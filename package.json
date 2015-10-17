@@ -1,0 +1,36 @@
+{
+	"name": "kalabasa.github.io",
+	"version": "0.0.0",
+	"description": "My website",
+	"author": "Lean Rada",
+	"devDependencies": {
+		"handlebars-cmd": "latest",
+		"node-sass": "latest",
+		"uglify-js": "latest",
+		"html-minifier": "latest",
+
+		"parallelshell": "latest",
+		"fsmonitor": "latest",
+		"node-live-reload": "latest",
+		"http-server": "latest"
+	},
+	"scripts": {
+		"dev": "parallelshell 'node-live-reload -p 9091 -d build' 'npm run watch' 'http-server -a localhost -p 8080 -o'",
+
+		"clean": "rm -r build",
+		
+		"build": "mkdir -p build && parallelshell 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_bower' 'npm run build_assets'",
+		"build_html": "handlebars src/html/home.json < src/html/home.handlebars | html-minifier --remove-comments --collapse-whitespace --conservative-collapse -o build/index.html",
+		"build_css": "scss -t compressed --update src/css:build",
+		"build_js": "uglifyjs $(cat js.includes) src/js/* --source-map build/script.js.map --source-map-url script.js.map --source-map-root src/js -o build/script.js",
+		"build_bower": "rsync -cr --delete --info=name bower_components build",
+		"build_assets": "rsync -cr --delete --info=name src/assets/* build",
+
+		"watch": "parallelshell 'npm run watch_html' 'npm run watch_css' 'npm run watch_js' 'npm run watch_bower' 'npm run watch_assets'",
+		"watch_html": "fsmonitor -d src/html -s npm run build_html",
+		"watch_css": "scss -t compressed --watch src/css:build",
+		"watch_js": "fsmonitor -d src/js -d bower_components '+*.js' -s npm run build_js",
+		"watch_bower": "fsmonitor -d bower_components -s npm run build_bower",
+		"watch_assets": "fsmonitor -d src/assets -s npm run build_assets"
+	}
+}
