@@ -2,22 +2,48 @@
 @import "layout";
 @import "animations";
 @import "style-mixins";
-@import url(https://fonts.googleapis.com/css?family=Kalam:300|Alegreya:400,400italic,700|Alegreya+Sans:400,300|Alegreya+SC|Alegreya+Sans+SC);
+@import url(https://fonts.googleapis.com/css?family=Kalam:300|Alegreya:400|Alegreya+Sans:300,400,400italic,700|Alegreya+SC|Alegreya+Sans+SC);
 
-$color-bg: #424B59;
+@mixin font-heading {
+	font-family: "Alegreya", serif;
+	font-weight: bold;
+	font-size: 1.5rem;
+}
+@mixin font-heading-2 {
+	font-family: "Alegreya Sans SC", sans-serif;
+	font-weight: normal;
+	font-size: 1.5rem;
+}
+@mixin font-body {
+	font-family: "Alegreya Sans", sans-serif;
+	font-weight: normal;
+	font-size: 1rem;
+}
+
+$timeline-dot-size: 14px;
+$timeline-fade-length: 40px;
+
+$color-bg: #2B3A4A;
 $color-bg-2: darken($color-bg, 5%);
-$color-fg: #D7D3AC;
+$color-fg: #F9F8EF;
 $color-fg-2: desaturate(lighten($color-bg, 15%), 15%);
+$color-accent: #5AE4FF;
 
 html {
-	font-size: 14pt;
+	@include font-body;
+	font-size: 13pt;
+	line-height: 1.5em;
 	background-color: $color-bg;
 	color: $color-fg;
 }
 
+a {
+	color: $color-accent;
+}
+
 #welcome {
 	margin: 10px;
-	font-family: "Alegreya", sans-serif;
+	font-family: "Alegreya SC", serif;
 	font-size: 0.4rem;
 	text-transform: uppercase;
 	background-color: rgba($color-bg, 0.6);
@@ -43,7 +69,7 @@ html {
 		width: 20px;
 		height: 20px;
 		path {
-			fill: #fff;
+			fill: $color-fg;
 		}
 	}
 	&:hover {
@@ -61,7 +87,7 @@ html {
 			&:hover {
 				padding-left: 30px;
 				padding-right: 30px;
-				background-color: #fff;
+				background-color: $color-fg;
 			}
 		}
 		&:hover {
@@ -71,67 +97,79 @@ html {
 }
 
 #gallery {
-	color: lighten($color-fg, 10%);
-	article {
+	&>a {
 		position: relative;
 		overflow: hidden;
-		cursor: pointer;
-		* {
-			position: absolute;
+		color: inherit;
+		article {
+			* {
+				position: absolute;
+			}
+			h1, p {
+				background-color: rgba($color-bg, 0.95);
+			}
+			&::after {
+				background-color: rgba($color-bg, 0.8);
+			}
+			h1, p {
+				min-width: $gallery-col-size-expanded - 40px;
+				min-height: 1.8em;
+				margin: 20px;
+				padding: 8px;
+				overflow: hidden;
+			}
+			h1 {
+				@include font-heading;
+				font-size: 1.8rem;
+				left: 0;
+				bottom: 60%;
+				margin-bottom: 0;
+				white-space: nowrap;
+				z-index: 3;
+			}
+			p {
+				@include font-body;
+				right: 0;
+				top: 40%;
+				margin-top: 0;
+				z-index: 2;
+			}
+			img {
+				top: 0;
+				bottom: 0;
+				right: 0;
+				min-width: $gallery-col-size-expanded;
+				min-height: 100%;
+				width: auto;
+				height: auto;
+				margin: auto;
+				z-index: 1;
+			}
+			&::after {
+				content: "";
+				position: absolute;
+				display: block;
+				width: 100%;
+				height: 100%;
+				z-index: 1;
+			}
 		}
-		h1, p, &::after {
-			background-color: rgba($color-bg, 0.8);
+
+		&:hover {
+			article::after {
+				background-color: rgba($color-bg, 0);
+			}
 		}
-		h1, p {
-			min-width: $gallery-col-size-expanded - 40px;
-			margin: 20px;
-			padding: 8px;
-			overflow: hidden;
-		}
-		h1 {
-			left: 0;
-			bottom: 60%;
-			margin-bottom: 0;
-			font-family: "Alegreya", serif;
-			z-index: 3;
-		}
-		p {
-			right: 0;
-			top: 40%;
-			margin-top: 0;
-			font-family: "Alegreya Sans", sans-serif;
-			z-index: 2;
-		}
-		img {
-			right: 0;
-			top: 0;
-			min-width: $gallery-col-size-expanded;
-			min-height: 100%;
-			z-index: 1;
-		}
-		&::after {
-			content: "";
-			position: absolute;
-			display: block;
-			width: 100%;
-			height: 100%;
-			z-index: 1;
-		}
-	}	
-	article:hover {
-		&::after {
-			background-color: rgba($color-bg, 0);
-		}
-	}
-	article:not(:hover) {
-		h1, p {
-			background-color: rgba($color-bg, 0);
-		}
-		h1 {
-			bottom: 100%;
-		}
-		p {
-			top: 100%;
+		&:not(:hover) {
+			h1, p {
+				background-color: rgba($color-bg, 0);
+			}
+			h1 {
+				bottom: 100%;
+			}
+			p {
+				top: 100%;
+			}
 		}
 	}
 }
@@ -167,19 +205,78 @@ html {
 	box-shadow: 0 0 32px 0 rgba(0,0,0,0.4);
 }
 
-#hello {
-	padding: 10% 10%;
-	font-family: "Alegreya Sans", serif;
-	h1, p.heading {
-		margin: 0;
+.section-heading {
+	@include font-heading-2;
+	text-align: center;
+}
+
+ul.timeline {
+	width: 4px;
+	padding: 0;
+	background: $color-fg;
+
+	&>li {
+		margin-bottom: 2em;
+
+		&::before {
+			box-sizing: border-box;
+			width: $timeline-dot-size;
+			height: $timeline-dot-size;
+			border-radius: 50%;
+			border: solid 3px $color-fg;
+			background: $color-bg-2;
+		}
+
+		&:nth-child(odd) div.timeline-entry::after {
+			left: $timeline-dot-size / 2 + 10px;
+			top: 0;
+			border-width: $timeline-dot-size;
+			border-color: $color-bg-2 $color-bg-2 transparent transparent;
+		}
+		&:nth-child(even) div.timeline-entry::after {
+			right: $timeline-dot-size / 2 + 10px;
+			top: 0;
+			border-width: $timeline-dot-size;
+			border-color: $color-bg-2 transparent transparent $color-bg-2;
+		}
 	}
+	div.timeline-entry {
+		&>div {
+			padding: 1em;
+			background: $color-bg-2;
+		}
+
+		&::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			width: 0;
+			height: 0;
+			border-style: solid;
+		}
+	}
+
+	margin-bottom: $timeline-fade-length;
+	&::after {
+		content: '';
+		position: absolute;
+		bottom: -$timeline-fade-length;
+		width: 100%;
+		height: $timeline-fade-length;
+		background: linear-gradient(0deg, transparent, $color-fg);
+	}
+}
+
+#hello {
 	h1 {
+		margin-bottom: 0;
 		height: 6rem;
 	}
 	.heading {
+		margin: 0;
 		height: 2.7rem;
 	}
-	p {
+	.text {
 		margin: 0.6rem 0;
 	}
 	#hello-portrait {
@@ -201,6 +298,45 @@ html {
 		}
 		p {
 			font-size: 1.2rem;
+		}
+	}
+}
+
+#experience {
+	.text {
+		text-align: center;
+		margin-bottom: 6em;
+	}
+	.experience-entry {
+		font-weight: bold;
+		color: $color-fg-2;
+		.value, .info {
+			font-weight: normal;
+			color: $color-fg;
+		}
+
+		.field {
+			// text-align: center;
+		}
+
+		&>div {
+			margin-bottom: 0.1em;
+		}
+		&>*:last-child {
+			margin-bottom: 0;
+		}
+
+		.job {
+			@include font-heading;
+			font-size: 1.25em;
+			margin-bottom: 0.3em;
+		}
+		.company {
+
+		}
+		.info {
+			margin-top: 1em;
+			// text-align: center;
 		}
 	}
 }

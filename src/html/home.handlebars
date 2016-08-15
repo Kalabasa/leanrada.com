@@ -10,13 +10,15 @@
 	<div id="welcome"><a href="kalabasa.github.io"><h1>kalabasa.github.io</h1></a></div>
 	<div id="gallery-container">
 		<section id="gallery">
-			{{#gallery_items}}
-				<article>
-					<h1>{{name}}</h1>
-					<p>{{description}}</p>
-					<img src="{{image_src}}"/>
-				</article>
-			{{/gallery_items}}
+			{{#each gallery_items}}
+				<a href="{{link}}">
+					<article>
+						<h1>{{name}}</h1>
+						<p>{{description}}</p>
+						<img src="{{image_src}}"/>
+					</article>
+				</a>
+			{{/each}}
 		</section>
 		<div id="container-btn-left" class="container-btn-gallery-nav overlay overlay-left overlay-vmid">
 			<button id="btn-left" class="overlay-btn" tabIndex="1">
@@ -29,40 +31,95 @@
 			</button>
 		</div>
 	</div>
+
 	<div id="container-btn-down" class="overlay overlay-bottom overlay-mid">
 		<button id="btn-down" class="overlay-btn" tabIndex="1">
 			{{{include "src/html/arrow-down.svg"}}}
 		</button>
 	</div>
+
 	<div id="main-container">
+
 		<section id="hello">
 			<div id="hello-text">
 				<div id="hello-portrait">
-					<img src="img/hello1.png"/>
+					<img src="{{bio.portrait.image_src}}"/>
 				</div>
 				<div id="hello-me">
 					<h1>Hi!</h1>
-					<p class="heading">My name is Lean Rada</p>
-					<p class="heading">I'm a Software Developer</p>
-					<p>I like making things</p>
-					<p>Yes</p>
+					<p class="heading">{{bio.heading}}</p>
+					<p class="heading">I'm <span id="hello-me-title">{{bio.titles.[0]}}</span></p>
+					{{#each bio.text}}
+						<p class="text">{{this}}</p>
+					{{/each}}
 				</div>
 			</div>
 		</section>
+
+		<section id="experience">
+			<h1 class="section-heading">Professional Experience</h1>
+			<p class="text">{{experience.text}}</p>
+			<ul class="timeline">
+				{{#each experience.works}}
+					<li>
+						<div class="timeline-entry">
+							<div class="experience-entry">
+								<div class="field value job">{{job}}</div>
+								{{#if company}}
+									<div class="field">at <span class="value company">{{company}}</span></div>
+								{{else}}
+									{{#if alt_company}}
+										<div class="field value company">{{alt_company}}</div>
+									{{/if}}
+								{{/if}}
+								{{#if date.[1]}}
+									<div class="field">from <span class="value date">{{date.[0]}}</span> to <span class="value date">{{date.[1]}}</span></div>
+								{{else}}
+									<div class="field">in <span class="value date">{{date.[0]}}</span></div>
+								{{/if}}
+								<p class="info">{{{info}}}</p>
+							</div>
+						</div>
+					</li>
+				{{/each}}
+			</ul>
+		</section>
+
+		<section id="education">
+			<h1 class="section-heading">Education</h1>
+			<p class="text">{{education.text}}</p>
+			<ul>
+				{{#each education.schools}}
+					<li>
+						<div class="education-entry">
+							<div class="name">{{name}}</div>
+							<div class="type">{{type}}</div>
+							<div class="date">{{date}}</div>
+							<div class="info">{{info}}</div>
+						</div>
+					</li>
+				{{/each}}
+			</ul>
+		</section>
+
 		<footer id="footer">
 			<div class="sig">
 				{{{include "src/html/lr.svg"}}}
 			</div>
-			<p class="copytext">&copy; 2015 Lean Rada</p>
+			<p class="copytext">&copy; 2016 Lean Rada</p>
 		</footer>
+
 		<nav id="nav">
 			<ol>
-				<li><a href="#">Home</a></li>
-				<li><a href="#">Projects</a></li>
+				<li><a href="#hello">Home</a></li>
+				<li><a href="#experience">Exp</a></li>
 				<li><a href="#">About</a></li>
 			</ol>
 		</nav>
+
 	</div>
+
+	<script>var bio = {titles: [{{#each bio.titles}}{{#if @index}},{{/if}}"{{this}}"{{/each}}]};</script>
 	<script type="text/javascript" src="script.js"></script>
 </body>
 </html>

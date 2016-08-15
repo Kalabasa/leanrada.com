@@ -14,29 +14,8 @@
 <body>
 	<iframe id="f" src="build/index.html" frameborder="0"></iframe>
 	<script>
-	var ws = null;
-	var timer;
-	function reconn() {
-		ws = null;
-		if(timer) clearTimeout(timer);
-		timer = setTimeout(function() {
-			if(ws === null) {
-				socket();
-			}
-		}, 2000);
-	}
-	function socket() {
-		ws = new WebSocket("ws://localhost:9091");
-		ws.onmessage = function(e) {
-			var data = JSON.parse(e.data);
-			if (data.r) {
-				document.getElementById("f").contentWindow.location.reload();
-			}
-		};
-		ws.onerror = reconn;
-		ws.onclose = reconn;
-	}
-	socket();
-	</script> 
+		document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] +
+		':40000/livereload.js?snipver=1"></' + 'script>')
+	</script>
 </body>
 </html>
