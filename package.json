@@ -18,10 +18,11 @@
 
 		"clean": "rm -r build",
 		
-		"build": "mkdir -p build && parallelshell 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_assets'",
+		"build": "mkdir -p build && parallelshell 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_bower' 'npm run build_assets'",
 		"build_html": "handlebars src/html/home.json < src/html/home.handlebars | html-minifier --remove-comments --collapse-whitespace --conservative-collapse -o build/index.html",
 		"build_css": "scss -t compressed --update src/css:build",
 		"build_js": "uglifyjs $(cat js.includes) src/js/*.js --compressed drop_console=false --source-map build/script.js.map --source-map-url script.js.map --source-map-root src/js -o build/script.js",
+		"build_bower": "rsync -cr --delete --info=name --include='*/' --include='*.css' --include='*.css.map' --exclude='*' bower_components/ build/bower_components",
 		"build_assets": "rsync -cr --delete --info=name src/assets/* build",
 
 		"watch": "parallelshell 'npm run watch_html' 'npm run watch_css' 'npm run watch_js' 'npm run watch_bower' 'npm run watch_assets'",
