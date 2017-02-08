@@ -3,10 +3,14 @@ $gallery-col-size-expanded: 400px;
 
 $hello-portrait-size: 100px;
 
-$timeline-entry-width: 30vw;
+$timeline-dot-size: 14px;
+
+$timeline-entry-width-sm: 80vw;
+$timeline-entry-width-lg: 30vw;
 
 $nav-height: 4rem;
-$media-break-sm: 600px;
+
+$media-break-sm: 800px;
 
 html {
 	box-sizing: border-box;
@@ -20,43 +24,8 @@ html, body {
 	box-sizing: inherit;
 }
 
-#gallery-container, #gallery, #main-container, #hello, #footer, #nav {
-	width: 100%;
-}
-
-#welcome {
-	position: absolute;
-	top: 0;
-	right: 0;
-	z-index: 150;
-}
-
-#gallery-container {
-	position: relative;
-	height: 100vh;
-	overflow-y: hidden;
-	z-index: 100;
-	.overlay-btn {
-		position: relative;
-	}
-	.container-btn-gallery-nav {
-		position: fixed;
-	}
-}
-
-#gallery {
-	position: fixed;
-	top: 0;
-	bottom: -50px;
-	display: flex;
-	overflow-x: scroll;
-	a {
-		height: 100vh;
-		flex: 1 0 $gallery-col-size;
-		&:hover {
-			flex-basis: $gallery-col-size-expanded;
-		}
-	}
+#nav {
+	width: 100vw;
 }
 
 #main-container {
@@ -64,8 +33,16 @@ html, body {
 	z-index: 200;
 
 	section {
-		width: 80%;
-		margin: 10%;
+		width: auto;
+		margin: 10% 1em;
+		margin-bottom: 30vh;
+		@media (min-width: $media-break-sm) {
+			& {
+				width: 80%;
+				margin: 10%;
+				margin-bottom: 30vh;
+			}
+		}
 	}
 }
 
@@ -78,14 +55,17 @@ html, body {
 }
 
 #hello-text {
-	display: flex;
-	#hello-portrait {
-		flex: 0 1 30%;
-	}
-	#hello-me {
-		flex: 0 1 70%;
-		.text {
-			width: (100% * 40 / 70);
+	display: block;
+	@media (min-width: $media-break-sm) {
+		display: flex;
+		#hello-portrait {
+			flex: 0 1 30%;
+		}
+		#hello-me {
+			flex: 0 1 70%;
+			.text {
+				width: (100% * 40 / 70);
+			}
 		}
 	}
 }
@@ -98,7 +78,12 @@ ul.timeline {
 	list-style-type: none;
 	position: relative;
 	width: 0;
-	margin: 0 auto;
+	margin: 0 5%;
+	@media (min-width: $media-break-sm) {
+		& {
+			margin: 0 auto;
+		}
+	}
 
 	&>li {
 		// Line points
@@ -111,14 +96,23 @@ ul.timeline {
 
 		div.timeline-entry {
 			position: relative;
-			width: $timeline-entry-width;
+			width: $timeline-entry-width-sm;
+			@media (min-width: $media-break-sm) {
+				& {
+					width: $timeline-entry-width-lg;
+				}
+			}
 		}
-		&:nth-child(even) div.timeline-entry {
-			right: $timeline-entry-width;
-			padding-right: 36px;
+
+		& div.timeline-entry {
+			padding-left: $timeline-dot-size * 3;
 		}
-		&:nth-child(odd) div.timeline-entry {
-			padding-left: 36px;
+		@media (min-width: $media-break-sm) {
+			&:nth-child(even) div.timeline-entry {
+				right: $timeline-entry-width-lg;
+				padding-left: 0;
+				padding-right: $timeline-dot-size * 3;
+			}
 		}
 	}
 }
@@ -154,8 +148,8 @@ ul.timeline {
 }
 
 /*
-* Components
-*/
+ * Components
+ */
 
 .overlay {
 	position: absolute;

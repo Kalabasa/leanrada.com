@@ -3,41 +3,10 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Kalabasa</title>
+	<title>Lean Rada</title>
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-	<div id="welcome"><a href="kalabasa.github.io"><h1>kalabasa.github.io</h1></a></div>
-	<div id="gallery-container">
-		<section id="gallery">
-			{{#each gallery_items}}
-				<a href="{{link}}">
-					<article>
-						<h1>{{name}}</h1>
-						<p>{{description}}</p>
-						<img src="{{image_src}}"/>
-					</article>
-				</a>
-			{{/each}}
-		</section>
-		<div id="container-btn-left" class="container-btn-gallery-nav overlay overlay-left overlay-vmid">
-			<button id="btn-left" class="overlay-btn" tabIndex="1">
-				{{{include "src/html/arrow-down.svg"}}}
-			</button>
-		</div>
-		<div id="container-btn-right" class="container-btn-gallery-nav overlay overlay-right overlay-vmid">
-			<button id="btn-right" class="overlay-btn" tabIndex="1">
-				{{{include "src/html/arrow-down.svg"}}}
-			</button>
-		</div>
-	</div>
-
-	<div id="container-btn-down" class="overlay overlay-bottom overlay-mid">
-		<button id="btn-down" class="overlay-btn" tabIndex="1">
-			{{{include "src/html/arrow-down.svg"}}}
-		</button>
-	</div>
-
 	<div id="main-container">
 
 		<section id="hello">
@@ -48,7 +17,7 @@
 				<div id="hello-me">
 					<h1>Hi!</h1>
 					<p class="heading">{{bio.heading}}</p>
-					<p class="heading">I'm <span id="hello-me-title">{{bio.titles.[0]}}</span></p>
+					<p id="hello-me-title-state" class="heading">I'm <span id="hello-me-title">{{bio.titles.[0]}}</span></p>
 					{{#each bio.text}}
 						<p class="text">{{this}}</p>
 					{{/each}}
@@ -57,27 +26,33 @@
 		</section>
 
 		<section id="experience">
-			<h1 class="section-heading">Professional Experience</h1>
+			<h1 class="section-heading">Work</h1>
 			<p class="text">{{experience.text}}</p>
-			<ul class="timeline">
+			<ul class="timeline"
+				data-aos="fade-up"
+				data-aos-once="true">
 				{{#each experience.works}}
-					<li>
+					<li data-aos="fade-up"
+						data-aos-once="true">
 						<div class="timeline-entry">
-							<div class="experience-entry">
+							<div class="experience-entry field-box">
+								{{#if image}}
+									<img class="image" src="{{image.src}}" title="{{image.title}}"/>
+								{{/if}}
 								<div class="field value job">{{job}}</div>
 								{{#if company}}
-									<div class="field">at <span class="value company">{{company}}</span></div>
+									<div class="field company">at <span class="value">{{company}}</span></div>
 								{{else}}
 									{{#if alt_company}}
 										<div class="field value company">{{alt_company}}</div>
 									{{/if}}
 								{{/if}}
 								{{#if date.[1]}}
-									<div class="field">from <span class="value date">{{date.[0]}}</span> to <span class="value date">{{date.[1]}}</span></div>
+									<div class="field date">from <span class="value">{{date.[0]}}</span> to <span class="value">{{date.[1]}}</span></div>
 								{{else}}
-									<div class="field">in <span class="value date">{{date.[0]}}</span></div>
+									<div class="field date">in <span class="value">{{date.[0]}}</span></div>
 								{{/if}}
-								<p class="info">{{{info}}}</p>
+								<p class="field info">{{{info}}}</p>
 							</div>
 						</div>
 					</li>
@@ -88,14 +63,21 @@
 		<section id="education">
 			<h1 class="section-heading">Education</h1>
 			<p class="text">{{education.text}}</p>
-			<ul>
+			<ul class="nolist">
 				{{#each education.schools}}
-					<li>
-						<div class="education-entry">
-							<div class="name">{{name}}</div>
-							<div class="type">{{type}}</div>
-							<div class="date">{{date}}</div>
-							<div class="info">{{info}}</div>
+					<li data-aos="fade"
+						data-aos-once="true">
+						<div class="education-entry field-box">
+							{{#if course}}
+								<div class="field value course">{{course}}</div>
+							{{/if}}
+							<div class="field name">at <span class="value">{{name}}</span></div>
+							{{#if date.[1]}}
+								<div class="field date">from <span class="value">{{date.[0]}}</span> to <span class="value">{{date.[1]}}</span></div>
+							{{else}}
+								<div class="field date">in <span class="value">{{date.[0]}}</span></div>
+							{{/if}}
+							<div class="field value info">{{{info}}}</div>
 						</div>
 					</li>
 				{{/each}}
@@ -103,14 +85,17 @@
 		</section>
 
 		<footer id="footer">
-			<p class="copytext">&copy; 2016 Lean Rada</p>
+			<ul class="contact">
+				<li class="">{{links.email}}</li>
+			</ul>
+			<p class="copytext">&copy; 2017 Lean Rada</p>
 		</footer>
 
 		<nav id="nav">
 			<ol>
-				<li><a href="#hello">Home</a></li>
+				<li><a href="#hello">Hi</a></li>
 				<li><a href="#experience">Exp</a></li>
-				<li><a href="#">About</a></li>
+				<li><a href="#education">Edu</a></li>
 			</ol>
 		</nav>
 

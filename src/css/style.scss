@@ -1,4 +1,6 @@
+// TODO Separate CSS into sections and common CSS
 @import "../bower_components/normalize.css/normalize.css";
+@import "../bower_components/aos/dist/aos.css";
 @import "layout";
 @import "animations";
 @import "style-mixins";
@@ -20,14 +22,16 @@
 	font-size: 1rem;
 }
 
-$timeline-dot-size: 14px;
-$timeline-fade-length: 40px;
+$timeline-fade-length: 6em;
 
-$color-bg: #2B3A4A;
+$color-bg: #29364A;
 $color-bg-2: darken($color-bg, 5%);
-$color-fg: #F9F8EF;
-$color-fg-2: desaturate(lighten($color-bg, 15%), 15%);
-$color-accent: #5AE4FF;
+$color-fg: #F7EED3;
+$color-fg-2: mix($color-bg, $color-fg, 45%);
+$color-fg-3: mix($color-bg, $color-fg, 60%);
+$color-accent: #63D1FF;
+
+$color-timeline: $color-fg-3;
 
 html {
 	@include font-body;
@@ -41,179 +45,42 @@ a {
 	color: $color-accent;
 }
 
-#welcome {
-	margin: 10px;
-	font-family: "Alegreya SC", serif;
-	font-size: 0.4rem;
-	text-transform: uppercase;
-	background-color: rgba($color-bg, 0.6);
-	color: rgba($color-fg, 0.8);
-	a {
-		text-decoration: none;
-		color: inherit;
-	}
-	h1 {
-		margin: 10px;
-	}
-}
-
-.overlay-btn {
-	width: 100%;
-	height: 100%;
-	padding: 10px;
-	background-color: transparent;
-	border: none;
-	svg {
-		position: relative;
-		top: 3px;
-		width: 20px;
-		height: 20px;
-		path {
-			fill: $color-fg;
-		}
-	}
-	&:hover {
-		background-color: $color-fg !important;
-		svg path {
-			fill: $color-bg !important;
-		}
-	}
-}
-
-#gallery-container {
-	.container-btn-gallery-nav {
-		height: 25%;
-		.overlay-btn {
-			&:hover {
-				padding-left: 30px;
-				padding-right: 30px;
-				background-color: $color-fg;
-			}
-		}
-		&:hover {
-			height: 100%;
-		}
-	}
-}
-
-#gallery {
-	&>a {
-		position: relative;
-		overflow: hidden;
-		color: inherit;
-		article {
-			* {
-				position: absolute;
-			}
-			h1, p {
-				background-color: rgba($color-bg, 0.95);
-			}
-			&::after {
-				background-color: rgba($color-bg, 0.8);
-			}
-			h1, p {
-				min-width: $gallery-col-size-expanded - 40px;
-				min-height: 1.8em;
-				margin: 20px;
-				padding: 8px;
-				overflow: hidden;
-			}
-			h1 {
-				@include font-heading;
-				font-size: 1.8rem;
-				left: 0;
-				bottom: 60%;
-				margin-bottom: 0;
-				white-space: nowrap;
-				z-index: 3;
-			}
-			p {
-				@include font-body;
-				right: 0;
-				top: 40%;
-				margin-top: 0;
-				z-index: 2;
-			}
-			img {
-				top: 0;
-				bottom: 0;
-				right: 0;
-				min-width: $gallery-col-size-expanded;
-				min-height: 100%;
-				width: auto;
-				height: auto;
-				margin: auto;
-				z-index: 1;
-			}
-			&::after {
-				content: "";
-				position: absolute;
-				display: block;
-				width: 100%;
-				height: 100%;
-				z-index: 1;
-			}
-		}
-
-		&:hover {
-			article::after {
-				background-color: rgba($color-bg, 0);
-			}
-		}
-		&:not(:hover) {
-			h1, p {
-				background-color: rgba($color-bg, 0);
-			}
-			h1 {
-				bottom: 100%;
-			}
-			p {
-				top: 100%;
-			}
-		}
-	}
-}
-
-#container-btn-left button svg {
-	transform: rotate(90deg);
-}
-
-#container-btn-right button svg {
-	transform: rotate(-90deg);
-}
-
-#container-btn-down {
-	width: 160px;
-	.overlay-btn {
-		background-color: rgba($color-bg, 0.8);
-		svg {
-			@include animation-bobbing;
-			path {
-				fill: $color-fg;
-			}
-		}
-	}
-	.overlay-btn:hover {
-		padding-top: 20px;
-		padding-bottom: 40px;
-	}
-}
-
 #main-container {
 	overflow: hidden;
 	background-color: $color-bg;
 	box-shadow: 0 0 32px 0 rgba(0,0,0,0.4);
 }
 
-.section-heading {
-	@include font-heading-2;
-	text-align: center;
+section {
+	& .section-heading {
+		@include font-heading-2;
+		margin-left: 5%;
+		margin-right: 5%;
+		margin-bottom: 1em;
+		text-align: left;
+		@media (min-width: $media-break-sm) {
+			& {
+				text-align: center;
+			}
+		}
+	}
+	& .text {
+		margin-left: 5%;
+		margin-right: 5%;
+		margin-bottom: 3em;
+		text-align: left;
+		@media (min-width: $media-break-sm) {
+			& {
+				text-align: center;
+			}
+		}
+	}
 }
 
 ul.timeline {
 	width: 4px;
 	padding: 0;
-	background: $color-fg;
+	background: $color-timeline;
 
 	&>li {
 		margin-bottom: 2em;
@@ -223,26 +90,26 @@ ul.timeline {
 			width: $timeline-dot-size;
 			height: $timeline-dot-size;
 			border-radius: 50%;
-			border: solid 3px $color-fg;
+			border: solid 3px $color-timeline;
 			background: $color-bg-2;
 		}
 
-		&:nth-child(odd) div.timeline-entry::after {
-			left: $timeline-dot-size / 2 + 10px;
+		& div.timeline-entry::after {
+			left: $timeline-dot-size;
 			top: 0;
 			border-width: $timeline-dot-size;
 			border-color: $color-bg-2 $color-bg-2 transparent transparent;
 		}
-		&:nth-child(even) div.timeline-entry::after {
-			right: $timeline-dot-size / 2 + 10px;
-			top: 0;
-			border-width: $timeline-dot-size;
-			border-color: $color-bg-2 transparent transparent $color-bg-2;
+		@media (min-width: $media-break-sm) {
+			&:nth-child(even) div.timeline-entry::after {
+				left: auto;
+				right: $timeline-dot-size;
+				border-color: $color-bg-2 transparent transparent $color-bg-2;
+			}
 		}
 	}
 	div.timeline-entry {
 		&>div {
-			padding: 1em;
 			background: $color-bg-2;
 		}
 
@@ -256,43 +123,54 @@ ul.timeline {
 		}
 	}
 
-	margin-bottom: $timeline-fade-length;
 	&::after {
 		content: '';
 		position: absolute;
-		bottom: -$timeline-fade-length;
+		bottom: 0;
 		width: 100%;
 		height: $timeline-fade-length;
-		background: linear-gradient(0deg, transparent, $color-fg);
+		background: linear-gradient(0deg, $color-bg, $color-timeline);
 	}
 }
 
 #hello {
 	h1 {
-		margin-bottom: 0;
-		height: 6rem;
+		margin: 0;
+		margin-top: 0.25em;
+		margin-bottom: 0.5em;
+		min-height: 3rem;
+		@media (min-width: $media-break-sm) {
+			min-height: 6rem;
+		}
 	}
 	.heading {
 		margin: 0;
-		height: 2.7rem;
+		margin-bottom: 1em;
+		min-height: 0.7rem;
 	}
 	.text {
 		margin: 0.6rem 0;
+		text-align: left;
 	}
 	#hello-portrait {
-		margin-right: 0.4rem;
-		text-align: right;
+		text-align: center;
 		img {
 			border-radius: 50%;
+		}
+		@media (min-width: $media-break-sm) {
+			margin-right: 0.4rem;
+			text-align: right;
 		}
 	}
 	#hello-me {
 		margin-left: 0.4rem;
 		h1 {
-			font-family: "Kalam", cursive;
+			line-height: 1em;
 			font-size: 4rem;
+			font-family: "Kalam", cursive;
 		}
 		.heading {
+			line-height: 1em;
 			font-size: 2rem;
 			font-weight: lighter;
 		}
@@ -300,43 +178,69 @@ ul.timeline {
 			font-size: 1.2rem;
 		}
 	}
+	#hello-me-title-state {
+		// Allow two lines minimum, to prevent layout jumping around due to wrapping
+		min-height: 2em;
+	}
+}
+
+.field-box {
+	font-weight: bold;
+	color: $color-fg-2;
+	.value, .info {
+		font-weight: normal;
+		color: $color-fg;
+	}
+
+	.field {
+		margin: 0 1rem;
+		&:first-child {
+			padding-top: 1rem;
+		}
+		&:last-child {
+			padding-bottom: 1rem;
+		}
+	}
+
+	&>* {
+		margin-bottom: 0.1em;
+	}
+	&>*:last-child {
+		margin-bottom: 0;
+	}
 }
 
 #experience {
-	.text {
-		text-align: center;
-		margin-bottom: 6em;
-	}
 	.experience-entry {
-		font-weight: bold;
-		color: $color-fg-2;
-		.value, .info {
-			font-weight: normal;
-			color: $color-fg;
-		}
-
-		.field {
-			// text-align: center;
-		}
-
-		&>div {
-			margin-bottom: 0.1em;
-		}
-		&>*:last-child {
-			margin-bottom: 0;
-		}
-
 		.job {
 			@include font-heading;
 			font-size: 1.25em;
 			margin-bottom: 0.3em;
 		}
 		.company {
-
 		}
 		.info {
 			margin-top: 1em;
-			// text-align: center;
+		}
+		.image {
+			width: 100%;
+		}
+	}
+}
+
+#education {
+	.education-entry {
+		margin: auto;
+		width: 80%;
+		background: $color-bg-2;
+		@media (min-width: $media-break-sm) {
+			width: 50%;
+		}
+
+		.course {
+			@include font-heading;
+			font-size: 1.25em;
+			margin-bottom: 0.3em;
 		}
 	}
 }
@@ -373,4 +277,15 @@ ul.timeline {
 	#nav ol {
 		margin: 0;
 	}
+}
+
+/*
+ * Components
+ */
+
+
+ul.nolist {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
 }

@@ -1,9 +1,10 @@
 "use strict";
 (function(_,$){
 	var $window = $(window);
-	var $hello_me_title = $("#hello-me-title");
+	var hello_me_title = document.getElementById("hello-me-title");
+	var $hello_me_title = $(hello_me_title);
 
-	const interval = 4000;
+	const interval = 3500;
 	var titles = window.bio.titles;
 
 	var next_title_index = 0;
@@ -16,11 +17,20 @@
 		});
 	}
 
-	setInterval(function() {
-		change_title(next_titles[next_title_index++]);
-		if (next_title_index >= next_titles.length) {
-			next_title_index = 0;
-			next_titles = _.shuffle(titles);
+	var on_title_scroll_visible = _.once(function() {
+		setInterval(function() {
+			change_title(next_titles[next_title_index++]);
+			if (next_title_index >= next_titles.length) {
+				next_title_index = 0;
+				next_titles = _.shuffle(titles);
+			}
+		}, interval);
+	});
+
+	$window.scroll(function() {
+		var rect = hello_me_title.getBoundingClientRect();
+		if (rect.top >= 0 && rect.bottom < window.innerHeight) {
+			on_title_scroll_visible();
 		}
-	}, interval);
+	});
 })(_,jQuery);
