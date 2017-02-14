@@ -7,18 +7,29 @@
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
+	<nav id="nav">
+		<ol class="nolist">
+			<li><a href="#hello">Hi</a></li>
+			<li><a href="#experience">Exp</a></li>
+			<li><a href="#education">Edu</a></li>
+		</ol>
+	</nav>
+
+	<div id="splash">
+	</div>
+
 	<div id="main-container">
 
 		<section id="hello">
 			<div id="hello-text">
 				<div id="hello-portrait">
-					<img src="{{bio.portrait.image_src}}"/>
+					<img src="{{hello.portrait.image_src}}" alt="my portrait"/>
 				</div>
 				<div id="hello-me">
 					<h1>Hi!</h1>
-					<p class="heading">{{bio.heading}}</p>
-					<p id="hello-me-title-state" class="heading">I'm <span id="hello-me-title">{{bio.titles.[0]}}</span></p>
-					{{#each bio.text}}
+					<p class="heading">{{hello.heading}}</p>
+					<p id="hello-me-title-state" class="heading">I'm <span id="hello-me-title">{{hello.titles.[0]}}</span></p>
+					{{#each hello.text}}
 						<p class="text">{{this}}</p>
 					{{/each}}
 				</div>
@@ -27,13 +38,9 @@
 
 		<section id="experience">
 			<h1 class="section-heading">Work</h1>
-			<p class="text">{{experience.text}}</p>
-			<ul class="timeline"
-				data-aos="fade-up"
-				data-aos-once="true">
+			<ol class="timeline">
 				{{#each experience.works}}
-					<li data-aos="fade-up"
-						data-aos-once="true">
+					<li>
 						<div class="timeline-entry">
 							<div class="experience-entry field-box">
 								{{#if image}}
@@ -57,16 +64,14 @@
 						</div>
 					</li>
 				{{/each}}
-			</ul>
+			</ol>
 		</section>
 
 		<section id="education">
 			<h1 class="section-heading">Education</h1>
-			<p class="text">{{education.text}}</p>
-			<ul class="nolist">
+			<ol class="nolist">
 				{{#each education.schools}}
-					<li data-aos="fade"
-						data-aos-once="true">
+					<li>
 						<div class="education-entry field-box">
 							{{#if course}}
 								<div class="field value course">{{course}}</div>
@@ -81,27 +86,27 @@
 						</div>
 					</li>
 				{{/each}}
-			</ul>
+			</ol>
 		</section>
 
 		<footer id="footer">
-			<ul class="contact">
-				<li class="">{{links.email}}</li>
+			<ul class="contact nolist">
+				{{#each contact.links}}
+					<li class="contact-entry">
+						<a href="{{url}}" target="_blank" aria-label="{{name}}" title="{{text}}">
+							<i class="fa fa-lg fa-{{fa-icon}}" aria-hidden="true"></i>
+						</a>
+					<!--</li>--><!--no closing tag - no space between inline-blocks-->
+				{{/each}}
 			</ul>
 			<p class="copytext">&copy; 2017 Lean Rada</p>
 		</footer>
 
-		<nav id="nav">
-			<ol>
-				<li><a href="#hello">Hi</a></li>
-				<li><a href="#experience">Exp</a></li>
-				<li><a href="#education">Edu</a></li>
-			</ol>
-		</nav>
-
 	</div>
 
-	<script>var bio = {titles: [{{#each bio.titles}}{{#if @index}},{{/if}}"{{this}}"{{/each}}]};</script>
-	<script type="text/javascript" src="script.js"></script>
+	<script data-main="js/main.js" src="requirejs/require.js"></script>
+	<script>
+		define("helloData", {titles: [{{#each hello.titles}}{{#if @index}},{{/if}}"{{this}}"{{/each}}]});
+	</script>
 </body>
 </html>

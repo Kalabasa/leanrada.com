@@ -1,36 +1,39 @@
 "use strict";
-(function(_,$){
-	var $window = $(window);
-	var hello_me_title = document.getElementById("hello-me-title");
-	var $hello_me_title = $(hello_me_title);
+define(["underscore", "jquery", "helloData"],
+function(_,$,data){
+	return {init: function() {
+		var $window = $(window);
+		var helloMeTitle = document.getElementById("hello-me-title");
+		var $helloMeTitle = $(helloMeTitle);
 
-	const interval = 3500;
-	var titles = window.bio.titles;
+		const interval = 3500;
+		var titles = data.titles;
 
-	var next_title_index = 0;
-	var next_titles = _.shuffle(titles.slice(1));
+		var nextTitleIndex = 0;
+		var nextTitles = _.shuffle(titles.slice(1));
 
-	var change_title = function(new_title) {
-		$hello_me_title.fadeOut(60, function() {
-			$hello_me_title.text(new_title);
-			$hello_me_title.fadeIn(150);
-		});
-	}
-
-	var on_title_scroll_visible = _.once(function() {
-		setInterval(function() {
-			change_title(next_titles[next_title_index++]);
-			if (next_title_index >= next_titles.length) {
-				next_title_index = 0;
-				next_titles = _.shuffle(titles);
-			}
-		}, interval);
-	});
-
-	$window.scroll(function() {
-		var rect = hello_me_title.getBoundingClientRect();
-		if (rect.top >= 0 && rect.bottom < window.innerHeight) {
-			on_title_scroll_visible();
+		function changeTitle(newTitle) {
+			$helloMeTitle.fadeOut(60, function() {
+				$helloMeTitle.text(newTitle);
+				$helloMeTitle.fadeIn(150);
+			});
 		}
-	});
-})(_,jQuery);
+
+		const onTitleScrollVisible = _.once(function() {
+			setInterval(function() {
+				changeTitle(nextTitles[nextTitleIndex++]);
+				if (nextTitleIndex >= nextTitles.length) {
+					nextTitleIndex = 0;
+					nextTitles = _.shuffle(titles);
+				}
+			}, interval);
+		});
+
+		$window.scroll(function() {
+			var rect = helloMeTitle.getBoundingClientRect();
+			if (rect.top >= 0 && rect.bottom < window.innerHeight) {
+				onTitleScrollVisible();
+			}
+		});
+	}};
+});

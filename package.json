@@ -8,28 +8,30 @@
 		"node-sass": "latest",
 		"uglify-js": "latest",
 		"html-minifier": "latest",
+		"bower": "latest",
+		"bower-requirejs": "latest",
 
 		"parallelshell": "latest",
 		"chokidar-cli": "latest",
 		"livereload": "latest"
 	},
 	"scripts": {
-		"dev": "parallelshell 'livereload build/ -p 40000 -w 200' 'npm run watch'",
+		"dev": "parallelshell 'livereload build/ -d -e css -p 40000' 'npm run watch'",
 
 		"clean": "rm -r build",
 		
-		"build": "mkdir -p build && parallelshell 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_bower' 'npm run build_assets'",
+		"build": "mkdir -p build && parallelshell 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_assets' 'npm run build_bower'",
 		"build_html": "handlebars src/html/home.json < src/html/home.handlebars | html-minifier --remove-comments --collapse-whitespace --conservative-collapse -o build/index.html",
 		"build_css": "scss -t compressed --update src/css:build",
-		"build_js": "uglifyjs $(cat js.includes) src/js/*.js --compressed drop_console=false --source-map build/script.js.map --source-map-url script.js.map --source-map-root src/js -o build/script.js",
-		"build_bower": "rsync -cr --delete --info=name --include='*/' --include='*.css' --include='*.css.map' --exclude='*' bower_components/ build/bower_components",
+		"build_js": "rsync -cr --delete --info=name src/js/*.js build/js; bower-requirejs -c build/js/bower-requirejs-config.js",
 		"build_assets": "rsync -cr --delete --info=name src/assets/* build",
+		"build_bower": "bower install",
 
 		"watch": "parallelshell 'npm run watch_html' 'npm run watch_css' 'npm run watch_js' 'npm run watch_bower' 'npm run watch_assets'",
 		"watch_html": "chokidar src/html -c 'npm run build_html'",
 		"watch_css": "scss -t compressed --watch src/css:build",
-		"watch_js": "chokidar src/js bower_components -c 'npm run build_js'",
-		"watch_bower": "chokidar bower_components -c 'npm run build_bower'",
-		"watch_assets": "chokidar src/assets -c 'npm run build_assets'"
+		"watch_js": "chokidar src/js -c 'npm run build_js'",
+		"watch_assets": "chokidar src/assets -c 'npm run build_assets'",
+		"watch_bower": "chokidar bower.json -c 'npm run build_bower'"
 	}
 }

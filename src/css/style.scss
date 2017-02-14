@@ -1,10 +1,15 @@
 // TODO Separate CSS into sections and common CSS
-@import "bower_components/normalize.css/normalize.css";
-@import "bower_components/aos/dist/aos.css";
+@import "normalize-css/normalize.css";
+@import "font-awesome/css/font-awesome.css";
+
+@import url(https://fonts.googleapis.com/css?family=Kalam:300|Alegreya:400|Alegreya+Sans:300,400,400italic,700|Alegreya+SC|Alegreya+Sans+SC);
+
+@import "constants";
+@import "mixins";
 @import "layout";
 @import "animations";
-@import "style-mixins";
-@import url(https://fonts.googleapis.com/css?family=Kalam:300|Alegreya:400|Alegreya+Sans:300,400,400italic,700|Alegreya+SC|Alegreya+Sans+SC);
+@import "style-timeline";
+
 
 @mixin font-heading {
 	font-family: "Alegreya", serif;
@@ -22,16 +27,6 @@
 	font-size: 1rem;
 }
 
-$timeline-fade-length: 6em;
-
-$color-bg: #29364A;
-$color-bg-2: darken($color-bg, 5%);
-$color-fg: #F7EED3;
-$color-fg-2: mix($color-bg, $color-fg, 45%);
-$color-fg-3: mix($color-bg, $color-fg, 60%);
-$color-accent: #63D1FF;
-
-$color-timeline: $color-fg-3;
 
 html {
 	@include font-body;
@@ -45,20 +40,27 @@ a {
 	color: $color-accent;
 }
 
-#main-container {
-	overflow: hidden;
-	background-color: $color-bg;
-	box-shadow: 0 0 32px 0 rgba(0,0,0,0.4);
+
+#splash {
+	background-color: $color-bg-2;
+	cursor: pointer;
 }
+
+
+#main-container {
+	background-color: $color-bg;
+	@include box_shadow(5);
+}
+
 
 section {
 	& .section-heading {
 		@include font-heading-2;
-		margin-left: 5%;
-		margin-right: 5%;
+		margin-left: 2%;
+		margin-right: 2%;
 		margin-bottom: 1em;
 		text-align: left;
-		@media (min-width: $media-break-sm) {
+		@include media-lg {
 			& {
 				text-align: center;
 			}
@@ -69,118 +71,11 @@ section {
 		margin-right: 5%;
 		margin-bottom: 3em;
 		text-align: left;
-		@media (min-width: $media-break-sm) {
+		@include media-lg {
 			& {
 				text-align: center;
 			}
 		}
-	}
-}
-
-ul.timeline {
-	width: 4px;
-	padding: 0;
-	background: $color-timeline;
-
-	&>li {
-		margin-bottom: 2em;
-
-		&::before {
-			box-sizing: border-box;
-			width: $timeline-dot-size;
-			height: $timeline-dot-size;
-			border-radius: 50%;
-			border: solid 3px $color-timeline;
-			background: $color-bg-2;
-		}
-
-		& div.timeline-entry::after {
-			left: $timeline-dot-size;
-			top: 0;
-			border-width: $timeline-dot-size;
-			border-color: $color-bg-2 $color-bg-2 transparent transparent;
-		}
-		@media (min-width: $media-break-sm) {
-			&:nth-child(even) div.timeline-entry::after {
-				left: auto;
-				right: $timeline-dot-size;
-				border-color: $color-bg-2 transparent transparent $color-bg-2;
-			}
-		}
-	}
-	div.timeline-entry {
-		&>div {
-			background: $color-bg-2;
-		}
-
-		&::after {
-			content: '';
-			position: absolute;
-			top: 0;
-			width: 0;
-			height: 0;
-			border-style: solid;
-		}
-	}
-
-	&::after {
-		content: '';
-		position: absolute;
-		bottom: 0;
-		width: 100%;
-		height: $timeline-fade-length;
-		background: linear-gradient(0deg, $color-bg, $color-timeline);
-	}
-}
-
-#hello {
-	h1 {
-		margin: 0;
-		margin-top: 0.25em;
-		margin-bottom: 0.5em;
-		min-height: 3rem;
-		@media (min-width: $media-break-sm) {
-			min-height: 6rem;
-		}
-	}
-	.heading {
-		margin: 0;
-		margin-bottom: 1em;
-		min-height: 0.7rem;
-	}
-	.text {
-		margin: 0.6rem 0;
-		text-align: left;
-	}
-	#hello-portrait {
-		text-align: center;
-		img {
-			border-radius: 50%;
-		}
-		@media (min-width: $media-break-sm) {
-			margin-right: 0.4rem;
-			text-align: right;
-		}
-	}
-	#hello-me {
-		margin-left: 0.4rem;
-		h1 {
-			line-height: 1em;
-			font-size: 4rem;
-			font-family: "Kalam", cursive;
-		}
-		.heading {
-			line-height: 1em;
-			font-size: 2rem;
-			font-weight: lighter;
-		}
-		p {
-			font-size: 1.2rem;
-		}
-	}
-	#hello-me-title-state {
-		// Allow two lines minimum, to prevent layout jumping around due to wrapping
-		min-height: 2em;
 	}
 }
 
@@ -210,6 +105,61 @@ ul.timeline {
 	}
 }
 
+
+#hello {
+	h1 {
+		margin: 0;
+		margin-top: 0.375em;
+		margin-bottom: 0.25em;
+		min-height: 3rem;
+		@include media-lg {
+			min-height: 6rem;
+		}
+	}
+	.heading {
+		margin: 0;
+		margin-bottom: 1em;
+		min-height: 0.7rem;
+	}
+	.text {
+		margin: 0.6rem 0;
+		text-align: left;
+	}
+	#hello-portrait {
+		text-align: center;
+		img {
+			border-radius: 50%;
+		}
+		@include media-lg {
+			margin-right: 0.4rem;
+			text-align: right;
+		}
+	}
+	#hello-me {
+		@include media-lg {
+			margin-left: 1rem;
+		}
+
+		h1 {
+			line-height: 1em;
+			font-size: 4rem;
+			font-family: "Kalam", cursive;
+		}
+		.heading {
+			line-height: 1em;
+			font-size: 2rem;
+			font-weight: lighter;
+		}
+		p {
+			font-size: 1.2rem;
+		}
+	}
+	#hello-me-title-state {
+		// Allow two lines minimum, to prevent layout jumping around due to wrapping
+		min-height: 2em;
+	}
+}
+
 #experience {
 	.experience-entry {
 		.job {
@@ -231,9 +181,9 @@ ul.timeline {
 #education {
 	.education-entry {
 		margin: auto;
-		width: 80%;
+		width: 96%;
 		background: $color-bg-2;
-		@media (min-width: $media-break-sm) {
+		@include media-lg {
 			width: 50%;
 		}
 
@@ -246,14 +196,27 @@ ul.timeline {
 }
 
 #footer {
-	font-size: 0.7rem;
 	background-color: $color-bg-2;
-	color: $color-fg-2;
+
+	.contact {
+		color: $color-fg-2;
+	}
+	.contact-entry {
+		a {
+			padding: 1em;
+			color: inherit;
+			&:hover {
+				padding: 1em 2em;
+				color: $color-fg;
+				background-color: $color-bg;
+			}
+		}
+	}
+
 	.copytext {
-		position: absolute;
-		right: 0;
-		bottom: 0;
-		margin: 1rem;
+		margin: 0.3em 1em;
+		font-size: 0.6rem;
+		color: $color-fg-2;
 	}
 }
 
@@ -261,8 +224,17 @@ ul.timeline {
 	font-family: "Alegreya Sans SC", sans-serif;
 	font-size: 0.9rrem;
 	background-color: $color-bg;
+
+	@include box_shadow(0);
+	&.raised {
+	  @include box_shadow(5);
+	}
+
 	ol {
 		margin: 0 10%;
+		@media (max-width: $media-break-sm) {
+			margin: 0;
+		}
 	}
 	li:hover {
 		background-color: $color-bg-2;
@@ -273,18 +245,13 @@ ul.timeline {
 	}
 }
 
-@media (max-width: $media-break-sm) {
-	#nav ol {
-		margin: 0;
-	}
-}
 
 /*
  * Components
  */
 
 
-ul.nolist {
+.nolist {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;

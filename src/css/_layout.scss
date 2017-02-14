@@ -1,16 +1,5 @@
-$gallery-col-size: 200px;
-$gallery-col-size-expanded: 400px;
-
-$hello-portrait-size: 100px;
-
-$timeline-dot-size: 14px;
-
-$timeline-entry-width-sm: 80vw;
-$timeline-entry-width-lg: 30vw;
-
-$nav-height: 4rem;
-
-$media-break-sm: 800px;
+@import "constants";
+@import "layout-timeline";
 
 html {
 	box-sizing: border-box;
@@ -24,24 +13,37 @@ html, body {
 	box-sizing: inherit;
 }
 
-#nav {
-	width: 100vw;
+
+#splash {
+	position: fixed;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	overflow: hidden;
+	z-index: 50;
 }
+
+#splash canvas {
+	width: 100%;
+	height: 100%;
+}
+
 
 #main-container {
 	position: relative;
-	z-index: 200;
+	margin-top: 100vh;
+	overflow: hidden;
+	z-index: 100;
 
 	section {
 		width: auto;
-		margin: 10% 1em;
+		margin: 10% 1rem;
 		margin-bottom: 30vh;
-		@media (min-width: $media-break-sm) {
-			& {
-				width: 80%;
-				margin: 10%;
-				margin-bottom: 30vh;
-			}
+		@include media-lg {
+			width: 80%;
+			margin: 10%;
+			margin-bottom: 30vh;
 		}
 	}
 }
@@ -53,10 +55,9 @@ html, body {
 		height: $hello-portrait-size;
 	}
 }
-
 #hello-text {
 	display: block;
-	@media (min-width: $media-break-sm) {
+	@include media-lg {
 		display: flex;
 		#hello-portrait {
 			flex: 0 1 30%;
@@ -70,76 +71,64 @@ html, body {
 	}
 }
 
-ul.timeline {
-	width: 100%;
-}
-
-ul.timeline {
-	list-style-type: none;
-	position: relative;
-	width: 0;
-	margin: 0 5%;
-	@media (min-width: $media-break-sm) {
-		& {
-			margin: 0 auto;
-		}
-	}
-
-	&>li {
-		// Line points
-		&::before {
-			content: '';
-			position: absolute;
-			left: 50%;
-			transform: translate(-50%, -50%);
-		}
-
-		div.timeline-entry {
-			position: relative;
-			width: $timeline-entry-width-sm;
-			@media (min-width: $media-break-sm) {
-				& {
-					width: $timeline-entry-width-lg;
-				}
-			}
-		}
-
-		& div.timeline-entry {
-			padding-left: $timeline-dot-size * 3;
-		}
-		@media (min-width: $media-break-sm) {
-			&:nth-child(even) div.timeline-entry {
-				right: $timeline-entry-width-lg;
-				padding-left: 0;
-				padding-right: $timeline-dot-size * 3;
-			}
-		}
-	}
-}
-
 #footer {
 	position: relative;
-	margin-bottom: $nav-height;
+	margin-bottom: $nav-height-sm;
 	text-align: center;
+	@include media-lg {
+		margin-bottom: $nav-height-lg;
+	}
+
+	.contact {
+		display: flex;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	.contact-entry {
+		display: flex;
+		flex: 0 0 auto;
+		a {
+			padding: 1em;
+			color: inherit;
+			&:hover {
+				padding: 1em 2em;
+				color: $color-fg;
+				background-color: $color-bg;
+			}
+		}
+	}
+
+	.copytext {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+	}
 }
 
 #nav {
 	position: fixed;
 	bottom: 0;
-	height: $nav-height;
+	left: 0;
+	right: 0;
 	z-index: 200;
+	height: $nav-height-sm;
+	@include media-lg {
+		height: $nav-height-lg;
+	}
+
 	ol {
 		display: flex;
-		margin: 0;
-		padding: 0;
-		list-style: none;
 	}
 	li {
 		display: flex;
 		flex: 1 0 auto;
 		text-align: center;
-		height: $nav-height;
-		line-height: $nav-height;
+		height: $nav-height-sm;
+		line-height: $nav-height-sm;
+		@include media-lg {
+			height: $nav-height-lg;
+			line-height: $nav-height-lg;
+		}
 
 		a {
 			flex: 1;
@@ -147,9 +136,11 @@ ul.timeline {
 	}
 }
 
+
 /*
  * Components
  */
+
 
 .overlay {
 	position: absolute;

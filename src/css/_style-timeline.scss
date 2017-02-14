@@ -1,0 +1,64 @@
+@import "constants";
+
+ol.timeline {
+	width: $timeline-stroke-size;
+	padding: 0;
+	background: $color-timeline;
+
+	&>li {
+		margin-bottom: 2em;
+
+		&::before {
+			box-sizing: border-box;
+			width: $timeline-dot-size;
+			height: $timeline-dot-size;
+			border-radius: 50%;
+			border: solid $timeline-stroke-size $color-timeline;
+			background: $color-bg-2;
+		}
+
+		& div.timeline-entry::after {
+			z-index: 1;
+			top: 0;
+			left: $timeline-dot-size;
+			border-width: $timeline-tail-size-sm;
+			border-color: $color-bg-2 $color-bg-2 transparent transparent;
+
+			@include media-lg {
+				border-width: $timeline-tail-size-lg;
+			}
+		}
+		@include media-lg {
+			&:nth-child(even) div.timeline-entry::after {
+				left: auto;
+				right: $timeline-dot-size;
+				border-color: $color-bg-2 transparent transparent $color-bg-2;
+			}
+		}
+	}
+	div.timeline-entry {
+		&>div {
+			position: relative;
+			z-index: 2;
+			background: $color-bg-2;
+		}
+
+		&::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			width: 0;
+			height: 0;
+			border-style: solid;
+		}
+	}
+
+	&::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+		height: $timeline-fade-length;
+		background: linear-gradient(0deg, $color-bg, $color-timeline);
+	}
+}
