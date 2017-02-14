@@ -1,6 +1,6 @@
 "use strict";
-define(["three","splash-scene"],
-function(THREE,splashScene) {
+define(["jquery","three","splash-scene"],
+function($,THREE,splashScene) {
 	// TODO fallback for no WebGL
 	return {init: function() {
 		const container = document.getElementById("splash");
@@ -10,15 +10,16 @@ function(THREE,splashScene) {
 		const renderer = new THREE.WebGLRenderer({antialias: true});
 		renderer.setPixelRatio(2);
 		renderer.setClearColor(scene.backgroundColor, 1);
-		renderer.shadowMap.enabled = true;
-		renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+		var isVisible = true;
 		updateOnResize();
 
 		container.appendChild(renderer.domElement);
 
 		function render() {
-			requestAnimationFrame(render);
+			if (isVisible) {
+				requestAnimationFrame(render);
+			}
 			renderer.render(scene.scene, scene.camera);
 		}
 		render();
@@ -30,6 +31,13 @@ function(THREE,splashScene) {
 		window.addEventListener("resize", updateOnResize, true);
 
 		container.addEventListener("click", splashScene.onClick);
-		window.addEventListener("scroll", splashScene.onScroll);
+		window.addEventListener("scroll", function(e) {
+			var wasVisible = isVisible;
+			isVisible = window.scrollY < $(window).height();
+			if (!wasVisible && isVisible) {
+				render();
+			}
+			splashScene.onScroll(e);
+		});
 	}};
 });

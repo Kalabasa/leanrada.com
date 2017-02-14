@@ -41,16 +41,10 @@ function($,THREE) {
 	var sideLightsIntensity = 1;
 
 	var leftLight = new THREE.PointLight(0xFF4488, sideLightsIntensity, INITIAL_BOX_DISTANCE * 4, 2);
-	leftLight.castShadow = true;
-	leftLight.shadow.mapSize.width = 2048;
-	leftLight.shadow.mapSize.height = 2048;
 	leftLight.position.set(-INITIAL_BOX_DISTANCE * 2, 0, BOX_SIZE * 3);
 	scene.add(leftLight);
 
 	var rightLight = new THREE.PointLight(0x44FF88, sideLightsIntensity, INITIAL_BOX_DISTANCE * 4, 2);
-	rightLight.castShadow = true;
-	rightLight.shadow.mapSize.width = 2048;
-	rightLight.shadow.mapSize.height = 2048;
 	rightLight.position.set(INITIAL_BOX_DISTANCE * 2, 0, BOX_SIZE * 3);
 	scene.add(rightLight);
 
@@ -84,8 +78,6 @@ function($,THREE) {
 			}
 
 			var cube = new THREE.Mesh(cubeGeom, cubeMat);
-			cube.castShadow = true;
-			cube.receiveShadow = true;
 			cube.userData.angularVelocity = new THREE.Quaternion();
 			cube.userData.angularVelocity.setFromAxisAngle(new THREE.Vector3(0, 0, 0), 0);
 
@@ -146,7 +138,7 @@ function($,THREE) {
 		}
 
 		currentLightsFactor += (targetLightsFactor - currentLightsFactor) * (motionFlag ? 0.02 : 0.1);
-		currentBoxDistance += (targetBoxDistance - currentBoxDistance) * (motionFlag ? 0.01 : 0.06);
+		currentBoxDistance += (targetBoxDistance - currentBoxDistance) * (motionFlag ? 0.01 : 0.03);
 		updateLightsIntensity();
 		updateBoxDistance();
 	}
@@ -161,8 +153,8 @@ function($,THREE) {
 
 	function onScroll(e) {
 		camera.position.y = -window.scrollY / cameraDistance / 16;
-		frontLight.position.y = camera.position.y * 2 + BOX_SIZE * 2;
-		TMP_VECTOR3.set(0, 0, -cameraDistance);
+		frontLight.position.y = camera.position.y * 3 + BOX_SIZE * 2;
+		TMP_VECTOR3.set(0, 0, -cameraDistance / 2);
 		camera.lookAt(TMP_VECTOR3);
 	}
 
