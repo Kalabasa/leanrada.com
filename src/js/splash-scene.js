@@ -72,9 +72,9 @@ function(THREE) {
 
 	function initializeCubes() {
 		var cubeFaces = [
-			[1,0,0,0,1,1],
+			[0,0,0,1,1,1],
 			[0,0,0,0,1,1],
-			[1,0,0,0,1,1]
+			[0,0,0,1,1,1]
 		];
 
 		for (var i = 0; i < 3; i++) {
@@ -164,12 +164,12 @@ function(THREE) {
 				// snap rotation to regular intervals
 				var f = 0.02;
 				if (initial) {
-					f = 0.08;
+					f = 0.12;
 					var elapsed = +Date.now() - startTime;
 					if (elapsed > 3000) {
 						f = 0;
 					} else {
-						f = f / (elapsed/100 + 1);
+						f = f / (elapsed/50 + 1);
 					}
 				}
 				cube.rotation.x += circleDelta(cube.rotation.x, Math.round(cube.rotation.x / stillSnapInterval) * stillSnapInterval) * f;
@@ -199,7 +199,22 @@ function(THREE) {
 
 
 	function onClick(e) {
-		toggleMotion();
+		mouse.x = (e.clientX / viewWidth) * 2 - 1;
+		mouse.y = -((e.clientY / viewHeight) * 2 - 1);
+
+		raycaster.setFromCamera(mouse, camera);
+		var intersects = raycaster.intersectObjects(scene.children);
+
+		if (intersects.length > 0) {
+			if (!motionFlag) {
+				toggleMotion();
+			}
+			intersects[0].object.userData.angularVelocity.setFromAxisAngle(
+				TMP_VECTOR3.set(randCenter(), randCenter(), randCenter()).normalize(), 
+				Math.PI * 2 / UPS);	
+		} else {
+			toggleMotion();
+		}
 	}
 
 	function onScroll(e) {
@@ -236,6 +251,7 @@ function(THREE) {
 			var newQuaternion = obj.quaternion.clone();
 			var dAngle = TMP_QUATERNION;
 			var speed = Math.sqrt(dx * dx + dy * dy) * Math.PI * 0.5;
+			speed = Math.min(speed, Math.PI * 16 / UPS);
 			dAngle.setFromAxisAngle(
 				TMP_VECTOR3.set(-dy, dx, 0).normalize(),
 				speed);
@@ -244,7 +260,7 @@ function(THREE) {
 			spinned += speed;
 		}
 
-		if (spinned > Math.PI * 0.02 && !motionFlag) {
+		if (spinned > Math.PI * 0.8 / UPS && !motionFlag) {
 			toggleMotion();
 		}
 	}
