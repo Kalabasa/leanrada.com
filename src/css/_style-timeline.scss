@@ -8,19 +8,28 @@ ol.timeline {
 	&>li {
 		margin-bottom: 2em;
 
+		// Dots
 		&::before {
 			box-sizing: border-box;
 			width: $timeline-dot-size;
 			height: $timeline-dot-size;
-			border-radius: 50%;
-			border: solid $timeline-stroke-size $color-timeline;
-			background: $color-bg-2;
+			transform: translate(-50%, -50%) rotate(45deg);
+			border-color: $color-timeline;
+			border-width: $timeline-stroke-size;
+			border-right: solid;
+			border-top: solid;
+			background: $color-bg;
 		}
 
+		&:first-child::before {
+			border-top: none;
+		}
+
+		// Tails
 		& div.timeline-entry::after {
 			z-index: 1;
 			top: 0;
-			left: $timeline-dot-size;
+			left: $timeline-dot-size + $timeline-stroke-size;
 			border-width: $timeline-tail-size-sm;
 			border-color: $color-bg-2 $color-bg-2 transparent transparent;
 
@@ -28,11 +37,24 @@ ol.timeline {
 				border-width: $timeline-tail-size-lg;
 			}
 		}
+
 		@include media-lg {
-			&:nth-child(even) div.timeline-entry::after {
-				left: auto;
-				right: $timeline-dot-size;
-				border-color: $color-bg-2 transparent transparent $color-bg-2;
+			&:nth-child(even) {
+
+				// Dots
+				&::before {
+					border-right: none;
+					border-top: none;
+					border-left: solid;
+					border-bottom: solid;
+				}
+
+				// Tails
+				div.timeline-entry::after {
+					left: auto;
+					right: $timeline-dot-size + $timeline-stroke-size;
+					border-color: $color-bg-2 transparent transparent $color-bg-2;
+				}
 			}
 		}
 	}

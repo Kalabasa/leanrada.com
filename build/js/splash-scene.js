@@ -7,7 +7,7 @@ function(THREE) {
 	const TMP_QUATERNION = new THREE.Quaternion();
 	const TMP_VECTOR3 = new THREE.Vector3();
 
-	const INITIAL_BOX_DISTANCE = 1.5;
+	const INITIAL_BOX_DISTANCE = 1.52;
 	const BOX_SIZE = 1;
 
 	const MAIN_COLOR = 0xF7EED3;
@@ -28,8 +28,13 @@ function(THREE) {
 	var mouse = new THREE.Vector2();
 
 	var mouseMoved = false;
-	var clicks = 0;
 
+	var initial = true;
+	var startTime = 0;
+
+	var stillSnapInterval = Math.PI / 4;
+
+	var lastToggle = +Date.now();
 	var motionFlag = false;
 	var targetLightsFactor = 0;
 	var targetBoxDistance = INITIAL_BOX_DISTANCE;
@@ -49,11 +54,11 @@ function(THREE) {
 	var sideLightsIntensity = 1;
 
 	var leftLight = new THREE.PointLight(0xFF4488, sideLightsIntensity, INITIAL_BOX_DISTANCE * 4, 2);
-	leftLight.position.set(-INITIAL_BOX_DISTANCE * 2, 0, BOX_SIZE * 3);
+	leftLight.position.set(-INITIAL_BOX_DISTANCE * 2.5, 0, BOX_SIZE * 2.5);
 	scene.add(leftLight);
 
 	var rightLight = new THREE.PointLight(0x44FF88, sideLightsIntensity, INITIAL_BOX_DISTANCE * 4, 2);
-	rightLight.position.set(INITIAL_BOX_DISTANCE * 2, 0, BOX_SIZE * 3);
+	rightLight.position.set(INITIAL_BOX_DISTANCE * 2.5, 0, BOX_SIZE * 2.5);
 	scene.add(rightLight);
 
 	var ambientLightIntensity = 1;
@@ -96,7 +101,7 @@ function(THREE) {
 
 
 		cubes[0].rotation.z = Math.PI / 4;
-		cubes[0].rotation.y = Math.asin(Math.tan(Math.PI / 8));
+		cubes[0].rotation.y = Math.asin(Math.tan(Math.PI / 10));
 
 		var ca = Math.PI * 7 / 4;
 		TMP_QUATERNION.setFromAxisAngle(
@@ -105,7 +110,7 @@ function(THREE) {
 		cubes[1].rotation.setFromQuaternion(TMP_QUATERNION);
 
 		cubes[2].rotation.z = Math.PI * 5 / 4;
-		cubes[2].rotation.y = -Math.asin(Math.tan(Math.PI / 8));
+		cubes[2].rotation.y = -Math.asin(Math.tan(Math.PI / 10));
 
 		updateBoxDistance();
 	}
@@ -148,10 +153,28 @@ function(THREE) {
 				// "random" angular acceleration
 				var angularAccAcc = TMP_QUATERNION;
 				angularAccAcc.setFromAxisAngle(
-					TMP_VECTOR3.set(Math.sin(t / 100), Math.sin(t / 200 + 1), Math.sin(t / 300 + 2)).normalize(),
+					TMP_VECTOR3.set(
+						Math.sin(t * (i + 1) / 100 + i), 
+						Math.sin(t * (i + 0.5) / 200 + 1 + i), 
+						Math.sin(t * (i + 0.25) / 300 + 2 + i)).normalize(),
 					Math.PI * 0.06 / UPS / UPS / UPS);
 				angularAcceleration.premultiply(angularAccAcc);
 				angularVelocity.premultiply(angularAcceleration);
+			} else {
+				// snap rotation to regular intervals
+				var f = 0.02;
+				if (initial) {
+					f = 0.08;
+					var elapsed = +Date.now() - startTime;
+					if (elapsed > 3000) {
+						f = 0;
+					} else {
+						f = f / (elapsed/100 + 1);
+					}
+				}
+				cube.rotation.x += circleDelta(cube.rotation.x, Math.round(cube.rotation.x / stillSnapInterval) * stillSnapInterval) * f;
+				cube.rotation.y += circleDelta(cube.rotation.y, Math.round(cube.rotation.y / stillSnapInterval) * stillSnapInterval) * f;
+				cube.rotation.z += circleDelta(cube.rotation.z, Math.round(cube.rotation.z / stillSnapInterval) * stillSnapInterval) * f;
 			}
 		}
 
@@ -162,14 +185,20 @@ function(THREE) {
 	}
 
 	function toggleMotion() {
+		if (initial) {
+			cubes[0].userData.angularVelocity.setFromAxisAngle(TMP_VECTOR3.set(0, 1, 0), -Math.PI / 8 / UPS);
+			cubes[2].userData.angularVelocity.setFromAxisAngle(TMP_VECTOR3.set(0, 1, 0), Math.PI / 8 / UPS);
+		}
+		initial = false;
+		lastToggle = +Date.now();
 		motionFlag = !motionFlag;
+		stillSnapInterval = Math.PI / (Math.floor(2 + Math.random() * 2) * Math.floor(1 + Math.random() * 2));
 		targetLightsFactor = motionFlag ? 1 : 0;
-		targetBoxDistance = motionFlag ? INITIAL_BOX_DISTANCE + 0.5 : INITIAL_BOX_DISTANCE * (0.6 + 0.4 / clicks);
+		targetBoxDistance = motionFlag ? INITIAL_BOX_DISTANCE + 0.5 : INITIAL_BOX_DISTANCE;
 	}
 
 
 	function onClick(e) {
-		clicks++;
 		toggleMotion();
 	}
 
@@ -178,6 +207,9 @@ function(THREE) {
 		frontLight.position.y = camera.position.y * 3 + BOX_SIZE * 2;
 		TMP_VECTOR3.set(0, 0, -cameraDistance / 4);
 		camera.lookAt(TMP_VECTOR3);
+		if (motionFlag) {
+			toggleMotion();
+		}
 	}
 
 	function onMouseMove(e) {
@@ -220,6 +252,11 @@ function(THREE) {
 
 	initializeCubes();
 	setInterval(update, 1000/UPS);
+	setInterval(function() {
+		if (+Date.now() - lastToggle > 8000) {
+			toggleMotion();
+		}
+	}, 12000);
 
 
 	function updateViewport(width, height) {
@@ -241,6 +278,16 @@ function(THREE) {
 
 
 	function randCenter() { return Math.random() - 0.5; }
+	function circleDelta(a, b) {
+		var d = b - a;
+		while (d > Math.PI) {
+			d -= Math.PI * 2;
+		}
+		while (d < -Math.PI) {
+			d += Math.PI * 2;
+		}
+		return d;
+	}
 
 	return {
 		update: updateViewport,
@@ -248,6 +295,7 @@ function(THREE) {
 		onMouseMove: onMouseMove,
 		onScroll: onScroll,
 		init: function (width, height) {
+			startTime = +Date.now();
 			this.update();
 			return {
 				scene: scene,

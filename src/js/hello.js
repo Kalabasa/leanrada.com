@@ -6,7 +6,7 @@ function(_,$,data){
 		var helloMeTitle = document.getElementById("hello-me-title");
 		var $helloMeTitle = $(helloMeTitle);
 
-		const interval = 3500;
+		const interval = 2200;
 		var titles = data.titles;
 
 		var nextTitleIndex = 0;
