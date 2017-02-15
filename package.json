@@ -20,12 +20,13 @@
 
 		"clean": "rm -r build",
 		
-		"build": "mkdir -p build && parallelshell 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_assets' 'npm run build_bower'",
+		"build": "mkdir -p build && parallelshell 'npm run build_html' 'npm run build_css' 'npm run build_assets' 'npm run build_bower'",
 		"build_html": "handlebars src/html/home.json < src/html/home.handlebars | html-minifier --remove-comments --collapse-whitespace --conservative-collapse -o build/index.html",
 		"build_css": "scss -t compressed --update src/css:build",
-		"build_js": "rsync -cr --delete --info=name src/js/*.js build/js; bower-requirejs -c build/js/bower-requirejs-config.js",
+		"build_js": "rsync -cr --delete --info=name src/js/*.js build/js",
 		"build_assets": "rsync -cr --delete --info=name src/assets/* build",
-		"build_bower": "bower install",
+		"build_bower": "bower install && npm run build_bower_config",
+		"build_bower_config": "bower-requirejs -c build/js/bower-requirejs-config.js",
 
 		"watch": "parallelshell 'npm run watch_html' 'npm run watch_css' 'npm run watch_js' 'npm run watch_bower' 'npm run watch_assets'",
 		"watch_html": "chokidar src/html -c 'npm run build_html'",

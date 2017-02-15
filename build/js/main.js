@@ -2,6 +2,7 @@
 requirejs.config({
 	shim: {
 		"jquery-bez": ["jquery"],
+		"jquery_appear": ["jquery"],
 		three: {
 			exports: "THREE"
 		}
@@ -13,10 +14,12 @@ requirejs.config({
 
 requirejs(["bower-requirejs-config"],
 function() {
-	requirejs(["hello", "nav", "splash"],
-	function (hello, nav, splash) {
+	requirejs(["splash", "start", "hello", "nav", "inview"],
+	function (splash, start, hello, nav, inview) {
+		splash.init();
+		start.init();
 		hello.init();
 		nav.init();
-		splash.init();
+		inview.init();
 	});
 });

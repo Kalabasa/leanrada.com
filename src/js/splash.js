@@ -34,12 +34,17 @@ function($,THREE,splashScene) {
 		container.addEventListener("touchend", splashScene.onTouchEnd);
 		container.addEventListener("mousemove", splashScene.onMouseMove);
 		window.addEventListener("scroll", function(e) {
+			var windowHeight = $(window).height();
+
 			var wasVisible = isVisible;
-			isVisible = window.scrollY < $(window).height();
+			isVisible = window.scrollY < windowHeight;
 			if (!wasVisible && isVisible) {
 				render();
 			}
+
 			splashScene.onScroll(e);
+
+			$(renderer.domElement).css("opacity", Math.max(0, 1 - window.scrollY / windowHeight));
 		});
 	}};
 });

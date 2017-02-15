@@ -1,4 +1,4 @@
-$very-slow: 0.7s;
+$very-slow: 0.8s;
 $slow: 0.4s;
 $fast: 0.2s;
 $very-fast: 0.1s;
@@ -7,13 +7,128 @@ $ease-out: cubic-bezier(0.2,0,0.25,1);
 $ease-enter: cubic-bezier(0.2,0.5,0.25,1);
 $ease-in: cubic-bezier(0.75,0,0.8,1);
 $ease-exit: cubic-bezier(0.75,0,0.8,0.5);
+$enter-delay: 0.2s;
 
-.contact-entry {
-	a {
-		transition: color $fast $ease,
-	                background-color $fast $ease,
-	                padding $fast $ease;
+
+/* Entrance animations */
+
+#hello-text.iv-active {
+	#hello-portrait img {
+		transform: scale(0);
 	}
+	#hello-me {
+		h1 {
+			opacity: 0;
+			transform: translateX(-4rem);
+		}
+		p {
+			opacity: 0;
+			transform: translateY(-2rem);
+		}
+	}
+
+	&.iv-entered {
+		#hello-portrait img {
+			transform: scale(1);
+			transition: transform $slow $ease-out $enter-delay;
+		}
+		#hello-me {
+			h1, p {
+				opacity: 1;
+				transform: translateX(0);
+			}
+			h1 {
+				transition: opacity $slow $ease-out ($enter-delay + $very-fast / 2),
+				            transform $slow $ease-out ($enter-delay + $very-fast / 2);
+			}
+			@for $i from 1 through 10 { // arbitrary 10 range
+				p:nth-child(#{$i}) {
+					transition: opacity $slow $ease-out ($enter-delay + $very-fast * (1 + 0.6 * $i)),
+					            transform $slow $ease-out ($enter-delay + $very-fast * (1 + 0.6 * $i));
+				}
+			}
+		}
+	}
+}
+
+#experience {
+	.timeline.iv-active {
+		opacity: 0;
+
+		&.iv-entered {
+			opacity: 1;
+			transition: opacity $fast $ease-in $enter-delay;
+		}
+	}
+
+	li.iv-active {
+		&::before { // Dots
+			transition: width $very-slow $ease $enter-delay,
+			            height $very-slow $ease $enter-delay;
+		}
+		.timeline-entry {
+			clip-path: circle(70.72% at 50% 50%);
+			transition: opacity $fast $ease-out ($enter-delay + $fast),
+			            clip-path $very-slow $ease ($enter-delay + $fast);
+		}
+
+		&.iv-invisible:not(.iv-entered) {
+			&::before {
+				width: 0;
+				height: 0;
+			}
+			.timeline-entry {
+				clip-path: circle(0 at 0 0);
+				opacity: 0;
+			}
+		}
+		@include media-lg {
+			&:nth-child(even).iv-invisible:not(.iv-entered) {
+				.timeline-entry {
+					clip-path: circle(0 at 100% 0);
+				}
+			}
+		}
+	}
+}
+
+.education-entry.iv-active {
+	opacity: 0;
+	clip-path: circle(0 at 50% 0);
+	transition: opacity $fast $ease-out $enter-delay,
+	            clip-path $very-slow $ease $enter-delay;
+
+	&.iv-entered {
+		opacity: 1;
+		clip-path: circle(70.72% at 50% 50%);
+	}	
+}
+
+#about-text.iv-active {
+	p {
+		opacity: 0;
+		transform: translateY(-1rem);
+	}
+
+	&.iv-entered {
+		@for $i from 1 through 20 { // arbitrary 10 range
+			p:nth-child(#{$i}) {
+				opacity: 1;
+				transform: translateY(0);
+				transition: opacity $slow $ease-out ($enter-delay + $very-fast * 0.4 * $i),
+				            transform $slow $ease-out ($enter-delay + $very-fast * 0.4 * $i);
+			}
+		}
+	}
+}
+
+
+/* State transitions */
+
+#start-btn {
+	transition: box-shadow $fast $ease,
+	            width $fast $ease,
+	            height $fast $ease;
 }
 
 #nav {
@@ -26,5 +141,13 @@ $ease-exit: cubic-bezier(0.75,0,0.8,0.5);
 
 	li {
 		transition: background-color $fast $ease-enter;
+	}
+}
+
+.contact-entry {
+	a {
+		transition: color $fast $ease,
+		            background-color $fast $ease,
+		            padding $fast $ease;
 	}
 }
