@@ -14,12 +14,13 @@ requirejs.config({
 
 requirejs(["bower-requirejs-config"],
 function() {
-	requirejs(["splash", "start", "hello", "nav", "inview"],
-	function (splash, start, hello, nav, inview) {
+	requirejs(["splash", "start", "hello", "nav", "inview", "more"],
+	function (splash, start, hello, nav, inview, more) {
 		splash.init();
 		start.init();
 		hello.init();
 		nav.init();
 		inview.init();
+		more.init();
 	});
 });
