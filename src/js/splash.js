@@ -30,7 +30,8 @@ function($,THREE,splashScene) {
 		}
 		window.addEventListener("resize", updateOnResize, true);
 
-		container.addEventListener("click", splashScene.onClick);
+		container.addEventListener("mouseup", splashScene.onMouseUp);
+		container.addEventListener("touchend", splashScene.onTouchEnd);
 		container.addEventListener("mousemove", splashScene.onMouseMove);
 		window.addEventListener("scroll", function(e) {
 			var wasVisible = isVisible;

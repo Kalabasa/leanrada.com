@@ -20,6 +20,7 @@ function(THREE) {
 	var cameraDistance = 10;
 
 	var scene = new THREE.Scene();
+	// mouse click doesn't work for perspective right now
 	// var camera = new THREE.PerspectiveCamera(60, 1, Number.EPSILON, 1000);
 	var camera = new THREE.OrthographicCamera(0, 0, 1, 1, 0, 1000);
 
@@ -198,9 +199,19 @@ function(THREE) {
 	}
 
 
-	function onClick(e) {
-		mouse.x = (e.clientX / viewWidth) * 2 - 1;
-		mouse.y = -((e.clientY / viewHeight) * 2 - 1);
+	function onMouseUp(e) {
+		click(e.clientX, e.clientY);
+	}
+	function onTouchEnd(e) {
+		for (var i = e.changedTouches.length - 1; i >= 0; i--) {
+			var touch = e.changedTouches.item(i);
+			click(touch.clientX, touch.clientY);
+		}
+	}
+
+	function click(clientX, clientY) {
+		mouse.x = (clientX / viewWidth) * 2 - 1;
+		mouse.y = -((clientY / viewHeight) * 2 - 1);
 
 		raycaster.setFromCamera(mouse, camera);
 		var intersects = raycaster.intersectObjects(scene.children);
@@ -307,7 +318,8 @@ function(THREE) {
 
 	return {
 		update: updateViewport,
-		onClick: onClick,
+		onMouseUp: onMouseUp,
+		onTouchEnd: onTouchEnd,
 		onMouseMove: onMouseMove,
 		onScroll: onScroll,
 		init: function (width, height) {
