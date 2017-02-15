@@ -31,6 +31,7 @@ function($,THREE,splashScene) {
 		window.addEventListener("resize", updateOnResize, true);
 
 		container.addEventListener("click", splashScene.onClick);
+		container.addEventListener("mousemove", splashScene.onMouseMove);
 		window.addEventListener("scroll", function(e) {
 			var wasVisible = isVisible;
 			isVisible = window.scrollY < $(window).height();
