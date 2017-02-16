@@ -2,7 +2,7 @@ $very-slow: 0.8s;
 $slow: 0.4s;
 $fast: 0.2s;
 $very-fast: 0.1s;
-$ease: cubic-bezier(0.5,0,0,1);
+$ease: cubic-bezier(0.4,0,0.2,1);
 $ease-out: cubic-bezier(0.2,0,0.25,1);
 $ease-enter: cubic-bezier(0.2,0.5,0.25,1);
 $ease-in: cubic-bezier(0.75,0,0.8,1);
@@ -104,22 +104,76 @@ $enter-delay: 0.2s;
 	}	
 }
 
-#about-text.iv-active {
-	p {
-		opacity: 0;
-		transform: translateY(-0.5rem);
-	}
+#about-text {
+	.less {
+		p.iv-active {
+			opacity: 0;
+			transform: translateY(-0.5rem);
 
-	&.iv-entered {
-		@for $i from 1 through 20 { // arbitrary 10 range
-			p:nth-child(#{$i}) {
-				opacity: 1;
-				transform: translateY(0);
-				transition: opacity $slow $ease-out ($enter-delay + $very-fast * 0.6 * $i),
-				            transform $slow $ease-out ($enter-delay + $very-fast * 0.6 * $i);
+			&.iv-entered {
+				@for $i from 1 through 20 { // arbitrary 10 range
+					&:nth-child(#{$i}) {
+						opacity: 1;
+						transform: translateY(0);
+						transition: opacity $slow $ease-out ($enter-delay + $very-fast * 0.6 * $i),
+						            transform $slow $ease-out ($enter-delay + $very-fast * 0.6 * $i);
+					}
+				}
 			}
 		}
 	}
+
+	.more {
+		.more-btn {
+			display: block;
+			overflow: hidden;
+			transition: opacity $slow $ease-out $enter-delay,
+						box-shadow $fast $ease,
+			            background-color $fast $ease;
+
+			&.iv-active {
+				opacity: 0;
+
+				&.iv-entered {
+					opacity: 1;
+				}
+			}
+		}
+
+		&.more-inactive {
+			.more-btn {
+				max-height: 2em;
+			}
+			.more-content {
+				opacity: 0;
+				transform: translateY(-2rem);
+				clip-path: circle(0 at 50% 0);
+			}
+			p {
+				display: none;
+			}
+		}
+		&.more-active {
+			.more-btn {
+				max-height: 0;
+				padding-top: 0;
+				padding-bottom: 0;
+				transform: translateY(1em);
+				transition: max-height $fast $ease-in,
+							padding $fast $ease-in,
+							transform $fast $ease-in;
+			}
+			.more-content {
+				opacity: 1;
+				transform: translateY(0);
+				clip-path: circle(141.42% at 50% 0);
+				transition: opacity $slow $ease-out $fast,
+				            transform $slow $ease-out $fast,
+				            clip-path $very-slow $ease $fast;
+			}
+		}
+	}
+
 }
 
 
@@ -128,7 +182,8 @@ $enter-delay: 0.2s;
 #start-btn {
 	transition: box-shadow $fast $ease,
 	            width $fast $ease,
-	            height $fast $ease;
+	            height $fast $ease,
+	            font-size $fast $ease;
 }
 
 #nav {

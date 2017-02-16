@@ -151,13 +151,13 @@ function(THREE) {
 
 			if (motionFlag) {
 				var t = +Date.now();
-				// "random" angular acceleration
+				// random angular acceleration
 				var angularAccAcc = TMP_QUATERNION;
 				angularAccAcc.setFromAxisAngle(
 					TMP_VECTOR3.set(
-						Math.sin(t * (i + 1) / 100 + i), 
-						Math.sin(t * (i + 0.5) / 200 + 1 + i), 
-						Math.sin(t * (i + 0.25) / 300 + 2 + i)).normalize(),
+						Math.sin(t * (i + 1) / 100 + i + randCenter()), 
+						Math.sin(t * (i + 0.5) / 200 + 1 + i + randCenter()), 
+						Math.sin(t * (i + 0.25) / 300 + 2 + i + randCenter())).normalize(),
 					Math.PI * 0.06 / UPS / UPS / UPS);
 				angularAcceleration.premultiply(angularAccAcc);
 				angularVelocity.premultiply(angularAcceleration);
@@ -189,11 +189,15 @@ function(THREE) {
 		if (initial) {
 			cubes[0].userData.angularVelocity.setFromAxisAngle(TMP_VECTOR3.set(0, 1, 0), -Math.PI / 8 / UPS);
 			cubes[2].userData.angularVelocity.setFromAxisAngle(TMP_VECTOR3.set(0, 1, 0), Math.PI / 8 / UPS);
+			initial = false;
 		}
-		initial = false;
+
 		lastToggle = +Date.now();
+
 		motionFlag = !motionFlag;
+
 		stillSnapInterval = Math.PI / (Math.floor(2 + Math.random() * 2) * Math.floor(1 + Math.random() * 2));
+
 		targetLightsFactor = motionFlag ? 1 : 0;
 		targetBoxDistance = motionFlag ? INITIAL_BOX_DISTANCE + 0.5 : INITIAL_BOX_DISTANCE;
 	}
