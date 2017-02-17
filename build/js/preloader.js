@@ -3,7 +3,7 @@
 document.body.style.overflow = "hidden";
 document.body.style.height = "100%";
 
-document.addEventListener("load", function() {
+window.addEventListener("load", function() {
 	var preloader = document.getElementById("preloader");
 	setTimeout(function() {
 		document.body.style.overflowY = "auto";
