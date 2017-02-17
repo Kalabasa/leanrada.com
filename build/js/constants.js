@@ -3,7 +3,7 @@ define(["jquery", "jquery-bez"],
 function($){
 	return Object.freeze({
 		// Animation constants (see _animations.scss)
-		durationVerySlow: 700,
+		durationVerySlow: 800,
 		durationSlow: 400,
 		durationFast: 200,
 		durationVeryFast: 100,
