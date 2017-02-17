@@ -16,6 +16,7 @@ requirejs(["bower-requirejs-config"],
 function() {
 	requirejs(["jquery", "splash", "start", "hello", "nav", "inview", "more"],
 	function ($, splash, start, hello, nav, inview, more) {
+		// TODO Lazyload images to speedup splash
 		$(document).ready(function() {
 			splash.init();
 			start.init();
