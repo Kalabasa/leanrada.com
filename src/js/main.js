@@ -1,3 +1,4 @@
+// TODO Use CDNs instead of local copies
 "use strict";
 requirejs.config({
 	shim: {
@@ -16,7 +17,7 @@ requirejs(["bower-requirejs-config"],
 function() {
 	requirejs(["jquery", "splash", "start", "hello", "nav", "inview", "more", "video"],
 	function ($, splash, start, hello, nav, inview, more, video) {
-		// TODO Lazyload images to speedup splash
+		// TODO Lazyload images
 		$(document).ready(function() {
 			splash.init();
 			start.init();
@@ -24,6 +25,8 @@ function() {
 			nav.init();
 			inview.init();
 			more.init();
+		});
+		$(window).on("load", function() {
 			video.init();
 		});
 	});
