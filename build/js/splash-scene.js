@@ -1,7 +1,7 @@
 "use strict";
 define(["three"],
 function(THREE) {
-	const UPS = 100; // Updates Per Second
+	const UPS = 45; // Updates Per Second
 
 	const ZERO_QUATERNION = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 0), 0);
 	const TMP_QUATERNION = new THREE.Quaternion();
@@ -32,6 +32,7 @@ function(THREE) {
 
 	var initial = true;
 	var startTime = 0;
+	var ticks = 0;
 
 	var stillSnapInterval = Math.PI / 4;
 
@@ -166,11 +167,10 @@ function(THREE) {
 				var f = 0.02;
 				if (initial) {
 					f = 0.12;
-					var elapsed = +Date.now() - startTime;
-					if (elapsed > 3000) {
+					if (ticks > 3000 / UPS) {
 						f = 0;
 					} else {
-						f = f / (elapsed/50 + 1);
+						f = f / (ticks * 8 / UPS + 1);
 					}
 				}
 				cube.rotation.x += circleDelta(cube.rotation.x, Math.round(cube.rotation.x / stillSnapInterval) * stillSnapInterval) * f;
@@ -183,6 +183,8 @@ function(THREE) {
 		currentBoxDistance += (targetBoxDistance - currentBoxDistance) * (motionFlag ? 0.01 : 0.03);
 		updateLightsIntensity();
 		updateBoxDistance();
+
+		ticks++;
 	}
 
 	function toggleMotion() {

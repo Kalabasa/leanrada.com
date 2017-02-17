@@ -21,7 +21,7 @@ function($,constants){
 		});
 
 		function onScroll(e) {
-			if (window.scrollY > 5) {
+			if (window.scrollY > 20) {
 				$window.off("scroll", onScroll);
 		
 				$startBtn.prop("disabled", true);
@@ -35,5 +35,6 @@ function($,constants){
 		}
 
 		$window.on("scroll", onScroll);		
+		onScroll();
 	}};
 });

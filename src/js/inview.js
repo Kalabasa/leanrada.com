@@ -3,7 +3,6 @@ define(["jquery","jquery_appear"],
 function($){
 	return {init: function(){
 		$(".iv").addClass("iv-active iv-invisible").appear();
-		$.force_appear();
 		$(document.body)
 			.on("appear", ".iv", function(event, $appeared) {
 				$appeared
@@ -17,5 +16,6 @@ function($){
 					.addClass("iv-invisible")
 					.removeClass("iv-visible");
 			});
+		$.force_appear();
 	}};
 });
