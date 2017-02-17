@@ -1,5 +1,5 @@
 "use strict";
-define(["underscore", "jquery", "helloData"],
+define(["underscore", "jquery", "hello-data"],
 function(_,$,data){
 	return {init: function() {
 		var $window = $(window);
