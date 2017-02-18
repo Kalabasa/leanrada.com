@@ -166,11 +166,11 @@ function(THREE) {
 				// snap rotation to regular intervals
 				var f = 0.02;
 				if (initial) {
-					f = 0.12;
-					if (ticks > 3000 / UPS) {
+					f = 0.04;
+					if (ticks > 4000 / UPS) {
 						f = 0;
 					} else {
-						f = f / (ticks * 8 / UPS + 1);
+						f = f / (ticks / UPS + 1);
 					}
 				}
 				cube.rotation.x += circleDelta(cube.rotation.x, Math.round(cube.rotation.x / stillSnapInterval) * stillSnapInterval) * f;
@@ -285,11 +285,16 @@ function(THREE) {
 
 	initializeCubes();
 	setInterval(update, 1000/UPS);
-	setInterval(function() {
-		if (+Date.now() - lastToggle > 8000) {
+	setTimeout(function() {
+		if (+Date.now() - lastToggle > 4000) {
 			toggleMotion();
 		}
-	}, 12000);
+		setInterval(function() {
+			if (+Date.now() - lastToggle > 8000) {
+				toggleMotion();
+			}
+		}, 12000);
+	}, 4000);
 
 
 	function updateViewport(width, height) {

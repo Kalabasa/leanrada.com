@@ -13,6 +13,6 @@ window.addEventListener("load", function() {
 			document.body.style.overflow = "auto";
 			preloader.parentNode.removeChild(preloader);
 		}, 400);
-	}, 0);
+	}, 100);
 });
 
