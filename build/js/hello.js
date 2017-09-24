@@ -6,16 +6,19 @@ function(_,$,data){
 		var helloMeTitle = document.getElementById("hello-me-title");
 		var $helloMeTitle = $(helloMeTitle);
 
-		const interval = 2200;
+		const interval = 2400;
 		var titles = data.titles;
+
+		var also = true;
 
 		var nextTitleIndex = 0;
 		var nextTitles = _.shuffle(titles.slice(1));
 
 		function changeTitle(newTitle) {
 			$helloMeTitle.fadeOut(60, function() {
-				$helloMeTitle.text(newTitle);
+				$helloMeTitle.text((also ? "also " : "") + newTitle);
 				$helloMeTitle.fadeIn(150);
+				also = false;
 			});
 		}
 

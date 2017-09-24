@@ -8,6 +8,7 @@
 @import "mixins";
 @import "layout";
 @import "animations";
+@import "style-grid";
 @import "style-timeline";
 
 
@@ -36,7 +37,7 @@
 html {
 	@include font-body;
 	font-size: 13pt;
-	line-height: 1.5em;
+	line-height: 1.6em;
 	background-color: $color-bg;
 	color: $color-fg;
 }
@@ -141,6 +142,22 @@ section {
 	}
 }
 
+@mixin field-box-heading {
+	@include font-heading();
+	font-size: 1.25em;
+	margin-bottom: 0.3em;
+}
+
+@mixin field-value-tag {
+	opacity: 0.8;
+	font-size: 0.8em;
+	font-weight: bold;
+	background-color: $color-bg-3;
+	padding: 0 4pt;
+	margin: 2pt 0;
+	border-radius: 4pt;
+}
+
 
 #hello {
 	h1 {
@@ -196,12 +213,38 @@ section {
 	}
 }
 
+#projects {
+	.project-entry {
+		.name {
+			@include field-box-heading;
+		}
+		.full-description {
+			@include font-body;
+			font-size: 0.9rem;
+			margin-top: 1em;
+		}
+		.tech>.value {
+			@include field-value-tag;
+			display: inline-block;
+		}
+		.image {
+			height: 14rem;
+			width: 100%;
+			object-fit: cover;
+		}
+		.link {
+			font-size: 0.9rem;
+			.fa {
+				font-size: 80%;
+			}
+		}
+	}
+}
+
 #experience {
 	.experience-entry {
 		.job {
-			@include font-heading;
-			font-size: 1.25em;
-			margin-bottom: 0.3em;
+			@include field-box-heading;
 		}
 		.company {
 		}
@@ -318,4 +361,9 @@ section {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
+}
+
+a.plainlink {
+	text-decoration: none;
+	color: inherit;
 }

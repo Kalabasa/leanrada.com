@@ -7,7 +7,7 @@ $ease-out: cubic-bezier(0.2,0,0.25,1);
 $ease-enter: cubic-bezier(0.2,0.5,0.25,1);
 $ease-in: cubic-bezier(0.75,0,0.8,1);
 $ease-exit: cubic-bezier(0.75,0,0.8,0.5);
-$enter-delay: 0.2s;
+$enter-delay: 0.3s;
 
 
 #preloader.hide-preloader {
@@ -56,13 +56,24 @@ $enter-delay: 0.2s;
 	}
 }
 
+#projects {
+	.grid-entry.iv-active {
+		clip-path: polygon(50% 0, 50% 0, 50% 0, 50% 0);
+
+		&.iv-entered {
+			clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+			transition: clip-path $very-slow $ease $enter-delay;
+		}
+	}
+}
+
 #experience {
 	.timeline.iv-active {
 		opacity: 0;
 
 		&.iv-entered {
 			opacity: 1;
-			transition: opacity $fast $ease-in $enter-delay;
+			transition: opacity $fast $ease-out $enter-delay;
 		}
 	}
 
@@ -126,7 +137,7 @@ $enter-delay: 0.2s;
 			transform: translateY(-0.5rem);
 
 			&.iv-entered {
-				@for $i from 1 through 20 { // arbitrary 10 range
+				@for $i from 1 through 20 { // arbitrary range
 					&:nth-child(#{$i}) {
 						opacity: 1;
 						transform: translateY(0);
