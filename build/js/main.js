@@ -15,7 +15,7 @@ requirejs.config({
 
 requirejs(["bower-requirejs-config"],
 function() {
-	requirejs(["jquery", "splash", "start", "hello", "nav", "inview", "more", "video"],
+	requirejs(["jquery", "splash", "start", "hello", "nav", "inview", "video"],
 	function ($, splash, start, hello, nav, inview, more, video) {
 		// TODO Lazyload images
 		$(document).ready(function() {
@@ -24,7 +24,6 @@ function() {
 			hello.init();
 			nav.init();
 			inview.init();
-			more.init();
 		});
 		$(window).on("load", function() {
 			video.init();
