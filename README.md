@@ -35,8 +35,8 @@ Deploying
 
 ```sh
 # Be at the right place
-git checkout src
 cd kalabasa.github.io
+git checkout src
 
 # Deploy
 git add build -f
