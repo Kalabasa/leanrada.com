@@ -10,13 +10,35 @@ npm install --only=dev
 npm run build
 ```
 
+Running
+-------
+
+```sh
+# index.html is a container for the actual page. For live reload.
+xdg-open index.html
+
+# Automatic rebuild. Live reload.
+npm run dev
+```
+
+Sometimes you wanna open the page in a different device (like a mobile device).
+
+```sh
+# Serve the index.html
+python -m SimpleHTTPServer
+```
+
+Then, point your device's browser to your host. To open the page directly (no container, no live reload), go to `<host>/build`.
+
 Deploying
 ---------
 
 ```sh
+# Be at the right place
 git checkout src
 cd kalabasa.github.io
 
+# Deploy
 git add build -f
 git commit -m "Deploy"
 git subtree push --prefix build/ origin master
