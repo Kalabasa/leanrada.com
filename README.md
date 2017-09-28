@@ -15,7 +15,7 @@ Running
 
 ```sh
 # index.html is a container for the actual page. For live reload.
-xdg-open index.html
+open index.html
 
 # Automatic rebuild. Live reload.
 npm run dev
