@@ -43,4 +43,5 @@ git checkout -b deploy
 git add build -f
 git commit -m "Deploy"
 git subtree push --prefix build/ origin master
+git branch -D deploy
 ```
