@@ -17,10 +17,10 @@
 	"scripts": {
 		"dev": "concurrently 'npm run build' 'livereload build/ -d -e css -p 40000' 'npm run watch'",
 		"clean": "rm -r build",
-		"build": "mkdir -p build build/js build/css && concurrently 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_assets' 'npm run build_bower'",
+		"build": "mkdir -vp build build/js build/css && concurrently 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_assets' 'npm run build_bower'",
 		"build_html": "handlebars src/html/home.json < src/html/home.handlebars | html-minifier --remove-comments --collapse-whitespace --conservative-collapse -o build/index.html",
 		"build_css": "node-sass --output-style compressed src/css/ -o build/css/",
-		"build_js": "rsync -cr --delete --info=name --exclude='bower-requirejs-config.js' src/js/ build/",
+		"build_js": "rsync -cr --delete --info=name --exclude='bower-requirejs-config.js' src/js/ build/js/",
 		"build_assets": "rsync -cr --delete --info=name src/assets/* build/",
 		"build_bower": "bower install && npm run build_bower_config",
 		"build_bower_config": "bower-requirejs -c build/js/bower-requirejs-config.js",

@@ -38,10 +38,13 @@ Deploying
 cd kalabasa.github.io
 git checkout src
 
-# Deploy
+# Deploy build (TODO make this script)
 git checkout -b deploy
-git add build -f
+npm run build
+git add -f build/
 git commit -m "Deploy"
-git subtree push --prefix build/ origin master
+git subtree split -P build/ -b master
+git push -f origin master:master
+git checkout src
 git branch -D deploy
 ```
