@@ -3,30 +3,35 @@
 requirejs.config({
 	shim: {
 		"jquery-bez": ["jquery"],
-		"jquery_appear": ["jquery"],
-		three: {
-			exports: "THREE"
-		}
-	},
-	paths: {
-		three: "../threejs/build/three.min"
+		"jquery_appear": ["jquery"]
 	}
 });
 
 requirejs(["bower-requirejs-config"],
 function() {
-	requirejs(["jquery", "splash", "start", "hello", "nav", "inview", "video"],
-	function ($, splash, start, hello, nav, inview, more, video) {
-		// TODO Lazyload images
+	requirejs(["jquery", "hello", "nav", "inview", "video"],
+	function ($, hello, nav, inview, video) {
 		$(document).ready(function() {
-			splash.init();
-			start.init();
-			hello.init();
-			nav.init();
-			inview.init();
-		});
-		$(window).on("load", function() {
 			video.init();
+			nav.init();
+			startUi();
+
+			// preloader script
+			var preloader = document.getElementById("preloader");
+			document.body.style.overflow = "auto";
+			document.body.style.height = "auto";
+			preloader.parentNode.removeChild(preloader);
 		});
+
+		function startUi() {
+			if (document.hidden) {
+				$(document).one('visibilitychange', function() {
+					startUi();
+				});
+			} else {
+				hello.init();
+				inview.init();
+			}
+		}
 	});
 });
