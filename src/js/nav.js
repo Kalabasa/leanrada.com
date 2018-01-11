@@ -17,6 +17,7 @@ function(_,$,constants){
 		function updateOnScroll(initial) {
 			const navHeight = $nav.height();
 			const scroll = $window.scrollTop() + $window.height();
+			console.log(scroll);
 
 			const fadeInterval = navHeight / 2;
 			const fadeThreshold = $firstSection.offset().top + $window.height() - scrollDestOffset() - fadeInterval;

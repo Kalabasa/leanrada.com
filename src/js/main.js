@@ -9,11 +9,12 @@ requirejs.config({
 
 requirejs(["bower-requirejs-config"],
 function() {
-	requirejs(["jquery", "hello", "nav", "inview", "video"],
-	function ($, hello, nav, inview, video) {
+	requirejs(["jquery", "start", "hello", "nav", "inview", "video"],
+	function ($, start, hello, nav, inview, video) {
 		$(document).ready(function() {
-			video.init();
+			start.init();
 			nav.init();
+			video.init();
 			startUi();
 
 			// preloader script
