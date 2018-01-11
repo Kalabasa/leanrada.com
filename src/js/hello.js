@@ -22,21 +22,12 @@ function(_,$,data){
 			});
 		}
 
-		const onTitleScrollVisible = _.once(function() {
-			setInterval(function() {
-				changeTitle(nextTitles[nextTitleIndex++]);
-				if (nextTitleIndex >= nextTitles.length) {
-					nextTitleIndex = 0;
-					nextTitles = _.shuffle(titles);
-				}
-			}, interval);
-		});
-
-		$window.scroll(function() {
-			var rect = helloMeTitle.getBoundingClientRect();
-			if (rect.top >= 0 && rect.bottom < window.innerHeight) {
-				onTitleScrollVisible();
+		setInterval(function() {
+			changeTitle(nextTitles[nextTitleIndex++]);
+			if (nextTitleIndex >= nextTitles.length) {
+				nextTitleIndex = 0;
+				nextTitles = _.shuffle(titles);
 			}
-		});
+		}, interval);
 	}};
 });

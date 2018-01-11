@@ -2,7 +2,12 @@
 define(["jquery","jquery_appear"],
 function($){
 	return {init: function(){
-		$(".iv").addClass("iv-active iv-invisible").appear();
+		$(window).resize(function() {
+			$(".iv").data("appear-top-offset", -$(window).height() / 3);
+		});
+		$(".iv").addClass("iv-active iv-invisible")
+			.data("appear-top-offset", -$(window).height() / 3)
+			.appear();
 		$(document.body)
 			.on("appear", ".iv", function(event, $appeared) {
 				$appeared
