@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 git checkout deploy
 git merge --no-edit -X theirs src
+bower install
+npm install --only=dev
 npm run build
 git add -f build/
 git commit -m "Deploy"
