@@ -15,7 +15,7 @@ function() {
 			start.init();
 			nav.init();
 			video.init();
-			cursor.init();
+			// cursor.init();
 			startUi();
 
 			// preloader script
