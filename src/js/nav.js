@@ -7,7 +7,7 @@ function(_,$,constants){
 		const $htmlBody = $("html, body");
 		const $nav = $("#nav");
 		const $mainContainer = $("#main-container");
-		const $firstSection = $mainContainer.children("section:first-of-type");
+		const $targetSection = $mainContainer.children("#projects");
 
 
 		/* Scroll reveal handling */
@@ -17,10 +17,9 @@ function(_,$,constants){
 		function updateOnScroll(initial) {
 			const navHeight = $nav.height();
 			const scroll = $window.scrollTop() + $window.height();
-			console.log(scroll);
 
 			const fadeInterval = navHeight / 2;
-			const fadeThreshold = $firstSection.offset().top + $window.height() - scrollDestOffset() - fadeInterval;
+			const fadeThreshold = $targetSection.offset().top + $window.height() - scrollDestOffset() - fadeInterval;
 
 			const delta = scroll - fadeThreshold;
 			const opacity = Math.max(0, Math.min(delta/fadeInterval, 1));
