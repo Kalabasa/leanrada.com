@@ -68,7 +68,6 @@ function(_,$,constants){
 			}, constants.durationSlow, constants.ease);
 
 			event.preventDefault();
-			window.history.replaceState(null, null, target.hash);
 		});
 
 
