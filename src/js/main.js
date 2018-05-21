@@ -16,7 +16,7 @@ function() {
 			start.init();
 			nav.init();
 			video.init();
-			// cursor.init();
+			cursor.init();
 			ua.init();
 			startUi();
 
