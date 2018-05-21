@@ -10,7 +10,7 @@ function($){
 		for (var i = 0; i < 2; i++) {
 			var div = document.createElement("div");
 			div.className = "cursor cursor" + (i + 1);
-			div.style.display = 'none';
+			div.style.display = "none";
 			document.body.appendChild(div);
 			var midX = $(window).width() / 2;
 			var midY = $(window).height() / 2;
@@ -29,11 +29,16 @@ function($){
 
 		var targetElement = null;
 		var $targetElement = null;
-		var mouse = {x: 0, y: 0, down: false};
+		var mouse = {x: 0, y: 0, down: false, touch: false};
 
-		$(window).mousemove(function(event) {
+		$window.one("touchstart", function(event) {
+			console.log("NONONO");
+			mouse.touch = true;
+		});
+
+		$window.mousemove(function(event) {
 			cursors.forEach(function(cur, i) {
-				cur.visible = true;
+				cur.visible = !mouse.touch;
 				cur.tx = event.clientX;
 				cur.ty = event.clientY;
 			});
@@ -43,8 +48,8 @@ function($){
 			mouse.y = event.clientY;
 		});
 
-		$(window).mousedown(function(event) { mouse.down = true; });
-		$(window).mouseup(function(event) { mouse.down = false; });
+		$window.mousedown(function(event) { mouse.down = true; });
+		$window.mouseup(function(event) { mouse.down = false; });
 
 		update();
 
@@ -77,19 +82,20 @@ function($){
 				cur.vx *= targetElement ? 0.6 : 0.4;
 				cur.vy *= targetElement ? 0.6 : 0.4;
 
-				var radius = cur.visible
-					? targetElement
+				var radius = 0;
+				if (cur.visible) {
+					radius = targetElement
 						? Math.max($targetElement.outerWidth(), $targetElement.outerHeight()) * 1.1
-						: 100 + (Math.sqrt(cur.vx*cur.vx + cur.vy*cur.vy) * 2)
-					: 0;
-				if (mouse.down) radius += 60;
+						: 100 + (Math.sqrt(cur.vx*cur.vx + cur.vy*cur.vy) * 2);
+					if (mouse.down) radius += 60;
+				}
 				cur.r += (radius - cur.r) * 0.2;
 
 				cur.el.style.left = cur.x + "px";
 				cur.el.style.top = cur.y + "px";
 				cur.el.style.width = cur.r + "px";
 				cur.el.style.height = cur.r + "px";
-				cur.el.style.display = cur.visible ? 'block' : 'none';
+				cur.el.style.display = cur.visible ? "block" : "none";
 			});
 			requestAnimationFrame(update);
 		}
