@@ -1,3 +1,4 @@
+// TODO Use Babel & new modules syntax
 // TODO Use CDNs instead of local copies
 "use strict";
 requirejs.config({
@@ -9,13 +10,14 @@ requirejs.config({
 
 requirejs(["bower-requirejs-config"],
 function() {
-	requirejs(["jquery", "start", "hello", "nav", "inview", "video", "cursor"],
-	function ($, start, hello, nav, inview, video, cursor) {
+	requirejs(["jquery", "start", "hello", "nav", "inview", "video", "cursor", "ua"],
+	function ($, start, hello, nav, inview, video, cursor, ua) {
 		$(document).ready(function() {
 			start.init();
 			nav.init();
 			video.init();
 			// cursor.init();
+			ua.init();
 			startUi();
 
 			// preloader script
