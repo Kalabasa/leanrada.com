@@ -11,7 +11,6 @@ function($,constants){
 			$startBtn.show();
 		
 			$startBtn.on("click", function() {
-				console.log("CSALSAJD");
 				$window.off("scroll", this);
 
 				$htmlBody.animate({

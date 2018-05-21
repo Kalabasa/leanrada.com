@@ -10,8 +10,8 @@ requirejs.config({
 
 requirejs(["bower-requirejs-config"],
 function() {
-	requirejs(["jquery", "start", "hello", "nav", "inview", "video", "cursor", "ua"],
-	function ($, start, hello, nav, inview, video, cursor, ua) {
+	requirejs(["jquery", "start", "hello", "nav", "inview", "video", "cursor", "ua", "lazysizes"],
+	function ($, start, hello, nav, inview, video, cursor, ua, lazysizes) {
 		$(document).ready(function() {
 			start.init();
 			nav.init();
@@ -24,6 +24,7 @@ function() {
 			var preloader = document.getElementById("preloader");
 			document.body.style.overflow = "auto";
 			document.body.style.height = "auto";
+			document.body.className += " js";
 			preloader.parentNode.removeChild(preloader);
 		});
 
