@@ -1,35 +1,25 @@
 {
-	"name": "kalabasa.github.io",
-	"version": "0.0.0",
-	"description": "My website",
-	"author": "Lean Rada",
-	"devDependencies": {
-		"handlebars-cmd": "latest",
-		"node-sass": "latest",
-		"uglify-js": "latest",
-		"html-minifier": "latest",
-		"bower": "latest",
-		"bower-requirejs": "latest",
-		"concurrently": "latest",
-		"chokidar-cli": "latest",
-		"livereload": "latest",
-		"rimraf": "latest"
-	},
-	"scripts": {
-		"dev": "concurrently 'npm run build' 'livereload build/ -d -e css -p 40000' 'npm run watch'",
-		"clean": "rimraf build",
-		"build": "mkdir -vp build build/js build/css && concurrently 'npm run build_html' 'npm run build_css' 'npm run build_js' 'npm run build_assets' 'npm run build_bower'",
-		"build_html": "handlebars src/html/home.json < src/html/home.handlebars | html-minifier --remove-comments --collapse-whitespace --conservative-collapse -o build/index.html",
-		"build_css": "node-sass --output-style compressed src/css/ -o build/css/",
-		"build_js": "rsync -cr --delete --info=name --exclude='bower-requirejs-config.js' src/js/ build/js/",
-		"build_assets": "rsync -cr --delete --info=name src/assets/* build/",
-		"build_bower": "bower install && npm run build_bower_config",
-		"build_bower_config": "bower-requirejs -c build/js/bower-requirejs-config.js",
-		"watch": "concurrently 'npm run watch_html' 'npm run watch_css' 'npm run watch_js' 'npm run watch_bower' 'npm run watch_assets'",
-		"watch_html": "chokidar src/html -c 'npm run build_html'",
-		"watch_css": "chokidar src/css/ -c 'node-sass --output-style compressed src/css/ -o build/css/'",
-		"watch_js": "chokidar src/js/ -c 'npm run build_js'",
-		"watch_assets": "chokidar src/assets/ -c 'npm run build_assets'",
-		"watch_bower": "chokidar bower.json -c 'npm run build_bower'"
-	}
+  "name": "kalabasa.github.io",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Lean Rada",
+  "devDependencies": {
+    "autoprefixer-stylus": "^0.14.0",
+    "browser-sync": "^2.24.5",
+    "chokidar-cli": "^1.2.0",
+    "concurrently": "^3.6.0",
+    "esm": "^3.0.63",
+    "glob": "^7.1.2",
+    "handlebars": "^4.0.11",
+    "ncp": "^2.0.0",
+    "rimraf": "^2.6.2",
+    "rollup": "^0.62.0",
+    "stylus": "^0.54.5"
+  },
+  "scripts": {
+    "build": "node -r esm build.js",
+    "watch": "chokidar 'src/**' -c 'npm run build'",
+    "serve": "browser-sync build -w",
+    "dev": "concurrently 'npm run build' 'npm run serve' 'npm run watch'"
+  }
 }

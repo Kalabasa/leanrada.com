@@ -1,0 +1,65 @@
+random(a, b)
+	return math(math(0, 'random') * (b - a + 1) + a, 'floor')
+
+item-width-pct = 40
+
+jobs-decors = 3
+jobs-decors-margin = 18%
+
+section.jobs
+	position relative
+
+	.jobs-list
+		display flex
+		flex-direction column
+	.jobs-item
+		position relative
+		min-width 20em
+		width (item-width-pct * 1%)
+		padding 2em
+		background color-bg
+		& + .jobs-item
+			margin-top 66px
+		for i in (1..8)
+			&:nth-of-type(8n + {2 * i})
+				left (random((100 - item-width-pct) * 2 / 3, 100 - item-width-pct) * 1%)
+			&:nth-of-type(8n + {2 * i + 1})
+				left (random(0, (100 - item-width-pct) / 3) * 1%)
+		&:first-of-type
+			left auto
+			margin-left 10%
+			align-self flex-start
+			border solid 9px color-accent
+		&:last-of-type
+			left auto
+			margin-right 10%
+			align-self flex-end
+
+	.job-name
+		font-heading1()
+	.job-date
+		margin-top 0
+
+	// decorative pseudo-elements (for background)
+	for i in (1..jobs-decors)
+		color-var = 'color-accent' + ((i - 1) * 1 % color-accents + 1)
+		.jobs-decor{i}
+			position absolute
+			top 55vh // skip over headings
+			bottom 0
+			left 0
+			right 0
+			clip-slant(
+				sin(holy-angle) * 100vw,
+				((i - 1) / jobs-decors * (100% + jobs-decors-margin)),
+				(i / jobs-decors * (100% + jobs-decors-margin) - jobs-decors-margin)
+			)
+			&::before
+				content ''
+				position fixed
+				left 5vw
+				top 30vh
+				width 60vw
+				height 40vh
+				transform translateX(30vw * (i - 1) / (jobs-decors - 1))
+				background linear-gradient(1200deg + holy-angle, lookup(color-var) 40%, lookup(color-var + '-tint'))

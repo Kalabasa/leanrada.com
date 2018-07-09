@@ -1,0 +1,67 @@
+image-min-size = 240px
+image-size = 75vmin
+info-min-size = 180px
+info-size = 45vmin
+
+section.projects
+	.projects-list
+		display flex
+		flex-direction column
+	.projects-item
+		position relative
+		min-width (image-min-size + info-min-size * 0.75)
+		min-height image-min-size
+		width (image-size + info-size * 0.75)
+		height (image-size)
+		& + .projects-item
+			margin-top -10vmin
+
+	.project-image
+		position absolute
+		min-width image-min-size
+		min-height image-min-size
+		width image-size
+		height image-size
+		background white
+		img
+			width 100%
+			height 100%
+			object-fit cover
+			mix-blend-mode luminosity
+			filter: grayscale(100%) brightness(1.4) contrast(80%)
+			transition filter 60ms ease-out
+	& .projects-item:hover .project-image img
+			mix-blend-mode unset
+			filter: none
+	.project-info
+		position absolute
+		top ((image-size - info-size) / 2)
+		min-width info-min-size
+		min-height info-min-size
+		width info-size
+		padding 2em
+		background color-bg
+
+	.projects-item
+		&:nth-child(odd)
+			align-self flex-start
+			.project-image
+				left 0
+			.project-info
+				right 0
+		&:nth-child(even)
+			align-self flex-end
+			.project-image
+				right 0
+			.project-info
+				left 0
+
+	.project-name
+		font-heading1()
+
+	// decorative pseudo-elements (for background)
+	for i in (1..color-accents)
+		color-var = 'color-accent' + ((i - 1) * 1 % color-accents + 1)
+		.projects-item:nth-of-type({color-accents}n + {(i) * 1 % color-accents + 1})
+			.project-image
+				background linear-gradient(120deg, lookup(color-var) 25%, lookup(color-var + '-tint') 75%)

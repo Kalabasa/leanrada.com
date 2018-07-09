@@ -1,9 +1,8 @@
 #!/usr/bin/env sh
 git checkout -B deploy
 git merge --no-edit -X theirs src
-bower install
-npm install --only=dev
-npm run build
+yarn install
+yarn build
 git add -f build/
 git commit -m "Deploy"
 git branch -D master
