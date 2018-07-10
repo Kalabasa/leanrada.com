@@ -2,6 +2,7 @@ random(a, b)
 	return math(math(0, 'random') * (b - a + 1) + a, 'floor')
 
 item-width-pct = 40
+item-min-width = 20em
 
 jobs-decors = 3
 jobs-decors-margin = 18%
@@ -14,7 +15,7 @@ section.jobs
 		flex-direction column
 	.jobs-item
 		position relative
-		min-width 20em
+		min-width item-min-width
 		width (item-width-pct * 1%)
 		padding 2em
 		background color-bg
@@ -34,6 +35,24 @@ section.jobs
 			left auto
 			margin-right 10%
 			align-self flex-end
+
+		@media (max-width (item-min-width * 2))
+			align-self stretch
+			min-width unset
+			width auto
+			padding 1em 0
+			& + .jobs-item
+				margin-top 2em
+			&:nth-of-type(1n)
+				left 0
+				right 0
+				margin-left 0
+				margin-right 0
+			&:first-of-type
+				padding-left 1em
+				border-right none
+				border-top none
+				border-bottom none
 
 	.job-name
 		font-heading1()
@@ -57,9 +76,11 @@ section.jobs
 			&::before
 				content ''
 				position fixed
-				left 5vw
-				top 30vh
-				width 60vw
-				height 40vh
+				left 5%
+				top 30%
+				width 60%
+				height 40%
 				transform translateX(30vw * (i - 1) / (jobs-decors - 1))
-				background linear-gradient(1200deg + holy-angle, lookup(color-var) 40%, lookup(color-var + '-tint'))
+				background url('img/tex.png'), linear-gradient(120deg + holy-angle, lookup(color-var) 40%, lookup(color-var + '-tint'))
+			@media (max-width (item-min-width * 2))
+				display none
