@@ -10,6 +10,7 @@ import Handlebars from 'handlebars';
 import stylus from 'stylus';
 import autoprefixer from 'autoprefixer-stylus';
 
+import relhref from './src/handlebars/relhref.js';
 import data from './src/data.js';
 
 const prod = process.argv.includes('--prod');
@@ -19,19 +20,44 @@ const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 const globAsync = promisify(glob);
 
+// Begin build
+
 if (!fs.existsSync('build')) fs.mkdirSync('build');
 
-const htmlFiles = globAsync('src/pages/*.handlebars')
+relhref.use(Handlebars);
+
+const partials = globAsync('src/handlebars/*.partial.handlebars')
+	.then(files => {
+		let partials = [];
+		for (let file of files) {
+			const partialName = path.basename(file, '.partial.handlebars');
+
+			console.log(`compiling partial ${file} ➔ ${partialName}`);
+
+			const partial = readFileAsync(file, 'utf8')
+				.then(template => {
+					Handlebars.registerPartial(partialName, template);
+					return partialName;
+				});
+			partials.push(partial);
+		}
+		return Promise.all(partials);
+	});
+
+const htmlFiles = partials
+	.then(() => globAsync('src/pages/*.handlebars'))
 	.then(files => {
 		let htmlFiles = [];
 		for (let file of files) {
 			const pageName = path.basename(file, path.extname(file));
-			const out = `build/${pageName}.html`;
+			const pageFilename = `${pageName}.html`;
+			const pageData = { ...data, pageFilename };
+			const out = `build/${pageFilename}`;
 
 			console.log(`compiling ${file} ➔ ${out}`);
 
 			const htmlFile = readFileAsync(file, 'utf8')
-				.then(src => Handlebars.compile(src)(data))
+				.then(src => Handlebars.compile(src)(pageData))
 				.then(html => writeFileAsync(out, html))
 				.then(() => out);
 			htmlFiles.push(htmlFile);

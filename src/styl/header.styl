@@ -1,11 +1,10 @@
 header.header
-	position absolute
 	display flex
 	align-items center
 	width 100%
 	height 72px
 	padding 0 5vw
-	z-index 1
+	background color-accent
 	.header-title
 		flex 1 1 auto
 	nav ul
@@ -13,26 +12,32 @@ header.header
 		a
 			display inline-block
 			position relative
+			font-weight bold
 			text-decoration none
 			padding 0.5em
 			margin-left 36px
-			transition color 0.06s ease-out
+			transition color 0.03s ease-out
+			z-index 0
 			&::before
 				content ''
 				position absolute
 				left 0
 				right 0
-				top calc(100% - 2px)
+				top calc(100% - 2.5px)
 				bottom 0
 				background color-fg
 				transform skewX(holy-angle)
+				transition top 0.1s ease-swift, bottom 0.1s ease-swift
 				z-index -1
-				transition top 0.1s ease-swift
-			&:hover, &:focus
+			&:hover, &:focus, &[href='#']
 				color color-accent
 				&::before
 					top 0
-				&[href^='#']::after // signify same-page anchor
+					bottom 0
+			&:hover, &:focus
+				&[href='#']
+					opacity 0.9
+				&[href^='#']:not([href='#'])::after // signify same-page anchor
 					content ''
 					position absolute
 					left 50%
@@ -43,6 +48,3 @@ header.header
 					border-top-color color-fg
 					transform translateX(-50%)
 					z-index -1
-
-	> *
-		animation fade 0.4s 1.2s ease-out backwards
