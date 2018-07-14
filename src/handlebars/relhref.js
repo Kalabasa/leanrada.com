@@ -12,7 +12,7 @@ export default {
 					href = href.substring(pageFilename.length);
 				}
 			}
-			if (href.startsWith('index.html')) {
+			if (href === 'index.html') {
 				href = href.replace(/^index\.html/, '.');
 			}
 			return href;

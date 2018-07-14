@@ -9,6 +9,9 @@ import ncp from 'ncp';
 import Handlebars from 'handlebars';
 import stylus from 'stylus';
 import autoprefixer from 'autoprefixer-stylus';
+import { rollup } from 'rollup';
+import rollupResolve from 'rollup-plugin-node-resolve';
+import rollupCommonjs from 'rollup-plugin-commonjs';
 
 import relhref from './src/handlebars/relhref.js';
 import data from './src/data.js';
@@ -93,6 +96,37 @@ const cssFiles = globAsync('src/pages/*.styl')
 			cssFiles.push(cssFile);
 		}
 		return Promise.all(cssFiles);
+	});
+
+const jsFiles = globAsync('src/pages/*.js')
+	.then(files => {
+		const resolve = rollupResolve({
+			browser: true,
+		});
+		const commonjs = rollupCommonjs();
+
+		let jsFiles = [];
+		for (let file of files) {
+			const scriptName = path.basename(file, path.extname(file));
+			const out = `build/${scriptName}.js`;
+
+			console.log(`compiling ${file} ➔ ${out}`);
+
+			const jsFile = rollup({
+					input: file,
+					plugins: [ resolve, commonjs ],
+				})
+				.then(bundle => {
+					return bundle.write({
+						file: out,
+						format: 'iife',
+						name: scriptName,
+					});
+				})
+				.then(() => out);
+			jsFiles.push(jsFile);
+		}
+		return Promise.all(jsFiles);
 	});
 
 console.log('copying src/assets ➔ build');

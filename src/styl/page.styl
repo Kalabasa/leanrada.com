@@ -1,2 +1,46 @@
+@require 'common'
 @require 'header'
 @require 'footer'
+
+transition-decors = 2
+
+.main
+	position absolute
+	left 0
+	right 0
+	top 0
+	min-height: 100vh
+	background color-bg
+
+.main.page-enter
+	visibility visible !important
+	z-index 5000
+	animation pageenter 0.4s 0.2s ease-swift both
+
+.main.page-exit
+	z-index -5000
+
+.transition-decor1
+	background color-bg
+.transition-decor2
+	background color-accent
+
+for i in (1..transition-decors)
+	.transition-decor{i}
+		visibility hidden
+	.main.page-exit .transition-decor{i}
+		visibility visible
+		position fixed
+		left 0
+		right 0
+		top 0
+		bottom 0
+		z-index 4900
+		animation pageenter 0.4s (0.1s * (i - 1)) ease-swift both
+
+offset = sin(holy-angle) * 100vw
+@keyframes pageenter
+	from
+		clip-path "polygon(0% calc(100vh - %s), 100% 100vh, 100% 100%, 0% 100%)" % (offset)
+	to
+		clip-path "polygon(0% 0, 100% %s, 100% 100%, 0% 100%)" % (offset)
