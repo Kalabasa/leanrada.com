@@ -2,7 +2,8 @@
 git checkout -B deploy
 git merge --no-edit -X theirs src
 yarn install
-yarn build
+rm -rf build/
+yarn build --prod
 git add -f build/
 git commit -m "Deploy"
 git branch -D master

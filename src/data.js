@@ -8,7 +8,7 @@ export default {
 			full_description: "Android game that features tangram with a twist. Pieces can be resized, adding a new dimension to the classic puzzle.",
 			tech: ["Android", "Kotlin", "Realm", "Robolectric"],
 			image: {
-				src: "img/hypertangram_0.png",
+				src: "img/hypertangram_0.jpg",
 				title: "screenshot of Hypertangram gameplay"
 			}
 		},
