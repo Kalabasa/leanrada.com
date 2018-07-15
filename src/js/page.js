@@ -13,7 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const transition = Barba.BaseTransition.extend({
 	start() {
-		document.body.style.overflow = 'hidden';
+		this.finished = false;
+
+		document.body.classList.add('page-transition');
 		this.oldContainer.classList.add('page-exit');
 
 		this.newContainerLoading.then(() => {
@@ -32,18 +34,21 @@ const transition = Barba.BaseTransition.extend({
 			this.newContainer.classList.add('page-enter');
 
 			this.newContainer.addEventListener('animationend', () => this.finish());
-			setTimeout(() => this.finish(), 2000);
+			setTimeout(() => this.finish(), 3000);
 		});
 	},
 
 	finish() {
+		if (this.finished) return;
+		this.finished = true;
+
 		for(let el of this.oldHeadEls) {
 			el.remove();
 		}
 		this.oldHeadEls = [];
 
+		document.body.classList.remove('page-transition');
 		this.newContainer.classList.remove('page-enter');
-		setTimeout(() => document.body.style.overflow = 'unset', 500);
 
 		this.done();
 	},

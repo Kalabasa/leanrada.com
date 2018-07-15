@@ -4,6 +4,11 @@
 
 transition-decors = 2
 
+page-transition-duration = 0.6s
+
+body.page-transition
+	overflow hidden
+
 .main
 	position absolute
 	left 0
@@ -15,32 +20,27 @@ transition-decors = 2
 .main.page-enter
 	visibility visible !important
 	z-index 5000
-	animation pageenter 0.4s 0.2s ease-swift both
+	animation pageenter page-transition-duration 0.3s ease-swift-out both
 
 .main.page-exit
 	z-index -5000
-
-.transition-decor1
-	background color-bg
-.transition-decor2
-	background color-accent
-
-for i in (1..transition-decors)
-	.transition-decor{i}
-		visibility hidden
-	.main.page-exit .transition-decor{i}
-		visibility visible
-		position fixed
-		left 0
-		right 0
-		top 0
-		bottom 0
-		z-index 4900
-		animation pageenter 0.4s (0.1s * (i - 1)) ease-swift both
+	animation pageexit page-transition-duration ease-swift-in both
 
 offset = sin(holy-angle) * 100vw
 @keyframes pageenter
 	from
+		transform translateY(50vh)
 		clip-path "polygon(0% calc(100vh - %s), 100% 100vh, 100% 100%, 0% 100%)" % (offset)
 	to
+		transform translateY(0)
 		clip-path "polygon(0% 0, 100% %s, 100% 100%, 0% 100%)" % (offset)
+
+@keyframes pageexit
+	from
+		opacity 1
+		transform translateY(0)
+		clip-path "polygon(0% 0%, 100% 0%, 100% 100vh, 0% calc(100vh - %s))" % (offset)
+	to 
+		opacity 0
+		transform translateY(-25vh)
+		clip-path "polygon(0% 0%, 100% 0, 100% %s, 0% 0)" % (offset)
