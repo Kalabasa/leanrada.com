@@ -1,3 +1,4 @@
-import '../js/page.js';
+import page from '../js/page.js';
 
-console.log('hello from index.js');
+page.ready(() => {
+});

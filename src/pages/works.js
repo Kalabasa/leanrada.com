@@ -1,3 +1,4 @@
-import '../js/page.js';
+import page from '../js/page.js';
 
-console.log('hello from works.js');
+page.ready(() => {
+});

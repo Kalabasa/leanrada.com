@@ -1,5 +1,26 @@
 import Barba from 'barba.js';
 
+window.readyState = window.readyState || {
+	ready: false,
+	callbacks: [],
+};
+
+function ready(callback) {
+	if (window.readyState.ready) {
+		callback();
+	} else {
+		window.readyState.callbacks.push(callback);
+	}
+}
+
+function onReady() {
+	window.readyState.ready = true;
+	for (let c of window.readyState.callbacks) {
+		c();
+	}
+	window.readyState.callbacks = [];
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 	Barba.Pjax.preventCheck = function() { return preventCheck.apply(this, arguments) };
 	Barba.Pjax.getTransition = function() { return transition };
@@ -9,10 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const main = document.querySelector('.main');
 	main.dataset.page = getPageName();
+
+	onReady();
 });
 
 const transition = Barba.BaseTransition.extend({
 	start() {
+		window.readyState.ready = false;
 		this.finished = false;
 
 		window.scroll({
@@ -32,10 +56,20 @@ const transition = Barba.BaseTransition.extend({
 			const newHead = this.newContainer.querySelector('#pjax-head');
 			this.oldHeadEls = [];
 			if (newHead) {
-				for(let el of [...newHead.content.children]) {
-					this.oldHeadEls.push(document.getElementById(el.id));
-					document.head.appendChild(el);
+				const newHeadContent = document.importNode(newHead.content, true);
+				for(let c of [...newHeadContent.children]) {
+					this.oldHeadEls.push(document.getElementById(c.id));
+
+					if (c.tagName === 'SCRIPT') {
+						// Browsers only execute <scripts> freshly created by createElement
+						const clone = document.createElement('script');
+						for (let attr of c.attributes) {
+							clone.setAttribute(attr.name, attr.value);
+						}
+						newHeadContent.replaceChild(clone, c);
+					}
 				}
+				document.head.appendChild(newHeadContent);
 				newHead.remove();
 			}
 
@@ -61,6 +95,7 @@ const transition = Barba.BaseTransition.extend({
 		this.newContainer.classList.remove('page-enter');
 
 		this.done();
+		onReady();
 	},
 });
 
@@ -111,3 +146,7 @@ function preventCheck(evt, element) {
 
     return true;
 }
+
+export default {
+	ready,
+};
