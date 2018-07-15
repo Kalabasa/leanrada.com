@@ -6,12 +6,17 @@ import { promisify } from 'util';
 import rimraf from 'rimraf';
 import glob from 'glob';
 import ncp from 'ncp';
+
 import Handlebars from 'handlebars';
+
 import stylus from 'stylus';
-import autoprefixer from 'autoprefixer-stylus';
+import stylusAutoprefixer from 'autoprefixer-stylus';
+import uglifycss from 'uglifycss';
+
 import { rollup } from 'rollup';
 import rollupResolve from 'rollup-plugin-node-resolve';
 import rollupCommonjs from 'rollup-plugin-commonjs';
+import rollupBabel from 'rollup-plugin-babel';
 
 import relhref from './src/handlebars/relhref.js';
 import data from './src/data.js';
@@ -70,6 +75,8 @@ const htmlFiles = partials
 
 const cssFiles = globAsync('src/pages/*.styl')
 	.then(files => {
+		const autoprefixer = stylusAutoprefixer();
+
 		let cssFiles = [];
 		for (let file of files) {
 			const styleName = path.basename(file, path.extname(file));
@@ -80,7 +87,7 @@ const cssFiles = globAsync('src/pages/*.styl')
 			const paths = ['node_modules', 'src/pages'].map(p => path.resolve(__dirname, p));
 			const cssFile = readFileAsync(file, 'utf8')
 				.then(src => stylus(src)
-					.use(autoprefixer())
+					.use(autoprefixer)
 					.set('filename', out)
 					.set('paths', paths))
 				.then(stylusObj => {
@@ -91,6 +98,13 @@ const cssFiles = globAsync('src/pages/*.styl')
 					}
 				})
 				.then(stylusObj => promisify(stylusObj.render).call(stylusObj))
+				.then(css => {
+					if (prod) {
+						return uglifycss.processString(css);
+					} else {
+						return css;
+					}
+				})
 				.then(css => writeFileAsync(out, css))
 				.then(() => out);
 			cssFiles.push(cssFile);
@@ -104,6 +118,17 @@ const jsFiles = globAsync('src/pages/*.js')
 			browser: true,
 		});
 		const commonjs = rollupCommonjs();
+		const babel = rollupBabel({
+			exclude: 'node_modules/**',
+		});
+
+		const plugins = [
+			resolve,
+			commonjs,
+		];
+		if (prod) {
+			plugins.push(babel);
+		}
 
 		let jsFiles = [];
 		for (let file of files) {
@@ -114,7 +139,7 @@ const jsFiles = globAsync('src/pages/*.js')
 
 			const jsFile = rollup({
 					input: file,
-					plugins: [ resolve, commonjs ],
+					plugins,
 				})
 				.then(bundle => {
 					return bundle.write({
