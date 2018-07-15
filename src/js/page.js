@@ -15,10 +15,17 @@ const transition = Barba.BaseTransition.extend({
 	start() {
 		this.finished = false;
 
+		window.scroll({
+			top: 0,
+			behavior: 'smooth'
+		});
+
 		document.body.classList.add('page-transition');
 		this.oldContainer.classList.add('page-exit');
 
 		this.newContainerLoading.then(() => {
+			// transplant new head because Barba.js does not do head
+			// new head is in the body in a template called pjax-head
 			const newHead = this.newContainer.querySelector('#pjax-head');
 			this.oldHeadEls = [];
 			if (newHead) {
