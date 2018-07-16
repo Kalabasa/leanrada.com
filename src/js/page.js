@@ -1,42 +1,48 @@
 import Barba from 'barba.js';
 
-window.readyState = window.readyState || {
+window.pageReadyState = window.pageReadyState || {
 	ready: false,
 	callbacks: [],
 };
 
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', onLoad);
+} else {
+	onLoad();
+}
+
 function ready(callback) {
-	if (window.readyState.ready) {
+	if (window.pageReadyState.ready) {
 		callback();
 	} else {
-		window.readyState.callbacks.push(callback);
+		window.pageReadyState.callbacks.push(callback);
 	}
 }
 
 function onReady() {
-	window.readyState.ready = true;
-	for (let c of window.readyState.callbacks) {
+	window.pageReadyState.ready = true;
+	for (let c of window.pageReadyState.callbacks) {
 		c();
 	}
-	window.readyState.callbacks = [];
+	window.pageReadyState.callbacks = [];
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function onLoad() {
 	Barba.Pjax.preventCheck = function() { return preventCheck.apply(this, arguments) };
 	Barba.Pjax.getTransition = function() { return transition };
 
 	Barba.Pjax.start();
 	Barba.Prefetch.init();
 
-	const main = document.querySelector('.main');
+	const main = [...document.querySelectorAll('.main')].pop();
 	main.dataset.page = getPageName();
 
 	onReady();
-});
+}
 
 const transition = Barba.BaseTransition.extend({
 	start() {
-		window.readyState.ready = false;
+		window.pageReadyState.ready = false;
 		this.finished = false;
 
 		window.scroll({
