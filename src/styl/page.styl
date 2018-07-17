@@ -6,14 +6,22 @@ transition-decors = 2
 
 page-transition-duration = 0.4s
 
+page-transition-color(color)
+	/body{selector()}.page-transition
+		background color
+
 body
 	left 0
 	right 0
 	top 0
 	bottom 0
+	background color-bg
+body.page-transition
 	overflow hidden
 
 .main
+	display flex
+	flex-direction column
 	position absolute
 	left 0
 	right 0
@@ -31,7 +39,18 @@ body
 	z-index -5000
 	animation pageexit page-transition-duration ease-swift-in both
 
+.page-going-up
+	.main.page-enter
+		animation pageenter-up page-transition-duration ease-swift-out both
+	.main.page-exit
+		animation pageexit-up page-transition-duration ease-swift-in both
+
+[data-page-to='index.html']
+	page-transition-color(color-accent)
+
+
 offset = sin(holy-angle) * 100vw
+
 @keyframes pageenter
 	from
 		transform translateY(70vh)
@@ -49,3 +68,21 @@ offset = sin(holy-angle) * 100vw
 		opacity 0
 		transform translateY(-15vh)
 		clip-path "polygon(0% 0%, 100% 0, 100% %s, 0% 0)" % (offset)
+
+@keyframes pageenter-up
+	from
+		transform translateY(-70vh)
+		clip-path "polygon(0% 0%, 100% 0, 100% %s, 0% 0)" % (offset)
+	to
+		transform translateY(0)
+		clip-path "polygon(0% 0%, 100% 0%, 100% 100vh, 0% calc(100vh - %s))" % (offset)
+
+@keyframes pageexit-up
+	from
+		opacity 1
+		transform translateY(0)
+		clip-path "polygon(0% 0, 100% %s, 100% 100%, 0% 100%)" % (offset)
+	to 
+		opacity 0
+		transform translateY(15vh)
+		clip-path "polygon(0% calc(100vh - %s), 100% 100vh, 100% 100%, 0% 100%)" % (offset)

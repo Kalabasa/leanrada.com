@@ -4,18 +4,16 @@ export default {
 	use(Handlebars) {
 		Handlebars.registerHelper('relhref', function(options) {
 			let href = options.fn(this);
-			const pageFilename = options.data.root.pageFilename;
-			if (pageFilename) {
-				if (href === pageFilename) {
-					href = '#';
-				} else if (href.startsWith(pageFilename) && href.charAt(pageFilename.length) === '#') {
-					href = href.substring(pageFilename.length);
-				}
-			}
-			if (href === 'index.html') {
-				href = href.replace(/^index\.html/, '.');
-			}
-			return href;
+			if (href[0] !== '/') throw new Error(`href must be absolute. got: ${href}`);
+
+			const pagePath = options.data.root.pagePath;
+			if (pagePath[0] !== '/') throw new Error(`pagePath must be absolute. got: ${pagePath}`);
+
+			if (pagePath === href) return '#';
+
+			const pathBase = pagePath.match(/^([^#]*\/)[^\/]+$/)[1];
+
+			return path.relative(pathBase, href);
 		});
 	},
 };

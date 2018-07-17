@@ -1,18 +1,88 @@
 @require '../styl/common'
 @require '../styl/page'
 
+image-size = 300px
+image-gap = 2rem
+appear-duration = 0.12s
+disappear-duration = 0.2s
+
+[data-page-to^='works/']
+	page-transition-color(color-accent)
+
 .main[data-page='works.html']
 	display flex
 	flex-direction column
+	overflow hidden
 
-	section.wip
-		flex 1
-		padding 4rem 5vw
-		font-weight bold
-		h1
-			font-heading1()
-			font-size 10vh
-		p
-			font-body()
-			font-size 5vh
-			font-weight bold
+	section.works
+		display flex
+		flex-direction column
+		width 100%
+		padding 4em margin-hedge
+		.grid
+			display grid
+			align-self center
+			width 'calc(%s + %s)' % ((image-size * 3) (image-gap * 2))
+			grid-template-columns repeat(auto-fill, image-size)
+			grid-template-rows auto
+			grid-auto-rows image-size
+			grid-auto-flow row
+			grid-gap image-gap		
+
+	h1.page-heading
+		grid-column 1 / -1
+	
+	.projects-item
+		position relative
+		> *
+			position absolute
+			left 0
+			right 0
+			top 0
+			bottom 0
+		.project-image
+			width 100%
+			height 100%
+			object-fit cover
+			transition clip-path disappear-duration ease-swift
+			clip-slant(sin(holy-angle) * image-size)
+			z-index 2
+			pointer-events none
+		.project-link
+			overflow hidden
+			display block
+			padding 1em
+			font-heading2()
+			text-decoration none
+			background linear-gradient(to bottom, color-accent 10%, color-accent-tint 40%, transparent 40%)
+			z-index 1
+		.project-name
+			display inline-block
+			transform translateY((image-size * -0.25))
+			transition transform disappear-duration appear-duration ease-swift
+		&:hover
+			.project-image
+				clip-slant(sin(holy-angle) * image-size, 25%, 75%)
+				transition clip-path appear-duration ease-swift-out
+			.project-name
+				transform translateY(0)
+				transition transform appear-duration ease-swift-out
+
+		&::after
+			content ''
+			position absolute
+			left 0
+			right 0
+			top 0
+			bottom 100%
+			background color-accent
+			z-index 2000
+			visibility hidden
+			transition all 0.28s ease-swift-in
+			transform skewY(holy-angle)
+		&.item-selected::after
+			left -100vw
+			right -100vw
+			top -50%
+			bottom -50vh
+			visibility visible

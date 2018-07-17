@@ -1,8 +1,9 @@
 import Barba from 'barba.js';
 
-window.pageReadyState = window.pageReadyState || {
+window.pageState = window.pageState || {
+	initialized: false,
 	ready: false,
-	callbacks: [],
+	readyCallbacks: [],
 };
 
 if (document.readyState === 'loading') {
@@ -12,36 +13,53 @@ if (document.readyState === 'loading') {
 }
 
 function ready(callback) {
-	if (window.pageReadyState.ready) {
+	if (window.pageState.ready) {
 		callback();
 	} else {
-		window.pageReadyState.callbacks.push(callback);
+		window.pageState.readyCallbacks.push(callback);
 	}
 }
 
 function onReady() {
-	window.pageReadyState.ready = true;
-	for (let c of window.pageReadyState.callbacks) {
+	window.pageState.ready = true;
+	for (let c of window.pageState.readyCallbacks) {
 		c();
 	}
-	window.pageReadyState.callbacks = [];
+	window.pageState.readyCallbacks = [];
 }
 
 function onLoad() {
-	Barba.Pjax.getTransition = function() { return transition };
+	if (!window.pageState.initialized) {
+		window.pageState.initialized = true;
 
-	Barba.Pjax.start();
-	Barba.Prefetch.init();
+		Barba.Pjax.getTransition = function() { return transition };
 
-	const main = [...document.querySelectorAll('.main')].pop();
-	main.dataset.page = getPageName();
+		Barba.Pjax.start();
+		Barba.Prefetch.init();
+
+		let lastHref = window.location.href;
+		Barba.Dispatcher.on('initStateChange', (status) => {
+			const currentLevel = countSeps(lastHref);
+			const targetLevel = countSeps(status.url);
+			if (targetLevel < currentLevel) {
+				document.body.classList.add('page-going-up');
+			}
+			lastHref = status.url;
+		});
+		Barba.Dispatcher.on('transitionCompleted', (el) => {
+			document.body.classList.remove('page-going-up');
+		});
+
+		const main = [...document.querySelectorAll('.main')].pop();
+		main.dataset.page = getPageName();
+	}
 
 	onReady();
 }
 
 const transition = Barba.BaseTransition.extend({
 	start() {
-		window.pageReadyState.ready = false;
+		window.pageState.ready = false;
 		this.finished = false;
 
 		window.scroll({
@@ -50,6 +68,7 @@ const transition = Barba.BaseTransition.extend({
 		});
 
 		document.body.classList.add('page-transition');
+		document.body.dataset.pageTo = getPageName();
 		this.oldContainer.classList.add('page-exit');
 
 		Promise.all([
@@ -97,6 +116,7 @@ const transition = Barba.BaseTransition.extend({
 		this.oldHeadEls = [];
 
 		document.body.classList.remove('page-transition');
+		delete document.body.dataset.pageTo;
 		this.newContainer.classList.remove('page-enter');
 
 		this.done();
@@ -105,8 +125,13 @@ const transition = Barba.BaseTransition.extend({
 });
 
 function getPageName() {
-	if (window.location.pathname.endsWith('/')) return 'index.html';
-	return window.location.pathname.split('/').slice(-1)[0];
+	let pathname = window.location.pathname;
+	if (window.location.pathname.endsWith('/')) pathname += 'index.html';
+	return pathname.substring(1); // remove front slash
+}
+
+function countSeps(path) {
+	return (path.match(/\//g) || []).length;
 }
 
 export default {

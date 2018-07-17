@@ -3,11 +3,13 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { promisify } from 'util';
 
+import _ from 'lodash';
 import rimraf from 'rimraf';
 import glob from 'glob';
 import ncp from 'ncp';
 
 import Handlebars from 'handlebars';
+import marked from 'marked';
 
 import stylus from 'stylus';
 import stylusAutoprefixer from 'autoprefixer-stylus';
@@ -30,9 +32,15 @@ const globAsync = promisify(glob);
 
 // Begin build
 
-if (!fs.existsSync('build')) fs.mkdirSync('build');
+[
+	'build',
+	'build/works',
+].forEach(dir => {
+	if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+})
 
 relhref.use(Handlebars);
+Handlebars.registerPartial('content', '{{{ content }}}')
 
 const partials = globAsync('src/handlebars/*.partial.handlebars')
 	.then(files => {
@@ -52,15 +60,15 @@ const partials = globAsync('src/handlebars/*.partial.handlebars')
 		return Promise.all(partials);
 	});
 
-const htmlFiles = partials
+const pageHtmlFiles = partials
 	.then(() => globAsync('src/pages/*.handlebars'))
 	.then(files => {
-		let htmlFiles = [];
+		let pageHtmlFiles = [];
 		for (let file of files) {
 			const pageName = path.basename(file, path.extname(file));
-			const pageFilename = `${pageName}.html`;
-			const pageData = { ...data, pageFilename };
-			const out = `build/${pageFilename}`;
+			const pagePath = `/${pageName}.html`;
+			const pageData = { ...data, pagePath };
+			const out = `build/${pagePath}`;
 
 			console.log(`compiling ${file} ➔ ${out}`);
 
@@ -68,19 +76,72 @@ const htmlFiles = partials
 				.then(src => Handlebars.compile(src)(pageData))
 				.then(html => writeFileAsync(out, html))
 				.then(() => out);
-			htmlFiles.push(htmlFile);
+			pageHtmlFiles.push(htmlFile);
 		}
-		return Promise.all(htmlFiles);
+		return Promise.all(pageHtmlFiles);
 	});
 
-const cssFiles = globAsync('src/pages/*.styl')
+const mdHtmlFiles = partials
+	.then(() => globAsync('src/pages/**/*.md'))
+	.then(files => {
+		let mdHtmlFiles = [];
+		for (let file of files) {
+			const fileMd = file.replace(/\.md$/, '.html');
+			const pagePath = fileMd.replace(/^src\/pages\//, '/');
+			const out = fileMd.replace(/^src\/pages/, 'build');
+
+			console.log(`compiling ${file} ➔ ${out}`);
+
+			const htmlFile = readFileAsync(file, 'utf8')
+				.then(md => {
+					// extract metadata
+					const metaMatch = md.match(/<!--({(.|\r|\n)+})-->/);
+					const meta = metaMatch ? JSON.parse(metaMatch[1]) : {};
+					return { md: md.substring(metaMatch.index + metaMatch[0].length), meta };
+				})
+				.then(({ md, meta }) => {
+					// supply variables in md itself
+					if (meta.template) {
+						const pageData = meta.data ? _.get(data, meta.data) : {};
+						md = Handlebars.compile(md)(pageData);
+					}
+					return { md, meta };
+				})
+				.then(({ md, ...obj }) =>
+					// convert md to html
+					promisify(marked)(md)
+						.then(html => ({ html, ...obj }))
+				)
+				.then(({ html, meta }) => {
+					// provide page template
+					if (meta.template) {
+						const template = fs.readFileSync(`src/handlebars/${meta.template}.handlebars`, 'utf8');
+						const pageData = meta.data ? _.get(data, meta.data) : {};
+						html = Handlebars.compile(template)({
+							...pageData,
+							pagePath,
+							content: new Handlebars.SafeString(html)
+						});
+					}
+					return html;
+				})
+				.then(html => writeFileAsync(out, html))
+				.then(() => out);
+			mdHtmlFiles.push(htmlFile);
+		}
+		return Promise.all(mdHtmlFiles);
+	});
+
+const htmlFiles = Promise.all([pageHtmlFiles, mdHtmlFiles])
+	.then(arrs => arrs.reduce((acc, arr) => acc.concat(arr), []));
+
+const cssFiles = globAsync('src/pages/**/*.styl')
 	.then(files => {
 		const autoprefixer = stylusAutoprefixer();
 
 		let cssFiles = [];
 		for (let file of files) {
-			const styleName = path.basename(file, path.extname(file));
-			const out = `build/${styleName}.css`;
+			const out = file.replace(/^src\/pages/, 'build').replace(/\.styl$/, '.css');
 
 			console.log(`compiling ${file} ➔ ${out}`);
 
@@ -112,7 +173,7 @@ const cssFiles = globAsync('src/pages/*.styl')
 		return Promise.all(cssFiles);
 	});
 
-const jsFiles = globAsync('src/pages/*.js')
+const jsFiles = globAsync('src/pages/**/*.js')
 	.then(files => {
 		const resolve = rollupResolve({
 			browser: true,
@@ -133,7 +194,7 @@ const jsFiles = globAsync('src/pages/*.js')
 		let jsFiles = [];
 		for (let file of files) {
 			const scriptName = path.basename(file, path.extname(file));
-			const out = `build/${scriptName}.js`;
+			const out = file.replace(/^src\/pages/, 'build');
 
 			console.log(`compiling ${file} ➔ ${out}`);
 
@@ -159,10 +220,8 @@ ncp('src/assets', 'build')
 
 if (prod) {
 	Promise.all([cssFiles, htmlFiles])
-		.then(([_, files]) => {
-			for (let file of files) {
-				console.log(`optimizing fonts ${file}`);
-				spawn('node_modules/.bin/subfont', [file, '-i']);
-			}
+		.then(() => {
+			console.log('optimizing fonts');
+			spawn('node_modules/.bin/subfont', ['build/index.html', '-i']);
 		});
 }

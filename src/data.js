@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 // data for the whole site!
 const data = {
 	featured_projects: [ 'hypertangram', 'planetdefense', 'conversations' ],
@@ -109,6 +111,7 @@ const data = {
 	],
 };
 
-data.featured_projects = data.featured_projects.map(id => data.projects.find(p => p.id === id));
+data.projects_featured = data.featured_projects.map(id => data.projects.find(p => p.id === id));
+data.projects_byid = _.keyBy(data.projects, 'id');
 
 export default data;
