@@ -26,6 +26,9 @@ function onReady() {
 		c();
 	}
 	window.pageState.readyCallbacks = [];
+
+	const main = [...document.querySelectorAll('.main')].pop();
+	main.focus(); // mainly for enabling keyboard scroll, because body isn't scrollable, .main is
 }
 
 function onLoad() {
