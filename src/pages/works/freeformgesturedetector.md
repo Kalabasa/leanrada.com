@@ -4,6 +4,8 @@
 }-->
 
 
-# FreeformGestureDetector
+# Freeform Gesture Detector
 
 ## Multi-touch transform gesture detector for Android.
+
+WIP
