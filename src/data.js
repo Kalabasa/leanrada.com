@@ -15,16 +15,20 @@ const data = {
 				alt: 'screenshot of Hypertangram gameplay'
 			}
 		},
-		// {
-		// 	id: 'freeformgesturedetector',
-		// 	name: 'FreeformGestureDetector',
-		// 	links: [{ name: 'Github', url: 'https://github.com/Kalabasa/FreeformGestureDetector/' }],
-		// 	short_description: 'Multi-touch transform gesture detector for Android.',
-		// 	tech: ['Android', 'Kotlin'],
-		// 	image {
-		// 		src: '
-		// 	},
-		// },
+		{
+			id: 'freeformgesturedetector',
+			name: 'FreeformGestureDetector',
+			links: [
+				{ name: 'Github', url: 'https://github.com/Kalabasa/FreeformGestureDetector/' },
+				{ name: 'Android Arsenal', url: 'https://android-arsenal.com/details/1/6939' },
+			],
+			short_description: 'Multi-touch transform gesture detector for Android.',
+			tech: ['Android', 'Kotlin'],
+			image: {
+				src: 'img/freeformgesturedetector_head.png',
+				alt: 'README of the project',
+			},
+		},
 		{
 			id: 'planetdefense',
 			name: 'PlanetDefense',
