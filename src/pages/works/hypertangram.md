@@ -6,7 +6,7 @@
 
 # Hypertangram
 
-<span class="mockup-phone">![phone with Hypertangram](../img/hypertangram_1.png)
+<span class="mockup-phone">![phone with Hypertangram](../img/hypertangram_1.jpg)
 <span class="phone-body"></span>
 </span>
 
@@ -37,14 +37,14 @@ Major development challenges were geometry-related. See, I didn’t want grid-ba
 
 The other challenge was the solution checking algorithm. Due to the nature of the game, there can be several solutions to a single puzzle, and there is no easy way to find them all by hand, nor by algorithm.
 
-![illustration of multiple solutions](../img/ht_solutions.png)
+![illustration of multiple solutions](../img/ht_solutions.jpg)
 <span class="caption">Multiple solutions for a single puzzle</span>
 
 Beginning with a simple discrete approach where I would check every pixel intersection, I ended up with a logical approach, using [boolean operations on polygons](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons), in order to implement the win condition &mdash; whether the target shape is filled up by all the pieces.
 
 Music and graphics were created by me. I wanted a minimal look with a physical feel. *Abstract, yet tangible*.
 
-![screenshot detail](../img/hypertangram_4.png)
+![screenshot detail](../img/hypertangram_4.jpg)
 
 I’m really proud of the amount of polish I’ve done here. Of course, there’s always room for improvement, but finished is better than perfect.
 
