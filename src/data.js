@@ -9,13 +9,22 @@ const data = {
 			name: 'Hypertangram',
 			links: [{ name: 'Google Play', url: 'https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram' }],
 			short_description: 'Mobile puzzle game about packing shapes together',
-			full_description: 'Android game that features tangram with a twist. Pieces can be resized, adding a new dimension to the classic puzzle.',
 			tech: ['Android', 'Kotlin', 'Realm', 'Robolectric'],
 			image: {
 				src: 'img/hypertangram_0.jpg',
-				title: 'screenshot of Hypertangram gameplay'
+				alt: 'screenshot of Hypertangram gameplay'
 			}
 		},
+		// {
+		// 	id: 'freeformgesturedetector',
+		// 	name: 'FreeformGestureDetector',
+		// 	links: [{ name: 'Github', url: 'https://github.com/Kalabasa/FreeformGestureDetector/' }],
+		// 	short_description: 'Multi-touch transform gesture detector for Android.',
+		// 	tech: ['Android', 'Kotlin'],
+		// 	image {
+		// 		src: '
+		// 	},
+		// },
 		{
 			id: 'planetdefense',
 			name: 'PlanetDefense',
@@ -25,7 +34,7 @@ const data = {
 			tech: ['Javascript', 'PixiJS'],
 			image: {
 				src: 'img/planetdefense_0.jpg',
-				title: 'screenshot of PlanetDefense gameplay'
+				alt: 'screenshot of PlanetDefense gameplay'
 			},
 		},
 		{
@@ -40,7 +49,7 @@ const data = {
 			tech: ['LMMS', 'Audacity'],
 			image: {
 				src: 'img/conversations_0.jpg',
-				title: 'Conversations album art'
+				alt: 'Conversations album art'
 			}
 		},
 		{
@@ -51,7 +60,7 @@ const data = {
 			tech: ['React', 'Backbone.js', 'Mapbox', 'D3.js', 'Material Design', 'PHP', 'Python'],
 			image: {
 				src: 'img/dynastymap_0.jpg',
-				title: `screenshot of DynastyMap's welcome screen`
+				alt: `screenshot of DynastyMap's welcome screen`
 			}
 		},
 	],

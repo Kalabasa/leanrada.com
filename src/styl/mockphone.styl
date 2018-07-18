@@ -1,0 +1,103 @@
+entrance-animation = 1s ease-swift-out
+
+phone-glare-size = 3000px
+
+.mockup-phone
+	phone-screen-width = 9vmin * 5
+	phone-screen-height = 16vmin * 5
+
+	phone-body-width = phone-screen-width + 3vmin
+	phone-body-height = phone-screen-height + 14vmin
+	phone-body-thickness = 4vmin
+
+	phone-body-diameter = (phone-body-width ** 2 + phone-body-height ** 2) ** 0.5
+	phone-body-diameter-angle = math(unit(phone-body-height / phone-body-width, ''), 'atan') * 180deg / PI
+
+	position relative
+	display block
+	margin auto
+	width phone-body-width
+	height phone-body-height
+	perspective 2000px
+	transform rotate3d(2, -1, 1, 45deg)
+	transform-style preserve-3d
+	transition transform 1s ease-swift
+	animation phoneenter entrance-animation
+	&:hover
+		transform none
+		&::after
+			// screen glare
+			opacity 0
+			background-position 0 (- phone-glare-size)
+	*
+		transform-style inherit
+	img // specificity hack
+		display block
+		position absolute
+		width phone-screen-width !important
+		height phone-screen-height !important
+		max-height unset !important
+		border-radius 0.5vmin
+		transform translate3d((phone-body-width - phone-screen-width) / 2, (phone-body-height - phone-screen-height) / 2, 0)
+	&::before
+		// front frame
+		content ''
+		display block
+		position absolute
+		width phone-body-width
+		height phone-body-height
+		border-radius 1vmin
+		background linear-gradient(to bottom, #F4F4F4, #D8DFE0)
+		transform translateZ(-1px)
+	&::after
+		// screen glare
+		content ''
+		display block
+		position absolute
+		width phone-screen-width
+		height phone-screen-height
+		border-radius 0.5vmin
+		padding 0.1px
+		background radial-gradient(phone-glare-size at top left, transparent, rgba(white, 0.1) (phone-screen-height / 2), rgba(white, 0.4) phone-screen-height, transparent, transparent, white, transparent, transparent)
+		background-position 0 0
+		background-size 100% phone-glare-size
+		background-repeat no-repeat
+		opacity 1
+		transform translate((phone-body-width - phone-screen-width) / 2, (phone-body-height - phone-screen-height) / 2)
+		transition opacity 1s ease-swift, background 1s ease-swift
+		animation glareenter entrance-animation
+	.phone-body
+		display block
+		position absolute
+		width phone-body-width
+		height phone-body-height
+		transform translateZ((- phone-body-thickness)) translateZ(-2px)
+		&::before, &::after
+			content ''
+			display block
+			position absolute
+			background #BBCBD0
+		&::before
+			// give volume to middle gap
+			right 0
+			width phone-body-diameter
+			height phone-body-thickness
+			transform-origin top right
+			transform rotateZ((- phone-body-diameter-angle)) rotateX(90deg)
+		&::after
+			// back pane
+			width phone-body-width
+			height phone-body-height
+			border-radius 1vmin
+
+@keyframes phoneenter
+	from
+		transform rotate3d(4, -1, 1, 90deg)
+	to
+		transform rotate3d(2, -1, 1, 45deg)
+
+@keyframes glareenter
+	from
+		background-position 0 (- phone-glare-size)
+	to
+		background-position 0 0
