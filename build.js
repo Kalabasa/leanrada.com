@@ -8,6 +8,10 @@ import rimraf from 'rimraf';
 import glob from 'glob';
 import ncp from 'ncp';
 
+const readFileAsync = promisify(fs.readFile);
+const writeFileAsync = promisify(fs.writeFile);
+const globAsync = promisify(glob);
+
 import Handlebars from 'handlebars';
 import marked from 'marked';
 
@@ -16,6 +20,7 @@ import stylusAutoprefixer from 'autoprefixer-stylus';
 import uglifycss from 'uglifycss';
 
 import { rollup } from 'rollup';
+import rollupReplace from 'rollup-plugin-replace';
 import rollupResolve from 'rollup-plugin-node-resolve';
 import rollupCommonjs from 'rollup-plugin-commonjs';
 import rollupBabel from 'rollup-plugin-babel';
@@ -26,9 +31,11 @@ import data from './src/data.js';
 const prod = process.argv.includes('--prod');
 if (prod) console.log('prod mode');
 
-const readFileAsync = promisify(fs.readFile);
-const writeFileAsync = promisify(fs.writeFile);
-const globAsync = promisify(glob);
+const jsConstants = {
+	ENV: prod ? 'production' : 'debug',
+	ENV_PROD: prod,
+	ENV_DEBUG: !prod,
+};
 
 // Begin build
 
@@ -175,6 +182,7 @@ const cssFiles = globAsync('src/pages/**/*.styl')
 
 const jsFiles = globAsync('src/pages/**/*.js')
 	.then(files => {
+		const replace = rollupReplace(jsConstants);
 		const resolve = rollupResolve({
 			browser: true,
 		});
@@ -184,6 +192,7 @@ const jsFiles = globAsync('src/pages/**/*.js')
 		});
 
 		const plugins = [
+			replace,
 			resolve,
 			commonjs,
 		];
