@@ -15,7 +15,7 @@
 Hypertangram is a challenging geometric puzzle game on Android based on the classic tangram puzzle. What’s different with this one is that, in addition to regular dragging and rotating, **pieces can be resized**.
 
 <p>
-	<video autoplay loop>
+	<video muted autoplay loop>
 		<source src="../video/hypertangram_2.webm">
 		<source src="../video/hypertangram_2.mp4">
 		<a href="../video/hypertangram_2.mp4">Demo video</a>
@@ -27,7 +27,7 @@ This is a personal project, and my first “complete” game in terms of feature
 Major development challenges were geometry-related. See, I didn’t want grid-based movement like in other tangram apps. I wanted free dragging, rotation, and scaling, with smart edge-snapping. It took a lot of time and rewrites to make the snapping feel right.
 
 <p>
-	<video autoplay loop>
+	<video muted autoplay loop>
 		<source src="../video/hypertangram_3.webm">
 		<source src="../video/hypertangram_3.mp4">
 		<a href="../video/hypertangram_3.mp4">Video of old development version</a>
