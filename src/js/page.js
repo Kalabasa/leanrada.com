@@ -116,12 +116,17 @@ const transition = Barba.BaseTransition.extend({
 							newHead.remove();
 						}
 
-						// wait for subresources to load
-						return Promise.all([
-							newHeadEls.map(el => resolve => {
-								el.addEventListener('load', resolve);
-							}),
-						]);
+						// wait for linked subresources to load
+						const linksLoaded = newHeadEls.filter(el => el.tagName === 'LINK')
+							.map(el => new Promise(resolve => {
+								if (el.sheet || !('onload' in el)) {
+									resolve();
+								} else {
+									el.addEventListener('load', resolve);
+									el.addEventListener('error', resolve);
+								}
+							}));
+						return Promise.all(linksLoaded);
 					}),
 			])
 			.then(() => {
