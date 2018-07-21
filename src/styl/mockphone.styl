@@ -1,7 +1,3 @@
-entrance-animation = 1.5s ease-swift-out backwards
-
-phone-glare-size = 3000px
-
 .mockup-phone
 	phone-screen-width = 9vmin * 5
 	phone-screen-height = 16vmin * 5
@@ -13,14 +9,17 @@ phone-glare-size = 3000px
 	phone-body-diameter = (phone-body-width ** 2 + phone-body-height ** 2) ** 0.5
 	phone-body-diameter-angle = math(unit(phone-body-height / phone-body-width, ''), 'atan') * 180deg / PI
 
+	phone-glare-size = 3000px
+
+	entrance-animation = 1.5s ease-swift-out backwards
+
+
 	position relative
 	display block
 	margin auto
 	width phone-body-width
 	height phone-body-height
-	perspective 2000px
-	transform rotate3d(2, -1, 1, 45deg)
-	transform-style preserve-3d
+	transform rotate3d(2, -1, 1, 60deg)
 	transition transform 1s ease-swift
 	animation phoneenter entrance-animation
 	&:hover
@@ -29,14 +28,12 @@ phone-glare-size = 3000px
 			// screen glare
 			opacity 0
 			background-position 0 (- phone-glare-size)
-	*
-		transform-style inherit
-	img
+
+	> img
 		display block
 		position absolute
-		width phone-screen-width !important
-		height phone-screen-height !important
-		max-height unset !important
+		width phone-screen-width
+		height phone-screen-height
 		border-radius 0.5vmin
 		transform translate3d((phone-body-width - phone-screen-width) / 2, (phone-body-height - phone-screen-height) / 2, 0)
 	&::before
@@ -90,14 +87,12 @@ phone-glare-size = 3000px
 			height phone-body-height
 			border-radius 1vmin
 
-@keyframes phoneenter
-	from
-		transform rotate3d(4, -1, 1, 90deg)
-	to
-		transform rotate3d(2, -1, 1, 45deg)
+	@keyframes phoneenter
+		from
+			transform rotate3d(4, -1, 1, 90deg)
 
-@keyframes glareenter
-	from
-		background-position 0 phone-glare-size
-	to
-		background-position 0 0
+	@keyframes glareenter
+		from
+			background-position 0 phone-glare-size
+		to
+			background-position 0 0

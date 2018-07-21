@@ -6,34 +6,32 @@
 
 # Hypertangram
 
-<span class="mockup-phone">![phone with Hypertangram](../img/hypertangram_1.jpg)
+<span class="d3d"><span class="mockup-phone">![phone with Hypertangram](../img/hypertangram_1.jpg)
 <span class="phone-body"></span>
-</span>
+</span></span>
 
 ## Hypertangram is tangram with a twist.
 
-Hypertangram is a challenging geometric puzzle game on Android based on the classic tangram puzzle. What’s different with this one is that, in addition to regular dragging and rotating, **pieces can be resized**.
+**Hypertangram** is a challenging geometric puzzle game on Android based on the classic tangram puzzle. What’s different with this one is that, in addition to regular dragging and rotating, *pieces can be resized*.
 
-<p>
-	<video muted autoplay loop>
-		<source src="../video/hypertangram_2.webm">
-		<source src="../video/hypertangram_2.mp4">
-		<a href="../video/hypertangram_2.mp4">Demo video</a>
-	</video>
-</p>
+<video muted autoplay loop>
+	<source src="../video/hypertangram_2.webm">
+	<source src="../video/hypertangram_2.mp4">
+	<a href="../video/hypertangram_2.mp4">Demo video</a>
+</video>
 
 This is a personal project, and my first “complete” game in terms of features and polish. This game idea had been sitting in the back of my mind for quite a time. I finally did it in about 6 months of free-time development.
 
 Major development challenges were geometry-related. See, I didn’t want grid-based movement like in other tangram apps. I wanted free dragging, rotation, and scaling, with smart edge-snapping. It took a lot of time and rewrites to make the snapping feel right.
 
-<p>
+<span>
 	<video muted autoplay loop>
 		<source src="../video/hypertangram_3.webm">
 		<source src="../video/hypertangram_3.mp4">
 		<a href="../video/hypertangram_3.mp4">Video of old development version</a>
 	</video>
 	<span class="caption">Old prototype</span>
-</p>
+</span>
 
 The other challenge was the solution checking algorithm. Due to the nature of the game, there can be several solutions to a single puzzle, and there is no easy way to find them all by hand, nor by algorithm.
 

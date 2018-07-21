@@ -1,0 +1,127 @@
+.mockup-album
+	case-size = 50vmin
+	disc-size = 46vmin
+	label-size = 16vmin
+	hole-size = 1vmin
+	groove-thickness = 4px
+	disc-color = #252C35
+	
+	rev-time = 0.8s
+	transition-time = 0.5s
+
+
+	display block
+	position relative
+	margin auto
+	width case-size
+	height case-size
+	transform translateZ(0vmin) rotate3d(1, 0, 0, 45deg)
+	transition transform transition-time ease-swift
+	animation albumenter 0.9s ease-swift-out backwards
+
+	> img
+	&::after // shadow
+		display block
+		position absolute
+		right case-size * 0.4
+		width case-size
+		height case-size
+		transition right transition-time ease-swift, opacity transition-time ease-swift, transform transition-time ease-swift
+	> img
+		z-index 2
+		transform translate3d(0, 8vmin, 6vmin) rotate3d(-1, -0.06, -0.06, 45deg)
+	&::after // shadow
+		content ''
+		background linear-gradient(200deg, rgba(#fff, 0.1), rgba(#000, 0.05), rgba(#000, 0.3))
+		opacity 1
+		z-index 3
+		transform translate3d(0, 8vmin, 6vmin) rotate3d(-1, -0.06, -0.06, 45deg) translateZ(1px)
+
+	.album-disc
+		display block
+		position absolute
+		left case-size * 0.7
+		top ((case-size - disc-size) / 2)
+		width disc-size
+		height disc-size
+		border-radius 50%
+		background disc-color;
+		overflow hidden
+		z-index 1
+		transition left transition-time ease-swift
+		> img // label
+			display block
+			position absolute
+			left ((disc-size - label-size) / 2)
+			top ((disc-size - label-size) / 2)
+			width label-size
+			height label-size
+			border solid 2vmin transparent
+			border-radius 50%
+			z-index 3
+		&::before // grooves
+			content ''
+			display block
+			position absolute
+			left groove-thickness
+			right groove-thickness
+			top 0
+			bottom 0
+			background repeating-radial-gradient(transparent, rgba(disc-color, 0.3), rgba(#000, 0.1), transparent groove-thickness)
+			transform-origin center
+			z-index 2
+			transition:
+				border-width transition-time cubic-bezier(1, 0, 0.5, 1),
+				transform transition-time cubic-bezier(1, 0, 0.5, 1)
+		&::after // radial glare
+			content ''
+			display block
+			position absolute
+			left 50%
+			right 50%
+			width 200%
+			height 200%
+			background radial-gradient(closest-side, #FFFFFF68, #FFFFFF60 2%, #FFFFFF48 4%, #EBFCFF40, #FFFFFF20, #FFFFFF10, #FFFFFF08, transparent)
+			z-index 1
+			transform translate(-60%, 5%)
+			transition: transform transition-time ease-swift
+
+	// start <- hover
+	&:not(:hover)
+		transform translateZ(-10vmin) rotate3d(1, 1, 1, -3deg)
+		> img
+		&::after // shadow
+			right 0
+			transform translateZ(10vmin) rotate3d(0, 0, 1, 0deg)
+		&::after // shadow
+			opacity 0
+		.album-disc
+			left ((case-size - disc-size) / 2)
+			&::after // radial glare
+				transform translate(25%, -60%)
+
+	// rotation
+	&:hover .album-disc
+		> img
+		&::before // grooves
+			animation:
+				rotating (rev-time * 2) transition-time cubic-bezier(0.5, 0, 0.5, 0),
+				rotating rev-time (rev-time * 2 + transition-time) linear infinite
+		&::after // angular glare
+			animation glareanimation 70ms transition-time ease-in-out alternate infinite
+
+	@keyframes albumenter
+		from
+			transform translate3d(0, 20vh, -10vmin) rotateX(20deg)
+
+	@keyframes rotating
+		from
+			transform rotate(0deg)
+		to
+			transform rotate(360deg)
+
+	@keyframes glareanimation
+		from
+			transform transform(-50%, -50%) rotate(-30deg)
+		to
+			transform transform(-50%, -50%) rotate(-40deg)
