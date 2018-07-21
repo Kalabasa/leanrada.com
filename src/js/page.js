@@ -35,6 +35,8 @@ function onLoad() {
 	if (!window.pageState.initialized) {
 		window.pageState.initialized = true;
 
+		if (ENV_DEBUG) console.log('initializing page');
+
 		Barba.Pjax.getTransition = function() { return transition };
 
 		Barba.Pjax.start();
@@ -55,6 +57,7 @@ function onLoad() {
 
 		const main = [...document.querySelectorAll('.main')].pop();
 		main.dataset.page = getPageName();
+		main.classList.add('page-active');
 	}
 
 	onReady();
@@ -63,7 +66,6 @@ function onLoad() {
 const transition = Barba.BaseTransition.extend({
 	start() {
 		window.pageState.ready = false;
-		this.finished = false;
 
 		window.scroll({
 			top: 0,
@@ -72,47 +74,77 @@ const transition = Barba.BaseTransition.extend({
 
 		document.body.classList.add('page-transition');
 		document.body.dataset.pageTo = getPageName();
+		this.oldContainer.classList.remove('page-active');
 		this.oldContainer.classList.add('page-exit');
 
 		Promise.all([
-			new Promise((resolve) => setTimeout(resolve, 250)),
-			this.newContainerLoading,
-		]).then(() => {
-			// transplant new head because Barba.js does not do head
-			// new head is in the body in a template called pjax-head
-			const newHead = this.newContainer.querySelector('#pjax-head');
-			this.oldHeadEls = [];
-			if (newHead) {
-				const newHeadContent = document.importNode(newHead.content, true);
-				for(let c of [...newHeadContent.children]) {
-					this.oldHeadEls.push(document.getElementById(c.id));
+				// prevent too much overlap by setting minimum delay before the next page's transition
+				new Promise(resolve => setTimeout(resolve, 300)),
 
-					if (c.tagName === 'SCRIPT') {
-						// Browsers only execute <scripts> freshly created by createElement
-						const clone = document.createElement('script');
-						for (let attr of c.attributes) {
-							clone.setAttribute(attr.name, attr.value);
+				// load subresources after loading new content
+				this.newContainerLoading
+					.then(() => {
+						// set page name to allow scoped CSS
+						this.newContainer.dataset.page = getPageName();
+						this.newContainer.classList.add('page-idle');
+						this.newContainer.scrollTop = 0;
+						delete this.newContainer.style.visibility;
+
+						// transplant new head because Barba.js does not load <head>
+						// new head is in the main content in a template called pjax-head
+						const newHead = this.newContainer.querySelector('#pjax-head');
+
+						let newHeadEls = [];
+						this.oldHeadEls = [];
+
+						if (newHead) {
+							const newHeadContent = document.importNode(newHead.content, true);
+							for(let c of [...newHeadContent.children]) {
+								newHeadEls.push(c);
+								this.oldHeadEls.push(document.getElementById(c.id));
+
+								if (c.tagName === 'SCRIPT') {
+									// Browsers only execute <scripts> freshly created by createElement
+									const clone = document.createElement('script');
+									for (let attr of c.attributes) {
+										clone.setAttribute(attr.name, attr.value);
+									}
+									newHeadContent.replaceChild(clone, c);
+								}
+							}
+							document.head.appendChild(newHeadContent);
+							newHead.remove();
 						}
-						newHeadContent.replaceChild(clone, c);
-					}
-				}
-				document.head.appendChild(newHeadContent);
-				newHead.remove();
-			}
 
-			this.newContainer.dataset.page = getPageName();
+						// wait for subresources to load
+						return Promise.all([
+							newHeadEls.map(el => resolve => {
+								el.addEventListener('load', resolve);
+							}),
+						]);
+					}),
+			])
+			.then(() => {
+				// animate entrance after loading all necessary stuff
+				this.newContainer.classList.remove('page-idle');
+				this.newContainer.classList.add('page-enter');
 
-			this.newContainer.classList.add('page-enter');
+				return new Promise(resolve => {
+					let resolved = false;
+					const resolveOnce = () => {
+						if (!resolved) resolve();
+						resolved = true;
+					};
 
-			this.newContainer.addEventListener('animationend', () => this.finish());
-			setTimeout(() => this.finish(), 3000);
-		});
+					this.newContainer.addEventListener('animationend', resolveOnce);
+
+					setTimeout(resolveOnce, 4000); // maximum transition time
+				});
+			})
+			.then(() => this.finish());
 	},
 
 	finish() {
-		if (this.finished) return;
-		this.finished = true;
-
 		for(let el of this.oldHeadEls) {
 			el.remove();
 		}
@@ -121,6 +153,7 @@ const transition = Barba.BaseTransition.extend({
 		document.body.classList.remove('page-transition');
 		delete document.body.dataset.pageTo;
 		this.newContainer.classList.remove('page-enter');
+		this.newContainer.classList.add('page-active');
 
 		this.done();
 		onReady();
