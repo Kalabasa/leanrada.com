@@ -31,13 +31,13 @@ The game was made with [PixiJS](http://www.pixijs.com), a scene-graph based 2D g
 
 I initially tried [Phaser](https://phaser.io), but it was too much for my taste. Having found out that Phaser uses Pixi underneath, I went with Pixi. I prefer simpler libraries.
 
-## Results (and postmortem)
+## Results
 
 <span>![ratings of PlanetDefense](../img/planetdefense_results.jpg)
 	<span class="caption">Final judging results for PlanetDefense</span>
 </span>
 
-I did not expect to rank high in Graphics, but it was the highest criterion in my submission. I think it’s something to do with the colors, ’cause the pixel art was definitely not great. That was also the gist of some of the comments I received.
+I did not expect to rank high in Graphics. I think it’s something to do with the colors, ’cause the pixel art was definitely not great. The color scheme was also mentioned in the comments.
 
 Here's a little trick to improving any color scheme: **Just overlay a solid color on everything.** It makes every color suddenly connect with each other and gives an overall “mood”.
 

@@ -15,6 +15,10 @@
 
 **FreeformGestureDetector** is an Android library that converts multi-touch gestures into incremental Matrix transformations.
 
-This library arose from the development of <a href="hypertangram.html">Hypertangram</a>. I wanted free manipulation of puzzle pieces because I wanted the game's controls to be intuitive.
+That is, it processes any kind of touch gesture, from single-finger dragging to multitouch skew and scale, and outputs the corresponding Matrix transform.
 
-It's open-source and available on [Github](https://github.com/Kalabasa/FreeformGestureDetector).
+Credits to [Matrix.setPolyToPoly](https://developer.android.com/reference/android/graphics/Matrix) for making this easy.
+
+This library arose from the development of <a href="hypertangram.html">Hypertangram</a>. I wanted free manipulation of puzzle pieces because I wanted the game’s controls to be intuitive.
+
+It’s open-source and available on [Github](https://github.com/Kalabasa/FreeformGestureDetector).

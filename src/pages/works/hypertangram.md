@@ -22,7 +22,9 @@
 
 This is a personal project, and my first “complete” game in terms of features and polish. This game idea had been sitting in the back of my mind for quite a time. I finally did it in about 6 months of free-time development.
 
-Major development challenges were geometry-related. See, I didn’t want grid-based movement like in other tangram apps. I wanted free dragging, rotation, and scaling, with smart edge-snapping. It took a lot of time and rewrites to make the snapping feel right.
+I faced many challenges in the development of this game. Most fo them were geometry-related.
+
+See, I didn’t want grid-based movement like in other tangram apps. I wanted free dragging, rotation, and scaling, with smart edge-snapping. It took a lot of time and rewrites to make it feel right.
 
 <span>
 	<video muted autoplay loop>
@@ -33,12 +35,12 @@ Major development challenges were geometry-related. See, I didn’t want grid-ba
 	<span class="caption">Old prototype</span>
 </span>
 
-The other challenge was the solution checking algorithm. Due to the nature of the game, there can be several solutions to a single puzzle, and there is no easy way to find them all by hand, nor by algorithm.
+Due to the nature of the game, there can be several solutions to a single puzzle. There is no easy way to find them all by hand, nor by algorithm. The solution checking algorithm was a challenge.
 
 ![illustration of multiple solutions](../img/ht_solutions.jpg)
 <span class="caption">Multiple solutions for a single puzzle</span>
 
-Beginning with a simple discrete approach where I would check every pixel intersection, I ended up with a logical approach, using [boolean operations on polygons](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons), in order to implement the win condition &mdash; whether the target shape is filled up by all the pieces.
+Beginning with a simple discrete approach where I would check every pixel intersection, I ended up with a logical approach, using [boolean operations on polygons](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons), in order to implement the win condition.
 
 Music and graphics were created by me. I wanted a minimal look with a physical feel. *Abstract, yet tangible*.
 
