@@ -38,6 +38,6 @@ Fortunately for anyone trying this kind of thing today, election results are now
 
 ![detail view](../img/dynastymap_biv.jpg)
 
-This project was developed as a requirement (Special Problem) for my Computer Science B.S. degree. The idea of political dynasty visualization came from one of my professors. It was also inspired by Hans Rolsing's visualizations and [Trendalyzer](https://www.gapminder.org/tools).
+This project was developed as a requirement (Special Problem) for my Computer Science B.S. degree. The idea of political dynasty visualization came from one of my professors. It was also inspired by Hans Rosling's visualizations and [Trendalyzer](https://www.gapminder.org/tools).
 
 An instance of the app is hosted on the university's development server, but it's not working and I no longer maintain it. You can still see the landing page and the bare app [there](http://agila.upm.edu.ph/~lgrada/dynavis).
