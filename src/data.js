@@ -13,7 +13,8 @@ const data = {
 			image: {
 				src: 'img/hypertangram_0.jpg',
 				alt: 'screenshot of Hypertangram gameplay'
-			}
+			},
+			tags: ['game', 'java', 'android'],
 		},
 		{
 			id: 'freeformgesturedetector',
@@ -28,6 +29,7 @@ const data = {
 				src: 'img/freeformgesturedetector_head.png',
 				alt: 'README of the project',
 			},
+			tags: ['library', 'java', 'android', 'open source'],
 		},
 		{
 			id: 'planetdefense',
@@ -40,6 +42,7 @@ const data = {
 				src: 'img/planetdefense_0.jpg',
 				alt: 'screenshot of PlanetDefense gameplay'
 			},
+			tags: ['game', 'js', 'pixi', 'web', 'html5', 'canvas'],
 		},
 		{
 			id: 'conversations',
@@ -54,7 +57,8 @@ const data = {
 			image: {
 				src: 'img/conversations_0.jpg',
 				alt: 'Conversations album art'
-			}
+			},
+			tags: ['music'],
 		},
 		{
 			id: 'dynastymap',
@@ -65,7 +69,8 @@ const data = {
 			image: {
 				src: 'img/dynastymap_0.jpg',
 				alt: `screenshot of DynastyMap's welcome screen`
-			}
+			},
+			tags: ['js', 'react', 'html5'],
 		},
 	],
 
@@ -123,8 +128,5 @@ const data = {
 		// { name: 'Ludum Dare (Legacy)', img: 'img/icon-game.svg', href: 'http://legacy.ludumdare.com/compo/author/kalabasa/' },
 	],
 };
-
-data.projects_featured = data.featured_projects.map(id => data.projects.find(p => p.id === id));
-data.projects_byid = _.keyBy(data.projects, 'id');
 
 export default data;

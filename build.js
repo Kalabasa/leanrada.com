@@ -26,7 +26,6 @@ import rollupCommonjs from 'rollup-plugin-commonjs';
 import rollupBabel from 'rollup-plugin-babel';
 
 import relhref from './src/handlebars/relhref.js';
-import data from './src/data.js';
 
 const prod = process.argv.includes('--prod');
 if (prod) console.log('prod mode');
@@ -37,14 +36,21 @@ const jsConstants = {
 	ENV_DEBUG: !prod,
 };
 
-// Begin build
-
 [
 	'build',
 	'build/works',
 ].forEach(dir => {
 	if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-})
+});
+
+if (prod) {
+	require('./src/genIndex.js');
+	require('./src/compileData.js');
+}
+
+import data from './gen/data.json';
+
+// Begin build
 
 relhref.use(Handlebars);
 Handlebars.registerPartial('content', '{{{ content }}}')
