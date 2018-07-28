@@ -4,7 +4,7 @@ import path from 'path';
 import elasticlunr from 'elasticlunr';
 import marked from 'marked';
 import markedPlaintext from 'marked-plaintext';
-import striptags from 'striptags';
+import h2p from 'html2plaintext';
 
 import { toRef } from './dataRef.js';
 import data from './data.js';
@@ -25,7 +25,7 @@ const documents = [
 			marked(
 				fs.readFileSync(path.join(__dirname, `../pages/works/${p.id}.md`), 'utf8'),
 				markedOptions)
-		].filter(v => v).map(v => striptags(v)).join(' ').replace(/\s+/g, ' '),
+		].filter(v => v).map(v => h2p(v)).join(' ').replace(/\s+/g, ' '),
 		tags: [
 			...(p.tags || []),
 			...(p.tech || []),
@@ -33,8 +33,6 @@ const documents = [
 		].map(v => v.toLowerCase()).filter((v, i, self) => self.indexOf(v) === i).join(' '),
 	})),
 ];
-
-console.log(documents);
 
 const idx = elasticlunr(function() {
 	this.setRef('id');

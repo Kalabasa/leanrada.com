@@ -42,7 +42,7 @@ export default {
 				src: 'img/planetdefense_0.jpg',
 				alt: 'screenshot of PlanetDefense gameplay'
 			},
-			tags: ['game', 'videogame', 'js', 'pixi', 'html5', 'canvas', 'web', 'gamedev', 'planet'],
+			tags: ['game', 'videogame', 'js', 'pixi', 'html', 'html5', 'canvas', 'web', 'gamedev', 'planet'],
 		},
 		{
 			id: 'conversations',
@@ -58,7 +58,7 @@ export default {
 				src: 'img/conversations_0.jpg',
 				alt: 'Conversations album art'
 			},
-			tags: ['music', 'jazz', 'jazzhop', 'chilhop'],
+			tags: ['music', 'jazz', 'jazzhop', 'chillhop'],
 		},
 		{
 			id: 'dynastymap',
@@ -70,7 +70,7 @@ export default {
 				src: 'img/dynastymap_0.jpg',
 				alt: `screenshot of DynastyMap's welcome screen`
 			},
-			tags: ['js', 'react', 'backbone', 'html5', 'web', 'politics'],
+			tags: ['js', 'react', 'backbone', 'html', 'html5', 'css', 'web', 'politics'],
 		},
 	],
 
