@@ -1,5 +1,6 @@
 import axios from 'axios';
-import elasticlunr from 'elasticlunr/elasticlunr.min';
+import { cacheAdapterEnhancer } from 'axios-extensions';
+import elasticlunr from 'elasticlunr/elasticlunr.min.js';
 import handlebars from 'handlebars/lib/handlebars.js';
 
 import { page } from '../js/common.js';
@@ -7,6 +8,10 @@ import { fromRef } from '../data/dataRef.js';
 import searchConfig from '../data/searchConfig.js';
 
 if (ENV_DEBUG) console.log('search.js execute');
+
+const http = axios.create({
+	adapter: cacheAdapterEnhancer(axios.defaults.adapter),
+});
 
 page.ready(() => {
 	if (ENV_DEBUG) console.log('search.js ready');
@@ -22,7 +27,7 @@ page.ready(() => {
 });
 
 function search(query) {
-	history.pushState(null, null, '?q=' + encodeURIComponent(query));
+	history.pushState(null, null, '?q=' + (query ? encodeURIComponent(query) : ''));
 
 	document.querySelector('section.search .search-form input').value = query;
 	document.querySelectorAll('section.search .query').forEach(el => el.innerText = query);
@@ -43,8 +48,8 @@ function search(query) {
 	existingResults.deleteContents();
 
 	Promise.all([
-		axios.get('/idx.json'),
-		axios.get('/data.json'),
+		http.get('/idx.json'),
+		http.get('/data.json'),
 	]).then(([idxResp, dataResp]) => {
 		const idx = elasticlunr.Index.load(idxResp.data);
 		let results = idx.search(query, searchConfig);
