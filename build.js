@@ -12,7 +12,7 @@ const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 const globAsync = promisify(glob);
 
-import Handlebars from 'handlebars';
+import handlebars from 'handlebars';
 import marked from 'marked';
 
 import stylus from 'stylus';
@@ -21,7 +21,9 @@ import uglifycss from 'uglifycss';
 
 import { rollup } from 'rollup';
 import rollupReplace from 'rollup-plugin-replace';
+import rollupBuiltins from 'rollup-plugin-node-builtins';
 import rollupResolve from 'rollup-plugin-node-resolve';
+import rollupGlobals from 'rollup-plugin-node-globals';
 import rollupCommonjs from 'rollup-plugin-commonjs';
 import rollupBabel from 'rollup-plugin-babel';
 
@@ -44,16 +46,16 @@ const jsConstants = {
 });
 
 if (prod) {
-	require('./src/genIndex.js');
-	require('./src/compileData.js');
+	require('./src/data/genIndex.js');
+	require('./src/data/compileData.js');
 }
 
 import data from './gen/data.json';
 
 // Begin build
 
-relhref.use(Handlebars);
-Handlebars.registerPartial('content', '{{{ content }}}')
+relhref.use(handlebars);
+handlebars.registerPartial('content', '{{{ content }}}')
 
 const partials = globAsync('src/handlebars/*.partial.handlebars')
 	.then(files => {
@@ -65,7 +67,7 @@ const partials = globAsync('src/handlebars/*.partial.handlebars')
 
 			const partial = readFileAsync(file, 'utf8')
 				.then(template => {
-					Handlebars.registerPartial(partialName, template);
+					handlebars.registerPartial(partialName, template);
 					return partialName;
 				});
 			partials.push(partial);
@@ -81,12 +83,12 @@ const pageHtmlFiles = partials
 			const pageName = path.basename(file, path.extname(file));
 			const pagePath = `/${pageName}.html`;
 			const pageData = { ...data, pagePath };
-			const out = `build/${pagePath}`;
+			const out = `build${pagePath}`;
 
 			console.log(`compiling ${file} ➔ ${out}`);
 
 			const htmlFile = readFileAsync(file, 'utf8')
-				.then(src => Handlebars.compile(src)(pageData))
+				.then(src => handlebars.compile(src)(pageData))
 				.then(html => writeFileAsync(out, html))
 				.then(() => out);
 			pageHtmlFiles.push(htmlFile);
@@ -116,7 +118,7 @@ const mdHtmlFiles = partials
 					// supply variables in md itself
 					if (meta.template) {
 						const pageData = meta.data ? _.get(data, meta.data) : {};
-						md = Handlebars.compile(md)(pageData);
+						md = handlebars.compile(md)(pageData);
 					}
 					return { md, meta };
 				})
@@ -130,10 +132,10 @@ const mdHtmlFiles = partials
 					if (meta.template) {
 						const template = fs.readFileSync(`src/handlebars/${meta.template}.handlebars`, 'utf8');
 						const pageData = meta.data ? _.get(data, meta.data) : {};
-						html = Handlebars.compile(template)({
+						html = handlebars.compile(template)({
 							...pageData,
 							pagePath,
-							content: new Handlebars.SafeString(html)
+							content: new handlebars.SafeString(html)
 						});
 					}
 					return html;
@@ -189,10 +191,12 @@ const cssFiles = globAsync('src/pages/**/*.styl')
 const jsFiles = globAsync('src/pages/**/*.js')
 	.then(files => {
 		const replace = rollupReplace(jsConstants);
+		const builtins = rollupBuiltins();
 		const resolve = rollupResolve({
 			browser: true,
 		});
 		const commonjs = rollupCommonjs();
+		const globals = rollupGlobals();
 		const babel = rollupBabel({
 			exclude: 'node_modules/**',
 		});
@@ -201,6 +205,8 @@ const jsFiles = globAsync('src/pages/**/*.js')
 			replace,
 			resolve,
 			commonjs,
+			globals,
+			builtins,
 		];
 		if (prod) {
 			plugins.push(babel);
@@ -221,6 +227,7 @@ const jsFiles = globAsync('src/pages/**/*.js')
 					return bundle.write({
 						file: out,
 						format: 'iife',
+						strict: false, // due to elasticlunr
 						name: scriptName,
 					});
 				})
@@ -231,7 +238,13 @@ const jsFiles = globAsync('src/pages/**/*.js')
 	});
 
 console.log('copying src/assets ➔ build');
-ncp('src/assets', 'build')
+ncp('src/assets', 'build');
+
+console.log('copying gen/idx.json ➔ build/idx.json');
+fs.createReadStream('gen/idx.json').pipe(fs.createWriteStream('build/idx.json'));
+
+console.log('copying gen/data.json ➔ build/data.json');
+fs.createReadStream('gen/data.json').pipe(fs.createWriteStream('build/data.json'));
 
 if (prod) {
 	Promise.all([cssFiles, htmlFiles])

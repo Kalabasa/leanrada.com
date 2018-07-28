@@ -1,4 +1,4 @@
-import page from '../../js/page.js';
+import { page } from '../../js/common.js';
 import supportBlendMode from '../../js/supportBlendMode.js';
 
 if (ENV_DEBUG) console.log('work.js execute');

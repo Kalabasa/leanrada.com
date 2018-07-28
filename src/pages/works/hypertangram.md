@@ -22,7 +22,7 @@
 
 This is a personal project, and my first “complete” game in terms of features and polish. This game idea had been sitting in the back of my mind for quite a time. I finally did it in about 6 months of free-time development.
 
-I faced many challenges in the development of this game. Most fo them were geometry-related.
+I faced many challenges in the development of this game. Most of them were geometry-related.
 
 See, I didn’t want grid-based movement like in other tangram apps. I wanted free dragging, rotation, and scaling, with smart edge-snapping. It took a lot of time and rewrites to make it feel right.
 

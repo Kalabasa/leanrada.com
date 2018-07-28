@@ -1,20 +1,20 @@
 import _ from 'lodash';
 
 // data for the whole site!
-const data = {
+export default {
 	featured_projects: [ 'hypertangram', 'planetdefense', 'conversations' ],
 	projects: [
 		{
 			id: 'hypertangram',
 			name: 'Hypertangram',
 			links: [{ name: 'Google Play', url: 'https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram' }],
-			short_description: 'Mobile puzzle game about packing shapes together',
+			short_description: 'Mobile puzzle game about packing shapes together.',
 			tech: ['Android', 'Kotlin', 'Realm', 'Robolectric'],
 			image: {
 				src: 'img/hypertangram_0.jpg',
 				alt: 'screenshot of Hypertangram gameplay'
 			},
-			tags: ['game', 'videogame', 'game design', 'java', 'android'],
+			tags: ['game', 'videogame', 'game design', 'java', 'android', 'google play', 'gamedev', 'tangram', 'puzzle'],
 		},
 		{
 			id: 'freeformgesturedetector',
@@ -29,7 +29,7 @@ const data = {
 				src: 'img/freeformgesturedetector_head.png',
 				alt: 'README of the project',
 			},
-			tags: ['library', 'java', 'android', 'open source'],
+			tags: ['library', 'java', 'android', 'open source', 'hypertangram', 'gesture'],
 		},
 		{
 			id: 'planetdefense',
@@ -42,7 +42,7 @@ const data = {
 				src: 'img/planetdefense_0.jpg',
 				alt: 'screenshot of PlanetDefense gameplay'
 			},
-			tags: ['game', 'videogame', 'js', 'pixi', 'html5', 'canvas'],
+			tags: ['game', 'videogame', 'js', 'pixi', 'html5', 'canvas', 'web', 'gamedev', 'planet'],
 		},
 		{
 			id: 'conversations',
@@ -58,7 +58,7 @@ const data = {
 				src: 'img/conversations_0.jpg',
 				alt: 'Conversations album art'
 			},
-			tags: ['music'],
+			tags: ['music', 'jazz', 'jazzhop', 'chilhop'],
 		},
 		{
 			id: 'dynastymap',
@@ -70,7 +70,7 @@ const data = {
 				src: 'img/dynastymap_0.jpg',
 				alt: `screenshot of DynastyMap's welcome screen`
 			},
-			tags: ['js', 'react', 'backbone', 'html5'],
+			tags: ['js', 'react', 'backbone', 'html5', 'web', 'politics'],
 		},
 	],
 
@@ -128,5 +128,3 @@ const data = {
 		// { name: 'Ludum Dare (Legacy)', img: 'img/icon-game.svg', href: 'http://legacy.ludumdare.com/compo/author/kalabasa/' },
 	],
 };
-
-export default data;

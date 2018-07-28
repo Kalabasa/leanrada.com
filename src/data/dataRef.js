@@ -1,3 +1,5 @@
+// generates reference IDs to data and back
+
 export function fromRef(data, ref) {
 	const refSplit = ref.split('/', 2);
 	const type = refSplit[0];

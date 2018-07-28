@@ -31,3 +31,5 @@ The final product may not be the best, but it's a learning experience, so I can 
 I've been making music since 15 (more or less). Music is yet another hobby of mine aside from programming. Starting with [Notessimo](https://www.notessimo.net) to fuller DAWs like [LMMS](https://lmms.io/), I've been making electronic music with genres ranging from mellow solo piano to cheesy dance music. I have also tried [FL Studio](https://www.image-line.com/flstudio).
 
 Have a listen on [Spotify](https://open.spotify.com/album/2LEKLuoWYauyAlQ8JwoPc2).
+
+Or name your own price on [Bandcamp](http://lreaadna.bandcamp.com/album/conversations).

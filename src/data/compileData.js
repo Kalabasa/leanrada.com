@@ -2,14 +2,15 @@ import fs from 'fs';
 import path from 'path';
 
 import _ from 'lodash';
-import lunr from 'lunr';
+import elasticlunr from 'elasticlunr';
 
 import { fromRef, refId, dataUrl } from './dataRef.js';
 import data from './data.js';
+import searchConfig from './searchConfig.js';
 
 console.log('compiling data');
 
-const idx = lunr.Index.load(require('../gen/idx.json'));
+const idx = elasticlunr.Index.load(require('../../gen/idx.json'));
 
 // TODO See if suggested items is reusable
 const suggestedSize = 3;
@@ -18,17 +19,18 @@ data.projects.forEach((proj, projIndex) => {
 		...(proj.tags || []),
 		...[proj.short_description, proj.full_description].filter(v => v).join(' ').split(/\s+/)
 	].map(v => v.toLowerCase()).filter((v, i, self) => self.indexOf(v) === i);
-	query.splice(10);
+	query.splice(8);
 
-	const related = idx.search(query.join(' '))
+	const related = idx.search(query.join(' '), searchConfig)
 		.filter(r => refId(r.ref) !== proj.id)
 		.filter(r => r.score > 0.4);
 
 	const suggested = related.map(r => ({
 		...fromRef(data, r.ref),
-		related: r.score > 0.8,
+		related: true,
 	}));
 
+	console.log(`suggestions for ${proj.name}: ${suggested.map(s => s.item.name).join(', ')}`);
 	suggested.splice(suggestedSize);
 
 	let i = 1;
@@ -41,7 +43,7 @@ data.projects.forEach((proj, projIndex) => {
 		suggested.push({
 			item: next,
 			url,
-			related: 0,
+			related: false,
 		});
 
 		if (i > data.projects.length) break;
@@ -61,4 +63,4 @@ data.projects_featured = data.featured_projects.map(id => data.projects.find(p =
 data.projects_byid = _.keyBy(data.projects, 'id');
 
 if (!fs.existsSync('gen')) fs.mkdirSync('gen');
-fs.writeFileSync(path.join(__dirname, '../gen/data.json'), JSON.stringify(data));
+fs.writeFileSync(path.join(__dirname, '../../gen/data.json'), JSON.stringify(data));
