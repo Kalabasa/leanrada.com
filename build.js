@@ -50,7 +50,7 @@ if (prod) {
 	require('./src/data/compileData.js');
 }
 
-import data from './gen/data.json';
+const data = require('./gen/data.json');
 
 // Begin build
 
@@ -245,11 +245,3 @@ fs.createReadStream('gen/idx.json').pipe(fs.createWriteStream('build/idx.json'))
 
 console.log('copying gen/data.json ➔ build/data.json');
 fs.createReadStream('gen/data.json').pipe(fs.createWriteStream('build/data.json'));
-
-if (prod) {
-	Promise.all([cssFiles, htmlFiles])
-		.then(() => {
-			console.log('optimizing fonts');
-			spawn('node_modules/.bin/subfont', ['build/index.html', '-i']);
-		});
-}

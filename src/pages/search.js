@@ -16,7 +16,14 @@ const http = axios.create({
 page.ready(() => {
 	if (ENV_DEBUG) console.log('search.js ready');
 
-	const query = (new URL(window.location)).searchParams.get('q');
+	let query = '';
+	if (window.location.hash.length) {
+		query = decodeURIComponent(window.location.hash.substring(1));
+	} else {
+		// query string fallback
+		query = (new URL(window.location)).searchParams.q;
+	}
+
 	search(query);
 
 	const form = document.querySelector('section.search form.search-form');
@@ -27,7 +34,7 @@ page.ready(() => {
 });
 
 function search(query) {
-	history.pushState(null, null, '?q=' + (query ? encodeURIComponent(query) : ''));
+	history.pushState(null, null, '#' + (query ? encodeURIComponent(query) : ''));
 
 	document.querySelector('section.search .search-form input').value = query;
 	document.querySelectorAll('section.search .query').forEach(el => el.innerText = query);
@@ -54,7 +61,7 @@ function search(query) {
 		const idx = elasticlunr.Index.load(idxResp.data);
 		let results = idx.search(query, searchConfig);
 
-		if (ENV_DEBUG) console.log('raw search results', query, results);
+		if (ENV_DEBUG) console.log(`raw search results "${query}": `, results);
 		results = results.filter(v => v.score > 0.3);
 
 		if (results.length) {
