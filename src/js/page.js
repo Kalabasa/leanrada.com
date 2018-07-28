@@ -28,7 +28,7 @@ function onReady() {
 	window.pageState.readyCallbacks = [];
 
 	const main = [...document.querySelectorAll('.main')].pop();
-	main.focus(); // mainly for enabling keyboard scroll, because body isn't scrollable, .main is
+	main.focus({ preventScroll: true }); // mainly for enabling keyboard scroll, because body isn't scrollable, .main is
 }
 
 function onLoad() {
@@ -68,6 +68,7 @@ const transition = Barba.BaseTransition.extend({
 		window.pageState.ready = false;
 
 		window.scroll({
+			left: 0,
 			top: 0,
 			behavior: 'smooth'
 		});
@@ -87,7 +88,7 @@ const transition = Barba.BaseTransition.extend({
 						// set page name to allow scoped CSS
 						this.newContainer.dataset.page = getPageName();
 						this.newContainer.classList.add('page-idle');
-						this.newContainer.scrollTop = 0;
+						// this.newContainer.scrollTop = 0;
 						delete this.newContainer.style.visibility;
 
 						// transplant new head because Barba.js does not load <head>
@@ -101,7 +102,9 @@ const transition = Barba.BaseTransition.extend({
 							const newHeadContent = document.importNode(newHead.content, true);
 							for(let c of [...newHeadContent.children]) {
 								newHeadEls.push(c);
-								this.oldHeadEls.push(document.getElementById(c.id));
+
+								const old = document.getElementById(c.id);
+								if (old) this.oldHeadEls.push(old);
 
 								if (c.tagName === 'SCRIPT') {
 									// Browsers only execute <scripts> freshly created by createElement

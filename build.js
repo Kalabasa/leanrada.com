@@ -131,7 +131,10 @@ const mdHtmlFiles = partials
 					// provide page template
 					if (meta.template) {
 						const template = fs.readFileSync(`src/handlebars/${meta.template}.handlebars`, 'utf8');
-						const pageData = meta.data ? _.get(data, meta.data) : {};
+						const pageData = {
+							...(_.get(data, meta.data || '_______', {})),
+							..._.omit(meta, 'template', 'data'),
+						};
 						html = handlebars.compile(template)({
 							...pageData,
 							pagePath,

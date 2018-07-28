@@ -5,6 +5,17 @@ export default {
 	featured_projects: [ 'hypertangram', 'planetdefense', 'conversations' ],
 	projects: [
 		{
+			id: 'kalabasa',
+			name: 'kalabasa.github.io',
+			short_description: 'Portfolio and personal page of me.',
+			tech: ['HTML5', 'Stylus', 'Javascript'],
+			image: {
+				src: 'img/kalabasa_0.jpg',
+				alt: 'screenshot of the intro page'
+			},
+			tags: ['css', 'portfolio', 'web', 'js', 'rollup'],
+		},
+		{
 			id: 'hypertangram',
 			name: 'Hypertangram',
 			links: [{ name: 'Google Play', url: 'https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram' }],
@@ -42,7 +53,7 @@ export default {
 				src: 'img/planetdefense_0.jpg',
 				alt: 'screenshot of PlanetDefense gameplay'
 			},
-			tags: ['game', 'videogame', 'js', 'pixi', 'html', 'html5', 'canvas', 'web', 'gamedev', 'planet'],
+			tags: ['game', 'videogame', 'js', 'pixi', 'html', 'html5', 'canvas', 'gamedev', 'planet'],
 		},
 		{
 			id: 'conversations',
