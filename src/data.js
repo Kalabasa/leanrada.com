@@ -14,7 +14,7 @@ const data = {
 				src: 'img/hypertangram_0.jpg',
 				alt: 'screenshot of Hypertangram gameplay'
 			},
-			tags: ['game', 'java', 'android'],
+			tags: ['game', 'videogame', 'game design', 'java', 'android'],
 		},
 		{
 			id: 'freeformgesturedetector',
@@ -42,7 +42,7 @@ const data = {
 				src: 'img/planetdefense_0.jpg',
 				alt: 'screenshot of PlanetDefense gameplay'
 			},
-			tags: ['game', 'js', 'pixi', 'web', 'html5', 'canvas'],
+			tags: ['game', 'videogame', 'js', 'pixi', 'html5', 'canvas'],
 		},
 		{
 			id: 'conversations',
@@ -70,7 +70,7 @@ const data = {
 				src: 'img/dynastymap_0.jpg',
 				alt: `screenshot of DynastyMap's welcome screen`
 			},
-			tags: ['js', 'react', 'html5'],
+			tags: ['js', 'react', 'backbone', 'html5'],
 		},
 	],
 

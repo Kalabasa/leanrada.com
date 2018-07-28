@@ -11,7 +11,8 @@ console.log('compiling data');
 
 const idx = lunr.Index.load(require('../gen/idx.json'));
 
-const suggestedSize = 2;
+// TODO See if suggested items is reusable
+const suggestedSize = 3;
 data.projects.forEach((proj, projIndex) => {
 	const query = [
 		...(proj.tags || []),
@@ -21,9 +22,14 @@ data.projects.forEach((proj, projIndex) => {
 
 	const related = idx.search(query.join(' '))
 		.filter(r => refId(r.ref) !== proj.id)
-		.filter(r => r.score > 0.5);
+		.filter(r => r.score > 0.4);
 
-	const suggested = related.map(r => fromRef(data, r.ref));
+	const suggested = related.map(r => ({
+		...fromRef(data, r.ref),
+		related: r.score > 0.8,
+	}));
+
+	suggested.splice(suggestedSize);
 
 	let i = 1;
 	while (suggested.length < suggestedSize) {
@@ -35,6 +41,7 @@ data.projects.forEach((proj, projIndex) => {
 		suggested.push({
 			item: next,
 			url,
+			related: 0,
 		});
 
 		if (i > data.projects.length) break;
@@ -42,8 +49,11 @@ data.projects.forEach((proj, projIndex) => {
 
 	proj.suggested = suggested.map(v => ({
 		name: v.item.name,
+		description: v.item.short_description,
 		imgSrc: v.item.image.src,
+		typeClass: 'works', // FIXME Hardcoded value
 		url: v.url,
+		related: v.related,
 	}));
 });
 

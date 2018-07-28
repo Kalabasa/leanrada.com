@@ -29,7 +29,7 @@ const searchable = [
 			...(p.tags || []),
 			...(p.tech || []),
 			...(p.links || []).map(l => l.name)
-		].join(' '),
+		].map(v => v.toLowerCase()).filter((v, i, self) => self.indexOf(v) === i),
 	})),
 ];
 

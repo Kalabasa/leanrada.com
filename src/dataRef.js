@@ -5,7 +5,7 @@ export function fromRef(data, ref) {
 	switch(type) {
 		case 'projects':
 			const item = data.projects.find(p => p.id === id);
-			return { item, url: `/works/${item.id}.html` };
+			return { item, type: 'project', url: `/works/${item.id}.html` };
 		default:
 			throw new Error(`unknown type: ${type}`);
 	}
