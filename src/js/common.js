@@ -1,23 +1,28 @@
 import page from './page.js';
+import Barba from 'barba.js';
 
 page.ready(() => {
-	const searchForm = document.querySelector('#header-search');
-	const searchInput = document.querySelector('#header-search input');
+	const searchForm = [...document.querySelectorAll('#header-search')].pop();
+	const searchInput = [...document.querySelectorAll('#header-search input')].pop();
 
 	// use hash params instead of query params for performance
 	searchForm.addEventListener('submit', event => {
 		event.preventDefault();
 		if (searchInput.value) {
-			window.location.href = `/search.html#${encodeURIComponent(searchInput.value)}`;
+			const url = `/search.html#${encodeURIComponent(searchInput.value)}`;
+			Barba.Pjax.goTo(url);
+			if (window.location.href !== url) window.location.href = url;
+			window.dispatchEvent(new HashChangeEvent('hashchange'));
 		}
 	});
 
 	// search.html prefetch
 	const prefetchSearch = () => {
-		if (searchInput.value) {
+		if ((searchInput.value || '').length >= 2) {
 			const link = document.createElement('link');
-			link.setAttribute('rel', 'preload');
-			link.setAttribute('href', '/search.html');
+			link.rel = 'preload';
+			link.href = '/search.html';
+			link.as = 'fetch';
 			document.querySelector('head').appendChild(link);
 
 			searchInput.removeEventListener('change', prefetchSearch);

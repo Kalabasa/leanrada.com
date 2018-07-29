@@ -1,3 +1,4 @@
+import queryString from 'query-string';
 import axios from 'axios';
 import { cacheAdapterEnhancer } from 'axios-extensions';
 import elasticlunr from 'elasticlunr/elasticlunr.min.js';
@@ -16,25 +17,45 @@ const http = axios.create({
 page.ready(() => {
 	if (ENV_DEBUG) console.log('search.js ready');
 
-	let query = '';
-	if (window.location.hash.length) {
-		query = decodeURIComponent(window.location.hash.substring(1));
-	} else {
-		// query string fallback
-		query = (new URL(window.location)).searchParams.q;
-	}
-
-	search(query);
+	execQuery();
+	if (ENV_DEBUG) console.log('adding hashchange');
+	window.addEventListener('hashchange', execQuery, false);
 
 	const form = document.querySelector('section.search form.search-form');
 	form.addEventListener('submit', event => {
 		event.preventDefault();
 		search(form.elements.q.value);
 	});
+
+	const input = document.querySelector('section.search .search-form input');
+	input.addEventListener('focus', () => {
+		input.select();
+	});
 });
 
+page.leave(() => {
+	if (ENV_DEBUG) console.log('removing hashchange');
+	window.removeEventListener('hashchange', execQuery);
+});
+
+function execQuery() {
+	let query = '';
+	if (window.location.hash.length) {
+		query = decodeURIComponent(window.location.hash.substring(1));
+	} else {
+		// query string fallback
+		query = queryString.parse(window.location.search).q || '';
+	}
+
+	search(query);
+}
+
 function search(query) {
-	history.pushState(null, null, '#' + (query ? encodeURIComponent(query) : ''));
+	console.log(query);
+	if (!query) return;
+
+	const hash = '#' + encodeURIComponent(query);
+	history.pushState(null, null, '//' + window.location.host + window.location.pathname + hash);
 
 	document.querySelector('section.search .search-form input').value = query;
 	document.querySelectorAll('section.search .query').forEach(el => el.innerText = query);

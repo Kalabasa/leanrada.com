@@ -4,6 +4,7 @@ window.pageState = window.pageState || {
 	initialized: false,
 	ready: false,
 	readyCallbacks: [],
+	leaveCallbacks: [],
 };
 
 if (document.readyState === 'loading') {
@@ -19,16 +20,22 @@ function ready(callback) {
 		window.pageState.readyCallbacks.push(callback);
 	}
 }
+function leave(callback) {
+	window.pageState.leaveCallbacks.push(callback);
+}
 
 function onReady() {
 	window.pageState.ready = true;
-	for (let c of window.pageState.readyCallbacks) {
-		c();
-	}
+	for (let c of window.pageState.readyCallbacks) c();
 	window.pageState.readyCallbacks = [];
 
 	const main = [...document.querySelectorAll('.main')].pop();
 	main.focus({ preventScroll: true }); // mainly for enabling keyboard scroll, because body isn't scrollable, .main is
+}
+
+function onLeave() {
+	for (let c of window.pageState.leaveCallbacks) c();
+	window.pageState.leaveCallbacks = [];
 }
 
 function onLoad() {
@@ -66,6 +73,7 @@ function onLoad() {
 const transition = Barba.BaseTransition.extend({
 	start() {
 		window.pageState.ready = false;
+		onLeave();
 
 		window.scroll({
 			left: 0,
@@ -180,4 +188,5 @@ function countSeps(path) {
 
 export default {
 	ready,
+	leave,
 };
