@@ -13,7 +13,7 @@ export default {
 				src: 'img/kalabasa_0.jpg',
 				alt: 'screenshot of the intro page'
 			},
-			tags: ['css', 'portfolio', 'web', 'js', 'rollup'],
+			tags: ['css', 'css3', 'portfolio', 'web', 'js', 'rollup', 'ui', 'animation'],
 		},
 		{
 			id: 'hypertangram',
@@ -25,7 +25,7 @@ export default {
 				src: 'img/hypertangram_0.jpg',
 				alt: 'screenshot of Hypertangram gameplay'
 			},
-			tags: ['game', 'videogame', 'game design', 'java', 'android', 'google play', 'gamedev', 'tangram', 'puzzle'],
+			tags: ['game', 'videogame', 'game design', 'java', 'android', 'google play', 'gamedev', 'tangram', 'puzzle', 'ux', 'graphics', 'music', 'sound effects'],
 		},
 		{
 			id: 'freeformgesturedetector',
@@ -40,7 +40,7 @@ export default {
 				src: 'img/freeformgesturedetector_head.png',
 				alt: 'README of the project',
 			},
-			tags: ['library', 'java', 'android', 'open source', 'hypertangram', 'gesture'],
+			tags: ['library', 'java', 'android', 'open source', 'hypertangram', 'gesture', 'ui'],
 		},
 		{
 			id: 'planetdefense',
@@ -69,7 +69,7 @@ export default {
 				src: 'img/conversations_0.jpg',
 				alt: 'Conversations album art'
 			},
-			tags: ['music', 'jazz', 'jazzhop', 'chillhop'],
+			tags: ['music', 'jazz', 'jazzhop', 'chillhop', 'art'],
 		},
 		{
 			id: 'dynastymap',
