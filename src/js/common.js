@@ -10,7 +10,12 @@ page.ready(() => {
 		event.preventDefault();
 		if (searchInput.value) {
 			const url = `/search.html#${encodeURIComponent(searchInput.value)}`;
-			Barba.Pjax.goTo(url);
+			try {
+				// Breaks when hash change
+				Barba.Pjax.goTo(url);
+			} catch (err) {
+				console.error(err);
+			}
 			if (window.location.href !== url) window.location.href = url;
 			window.dispatchEvent(new HashChangeEvent('hashchange'));
 		}

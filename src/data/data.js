@@ -81,7 +81,7 @@ export default {
 				src: 'img/dynastymap_0.jpg',
 				alt: `screenshot of DynastyMap's welcome screen`
 			},
-			tags: ['js', 'react', 'backbone', 'html', 'html5', 'css', 'web', 'politics'],
+			tags: ['js', 'react', 'reactjs', 'backbone', 'backbonejs', 'mapboxjs', 'leaflet', 'leafletjs', 'd3js', 'html', 'html5', 'css', 'web', 'politics'],
 		},
 	],
 
