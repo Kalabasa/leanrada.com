@@ -18,7 +18,6 @@ page.ready(() => {
 	if (ENV_DEBUG) console.log('search.js ready');
 
 	execQuery();
-	if (ENV_DEBUG) console.log('adding hashchange');
 	window.addEventListener('hashchange', execQuery, false);
 
 	const form = document.querySelector('section.search form.search-form');
@@ -34,7 +33,6 @@ page.ready(() => {
 });
 
 page.leave(() => {
-	if (ENV_DEBUG) console.log('removing hashchange');
 	window.removeEventListener('hashchange', execQuery);
 });
 
@@ -51,7 +49,6 @@ function execQuery() {
 }
 
 function search(query) {
-	console.log(query);
 	if (!query) return;
 
 	const hash = '#' + encodeURIComponent(query);
