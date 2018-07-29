@@ -3,8 +3,6 @@
 
 image-size = 300px
 image-gap = 20px
-appear-duration = 0.12s
-disappear-duration = 0.2s
 
 [data-page-to^='works/']
 	page-transition-color(color-accent)
@@ -31,6 +29,8 @@ disappear-duration = 0.2s
 			flex 1 1 auto
 			flex-wrap wrap
 			margin (- image-gap / 2)
+			padding-bottom 5vw
+			transform skewY(holy-angle)
 			> *
 				margin (image-gap / 2)
 			&::after // spacer
@@ -47,64 +47,95 @@ disappear-duration = 0.2s
 		flex 0 1 auto
 		width image-size
 		height image-size
+		overflow hidden
+		transition transform 0.2s ease-back-out
+
 		> *
+			display block
 			position absolute
 			left 0
 			right 0
-			top 0
-			bottom 0
+			top (image-size * sin(holy-angle))
+			bottom (image-size * sin(holy-angle))
+			transform skewY(- holy-angle)
+
 		.project-image
 			width 100%
-			height 100%
+			height (image-size * (1 - 2 * sin(holy-angle)))
+			background color-bg2 // placeholder
 			object-fit cover
-			background #888888 // placeholder color
-			transition clip-path disappear-duration ease-swift
-			clip-slant(sin(holy-angle) * image-size)
-			z-index 2
-			pointer-events none
-		.project-link
-			overflow hidden
-			display block
-			padding 1em
-			font-heading2()
-			text-decoration none
-			background linear-gradient(to bottom, color-accent 10%, color-accent-tint 40%, transparent 40%)
+			opacity 0.2
 			z-index 1
-			&[href='works/kalabasa.html'] // special case
-				color color-accent
-				background linear-gradient(to bottom, color-bgi 40%, transparent 40%)
-		.project-name
-			display inline-block
-			transform translateY((image-size * -0.25))
-			transition transform disappear-duration appear-duration ease-swift
-		&:hover
-			.project-image
-				clip-slant(sin(holy-angle) * image-size, 25%, 75%)
-				transition clip-path appear-duration ease-swift-out
-			.project-name
-				transform translateY(0)
-				transition transform appear-duration ease-swift-out
 
-		&::after
-			content ''
-			position absolute
-			left 0
-			right 0
-			top 0
-			bottom 100%
-			background color-accent
-			z-index 2000
+		a.project-link
+			display block
+			text-decoration none
+			z-index 2
+			^[-1]:nth-child(4n) ^[-1..-1]
+				padding-top 20%
+			^[-1]:nth-child(4n + 1) ^[-1..-1]
+				padding-top 55%
+			^[-1]:nth-child(4n + 2) ^[-1..-1]
+				padding-top 35%
+			^[-1]:nth-child(4n + 3) ^[-1..-1]
+				padding-top 75%
+			^[-1]:nth-child(5n) ^[-1..-1]
+			^[-1]:nth-child(5n + 3) ^[-1..-1]
+				text-align left
+			^[-1]:nth-child(5n + 1) ^[-1..-1]
+				text-align center
+			^[-1]:nth-child(5n + 2) ^[-1..-1]
+			^[-1]:nth-child(5n + 4) ^[-1..-1]
+				text-align right
+
+		.project-name
+			font-heading2()
+			display inline
+			position relative
+			padding 0.25em 0.5em
+			color color-fgi
+			background color-bgi
+			font-size 120%
+			opacity 1
+			-webkit-box-decoration-break clone // FIXME
+			box-decoration-break clone
+		
+		.project-description
+			display inline
+			position relative
+			padding 0.125em 0.25em
+			color color-fgi
+			// background color-bgi
+			font-size 120%
+			font-weight bold
 			visibility hidden
-			transition left 0.3s ease-swift-in,
-				right 0.3s ease-swift-in,
-				top 0.06s ease-swift,
-				bottom 0.1s ease-swift-in,
-				transform 0.3s ease-swift-in
-			transform skewY(holy-angle)
-		&.item-selected::after
-			left -100vw
-			right -100vw
-			top (sin(holy-angle) * image-size)
-			bottom -50vh
-			visibility visible
-			transform translateY(-15vh)
+			-webkit-box-decoration-break clone // FIXME
+			box-decoration-break clone
+
+		&:hover
+			for i in (1..color-accents)
+				&:nth-child({color-accents}n + {i})
+					background lookup('color-accent' + i + '-tint')
+			transform scale(1.03)
+			z-index 100
+			.project-image
+				opacity 0.06
+				/.support-blend-mode &
+					opacity 0.4
+					mix-blend-mode soft-light
+			.project-name
+				color color-fg
+				background color-bg
+			.project-description
+				visibility visible
+
+		&.item-selected
+			transform scale(12, 8)
+			background color-accent
+			z-index 100
+			transition:
+				background 0.2s ease-in,
+				transform (page-transition-duration - 0.1s) 0.1s ease-swift-in;
+			> *
+				opacity 0
+				transition: opacity 0.08s ease-in

@@ -7,7 +7,7 @@ export default {
 		{
 			id: 'kalabasa',
 			name: 'kalabasa.github.io',
-			short_description: 'Portfolio and personal page of me.',
+			short_description: 'My portfolio and personal site.',
 			tech: ['HTML5', 'Stylus', 'Javascript'],
 			image: {
 				src: 'img/kalabasa_0.jpg',
