@@ -21,7 +21,7 @@ This library arose from the development of <a href="hypertangram.html">Hypertang
 
 Credits to [`Matrix.setPolyToPoly`](https://developer.android.com/reference/android/graphics/Matrix) for making this easy.
 
-It’s open-source and available on [Github](https://github.com/Kalabasa/FreeformGestureDetector).
+It’s open-source and available on [**Github**](https://github.com/Kalabasa/FreeformGestureDetector).
 
 <div class="center">
 	<div class="github-card" data-github="Kalabasa/FreeformGestureDetector" data-width="400" data-height="153" data-theme="default"></div>

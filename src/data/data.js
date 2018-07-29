@@ -11,7 +11,7 @@ export default {
 			tech: ['HTML5', 'Stylus', 'Javascript'],
 			image: {
 				src: 'img/kalabasa_0.jpg',
-				alt: 'screenshot of the intro page'
+				alt: 'screenshot of intro page'
 			},
 			tags: ['css', 'css3', 'portfolio', 'web', 'js', 'rollup', 'ui', 'animation'],
 		},
@@ -23,9 +23,20 @@ export default {
 			tech: ['Android', 'Kotlin', 'Realm', 'Robolectric'],
 			image: {
 				src: 'img/hypertangram_0.jpg',
-				alt: 'screenshot of Hypertangram gameplay'
+				alt: 'screenshot of gameplay'
 			},
 			tags: ['game', 'videogame', 'game design', 'java', 'android', 'google play', 'gamedev', 'tangram', 'puzzle', 'ux', 'graphics', 'music', 'sound effects'],
+		},
+		{
+			id: 'arosybrokenalbum',
+			name: 'A Rosy Broken Album',
+			links: [{ name: 'Soundcloud', url: 'https://soundcloud.com/lreaadna/sets/a-rosy-broken-album' }],
+			short_description: 'Solo piano pieces about feelings.',
+			image: {
+				src: 'img/arosybrokenalbum_0.jpg',
+				alt: 'cover art',
+			},
+			tags: ['music', 'piano', 'solo'],
 		},
 		{
 			id: 'freeformgesturedetector',
@@ -38,7 +49,7 @@ export default {
 			tech: ['Android', 'Kotlin'],
 			image: {
 				src: 'img/freeformgesturedetector_head.png',
-				alt: 'README of the project',
+				alt: 'illustration',
 			},
 			tags: ['library', 'java', 'android', 'open source', 'hypertangram', 'gesture', 'ui'],
 		},
@@ -51,7 +62,7 @@ export default {
 			tech: ['Javascript', 'PixiJS'],
 			image: {
 				src: 'img/planetdefense_0.jpg',
-				alt: 'screenshot of PlanetDefense gameplay'
+				alt: 'screenshot of gameplay'
 			},
 			tags: ['game', 'videogame', 'js', 'pixi', 'html', 'html5', 'canvas', 'gamedev', 'planet'],
 		},
@@ -67,7 +78,7 @@ export default {
 			tech: ['LMMS', 'Audacity'],
 			image: {
 				src: 'img/conversations_0.jpg',
-				alt: 'Conversations album art'
+				alt: 'album art'
 			},
 			tags: ['music', 'jazz', 'jazzhop', 'chillhop', 'art'],
 		},
@@ -79,7 +90,7 @@ export default {
 			tech: ['React', 'Backbone.js', 'Mapbox', 'D3.js', 'Material Design', 'PHP', 'Python'],
 			image: {
 				src: 'img/dynastymap_0.jpg',
-				alt: `screenshot of DynastyMap's welcome screen`
+				alt: `screenshot of welcome screen`
 			},
 			tags: ['js', 'react', 'reactjs', 'backbone', 'backbonejs', 'mapboxjs', 'leaflet', 'leafletjs', 'd3js', 'html', 'html5', 'css', 'web', 'politics'],
 		},

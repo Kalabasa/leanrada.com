@@ -31,4 +31,4 @@
 <marquee><code><pre>              M E T A</pre></code></marquee>
 <marquee><code><pre>               M E T A</pre></code></marquee>
 
-Seriously though, this page is WIP.
+This page is a WIP.
