@@ -5,6 +5,7 @@ window.pageState = window.pageState || {
 	ready: false,
 	readyCallbacks: [],
 	leaveCallbacks: [],
+	scrollPositions: {},
 };
 
 if (document.readyState === 'loading') {
@@ -24,21 +25,35 @@ function leave(callback) {
 	window.pageState.leaveCallbacks.push(callback);
 }
 
-function onReady() {
+function onReady(container, page) {
 	window.pageState.ready = true;
 	for (let c of window.pageState.readyCallbacks) c();
 	window.pageState.readyCallbacks = [];
 
-	const main = [...document.querySelectorAll('.main')].pop();
-	main.focus({ preventScroll: true }); // mainly for enabling keyboard scroll, because body isn't scrollable, .main is
+	container.focus({ preventScroll: true }); // mainly for enabling keyboard scroll, because body isn't scrollable, .main is
+
+	const scroll = window.pageState.scrollPositions[page];
+	if (scroll) {
+		container.scrollLeft = scroll.scrollLeft;
+		container.scrollTop = scroll.scrollTop;
+	}
 }
 
-function onLeave() {
+function onLeave(container, page) {
 	for (let c of window.pageState.leaveCallbacks) c();
 	window.pageState.leaveCallbacks = [];
+
+	window.pageState.scrollPositions[page] = {
+		scrollLeft: container.scrollLeft,
+		scrollTop: container.scrollTop,
+	};
 }
 
 function onLoad() {
+	const main = [...document.querySelectorAll('.main')].pop();
+	const page = getPageName();
+	main.dataset.page = page;
+
 	if (!window.pageState.initialized) {
 		window.pageState.initialized = true;
 
@@ -62,24 +77,16 @@ function onLoad() {
 			document.body.classList.remove('page-going-up');
 		});
 
-		const main = [...document.querySelectorAll('.main')].pop();
-		main.dataset.page = getPageName();
 		main.classList.add('page-active');
 	}
 
-	onReady();
+	onReady(main, page);
 }
 
 const transition = Barba.BaseTransition.extend({
 	start() {
 		window.pageState.ready = false;
-		onLeave();
-
-		window.scroll({
-			left: 0,
-			top: 0,
-			behavior: 'smooth'
-		});
+		onLeave(this.oldContainer, this.oldContainer.dataset.page);
 
 		document.body.classList.add('page-transition');
 		document.body.dataset.pageTo = getPageName();
@@ -172,7 +179,7 @@ const transition = Barba.BaseTransition.extend({
 		this.newContainer.classList.add('page-active');
 
 		this.done();
-		onReady();
+		onReady(this.newContainer, this.newContainer.dataset.page);
 	},
 });
 
