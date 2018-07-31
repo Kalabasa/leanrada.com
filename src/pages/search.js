@@ -21,12 +21,14 @@ page.ready(() => {
 	window.addEventListener('hashchange', execQuery, false);
 
 	const form = document.querySelector('section.search form.search-form');
+	const input = document.querySelector('section.search .search-form input');
+
 	form.addEventListener('submit', event => {
 		event.preventDefault();
+		input.blur();
 		search(form.elements.q.value);
 	});
 
-	const input = document.querySelector('section.search .search-form input');
 	input.addEventListener('focus', () => {
 		input.select();
 	});
