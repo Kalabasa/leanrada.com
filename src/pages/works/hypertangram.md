@@ -20,11 +20,13 @@
 	<a href="../video/hypertangram_2.mp4">Demo video</a>
 </video>
 
-This is a personal project, and my first “complete” game in terms of features and polish. This game idea had been sitting in the back of my mind for quite a time. I finally did it in about 6 months of free-time development.
+This is a personal project, and my first “complete” game in terms of features and polish. This game idea had been sitting in the back of my mind for quite a time, and I finally did it in about 6 months of free-time development.
 
-I had a lot of problems with the geometry code.
+It wasn’t all smooth sailing. There were lots of problems with the geometry code.
 
-See, I didn’t want grid-based movement like in other tangram apps. I wanted free dragging, rotation, and scaling, with smart edge-snapping. This design decision proved to be technically demanding later on.
+See, I didn’t want grid-based movement like in other tangram apps. I wanted free dragging, rotation, and scaling, with smart edge-snapping.
+
+This design decision proved to be technically demanding later on.
 
 <span>
 	<video muted autoplay loop>
@@ -35,9 +37,9 @@ See, I didn’t want grid-based movement like in other tangram apps. I wanted fr
 	<span class="caption">Old prototype</span>
 </span>
 
-It took a lot of time and rewrites to make it correct and also feel good.
+Most of the time spent in development was on making this correct and also feel good.
 
-So far so good, but there's more *geometrials* ahead.
+But that’s not all. There are more *geometrials* ahead.
 
 Due to the nature of the main game mechanic, there can be several solutions to a single puzzle.
 
@@ -48,7 +50,7 @@ There is no easy way to find them all by hand, nor by algorithm. The solution ch
 
 I ended up with a logical approach, using [boolean operations on polygons](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons), in order to implement the win condition.
 
-*Note to self: Don't mix geometric operations and floating point numbers. They are oil and water.*
+*Note to self: Don’t mix geometric operations and floating point numbers. They are oil and water.*
 
 Aside from design & programming, I also created the music and graphics myself. For the look, I wanted it minimal with a physical feel. *Abstract, yet tangible*.
 
@@ -58,7 +60,7 @@ I’m really proud of the amount of polish I’ve done here. Of course, there’
 
 *It was a **geometriumph**.*
 
-Try it out! It's free.
+Try it out! It’s free.
 
 <p class="center">
 	<a class="anchor-plain" href="https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1"><img class="media-plain" width="200px" alt="Get it on Google Play" src="https://play.google.com/intl/en_gb/badges/images/generic/en_badge_web_generic.png"/></a>

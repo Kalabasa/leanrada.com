@@ -10,9 +10,19 @@
 <span class="album-disc">![Disc art](../img/arosybrokenalbum_0.jpg)</span>
 </span></span>
 
-## Evocative solo piano music.
+## Evocative piano music.
 
-The piano is a versatile and expressive instrument. That’s why I love the piano.
+The piano is a versatile and expressive instrument.
+
+It is easily my favorite musical instrument.
+
+I love the piano. I've been meaning to make good music out of it for a long time. There were attempts, but it is only now that I had the knowledge and capability to create music that I want. So I compiled an album.
+
+The album is made up of four short piano pieces. Each piece was supposed to represent a single thought or mood, and that is why they are short.
+
+They don't have much structure, since I focused more on the texture or *feels* of the core idea of each piece.
+
+I don't claim to be the best in music composition, but I did my best. I hope this sounds pleasant to your ears!
 
 <p class="center">
 	<iframe width="100%" height="400" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/438007326&color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
@@ -20,7 +30,7 @@ The piano is a versatile and expressive instrument. That’s why I love the pian
 
 Some of my musical influences in piano were **Chopin**, **Isaac Shepard**, and **Yiruma**. Although I grew up loving classical pieces, I have now come to like contemporary piano music as well.
 
-Since my teen years, piano music has always been there to soothe my soul. I play it as a release of emotion.
+Since my teen years, piano music has always been a source of calmness. I play it as a release of emotion. I don't play as much these days though.
 
 My long-time favorite piano pieces are:
 * **Canon in D** (Pachelbel) <sup>[[YouTube]](https://www.youtube.com/watch?v=rNsgHMklBW0)</sup>
@@ -30,4 +40,4 @@ My long-time favorite piano pieces are:
 
 Honorable mentions go to: **Joel Hisaishi**, [**Inner Version**](https://www.youtube.com/watch?v=iimaFJRVW5k), and [**re:plus**](https://www.replusmusic.com/).
 
-Visit my [**Soundcloud**](https://soundcloud.com/lreaadna/sets/a-rosy-broken-album) for more music.
+Visit my [**Soundcloud**](https://soundcloud.com/lreaadna/sets/a-rosy-broken-album) for more!

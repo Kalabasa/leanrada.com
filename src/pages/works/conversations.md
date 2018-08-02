@@ -34,7 +34,7 @@ I've been making music since 15, more or less. Music is yet another hobby of min
 
 Have a listen on [**Spotify**](https://open.spotify.com/album/2LEKLuoWYauyAlQ8JwoPc2).
 
-Or name your own price on [**Bandcamp**](http://lreaadna.bandcamp.com/album/conversations).
+Or be a little more generous on [**Bandcamp**](http://lreaadna.bandcamp.com/album/conversations).
 
 <div class="center">
 	<iframe src="https://open.spotify.com/embed?uri=spotify:album:2LEKLuoWYauyAlQ8JwoPc2&theme=white&view=coverart" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>

@@ -26,13 +26,13 @@ Main features of the app are the computation political dynasty prevalence in <ab
 
 <span class="bleed">![screenshot](../img/dynastymap_1.jpg)</span>
 
-This webapp is a <abbr title="single-page application">SPA</abbr> made in [React](https://reactjs.org) and [Backbone.js](http://backbonejs.org). I used [Leaflet](https://leafletjs.com) and [D3.js](https://d3js.org/) for the visualizations.
+This webapp is a <abbr title="single-page application">SPA</abbr> made in [**React**](https://reactjs.org) and [Backbone.js](http://backbonejs.org). I used [Leaflet](https://leafletjs.com) and [D3.js](https://d3js.org/) for the visualizations.
 
-Server-side is PHP with [Slim](https://www.slimframework.com) and [Medoo](https://medoo.in). Server-side processing is in Python. Data processing is for the computation of dynasty variables and GeoJSON processing.
+Server-side is **PHP** with [Slim](https://www.slimframework.com) and [Medoo](https://medoo.in). I used **Python** for data processing: for the computation of dynasty variables and GeoJSON processing.
 
 <span class="bleed">![detail view](../img/dynastymap_2.jpg)</span>
 
-I got the data from [COMELEC](https://www.comelec.gov.ph) and [Open Data PH](https://www.gov.ph/data). I had to scrape election results from the 2015 COMELEC website because they don't have an API.
+I got the data from [COMELEC](https://www.comelec.gov.ph) and [Open Data PH](https://www.gov.ph/data). I had to scrape election results from the 2015 COMELEC website because they didn't have an API.
 
 Fortunately for anyone trying this kind of thing today, election results are now available in CSV(?) on Open Data PH.
 
