@@ -34,12 +34,6 @@ function onReady(container, page) {
 		// mainly for enabling keyboard scroll, because body isn't scrollable, .main is
 		container.focus({ preventScroll: true });
 	}
-
-	const scroll = window.pageState.scrollPositions[page];
-	if (scroll) {
-		container.scrollLeft = scroll.scrollLeft;
-		container.scrollTop = scroll.scrollTop;
-	}
 }
 
 function onLeave(container, page) {
@@ -98,7 +92,7 @@ const transition = Barba.BaseTransition.extend({
 
 		Promise.all([
 				// prevent too much overlap by setting minimum delay before the next page's transition
-				new Promise(resolve => setTimeout(resolve, 300)),
+				new Promise(resolve => setTimeout(resolve, 400)),
 
 				// load subresources after loading new content
 				this.newContainerLoading
@@ -154,6 +148,13 @@ const transition = Barba.BaseTransition.extend({
 				// animate entrance after loading all necessary stuff
 				this.newContainer.classList.remove('page-idle');
 				this.newContainer.classList.add('page-enter');
+
+				// restore scroll position
+				const scroll = window.pageState.scrollPositions[this.newContainer.dataset.page];
+				if (scroll) {
+					this.newContainer.scrollLeft = scroll.scrollLeft;
+					this.newContainer.scrollTop = scroll.scrollTop;
+				}
 
 				return new Promise(resolve => {
 					let resolved = false;
