@@ -14,7 +14,7 @@ page.ready(() => {
 				// Breaks when hash change
 				Barba.Pjax.goTo(url);
 			} catch (err) {
-				console.error(err);
+				if (ENV_DEBUG) console.warn(err);
 			}
 			if (window.location.href !== url) window.location.href = url;
 			window.dispatchEvent(new HashChangeEvent('hashchange'));

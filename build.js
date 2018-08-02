@@ -82,7 +82,8 @@ const pageHtmlFiles = partials
 		for (let file of files) {
 			const pageName = path.basename(file, path.extname(file));
 			const pagePath = `/${pageName}.html`;
-			const pageData = { ...data, pagePath };
+			const pageId = `${pageName}.html`;
+			const pageData = { ...data, pageId, pagePath };
 			const out = `build${pagePath}`;
 
 			console.log(`compiling ${file} ➔ ${out}`);
@@ -103,6 +104,7 @@ const mdHtmlFiles = partials
 		for (let file of files) {
 			const fileMd = file.replace(/\.md$/, '.html');
 			const pagePath = fileMd.replace(/^src\/pages\//, '/');
+			const pageId = pagePath.substring(1);
 			const out = fileMd.replace(/^src\/pages/, 'build');
 
 			console.log(`compiling ${file} ➔ ${out}`);
@@ -132,6 +134,7 @@ const mdHtmlFiles = partials
 					if (meta.template) {
 						const template = fs.readFileSync(`src/handlebars/${meta.template}.handlebars`, 'utf8');
 						const pageData = {
+							pageId,
 							...(_.get(data, meta.data || '_______', {})),
 							..._.omit(meta, 'template', 'data'),
 						};

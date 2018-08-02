@@ -1,6 +1,6 @@
 // if deep nested, color yellow
 if (window.self !== window.top) {
-	const nestedDocument = document.querySelector('#portal').children[0].contentDocument;
+	const nestedDocument = document.querySelector('#showcase').contentDocument;
 	nestedDocument.open("text/html", "replace");
 	nestedDocument.close();
 	nestedDocument.body.style.background = 'linear-gradient(120deg, #FFDD55 40%, #FFB838)';
@@ -13,65 +13,44 @@ if (window.self !== window.top && window.parent === window.top) window.top.postM
 window.addEventListener('message', event => {
 	if (event.origin !== window.location.origin) return;
 	if (event.data === 'merge') {
-		const container = document.querySelector('#portal');
+		const iframe = document.querySelector('#showcase');
 
-		const rect = container.getBoundingClientRect();
-
-		const a = {
-			left: rect.left,
-			top: rect.top,
-			right: window.innerWidth - rect.right,
-			bottom: window.innerHeight - rect.bottom,
+		const rect = iframe.getBoundingClientRect();
+		const initial = {
+			left: rect.left + 'px',
+			top: rect.top + 'px',
+			width: rect.width + 'px',
+			height: rect.height + 'px',
 		};
-		const b = {
-			left: 0,
-			top: 0,
-			right: 0,
-			bottom: 0,
+		const target = {
+			left: '0px',
+			top: '0px',
+			width: '100vw',
+			height: '100vh',
 		};
 
-		const duration = 1500;
-		let start, end;
+		iframe.style.display = 'block';
+		iframe.style.position = 'fixed';
+		Object.assign(iframe.style, initial);
+		iframe.style.zIndex = 2000;
+		iframe.removeAttribute('width');
+		iframe.removeAttribute('height');
 
-		const expand = () => {
-			let t = (Date.now() - start) / duration;
-			let v;
-			if (t >= 1) {
-				window.location = container.children[0].contentWindow.location;
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				iframe.classList.add('growing');
+				Object.assign(iframe.style, target);
+			});
+		});
+
+		const wait = () => {
+			if (iframe.getBoundingClientRect().top === 0) {
+				window.location = iframe.contentWindow.location;
 				return;
 			} else {
-				t = ease(t);
-				const u = 1 - t;
-				v = {
-					left: b.left * t + a.left * u,
-					right: b.right * t + a.right * u,
-					top: b.top * t + a.top * u,
-					bottom: b.bottom * t + a.bottom * u,
-				};
-				requestAnimationFrame(expand);
+				requestAnimationFrame(wait);
 			}
-			container.style.left = v.left + 'px';
-			container.style.right = v.right + 'px';
-			container.style.top = v.top + 'px';
-			container.style.bottom = v.bottom + 'px';
 		};
-
-		setTimeout(() => {
-			container.style.position = 'fixed';
-			container.style.zIndex = 2000;
-			container.style.width = 'unset';
-			container.style.height = 'unset';
-			container.style.border = 'unset';
-
-			start = Date.now();
-			end = Date.now() + duration;
-
-			requestAnimationFrame(expand);
-		}, 500);
-
-		container.style.boxShadow = '0 0 200px #0006';
-		container.style.transition = 'box-shadow 2s ease';
+		wait();
 	}
 });
-
-function ease(t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t }

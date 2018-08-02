@@ -30,7 +30,10 @@ function onReady(container, page) {
 	for (let c of window.pageState.readyCallbacks) c();
 	window.pageState.readyCallbacks = [];
 
-	container.focus({ preventScroll: true }); // mainly for enabling keyboard scroll, because body isn't scrollable, .main is
+	if (window.self === window.top) {
+		// mainly for enabling keyboard scroll, because body isn't scrollable, .main is
+		container.focus({ preventScroll: true });
+	}
 
 	const scroll = window.pageState.scrollPositions[page];
 	if (scroll) {
@@ -102,8 +105,8 @@ const transition = Barba.BaseTransition.extend({
 					.then(() => {
 						// set page name to allow scoped CSS
 						this.newContainer.dataset.page = getPageName();
+						this.newContainer.classList.remove('page-active');
 						this.newContainer.classList.add('page-idle');
-						// this.newContainer.scrollTop = 0;
 						delete this.newContainer.style.visibility;
 
 						// transplant new head because Barba.js does not load <head>

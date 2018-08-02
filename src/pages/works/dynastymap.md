@@ -24,19 +24,19 @@ We all know they're bad, but how can we justify that view? We can look into data
 
 Main features of the app are the computation political dynasty prevalence in <abbr title="Local Government Units">LGUs</abbr>, and visualization of dynasties along with various user-uploaded datasets.
 
-![screenshot](../img/dynastymap_1.jpg)
+<span class="bleed">![screenshot](../img/dynastymap_1.jpg)</span>
 
 This webapp is a <abbr title="single-page application">SPA</abbr> made in [React](https://reactjs.org) and [Backbone.js](http://backbonejs.org). I used [Leaflet](https://leafletjs.com) and [D3.js](https://d3js.org/) for the visualizations.
 
 Server-side is PHP with [Slim](https://www.slimframework.com) and [Medoo](https://medoo.in). Server-side processing is in Python. Data processing is for the computation of dynasty variables and GeoJSON processing.
 
-![detail view](../img/dynastymap_2.jpg)
+<span class="bleed">![detail view](../img/dynastymap_2.jpg)</span>
 
 I got the data from [COMELEC](https://www.comelec.gov.ph) and [Open Data PH](https://www.gov.ph/data). I had to scrape election results from the 2015 COMELEC website because they don't have an API.
 
 Fortunately for anyone trying this kind of thing today, election results are now available in CSV(?) on Open Data PH.
 
-![detail view](../img/dynastymap_biv.jpg)
+![bivariate choropleth](../img/dynastymap_biv.jpg)
 
 This project was developed as a requirement (Special Problem) for my Computer Science B.S. degree. The idea of political dynasty visualization came from one of my professors. It was also inspired by Hans Rosling's visualizations and [Trendalyzer](https://www.gapminder.org/tools).
 
