@@ -27,21 +27,25 @@ I participate in these <abbr title="Ludum Dare">LD</abbr> jams occasionally. In 
 
 [Missile Command](https://en.wikipedia.org/wiki/Missile_Command) is an arcade game from the ’80s. The usual formula of taking a classic and giving it a twist was not very original, but time was limited. Minus points for Innovation, I guess.
 
-48 hours later, I managed to come up with a working game/prototype.
+<span>![design notes](../img/planetdefense_notes0.jpg)
+	<span class="caption">Some design sketches showing some planned but unimplemented features.</span>
+</span>
 
-![screenshot of PlanetDefense](../img/planetdefense_0.jpg)
+Several hours later, I managed to come up with a working game/prototype.
+
+![screenshot](../img/planetdefense_0.jpg)
 
 Hooray! A finished game in exchange for precious hours of sleep!
 
 The game was made with [PixiJS](http://www.pixijs.com), a scene-graph based 2D graphics engine for Javascript. I’m used to this graphics model since I started programming with Flash.
 
-I initially tried [Phaser](https://phaser.io), but it was too much for my taste. Having found out that Phaser uses Pixi underneath, I went with Pixi. I prefer simpler libraries.
+I initially tried [Phaser](https://phaser.io), but it was too much for my taste. Having found out that Phaser uses Pixi underneath, I went with Pixi. I prefer the simple libraries. *Enjoy the simple things in life.*
 
 ## Results
 
-Participants judge each other’s games after for 3 weeks. It’s actually nice. Most feedback is constructive and there are suddenly thousands of new free games for you to play!
+In the aftermath of the main event, participants will judge each other’s games for 3 weeks. The judging activity is actually nice. Most feedback is constructive and there are suddenly thousands of new free games for you to play!
 
-<span>![ratings of PlanetDefense](../img/planetdefense_results.jpg)
+<span>![ratings](../img/planetdefense_results.jpg)
 	<span class="caption">Final judging results for PlanetDefense</span>
 </span>
 

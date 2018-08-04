@@ -20,17 +20,21 @@ Influences range from jazz, funk, and bossa nova to lo-fi, hip-hop, and new-age.
 	<iframe src="https://open.spotify.com/embed?uri=spotify:album:2LEKLuoWYauyAlQ8JwoPc2&theme=white&view=coverart" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
 </p>
 
-The goal of this project was for me to learn the full music production process, from composing, to mixing and mastering, to publishing. This is my first music published on a platform like Spotify.
+The goal of this project was for me to learn the full music production process, from composing, to mixing and mastering, to publishing.
+
+This is my first music published on a platform like Spotify.
 
 <span>![screenshot of LMMS](../img/conversations_lmms.jpg)
 	<span class="caption">I use [LMMS](https://lmms.io/) to make music.</span>
 </span>
 
-I have learned a lot by watching music theory on YouTube, experimenting with signal processing techniques and other plugins, and practicing mixing and mastering.
+Over the course of the project, I have learned a lot. I watched music theory on YouTube, experimented with signal processing techniques and other plugins, and practiced mixing and mastering.
 
-The final product may not be the best, but it's a learning experience, so I can say that the project was a success.
+The final product may not be the best, but it’s a learning experience, so I can say that the project was a success.
 
-I've been making music since 15, more or less. Music is yet another hobby of mine aside from programming. Starting with [Notessimo](https://www.notessimo.net), to DAWs like [LMMS](https://lmms.io/), I've made music ranging from solo piano pieces to electronic dance music. I have also tried [FL Studio](https://www.image-line.com/flstudio).
+---
+
+I’ve been making music since 15, more or less. Music is yet another hobby of mine aside from programming. Starting with [Notessimo](https://www.notessimo.net), to DAWs like [LMMS](https://lmms.io/), I’ve made music ranging from solo piano pieces to electronic dance music. I have also tried [FL Studio](https://www.image-line.com/flstudio).
 
 Have a listen on [**Spotify**](https://open.spotify.com/album/2LEKLuoWYauyAlQ8JwoPc2).
 

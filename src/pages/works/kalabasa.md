@@ -17,7 +17,7 @@
 
 ## My place on the web.
 
-Bold & bright colors, minimalist elements, angular forms, and swift motion. This is my website. And this represents me <small>(Can’t say I’m bold and swift, though).</small>
+Here is my website! It is this website you’re on right now!
 
 I made this as an exercise to brush up my web development skills, and also to get on with the digital trends. This is actually the third iteration of my personal website.
 
@@ -26,7 +26,7 @@ The first one was around **2012**. I was attending college back then for my comp
 <span class="bleed">![first personal website](../img/kalabasa_1.png)</span>
 <span class="caption">My first personal site.</span>
 
-This version of the site mainly hosted my course projects and other small games. [I did Ludum Dare](http://ludumdare.com/compo/author/kalabasa/) more back then. It also sported an interactive Flash header (now obsolete). Good times.
+This old version mainly hosted my course projects and other small games. [I did Ludum Dare](http://ludumdare.com/compo/author/kalabasa/) more back then. It also sported an interactive Flash header (now obsolete). Good times.
 
 A second version was made in **2015**. It was more minimalist and better represented my personality.
 
@@ -38,22 +38,24 @@ A second version was made in **2015**. It was more minimalist and better represe
 	</video>
 </span>
 
-This one had an interactive splash screen that was made with [three.js](https://threejs.org).
+This one had an interactive splash screen made with [three.js](https://threejs.org).
 
-I like minimalism, but I grew tired of this look soon enough. Eventually, I decided that a revamp was needed, bringing us to the present time. 2018. The third and current version.
+I liked the minimal look of this one, but I somehow grew tired of it soon enough.
+
+Eventually, I decided that a revamp was needed, bringing us what we have here right now. **2018.** The third and current version.
 
 ![screenshot](../img/kalabasa_0.jpg)
 
-This current website is a static site generated at build time. It is progressively enhanced using [**Vanilla JS**](http://vanilla-js.com), plus [**Barba.js**](http://barbajs.org) for smooth page transitions. Client-side search was made possible through [**Elasticlunr.js**](http://elasticlunr.com).
-
-It’s a static site because you can’t do server-side on Github Pages. It’s also fast. And cool.
+This current website is a static site, progressively enhanced using [**Vanilla JS**](http://vanilla-js.com), plus [**Barba.js**](http://barbajs.org) for smooth page transitions. Client-side search was made possible through [**Elasticlunr.js**](http://elasticlunr.com).
 
 <span>![phone in CSS](../img/kalabasa_phone.jpg)
 	<span class="caption">Phone mockup in CSS 3D.</span>
 </span>
 
-I use my own build script, which calls a bunch of other tools, like [**rollup.js**](https://rollupjs.org) for Babel and JS bundling, [**Marked.js**](https://marked.js.org/) for markdown, [**Handlebars.js**](https://handlebarsjs.com), and [**Stylus**](http://stylus-lang.com) for CSS.
+I use my own build script, which calls a bunch of other tools, like [**rollup.js**](https://rollupjs.org), [**Babel**](https://babeljs.io), [**Marked.js**](https://marked.js.org/), [**Handlebars.js**](https://handlebarsjs.com), and [**Stylus**](http://stylus-lang.com).
 
-Maybe I should use Webpack like everyone else.
+The build’s quite slow though. Maybe I should use Webpack like everyone else.
 
-This website’s source is available on [Github](https://github.com/Kalabasa/kalabasa.github.io) (duh). You can check out some of the tricks in here.
+I chose to make it a static site because it’s fast *(supposedly)*. And also fun. And cool. Well actually, it was mostly because you can’t do server stuff in Github Pages.
+
+This website’s source is available on [Github](https://github.com/Kalabasa/kalabasa.github.io) (duh). All the magic is in there.

@@ -8,6 +8,13 @@ page-transition-color(color)
 	/body{selector()}.page-transition
 		background color
 
+// special page transition colors
+[data-page-to='index.html']
+	page-transition-color(color-accent)
+[data-page-to^='works/']
+	page-transition-color(color-bgi)
+
+
 body
 	left 0
 	right 0
@@ -15,7 +22,7 @@ body
 	bottom 0
 	min-width 100vw
 	min-height 100vh
-	background color-bg
+	background color-accent
 	overflow hidden
 	&.page-transition
 		#preloader
@@ -61,10 +68,6 @@ body
 	.main.page-exit
 		animation pageexit-up page-transition-duration ease-page-in both
 
-[data-page-to='index.html']
-	page-transition-color(color-accent)
-
-
 offset = sin(holy-angle) * 100vw
 
 @keyframes pageenter
@@ -77,11 +80,9 @@ offset = sin(holy-angle) * 100vw
 
 @keyframes pageexit
 	from
-		opacity 1
 		transform translateY(0)
 		clip-path "polygon(0% 0%, 100% 0%, 100% 100vh, 0% calc(100vh - %s))" % (offset)
 	to 
-		opacity 0
 		transform translateY(-15vh)
 		clip-path "polygon(0% 0%, 100% 0, 100% %s, 0% 0)" % (offset)
 
@@ -95,10 +96,8 @@ offset = sin(holy-angle) * 100vw
 
 @keyframes pageexit-up
 	from
-		opacity 1
 		transform translateY(0)
 		clip-path "polygon(0% 0, 100% %s, 100% 100%, 0% 100%)" % (offset)
 	to 
-		opacity 0
 		transform translateY(15vh)
 		clip-path "polygon(0% calc(100vh - %s), 100% 100vh, 100% 100%, 0% 100%)" % (offset)

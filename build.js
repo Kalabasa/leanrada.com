@@ -194,6 +194,7 @@ const cssFiles = globAsync('src/pages/**/*.styl')
 		return Promise.all(cssFiles);
 	});
 
+// TODO Code splitting. Common chunk.
 const jsFiles = globAsync('src/pages/**/*.js')
 	.then(files => {
 		const replace = rollupReplace(jsConstants);

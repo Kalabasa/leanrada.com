@@ -97,13 +97,13 @@ export default {
 	],
 
 	jobs: [
-		// {
-		// 	name: 'Frontend Engineer',
-		// 	company: 'Canva',
-		// 	date: ['2018'],
-		// 	tech: [],
-		// 	description: 'TBA'
-		// },
+		{
+			name: 'Frontend Engineer',
+			company: 'Canva',
+			date: ['2018'],
+			tech: [],
+			description: 'TBA'
+		},
 		{
 			name: 'Web Developer',
 			company: 'Azeus',

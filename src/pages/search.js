@@ -54,7 +54,9 @@ function search(query) {
 	if (!query) return;
 
 	const hash = '#' + encodeURIComponent(query);
-	history.pushState(null, null, '//' + window.location.host + window.location.pathname + hash);
+	if (window.location.hash !== hash) {
+		history.pushState(null, null, '//' + window.location.host + window.location.pathname + hash);
+	}
 
 	document.querySelector('section.search .search-form input').value = query;
 	document.querySelectorAll('section.search .query').forEach(el => el.innerText = query);

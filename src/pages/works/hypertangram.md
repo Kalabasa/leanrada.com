@@ -20,7 +20,9 @@
 	<a href="../video/hypertangram_2.mp4">Demo video</a>
 </video>
 
-This is a personal project, and my first “complete” game in terms of features and polish. This game idea had been sitting in the back of my mind for quite a time, and I finally did it in about 6 months of free-time development.
+This is my first “complete” game in terms of features and polish.
+
+This game idea had been sitting in the back of my mind for quite a time, and I finally did it in about 6 months of development in my free time.
 
 It wasn’t all smooth sailing. There were lots of problems with the geometry code.
 
@@ -37,26 +39,34 @@ This design decision proved to be technically demanding later on.
 	<span class="caption">Old prototype</span>
 </span>
 
-Most of the time spent in development was on making this correct and also feel good.
+Most of the time was spent on making this correct and also feel good.
 
-But that’s not all. There are more *geometrials* ahead.
+But that’s not all. There were more *geometrials* ahead.
 
 Due to the nature of the main game mechanic, there can be several solutions to a single puzzle.
 
 ![illustration of multiple solutions](../img/ht_solutions.jpg)
 <span class="caption">Multiple solutions for a single puzzle</span>
 
-There is no easy way to find them all by hand, nor by algorithm. The solution checking algorithm went through rounds of rethinking.
+There is no easy way to find them all by hand, nor by algorithm, as far as I know. The solution checking algorithm went through rounds of rethinking.
 
 I ended up with a logical approach, using [boolean operations on polygons](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons), in order to implement the win condition.
 
 *Note to self: Don’t mix geometric operations and floating point numbers. They are oil and water.*
 
-Aside from design & programming, I also created the music and graphics myself. For the look, I wanted it minimal with a physical feel. *Abstract, yet tangible*.
+Aside from design & programming, I also created the music and graphics myself. For the look, I wanted it minimal with a physical feel. Abstract, yet tangible.
 
-![screenshot detail](../img/hypertangram_4.jpg)
+<span>![graphic design notes](../img/hypertangram_notes1.jpg)
+	<span class="caption">Some design sketches</span>
+</span>
 
-I’m really proud of the amount of polish I’ve done here. Of course, there’s always room for improvement, but finished is better than perfect.
+The game’s graphics are procedurally rendered using Android’s [`Canvas`](https://developer.android.com/reference/android/graphics/Canvas) API. It was not very optimized. All because I did not want to do GL stuff. <small>Sorry if I made your phones overheat.</small>
+
+<span>![screenshot detail](../img/hypertangram_4.jpg)
+	<span class="caption">Close-up of the *“Abstract, yet tangible”*</span>
+</span>
+
+I really liked what I did here. Of course, there’s always room for improvement, but finished is better than perfect.
 
 *It was a **geometriumph**.*
 
