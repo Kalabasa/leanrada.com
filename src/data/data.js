@@ -101,8 +101,8 @@ export default {
 			name: 'Frontend Engineer',
 			company: 'Canva',
 			date: ['2018'],
-			tech: [],
-			description: 'TBA'
+			tech: ['React', 'JavaScript', 'PHP'],
+			description: 'Engineering the growth of the Canva product.',
 		},
 		{
 			name: 'Web Developer',
