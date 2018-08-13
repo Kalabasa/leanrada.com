@@ -101,14 +101,14 @@ export default {
 			name: 'Frontend Engineer',
 			company: 'Canva',
 			date: ['2018'],
-			tech: ['React', 'JavaScript', 'PHP'],
+			tech: ['React', 'JavaScript', 'PHP', 'Sass'],
 			description: 'Engineering the growth of the Canva product.',
 		},
 		{
 			name: 'Web Developer',
 			company: 'Azeus',
 			date: ['2017', '2018'],
-			tech: ['Vue.js', 'Webpack', 'Spring Boot', 'Gradle', 'JasperReports', 'TypeScript', 'Java'],
+			tech: ['Vue.js', 'Webpack', 'Spring Boot', 'Gradle', 'JasperReports', 'TypeScript', 'Java', 'Stylus'],
 			description: 'Full-stack web and systems development.'
 		},
 		{
