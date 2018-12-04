@@ -102,7 +102,7 @@ export default {
 			company: 'Canva',
 			date: ['2018'],
 			tech: ['React', 'JavaScript', 'PHP', 'Sass'],
-			description: 'Engineering the growth of the Canva product.',
+			description: 'Frontend growth engineering.',
 		},
 		{
 			name: 'Web Developer',
