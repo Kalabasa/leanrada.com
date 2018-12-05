@@ -2,8 +2,20 @@ import _ from 'lodash';
 
 // data for the whole site!
 export default {
-	featured_projects: [ 'hypertangram', 'planetdefense', 'conversations' ],
+	featured_projects: [ 'canvaenterprise', 'hypertangram', 'planetdefense' ],
 	projects: [
+    {
+      id: 'canvaenterprise',
+      name: 'Canva Enterprise',
+      links: [{ name: 'Web', url: 'https://about.canva.com/enterprise' }],
+      short_description: 'Page showcasing the Canva’s Enterprise offering.',
+      tech: ['HTML5', 'SCSS', 'JS'],
+      image: {
+        src: 'img/canvaenterprise_0.jpg',
+        alt: 'screenshot'
+      },
+      tags: ['css', 'css3', 'web', 'animation'],
+    },
 		{
 			id: 'kalabasa',
 			name: 'kalabasa.github.io',
