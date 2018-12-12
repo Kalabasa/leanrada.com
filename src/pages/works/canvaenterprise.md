@@ -22,6 +22,10 @@ The animations were implemented using a bunch of CSS 3D transforms, animations, 
 
 I enjoyed animating the whole scene and doing all the little details (like how the shadows respond to the sheets' heights). Kudos to our designers for the neat concept.
 
+<span class="d3d"><span class="mockup-phone">![phone view](../img/canvaenterprise_3.jpg)
+<span class="phone-body"></span>
+</span></span>
+
 Halfway through the project, it was handed over to another dev, as I needed to focus elsewhere. So the inner screens (survey part) weren’t done by me. All of it was done in a little over a month.
 
 [See it live on Canva!](https://about.canva.com/enterprise)
