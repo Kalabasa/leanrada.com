@@ -22,6 +22,6 @@ The animations were implemented using a bunch of CSS 3D transforms, animations, 
 
 I enjoyed animating the whole scene and doing all the little details (like how the shadows respond to the sheets' heights). Kudos to our designers for the neat concept.
 
-Halfway through the project, it was handed over to another dev, as I needed to focus elsewhere. So the inner screens (survey part) weren’t done by me. It was all done in a little over a month.
+Halfway through the project, it was handed over to another dev, as I needed to focus elsewhere. So the inner screens (survey part) weren’t done by me. All of it was done in a little over a month.
 
-[See it live at the Canva website!](https://about.canva.com/enterprise)
+[See it live on Canva!](https://about.canva.com/enterprise)
