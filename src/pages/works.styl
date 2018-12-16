@@ -50,6 +50,13 @@ image-gap = 20px
 		overflow hidden
 		z-index 1
 		transition transform 0.2s ease-back-out
+		animation enter-item 0.3s ease-swift-out backwards
+
+		for i in 1..10
+			&:nth-child({i})
+				animation-delay 0.4s + (0.4s * math(i / 10, 'sqrt'))
+		&:nth-child(n + 10)
+			animation-delay 0.8s
 
 		> *
 			display block
@@ -147,3 +154,11 @@ image-gap = 20px
 				background @background
 				z-index 2100
 				animation fade (page-transition-duration / 4) (page-transition-duration / 4) ease-swift-in both
+
+	@keyframes enter-item
+		from
+			opacity 0
+			transform translateX(-5%)
+		to
+			opacity 1
+			transform none
