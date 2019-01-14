@@ -4,18 +4,18 @@ import _ from 'lodash';
 export default {
 	featured_projects: [ 'canvaenterprise', 'hypertangram', 'planetdefense' ],
 	projects: [
-    {
-      id: 'canvaenterprise',
-      name: 'Canva Enterprise',
-      links: [{ name: 'Web', url: 'https://about.canva.com/enterprise' }],
-      short_description: 'Page showcasing Canva’s Enterprise offering.',
-      tech: ['HTML5', 'SCSS', 'JS'],
-      image: {
-        src: 'img/canvaenterprise_0.jpg',
-        alt: 'screenshot'
-      },
-      tags: ['css', 'css3', 'web', 'animation'],
-    },
+		{
+			id: 'canvaenterprise',
+			name: 'Canva Enterprise',
+			links: [{ name: 'Web', url: 'https://about.canva.com/enterprise' }],
+			short_description: 'Page showcasing Canva’s Enterprise offering.',
+			tech: ['HTML5', 'SCSS', 'JS'],
+			image: {
+				src: 'img/canvaenterprise_0.jpg',
+				alt: 'screenshot'
+			},
+			tags: ['css', 'css3', 'web', 'animation'],
+		},
 		{
 			id: 'kalabasa',
 			name: 'kalabasa.github.io',
@@ -26,6 +26,17 @@ export default {
 				alt: 'screenshot of intro page'
 			},
 			tags: ['css', 'css3', 'portfolio', 'web', 'js', 'rollup', 'ui', 'animation'],
+		},
+		{
+			id: 'heartgame',
+			name: 'Heart Game',
+			short_description: 'A very simple casual game.',
+			tech: ['HTMl5', 'Javascript'],
+			image: {
+				src: 'img/heartgame.jpg',
+				alt: 'game visual',
+			},
+			tags: ['js', 'canvas', 'game'],
 		},
 		{
 			id: 'hypertangram',
@@ -81,7 +92,7 @@ export default {
 		{
 			id: 'conversations',
 			name: 'Conversations EP',
-		 	links: [
+			links: [
 				{ name: 'Spotify', url: 'https://open.spotify.com/album/2LEKLuoWYauyAlQ8JwoPc2' },
 				{ name: 'Bandcamp', url: 'http://lreaadna.bandcamp.com/album/conversations' }
 			],
