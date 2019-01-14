@@ -171,5 +171,6 @@ export default {
 		{ name: 'Soundcloud', img: 'img/icon-music.svg', href: 'https://soundcloud.com/lreaadna' },
 		{ name: 'Ludum Dare', img: 'img/icon-game.svg', href: 'https://ldjam.com/users/kalabasa/games' },
 		// { name: 'Ludum Dare (Legacy)', img: 'img/icon-game.svg', href: 'http://legacy.ludumdare.com/compo/author/kalabasa/' },
+		{ name: 'CodePen', img: 'img/icon-codepen.svg', href: 'https://codepen.io/kalabasa/' },
 	],
 };
