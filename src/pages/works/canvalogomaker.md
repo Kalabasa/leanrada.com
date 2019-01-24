@@ -12,13 +12,15 @@
 	</video>
 </span>
 
-Logo Maker is a tool to generate a customized logo in Canva. You supply the brand name, style, and colors; it will do the rest! ✨ <small>Actually, color customization isn’t available yet, but will be soon!</small>
+## Online logo generator
+
+Logo Maker is a tool that generates a customized logo in Canva. You supply the brand name, style, and colors; it will do the rest! ✨ <small>Actually, color customization isn’t available yet, but will be soon!</small>
 
 My role in this project was the implementation of the landing page and the “choices” modal interface.
 
 <span class="bleed">![screenshot](../img/canvalogomaker_3.jpg)</span>
 
-I also did some integration with the editor, but the amazing Smart Design team did the magic! They were able to create a system that generates dynamic pixel-perfect designs with several parameters!
+I also did some integration with our internal design API, but the amazing Smart Design team did the magic! They made a design system that generates dynamic pixel-perfect designs with several parameters!
 
 Once the design is generated, it can be further customized using in the Canva Editor.
 
@@ -26,6 +28,6 @@ Once the design is generated, it can be further customized using in the Canva Ed
 <span class="phone-body"></span>
 </span></span>
 
-This cool project was made possible by the cool people at Canva - spanning multiple teams! - from template designers to product engineers. It was a fun journey!
+This cool project was made possible by the cool people at Canva - spanning multiple teams, from graphic designers to product engineers! It was a fun journey!
 
 [Try it!](https://about.canva.com/tools/logo-maker)
