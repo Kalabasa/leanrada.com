@@ -8,7 +8,7 @@ export default {
 			id: 'canvalogomaker',
 			name: 'Canva Logo Maker',
 			links: [{ name: 'Web', url: 'https://www.canva.com/tools/logo-maker/' }],
-			short_description: 'Custom logo generator using Canva.',
+			short_description: 'Logo generator using Canva.',
 			tech: ['JS', 'HTML5', 'SCSS'],
 			image: {
 				src: 'img/canvalogomaker_0.jpg',
