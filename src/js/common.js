@@ -2,8 +2,17 @@ import page from './page.js';
 import Barba from 'barba.js';
 
 page.ready(() => {
+	const header = [...document.querySelectorAll('header.header')].pop();;
 	const searchForm = [...document.querySelectorAll('#header-search')].pop();
 	const searchInput = [...document.querySelectorAll('#header-search input')].pop();
+
+	searchInput.addEventListener('focus', () => {
+		header.classList.add('header-searching');
+	});
+
+	searchInput.addEventListener('blur', () => {
+		header.classList.remove('header-searching');
+	});
 
 	// use hash params instead of query params for performance
 	searchForm.addEventListener('submit', event => {
