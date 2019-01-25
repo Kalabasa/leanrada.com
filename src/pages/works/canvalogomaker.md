@@ -22,7 +22,7 @@ My role in this project was the implementation of the landing page and the “ch
 
 I also did some integration with our internal design API, but the amazing Smart Design team did the magic! They made a design system that generates dynamic pixel-perfect designs with several parameters!
 
-Once the design is generated, it can be further customized using in the Canva Editor.
+Once the design is generated, it can be further customized in the Canva Editor.
 
 <span class="d3d"><span class="mockup-phone">![phone view](../img/canvalogomaker_1.jpg)
 <span class="phone-body"></span>
