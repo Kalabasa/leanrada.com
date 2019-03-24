@@ -2,8 +2,20 @@ import _ from 'lodash';
 
 // data for the whole site!
 export default {
-	featured_projects: [ 'canvalogomaker', 'hypertangram', 'planetdefense' ],
+	featured_projects: [ 'canvaphotoeditor', 'hypertangram', 'planetdefense' ],
 	projects: [
+		{
+			id: 'canvaphotoeditor',
+			name: 'Canva Photo Editor',
+			links: [{ name: 'Web', url: 'https://www.canva.com/photo-editor/' }],
+			short_description: 'Simple photo editor by Canva.',
+			tech: ['React', 'MobX', 'WebGL'],
+			image: {
+				src: 'img/canvaphotoeditor_thumb.jpg',
+				alt: 'screenshot'
+			},
+			tags: ['web', 'react', 'image'],
+		},
 		{
 			id: 'canvalogomaker',
 			name: 'Canva Logo Maker',

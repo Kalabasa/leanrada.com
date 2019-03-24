@@ -7,7 +7,7 @@
 
 ![screenshot](../img/canvaenterprise_1.jpg)
 
-One of my first projects at Canva was a page that showcases Canva Enterprise. I was responsible for the dev work on its front page.
+One of my first projects at Canva was a page that showcases **Canva Enterprise**. I was responsible for the dev work on its front page.
 
 It has some cool animations.
 
