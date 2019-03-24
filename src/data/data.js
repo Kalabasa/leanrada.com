@@ -14,7 +14,7 @@ export default {
 				src: 'img/canvaphotoeditor_thumb.jpg',
 				alt: 'screenshot'
 			},
-			tags: ['web', 'react', 'image'],
+			tags: ['canva', 'web', 'js', 'css', 'css3', 'scss', 'webpack', 'react', 'reactjs', 'mobx', 'webgl', 'image', 'tool', 'app'],
 		},
 		{
 			id: 'canvalogomaker',
@@ -26,7 +26,7 @@ export default {
 				src: 'img/canvalogomaker_0.jpg',
 				alt: 'screenshot'
 			},
-			tags: ['css', 'css3', 'web', 'animation'],
+			tags: ['canva', 'css', 'css3', 'web', 'animation', 'tool'],
 		},
 		{
 			id: 'canvaenterprise',
@@ -38,7 +38,7 @@ export default {
 				src: 'img/canvaenterprise_0.jpg',
 				alt: 'screenshot'
 			},
-			tags: ['css', 'css3', 'web', 'animation'],
+			tags: ['canva', 'css', 'css3', 'web', 'animation'],
 		},
 		{
 			id: 'kalabasa',
@@ -72,7 +72,7 @@ export default {
 				src: 'img/hypertangram_0.jpg',
 				alt: 'screenshot of gameplay'
 			},
-			tags: ['game', 'videogame', 'game design', 'java', 'android', 'google play', 'gamedev', 'tangram', 'puzzle', 'ux', 'graphics', 'music', 'sound effects'],
+			tags: ['game', 'videogame', 'game design', 'java', 'android', 'google play', 'gamedev', 'tangram', 'puzzle', 'ux', 'graphics', 'music', 'sound effects', 'app'],
 		},
 		{
 			id: 'arosybrokenalbum',
@@ -147,7 +147,7 @@ export default {
 		{
 			name: 'Frontend Engineer',
 			company: 'Canva',
-			date: ['2018'],
+			date: ['2018', 'now'],
 			tech: ['React', 'JavaScript', 'PHP', 'Sass'],
 			description: 'Frontend growth engineering.',
 		},
