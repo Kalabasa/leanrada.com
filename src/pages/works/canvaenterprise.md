@@ -28,4 +28,4 @@ I enjoyed animating the whole scene and doing all the little details (like how t
 
 Halfway through the project, it was handed over to another dev, as I needed to focus elsewhere. So the inner screens (survey part) weren’t done by me. All of it was done in a little over a month.
 
-[See it live on Canva!](https://about.canva.com/enterprise)
+Update: So there's [a newer version of the page now.](https://about.canva.com/enterprise) You can still see [my project's version on archive.org.](https://web.archive.org/web/20190401230423/https://about.canva.com/enterprise/)

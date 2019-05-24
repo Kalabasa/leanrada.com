@@ -31,7 +31,7 @@ export default {
 		{
 			id: 'canvaenterprise',
 			name: 'Canva Enterprise',
-			links: [{ name: 'Web', url: 'https://about.canva.com/enterprise/' }],
+			links: [{ name: 'Web', url: 'https://web.archive.org/web/20190401230423/https://about.canva.com/enterprise/' }],
 			short_description: 'Page presenting Canva’s Enterprise offering.',
 			tech: ['HTML5', 'SCSS', 'JS'],
 			image: {
