@@ -1,6 +1,8 @@
 import page from './page.js';
 import Barba from 'barba.js';
 
+initGtag();
+
 page.ready(() => {
 	const header = [...document.querySelectorAll('header.header')].pop();;
 	const searchForm = [...document.querySelectorAll('#header-search')].pop();
@@ -44,5 +46,25 @@ page.ready(() => {
 	};
 	searchInput.addEventListener('change', prefetchSearch);
 });
+
+function initGtag() {
+	const id = 'UA-141010266-1';
+
+	if ('gtag' in window) {
+		return;
+	}
+
+	const gtagScript = document.createElement('script');
+	gtagScript.type = 'text/javascript';
+	gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+	gtagScript.async = true;
+	document.head.appendChild(gtagScript);
+
+	window.dataLayer = window.dataLayer || [];
+	window.gtag = () => dataLayer.push(arguments);
+	gtag('js', new Date());
+
+	gtag('config', id);
+}
 
 export { page };
