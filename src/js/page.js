@@ -34,6 +34,8 @@ function onReady(container, page) {
 		// mainly for enabling keyboard scroll, because body isn't scrollable, .main is
 		container.focus({ preventScroll: true });
 	}
+
+	configGtag(page);
 }
 
 function onLeave(container, page) {
@@ -195,6 +197,27 @@ function getPageName() {
 
 function countSeps(path) {
 	return (path.match(/\//g) || []).length;
+}
+
+function configGtag(page) {
+	const id = 'UA-141010266-1';
+
+	if (!('gtag' in window)) {
+		const gtagScript = document.createElement('script');
+		gtagScript.type = 'text/javascript';
+		gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+		gtagScript.async = true;
+		document.head.appendChild(gtagScript);
+
+		window.dataLayer = window.dataLayer || [];
+		window.gtag = () => dataLayer.push(arguments);
+		gtag('js', new Date());
+	}
+
+	gtag('config', id, {
+		'page_title' : document.title,
+		'page_path': '/' + page
+	});
 }
 
 export default {
