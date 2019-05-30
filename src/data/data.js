@@ -150,6 +150,10 @@ export default {
 			date: ['2018', 'now'],
 			tech: ['React', 'JavaScript', 'PHP', 'Sass'],
 			description: 'Frontend growth engineering.',
+			thumbnail: {
+				src: 'img/thumb-canva.png',
+				alt: 'Canva logo',
+			},
 		},
 		{
 			name: 'Web Developer',
@@ -163,7 +167,11 @@ export default {
 			company: 'Azeus',
 			date: ['2015', '2017'],
 			tech: ['Android', 'Android Studio', 'Java', 'SQLite'],
-			description: `Worked on the Android app for the digital meetings and collaboration system called <a target='_blank' href='https://www.azeusconvene.com/'>Convene</a>.`
+			description: `Worked on the Android app for the digital meetings and collaboration system called <a target='_blank' href='https://www.azeusconvene.com/'>Convene</a>.`,
+			thumbnail: {
+				src: 'img/thumb-convene.png',
+				alt: 'Convene logo',
+			},
 		},
 		{
 			name: 'Software Engineering Intern',
