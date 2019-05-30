@@ -215,8 +215,8 @@ function configGtag(page) {
 	}
 
 	gtag('config', id, {
-		'page_title' : document.title,
-		'page_path': '/' + page
+		page_title: document.title,
+		page_path: '/' + page,
 	});
 }
 
