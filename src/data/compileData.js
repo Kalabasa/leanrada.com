@@ -19,18 +19,20 @@ data.projects.forEach((proj, projIndex) => {
 		...(proj.tags || []),
 		...[proj.short_description, proj.full_description].filter(v => v).join(' ').split(/\s+/)
 	].map(v => v.toLowerCase()).filter((v, i, self) => self.indexOf(v) === i);
+
 	query.splice(8);
 
 	const related = idx.search(query.join(' '), searchConfig)
 		.filter(r => refId(r.ref) !== proj.id)
 		.filter(r => r.score > 0.4);
 
+	related.splice(2);
+
 	const suggested = related.map(r => ({
 		...fromRef(data, r.ref),
 		related: true,
 	}));
 
-	console.log(`suggestions for ${proj.name}: ${suggested.map(s => s.item.name).join(', ')}`);
 	suggested.splice(suggestedSize);
 
 	let i = 1;
@@ -48,6 +50,8 @@ data.projects.forEach((proj, projIndex) => {
 
 		if (i > data.projects.length) break;
 	}
+
+	console.log(`suggestions for ${proj.name}: ${suggested.map(s => s.item.name + (s.related ? ' [r]' : '')).join(', ')}`);
 
 	proj.suggested = suggested.map(v => ({
 		name: v.item.name,

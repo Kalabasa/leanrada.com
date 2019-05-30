@@ -14,7 +14,7 @@ export default {
 				src: 'img/canvaphotoeditor_thumb.jpg',
 				alt: 'screenshot'
 			},
-			tags: ['canva', 'web', 'js', 'css', 'css3', 'scss', 'webpack', 'react', 'reactjs', 'mobx', 'webgl', 'image', 'tool', 'app'],
+			tags: ['web', 'webapp', 'ui', 'reactjs', 'webpack', 'webgl', 'tool'],
 		},
 		{
 			id: 'canvalogomaker',
@@ -26,7 +26,7 @@ export default {
 				src: 'img/canvalogomaker_0.jpg',
 				alt: 'screenshot'
 			},
-			tags: ['canva', 'css', 'css3', 'web', 'animation', 'tool'],
+			tags: ['web', 'webapp', 'ui', 'animation', 'css', 'tool'],
 		},
 		{
 			id: 'canvaenterprise',
@@ -38,7 +38,7 @@ export default {
 				src: 'img/canvaenterprise_0.jpg',
 				alt: 'screenshot'
 			},
-			tags: ['canva', 'css', 'css3', 'web', 'animation'],
+			tags: ['web', 'website', 'ui', 'animation', 'css', 'canva'],
 		},
 		{
 			id: 'kalabasa',
@@ -49,7 +49,7 @@ export default {
 				src: 'img/kalabasa_0.jpg',
 				alt: 'screenshot of intro page'
 			},
-			tags: ['css', 'css3', 'portfolio', 'web', 'js', 'rollup', 'ui', 'animation'],
+			tags: ['web', 'website', 'ui', 'rollup', 'js', 'animation'],
 		},
 		{
 			id: 'heartgame',
@@ -60,7 +60,7 @@ export default {
 				src: 'img/heartgame.jpg',
 				alt: 'game visual',
 			},
-			tags: ['js', 'canvas', 'game'],
+			tags: ['web', 'game', 'videogame', 'gamedev'],
 		},
 		{
 			id: 'hypertangram',
@@ -72,7 +72,7 @@ export default {
 				src: 'img/hypertangram_0.jpg',
 				alt: 'screenshot of gameplay'
 			},
-			tags: ['game', 'videogame', 'game design', 'java', 'android', 'google play', 'gamedev', 'tangram', 'puzzle', 'ux', 'graphics', 'music', 'sound effects', 'app'],
+			tags: ['game', 'videogame', 'gamedev', 'design', 'java', 'ux', 'graphics', 'music', 'app'],
 		},
 		{
 			id: 'arosybrokenalbum',
@@ -83,7 +83,7 @@ export default {
 				src: 'img/arosybrokenalbum_0.jpg',
 				alt: 'cover art',
 			},
-			tags: ['music', 'piano', 'solo'],
+			tags: ['art', 'music', 'piano', 'solo'],
 		},
 		{
 			id: 'freeformgesturedetector',
@@ -98,7 +98,7 @@ export default {
 				src: 'img/freeformgesturedetector_head.png',
 				alt: 'illustration',
 			},
-			tags: ['library', 'java', 'android', 'open source', 'hypertangram', 'gesture', 'ui'],
+			tags: ['library', 'java', 'android', 'open source', 'hypertangram', 'ui'],
 		},
 		{
 			id: 'planetdefense',
@@ -111,7 +111,7 @@ export default {
 				src: 'img/planetdefense_0.jpg',
 				alt: 'screenshot of gameplay'
 			},
-			tags: ['game', 'videogame', 'js', 'pixi', 'html', 'html5', 'canvas', 'gamedev', 'planet'],
+			tags: ['web', 'game', 'videogame', 'gamedev', 'pixi'],
 		},
 		{
 			id: 'conversations',
@@ -127,7 +127,7 @@ export default {
 				src: 'img/conversations_0.jpg',
 				alt: 'album art'
 			},
-			tags: ['music', 'jazz', 'jazzhop', 'chillhop', 'art'],
+			tags: ['art', 'music', 'jazz', 'jazzhop', 'chillhop'],
 		},
 		{
 			id: 'dynastymap',
@@ -139,7 +139,7 @@ export default {
 				src: 'img/dynastymap_0.jpg',
 				alt: `screenshot of welcome screen`
 			},
-			tags: ['js', 'react', 'reactjs', 'backbone', 'backbonejs', 'mapboxjs', 'leaflet', 'leafletjs', 'd3js', 'html', 'html5', 'css', 'web', 'politics'],
+			tags: ['web', 'js', 'reactjs', 'backbonejs', 'mapboxjs', 'leaflet', 'd3js', 'politics', 'webapp'],
 		},
 	],
 
@@ -149,7 +149,7 @@ export default {
 			company: 'Canva',
 			date: ['2018', 'now'],
 			tech: ['React', 'JavaScript', 'PHP', 'Sass'],
-			description: 'Frontend growth engineering.',
+			description: 'Frontend growth engineering. We run experiments and iterate – to empower the world to design with us!',
 			thumbnail: {
 				src: 'img/thumb-canva.png',
 				alt: 'Canva logo',
@@ -159,8 +159,8 @@ export default {
 			name: 'Web Developer',
 			company: 'Azeus',
 			date: ['2017', '2018'],
-			tech: ['Vue.js', 'Webpack', 'Spring Boot', 'Gradle', 'JasperReports', 'TypeScript', 'Java', 'Stylus'],
-			description: 'Full-stack web and systems development.'
+			tech: ['Vue.js', 'Webpack', 'Spring Boot', 'Gradle', 'TypeScript', 'Java', 'Stylus'],
+			description: 'Full-stack web and systems development for the Hong Kong government.'
 		},
 		{
 			name: 'Android Developer',
