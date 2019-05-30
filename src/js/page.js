@@ -203,15 +203,15 @@ function configGtag(page) {
 	const id = 'UA-141010266-1';
 
 	if (!('gtag' in window)) {
+		window.dataLayer = window.dataLayer || [];
+		window.gtag = function(){ dataLayer.push(arguments); };
+		gtag('js', new Date());
+
 		const gtagScript = document.createElement('script');
 		gtagScript.type = 'text/javascript';
 		gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
 		gtagScript.async = true;
 		document.head.appendChild(gtagScript);
-
-		window.dataLayer = window.dataLayer || [];
-		window.gtag = () => dataLayer.push(arguments);
-		gtag('js', new Date());
 	}
 
 	gtag('config', id, {
