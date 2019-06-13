@@ -160,7 +160,7 @@ export default {
 			company: 'Azeus',
 			date: ['2017', '2018'],
 			tech: ['Vue.js', 'Webpack', 'Spring Boot', 'Gradle', 'TypeScript', 'Java', 'Stylus'],
-			description: 'Full-stack web and systems development for the Hong Kong government.'
+			description: 'Full-stack web and systems development.'
 		},
 		{
 			name: 'Android Developer',
