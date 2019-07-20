@@ -148,7 +148,7 @@ export default {
 			name: 'Frontend Engineer',
 			company: 'Canva',
 			date: ['2018', 'now'],
-			tech: ['React', 'JavaScript', 'PHP', 'Sass'],
+			tech: ['React', 'Node', 'TypeScript'],
 			description: 'Frontend growth engineering. We run experiments and iterate – to empower the world to design with us!',
 			thumbnail: {
 				src: 'img/thumb-canva.png',
