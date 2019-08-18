@@ -49,7 +49,7 @@ function onLeave(container, page) {
 }
 
 function onLoad() {
-	const main = [...document.querySelectorAll('.main')].pop();
+	const main = getCurrentMainElement();
 	const page = getPageName();
 	main.dataset.page = page;
 
@@ -189,6 +189,10 @@ const transition = Barba.BaseTransition.extend({
 	},
 });
 
+function getCurrentMainElement() {
+	return [...document.querySelectorAll('.main')].pop();
+}
+
 function getPageName() {
 	let pathname = window.location.pathname;
 	if (window.location.pathname.endsWith('/')) pathname += 'index.html';
@@ -197,6 +201,10 @@ function getPageName() {
 
 function countSeps(path) {
 	return (path.match(/\//g) || []).length;
+}
+
+function isReady() {
+	return window.pageState.ready;
 }
 
 function configGtag(page) {
@@ -223,4 +231,6 @@ function configGtag(page) {
 export default {
 	ready,
 	leave,
+	isReady,
+	getCurrentMainElement,
 };

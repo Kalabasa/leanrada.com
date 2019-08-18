@@ -73,5 +73,5 @@ I really liked what I did here. Of course, there’s always room for improvement
 Try it out! It’s free.
 
 <p class="center">
-	<a class="anchor-plain" href="https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1"><img class="media-plain" width="200px" alt="Get it on Google Play" src="https://play.google.com/intl/en_gb/badges/images/generic/en_badge_web_generic.png"/></a>
+	<a class="anchor-plain" href="https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram&referrer=utm_source%3Dkalabasa.github.io&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1"><img class="media-plain" width="200px" alt="Get it on Google Play" src="https://play.google.com/intl/en_gb/badges/images/generic/en_badge_web_generic.png"/></a>
 </p>

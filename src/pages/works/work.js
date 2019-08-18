@@ -8,6 +8,8 @@ function isExternal(url) {
     return domain(window.location.href) !== domain(url);
 }
 
+window.workPage = page;
+
 page.ready(() => {
 	if (ENV_DEBUG) console.log('work.js ready');
 	

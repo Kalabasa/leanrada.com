@@ -7,9 +7,9 @@
 
 ## Part 2: Augmented reality
 
-<small class="small-block">[Part 1](dimensions.html)</small>
+<small class="small-block">[Part 1 of this post.](dimensions.html)</small>
 
-The idea of including augmented reality was wholly inspired by [AR.js](https://github.com/jeromeetienne/AR.js), an awesome project that brings easy and performant augmented reality for the web.
+The idea of including augmented reality was wholly inspired by [AR.js](https://github.com/jeromeetienne/AR.js), an awesome project that brings fast and easy augmented reality to the web.
 
 <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -21,17 +21,17 @@ The planned user flow was like this:
 * App opens the phone’s camera to track the piece.
 * App superimposes virtual art on the physical art.
 
-Implementing step 4 (tracking the piece) was met with difficulty because AR.js required special markers in order to track the 3D scene.
+Implementing piece tracking (step 4) was met with difficulty. AR.js required special markers in order to track the 3D scene.
 
-The prints were already finalized, so I couldn’t add AR markers on it then. Plus, the piece already had a QR code slapped on it. Adding any more technical tags would’ve ruined it.
+The prints were already finalized, so I couldn’t add AR markers on it then. Plus, the piece already had a QR code slapped on it. Adding any more technological tags would’ve ruined it.
 
-I looked around for alternatives like **Tracking.js**, **OpenCV**, and even **TensorFlow**, but ultimately implemented my own image recognition algorithm.
+I looked around for alternatives like **Tracking.js**, **OpenCV**, and even **TensorFlow**, but ultimately implemented my own **image recognition** algorithm.
 
 ---
 
 ## Image recognition
 
-[**Image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) is a computer vision problem of determining whether an image contains some specific object or not.
+[**Image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) is a computer vision problem of determining whether an image contains some specific object or not. I used this to determine if the piece has been aligned in front of the camera.
 
 <span class="bleed">
   <video muted autoplay loop playsinline>
@@ -41,11 +41,11 @@ I looked around for alternatives like **Tracking.js**, **OpenCV**, and even **Te
 </span>
 <span class="caption">The app recognizes when the target piece has been aligned.</span>
 
-There exists many solutions to this problem ranging from simple histogram matching to convolutional neural networks. These days everyone just uses neural networks and deep learning if possible.
+There exists many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. These days everyone just uses neural networks and deep learning if possible.
 
 These technologies power some apps like Face Swap and Snaphchat filters, and is also used for things like mass camera surveillance.
 
-In my case however, I’ve simplified the problem to determining whether any of the three pieces are in the center frame in the user’s camera, or not. No position tracking. This is just a yes/no problem.
+In my case however, I’ve simplified the problem to determining whether any of the three pieces are in the center frame in the user’s camera, or not. No more position tracking. This is just a yes/no problem.
 
 Consequently, my algorithm was very simple:
 
