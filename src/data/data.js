@@ -220,7 +220,7 @@ export default {
 			date: ['2018', 'now'],
 			tech: ['React', 'Node', 'TypeScript'],
 			description:
-				'Frontend growth engineering. We run experiments and iterate – to empower the world to design with us!',
+				'Building all sorts of stuff.',
 			thumbnail: {
 				src: 'img/thumb-canva.png',
 				alt: 'Canva logo'
