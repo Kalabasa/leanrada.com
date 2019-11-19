@@ -48,6 +48,6 @@ The project was completed in around 2 months.
 <span class="bleed">![landing page screenshot](../img/canvaphotoeditor_3.jpg)</span>
 <span class="caption">The landing page</span>
 
-After the revamp we saw an increase of 50% in conversions (that is, Canva signups), so we can say that the project was a success! 🎉 Congrats to the team!
+After the revamp we saw an increase of 50% in conversions (that is, Canva signups), so we can say that the project was a success! 🎉
 
-[Visit the site and try it out!](https://www.canva.com/photo-editor/)
+Update: There's different version up now for other reasons. You can still see [my project’s version on archive.org](https://web.archive.org/web/20190517230019/https://www.canva.com/photo-editor/), but the webapp won't work properly on the archive.
