@@ -50,4 +50,4 @@ The project was completed in around 2 months.
 
 After the revamp we saw an increase of 50% in conversions (that is, Canva signups), so we can say that the project was a success! 🎉
 
-Update: There's different version up now for other reasons. You can still see [my project’s version on archive.org](https://web.archive.org/web/20190517230019/https://www.canva.com/photo-editor/), but the webapp won't work properly on the archive.
+[Take a look!](https://www.canva.com/photo-editor/)
