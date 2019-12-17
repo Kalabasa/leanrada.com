@@ -1,4 +1,5 @@
-// See work.js
+import './snippet';
+
 window.workPage.ready(() => setTimeout(addInstagramEmbedScript, 0));
 
 function addInstagramEmbedScript() {

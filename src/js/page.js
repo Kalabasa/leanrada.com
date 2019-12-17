@@ -114,7 +114,7 @@ const transition = Barba.BaseTransition.extend({
 
 						if (newHead) {
 							const newHeadContent = document.importNode(newHead.content, true);
-							for(let c of [...newHeadContent.children]) {
+							for(const c of [...newHeadContent.children]) {
 								newHeadEls.push(c);
 
 								const old = document.getElementById(c.id);
