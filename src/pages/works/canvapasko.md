@@ -25,8 +25,6 @@ It featured a **live preview** where you can preview your design by typing a nam
 	<a href="../video/canvapasko_livetemplate.mp4">Video</a>
 </video>
 
-Now that’s instant gratification 👌
-
 After selecting a template, the Canva editor will pop up. You can design and submit your greeting card right then and there.
 
 <span class="bleed">
@@ -37,11 +35,11 @@ After selecting a template, the Canva editor will pop up. You can design and sub
 </span>
 <span class="caption">User flow</span>
 
-The pop-up editor was a new product from Canva where people can integrate the Canva editor into their own website. It’s officially called the [**Canva Button**](https://www.canva.com/button/).
+The pop-up Canva editor embedded in the page was from a new product from Canva called the [**Canva Button**](https://www.canva.com/button/). Using the Canva Button SDK, developers can integrate the Canva editor into their own website.
 
 My favorite part of the microsite was the design page.
 
-It featured an **interactive animated background** and a **billboard preview** of the participant’s newly-created design, as shown briefly in the video above.
+It featured an **interactive animated background** and a **billboard preview** of the participant’s newly-created design.
 
 <video muted playsinline autoplay loop>
 	<source src="../video/canvapasko_interact.mp4">
@@ -57,9 +55,9 @@ These animations were implemented in pure CSS so it doesn’t interfere with the
 </video>
 <span class="caption">Social media post and billboard preview</span>
 
-The billboard preview should give the participant a visual of their prize (if they would win).
+The billboard preview should help the participant visualize their prize should they win.
 
-These animations aimed to delight and motivate them to wrap up their entry by following the instructions and posting to social media.
+These animations overall aimed to delight and motivate the participants to continue and wrap up their entry by following the instructions and posting to social media.
 
 The contest ran for about one month and got around a thousand entries.
 
@@ -73,7 +71,7 @@ Out of all submissions, 20 winners were selected to be displayed on the prize bi
 
 But really the best thing about this project was the participant’s entries themselves. It wouldn’t be called _“Designed By You”_ for nothing!
 
-Some of the stories were really inspiring. Here are some of the entries from [the Facebook post](https://www.facebook.com/CanvaPhilippines/videos/420974562128240/).
+Some of the stories accompanying the entries were really inspiring. Here are some of them from the [Facebook post](https://www.facebook.com/CanvaPhilippines/videos/420974562128240/).
 
 <p>
 <div class="fb-comment-embed"
@@ -91,9 +89,9 @@ One particular winner got a special surprise — a Canva-sponsored homecoming an
 
 <iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/KFzrdp-j1jo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-I really like how Canva as a company tries to make every moment magical, whether it’s small things like little UI easter eggs, or bigger things like this contest. Seeing a billboard dedicated to you must be amazing.
+I really like how Canva as a company tries to make these magical moments, whether it’s small things like little UI easter eggs, or bigger things like this contest. Seeing a billboard dedicated to you must be amazing.
 
-It’s very nice to have worked on a project like this that impacted people on a personal level. I never really expected this level of awesomeness. ✨
+It’s very nice to have worked on a project like this that impacted people on a personal level. I never really expected this outcome.
 
 Seeing all the responses and reactions made all the nights at the office worth it <small>(aside from the extra overtime pay, that is. 👌)</small>
 

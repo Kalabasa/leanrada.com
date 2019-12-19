@@ -5,25 +5,25 @@
 
 # Dimensions
 
-## Part 2: Augmented reality
+## Part 2. Augmented reality
 
-<small class="small-block">[Part 1 of this post.](dimensions.html)</small>
+The idea of including augmented reality into the art piece was wholly inspired by [AR.js](https://github.com/jeromeetienne/AR.js), an awesome project that brings fast and easy augmented reality to the web.
 
-The idea of including augmented reality was wholly inspired by [AR.js](https://github.com/jeromeetienne/AR.js), an awesome project that brings fast and easy augmented reality to the web.
+<iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+The AR.js demo looked really cool and smooth.
 
-The planned user flow was like this:
+With augmented reality, the art piece became an art experience. The user flow for the experience went like this:
 
-* User sees the piece and notices QR code.
-* User whips out smartphone to scan QR code.
-* Smartphone is directed to the app.
-* App opens the phone’s camera to track the piece.
-* App superimposes virtual art on the physical art.
+1. User sees the piece and notices the **QR code**.
+1. User whips out smartphone to **scan** the QR code.
+1. Smartphone is directed to the **app**.
+1. App opens the phone’s camera to **track** the piece in 3D space.
+1. App superimposes virtual art on the physical art, *augmenting reality*. ✨
 
-Implementing piece tracking (step 4) was met with difficulty. AR.js required special markers in order to track the 3D scene.
+Implementing object tracking (step 4) proved to be difficult. With AR.js, it required special **markers** in order to track the 3D scene.
 
-The prints were already finalized, so I couldn’t add AR markers on it then. Plus, the piece already had a QR code slapped on it. Adding any more technological tags would’ve ruined it.
+The prints were already finalized, so I couldn’t add AR markers on it by then. Plus, the piece already had a QR code slapped on it. Adding any more technical tags would’ve ruined it.
 
 I looked around for alternatives like **Tracking.js**, **OpenCV**, and even **TensorFlow**, but ultimately implemented my own **image recognition** algorithm.
 
@@ -31,7 +31,7 @@ I looked around for alternatives like **Tracking.js**, **OpenCV**, and even **Te
 
 ## Image recognition
 
-[**Image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) is a computer vision problem of determining whether an image contains some specific object or not. I used this to determine if the piece has been aligned in front of the camera.
+[**Image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) is a computer vision problem of determining whether an image contains some specific object or not. For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera.
 
 <span class="bleed">
   <video muted autoplay loop playsinline>
@@ -45,40 +45,95 @@ There exists many solutions to this problem, ranging from simple histogram match
 
 These technologies power some apps like Face Swap and Snaphchat filters, and is also used for things like mass camera surveillance.
 
-In my case however, I’ve simplified the problem to determining whether any of the three pieces are in the center frame in the user’s camera, or not. No more position tracking. This is just a yes/no problem.
+In my case however, I’ve simplified the problem to determining whether any of the three specific art pieces is in the center frame in the user’s camera, or not. No position tracking.
+
+This reduced the problem to a yes/no problem.
 
 Consequently, my algorithm was very simple:
 
-I start by picking three regions over the camera image.
+I started by picking three regions over the camera image. These predetermined regions were selected to obtain key characteristics of the pieces.
 
-Then I get the average color of each region.
+TODO illo
 
-TODO DEMO
+On each frame, I get the average color of each region.
 
-These specific regions were picked so as to obtain the pieces’ key characteristics.
+TODO illo
 
-Then the top and middle colors are subtracted, as well as the middle and bottom, producing two colors.
+The top and middle colors are subtracted, as well as the middle and bottom, producing two difference colors.
 
-TODO DEMO
+This subtraction step can be likened to a convolution in 2D image processing.
 
-The subtraction operation cancels out variances in lighting, camera quality, and white balance. This step can be compared to a convolution in 2D image processing.
+TODO illo
 
-TODO Theory behind subtraction?
-PerceivedColor = TrueColor * Light + Noise
+The two difference colors are then normalized.
 
-The channels of the differences are separated and combined as one series of numbers. This series of numbers is called a feature vector, i.e., numbers that summarize the image.
+TODO illo
 
-TODO DEMO
+The two resulting normalized colors can be used to compare the image for a match.
 
-Finally, the vector is normalized.
+The theory behind this was based on the fact that camera sensors don’t actually pick up the true color of an object. The perceived color is affected by room lighting, camera quality, and other factors.
 
-Turning images into vectors makes the problem of comparing images a mathematical one.
+To work with this theory, colors were modeled as:
+
+```
+PC = TC * a + b
+```
+
+Where
+* `PC` is the color perceived from the camera sensor
+* `TC` is true color of the material (unknown)
+* `a` and `b` are lighting parameters that describe the white balance, environmental illumination, camera quality, and other factors (unknown).
+
+By subtracting two perceived colors, the unknown lighting variable `b` could be eliminated.
+
+```
+PC2 - PC1 = (TC2 * a + b) - (TC1 * a + b)
+          = TC2 * a - TC1 * a
+          = (TC2 - TC1) * a
+```
+
+TODO illo, with labels
+
+Let’s call the differences `D1` and `D2`:
+
+```
+D1 = (TC2 - TC1) * a
+D2 = (TC3 - TC2) * a
+```
+
+To eliminate the lighting variable `a`, the values were normalized, that is, divided each by the highest value.
+
+Let’s call the normalized values `N1` and `N2`, for normalized `D1` and `D2`, respectively.
+
+```
+N1 = D1 / max(D1, D2)
+   = (TC2 - TC1) * a / max(D1, D2)
+   = (TC2 - TC1) / max(D1 / a, D2 / a)
+   = (TC2 - TC1) / max(TC2 - TC1, TC3 - TC2)
+```
+
+TODO illo, with labels
+
+The final values are:
+
+```
+N1 = (TC2 - TC1) / max(TC2 - TC1, TC3 - TC2)
+N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
+```
+
+As you can see the final values `N1` and `N2` are not affected by the lighting parameters at all. They are purely derived from true color. <small>According to the model anyway.</small>
+
+Using these normalized colors meant that the image matching algorithm would be robust across different lighting conditions and various smartphone cameras.
+
+The final step was to combine the RGB channels of the normalized colors into one series of numbers, called the **feature vector** of the image, i.e., a set of numbers that *summarize* the image.
+
+TODO illo
+
+Turning the image into a vector made the problem of comparing image similarity a mathematical one.
 
 The Euclidean distance between two feature vectors approximate the difference between two corresponding images.
 
-This can be used to compare the camera image with a reference image - a target image to match.
-
-I obtained reference feature vectors from the raw pixel data and on-site photos. On each frame, these reference vectors are compared to the feature vectors processed from the camera. If the vectors match, then the images match.
+On each frame, the target images’ feature vectors are compared to the feature vectors processed from the camera. If the vectors match, then the images match.
 
 TODO Live demo with vector matching
 
@@ -88,59 +143,56 @@ Once it gets a match the **augmented reality** experience starts rolling in.
 
 ## Augmented reality
 
-Remember the concept for the tiles? The pen, pencil, brush, et al?
-
-The vision for the augmented reality part was that these tiles would come alive, burst out of the piece, and start drawing streaks of paint, ink, or whatever in the air.
+The vision for the augmented reality part was that the tiles in the piece would come alive, burst out of the piece, and start drawing streaks of paint, ink, or whatever in the air, depending on the tile type.
 
 ![AR notes](../img/dimensions_arnotes.jpg)
 
-The AR part was rendered using [three.js](https://threejs.org/). I’ve used three.js before and it was great, very easy-to-learn API, great examples.
+The AR part was rendered using [three.js](https://threejs.org/). I’ve used three.js before and it was great, with very easy to learn API and good examples.
 
-I was quickly able to render virtual objects in real space:
+I was quickly able to sketch out virtual objects in space.
 
 <video muted autoplay loop playsinline>
   <source src="../video/dimensions_ar1.mp4">
-  <a href="../video/dimensions_ar1.mp4">Demo video</a>
+  <a href="../video/dimensions_ar1.mp4">Prototype video</a>
 </video>
 
 This was made by simply overlaying a transparent three.js `<canvas>` onto the `<video>` that’s streaming the camera feed.
 
 A three.js extension called `DeviceOrientationControls` provides synchronization between the device’s orientation and the virtual camera.
 
-Note that only device orientation can be tracked. Translations in space weren’t tracked, so virtual objects would appear follow the device. The experience was designed around this limitation.
+Note that only device orientation can be tracked. Tracking translations in space weren’t possible yet, so virtual objects would appear follow the device when it moves.
 
-<small class="small-block">There was a bug on iOS Safari with orientation tracking due to changes in their permissions model (?), which apparently was just released July 2019. The bug was only discovered in production (i.e., at the exhibit) and I sadly witnessed some iPhone users not getting the full experience.</small>
+The experience was designed around this limitation by keeping the objects at constant distance to the user, subtly hinting that there’s no need to move or walk, only looking around.
 
-Modeling the tiles as 3D objects were simply extrusions of the tiles’ paths, made easy with three.js’s `ExtrudeGeometry`.
+<video muted autoplay loop playsinline>
+  <source src="../video/dimensions_1.mp4">
+  <a href="../video/dimensions_1.mp4">Demo video</a>
+</video>
 
-The “paint” trails were made using an old unmaintained library called [**TrailRendererJS**](https://github.com/mkkellogg/TrailRendererJS), which surprisingly still works, although it bugs out when the camera isn’t at the origin.
+<small class="small-block">There was a bug on iOS Safari with orientation tracking, which apparently was just introduced July 2019, one month before the event. Sadly most iPhone users did not get the full experience.</small>
 
-The floating tiles’ movement behavior were guided by the triangle wave function defined as `arccos(sin(x))`. It looks like this:
+Modeling the tiles as 3D objects were simply extrusions of the tiles’ 2D shape paths, made very easy with three.js’s `ExtrudeGeometry`.
 
-<span>![triangle wave function](../img/dimensions_trianglewave.png)
-  <span class="caption">`y = arccos(sin(x))`</span>
-</span>
+The “paint” trails were made using an old unmaintained library called [**TrailRendererJS**](https://github.com/mkkellogg/TrailRendererJS), which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.
 
-Multiplying the sine value smoothens out the curve which makes the tiles’ movement more organic.
+TODO model
+
+The floating tiles’ movement behavior were guided by a smooth triangle wave function defined as `arccos(0.95 sin(x))`.
 
 <span>![smooth triangle wave function](../img/dimensions_trianglewave2.png)
   <span class="caption">`y = arccos(0.95 sin(x))`</span>
 </span>
 
-Imagine that path multplied for each floating tile.
+This triangle wave path was wrapped around a virtual cylinder around the user’s position.
 
-![many smooth triangle wave function](../img/dimensions_waves.png)
-
-Then the paths are wrapped around an imaginary cylinder around the user’s position. A little bit of randomness added.
-
-resulting in an organized chaos of particles orbiting the user, and creating criss-crossing trails.
+With each floating tile following a variant of this path, the result was an organized chaos of criss-crossing particles orbiting the user.
 
 <video muted autoplay loop playsinline>
   <source src="../video/dimensions_trail.mp4">
   <a href="../video/dimensions_trail.mp4">Demo video</a>
 </video>
 
-A fun experiment is when the paint trails are allowed to go on indefinitely. These trails would eventually produce another piece of 2D generative art.
+A fun experiment is when the paint trails are allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a different piece of generative art.
 
 <span>![](../img/dimensions_trailart.png)
   <span class="caption">Trail art</span>
