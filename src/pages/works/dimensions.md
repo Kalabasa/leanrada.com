@@ -5,7 +5,18 @@
 
 # Dimensions
 
-![example](../img/dimensions_0.jpg)
+<span class="bleed">
+<div style="display: flex; max-height: 60vh">
+  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover">
+    <source src="../video/dimensions_2.mp4">
+    <a href="../video/dimensions_2.mp4">Reaction video</a>
+  </video>
+  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover">
+    <source src="../video/dimensions_3.mp4">
+    <a href="../video/dimensions_3.mp4">Reaction video</a>
+  </video>
+</div>
+</span>
 
 ## Generative art and augmented reality
 
@@ -15,7 +26,7 @@ On August 2019, Canva Philippines celebrated its fifth year. Part of the event w
 
 I joined because it sounded like a fun opportunity to push myself and learn new things!
 
-I knew right away that the art medium had to be **HTML**, **CSS**, and **JS**, and I wanted it to be an interactive experience.
+I knew right away that the art medium had to be **HTML**, **CSS**, and **JS**, and I wanted it to somehow be an interactive experience.
 
 <span>![](../img/dimensions_xlikha.jpg)
 	<span class="caption">Scrapped first attempt.</span>
