@@ -33,7 +33,7 @@ Pen, paper, pencil, brush, and tablet: these would become the building blocks of
   <span class="caption">Testing some random tiling</span>
 </span>
 
-In designing the individual tiles I restricted them to one basic shape – a quarter circle — as basis for the tiles’ forms.
+In designing the individual tiles I restricted them to one basic shape — a quarter circle — as basis for the tiles’ forms.
 
 <span>![](../img/dimensions_notes0.jpg)
   <span class="caption">Studies of how different tilesets look in the same tiling compositions</span>
@@ -85,7 +85,7 @@ You may start seeing some semicircles and larger contours forming across tiles.
 
 See those other shapes *emerging* from the five basic tiles? If you squint hard enough, you might be able to see a Pacman, maybe an apple logo, or maybe a bird.
 
-*Emergence* is a common feature of generative art. It’s the idea that something more arises from simple systems - whether intentional or coincidental. A good example of emergence is [fractal art](https://en.wikipedia.org/wiki/Fractal_art).
+*Emergence* is a common feature of generative art. It’s the idea that something more arises from simple systems — whether intentional or coincidental. A good example of emergence is [fractal art](https://en.wikipedia.org/wiki/Fractal_art).
 
 Anyway, the next step was to pick a palette from a color scheme generator <small>(because everything’s generated!)</small>, and randomly assign each region a color.
 

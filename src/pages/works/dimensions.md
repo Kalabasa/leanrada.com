@@ -34,6 +34,6 @@ I knew right away that the art medium had to be **HTML**, **CSS**, and **JS**, a
 
 After struggling for inspiration (and after one failed attempt), I’ve come up with a **generative art** and **augmented reality** concept.
 
-The general plan was to make two components - one physical print and one <abbr title="augmented reality">AR</abbr> app.
+The general plan was to make two components — one physical print and one <abbr title="augmented reality">AR</abbr> app.
 
 I will go into more detail in each component in the following posts: [**Part 1. Generative art**](dimensions1.html) and [**Part 2. Augmented reality**](dimensions2.html).

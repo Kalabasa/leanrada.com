@@ -225,7 +225,7 @@ Here’s the final set. You may test the AR app right on this page! Just have th
 <span class="bleed">![](../img/dimensions_finalset.jpg)</span>
 <span class="caption">Go to [tiny.cc/kdi](https://kalabasa.github.io/dimensions/) on phone if QR doesn’t work.</span>
 
-It was a fun and challenging project. Aside from production bugs, it was fun seeing people react to it! 😂
+It was a fun and challenging project. Aside from production bugs, it was great seeing people react to it! 😂
 
 <span class="bleed">
 <div style="display: flex; max-height: 80vh">
@@ -240,4 +240,4 @@ It was a fun and challenging project. Aside from production bugs, it was fun see
 </div>
 </span>
 
-yay 🎉
+Yay 🎉

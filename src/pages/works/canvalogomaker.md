@@ -28,6 +28,6 @@ Once the design is generated, it can be further customized in the Canva Editor.
 <span class="phone-body"></span>
 </span></span>
 
-This cool project was made possible by the cool people at Canva - spanning multiple teams, from graphic designers to product engineers! It was a fun journey!
+This cool project was made possible by the cool people at Canva — spanning multiple teams, from graphic designers to product engineers! It was a fun journey!
 
 [Try it!](https://about.canva.com/tools/logo-maker)

@@ -25,7 +25,7 @@ A redesign and rewrite was needed for future improvement.
 <span class="bleed">![old version](../img/canvaphotoeditor_old.jpg)</span>
 <span class="caption">Old version</span>
 
-So around Summer 2019 <small>(Australian Summer 2018-2019)</small>, a redesign was made and the app was rewritten in a more modern stack. The revamped version looks better, more modern, and is responsive.
+So around Summer 2019 <small>(Australian Summer 2018–2019)</small>, a redesign was made and the app was rewritten in a more modern stack. The revamped version looks better, more modern, and is responsive.
 
 ![mobile screenshot](../img/canvaphotoeditor_0.jpg)
 
