@@ -5,18 +5,10 @@
 
 # Dimensions
 
-<span class="bleed">
-<div style="display: flex; max-height: 60vh">
-  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover">
-    <source src="../video/dimensions_2.mp4">
-    <a href="../video/dimensions_2.mp4">Reaction video</a>
-  </video>
-  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover">
-    <source src="../video/dimensions_3.mp4">
-    <a href="../video/dimensions_3.mp4">Reaction video</a>
-  </video>
-</div>
-</span>
+<video muted autoplay loop playsinline style="max-height: 512px; object-fit: cover">
+  <source src="../video/dimensions_2.mp4">
+  <a href="../video/dimensions_2.mp4">Video</a>
+</video>
 
 ## Generative art and augmented reality
 

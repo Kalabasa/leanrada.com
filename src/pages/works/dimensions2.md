@@ -5,9 +5,9 @@
 
 # Dimensions
 
-<video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover; max-height: 40vh">
-  <source src="../video/dimensions_2.mp4">
-  <a href="../video/dimensions_2.mp4">Reaction video</a>
+<video muted autoplay loop playsinline style="max-height: 512px; object-fit: cover">
+  <source src="../video/dimensions_3.mp4">
+  <a href="../video/dimensions_3.mp4">Video</a>
 </video>
 
 ## Part 2. Augmented reality
@@ -214,30 +214,38 @@ With each floating tile following a variant of this path, the result was an orga
   <a href="../video/dimensions_trail.mp4">Demo video</a>
 </video>
 
-One fun experiment was when the trails were allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a nice pattern.
+One interesting experiment was when the trails were allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a nice pattern.
 
 <span>![](../img/dimensions_trailart.png)
   <span class="caption">Trail art</span>
 </span>
 
-Here’s the final set. You may test the AR app right on this page! Just have this page on a desktop, and then point your smartphone to it.
+When it finally exhibited, I mostly watched from the sidelines, taking notes on how people interacted. It’s like live testing on prod.
 
-<span class="bleed">![](../img/dimensions_finalset.jpg)</span>
-<span class="caption">Go to [tiny.cc/kdi](https://kalabasa.github.io/dimensions/) on phone if QR doesn’t work.</span>
+There were some UX issues that had to be fixed. It wasn‘t as seamless as I’ve hoped, and explicit instructions on how to use it were needed.
 
-It was a fun and challenging project. Aside from production bugs, it was great seeing people react to it! 😂
+It went smoothly for the most part, after a few hotfixes. Seeing people react to it was great! ⭐️
+
+The iOS bug was never fixed. 🤖
 
 <span class="bleed">
 <div style="display: flex; max-height: 80vh">
-  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover">
+  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover; width: 50%">
     <source src="../video/dimensions_2.mp4">
     <a href="../video/dimensions_2.mp4">Reaction video</a>
   </video>
-  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover">
+  <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover; width: 50%">
     <source src="../video/dimensions_3.mp4">
     <a href="../video/dimensions_3.mp4">Reaction video</a>
   </video>
 </div>
 </span>
 
-Yay 🎉
+Here’s the final set. Give it a try right on this page!
+
+Just have this page on a desktop, and then point your smartphone camera to it, assuming your camera app has a QR code scanning feature.
+
+<span class="bleed">![](../img/dimensions_finalset.jpg)</span>
+<span class="caption">Go to [tiny.cc/kdi](https://kalabasa.github.io/dimensions/) on phone if QR doesn’t work.</span>
+
+It has been a really fun and challenging project! 🎉
