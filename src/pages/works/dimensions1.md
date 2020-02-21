@@ -160,7 +160,7 @@ Adding the QR code involved changing the center tiles to a lighter palette befor
 
 And that’s it for the physical prints! The next part is about the non-physical half of the piece, the augmented reality component.
 
-[**Part 2. Augmented reality**](dimensions2.html)
+<a class="anchor-em" href="dimensions2.html">Part two: Augmented reality</a>
 
 ---
 
@@ -179,4 +179,4 @@ This is a post-exhibit version, where I finally figured out color palette genera
 
 ---
 
-[**Part 2. Augmented reality**](dimensions2.html)
+<a class="anchor-em" href="dimensions2.html">Part two: Augmented reality</a>

@@ -241,11 +241,13 @@ The iOS bug was never fixed. 🤖
 </div>
 </span>
 
-Here’s the final set. Give it a try right on this page!
+You can give it a try right on this page!
 
-Just have this page on a desktop, and then point your smartphone camera to it, assuming your camera app has a QR code scanning feature.
+Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.
 
 <span class="bleed">![](../img/dimensions_finalset.jpg)</span>
 <span class="caption">Go to [tiny.cc/kdi](https://kalabasa.github.io/dimensions/) on phone if QR doesn’t work.</span>
+
+Here’s the final set!
 
 It has been a really fun and challenging project! 🎉

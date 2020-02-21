@@ -28,4 +28,7 @@ After struggling for inspiration (and after one failed attempt), I’ve come up 
 
 The general plan was to make two components — one physical print and one <abbr title="augmented reality">AR</abbr> app.
 
-I will go into more detail in each component in the following posts: [**Part 1. Generative art**](dimensions1.html) and [**Part 2. Augmented reality**](dimensions2.html).
+I wrote about it in detail in the following posts:
+
+* <a class="anchor-em" href="dimensions1.html">Part one: Generative art</a>
+* <a class="anchor-em" href="dimensions2.html">Part two: Augmented reality</a>
