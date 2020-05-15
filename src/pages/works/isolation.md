@@ -64,7 +64,7 @@ Same for the bass. The bass line was written to harmonize:
 	<sup>F<sup>o</sup> / </sup><strong>F</strong>
 </div>
 
-But they all worked together to create a steady and chill sound to quarantine to.
+They all worked together to create a steady and chill sound to quarantine to.
 
 There were no choruses or big movements because that’s not chill; that’s drama.
 
