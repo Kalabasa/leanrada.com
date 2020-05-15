@@ -7,6 +7,7 @@ export default {
     {
       id: "canvapasko",
       name: "#CanvaPasko",
+      links: [{ name: "Web", url: "https://www.canva.com/canvapasko/" }],
       short_description: "Canva’s Christmas billboard design contest!",
       tech: ["React"],
       image: {
