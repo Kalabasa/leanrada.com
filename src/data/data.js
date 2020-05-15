@@ -8,9 +8,7 @@ export default {
       id: "isolation",
       name: "Isolation",
       links: [{ name: "Spotify", url: "https://open.spotify.com/track/4kgEsArxnTj7UKsBJhYflk?si=xAtOncLWRPq64bPX4A5Vdw" }],
-      short_description: "Chill music to quarantine to",
-      full_description:
-        "Music composed while in quarantine during the 2020 Wuhan virus pandemic",
+      short_description: "Chill music to quarantine to.",
       tech: ["LMMS", "Audacity"],
       image: {
         src: "img/isolation.jpg",
