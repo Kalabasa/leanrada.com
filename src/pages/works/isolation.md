@@ -32,12 +32,12 @@ I think this might also be called [**counterpoint**](https://en.wikipedia.org/wi
 
 Here is the resulting chord progression in the key of C:
 
-<span class="center">
+<div style="text-align:center">
 	<strong>Em</strong><sup>7</sup>&emsp;
 	<strong>E</strong><sup>o♭6</sup>&emsp;
 	<strong>F</strong><sup>M7</sup>&emsp;
 	<strong>F</strong><sup>o7</sup>
-</span>
+</div>
 
 The result of the voice-heavy composition was noticeable – There were no strong movements in the chord progression.
 
