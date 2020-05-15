@@ -30,7 +30,7 @@ The composition was built using a bottom-up approach. Instead of deciding on the
 
 I think this might also be called [**counterpoint**](https://en.wikipedia.org/wiki/Counterpoint) in classical terms. <small>idk 🤷‍♂️</small>
 
-Here is the resulting chord progression in the key of C:
+The resulting chord progression was:
 
 <div style="text-align:center">
 	<strong>Em</strong><sup>7</sup>&emsp;
@@ -38,8 +38,9 @@ Here is the resulting chord progression in the key of C:
 	<strong>F</strong><sup>M7</sup>&emsp;
 	<strong>F</strong><sup>o7</sup>
 </div>
+<small>Key: <strong>C</strong></small>
 
-The result of the voice-heavy composition was noticeable – There were no strong movements in the chord progression.
+The result of voice-heavy composition was noticeable – There were no strong movements in the chord progression.
 
 Rather, the movement of the music was driven by the individual voice lines.
 
@@ -48,9 +49,9 @@ Rather, the movement of the music was driven by the individual voice lines.
 		<iframe width="768" height="432" src="https://www.youtube-nocookie.com/embed/vjv3dPCYy7o" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</div>
 </span>
-<span class="caption">There are four voice lines that can be seen in the piano roll.</span>
+<span class="caption">There are four voice lines for the vibraphone. They can be seen in the piano roll in the video.</span>
 
-Same for the bass. The bass line was written to accompany the harmony. <small>(simplified here for illustration)</small>
+Same for the bass. The bass line was written to harmonize:
 
 <div style="text-align:center">
 	<sup>Em / </sup><strong>C</strong>&emsp;
@@ -63,9 +64,9 @@ Same for the bass. The bass line was written to accompany the harmony. <small>(s
 	<sup>F<sup>o</sup> / </sup><strong>F</strong>
 </div>
 
-They all work together to create a steady and chill sound to quarantine to.
+But they all worked together to create a steady and chill sound to quarantine to.
 
-There are no choruses or big movements because that’s drama, not chill.
+There were no choruses or big movements because that’s not chill; that’s drama.
 
 ---
 
