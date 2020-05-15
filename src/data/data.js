@@ -7,14 +7,20 @@ export default {
     {
       id: "isolation",
       name: "Isolation",
-      links: [{ name: "Spotify", url: "https://open.spotify.com/track/4kgEsArxnTj7UKsBJhYflk?si=xAtOncLWRPq64bPX4A5Vdw" }],
+      links: [
+        {
+          name: "Spotify",
+          url:
+            "https://open.spotify.com/track/4kgEsArxnTj7UKsBJhYflk?si=xAtOncLWRPq64bPX4A5Vdw",
+        },
+      ],
       short_description: "Chill music to quarantine to.",
       tech: ["LMMS", "Audacity"],
       image: {
         src: "img/isolation.jpg",
-        alt: "album art"
+        alt: "album art",
       },
-      tags: ["art", "music", "jazz", "jazzhop", "chillhop"]
+      tags: ["art", "music", "jazz", "jazzhop", "chillhop"],
     },
     {
       id: "canvapasko",
@@ -24,9 +30,9 @@ export default {
       tech: ["React"],
       image: {
         src: "img/canvapasko_thumb.jpg",
-        alt: "screenshot"
+        alt: "screenshot",
       },
-      tags: ["web", "ui", "animation", "reactjs", "css", "canva", "christmas"]
+      tags: ["web", "ui", "animation", "reactjs", "css", "canva", "christmas"],
     },
     {
       id: "dimensions",
@@ -35,9 +41,9 @@ export default {
       tech: ["Vue.js", "three.js"],
       image: {
         src: "img/dimensions_thumb.jpg",
-        alt: "clip of piece"
+        alt: "clip of piece",
       },
-      tags: ["vue", "art", "3d"]
+      tags: ["vue", "art", "3d"],
     },
     {
       id: "canvaphotoeditor",
@@ -47,9 +53,9 @@ export default {
       tech: ["React", "MobX", "WebGL"],
       image: {
         src: "img/canvaphotoeditor_thumb.jpg",
-        alt: "screenshot"
+        alt: "screenshot",
       },
-      tags: ["web", "webapp", "ui", "reactjs", "webpack", "webgl", "tool"]
+      tags: ["web", "webapp", "ui", "reactjs", "webpack", "webgl", "tool"],
     },
     {
       id: "canvalogomaker",
@@ -59,9 +65,9 @@ export default {
       tech: ["JS", "HTML5", "SCSS"],
       image: {
         src: "img/canvalogomaker_0.jpg",
-        alt: "screenshot"
+        alt: "screenshot",
       },
-      tags: ["web", "webapp", "ui", "animation", "css", "tool"]
+      tags: ["web", "webapp", "ui", "animation", "css", "tool"],
     },
     {
       id: "canvaenterprise",
@@ -70,16 +76,16 @@ export default {
         {
           name: "Web",
           url:
-            "https://web.archive.org/web/20190401230423/https://about.canva.com/enterprise/"
-        }
+            "https://web.archive.org/web/20190401230423/https://about.canva.com/enterprise/",
+        },
       ],
       short_description: "Page presenting Canva’s Enterprise offering.",
       tech: ["HTML5", "SCSS", "JS"],
       image: {
         src: "img/canvaenterprise_0.jpg",
-        alt: "screenshot"
+        alt: "screenshot",
       },
-      tags: ["web", "website", "ui", "animation", "css", "canva"]
+      tags: ["web", "website", "ui", "animation", "css", "canva"],
     },
     {
       id: "kalabasa",
@@ -88,9 +94,9 @@ export default {
       tech: ["HTML5", "Stylus", "Javascript"],
       image: {
         src: "img/kalabasa_0.jpg",
-        alt: "screenshot of intro page"
+        alt: "screenshot of intro page",
       },
-      tags: ["web", "website", "ui", "rollup", "js", "animation", "3d"]
+      tags: ["web", "website", "ui", "rollup", "js", "animation", "3d"],
     },
     {
       id: "heartgame",
@@ -99,9 +105,9 @@ export default {
       tech: ["HTMl5", "Javascript"],
       image: {
         src: "img/heartgame.jpg",
-        alt: "game visual"
+        alt: "game visual",
       },
-      tags: ["web", "game", "videogame", "gamedev"]
+      tags: ["web", "game", "videogame", "gamedev"],
     },
     {
       id: "hypertangram",
@@ -110,14 +116,14 @@ export default {
         {
           name: "Google Play",
           url:
-            "https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram"
-        }
+            "https://play.google.com/store/apps/details?id=com.kalabasagames.hypertangram",
+        },
       ],
       short_description: "Mobile puzzle game about packing shapes together.",
       tech: ["Android", "Kotlin", "Realm", "Robolectric"],
       image: {
         src: "img/hypertangram_0.jpg",
-        alt: "screenshot of gameplay"
+        alt: "screenshot of gameplay",
       },
       tags: [
         "game",
@@ -128,8 +134,8 @@ export default {
         "ux",
         "graphics",
         "music",
-        "app"
-      ]
+        "app",
+      ],
     },
     {
       id: "arosybrokenalbum",
@@ -137,15 +143,15 @@ export default {
       links: [
         {
           name: "Soundcloud",
-          url: "https://soundcloud.com/lreaadna/sets/a-rosy-broken-album"
-        }
+          url: "https://soundcloud.com/lreaadna/sets/a-rosy-broken-album",
+        },
       ],
       short_description: "Solo piano pieces about feelings.",
       image: {
         src: "img/arosybrokenalbum_0.jpg",
-        alt: "cover art"
+        alt: "cover art",
       },
-      tags: ["art", "music", "piano", "solo"]
+      tags: ["art", "music", "piano", "solo"],
     },
     {
       id: "freeformgesturedetector",
@@ -153,20 +159,20 @@ export default {
       links: [
         {
           name: "Github",
-          url: "https://github.com/Kalabasa/FreeformGestureDetector/"
+          url: "https://github.com/Kalabasa/FreeformGestureDetector/",
         },
         {
           name: "Android Arsenal",
-          url: "https://android-arsenal.com/details/1/6939"
-        }
+          url: "https://android-arsenal.com/details/1/6939",
+        },
       ],
       short_description: "Multi-touch transform gesture detector for Android.",
       tech: ["Android", "Kotlin"],
       image: {
         src: "img/freeformgesturedetector_head.png",
-        alt: "illustration"
+        alt: "illustration",
       },
-      tags: ["library", "java", "android", "open source", "hypertangram", "ui"]
+      tags: ["library", "java", "android", "open source", "hypertangram", "ui"],
     },
     {
       id: "planetdefense",
@@ -174,13 +180,14 @@ export default {
       links: [{ name: "Web", url: "https://kalabasa.github.io/PlanetDefense" }],
       short_description:
         "Game made in 48 hours for Ludum Dare 38: A Small World",
-      full_description: `Web game similar to Missile Command, but it's circular and it's made in 48 hours as entry for the popular game jam Ludum Dare.`,
+      full_description:
+        "Web game similar to Missile Command, but it’s circular and it’s made in 48 hours as entry for the popular game jam Ludum Dare.",
       tech: ["Javascript", "PixiJS"],
       image: {
         src: "img/planetdefense_0.jpg",
-        alt: "screenshot of gameplay"
+        alt: "screenshot of gameplay",
       },
-      tags: ["web", "game", "videogame", "gamedev", "pixi"]
+      tags: ["web", "game", "videogame", "gamedev", "pixi"],
     },
     {
       id: "conversations",
@@ -188,12 +195,12 @@ export default {
       links: [
         {
           name: "Spotify",
-          url: "https://open.spotify.com/album/2LEKLuoWYauyAlQ8JwoPc2"
+          url: "https://open.spotify.com/album/2LEKLuoWYauyAlQ8JwoPc2",
         },
         {
           name: "Bandcamp",
-          url: "http://lreaadna.bandcamp.com/album/conversations"
-        }
+          url: "http://lreaadna.bandcamp.com/album/conversations",
+        },
       ],
       short_description: "Chill jazzhop music",
       full_description:
@@ -201,9 +208,9 @@ export default {
       tech: ["LMMS", "Audacity"],
       image: {
         src: "img/conversations_0.jpg",
-        alt: "album art"
+        alt: "album art",
       },
-      tags: ["art", "music", "jazz", "jazzhop", "chillhop"]
+      tags: ["art", "music", "jazz", "jazzhop", "chillhop"],
     },
     {
       id: "dynastymap",
@@ -218,11 +225,11 @@ export default {
         "D3.js",
         "Material Design",
         "PHP",
-        "Python"
+        "Python",
       ],
       image: {
         src: "img/dynastymap_0.jpg",
-        alt: `screenshot of welcome screen`
+        alt: `screenshot of welcome screen`,
       },
       tags: [
         "web",
@@ -233,9 +240,9 @@ export default {
         "leaflet",
         "d3js",
         "politics",
-        "webapp"
-      ]
-    }
+        "webapp",
+      ],
+    },
   ],
 
   jobs: [
@@ -247,8 +254,8 @@ export default {
       description: "Building all sorts of stuff.",
       thumbnail: {
         src: "img/thumb-canva.png",
-        alt: "Canva logo"
-      }
+        alt: "Canva logo",
+      },
     },
     {
       name: "Web Developer",
@@ -261,20 +268,21 @@ export default {
         "Gradle",
         "TypeScript",
         "Java",
-        "Stylus"
+        "Stylus",
       ],
-      description: "Full-stack web and systems development."
+      description: "Full-stack web and systems development.",
     },
     {
       name: "Android Developer",
       company: "Azeus",
       date: ["2015", "2017"],
       tech: ["Android", "Android Studio", "Java", "SQLite"],
-      description: `Worked on the Android app for the digital meetings and collaboration system called <a target='_blank' href='https://www.azeusconvene.com/'>Convene</a>.`,
+      description:
+        "Worked on the Android app for the digital meetings and collaboration system called <a target='_blank' href='https://www.azeusconvene.com/'>Convene</a>.",
       thumbnail: {
         src: "img/thumb-convene.png",
-        alt: "Convene logo"
-      }
+        alt: "Convene logo",
+      },
     },
     {
       name: "Software Engineering Intern",
@@ -282,7 +290,7 @@ export default {
       date: ["2014"],
       tech: ["Android", "AndEngine", "Vert.x", "Java"],
       description:
-        "Worked on a peer-to-peer multiplayer card game on Android that features a disturbing Easter egg."
+        "Worked on a peer-to-peer multiplayer card game on Android that features a disturbing Easter egg.",
     },
     {
       name: "Flash Developer",
@@ -293,10 +301,10 @@ export default {
         "ActionScript 2.0",
         "Adobe Flash",
         "FlashDevelop",
-        "Macromedia Flash"
+        "Macromedia Flash",
       ],
       description:
-        "Created animated, sometimes interactive, Internet advertisements. Indirectly contributed to the rise of ad-blockers."
+        "Created animated, sometimes interactive, Internet advertisements. Indirectly contributed to the rise of ad-blockers.",
     },
     {
       name: "Powerpoint “Engineer”",
@@ -304,41 +312,41 @@ export default {
       date: ["2009"],
       tech: ["Photoshop", "Powerpoint"],
       description:
-        "Illustrated, animated, and created <em>interactive</em> biochemistry learning materials for some learning institute. In Powerpoint."
-    }
+        "Illustrated, animated, and created <em>interactive</em> biochemistry learning materials for some learning institute. In Powerpoint.",
+    },
   ],
 
   links: [
     {
       name: "Email",
       img: "img/icon-mail.svg",
-      href: "mailto:lgmrada@gmail.com"
+      href: "mailto:lgmrada@gmail.com",
     },
     {
       name: "Github",
       img: "img/icon-github.svg",
-      href: "https://github.com/Kalabasa"
+      href: "https://github.com/Kalabasa",
     },
     {
       name: "LinkedIn",
       img: "img/icon-linkedin.svg",
-      href: "https://ph.linkedin.com/in/lean-godffrey-rada"
+      href: "https://ph.linkedin.com/in/lean-godffrey-rada",
     },
     {
       name: "Soundcloud",
       img: "img/icon-music.svg",
-      href: "https://soundcloud.com/lreaadna"
+      href: "https://soundcloud.com/lreaadna",
     },
     {
       name: "Ludum Dare",
       img: "img/icon-game.svg",
-      href: "https://ldjam.com/users/kalabasa/games"
+      href: "https://ldjam.com/users/kalabasa/games",
     },
     // { name: 'Ludum Dare (Legacy)', img: 'img/icon-game.svg', href: 'http://legacy.ludumdare.com/compo/author/kalabasa/' },
     {
       name: "CodePen",
       img: "img/icon-codepen.svg",
-      href: "https://codepen.io/kalabasa/"
-    }
-  ]
+      href: "https://codepen.io/kalabasa/",
+    },
+  ],
 };
