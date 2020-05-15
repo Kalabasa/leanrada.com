@@ -75,6 +75,6 @@ An *Isolation* of voices.
 
 Just like our social *Isolation* in this pandemic.
 
-Isolated, yet still working together.
+Isolated, yet still working together. <small>(well, ideally)</small>
 
 Listen via [**Spotify**](https://open.spotify.com/album/6fq6RgPzULhd1Gq14Kf9Ix).
