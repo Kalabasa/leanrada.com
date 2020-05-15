@@ -68,7 +68,7 @@ Make a 9in&nbsp;×&nbsp;12in board, subdivided into a 6&nbsp;×&nbsp;8 grid of t
 For each cell, randomly render any of the five tile types:
 
 <span>![](../img/dimensions_1tiles.jpg)
-  <span class="caption">Random tiles added with placeholder colors.<br/> Truncated to a square here for brevity.</span>
+  <span class="caption">Random tiles added with placeholder colors.<br/> Board truncated to a square here for brevity.</span>
 </span>
 
 Each tile is randomly rotated in 90-degree increments, or flipped horizontally or vertically.
