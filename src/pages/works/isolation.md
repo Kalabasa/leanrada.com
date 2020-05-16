@@ -20,17 +20,15 @@ I made it using LMMS and Audacity, which are both free and open-source software 
 	<iframe src="https://open.spotify.com/embed?uri=spotify:album:6fq6RgPzULhd1Gq14Kf9Ix&theme=white&view=coverart" width="512" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
 </div>
 
-I don’t know what to write for this page so I guess I’ll write about music theory! <small>Disclaimer: I’m not an expert.</small>
-
 ---
 
-In this piece I leaned heavily on the [**voices**](https://en.wikipedia.org/wiki/Voice_leading) that make up the harmony.
+In this piece I leaned heavily on the [**voices**](https://en.wikipedia.org/wiki/Voice_leading) that make up the harmony. Voices are the individual melodic lines that when combined make harmony.
 
-The composition was built using a bottom-up approach. Instead of deciding on the chord progression and structures beforehand, the individual melodic lines ("voices") were formed in parallel to build up the harmony.
+Instead of deciding on the chord progression and structures beforehand, the individual melodic lines ("voices") led the way. It’s a bottom-up kind of way.
 
-I think this might also be called [**counterpoint**](https://en.wikipedia.org/wiki/Counterpoint) in classical terms. <small>idk 🤷‍♂️</small>
+<small>I think it’s called [**counterpoint**](https://en.wikipedia.org/wiki/Counterpoint) in classical terms.</small>
 
-The resulting chord progression was:
+So the resulting chord progression was this:
 
 <div style="text-align:center">
 	<strong>Em</strong><sup>7</sup>&emsp;
@@ -40,18 +38,18 @@ The resulting chord progression was:
 </div>
 <small>Key: <strong>C</strong></small>
 
-The result of voice-heavy composition was noticeable – There were no strong movements in the chord progression.
+The result was a floaty kind of feeling, with no particularly strong movements. There’s constant tension which is not fully resolved.
 
-Rather, the movement of the music was driven by the individual voice lines.
+The movement of the music was driven rather by the individual voice lines.
 
 <span class="bleed">
 	<div class="center">
 		<iframe width="768" height="432" src="https://www.youtube-nocookie.com/embed/vjv3dPCYy7o" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</div>
 </span>
-<span class="caption">There are four voice lines for the vibraphone. They can be seen in the piano roll in the video.</span>
+<span class="caption">There are four voice lines for the vibraphone. They can be seen on the piano roll here in this video.</span>
 
-Same for the bass. The bass line was written to harmonize:
+For the bass, it’s the same. It was written to accompany the harmony:
 
 <div style="text-align:center">
 	<sup>Em / </sup><strong>C</strong>&emsp;
@@ -64,18 +62,20 @@ Same for the bass. The bass line was written to harmonize:
 	<sup>F<sup>o</sup> / </sup><strong>F</strong>
 </div>
 
+<small>I think the bass turned out to be a big factor in the music’s motion, especially with the <strong>F</strong> going back to <strong>C</strong> movement.</small>
+
 They all worked together to create a steady and chill sound to quarantine to.
 
 There were no choruses or big movements because that’s not chill; that’s drama.
 
 ---
 
-In retrospect, the title of the piece coincidentally gets a new meaning in the context of music theory.
+In retrospect, the title *Isolation* gets a whole new meaning in the context of music.
 
 An *Isolation* of voices.
 
-Just like our social *Isolation* in this pandemic.
+Isolated, yet still working together.
 
-Isolated, yet still working together. <small>(well, ideally)</small>
+Just like our social *Isolation* in this pandemic.
 
 Listen via [**Spotify**](https://open.spotify.com/album/6fq6RgPzULhd1Gq14Kf9Ix).
