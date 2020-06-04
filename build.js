@@ -246,6 +246,7 @@ const jsFiles = globAsync('src/pages/**/*.js')
 		return Promise.all(jsFiles);
 	});
 
+// TODO optimize images
 console.log('copying src/assets ➔ build');
 ncp('src/assets', 'build');
 

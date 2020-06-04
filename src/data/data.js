@@ -5,6 +5,26 @@ export default {
   featured_projects: ["dimensions", "canvapasko", "hypertangram"],
   projects: [
     {
+      id: "sheetz",
+      name: "Sheetz",
+      links: [{ name: "Web", url: "https://kalabasa.github.io/sheetz/" }],
+      short_description: "Simple spreadsheet clone",
+      tech: ["Svelte"],
+      image: {
+        src: "img/sheetz.jpg",
+        alt: "screenshot",
+      },
+      tags: [
+        "web",
+        "webapp",
+        "javascript",
+        "svelte",
+        "tool",
+        "enterprise",
+        "tiny",
+      ],
+    },
+    {
       id: "isolation",
       name: "Isolation",
       links: [
@@ -107,7 +127,7 @@ export default {
         src: "img/heartgame.jpg",
         alt: "game visual",
       },
-      tags: ["web", "game", "videogame", "gamedev"],
+      tags: ["web", "game", "videogame", "gamedev", "tiny"],
     },
     {
       id: "hypertangram",
