@@ -15,8 +15,6 @@ A very simple spreadsheet built with [Svelte](https://svelte.dev).
 
 I discovered Svelte in 2019. It’s really interesting - a reactive component-based framework without the runtime bulk. There is no VDOM! Apparently, the DOM is updated directly with precise efficiency.
 
-<small>(I’m evidently fond of compact, direct, and seemingly simple frameworks/APIs.)</small>
-
 So, I wanted to try it on a simple webapp. A spreadsheet app seems to be a good case for this.
 
 Svelte syntax is like Vue, except, the script part is not required to be a class/object/function. It’s plain flat script!
