@@ -184,12 +184,7 @@ One caveat though is that only the orientation can be tracked. Tracking movement
 
 The experience was designed around this limitation by keeping the objects at constant distance to the user, subtly hinting that there’s no need to move or walk, only looking around.
 
-<span class="bleed">
-  <video muted autoplay loop playsinline>
-    <source src="../video/dimensions_1.mp4">
-    <a href="../video/dimensions_1.mp4">Demo video</a>
-  </video>
-</span>
+<!-- TODO demo video -->
 
 <small class="small-block">There was a bug on iOS Safari with orientation tracking, which apparently was just introduced July 2019, one month before the event. Sadly some iPhone users did not get the full experience.</small>
 
