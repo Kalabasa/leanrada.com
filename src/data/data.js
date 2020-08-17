@@ -8,7 +8,7 @@ export default {
       id: "sheetz",
       name: "Sheetz",
       links: [{ name: "Web", url: "https://kalabasa.github.io/sheetz/" }],
-      short_description: "Simple spreadsheet clone",
+      short_description: "Simple spreadsheet clone.",
       tech: ["Svelte"],
       image: {
         src: "img/sheetz.jpg",
@@ -270,7 +270,7 @@ export default {
       name: "Frontend Engineer",
       company: "Canva",
       date: ["2018", "now"],
-      tech: ["React", "Node", "TypeScript"],
+      tech: ["React", "Node", "TypeScript", "GraphQL", "Storybook", "MobX"],
       description: "Building all sorts of stuff.",
       thumbnail: {
         src: "img/thumb-canva.png",
@@ -330,7 +330,7 @@ export default {
       name: "Powerpoint “Engineer”",
       alt_company: "Freelance",
       date: ["2009"],
-      tech: ["Photoshop", "Powerpoint"],
+      tech: ["Photoshop", "Powerpoint", "ACD/ChemSketch"],
       description:
         "Illustrated, animated, and created <em>interactive</em> biochemistry learning materials for some learning institute. In Powerpoint.",
     },

@@ -30,4 +30,4 @@ Once the design is generated, it can be further customized in the Canva Editor.
 
 This cool project was made possible by the cool people at Canva — spanning multiple teams, from graphic designers to product engineers! It was a fun journey!
 
-[Try it!](https://about.canva.com/tools/logo-maker)
+There’s a newer version up now. But you can still [try the original version via Archive!](https://web.archive.org/web/20200817030753/https://about.canva.com/tools/logo-maker/)
