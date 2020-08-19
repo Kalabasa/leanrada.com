@@ -14,7 +14,7 @@ export default {
         src: "img/wikawik.jpg",
         alt: "screenshot",
       },
-      tags: ["web", "js", "d3js", "webapp", "visualization"],
+      tags: ["web", "d3js", "app", "language", "map", "visualization"],
     },
     {
       id: "sheetz",
@@ -26,15 +26,7 @@ export default {
         src: "img/sheetz.jpg",
         alt: "screenshot",
       },
-      tags: [
-        "web",
-        "webapp",
-        "javascript",
-        "svelte",
-        "tool",
-        "enterprise",
-        "tiny",
-      ],
+      tags: ["web", "app", "svelte", "tiny"],
     },
     {
       id: "isolation",
@@ -64,7 +56,7 @@ export default {
         src: "img/canvapasko_thumb.jpg",
         alt: "screenshot",
       },
-      tags: ["web", "ui", "animation", "reactjs", "css", "canva", "christmas"],
+      tags: ["web", "animation", "reactjs", "css", "canva", "christmas"],
     },
     {
       id: "dimensions",
@@ -75,7 +67,7 @@ export default {
         src: "img/dimensions_thumb.jpg",
         alt: "clip of piece",
       },
-      tags: ["vue", "art", "3d"],
+      tags: ["vue", "art", "3d", "ar"],
     },
     {
       id: "canvaphotoeditor",
@@ -87,7 +79,7 @@ export default {
         src: "img/canvaphotoeditor_thumb.jpg",
         alt: "screenshot",
       },
-      tags: ["web", "webapp", "ui", "reactjs", "webpack", "webgl", "tool"],
+      tags: ["web", "app", "reactjs", "webpack", "webgl", "tool", "canva"],
     },
     {
       id: "canvalogomaker",
@@ -99,7 +91,7 @@ export default {
         src: "img/canvalogomaker_0.jpg",
         alt: "screenshot",
       },
-      tags: ["web", "webapp", "ui", "animation", "css", "tool"],
+      tags: ["web", "animation", "css", "tool", "canva"],
     },
     {
       id: "canvaenterprise",
@@ -117,7 +109,7 @@ export default {
         src: "img/canvaenterprise_0.jpg",
         alt: "screenshot",
       },
-      tags: ["web", "website", "ui", "animation", "css", "canva"],
+      tags: ["web", "animation", "css", "canva"],
     },
     {
       id: "kalabasa",
@@ -128,7 +120,7 @@ export default {
         src: "img/kalabasa_0.jpg",
         alt: "screenshot of intro page",
       },
-      tags: ["web", "website", "ui", "rollup", "js", "animation", "3d"],
+      tags: ["web", "website", "ui", "rollup", "handlebars", "animation"],
     },
     {
       id: "heartgame",
@@ -158,11 +150,13 @@ export default {
         alt: "screenshot of gameplay",
       },
       tags: [
+        "mobile",
         "game",
         "videogame",
         "gamedev",
         "design",
         "java",
+        "android",
         "ux",
         "graphics",
         "music",
@@ -183,7 +177,7 @@ export default {
         src: "img/arosybrokenalbum_0.jpg",
         alt: "cover art",
       },
-      tags: ["art", "music", "piano", "solo"],
+      tags: ["art", "music", "piano"],
     },
     {
       id: "freeformgesturedetector",
@@ -204,7 +198,7 @@ export default {
         src: "img/freeformgesturedetector_head.png",
         alt: "illustration",
       },
-      tags: ["library", "java", "android", "open source", "hypertangram", "ui"],
+      tags: ["library", "java", "android", "open source", "hypertangram"],
     },
     {
       id: "planetdefense",
@@ -265,14 +259,14 @@ export default {
       },
       tags: [
         "web",
-        "js",
         "reactjs",
         "backbonejs",
         "mapboxjs",
         "leaflet",
         "d3js",
         "politics",
-        "webapp",
+        "app",
+        "map",
         "visualization",
       ],
     },

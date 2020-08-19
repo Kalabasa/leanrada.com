@@ -24,7 +24,7 @@ data.projects.forEach((proj, projIndex) => {
 
 	const related = idx.search(query.join(' '), searchConfig)
 		.filter(r => refId(r.ref) !== proj.id)
-		.filter(r => r.score > 0.4);
+		.filter(r => r.score > 0.6);
 
 	related.splice(2);
 
