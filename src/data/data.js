@@ -2,8 +2,20 @@ import _ from "lodash";
 
 // data for the whole site!
 export default {
-  featured_projects: ["dimensions", "canvapasko", "hypertangram"],
+  featured_projects: ["dimensions", "wikawik", "hypertangram"],
   projects: [
+    {
+      id: "wikawik",
+      name: "Wikawik",
+      links: [{ name: "Web", url: "https://kalabasa.github.io/wikawik/" }],
+      short_description: "Interactive language map of the Philippines.",
+      tech: ["D3.js"],
+      image: {
+        src: "img/wikawik.jpg",
+        alt: "screenshot",
+      },
+      tags: ["web", "js", "d3js", "webapp", "visualization"],
+    },
     {
       id: "sheetz",
       name: "Sheetz",
@@ -261,6 +273,7 @@ export default {
         "d3js",
         "politics",
         "webapp",
+        "visualization",
       ],
     },
   ],
