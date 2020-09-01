@@ -200,7 +200,7 @@ function getPageName() {
 }
 
 function countSeps(path) {
-	return (path.match(/\//g) || []).length;
+	return (path.replace(/\/index.html$/).match(/\//g) || []).length;
 }
 
 function isReady() {

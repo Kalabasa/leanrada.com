@@ -3,9 +3,8 @@ import supportBlendMode from '../../js/supportBlendMode.js';
 
 if (ENV_DEBUG) console.log('work.js execute');
 
-function isExternal(url) {
-    const domain = url => url.replace('http://','').replace('https://','').split('/')[0];
-    return domain(window.location.href) !== domain(url);
+function isExternal(hrefString) {
+  return /^[a-z0-9+\-.]+:\/\//i.test(hrefString);
 }
 
 const readyCallbacks = window.workPage && window.workPage.readyCallbacks || [];
@@ -22,6 +21,9 @@ page.ready(() => {
 	supportBlendMode();
 
 	for (let a of document.querySelectorAll('.prose a')) {
-		if (isExternal(a.href)) a.target = '_blank';
+		if (isExternal(a.getAttribute("href"))) {
+			a.target = '_blank';
+			a.classList.add('no-barba');
+		}
 	}
 });
