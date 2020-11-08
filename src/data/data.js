@@ -1,6 +1,3 @@
-import _ from "lodash";
-
-// data for the whole site!
 export default {
   featured_projects: ["dimensions", "wikawik", "hypertangram"],
   projects: [
@@ -71,7 +68,7 @@ export default {
     },
     {
       id: "canvaphotoeditor",
-      name: "Canva Photo Editor",
+      name: "Canva’s Photo Editor",
       links: [{ name: "Web", url: "https://www.canva.com/photo-editor/" }],
       short_description: "Simple photo editor by Canva.",
       tech: ["React", "MobX", "WebGL"],
@@ -83,7 +80,7 @@ export default {
     },
     {
       id: "canvalogomaker",
-      name: "Canva Logo Maker",
+      name: "Canva’s Logo Maker",
       links: [{ name: "Web", url: "https://www.canva.com/tools/logo-maker/" }],
       short_description: "Logo generator using Canva.",
       tech: ["JS", "HTML5", "SCSS"],
@@ -95,7 +92,7 @@ export default {
     },
     {
       id: "canvaenterprise",
-      name: "Canva Enterprise",
+      name: "Canva’s Enterprise Page",
       links: [
         {
           name: "Web",
