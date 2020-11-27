@@ -1,7 +1,8 @@
 <!--{
 	"template": "work",
 	"data": "projects_byid.canvapasko",
-	"script": "canvapasko.js"
+	"script": "canvapasko.js",
+	"noindex": "true"
 }-->
 
 # #CanvaPasko
