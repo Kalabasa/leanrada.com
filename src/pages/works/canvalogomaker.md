@@ -1,6 +1,7 @@
 <!--{
 	"template": "work",
-	"data": "projects_byid.canvalogomaker"
+	"data": "projects_byid.canvalogomaker",
+	"noindex": "true"
 }-->
 
 # Canva Logo Maker
