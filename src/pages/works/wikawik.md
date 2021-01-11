@@ -37,11 +37,9 @@ The main idea behind the project was that it would be a phrase book in map form.
 
 The phrases would be translations of everyday words and phrases, such as “good morning” and “good evening”.
 
-I also had an idea of having audio recordings of native speakers saying each of the phrases, because not all languages are pronounced the same. However, it wasn’t really feasible for me to do.
+I also had an idea of having audio recordings of native speakers saying each of the phrases, because not all languages are pronounced the same. However, it wasn’t really feasible for me to do so.
 
-If you do want to listen to recordings of different languages, there’s this YouTube channel called **[“I Love Languages!”](https://www.youtube.com/playlist?list=PLzyEfc7kyhns0aPJPaVkuwGdz2YLL_xx2)** created by Andy, a Filipino YouTube content creator. Her channel includes Philippine languages, among many others!
-
-So without audio resources, I had to settle on plain text phrases, lacking any pronunciation information.
+Without audio resources, I had to settle on plain text phrases, lacking any pronunciation information.
 
 The text phrases are displayed via speech bubbles that pop up from the little person markers scattered throughout the map.
 
