@@ -28,7 +28,7 @@ Main features of the app are: computation political dynasty prevalence in <abbr 
 
 This webapp is a <abbr title="single-page application">SPA</abbr> made in [**React**](https://reactjs.org) and [Backbone.js](http://backbonejs.org). I used [Leaflet](https://leafletjs.com) and [D3.js](https://d3js.org/) for the visualizations.
 
-Server-side is **PHP** with [Slim](https://www.slimframework.com) and [Medoo](https://medoo.in). I used **Python** for data processing &emdash; computation of dynasty variables and GeoJSON processing.
+Server-side is **PHP** with [Slim](https://www.slimframework.com) and [Medoo](https://medoo.in). I used **Python** for data processing - computation of dynasty variables and GeoJSON processing.
 
 <span class="bleed">![detail view](../img/dynastymap_2.jpg)</span>
 
