@@ -10,7 +10,7 @@
 
 ## A game about building and defending a fort.
 
-In 2021, I made a small base-buildier RTS game. It runs on the [**Minetest**](https://www.minetest.net/) voxel game engine.
+In 2021, I made a small base-builder RTS game. It runs on the [**Minetest**](https://www.minetest.net/) voxel game engine.
 
 The goal of this game is to defend a central core from invaders. The player commands minions to build up a fort around the core.
 
