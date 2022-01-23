@@ -52,7 +52,7 @@ Another problem is Minetest's **GUI system**. It's not very usable. It has absol
 
 To solve this I used [**JSX**](https://www.typescriptlang.org/docs/handbook/jsx.html), an XML-like syntax for defining UI in code.
 
-But there isn't anything in Minetest that knows how to render JSX elements, so I had to create a **GUI engine** within the game that takes in JSX elements and renders the it via Minetest's APIs.
+But there isn't anything in Minetest that knows how to render JSX elements, so I had to create a **GUI engine** within the game that takes in JSX elements and renders it via Minetest's APIs.
 
 The end-result is a more flexible GUI system, with bonus reactive data-binding and callbacks.
 
