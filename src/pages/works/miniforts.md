@@ -90,7 +90,7 @@ Minetest has a simple A* voxel-based ground-based pathfinding algorithm, implemn
 
 But that algorithm won't do. This game has multiple agents, a complex 3D terrain, and destructible walls.
 
-I ended up implementing a hierarchical pathfinding algorithm with a structure similar to [**RimWorld**'s region system](https://www.youtube.com/watch?v=RMBQn_sg7DA), also inspired by [**Castle** Story's pathfinder](https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large).
+I ended up implementing a hierarchical pathfinding algorithm with a structure similar to [**RimWorld**'s region system](https://www.youtube.com/watch?v=RMBQn_sg7DA), also inspired by [**Castle Story**'s pathfinder](https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large).
 
 <span class="bleed">
 	<video muted autoplay loop>
@@ -105,7 +105,7 @@ The system divides the world into components, each of which contains a set of po
 	<span class="caption">Component debug view</span>
 </span>
 
-Then the pathfinder finds a path through the components first, which is very fast, and only resolving voxel-level paths when the agent is moving through from one component to the next.
+The pathfinder then finds a path through the components first, which is very fast, and only resolving voxel-level paths when the agent is moving within a component.
 
 <span class="bleed">
 	<video muted autoplay loop>
