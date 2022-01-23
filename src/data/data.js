@@ -1,6 +1,24 @@
+const TYPE_GAME = 'game';
+const TYPE_MUSIC = 'music';
+const TYPE_WEB = 'web';
+const TYPE_PHYSICAL = 'physical';
+
 export default {
   featured_projects: ["dimensions", "wikawik", "hypertangram"],
   projects: [
+    {
+      id: "miniforts",
+      name: "MiniForts",
+      links: [{ name: "Github", url: "https://github.com/Kalabasa/mini_forts" }],
+      short_description: "Mini base-builder RTS game.",
+      tech: ["Minetest", "Typescript", "Lua"],
+      image: {
+        src: "img/miniforts_thumb.png",
+        alt: "screenshot",
+      },
+      type: TYPE_GAME,
+      tags: ["game", "videogame", "gamedev"],
+    },
     {
       id: "wikawik",
       name: "Wikawik",
@@ -11,6 +29,7 @@ export default {
         src: "img/wikawik.jpg",
         alt: "screenshot",
       },
+      type: TYPE_WEB,
       tags: ["web", "d3js", "app", "language", "map", "visualization"],
     },
     {
@@ -23,6 +42,7 @@ export default {
         src: "img/sheetz.jpg",
         alt: "screenshot",
       },
+      type: TYPE_WEB,
       tags: ["web", "app", "svelte", "tiny"],
     },
     {
@@ -41,6 +61,7 @@ export default {
         src: "img/isolation.jpg",
         alt: "album art",
       },
+      type: TYPE_MUSIC,
       tags: ["art", "music", "jazz", "jazzhop", "chillhop"],
     },
     {
@@ -53,6 +74,7 @@ export default {
         src: "img/canvapasko_thumb.jpg",
         alt: "screenshot",
       },
+      type: TYPE_WEB,
       tags: ["web", "animation", "reactjs", "css", "canva", "christmas"],
     },
     {
@@ -64,6 +86,7 @@ export default {
         src: "img/dimensions_thumb.jpg",
         alt: "clip of piece",
       },
+      type: TYPE_PHYSICAL,
       tags: ["vue", "art", "3d", "ar"],
     },
     {
@@ -76,6 +99,7 @@ export default {
         src: "img/canvaphotoeditor_thumb.jpg",
         alt: "screenshot",
       },
+      type: TYPE_WEB,
       tags: ["web", "app", "reactjs", "webpack", "webgl", "tool", "canva"],
     },
     {
@@ -88,6 +112,7 @@ export default {
         src: "img/canvalogomaker_0.jpg",
         alt: "screenshot",
       },
+      type: TYPE_WEB,
       tags: ["web", "animation", "css", "tool", "canva"],
     },
     {
@@ -106,6 +131,7 @@ export default {
         src: "img/canvaenterprise_0.jpg",
         alt: "screenshot",
       },
+      type: TYPE_WEB,
       tags: ["web", "animation", "css", "canva"],
     },
     {
@@ -117,6 +143,7 @@ export default {
         src: "img/kalabasa_0.jpg",
         alt: "screenshot of intro page",
       },
+      type: TYPE_WEB,
       tags: ["web", "website", "ui", "rollup", "handlebars", "animation"],
     },
     {
@@ -128,6 +155,7 @@ export default {
         src: "img/heartgame.jpg",
         alt: "game visual",
       },
+      type: TYPE_GAME,
       tags: ["web", "game", "videogame", "gamedev", "tiny"],
     },
     {
@@ -146,6 +174,7 @@ export default {
         src: "img/hypertangram_0.jpg",
         alt: "screenshot of gameplay",
       },
+      type: TYPE_GAME,
       tags: [
         "mobile",
         "game",
@@ -174,6 +203,7 @@ export default {
         src: "img/arosybrokenalbum_0.jpg",
         alt: "cover art",
       },
+      type: TYPE_MUSIC,
       tags: ["art", "music", "piano"],
     },
     {
@@ -210,6 +240,7 @@ export default {
         src: "img/planetdefense_0.jpg",
         alt: "screenshot of gameplay",
       },
+      type: TYPE_GAME,
       tags: ["web", "game", "videogame", "gamedev", "pixi"],
     },
     {
@@ -233,6 +264,7 @@ export default {
         src: "img/conversations_0.jpg",
         alt: "album art",
       },
+      type: TYPE_MUSIC,
       tags: ["art", "music", "jazz", "jazzhop", "chillhop"],
     },
     {
@@ -254,6 +286,7 @@ export default {
         src: "img/dynastymap_0.jpg",
         alt: `screenshot of welcome screen`,
       },
+      type: TYPE_WEB,
       tags: [
         "web",
         "reactjs",
