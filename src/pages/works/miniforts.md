@@ -86,9 +86,9 @@ I've only been able to use it for the HUD so far, but I imagine it would be very
 
 ## Pathfinding
 
-Minetest has a simple A* voxel-based ground-based pathfinding algorithm, implemneted in C++.
+Minetest has an ground-based A* pathfinding algorithm, implemented in C++, exposed via the Lua API.
 
-But that algorithm won't do. This game has multiple agents, a complex 3D terrain, and destructible walls.
+I've found that the built-in pathfinder wasn't sufficient for this game. This game has multiple agents with different locomotion types, a complex 3D terrain, and destructible walls.
 
 I ended up implementing a hierarchical pathfinding algorithm with a structure similar to [**RimWorld**'s region system](https://www.youtube.com/watch?v=RMBQn_sg7DA), also inspired by [**Castle Story**'s pathfinder](https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large).
 
