@@ -27,7 +27,7 @@ Now that I’m older, I got a better understanding of the languages in the Phili
 
 Did you know that many Filipinos are trilingual? They can speak at least three languages: Tagalog, English, and then their local language (e.g., Cebuano, Ilocano).
 
-Anyway, I digress. Back to the Wikawik project.
+**Anyway, I digress. Back to the Wikawik project.**
 
 This project has been on my list of project ideas for a while now. It was only in 2020 mid-quarantine August that the project gained traction, just in time for _Buwan ng Wika_.
 
@@ -125,7 +125,7 @@ Even then, Tagalog is gradually being usurped by English in some areas! (See [Ta
 
 You may have heard of [China imposing Mandarin on Tibetan schools](https://www.reuters.com/article/us-china-education-tibet/tibetan-language-learning-eroded-under-chinas-bilingual-education-rights-group-idUSKBN20S13W). The situation sounds similar, albeit without the whole invasion thingy. This is how a language dies. It starts with the children. When they stop learning and speaking the language, they stop passing it down to _their_ children, and the language dies.
 
-The good news is that Philippines recently introduced the mother tongue-based education policy, although it sounded like the implementation faced some challenges. Although very recently, there have been motions to revert back to English as medium of instruction in education. 🤷‍♂️
+The good news is that Philippines recently introduced the mother tongue-based education policy, but it sounded like the implementation faced some challenges. Then again, there have been motions to revert back to English as medium of instruction in education. 🤷‍♂️
 
 <video muted autoplay loop>
   <source src="../video/wikawik_intro.mp4">

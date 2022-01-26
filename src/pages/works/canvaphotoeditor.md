@@ -31,11 +31,9 @@ So around Summer 2019 <small>(Australian Summer 2018–2019)</small>, a redesign
 
 My part in this redesign was the coding of the webapp and the landing page.
 
-I chose to write the app in [**React**](https://reactjs.org/) with [**MobX**](https://mobx.js.org/). MobX really helped simplify the state management. It made React feel like Vue, which is what I like.
+I chose to write the app in [**React**](https://reactjs.org/) with [**MobX**](https://mobx.js.org/). MobX really helped simplify the state management of the whole app.
 
-This is also close to the frontend stack that our team is moving to in general.
-
-There are a few WebGL and canvas filter algorithms from the old app that I reused. The old app used [**glfx.js**](http://evanw.github.io/glfx.js/) for WebGL browsers and [**CamanJS**](http://camanjs.com/) for non-WebGL browsers, and I basically just adapted these stuff to the new code.
+There are a few WebGL and canvas filter algorithms from the old app that I reimplemented. I had to dip my toes into some fragment shaders for the WebGL version. The app uses [**glfx.js**](http://evanw.github.io/glfx.js/) for WebGL browsers and [**CamanJS**](http://camanjs.com/) for non-WebGL browsers.
 
 The backend is a simple server written with [**Express**](https://expressjs.com/) and the whole app was deployed on [**Heroku**](https://www.heroku.com/).
 
@@ -50,4 +48,4 @@ The project was completed in around 2 months.
 
 After the revamp we saw an increase of 50% in conversions (that is, Canva signups), so we can say that the project was a success! 🎉
 
-[Take a look!](https://www.canva.com/photo-editor/)
+Update: The standalone app has been decommissioned, and photo editing is now part of the main app.

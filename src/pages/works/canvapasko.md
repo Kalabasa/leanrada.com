@@ -96,6 +96,4 @@ It’s very nice to have worked on a project like this that impacted people on a
 
 Seeing all the responses and reactions made all the hard work in this project worth it <small>(well, aside from the extra overtime pay, that is. 👌)</small>
 
-You may visit the page at [**canva.com/canvapasko**](https://www.canva.com/canvapasko/).
-
 <div id="fb-root"></div>
