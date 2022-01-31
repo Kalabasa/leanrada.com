@@ -39,13 +39,13 @@ The backend is a simple server written with [**Express**](https://expressjs.com/
 
 <span class="bleed">![desktop screenshot](../img/canvaphotoeditor_2.jpg)</span>
 
-The app needs to be discoverable by search engines, and React as it is can't help with that, so an accompanying landing page was made. It was written in our usual landing page stack of WordPress and PHP, though WordPress was mostly just for infrastructure.
+The app needs to be discoverable by search engines, and React as it is can't help with that, so an accompanying landing page was made.
 
 The project was completed in around 2 months.
 
 <span class="bleed">![landing page screenshot](../img/canvaphotoeditor_3.jpg)</span>
 <span class="caption">The landing page</span>
 
-After the revamp we saw an increase of 50% in conversions (that is, Canva signups), so we can say that the project was a success! 🎉
+After the revamp we saw doubling in conversion rate (that is, Canva signups), so we can say that the project was a success! 🎉
 
 Update: The standalone app has been decommissioned, and photo editing is now part of the main app.
