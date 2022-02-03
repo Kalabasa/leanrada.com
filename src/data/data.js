@@ -307,8 +307,8 @@ export default {
       name: "Frontend Engineer",
       company: "Canva",
       date: ["2018", "now"],
-      tech: ["React", "Node", "TypeScript", "GraphQL", "Storybook", "MobX"],
-      description: "Building all sorts of stuff.",
+      tech: ["React", "Node", "TypeScript", "Java", "GraphQL", "Storybook", "MobX"],
+      description: "Building all sorts of exciting stuff 🚀 - frontend, backend, systems.",
       thumbnail: {
         src: "img/thumb-canva.png",
         alt: "Canva logo",
@@ -322,12 +322,15 @@ export default {
         "Vue.js",
         "Webpack",
         "Spring Boot",
-        "Gradle",
         "TypeScript",
         "Java",
         "Stylus",
       ],
-      description: "Full-stack web and systems development.",
+      description: "Full-stack web development - frontend, backend, CI.",
+      thumbnail: {
+        src: "img/thumb-azeus.png",
+        alt: "Azeus logo",
+      },
     },
     {
       name: "Android Developer",
@@ -345,9 +348,13 @@ export default {
       name: "Software Engineering Intern",
       company: "Azeus",
       date: ["2014"],
-      tech: ["Android", "AndEngine", "Vert.x", "Java"],
+      tech: ["Android", "WebSocket", "Java"],
       description:
         "Worked on a peer-to-peer multiplayer card game on Android that features a disturbing Easter egg.",
+      thumbnail: {
+        src: "img/thumb-azeus.png",
+        alt: "Azeus logo",
+      },
     },
     {
       name: "Flash Developer",
@@ -387,23 +394,22 @@ export default {
     {
       name: "LinkedIn",
       img: "img/icon-linkedin.svg",
-      href: "https://ph.linkedin.com/in/lean-godffrey-rada",
+      href: "https://www.linkedin.com/in/lean-godffrey-rada",
+    },
+    {
+      name: "CodePen",
+      img: "img/icon-codepen.svg",
+      href: "https://codepen.io/kalabasa/",
+    },
+    {
+      name: "Spotify",
+      img: "img/icon-music.svg",
+      href: "https://open.spotify.com/artist/7tsco1RLCeUP0UpN3hl5JS?si=VhGKoCxrRMaO6kdL_gGsXA",
     },
     {
       name: "Soundcloud",
       img: "img/icon-music.svg",
       href: "https://soundcloud.com/lreaadna",
-    },
-    {
-      name: "Ludum Dare",
-      img: "img/icon-game.svg",
-      href: "https://ldjam.com/users/kalabasa/games",
-    },
-    // { name: 'Ludum Dare (Legacy)', img: 'img/icon-game.svg', href: 'http://legacy.ludumdare.com/compo/author/kalabasa/' },
-    {
-      name: "CodePen",
-      img: "img/icon-codepen.svg",
-      href: "https://codepen.io/kalabasa/",
     },
   ],
 };
