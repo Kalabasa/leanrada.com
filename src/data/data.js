@@ -81,7 +81,7 @@ export default {
       id: "dimensions",
       name: "Dimensions",
       short_description: "Generative art and augmented reality.",
-      tech: ["Vue.js", "three.js"],
+      tech: ["three.js", "Vue.js", "Computer vision"],
       image: {
         src: "img/dimensions_thumb.jpg",
         alt: "clip of piece",
