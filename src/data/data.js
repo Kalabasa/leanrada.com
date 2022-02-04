@@ -7,6 +7,18 @@ export default {
   featured_projects: ["dimensions", "wikawik", "hypertangram"],
   projects: [
     {
+      id: "genuary2022",
+      name: "Genuary 2022",
+      short_description: "Generative art challenge.",
+      tech: ["p5.js"],
+      image: {
+        src: "img/genuary2022_thumb.jpg",
+        alt: "pieces",
+      },
+      type: TYPE_ART,
+      tags: ["processing", "art"],
+    },
+    {
       id: "miniforts",
       name: "MiniForts",
       links: [{ name: "Github", url: "https://github.com/Kalabasa/mini_forts" }],
