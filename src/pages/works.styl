@@ -19,12 +19,14 @@ image-gap = 20px
 			flex 0 1 auto
 			flex-direction column
 			align-items flex-start
-		.page-heading
-			margin-bottom image-gap
+		.grid-header
+			display flex
 		.grid
 			display flex
 			flex 1 1 auto
 			flex-wrap wrap
+			justify-content center
+			align-content flex-start
 			margin (- image-gap / 2)
 			padding-bottom 5vw
 			transform skewY(holy-angle)
@@ -37,7 +39,59 @@ image-gap = 20px
 				w = ((image-size + image-gap) * i)
 				// assumming margin-hedge is in vw
 				@media (min-width (w * 100 / (100 - unit(margin-hedge, '') * 2)))
-					max-width w
+					width w
+
+	.filter
+		display flex
+
+	#filter-checkbox
+		display none
+		&:checked ~ .filter-button
+			opacity 1
+		&:not(:checked) ~ .filter-bar
+			display none
+
+	.filter-button
+		cursor pointer
+		opacity 0.3
+		&:hover .filter-icon
+			transform scale(1.1)
+			opacity 0.6
+
+	.filter-icon
+		width 1.5em
+		height 1.5em
+		margin 0 0.5em
+		object-fit contain
+		object-position center center
+		transform-origin center center
+
+	.filter-bar
+		display flex
+	.filter-bar-arrow
+		width 1.5em
+		height 1.5em
+		margin 0 0.75em
+		object-fit contain
+		object-position center center
+
+	.filter-type-button
+		cursor pointer
+		&:hover .filter-type-icon
+			transform scale(1.1)
+			opacity 0.6
+	.filter-type-radio
+		display none
+		&:checked ~ .filter-type-icon
+			opacity 1
+	.filter-type-icon
+		width 1.5em
+		height 1.5em
+		margin 0 0.5em
+		object-fit contain
+		object-position center center
+		transform-origin center center
+		opacity 0.3
 
 	.projects-item
 		display block
@@ -50,13 +104,22 @@ image-gap = 20px
 		overflow hidden
 		z-index 1
 		transition transform 0.2s ease-back-out
-		animation enter-item 0.3s ease-swift-out backwards
 
-		for i in 1..10
-			&:nth-child({i})
-				animation-delay 0.4s + (0.4s * math(i / 10, 'sqrt'))
-		&:nth-child(n + 10)
-			animation-delay 0.8s
+		&.projects-item-hiding
+			animation exit-item 0.2s 0s ease-swift-out both
+		&.projects-item-hidden
+			display none
+
+		.grid-filtered > ^[-1..-1]
+			animation enter-item 0.1s 0s ease-swift-out both
+
+		:not(.grid-filtered) > ^[-1..-1]
+			animation enter-item 0.3s ease-swift-out backwards
+			for i in 1..10
+				&:nth-child({i})
+					animation-delay 0.4s + (0.4s * math(i / 10, 'sqrt'))
+			&:nth-child(n + 10)
+				animation-delay 0.8s
 
 		> *
 			display block
@@ -162,3 +225,11 @@ image-gap = 20px
 		to
 			opacity 1
 			transform none
+
+	@keyframes exit-item
+		from
+			opacity 1
+			transform none
+		to
+			opacity 0
+			transform translateX(5%)

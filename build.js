@@ -1,12 +1,8 @@
-// TODO Use Gulp
-
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
 import { promisify } from 'util';
 
 import _ from 'lodash';
-import rimraf from 'rimraf';
 import glob from 'glob';
 import ncp from 'ncp';
 

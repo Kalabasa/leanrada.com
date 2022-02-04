@@ -1,7 +1,7 @@
+const TYPE_WEB = 'web';
 const TYPE_GAME = 'game';
 const TYPE_MUSIC = 'music';
-const TYPE_WEB = 'web';
-const TYPE_PHYSICAL = 'physical';
+const TYPE_ART = 'art';
 
 export default {
   featured_projects: ["dimensions", "wikawik", "hypertangram"],
@@ -86,7 +86,7 @@ export default {
         src: "img/dimensions_thumb.jpg",
         alt: "clip of piece",
       },
-      type: TYPE_PHYSICAL,
+      type: TYPE_ART,
       tags: ["vue", "art", "3d", "ar"],
     },
     {
@@ -308,7 +308,7 @@ export default {
       company: "Canva",
       date: ["2018", "now"],
       tech: ["React", "Node", "TypeScript", "Java", "GraphQL", "Storybook", "MobX"],
-      description: "Building all sorts of exciting stuff 🚀 - frontend, backend, systems.",
+      description: "Building all sorts of stuff. 🚀",
       thumbnail: {
         src: "img/thumb-canva.png",
         alt: "Canva logo",
@@ -326,7 +326,7 @@ export default {
         "Java",
         "Stylus",
       ],
-      description: "Full-stack web development - frontend, backend, CI.",
+      description: "Full-stack web development.",
       thumbnail: {
         src: "img/thumb-azeus.png",
         alt: "Azeus logo",
