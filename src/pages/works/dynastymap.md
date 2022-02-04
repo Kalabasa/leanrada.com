@@ -14,7 +14,7 @@
 
 Political dynasties are prevalent in Philippine politics.
 
-We all know they're bad, but how can we justify that view? We can look into data and statistics. An easy way to study data is through data visualization.
+We all know they’re bad, but how can we justify that view? We can look into data and statistics. An easy way to study data is through data visualization.
 
 ![visualization of dynasties](../img/dynastymap_tags.png)
 
@@ -34,7 +34,7 @@ Server-side is **PHP** with [Slim](https://www.slimframework.com) and [Medoo](ht
 
 I got the data from [COMELEC](https://www.comelec.gov.ph) and [Open Data PH](https://www.gov.ph/data).
 
-I had to scrape election results from the 2015 COMELEC website because they didn't have an API.
+I had to scrape election results from the 2015 COMELEC website because they didn’t have an API.
 
 For anyone trying this kind of thing today, fortunately, election results are now available in CSV on Open Data PH.
 
@@ -42,6 +42,6 @@ For anyone trying this kind of thing today, fortunately, election results are no
 
 ---
 
-This project was developed as a requirement (Special Problem) for my Computer Science B.S. degree. The idea of political dynasty visualization came from one of my professors. It was also inspired by Hans Rosling's visualizations and [Trendalyzer](https://www.gapminder.org/tools).
+This project was developed as a requirement (Special Problem) for my Computer Science B.S. degree. The idea of political dynasty visualization came from one of my professors. It was also inspired by Hans Rosling’s visualizations and [Trendalyzer](https://www.gapminder.org/tools).
 
-An instance of the app is hosted on the university's development server, but it's not working and I no longer maintain it. You can still see the landing page and the bare app [there](http://agila.upm.edu.ph/~lgrada/dynavis).
+An instance of the app is hosted on the university’s development server, but it’s not working and I no longer maintain it. You can still see the landing page and the bare app [there](http://agila.upm.edu.ph/~lgrada/dynavis).

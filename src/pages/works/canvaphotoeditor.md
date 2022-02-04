@@ -18,7 +18,7 @@ This tool existed primarily as a way to promote the main design platform [Canva]
 
 <span class="bleed">![desktop screenshot](../img/canvaphotoeditor_1.jpg)</span>
 
-The Photo Editor had a previous version which was made by a third party developer in a proprietary framework on top of Angular 1 and Node 5. It was a bit difficult to maintain and iterate on. It was also not responsive so we're missing out on mobile users.
+The Photo Editor had a previous version which was made by a third party developer in a proprietary framework on top of Angular 1 and Node 5. It was a bit difficult to maintain and iterate on. It was also not responsive so we’re missing out on mobile users.
 
 A redesign and rewrite was needed for future improvement.
 
@@ -39,7 +39,7 @@ The backend is a simple server written with [**Express**](https://expressjs.com/
 
 <span class="bleed">![desktop screenshot](../img/canvaphotoeditor_2.jpg)</span>
 
-The app needs to be discoverable by search engines, and React as it is can't help with that, so an accompanying landing page was made.
+The app needs to be discoverable by search engines, and React as it is can’t help with that, so an accompanying landing page was made.
 
 The project was completed in around 2 months.
 
