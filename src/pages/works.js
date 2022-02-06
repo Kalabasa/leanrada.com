@@ -1,5 +1,4 @@
 import { page } from '../js/common.js';
-import supportBlendMode from '../js/supportBlendMode.js';
 
 if (ENV_DEBUG) console.log('works.js execute');
 
@@ -13,8 +12,6 @@ let projectItemElements;
 
 page.ready(() => {
 	if (ENV_DEBUG) console.log('works.js ready');
-
-	supportBlendMode();
 
 	grid = document.querySelector('section.works .grid');
 	projectItemElements = [...document.querySelectorAll('.projects-item')];

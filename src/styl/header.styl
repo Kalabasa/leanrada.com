@@ -47,33 +47,51 @@ header.header
 				&[href='#']
 					opacity 0.9
 
-	#header-search input
-		font-body()
-		margin 8px 0
-		margin-left 8px
-		padding 1em
-		width 3em
-		height 3em
-		border none
-		color transparent
-		background url('/img/icon-search.svg') right 0.75em center / 1.5em 1.5em no-repeat
-		cursor pointer
-		user-select all
-		transition:
-			margin 0.2s ease-swift,
-			padding 0.2s ease-swift,
-			width 0.2s ease-swift,
-			color 0.1s ease-swift,
-			background 0.1s ease-swift,
-			border-radius 0.04s ease-swift;
-		&:focus
-		^[0].header-searching ^[1..-1]
-			margin-left 12px
-			padding-right 3em
-			width 12em
-			color color-fg
-			background-color color-bg
-			cursor unset
+	#header-search
+		position relative
+
+		input
+			font-body()
+			margin 8px 0
+			margin-left 8px
+			padding 1em
+			width 3em
+			height 3em
+			border none
+			color transparent
+			background none
+			cursor pointer
+			user-select all
+			transition:
+				margin 0.2s ease-swift,
+				padding 0.2s ease-swift,
+				width 0.2s ease-swift,
+				color 0.1s ease-swift,
+				background 0.1s ease-swift,
+				border-radius 0.04s ease-swift;
+			&:focus
+			^[0].header-searching ^[1..-1]
+				margin-left 12px
+				padding-right 3em
+				width 12em
+				color color-fg
+				background-color color-bg
+				cursor unset
+		
+		.header-search-icon
+			content ''
+			display block
+			position absolute
+			right 0
+			top 0
+			bottom 0
+			width 3em
+			pointer-events none
+			@supports (mask: url(''))
+				mask url('/img/icon-search.svg') right 0.75em center / 1.5em 1.5em no-repeat
+				background-color color-fg
+				^[0..-2]:focus-within ^[-1..-1]
+					background-color color-fg !important
 
 	@media (max-width: 60em)
 		&.header-searching
@@ -85,7 +103,7 @@ header.header
 				width 90vw
 
 // header customization mixin
-header-colors(fg, bg, dark = false)
+header-colors(bg, fg = color-fg)
 	header.header
 		color fg
 		background bg
@@ -93,7 +111,6 @@ header-colors(fg, bg, dark = false)
 			background fg
 		a:hover, a:focus, a[href='#']
 			color bg
-		if dark
-			#header-search input:not(:focus)
+		@supports (mask: url(''))
+			#header-search .header-search-icon
 				background-color fg
-				border-radius 1.5em

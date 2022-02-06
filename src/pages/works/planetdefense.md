@@ -25,7 +25,7 @@ I participate in these <abbr title="Ludum Dare">LD</abbr> jams occasionally. In 
 	<span class="caption">Missile Command</span>
 </span>
 
-[Missile Command](https://en.wikipedia.org/wiki/Missile_Command) is an arcade game from the ’80s. The usual formula of taking a classic and giving it a twist was not very original, but time was limited. Minus points for Innovation, I guess.
+[Missile Command](https://en.wikipedia.org/wiki/Missile_Command) was an arcade game from the ’80s. The usual formula of taking a classic and giving it a twist was not very original, but time was limited. Minus points for Innovation, I guess.
 
 <span>![design notes](../img/planetdefense_notes0.jpg)
 	<span class="caption">Some design sketches showing some planned but unimplemented features.</span>

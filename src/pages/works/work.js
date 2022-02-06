@@ -1,5 +1,4 @@
 import { page } from '../../js/common.js';
-import supportBlendMode from '../../js/supportBlendMode.js';
 
 if (ENV_DEBUG) console.log('work.js execute');
 
@@ -18,8 +17,6 @@ page.ready(() => {
 		c();
 	}
 	
-	supportBlendMode();
-
 	for (let a of document.querySelectorAll('.prose a')) {
 		if (isExternal(a.getAttribute("href"))) {
 			a.target = '_blank';
