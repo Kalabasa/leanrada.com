@@ -47,7 +47,6 @@ function execQuery() {
 		query = queryString.parse(window.location.search).q || '';
 	}
 
-	console.log('execQuery', query);
 	search(query);
 }
 

@@ -10,10 +10,11 @@ page.ready(() => {
 
 	searchInput.addEventListener('focus', () => {
 		header.classList.add('header-searching');
+		searchInput.select();
 	});
 
 	searchInput.addEventListener('blur', () => {
-		header.classList.remove('header-searching');
+		setTimeout(() => header.classList.remove('header-searching'), 200);
 	});
 
 	// use hash params instead of query params for performance
@@ -44,7 +45,6 @@ function navigateToSearch(query) {
 		try {
 			// Barba may break on hash change
 			Barba.Pjax.goTo(`${searchPagePath}#${encodeURIComponent(query)}`);
-			window.dispatchEvent(new HashChangeEvent('hashchange'));
 		} catch (err) {
 			if (ENV_DEBUG) console.warn(err);
 			window.location.href = `${searchPagePath}?q=${encodeURIComponent(query)}`;
