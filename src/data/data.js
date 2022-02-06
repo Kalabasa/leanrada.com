@@ -23,7 +23,7 @@ export default {
       name: "MiniForts",
       links: [{ name: "Github", url: "https://github.com/Kalabasa/mini_forts" }],
       short_description: "Mini base-builder RTS game.",
-      tech: ["Minetest", "Typescript", "Lua"],
+      tech: ["Minetest", "TypeScript", "Lua"],
       image: {
         src: "img/miniforts_thumb.png",
         alt: "screenshot",
@@ -36,13 +36,13 @@ export default {
       name: "Wikawik",
       links: [{ name: "Web", url: "https://kalabasa.github.io/wikawik/" }],
       short_description: "Interactive language map of the Philippines.",
-      tech: ["D3.js"],
+      tech: ["D3.js", "MobX", "GeoJSON"],
       image: {
         src: "img/wikawik.jpg",
         alt: "screenshot",
       },
       type: TYPE_WEB,
-      tags: ["web", "d3js", "app", "language", "map", "visualization"],
+      tags: ["web", "d3js", "app", "webapp", "language", "map", "geo", "visualization"],
     },
     {
       id: "sheetz",
@@ -55,7 +55,7 @@ export default {
         alt: "screenshot",
       },
       type: TYPE_WEB,
-      tags: ["web", "app", "svelte", "tiny"],
+      tags: ["web", "app", "webapp", "svelte", "tiny"],
     },
     {
       id: "isolation",
@@ -81,19 +81,19 @@ export default {
       name: "#CanvaPasko",
       links: [{ name: "Web", url: "https://www.canva.com/canvapasko/" }],
       short_description: "Canva’s Christmas billboard design contest!",
-      tech: ["React"],
+      tech: ["React", "Canva"],
       image: {
         src: "img/canvapasko_thumb.jpg",
         alt: "screenshot",
       },
       type: TYPE_WEB,
-      tags: ["web", "animation", "reactjs", "css", "canva", "christmas"],
+      tags: ["web", "animation", "reactjs", "css", "christmas"],
     },
     {
       id: "dimensions",
       name: "Dimensions",
       short_description: "Generative art and augmented reality.",
-      tech: ["three.js", "Vue.js", "Computer vision"],
+      tech: ["three.js", "Vue.js", "computer vision"],
       image: {
         src: "img/dimensions_thumb.jpg",
         alt: "clip of piece",
@@ -112,7 +112,7 @@ export default {
         alt: "screenshot",
       },
       type: TYPE_WEB,
-      tags: ["web", "app", "reactjs", "webpack", "webgl", "tool", "canva"],
+      tags: ["web", "app", "webapp", "reactjs", "webpack", "webgl", "tool", "canva"],
     },
     {
       id: "canvalogomaker",
@@ -150,25 +150,25 @@ export default {
       id: "kalabasa",
       name: "kalabasa.github.io",
       short_description: "My portfolio and personal site.",
-      tech: ["HTML5", "Stylus", "Javascript"],
+      tech: ["Handlebars", "Stylus", "Javascript"],
       image: {
         src: "img/kalabasa_0.jpg",
         alt: "screenshot of intro page",
       },
       type: TYPE_WEB,
-      tags: ["web", "website", "ui", "rollup", "handlebars", "animation"],
+      tags: ["web", "website", "ui", "rollup", "html", "animation"],
     },
     {
       id: "heartgame",
       name: "Heart Game",
       short_description: "A very simple casual game.",
-      tech: ["HTMl5", "Javascript"],
+      tech: ["HTMl5", "JavaScript", "Phaser"],
       image: {
         src: "img/heartgame.jpg",
         alt: "game visual",
       },
       type: TYPE_GAME,
-      tags: ["web", "game", "videogame", "gamedev", "tiny"],
+      tags: ["web", "game", "videogame", "gamedev", "js", "pixi", "tiny"],
     },
     {
       id: "hypertangram",
@@ -232,12 +232,12 @@ export default {
         },
       ],
       short_description: "Multi-touch transform gesture detector for Android.",
-      tech: ["Android", "Kotlin"],
+      tech: ["Android", "Java"],
       image: {
         src: "img/freeformgesturedetector_head.png",
         alt: "illustration",
       },
-      tags: ["library", "java", "android", "open source", "hypertangram"],
+      tags: ["library", "kotlin", "android", "open source", "hypertangram"],
     },
     {
       id: "planetdefense",
@@ -309,6 +309,7 @@ export default {
         "politics",
         "app",
         "map",
+        "geo",
         "visualization",
       ],
     },
@@ -319,7 +320,7 @@ export default {
       name: "Frontend Engineer",
       company: "Canva",
       date: ["2018", "now"],
-      tech: ["React", "Node", "TypeScript", "Java", "GraphQL", "Storybook", "MobX"],
+      tech: ["React", "TypeScript", "MobX", "Node", "Java", "GraphQL", "Storybook"],
       description: "Building all sorts of stuff. 🚀",
       thumbnail: {
         src: "img/thumb-canva.png",
@@ -332,13 +333,14 @@ export default {
       date: ["2017", "2018"],
       tech: [
         "Vue.js",
-        "Webpack",
-        "Spring Boot",
         "TypeScript",
         "Java",
+        "Spring Boot",
+        "SQL",
+        "Webpack",
         "Stylus",
       ],
-      description: "Full-stack web development.",
+      description: "Full-stack web development and some DevOps.",
       thumbnail: {
         src: "img/thumb-azeus.png",
         alt: "Azeus logo",
@@ -350,7 +352,7 @@ export default {
       date: ["2015", "2017"],
       tech: ["Android", "Android Studio", "Java", "SQLite"],
       description:
-        "Worked on the Android app for the digital meetings and collaboration system called <a target='_blank' href='https://www.azeusconvene.com/'>Convene</a>.",
+        "Worked on the Android app for a collaborative platform called <a target='_blank' href='https://www.azeusconvene.com/'>Convene</a>.",
       thumbnail: {
         src: "img/thumb-convene.png",
         alt: "Convene logo",
@@ -362,7 +364,7 @@ export default {
       date: ["2014"],
       tech: ["Android", "WebSocket", "Java"],
       description:
-        "Worked on a peer-to-peer multiplayer card game on Android that features a disturbing Easter egg.",
+        "Built a P2P multiplayer card game on Android that features a disturbing Easter egg.",
       thumbnail: {
         src: "img/thumb-azeus.png",
         alt: "Azeus logo",
