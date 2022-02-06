@@ -380,7 +380,11 @@ export default {
         "Macromedia Flash",
       ],
       description:
-        "Created animated, sometimes interactive, Internet advertisements. Indirectly contributed to the rise of ad-blockers.",
+        "Created interactive animated Internet ads in Flash. Indirectly contributed to the rise of ad-blockers.",
+        thumbnail: {
+          src: "img/thumb-free-flash.png",
+          alt: "",
+        },
     },
     {
       name: "Powerpoint “Engineer”",
@@ -389,6 +393,10 @@ export default {
       tech: ["Photoshop", "Powerpoint", "ACD/ChemSketch"],
       description:
         "Illustrated, animated, and created <em>interactive</em> biochemistry learning materials for some learning institute. In Powerpoint.",
+        thumbnail: {
+          src: "img/thumb-free-ppt.png",
+          alt: "",
+        },
     },
   ],
 

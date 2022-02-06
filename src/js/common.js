@@ -14,7 +14,7 @@ page.ready(() => {
 	});
 
 	searchInput.addEventListener('blur', () => {
-		setTimeout(() => header.classList.remove('header-searching'), 200);
+		setTimeout(() => header.classList.remove('header-searching'), 100);
 	});
 
 	// use hash params instead of query params for performance
