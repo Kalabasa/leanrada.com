@@ -23,7 +23,7 @@ page.ready(() => {
 	const form = document.querySelector('section.search form.search-form');
 	const input = document.querySelector('section.search .search-form input');
 
-	form.addEventListener('submit', event => {
+	form.addEventListener('submit', (event) => {
 		event.preventDefault();
 		input.blur();
 		search(form.elements.q.value);
@@ -47,6 +47,7 @@ function execQuery() {
 		query = queryString.parse(window.location.search).q || '';
 	}
 
+	console.log('execQuery', query);
 	search(query);
 }
 
@@ -59,7 +60,7 @@ function search(query) {
 	}
 
 	document.querySelector('section.search .search-form input').value = query;
-	document.querySelectorAll('section.search .query').forEach(el => el.innerText = query);
+	document.querySelectorAll('section.search .query').forEach((el) => (el.innerText = query));
 
 	const resultsContainer = document.querySelector('section.search #results');
 	const resultsInfo = document.querySelector('section.search .results-info');
@@ -76,18 +77,15 @@ function search(query) {
 	existingResults.selectNodeContents(resultsContainer);
 	existingResults.deleteContents();
 
-	Promise.all([
-		http.get('/idx.json'),
-		http.get('/data.json'),
-	]).then(([idxResp, dataResp]) => {
+	Promise.all([http.get('/idx.json'), http.get('/data.json')]).then(([idxResp, dataResp]) => {
 		const idx = elasticlunr.Index.load(idxResp.data);
 		let results = idx.search(query, searchConfig);
 
 		if (ENV_DEBUG) console.log(`raw search results "${query}": `, results);
-		results = results.filter(v => v.score > 0.3);
+		results = results.filter((v) => v.score > 0.3);
 
 		if (results.length) {
-			const items = results.map(v => fromRef(dataResp.data, v.ref));
+			const items = results.map((v) => fromRef(dataResp.data, v.ref));
 			renderResults(resultsContainer, templates, items);
 			resultsInfoCount.textContent = results.length;
 			resultsInfo.style.display = 'block';
@@ -100,9 +98,11 @@ function search(query) {
 }
 
 function renderResults(container, templates, items) {
-	items.map(item => renderItem(templates[item.type], item)).forEach(content => {
-		container.appendChild(content);
-	});
+	items
+		.map((item) => renderItem(templates[item.type], item))
+		.forEach((content) => {
+			container.appendChild(content);
+		});
 }
 
 function renderItem(template, item) {
