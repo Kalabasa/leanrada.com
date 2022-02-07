@@ -112,7 +112,12 @@ const mdHtmlFiles = partials
 					// extract metadata
 					const metaMatch = md.match(/<!--({(.|\r|\n)+})-->/);
 					const meta = metaMatch ? JSON.parse(metaMatch[1]) : {};
-					return { md: md.substring(metaMatch.index + metaMatch[0].length), meta };
+					return {
+						md: metaMatch
+							? md.substring(metaMatch.index + metaMatch[0].length)
+							: md,
+						meta
+					};
 				})
 				.then(({ md, meta }) => {
 					// supply variables in md itself
