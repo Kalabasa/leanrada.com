@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
-git add -f build/
-STASH=(git stash create)
+set -e
+
+if [ -d "build/" ] 
+then
+	git add -f "build/"
+	STASH=(git stash create)
+fi
 
 git checkout -B deploy
 git merge --no-edit -X theirs src
 
 yarn install
-rm -rf build/
+rm -rf "build/"
 yarn build --prod
 
-git add -f build/
+git add -f "build/"
 git commit -m "Deploy"
 
 git branch -D master
-git subtree split -P build/ -b master
+git subtree split -P "build/" -b master
 
 git push -f origin master:master
 
