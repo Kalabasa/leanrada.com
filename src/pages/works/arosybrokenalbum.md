@@ -10,6 +10,8 @@
 <span class="album-disc">![Disc art](../img/arosybrokenalbum_0.jpg)</span>
 </span></span>
 
+{{> links . heading="Listen on" }}
+
 The piano is easily my favorite musical instrument. It’s a very versatile and expressive instrument.
 
 I’ve been meaning to create good music out of it for a long time. There were attempts, but it is only now that I had the knowledge and capability to create music that I want. So I compiled an album.
