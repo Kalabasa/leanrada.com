@@ -4,7 +4,7 @@ const TYPE_MUSIC = 'music';
 const TYPE_ART = 'art';
 
 export default {
-  featured_projects: ["dimensions", "wikawik", "hypertangram"],
+  featured_projects: ["wikawik", "dimensions", "hypertangram"],
   projects: [
     {
       id: "genuary2022",
@@ -79,7 +79,6 @@ export default {
     {
       id: "canvapasko",
       name: "#CanvaPasko",
-      links: [{ name: "Web", url: "https://www.canva.com/canvapasko/" }],
       short_description: "Canva’s Christmas billboard design contest!",
       tech: ["React", "Canva"],
       image: {
@@ -104,7 +103,6 @@ export default {
     {
       id: "canvaphotoeditor",
       name: "Canva’s Photo Editor",
-      links: [{ name: "Web", url: "https://www.canva.com/photo-editor/" }],
       short_description: "Simple photo editor by Canva.",
       tech: ["React", "MobX", "WebGL"],
       image: {
@@ -117,7 +115,6 @@ export default {
     {
       id: "canvalogomaker",
       name: "Canva’s Logo Maker Page",
-      links: [{ name: "Web", url: "https://www.canva.com/tools/logo-maker/" }],
       short_description: "Logo generator using Canva.",
       tech: ["JS", "HTML5", "SCSS"],
       image: {
@@ -130,13 +127,6 @@ export default {
     {
       id: "canvaenterprise",
       name: "Canva’s Enterprise Page",
-      links: [
-        {
-          name: "Web",
-          url:
-            "https://web.archive.org/web/20190401230423/https://about.canva.com/enterprise/",
-        },
-      ],
       short_description: "Page presenting Canva’s Enterprise offering.",
       tech: ["HTML5", "SCSS", "JS"],
       image: {

@@ -9,6 +9,8 @@
 <iframe src="https://kalabasa.github.io/sheetz/" width="960" height="420"></iframe>
 </p>
 
+{{> links . heading="Try it out" }}
+
 A very simple spreadsheet built with [Svelte](https://svelte.dev).
 
 > Svelte is a radical new approach to building user interfaces. Whereas traditional frameworks like React and Vue do the bulk of their work in the browser, Svelte shifts that work into a compile step that happens when you build your app.

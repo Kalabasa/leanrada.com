@@ -12,6 +12,8 @@
 
 ## Chill music to quarantine to.
 
+{{> links . heading="Listen on" }}
+
 **Isolation** is a single I composed during the 2020 pandemic.
 
 I made it using LMMS and Audacity, which are both free and open-source software for music and audio production.

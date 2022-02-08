@@ -12,6 +12,8 @@
 
 ## Hypertangram is tangram with a twist.
 
+{{> links . heading="Download on" }}
+
 **Hypertangram** is a challenging geometric puzzle game on Android based on the classic tangram puzzle. What’s different with this one is that, in addition to regular dragging and rotating, *pieces can be resized*.
 
 <video muted autoplay loop>

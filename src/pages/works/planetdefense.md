@@ -13,6 +13,8 @@
 
 </p>
 
+{{> links . heading="Try it out" }}
+
 This is my entry for the 38th [Ludum Dare](https://ldjam.com).
 
 Ludum Dare is a Game Jam (a hackathon for games) held every four months. A theme is announced and participants create a game from scratch in *48 hours*.

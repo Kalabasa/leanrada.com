@@ -12,4 +12,6 @@
 
 A very simple game about avoiding heartbreaks.
 
+{{> links . heading="Try it out" }}
+
 <small>Not working? Try refreshing or [play standalone!](https://kalabasa.github.io/heart-game/)</small>

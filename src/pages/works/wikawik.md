@@ -9,6 +9,8 @@
 
 ## Language map of the Philippines
 
+{{> links . heading="Open the app" }}
+
 According to the diksiyonaryo: **“wikawik”** is a Filipino word, meaning _madaldal_ or talkative.
 
 [Wikawik](https://kalabasa.github.io/wikawik/), on the other hand, is a webapp that showcases the various languages spoken in the Philippines.

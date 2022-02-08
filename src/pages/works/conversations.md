@@ -12,6 +12,8 @@
 
 ## Chill jazzhop music.
 
+{{> links . heading="Listen on" }}
+
 **Conversations** is a four-piece composition of mellow hip-hop beats, jazz harmony, and mild piano improvisations.
 
 Influences range from jazz, funk, and bossa nova to lo-fi, hip-hop, and new-age.
