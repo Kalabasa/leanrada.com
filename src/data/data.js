@@ -4,7 +4,7 @@ const TYPE_MUSIC = 'music';
 const TYPE_ART = 'art';
 
 export default {
-  featured_projects: ["wikawik", "dimensions", "hypertangram"],
+  featured_projects: ["wikawik", "hypertangram", "dimensions"],
   projects: [
     {
       id: "genuary2022",
@@ -171,7 +171,7 @@ export default {
         },
       ],
       short_description: "Mobile puzzle game about packing shapes together.",
-      tech: ["Android", "Kotlin", "Realm", "Robolectric"],
+      tech: ["Android", "Java", "Realm", "Robolectric"],
       image: {
         src: "img/hypertangram_0.jpg",
         alt: "screenshot of gameplay",
@@ -227,7 +227,7 @@ export default {
         src: "img/freeformgesturedetector_head.png",
         alt: "illustration",
       },
-      tags: ["library", "kotlin", "android", "open source", "hypertangram"],
+      tags: ["library", "android", "open source", "hypertangram"],
     },
     {
       id: "planetdefense",
@@ -307,10 +307,10 @@ export default {
 
   jobs: [
     {
-      name: "Frontend Engineer",
+      name: "Full-stack Engineer",
       company: "Canva",
       date: ["2018", "now"],
-      tech: ["React", "TypeScript", "MobX", "Node", "Java", "GraphQL", "Storybook"],
+      tech: ["React", "TypeScript", "MobX", "Node.js", "Java", "GraphQL", "Protobuf"],
       description: "Building all sorts of stuff. 🚀",
       thumbnail: {
         src: "img/thumb-canva.png",
