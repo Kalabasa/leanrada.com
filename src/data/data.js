@@ -309,9 +309,9 @@ export default {
     {
       name: "Full-stack Engineer",
       company: "Canva",
-      date: ["2018", "now"],
+      date: ["2018", "2022"],
       tech: ["React", "TypeScript", "MobX", "Node.js", "Java", "GraphQL", "Protobuf"],
-      description: "Building all sorts of stuff. 🚀",
+      description: "Built all sorts of stuff. 🚀",
       thumbnail: {
         src: "img/thumb-canva.png",
         alt: "Canva logo",
