@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="/fonts.css">
+	<link rel="preload" href="/fonts/montserrat-v12-latin-500.woff2" as="font" crossorigin>
+	<link rel="icon" type="image/png" sizes="192x192"  href="img/favicon/icon-192x192.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="img/favicon/icon-32x32.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="img/favicon/icon-96x96.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="img/favicon/icon-16x16.png">
+
+	<meta name="description" content="Hello! I'm Lean, a software engineer!">
+	<meta property="og:url" content="https://kalabasa.github.io/">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Lean Rada">
+	<meta property="og:description" content="Hello! I'm Lean, a software engineer!">
+	<meta property="og:image" content="https://kalabasa.github.io/img/preview_image.png">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta property="twitter:domain" content="kalabasa.github.io">
+	<meta property="twitter:url" content="https://kalabasa.github.io/">
+	<meta name="twitter:title" content="Lean Rada">
+	<meta name="twitter:description" content="Hello! I'm Lean, a software engineer!">
+	<meta name="twitter:image" content="https://kalabasa.github.io/img/preview_image.png">
+	<title>MiniForts | Works | Lean Rada</title>
+	<link id="main-css" rel="stylesheet" href="work.css">
+	<script id="main-js" src="work.js" defer></script>
+</head>
+<body>
+
+<div id="preloader" style="position: absolute; display: flex; align-items: center; justify-content: center; left: 0; right: 0; top: 0; bottom: 0; font-family: monospace; font-size: 22pt; font-weight: bolder; letter-spacing: 0.2ex; color: #444; background: #fff; z-index: -1000;">loading<marquee style="width: 1.5ex">&hellip;</marquee></div>
+
+<div id="barba-wrapper">
+<div class="barba-container main page-active" tabindex="-1" data-page="works/miniforts.html">
+	<template id="pjax-head">
+		<link id="main-css" rel="stylesheet" href="work.css">
+		<script id="main-js" src="work.js" defer></script>
+	</template>
+	<header class="header">
+		<div class="header-title"></div>
+		<nav>
+			<ul>
+				<li><a class="anchor-plain" href="../index.html">Home</a></li>
+				<li><a class="anchor-plain" href="../works.html">Projects</a></li>
+				<li><a class="anchor-plain" href="../about.html">About</a></li>
+			</ul>
+		</nav>
+		<form id="header-search" action="/search.html" autocomplete="off">
+			<input name="q"/>
+			<div class="header-search-icon"/>
+		</form>
+	</header>
+	<section class="work-back">
+		<a class="anchor-em" href="../works.html">Back to projects</a>
+	</section>
+	<section class="work-content prose">
+<h1 id="miniforts">MiniForts</h1>
+<p><img src="../img/miniforts_header.png" alt="preview"></p>
+<h2 id="a-game-about-building-and-defending-a-fort">A game about building and defending a fort.</h2>
+<p>In 2021, I made a small base-builder RTS game. It runs on the <a href="https://www.minetest.net/"><strong>Minetest</strong></a> voxel game engine.</p>
+<p>The goal of this game is to defend a central core from invaders. The player commands minions to build up a fort around the core.</p>
+<p><span class="bleed"><img src="../img/miniforts_0.gif" alt="minion shooting a slug"></span></p>
+<p>Minions are indirectly commanded by putting construction orders in the world.</p>
+<p><img src="../img/miniforts_2.gif" alt="gif"></p>
+<p>It has some rudimentary physics, where structures disconnected from the ground get destroyed.</p>
+<p><img src="../img/miniforts_3.gif" alt="gif"></p>
+<p>The game is not <em>complete</em>, but it’s decent enough for a few minutes of gameplay.</p>
+<p><span class="bleed"><img src="../img/miniforts_1.gif" alt="minions building a wall"></span></p>
+<p>The game’s development slowed down to a halt as I found myself being more and more limited with Minetest’s API and engine design - particularly its client-server design.</p>
+<p>I guess it’s partly my fault. Minetest is a first-person creative-survival voxel game &quot;engine&quot; - a Minecraft clone, if you will. It’s not particularly suited for a base-builder RTS experience.</p>
+<p>Here, I’ll write about some of the major limitations and the solutions I came up with.</p>
+<hr>
+<h2 id="the-scripting-language">The scripting language</h2>
+<p>My first problem was <strong>Lua</strong>. I didn’t like Lua. It’s not type-safe and lacks some of the modern expressions like the conditional (ternary) operator.</p>
+<p>To solve this, MiniForts was written in <strong>TypeScript</strong>. Then I used <a href="https://typescripttolua.github.io/"><strong>TypeScriptToLua</strong></a>.</p>
+<p>With the addition of <code>.d.ts</code> declaration files, I was able to use Minetest’s API in a type-safe way. It also unlocks fancy OOP, which is very useful in developing a game.</p>
+<hr>
+<h2 id="the-gui-engine">The GUI engine</h2>
+<p>Another problem is Minetest’s <strong>GUI system</strong>. It’s not very usable. It has absolute positioning and a lack of nesting or layouting. Interaction and UI updates are procedural.</p>
+<p>To solve this I used <a href="https://www.typescriptlang.org/docs/handbook/jsx.html"><strong>JSX</strong></a>, an XML-like syntax for defining UI in code.</p>
+<p>But there isn’t anything in Minetest that knows how to render JSX elements, so I had to create a <strong>GUI engine</strong> within the game that takes in JSX elements and renders it via Minetest’s APIs.</p>
+<p>The end-result is a more flexible GUI system, with bonus reactive data-binding and callbacks.</p>
+<span class="bleed">
+    <div class="center">
+        <div>
+            <img class="image" src="../img/miniforts_formspec.png"/>
+            <span class="caption">Minetest’s formspec</span>
+        </div>
+        <div>
+            <img class="image" src="../img/miniforts_tsx.png"/>
+            <span class="caption">JSX (TSX) version</span>
+        </div>
+    </div>
+</span>
+
+<p>Here’s one layout that I’ve implemented. It’s the radial layout that renders an arbitrary number of elements in a circular fashion:</p>
+<p><img src="../img/miniforts_radial.png" alt="hud code"></p>
+<p>Here’s another example which is the HUD that shows the player’s current resources in the upper-right corner of the screen.</p>
+<p><img src="../img/miniforts_hud.png" alt="hud">
+<img src="../img/miniforts_hud_code.png" alt="hud code"></p>
+<p>It was fun recreating a React-like environment on top of a very limited GUI API.</p>
+<p>I’ve only been able to use it for the HUD so far, but I imagine it would be very useful when doing RTS-type build menus. Or maybe even for changing door states and swapping ballista ammo.</p>
+<hr>
+<h2 id="pathfinding">Pathfinding</h2>
+<p>Minetest has an ground-based A* pathfinding algorithm, implemented in C++, exposed via the Lua API.</p>
+<p>I’ve found that the built-in pathfinder wasn’t sufficient for this game. This game has multiple agents with different locomotion types, a complex 3D terrain, and destructible walls.</p>
+<p>I ended up implementing a hierarchical pathfinding algorithm with a structure similar to <a href="https://www.youtube.com/watch?v=RMBQn_sg7DA"><strong>RimWorld</strong>’s region system</a>, also inspired by <a href="https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large"><strong>Castle Story</strong>’s pathfinder</a>.</p>
+<span class="bleed">
+    <video muted autoplay loop>
+        <source src="../video/miniforts_path.mp4">
+        <a href="../video/miniforts_path.mp4">Video</a>
+    </video>
+</span>
+
+<p>The system divides the world into components, each of which contains a set of positions reachable from one another.</p>
+<p><span><img src="../img/miniforts_debug_path.png" alt="debug pathfinding">
+    <span class="caption">Component debug view</span>
+</span></p>
+<p>The pathfinder then finds a path through the components first, which is very fast, and only resolving voxel-level paths when the agent is moving within a component.</p>
+<span class="bleed">
+    <video muted autoplay loop>
+        <source src="../video/miniforts_order_path.mp4">
+        <a href="../video/miniforts_order_path.mp4">Video</a>
+    </video>
+</span>
+
+<hr>
+<h2 id="world-generation">World generation</h2>
+<p>Unfortunately, I was only able to create one world type - the forest.</p>
+<p><img src="../img/miniforts_forest0.png" alt="forest"></p>
+<p>The terrain is a combination of stepped gradient noise maps generated from Minetest’s Perlin noise generator.</p>
+<p>The trees are a bit different. They are positioned by placing trees in a grid and randomizing their locations within their grid cell.</p>
+<p><img src="../img/miniforts_forest1.png" alt="forest"></p>
+<p>And the roots are simply the difference of two gradient noise maps, which creates these snaking patterns, with height falloff based on the nearest tree.</p>
+<hr>
+<h2 id="the-art">The art</h2>
+<p>I like pixel art. It’s easy to make passable results.</p>
+<p><span class="bleed"><img src="../img/miniforts_art.png" alt="art collection"></span></p>
+<p>Well, it’s not that easy. I struggled with the ground textures a lot.</p>
+<p>I realized that what’s more important at this resolution is the readability of something rather than the details of it.</p>
+<p><span class="bleed"><img src="../img/miniforts_grass.gif" alt="grass comparison"></span></p>
+<p>I got a lot of inspiration from <strong>The Legend of Zelda: The Minish Cap</strong>, which has similar miniature environments.</p>
+<p><span><img src="../img/miniforts_zelda.jpg" alt="minish cap">
+    <span class="caption">Source: <a href="https://www.zeldaspalace.com/theminishcap/screenshots.php" target="_blank">Zelda’s Palace</a></span>
+</span></p>
+<hr>
+<p>In the end, I did not publicize this game to the community, either by announcing it in the forum or by uploading it to the <a href="https://content.minetest.net/">community mod repository</a>. I think I intend to finish this game at some point, before releasing a &quot;launch version&quot;.</p>
+<p>It was great to get back to this game development hobby again.</p>
+<p>Source <a href="https://github.com/Kalabasa/mini_forts">here</a>.</p>
+	</section>
+
+	<section class="work-suggested">
+		<a class="suggested-item anchor-plain" href="/works/heartgame.html">
+			<img src="../img/heartgame.jpg" />
+			<div class="item-info">
+				<div class="item-context">
+					Related content
+									</div>
+				<div class="item-name">Heart Game</div>
+			</div>
+		</a>
+		<a class="suggested-item anchor-plain" href="/works/planetdefense.html">
+			<img src="../img/planetdefense_0.jpg" />
+			<div class="item-info">
+				<div class="item-context">
+					Related content
+									</div>
+				<div class="item-name">PlanetDefense</div>
+			</div>
+		</a>
+		<a class="suggested-item anchor-plain" href="/works/wikawik.html">
+			<img src="../img/wikawik.jpg" />
+			<div class="item-info">
+				<div class="item-context">
+					More works
+				</div>
+				<div class="item-name">Wikawik</div>
+			</div>
+		</a>
+	</section>
+	<footer class="footer">
+		Ⓒ 2022 Lean Rada.
+	</footer>
+</div>
+</div>
+</body>
+</html>
