@@ -13,7 +13,7 @@ As 2022 rolled in, I stumbled upon a site called <a href="https://genuary.art/" 
 
 The challenge was to create a **generative art** piece for every day of January. Each day there was a prompt, and each code art was supposed to be based on the day’s prompt.
 
-Having done some <a href="dimension1.html">generative art</a> in the past, I committed myself to the challenge. Sounds like fun!
+Having done some <a href="dimensions1.html">generative art</a> in the past, I committed myself to the challenge. Sounds like fun!
 
 Here I’ll show you all of my Genuary 2022 works and some info about the techniques I used.
 

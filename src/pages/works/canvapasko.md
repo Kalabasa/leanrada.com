@@ -11,7 +11,7 @@
 
 ## Christmas designed by you!
 
-**#CanvaPasko** was an online design contest where winning designs got featured on a billboard.
+**#CanvaPasko** (2019) was an online design contest where winning designs got featured on a billboard.
 
 The project aimed to empower everyone to design beautiful Christmas cards and take pride in showing their love in a big way!
 

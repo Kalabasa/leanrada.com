@@ -15,7 +15,7 @@
 
 ## Online logo generator
 
-**Logo Maker** is a tool that generates a customized logo in Canva. You supply the brand name, style, and colors; it will do the rest! ✨ <small>(Actually, color customization isn’t available yet, but will be soon!)</small>
+**Logo Maker** (2018) is a tool that generates a customized logo in Canva. You supply the brand name, style, and colors; it will do the rest! ✨ <small>(Actually, color customization isn’t available yet, but will be soon!)</small>
 
 My role in this project was the implementation of the landing page and the “choices” modal interface.
 

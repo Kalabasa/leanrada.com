@@ -16,7 +16,7 @@ export default {
         alt: "pieces",
       },
       type: TYPE_ART,
-      tags: ["processing", "art"],
+      tags: ["processing", "generative", "art"],
     },
     {
       id: "miniforts",
@@ -74,7 +74,7 @@ export default {
         alt: "album art",
       },
       type: TYPE_MUSIC,
-      tags: ["art", "music", "jazz", "jazzhop", "chillhop"],
+      tags: ["music", "jazz", "jazzhop", "chillhop"],
     },
     {
       id: "canvapasko",
@@ -98,7 +98,7 @@ export default {
         alt: "clip of piece",
       },
       type: TYPE_ART,
-      tags: ["vue", "art", "3d", "ar"],
+      tags: ["vue", "generative", "art", "3d", "ar"],
     },
     {
       id: "canvaphotoeditor",
@@ -206,7 +206,7 @@ export default {
         alt: "cover art",
       },
       type: TYPE_MUSIC,
-      tags: ["art", "music", "piano"],
+      tags: ["music", "piano"],
     },
     {
       id: "freeformgesturedetector",
@@ -267,7 +267,7 @@ export default {
         alt: "album art",
       },
       type: TYPE_MUSIC,
-      tags: ["art", "music", "jazz", "jazzhop", "chillhop"],
+      tags: ["music", "jazz", "jazzhop", "chillhop"],
     },
     {
       id: "dynastymap",
@@ -307,7 +307,18 @@ export default {
 
   jobs: [
     {
-      name: "Full-stack Engineer",
+      name: "Software Engineer",
+      company: "Google",
+      date: ["2022", "now"],
+      tech: ["Java", "Kotlin", "Android"],
+      description: "Google Maps. For driving. 📍🚗",
+      thumbnail: {
+        src: "img/thumb-google.png",
+        alt: "Google logo",
+      },
+    },
+    {
+      name: "Software Engineer",
       company: "Canva",
       date: ["2018", "2022"],
       tech: ["React", "TypeScript", "MobX", "Node.js", "Java", "GraphQL", "Protobuf"],
@@ -330,7 +341,7 @@ export default {
         "Webpack",
         "Stylus",
       ],
-      description: "Full-stack web development and some DevOps.",
+      description: "Full-stack web development.",
       thumbnail: {
         src: "img/thumb-azeus.png",
         alt: "Azeus logo",

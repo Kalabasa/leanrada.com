@@ -12,7 +12,7 @@
 
 ## Edit photos online
 
-**Photo Editor** is an online tool by Canva for simple image editing. It features pre-set filters, simple adjustment sliders, crop, resize, and rotation tools.
+**Photo Editor** (2019) is an online tool by Canva for simple image editing. It features pre-set filters, simple adjustment sliders, crop, resize, and rotation tools.
 
 This tool existed primarily as a way to promote the main design platform [Canva](https://www.canva.com). Users coming in to edit photos are likely to have more design needs than image editing, so there are a few promotional paths to Canva in the photo editor itself.
 
@@ -48,4 +48,4 @@ The project was completed in around 2 months.
 
 After the revamp we saw doubling in conversion rate (that is, Canva signups), so we can say that the project was a success! 🎉
 
-Update: The standalone app has been decommissioned, and photo editing is now part of the main app.
+Update: The standalone app has been decommissioned, and photo editing features are now part of the main app.
