@@ -21,7 +21,7 @@ My role in this project was the implementation of the landing page and the “ch
 
 <span class="bleed">![screenshot](../img/canvalogomaker_3.jpg)</span>
 
-I also did some integration with our internal design API, but the amazing Smart Design team did the magic! They made a design system that generates dynamic pixel-perfect designs with several parameters!
+I also did some integration with our internal design API, but the amazing Smart Design team did the magic! They made a design system that generates dynamic designs controlled by several parameters!
 
 Once the design is generated, it can be further customized in the Canva Editor.
 
@@ -31,4 +31,4 @@ Once the design is generated, it can be further customized in the Canva Editor.
 
 This cool project was made possible by the cool people at Canva — spanning multiple teams, from graphic designers to product engineers! It was a fun journey!
 
-There’s a newer generation of thing-makers now. But you can still [try the original version via Archive!](https://web.archive.org/web/20200817030753/https://about.canva.com/tools/logo-maker/)
+There’s a newer generation of thing-makers at Canva now. But you can still [try the original version via Archive!](https://web.archive.org/web/20200817030753/https://about.canva.com/tools/logo-maker/)

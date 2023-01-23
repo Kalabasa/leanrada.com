@@ -56,6 +56,6 @@ I use my own build script, which calls a bunch of other tools, like [**rollup.js
 
 The build’s quite slow though. Maybe I should use Webpack like everyone else.
 
-I chose to make it a static site because it’s fast *(supposedly)*. And also fun. And cool. Well actually, it was mostly because you can’t do server stuff in Github Pages.
+I chose to make it a static site because it’s fast *(supposedly)*. And also fun. And cool. Well actually, it was mostly because you can’t do server stuff on Github Pages.
 
 This website’s source is available on [Github](https://github.com/Kalabasa/kalabasa.github.io) (duh). All the magic is in there.

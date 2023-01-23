@@ -14,7 +14,7 @@
 
 **Photo Editor** (2019) is an online tool by Canva for simple image editing. It features pre-set filters, simple adjustment sliders, crop, resize, and rotation tools.
 
-This tool existed primarily as a way to promote the main design platform [Canva](https://www.canva.com). Users coming in to edit photos are likely to have more design needs than image editing, so there are a few promotional paths to Canva in the photo editor itself.
+This tool existed primarily as a way to promote the main design platform [Canva](https://www.canva.com). Users coming in to edit photos are likely to have some design needs for their edited images, so there are a few promotional paths to Canva in the photo editor itself.
 
 <span class="bleed">![desktop screenshot](../img/canvaphotoeditor_1.jpg)</span>
 
@@ -38,8 +38,6 @@ There are a few WebGL and canvas filter algorithms from the old app that I reimp
 The backend is a simple server written with [**Express**](https://expressjs.com/) and the whole app was deployed on [**Heroku**](https://www.heroku.com/).
 
 <span class="bleed">![desktop screenshot](../img/canvaphotoeditor_2.jpg)</span>
-
-The app needs to be discoverable by search engines, and React as it is can’t help with that, so an accompanying landing page was made.
 
 The project was completed in around 2 months.
 

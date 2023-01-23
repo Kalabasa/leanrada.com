@@ -10,7 +10,7 @@
 <iframe src="https://kalabasa.github.io/heart-game/" width="300" height="400"></iframe>
 </p>
 
-A very simple game about avoiding heartbreaks.
+A very simple game about avoiding heartbreaks. Click the heart forever.
 
 {{> links . heading="Try it out" }}
 

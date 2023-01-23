@@ -14,11 +14,11 @@
 
 Political dynasties are prevalent in Philippine politics.
 
-We all know they’re bad, but how can we justify that view? We can look into data and statistics. An easy way to study data is through data visualization.
+We all know they’re bad, but how can we prove that view? We can look into data and statistics. An easy way to study data is through data visualization.
 
 ![visualization of dynasties](../img/dynastymap_tags.png)
 
-**DynastyMap** is a webapp for visualizing political dynasties and comparing it with other variables such as population and poverty indicators.
+**DynastyMap** (2015) is a webapp for visualizing political dynasties and comparing it with other variables such as population and poverty indicators. This was my final project as a student.
 
 ![comparing datasets](../img/dynastymap_compare.png)
 
@@ -44,4 +44,4 @@ For anyone trying this kind of thing today, fortunately, election results are no
 
 This project was developed as a requirement (Special Problem) for my Computer Science B.S. degree. The idea of political dynasty visualization came from one of my professors. It was also inspired by Hans Rosling’s visualizations and [Trendalyzer](https://www.gapminder.org/tools).
 
-An instance of the app is hosted on the university’s development server, but it’s not working and I no longer maintain it. You can still see the landing page and the bare app [there](http://agila.upm.edu.ph/~lgrada/dynavis).
+An instance of the app was hosted on the university’s server, but it has apparently been cleaned up now.

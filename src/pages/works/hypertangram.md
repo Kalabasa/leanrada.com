@@ -14,7 +14,7 @@
 
 {{> links . heading="Download on" }}
 
-**Hypertangram** is a challenging geometric puzzle game on Android based on the classic tangram puzzle. What’s different with this one is that, in addition to regular dragging and rotating, *pieces can be resized*.
+**Hypertangram** (2018) is a mind-bending geometric puzzle game on Android based on the classic tangram puzzle. What’s different with this one is that, in addition to regular dragging and rotating, *pieces can be resized*.
 
 <video muted autoplay loop>
 	<source src="../video/hypertangram_2.webm">
@@ -22,9 +22,9 @@
 	<a href="../video/hypertangram_2.mp4">Demo video</a>
 </video>
 
-This is my first “complete” game in terms of features and polish.
+This was my first “complete” game in terms of features and polish.
 
-This game idea had been sitting in the back of my mind for quite a time, and I finally did it in about 6 months of development in my free time.
+The idea had been sitting in the back of my mind for quite a time, and I finally did it in about 6 months of development in my free time.
 
 It wasn’t all smooth sailing. There were lots of problems with the geometry code.
 
@@ -52,7 +52,7 @@ Due to the nature of the main game mechanic, there can be several solutions to a
 
 There is no easy way to find them all by hand, nor by algorithm, as far as I know. The solution checking algorithm went through rounds of rethinking.
 
-I ended up with a logical approach, using [boolean operations on polygons](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons), in order to implement the win condition.
+I ended up with an algorithmic approach, using [boolean operations on polygons](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons), in order to implement the win condition.
 
 *Note to self: Don’t mix geometric operations and floating point numbers. They are oil and water.*
 

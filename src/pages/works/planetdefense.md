@@ -15,11 +15,11 @@
 
 {{> links . heading="Try it out" }}
 
-This is my entry for the 38th [Ludum Dare](https://ldjam.com).
+This was my entry for the 38th [Ludum Dare](https://ldjam.com).
 
 Ludum Dare is a Game Jam (a hackathon for games) held every four months. A theme is announced and participants create a game from scratch in *48 hours*.
 
-I participate in these <abbr title="Ludum Dare">LD</abbr> jams occasionally. In LD 38, the theme was **A Small World**. Immediately after the theme was announced, I went self-brainstorming for game concepts. Fortunately, I settled on an idea before the 12-hour mark.
+I used participated in these <abbr title="Ludum Dare">LD</abbr> jams frequently. In LD 38, the theme was **A Small World**. Immediately after the theme was announced, I went self-brainstorming for game concepts. Fortunately, I settled on an idea before the 12-hour mark.
 
 ## Missile Command, but circular.
 

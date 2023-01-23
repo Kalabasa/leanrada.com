@@ -14,7 +14,7 @@
 
 The piano is easily my favorite musical instrument. It’s a very versatile and expressive instrument.
 
-I’ve been meaning to create good music out of it for a long time. There were attempts, but it is only now that I had the knowledge and capability to create music that I want. So I compiled an album.
+I’ve been meaning to create good music out of it for a long time. So somewhere around 2017, I compiled an album.
 
 The album is made up of four short piano pieces. Each piece was supposed to represent a single thought or mood, and that is why they are short.
 

@@ -14,7 +14,7 @@
 
 {{> links . heading="Listen on" }}
 
-**Isolation** is a single I composed during the 2020 pandemic.
+**Isolation** (2020) is a single I composed during the 2020 pandemic.
 
 I made it using LMMS and Audacity, which are both free and open-source software for music and audio production.
 
@@ -28,7 +28,7 @@ In this piece I leaned heavily on the [**voices**](https://en.wikipedia.org/wiki
 
 Instead of deciding on the chord progression and structures beforehand, the individual melodic lines ("voices") led the way. It’s a bottom-up kind of way.
 
-<small>I think it’s called [**counterpoint**](https://en.wikipedia.org/wiki/Counterpoint) in classical terms.</small>
+<small>I think it’s called [**counterpoint**](https://en.wikipedia.org/wiki/Counterpoint) in classical terms. Maybe.</small>
 
 So the resulting chord progression was this:
 
@@ -71,13 +71,5 @@ They all worked together to create a steady and chill sound to quarantine to.
 There were no choruses or big movements because that’s not chill; that’s drama.
 
 ---
-
-In retrospect, the title *Isolation* gets a whole new meaning in the context of music.
-
-An *Isolation* of voices.
-
-Isolated, yet still working together.
-
-Just like our social *Isolation* in this pandemic.
 
 Listen via [**Spotify**](https://open.spotify.com/album/6fq6RgPzULhd1Gq14Kf9Ix).

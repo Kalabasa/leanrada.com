@@ -62,7 +62,7 @@ These animations overall aimed to delight and motivate the participants to conti
 
 The contest ran for about one month around Nov–Dec 2019 and got over a thousand entries.
 
-Out of all submissions, 20 winners were selected to be displayed on the prize billboard, strategically located near the traffic chokepoint that is the Guadalupe Bridge in EDSA.
+Out of all submissions, 20 winners were selected to be displayed on the prize billboard, strategically located near the ultimate traffic chokepoint that is the Guadalupe Bridge in EDSA.
 
 <div class="center">
 	<iframe src="https://www.google.com/maps/embed?pb=!4v1575174627710!6m8!1m7!1s_P91l446uupesxVgZfXVXQ!2m2!1d14.56887858693777!2d121.0461890864952!3f47.562236687655115!4f13.362368262334812!5f0.7820865974627469" width="600" height="450" frameborder="0" style="border:0;" allowfullscreen=""></iframe>
@@ -70,7 +70,7 @@ Out of all submissions, 20 winners were selected to be displayed on the prize bi
 
 ![billboard photo](../img/canvapasko_billboard.jpg)
 
-But really the best thing about this project was the participant’s entries themselves. It wouldn’t be called _“Designed By You”_ for nothing!
+The best thing about this project was the participant’s entries themselves. It wouldn’t be called _“Designed By You”_ for nothing!
 
 Some of the stories in the entries were really inspiring. Here are some of them from the [Facebook post](https://www.facebook.com/CanvaPhilippines/videos/420974562128240/).
 
@@ -84,16 +84,6 @@ data-href="https://www.facebook.com/CanvaPhilippines/posts/153090599424752?comme
 data-href="https://www.facebook.com/CanvaPhilippines/posts/153090599424752?comment_id=153592079374604" data-width="512"></div>
 </p>
 
-There were lots of messages about family and love that have emerged through the contest.
-
-One particular winner got a special surprise — a Canva-sponsored homecoming and reunion with their family in the Philippines!
-
-<iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/KFzrdp-j1jo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-I really like how Canva as a company tries to make these magical moments possible, whether it’s small things like little UI easter eggs, or bigger things like this contest. Seeing a billboard dedicated to you must be amazing.
-
-It’s very nice to have worked on a project like this that impacted people on a personal level. I never really expected this outcome.
-
-Seeing all the responses and reactions made all the hard work in this project worth it <small>(well, aside from the extra overtime pay, that is. 👌)</small>
+It’s very nice to have worked on a project like this that impacted people on a personal level.
 
 <div id="fb-root"></div>

@@ -14,7 +14,7 @@
 
 {{> links . heading="Listen on" }}
 
-**Conversations** is a four-piece composition of mellow hip-hop beats, jazz harmony, and mild piano improvisations.
+**Conversations** (2017) is a four-piece composition of mellow hip-hop beats, jazz harmony, and mild piano improvisations.
 
 Influences range from jazz, funk, and bossa nova to lo-fi, hip-hop, and new-age.
 
@@ -24,7 +24,7 @@ Influences range from jazz, funk, and bossa nova to lo-fi, hip-hop, and new-age.
 
 The goal of this project was for me to learn the full music production process, from composing, to mixing and mastering, to publishing.
 
-This is my first music published on a platform like Spotify.
+This was my first music published on a platform like Spotify.
 
 <span>![screenshot of LMMS](../img/conversations_lmms.jpg)
 	<span class="caption">I use [LMMS](https://lmms.io/) to make music.</span>
@@ -32,7 +32,7 @@ This is my first music published on a platform like Spotify.
 
 Over the course of the project, I have learned a lot. I watched music theory on YouTube, experimented with signal processing techniques and other plugins, and practiced mixing and mastering.
 
-The final product may not be the best, but it’s a learning experience, so I can say that the project was a success.
+The final product may not have been the best that I could do, but it was a learning experience, so I can say that the project was a success.
 
 ---
 

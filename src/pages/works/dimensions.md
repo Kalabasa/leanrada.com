@@ -12,7 +12,7 @@
 
 ## Generative art and augmented reality
 
-On August 2019, Canva Philippines celebrated its fifth year. Part of the event was an art exhibit featuring works of Canva employees.
+On August 2019, I made an augmented reality generative art experience for an exhibit featuring works of Canva employees during the local office's 5th anniversary celebration.
 
 ![photo of exhibit](../img/dimensions_exhibit.jpg)
 

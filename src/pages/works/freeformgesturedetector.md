@@ -15,7 +15,7 @@
 
 {{> links . heading="Check it out" }}
 
-**FreeformGestureDetector** is an Android library that converts multi-touch gestures into incremental Matrix transformations.
+**FreeformGestureDetector** (2018) is an Android library that converts multi-touch gestures into incremental Matrix transformations.
 
 It processes any kind of touch gesture, from single-finger dragging to multitouch skew and scale, and spits out the corresponding Matrix transforms needed to render that manipulation.
 

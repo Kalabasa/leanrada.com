@@ -13,7 +13,7 @@
 
 According to the diksiyonaryo: **“wikawik”** is a Filipino word, meaning _madaldal_ or talkative.
 
-[Wikawik](https://kalabasa.github.io/wikawik/), on the other hand, is a webapp that showcases the various languages spoken in the Philippines.
+[Wikawik](https://kalabasa.github.io/wikawik/) (2020), on the other hand, is a webapp that showcases the various languages spoken in the Philippines.
 
 <span class="d3d"><span class="mockup-phone">![phone with webapp](../img/wikawik_mob.jpg)
 <span class="phone-body"></span>
@@ -23,11 +23,11 @@ There are over 100 languages spoken across the Philippine archipelago.
 
 It’s amazing how diverse the language landscape of the Philippines is, yet it is rarely treasured or celebrated here in the Philippines.
 
-In my grade school years, we celebrated **_Buwan ng Wika_** (Month of Language) every August, but they never taught us about all the other languages in the Philippines. It was only ever about Tagalog, the official national language and the language of the capital city.
+In my grade school years, we celebrated [**_Buwan ng Wika_**](https://en.wikipedia.org/wiki/Buwan_ng_Wika) (Month of Language) every August, but they never taught us about all the other languages in the Philippines. It was only ever about Tagalog, the official national language and the language of the capital city.
 
-Now that I’m older, I got a better understanding of the languages in the Philippines. Linguistics has also become a fascination for me, especially when it relates to Austronesian languages, the larger language family under which Philippine languages are grouped.
+Now that I’m older, I got a wider understanding of the languages in the Philippines. Linguistics has also become a fascination for me, especially when it relates to Austronesian languages, the larger language family under which Philippine languages are grouped.
 
-Did you know that many Filipinos are trilingual? They can speak at least three languages: Tagalog, English, and then their local language (e.g., Cebuano, Ilocano).
+Did you know that many Filipinos are trilingual? They can speak at least three languages: Tagalog, English, and then their local language (e.g., Cebuano, Ilocano). Not me though. Just two for me.
 
 **Anyway, I digress. Back to the Wikawik project.**
 
@@ -105,7 +105,7 @@ That’s why a combination of other sources were used to supplement or correct t
 
 Related to that were the translated phrases themselves. The phrases were the hardest to research!
 
-Usually, meta information about a small language are readily available on the Internet, but what I needed were vocabularies or phrase books for the language. These resources are often non-existent, especially for dying languages that only had a handful of native speakers left.
+Usually, meta information about a small language are readily available on the Internet, but what I needed were the words themselves - vocabularies, or phrase books. These resources are often non-existent, especially for dying languages that only had a handful of native speakers left.
 
 I ended up going through Internet listicles, language tutorials, chatter in public Facebook groups of tribespeople, bilingual dictionaries, and translated Bibles.
 
@@ -113,27 +113,19 @@ I’ve stalked Facebook posts and Facebook groups. Facebook is so prevalent in t
 
 I’ve also listened to spoken Bibles in different indigenous languages. Missionaries make these Bibles for indigenous people in their hopes of saving indigenous peoples from their “paganism”. Most of these Bibles have no text versions available, just spoken verses. Comparing the translated Bible with the Tagalog and English Bibles side-by-side helped with certain words and phrases.
 
-In the end, I got up to 82 translations. And that is for a single phrase only – the default “good morning”. For other phrases, such as “good evening”, not so much.
+I know it's not rigorous research, so I wrote a bunch of disclaimers on the About page.
+
+In the end, I got up to 82 translations. And that is for a single phrase only – the default “good morning”. For other phrases, such as “good evening”, not so much. I put up some forms for user submitted translations, but no one has ever submitted anything yet.
 
 ---
 
-The project was released on Aug 2, just in time for Buwan ng Wika.
-
-It was a fun and educational project. It made me appreciate the Philippine languages more and understand the linguistic oppression and pressure applied by the imposed national languages.
-
-If you look at the map, only a relatively small population have Tagalog as their primary language, compared to the other major languages. In most of the other regions, it’s usually either Ilocano or Cebuano as the lingua franca. Yet, the official national language was chosen to be Tagalog. <small>Why not teach both? Why not all three? We would all be multilingual then.</small>
-
-Even then, Tagalog is gradually being usurped by English in some areas! (See [Taglish](https://en.wikipedia.org/wiki/Taglish))
-
-You may have heard of [China imposing Mandarin on Tibetan schools](https://www.reuters.com/article/us-china-education-tibet/tibetan-language-learning-eroded-under-chinas-bilingual-education-rights-group-idUSKBN20S13W). The situation sounds similar, albeit without the whole invasion thingy. This is how a language dies. It starts with the children. When they stop learning and speaking the language, they stop passing it down to _their_ children, and the language dies.
-
-The good news is that Philippines recently introduced the mother tongue-based education policy, but it sounded like the implementation faced some challenges. Then again, there have been motions to revert back to English as medium of instruction in education. 🤷‍♂️
+It was a fun and educational project. It made me appreciate the Philippine languages more and discover a glimpse of the cultures around the Philippines!
 
 <video muted autoplay loop>
   <source src="../video/wikawik_intro.mp4">
   <a href="../video/wikawik_intro.mp4">Video of a version of the intro animation</a>
 </video>
 
-I hope we all embrace our differences and celebrate our diversity, is all what I’m saying.
+I hope we all embrace our differences and celebrate our diversity!
 
 Here’s a link to the [webapp](https://kalabasa.github.io/wikawik/). Salamat sa pagbisita!
