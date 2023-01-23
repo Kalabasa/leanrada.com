@@ -8,7 +8,7 @@ then
 fi
 
 git checkout -B deploy
-git merge --no-edit -X theirs src
+git merge --no-edit -X theirs src-2018
 
 yarn install
 rm -rf "build/"
