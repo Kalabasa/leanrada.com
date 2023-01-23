@@ -1,4 +1,5 @@
 <html>
+  <title>Hello</title>
   <page>
     <div class="home-page">
       <div class="home-content">
@@ -9,49 +10,49 @@
               palette="#e79907 #bf1852 #4d4aff #0ad591"
             />
             <home-preview-text text="Welcome to my website!" />
-            <img class="home-preview-icon" src="home/icons/tada.png" />
+            <home-preview-icon src="home/icons/tada.png" />
           </div>
           <div class="home-preview">
             <nebula class="home-nebula" palette="#e79907 #bf1852 #4d4aff" />
             <home-preview-text text="About my self" />
-            <img class="home-preview-icon" src="home/icons/glasses.png" />
+            <home-preview-icon href="/about/" src="home/icons/glasses.png" />
           </div>
           <div class="home-preview">
             <nebula class="home-nebula" palette="#e79907 #0ad591 #4d4aff" />
             <home-preview-text text="Beware my wares (the soft kind)" />
-            <img class="home-preview-icon" src="home/icons/pot.png" />
+            <home-preview-icon src="home/icons/pot.png" />
           </div>
           <div class="home-preview">
             <nebula class="home-nebula" palette="#bf1852 #4d4aff #0ad591" />
             <home-preview-text
               text="Look at my generative art (100% NFT-free)"
             />
-            <img class="home-preview-icon" src="home/icons/art.png" />
+            <home-preview-icon src="home/icons/art.png" />
           </div>
           <div class="home-preview">
             <nebula class="home-nebula" palette="#bf1852 #e79907 #0ad591" />
             <home-preview-text text="Listen to my music" />
-            <img class="home-preview-icon" src="home/icons/sound.png" />
+            <home-preview-icon src="home/icons/sound.png" />
           </div>
         </div>
         <span class="home-hello">hello!</span>
-        <!-- <br />
-        <a class="home-link home-color-1" href="/about/">
-          <home-icon src="home/icons/glasses.png" />about
-        </a>
         <br />
-        <a class="home-link home-color-2" href="/wares/">
-          <home-icon src="home/icons/pot.png" />wares
-        </a>
+        <slink class="home-link home-color-1" href="/about/">
+          <home-menu-icon src="home/icons/glasses.png" />about
+        </slink>
         <br />
-        <a class="home-link home-color-3" href="/genart/">
-          <home-icon src="home/icons/art.png" />gen. art
-        </a>
+        <slink class="home-link home-color-2" href="/wares/">
+          <home-menu-icon src="home/icons/pot.png" />wares
+        </slink>
         <br />
-        <a class="home-link home-color-4" href="/music/">
-          <home-icon src="home/icons/sound.png" />music
-        </a>
-        <br /> -->
+        <slink class="home-link home-color-3" href="/genart/">
+          <home-menu-icon src="home/icons/art.png" />gen. art
+        </slink>
+        <br />
+        <slink class="home-link home-color-4" href="/music/">
+          <home-menu-icon src="home/icons/sound.png" />music
+        </slink>
+        <br />
       </div>
     </div>
   </page>
@@ -112,28 +113,6 @@
     display: none;
   }
 
-  .home-preview-text {
-    position: relative;
-    width: 36vh;
-    height: 36vh;
-    font-size: 3vh;
-    font-style: italic;
-    color: #fff;
-    animation: home-preview-text-animation 7s
-      cubic-bezier(0.785, 0.135, 0.15, 0.86) infinite;
-    z-index: 1;
-  }
-  .home-preview-icon {
-    position: absolute;
-    left: calc(50% - 2.5vh);
-    top: calc(50% - 2.5vh);
-    width: 5vh;
-    height: 5vh;
-    z-index: 2;
-    image-rendering: pixelated;
-    filter: invert(1);
-    animation: home-preview-icon-animation 4s linear infinite;
-  }
   .home-nebula {
     position: absolute;
     left: 0;
@@ -141,6 +120,12 @@
     width: 100%;
     height: 100%;
     z-index: 0;
+  }
+  .home-preview-text {
+    z-index: 1;
+  }
+  .home-preview-icon {
+    z-index: 2;
   }
 
   .home-preview-0-enter {
@@ -164,16 +149,6 @@
     }
     100% {
       clip-path: polygon(0% 0%, 0% 100%, 100% 100%, 100% 0%);
-    }
-  }
-  @keyframes home-preview-text-animation {
-    to {
-      transform: rotate(-1turn);
-    }
-  }
-  @keyframes home-preview-icon-animation {
-    to {
-      transform: rotate(1turn);
     }
   }
 
@@ -236,10 +211,14 @@
     0% {
       animation-timing-function: cubic-bezier(0.8, 0, 0.8, 1);
       opacity: 0;
+      pointer-events: none;
     }
     50% {
       animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
       opacity: 1;
+    }
+    100% {
+      pointer-events: unset;
     }
   }
 </style>
@@ -259,15 +238,12 @@
       const previewNumber = index + 1;
 
       link.addEventListener("mouseover", () => {
+        if (event.target !== event.currentTarget) return;
         activatePreview(previewNumber);
       });
 
-      link.addEventListener("mouseout", () => {
-        if (activePreview !== previewNumber) return;
-        activatePreview(0);
-      });
-
       link.addEventListener("touchstart", (event) => {
+        if (event.target !== event.currentTarget) return;
         if (activePreview !== previewNumber) {
           event.preventDefault();
         }
@@ -275,7 +251,14 @@
       });
     });
 
+    document
+      .querySelector(".home-content")
+      .addEventListener("mouseleave", (event) => {
+        activatePreview(0);
+      });
+
     function activatePreview(previewNumber) {
+      if (activatePreview === previewNumber) return;
       activePreview = previewNumber;
 
       document

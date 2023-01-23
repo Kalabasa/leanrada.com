@@ -1,631 +1,684 @@
 <html>
 <head>
-  <script client="" defer="" src="https://unpkg.com/perlin-noise-3d@v0.5.4"></script>
-  <style>
-    .home-page {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
-
-    .home-content {
-      display: block;
-      white-space: nowrap;
-      height: 40vh;
-    }
-
-    .home-circle {
-      position: relative;
-      display: block;
-      float: left;
-      width: 40vh;
-      height: 40vh;
-      border-radius: 50%;
-      shape-outside: circle(50%);
-      overflow: hidden;
-    }
-
-    @media (max-aspect-ratio: 4/5) {
+   <title>Hello</title>
+   <script client="" defer="" src="https://unpkg.com/perlin-noise-3d@v0.5.4"></script>
+   <style>
       .home-page {
-        align-items: flex-start;
-        padding-top: 5vh;
-        height: auto;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         width: 100%;
+         height: 100%;
       }
+
+      .home-content {
+         display: block;
+         white-space: nowrap;
+         height: 40vh;
+      }
+
+      .home-circle {
+         position: relative;
+         display: block;
+         float: left;
+         width: 40vh;
+         height: 40vh;
+         border-radius: 50%;
+         shape-outside: circle(50%);
+         overflow: hidden;
+      }
+
+      @media (max-aspect-ratio: 4/5) {
+         .home-page {
+            align-items: flex-start;
+            padding-top: 5vh;
+            height: auto;
+         }
+
+         .home-hello {
+            display: block !important;
+            clear: left;
+            padding-top: 1em;
+         }
+      }
+
+      /* Preview */
+
+      .home-preview {
+         position: absolute;
+         left: 0;
+         right: 0;
+         top: 0;
+         bottom: 0;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+      }
+
+      .home-preview:not(.home-preview-active) {
+         display: none;
+      }
+
+      .home-nebula {
+         position: absolute;
+         left: 0;
+         top: 0;
+         width: 100%;
+         height: 100%;
+         z-index: 0;
+      }
+
+      .home-preview-text {
+         z-index: 1;
+      }
+
+      .home-preview-icon {
+         z-index: 2;
+      }
+
+      .home-preview-0-enter {
+         animation: home-preview-start 2s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+      }
+
+      @keyframes home-preview-start {
+         0% {
+            filter: saturate(0) brightness(255);
+            clip-path: polygon(100% 49.8%, 100% 50.2%, 100% 50.2%, 100% 49.8%);
+         }
+
+         25% {
+            clip-path: polygon(0% 49.8%, 0% 50.2%, 100% 50.2%, 100% 49.8%);
+         }
+
+         45% {
+            filter: saturate(0.2) brightness(16);
+         }
+
+         50% {
+            filter: saturate(1) brightness(1);
+            clip-path: polygon(0% 49.8%, 0% 50.2%, 100% 50.2%, 100% 49.8%);
+         }
+
+         100% {
+            clip-path: polygon(0% 0%, 0% 100%, 100% 100%, 100% 0%);
+         }
+      }
+
+      /* Menu */
 
       .home-hello {
-        display: block !important;
-        clear: left;
-        padding-top: 1em;
-      }
-    }
-
-    /* Preview */
-
-    .home-preview {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .home-preview:not(.home-preview-active) {
-      display: none;
-    }
-
-    .home-preview-text {
-      position: relative;
-      width: 36vh;
-      height: 36vh;
-      font-size: 3vh;
-      font-style: italic;
-      color: #fff;
-      animation: home-preview-text-animation 7s cubic-bezier(0.785, 0.135, 0.15, 0.86) infinite;
-      z-index: 1;
-    }
-
-    .home-preview-icon {
-      position: absolute;
-      left: calc(50% - 2.5vh);
-      top: calc(50% - 2.5vh);
-      width: 5vh;
-      height: 5vh;
-      z-index: 2;
-      image-rendering: pixelated;
-      filter: invert(1);
-      animation: home-preview-icon-animation 4s linear infinite;
-    }
-
-    .home-nebula {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-
-    .home-preview-0-enter {
-      animation: home-preview-start 2s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-    }
-
-    @keyframes home-preview-start {
-      0% {
-        filter: saturate(0) brightness(255);
-        clip-path: polygon(100% 49.8%, 100% 50.2%, 100% 50.2%, 100% 49.8%);
+         display: inline-block;
+         margin-left: 1em;
+         padding-bottom: 1.5vh;
+         font-size: 3vh;
+         font-style: italic;
+         color: #fff;
+         animation: home-hello-start 2s cubic-bezier(0.785, 0.135, 0.15, 0.86);
       }
 
-      25% {
-        clip-path: polygon(0% 49.8%, 0% 50.2%, 100% 50.2%, 100% 49.8%);
+      .home-link {
+         display: inline-flex;
+         align-items: center;
+         gap: 0.25em;
+         margin-left: 1em;
+         padding-top: 0.6vh;
+         padding-bottom: 0.6vh;
+         font-size: 3vh;
+         font-style: italic;
+         text-decoration: none;
+         color: #fff;
+         overflow: hidden;
+         transition: 0.1s cubic-bezier(0.075, 0.82, 0.165, 1);
+         transition-property: margin, padding;
+         animation: home-link-start 1s 1s backwards;
       }
 
-      45% {
-        filter: saturate(0.2) brightness(16);
+      .home-link.home-link-active {
+         padding-top: 3vh;
+         padding-bottom: 3vh;
       }
 
-      50% {
-        filter: saturate(1) brightness(1);
-        clip-path: polygon(0% 49.8%, 0% 50.2%, 100% 50.2%, 100% 49.8%);
+      .home-link.home-color-1.home-link-active {
+         color: #bf1852;
       }
 
-      100% {
-        clip-path: polygon(0% 0%, 0% 100%, 100% 100%, 100% 0%);
-      }
-    }
-
-    @keyframes home-preview-text-animation {
-      to {
-        transform: rotate(-1turn);
-      }
-    }
-
-    @keyframes home-preview-icon-animation {
-      to {
-        transform: rotate(1turn);
-      }
-    }
-
-    /* Menu */
-
-    .home-hello {
-      display: inline-block;
-      margin-left: 1em;
-      padding-bottom: 1.5vh;
-      font-size: 3vh;
-      font-style: italic;
-      color: #fff;
-      animation: home-hello-start 2s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-    }
-
-    .home-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25em;
-      margin-left: 1em;
-      padding-top: 0.6vh;
-      padding-bottom: 0.6vh;
-      font-size: 3vh;
-      font-style: italic;
-      text-decoration: none;
-      color: #fff;
-      overflow: hidden;
-      transition: 0.1s cubic-bezier(0.075, 0.82, 0.165, 1);
-      transition-property: margin, padding;
-      animation: home-link-start 1s 1s backwards;
-    }
-
-    .home-link.home-link-active {
-      padding-top: 3vh;
-      padding-bottom: 3vh;
-    }
-
-    .home-link.home-color-1.home-link-active {
-      color: #bf1852;
-    }
-
-    .home-link.home-color-2.home-link-active {
-      color: #0ad591;
-    }
-
-    .home-link.home-color-3.home-link-active {
-      color: #7774ff;
-    }
-
-    .home-link.home-color-4.home-link-active {
-      color: #e79907;
-    }
-
-    @keyframes home-hello-start {
-      0% {
-        opacity: 0;
-        margin-top: 18vh;
+      .home-link.home-color-2.home-link-active {
+         color: #0ad591;
       }
 
-      50% {
-        opacity: 1;
-        margin-top: 18vh;
-      }
-    }
-
-    @keyframes home-link-start {
-      0% {
-        animation-timing-function: cubic-bezier(0.8, 0, 0.8, 1);
-        opacity: 0;
+      .home-link.home-color-3.home-link-active {
+         color: #7774ff;
       }
 
-      50% {
-        animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
-        opacity: 1;
+      .home-link.home-color-4.home-link-active {
+         color: #e79907;
       }
-    }
-  </style>
-  <style>
-    nebula-client>canvas {
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-    }
-  </style>
-  <style>
-    .curved {
-      display: inline-block;
-      width: 0;
-    }
-  </style>
-  <style>
-    @font-face {
-      font-family: "Space Mono";
-      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
-    }
 
-    @font-face {
-      font-family: "Space Mono";
-      font-style: italic;
-      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
-    }
+      @keyframes home-hello-start {
+         0% {
+            opacity: 0;
+            margin-top: 18vh;
+         }
 
-    @font-face {
-      font-family: "Space Mono";
-      font-weight: bold;
-      src: url("/fonts/SpaceMono-Bold.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Space Mono";
-      font-weight: bold;
-      font-style: italic;
-      src: url("/fonts/SpaceMono-BoldItalic.ttf") format("truetype");
-    }
-
-    body {
-      margin: 0;
-      background-color: #000;
-      color: #fff;
-      font-family: "Space Mono", "Courier New", Courier, monospace;
-      font-size: 10px;
-      line-height: 1.2;
-      letter-spacing: 0;
-    }
-  </style>
-  <script client="">
-    (() => {
-      globalThis.BaseElement = createBaseElement(HTMLElement);
-
-      const lifecycleListeners = Symbol("lifecycleListeners");
-
-      function createBaseElement(superClass) {
-        return class BaseElement extends superClass {
-          constructor() {
-            super();
-            this[lifecycleListeners] = [];
-          }
-          connectedCallback() {
-            this[lifecycleListeners].forEach((it) => it.connect());
-          }
-          disconnectedCallback() {
-            this[lifecycleListeners].forEach((it) => it.disconnect());
-          }
-
-          /**
-           * @param factory {() => () => void}
-           */
-          addLifecycleListener(factory) {
-            let cleanup = () => {};
-            const connect = () => (cleanup = factory());
-            const disconnect = () => cleanup();
-
-            this[lifecycleListeners].push({
-              connect,
-              disconnect
-            });
-
-            if (this.isConnected) {
-              connect();
-            }
-          }
-
-          /**
-           * @param selector {string}
-           */
-          asyncQuerySelector(selector) {
-            const obj = {
-              exists: false,
-              element: null,
-            };
-
-            obj.promise = new Promise((resolve) => {
-              const observer = new MutationObserver(() => {
-                obj.element = this.querySelector(selector);
-                if (obj.element) {
-                  resolve(obj.element);
-                  obj.exists = true;
-                  observer.disconnect();
-                }
-              });
-
-              this.addLifecycleListener(() => {
-                observer.observe(this, {
-                  childList: true,
-                  subtree: true
-                });
-                return () => observer.disconnect();
-              });
-            });
-
-            return obj;
-          }
-
-          /**
-           * @param target {Element}
-           * @param event {string}
-           * @param callback {Function}
-           */
-          aliveListener(target, event, callback) {
-            this.addLifecycleListener(() => {
-              target.addEventListener(event, callback);
-              return () => target.removeEventListener(event, callback);
-            });
-          }
-
-          /**
-           * @param callbacks {object}
-           * @param callbacks.show {Function}
-           * @param callbacks.hide {Function}
-           */
-          visibilityListener({
-            show,
-            hide
-          }) {
-            let isShowing = false;
-
-            const observer = new IntersectionObserver((entries) => {
-              for (const entry of entries) {
-                if (entry.target !== this) continue;
-                if (isShowing !== entry.isIntersecting) {
-                  isShowing = entry.isIntersecting;
-                  if (isShowing) {
-                    show();
-                  } else {
-                    hide();
-                  }
-                }
-              }
-            });
-
-            this.addLifecycleListener(() => {
-              isShowing = false;
-              observer.observe(this);
-              return () => observer.disconnect();
-            });
-          }
-        };
+         50% {
+            opacity: 1;
+            margin-top: 18vh;
+         }
       }
-    })();
-  </script>
-  <script client="">
-    customElements.define(
-      "nebula-client",
-      class Nebula extends BaseElement {
-        constructor() {
-          super();
 
-          this.asyncCanvas = this.asyncQuerySelector("canvas");
-          this.context = null;
-          this.noise = null;
+      @keyframes home-link-start {
+         0% {
+            animation-timing-function: cubic-bezier(0.8, 0, 0.8, 1);
+            opacity: 0;
+            pointer-events: none;
+         }
 
-          this.gridSize = 30;
-          this.palette = ["#ff0000", "#00ff00", "#0000ff"];
+         50% {
+            animation-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+            opacity: 1;
+         }
 
-          this.lastT = 0;
-          this.startT = 0;
-
-          this.isVisible = true;
-          this.visibilityListener({
-            show: () => {
-              this.isVisible = true;
-              if (this.isConnected) this.loop();
-            },
-            hide: () => (this.isVisible = false),
-          });
-        }
-
-        connectedCallback() {
-          super.connectedCallback();
-
-          const paletteAttr = this.getAttribute("palette");
-          if (paletteAttr) {
-            this.palette = paletteAttr.split(" ");
-          }
-
-          if (this.isVisible) this.loop();
-        }
-
-        async loop() {
-          if (!this.isConnected && !this.isVisible) return;
-
-          const canvas =
-            this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
-
-          // initialize
-          if (!this.context) {
-            canvas.style.filter += ` blur(${Math.ceil(
-            canvas.width / this.gridSize
-          )}px)`;
-            canvas.globalCompositeOperation = "overlay";
-            this.context = canvas.getContext("2d");
-            this.context.fillStyle = "#000";
-            this.context.fillRect(0, 0, canvas.width, canvas.height);
-          }
-
-          requestAnimationFrame(() => this.loop());
-
-          if (typeof perlinNoise3d === "undefined") return;
-          if (!this.noise) {
-            this.noise = initNoise();
-            this.startT = getT();
-          }
-
-          this.draw(canvas, this.context);
-        }
-
-        /**
-         * @param canvas {HTMLCanvasElement}
-         * @param context {CanvasRenderingContext2D}
-         */
-        draw(canvas, context) {
-          const t = getT();
-          if (t <= this.lastT) return;
-          this.lastT = t;
-
-          const initTime = 16;
-          const alpha =
-            t <= this.startT + initTime ?
-            1 * ((this.startT + initTime - t) / initTime) :
-            0.016;
-
-          const {
-            noise,
-            gridSize,
-            palette
-          } = this;
-          const paletteLength = palette.length;
-          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
-          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
-
-          const cellWidth = Math.ceil(canvas.width / gridSize);
-          const cellHeight = Math.ceil(canvas.height / gridSize);
-          const halfGridSize = gridSize / 2;
-
-          for (let i = 0, x = 0; i < gridSize; i++, x += cellWidth) {
-            for (let j = 0, y = 0; j < gridSize; j++, y += cellHeight) {
-              const xy = [
-                1000 + (i - halfGridSize) * xScale + Math.sin(t * 0.01) * 2,
-                1000 + (j - halfGridSize) * yScale + Math.cos(t * 0.007) * 2,
-              ];
-              const p1 = noise.get(...xy, t * 0.03);
-              const p2 = noise.get(...xy, t * 0.03 + 0.5);
-              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
-              const p = p1 + p2;
-              const paletteIndex = Math.floor(paletteLength * p);
-
-              const rgb = palette[paletteIndex];
-              const a = Math.floor(alpha * 255)
-                .toString(16)
-                .padStart(2, "0");
-
-              context.fillStyle = `${rgb}${a}`;
-              context.fillRect(x, y, cellWidth, cellHeight);
-            }
-          }
-        }
+         100% {
+            pointer-events: unset;
+         }
       }
-    );
+   </style>
+   <style>
+      nebula-client>canvas {
+         width: 100%;
+         height: 100%;
+      }
+   </style>
+   <style>
+      .home-preview-text {
+         position: relative;
+         width: 36vh;
+         height: 36vh;
+         font-size: 3vh;
+         font-style: italic;
+         color: #fff;
+         animation: home-preview-text-animation 7s cubic-bezier(0.785, 0.135, 0.15, 0.86) infinite;
+      }
 
-    function getT() {
-      return Math.floor((Date.now() * 30) / 1000);
-    }
+      @keyframes home-preview-text-animation {
+         to {
+            transform: rotate(-1turn);
+         }
+      }
+   </style>
+   <style>
+      .curved {
+         display: inline-block;
+         width: 0;
+      }
+   </style>
+   <style>
+      .home-preview-icon-img {
+         position: absolute;
+         left: calc(50% - 2.5vh);
+         top: calc(50% - 2.5vh);
+         width: 5vh;
+         height: 5vh;
+         image-rendering: pixelated;
+         filter: invert(1);
+      }
+   </style>
+   <style>
+      .home-menu-icon {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         width: 3.5vh;
+         height: 3.5vh;
+         border-radius: 50%;
+         background-color: currentColor;
+      }
 
-    function initNoise() {
-      const noise = new perlinNoise3d();
-      noise.perlin_octaves = 1; // ?? defaults
-      noise.perlin_amp_falloff = 1;
-      return noise;
-    }
-  </script>
-  <script client="">
-    document.addEventListener("DOMContentLoaded", () => {
-      setTimeout(
-        () => previews[0].classList.remove("home-preview-0-enter"),
-        2000
-      );
+      .home-menu-icon-img {
+         position: relative;
+         left: -20vw;
+         width: 2.5vh;
+         height: 2.5vh;
+         image-rendering: pixelated;
+         filter: drop-shadow(20vw 0 #000);
+      }
+   </style>
+   <style>
+      @font-face {
+         font-family: "Space Mono";
+         src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+      }
 
-      let activePreview = 0;
-      const links = document.querySelectorAll(".home-link");
-      const previews = document.querySelectorAll(".home-preview");
+      @font-face {
+         font-family: "Space Mono";
+         font-style: italic;
+         src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+      }
 
-      links.forEach((link, index) => {
-        const previewNumber = index + 1;
+      @font-face {
+         font-family: "Space Mono";
+         font-weight: bold;
+         src: url("/fonts/SpaceMono-Bold.ttf") format("truetype");
+      }
 
-        link.addEventListener("mouseover", () => {
-          activatePreview(previewNumber);
-        });
+      @font-face {
+         font-family: "Space Mono";
+         font-weight: bold;
+         font-style: italic;
+         src: url("/fonts/SpaceMono-BoldItalic.ttf") format("truetype");
+      }
 
-        link.addEventListener("mouseout", () => {
-          if (activePreview !== previewNumber) return;
-          activatePreview(0);
-        });
-
-        link.addEventListener("touchstart", (event) => {
-          if (activePreview !== previewNumber) {
-            event.preventDefault();
-          }
-          activatePreview(previewNumber);
-        });
+      body {
+         margin: 0;
+         background-color: #000;
+         color: #fff;
+         font-family: "Space Mono", "Courier New", Courier, monospace;
+         font-size: 10px;
+         line-height: 1.2;
+         letter-spacing: 0;
+      }
+   </style>
+   <script>
+      document.addEventListener("DOMContentLoaded", () => {
+         const slinks = document.querySelectorAll("[data-slink]");
+         for (const slink of slinks) {
+            slink.addEventListener("mouseover", () => preloadLink(slink));
+            slink.addEventListener("touchstart", () => preloadLink(slink));
+         }
       });
 
-      function activatePreview(previewNumber) {
-        activePreview = previewNumber;
-
-        document
-          .querySelector(".home-preview-active")
-          ?.classList.remove("home-preview-active");
-        previews[previewNumber]?.classList.add("home-preview-active");
-
-        document
-          .querySelector(".home-link-active")
-          ?.classList.remove("home-link-active");
-        links[previewNumber - 1]?.classList.add("home-link-active");
+      function preloadLink(a) {
+         // todo fetch(a.href);
       }
-    });
-  </script>
+   </script>
+   <script>
+      (() => {
+         globalThis.BaseElement = createBaseElement(HTMLElement);
+
+         const lifecycleListeners = Symbol("lifecycleListeners");
+
+         function createBaseElement(superClass) {
+            return class BaseElement extends superClass {
+               constructor() {
+                  super();
+                  this[lifecycleListeners] = [];
+               }
+               connectedCallback() {
+                  this[lifecycleListeners].forEach((it) => it.connect());
+               }
+               disconnectedCallback() {
+                  this[lifecycleListeners].forEach((it) => it.disconnect());
+               }
+
+               /**
+                * @param factory {() => () => void}
+                */
+               addLifecycleListener(factory) {
+                  let cleanup = () => {};
+                  const connect = () => (cleanup = factory());
+                  const disconnect = () => cleanup();
+
+                  this[lifecycleListeners].push({
+                     connect,
+                     disconnect
+                  });
+
+                  if (this.isConnected) {
+                     connect();
+                  }
+               }
+
+               /**
+                * @param selector {string}
+                */
+               asyncQuerySelector(selector) {
+                  const obj = {
+                     exists: false,
+                     element: null,
+                  };
+
+                  obj.promise = new Promise((resolve) => {
+                     const observer = new MutationObserver(() => {
+                        obj.element = this.querySelector(selector);
+                        if (obj.element) {
+                           resolve(obj.element);
+                           obj.exists = true;
+                           observer.disconnect();
+                        }
+                     });
+
+                     this.addLifecycleListener(() => {
+                        observer.observe(this, {
+                           childList: true,
+                           subtree: true
+                        });
+                        return () => observer.disconnect();
+                     });
+                  });
+
+                  return obj;
+               }
+
+               /**
+                * @param target {Element}
+                * @param event {string}
+                * @param callback {Function}
+                */
+               aliveListener(target, event, callback) {
+                  this.addLifecycleListener(() => {
+                     target.addEventListener(event, callback);
+                     return () => target.removeEventListener(event, callback);
+                  });
+               }
+
+               /**
+                * @param callbacks {object}
+                * @param callbacks.show {Function}
+                * @param callbacks.hide {Function}
+                */
+               visibilityListener({
+                  show,
+                  hide
+               }) {
+                  let isShowing = false;
+
+                  const observer = new IntersectionObserver((entries) => {
+                     for (const entry of entries) {
+                        if (entry.target !== this) continue;
+                        if (isShowing !== entry.isIntersecting) {
+                           isShowing = entry.isIntersecting;
+                           if (isShowing) {
+                              show();
+                           } else {
+                              hide();
+                           }
+                        }
+                     }
+                  });
+
+                  this.addLifecycleListener(() => {
+                     isShowing = false;
+                     observer.observe(this);
+                     return () => observer.disconnect();
+                  });
+               }
+            };
+         }
+      })();
+   </script>
+   <script>
+      customElements.define(
+         "nebula-client",
+         class Nebula extends BaseElement {
+            constructor() {
+               super();
+
+               this.asyncCanvas = this.asyncQuerySelector("canvas");
+               this.context = null;
+               this.noise = null;
+
+               this.gridSize = 30;
+               this.palette = ["#ffffff"];
+
+               this.lastT = 0;
+               this.startT = 0;
+
+               this.isVisible = true;
+               this.visibilityListener({
+                  show: () => {
+                     this.isVisible = true;
+                     if (this.isConnected) this.loop();
+                  },
+                  hide: () => (this.isVisible = false),
+               });
+            }
+
+            connectedCallback() {
+               super.connectedCallback();
+
+               const paletteAttr = this.getAttribute("palette");
+               if (paletteAttr) {
+                  this.palette = paletteAttr.split(" ");
+               }
+
+               if (this.isVisible) this.loop();
+            }
+
+            async loop() {
+               if (!this.isConnected && !this.isVisible) return;
+
+               const canvas =
+                  this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
+
+               // initialize
+               if (!this.context) {
+                  const cellWidth = Math.ceil(canvas.width / this.gridSize);
+                  canvas.width = this.gridSize;
+                  canvas.height = this.gridSize;
+                  canvas.style.filter += ` blur(${cellWidth * 1.25}px)`;
+                  this.context = canvas.getContext("2d");
+               }
+
+               requestAnimationFrame(() => this.loop());
+
+               if (typeof perlinNoise3d === "undefined") return;
+               if (!this.noise) {
+                  this.noise = initNoise();
+                  this.startT = getT();
+               }
+
+               this.draw(canvas, this.context);
+            }
+
+            /**
+             * @param canvas {HTMLCanvasElement}
+             * @param context {CanvasRenderingContext2D}
+             */
+            draw(canvas, context) {
+               const t = getT();
+               if (t <= this.lastT) return;
+               this.lastT = t;
+
+               const initTime = 8;
+               const alpha =
+                  t <= this.startT + initTime ?
+                  1 * ((this.startT + initTime - t) / initTime) :
+                  0.016;
+
+               const {
+                  noise,
+                  gridSize,
+                  palette
+               } = this;
+               const paletteLength = palette.length;
+               const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+               const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+               const cellWidth = Math.ceil(canvas.width / gridSize);
+               const cellHeight = Math.ceil(canvas.height / gridSize);
+               const halfGridSize = gridSize / 2;
+
+               for (let i = 0, x = 0; i < gridSize; i++, x += cellWidth) {
+                  for (let j = 0, y = 0; j < gridSize; j++, y += cellHeight) {
+                     const xy = [
+                        1000 + (i - halfGridSize) * xScale + Math.sin(t * 0.01) * 2,
+                        1000 + (j - halfGridSize) * yScale + Math.cos(t * 0.007) * 2,
+                     ];
+                     const p1 = noise.get(...xy, t * 0.03);
+                     const p2 = noise.get(...xy, t * 0.03 + 0.5);
+                     // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+                     const p = p1 + p2;
+                     const paletteIndex = Math.floor(paletteLength * p);
+
+                     const rgb = palette[paletteIndex];
+                     const a = Math.floor(alpha * 255)
+                        .toString(16)
+                        .padStart(2, "0");
+
+                     context.fillStyle = `${rgb}${a}`;
+                     context.fillRect(x, y, cellWidth, cellHeight);
+                  }
+               }
+            }
+         }
+      );
+
+      function getT() {
+         return Math.floor((Date.now() * 30) / 1000);
+      }
+
+      function initNoise() {
+         const noise = new perlinNoise3d();
+         noise.perlin_octaves = 1; // ?? defaults
+         noise.perlin_amp_falloff = 1;
+         return noise;
+      }
+   </script>
+   <script>
+      document.addEventListener("DOMContentLoaded", () => {
+         setTimeout(
+            () => previews[0].classList.remove("home-preview-0-enter"),
+            2000
+         );
+
+         let activePreview = 0;
+         const links = document.querySelectorAll(".home-link");
+         const previews = document.querySelectorAll(".home-preview");
+
+         links.forEach((link, index) => {
+            const previewNumber = index + 1;
+
+            link.addEventListener("mouseover", () => {
+               if (event.target !== event.currentTarget) return;
+               activatePreview(previewNumber);
+            });
+
+            link.addEventListener("touchstart", (event) => {
+               if (event.target !== event.currentTarget) return;
+               if (activePreview !== previewNumber) {
+                  event.preventDefault();
+               }
+               activatePreview(previewNumber);
+            });
+         });
+
+         document
+            .querySelector(".home-content")
+            .addEventListener("mouseleave", (event) => {
+               activatePreview(0);
+            });
+
+         function activatePreview(previewNumber) {
+            if (activatePreview === previewNumber) return;
+            activePreview = previewNumber;
+
+            document
+               .querySelector(".home-preview-active")
+               ?.classList.remove("home-preview-active");
+            previews[previewNumber]?.classList.add("home-preview-active");
+
+            document
+               .querySelector(".home-link-active")
+               ?.classList.remove("home-link-active");
+            links[previewNumber - 1]?.classList.add("home-link-active");
+         }
+      });
+   </script>
 </head>
+
 
 <body>
 
-  <div class="home-page">
-    <div class="home-content">
-      <div class="home-circle">
-        <div class="home-preview home-preview-active home-preview-0-enter">
+
+   <div class="home-page">
+      <div class="home-content">
+         <div class="home-circle">
+            <div class="home-preview home-preview-active home-preview-0-enter">
 
 
-          <nebula-client class="home-nebula" palette="#e79907 #bf1852 #4d4aff #0ad591">
-            <canvas style="filter: contrast(1.5)">
-            </canvas></nebula-client>
-          <span class="home-preview-text">
-            <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-78.75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(78.75deg); transform-origin: 0.5ch 18vh">!</span>
-          </span>
-          <img class="home-preview-icon" src="home/icons/tada.png">
-        </div>
-        <div class="home-preview">
+               <nebula-client class="home-nebula" palette="#e79907 #bf1852 #4d4aff #0ad591">
+                  <canvas style="filter: contrast(1.5)">
+                  </canvas></nebula-client>
+               <span class="home-preview-text">
+                  <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-78.75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(78.75deg); transform-origin: 0.5ch 18vh">!</span>
+               </span>
+               <img class="home-preview-icon home-preview-icon-img" src="home/icons/tada.png">
+            </div>
+            <div class="home-preview">
 
 
-          <nebula-client class="home-nebula" palette="#e79907 #bf1852 #4d4aff">
-            <canvas style="filter: contrast(1.5)">
-            </canvas></nebula-client>
-          <span class="home-preview-text">
-            <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh">A</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh">u</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">f</span>
-          </span>
-          <img class="home-preview-icon" src="home/icons/glasses.png">
-        </div>
-        <div class="home-preview">
+               <nebula-client class="home-nebula" palette="#e79907 #bf1852 #4d4aff">
+                  <canvas style="filter: contrast(1.5)">
+                  </canvas></nebula-client>
+               <span class="home-preview-text">
+                  <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh">A</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh">u</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">f</span>
+               </span>
+               <a data-slink="" class="home-preview-icon" href="/about/">
+                  <img class="home-preview-icon-img" src="home/icons/glasses.png">
+               </a>
+            </div>
+            <div class="home-preview">
 
 
-          <nebula-client class="home-nebula" palette="#e79907 #0ad591 #4d4aff">
-            <canvas style="filter: contrast(1.5)">
-            </canvas></nebula-client>
-          <span class="home-preview-text">
-            <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-112.5deg); transform-origin: 0.5ch 18vh">B</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-105deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-97.5deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-90deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-82.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-67.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-60deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-52.5deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh">(</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh">h</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(52.5deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(60deg); transform-origin: 0.5ch 18vh">f</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(67.5deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(82.5deg); transform-origin: 0.5ch 18vh">k</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(90deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(97.5deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(105deg); transform-origin: 0.5ch 18vh">d</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(112.5deg); transform-origin: 0.5ch 18vh">)</span>
-          </span>
-          <img class="home-preview-icon" src="home/icons/pot.png">
-        </div>
-        <div class="home-preview">
+               <nebula-client class="home-nebula" palette="#e79907 #0ad591 #4d4aff">
+                  <canvas style="filter: contrast(1.5)">
+                  </canvas></nebula-client>
+               <span class="home-preview-text">
+                  <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-112.5deg); transform-origin: 0.5ch 18vh">B</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-105deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-97.5deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-90deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-82.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-67.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-60deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-52.5deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh">(</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh">h</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(52.5deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(60deg); transform-origin: 0.5ch 18vh">f</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(67.5deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(82.5deg); transform-origin: 0.5ch 18vh">k</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(90deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(97.5deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(105deg); transform-origin: 0.5ch 18vh">d</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(112.5deg); transform-origin: 0.5ch 18vh">)</span>
+               </span>
+               <img class="home-preview-icon home-preview-icon-img" src="home/icons/pot.png">
+            </div>
+            <div class="home-preview">
 
 
-          <nebula-client class="home-nebula" palette="#bf1852 #4d4aff #0ad591">
-            <canvas style="filter: contrast(1.5)">
-            </canvas></nebula-client>
-          <span class="home-preview-text">
-            <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-150deg); transform-origin: 0.5ch 18vh">L</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-142.5deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-135deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-127.5deg); transform-origin: 0.5ch 18vh">k</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-120deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-112.5deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-105deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-97.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-90deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-82.5deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-67.5deg); transform-origin: 0.5ch 18vh">g</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-60deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-52.5deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh">v</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">(</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(52.5deg); transform-origin: 0.5ch 18vh">1</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(60deg); transform-origin: 0.5ch 18vh">0</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(67.5deg); transform-origin: 0.5ch 18vh">0</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(75deg); transform-origin: 0.5ch 18vh">%</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(82.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(90deg); transform-origin: 0.5ch 18vh">N</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(97.5deg); transform-origin: 0.5ch 18vh">F</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(105deg); transform-origin: 0.5ch 18vh">T</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(112.5deg); transform-origin: 0.5ch 18vh">-</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(120deg); transform-origin: 0.5ch 18vh">f</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(127.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(135deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(142.5deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(150deg); transform-origin: 0.5ch 18vh">)</span>
-          </span>
-          <img class="home-preview-icon" src="home/icons/art.png">
-        </div>
-        <div class="home-preview">
+               <nebula-client class="home-nebula" palette="#bf1852 #4d4aff #0ad591">
+                  <canvas style="filter: contrast(1.5)">
+                  </canvas></nebula-client>
+               <span class="home-preview-text">
+                  <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-150deg); transform-origin: 0.5ch 18vh">L</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-142.5deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-135deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-127.5deg); transform-origin: 0.5ch 18vh">k</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-120deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-112.5deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-105deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-97.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-90deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-82.5deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-67.5deg); transform-origin: 0.5ch 18vh">g</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-60deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-52.5deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh">v</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">(</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(52.5deg); transform-origin: 0.5ch 18vh">1</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(60deg); transform-origin: 0.5ch 18vh">0</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(67.5deg); transform-origin: 0.5ch 18vh">0</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(75deg); transform-origin: 0.5ch 18vh">%</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(82.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(90deg); transform-origin: 0.5ch 18vh">N</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(97.5deg); transform-origin: 0.5ch 18vh">F</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(105deg); transform-origin: 0.5ch 18vh">T</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(112.5deg); transform-origin: 0.5ch 18vh">-</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(120deg); transform-origin: 0.5ch 18vh">f</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(127.5deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(135deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(142.5deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(150deg); transform-origin: 0.5ch 18vh">)</span>
+               </span>
+               <img class="home-preview-icon home-preview-icon-img" src="home/icons/art.png">
+            </div>
+            <div class="home-preview">
 
 
-          <nebula-client class="home-nebula" palette="#bf1852 #e79907 #0ad591">
-            <canvas style="filter: contrast(1.5)">
-            </canvas></nebula-client>
-          <span class="home-preview-text">
-            <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">L</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">u</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">c</span>
-          </span>
-          <img class="home-preview-icon" src="home/icons/sound.png">
-        </div>
+               <nebula-client class="home-nebula" palette="#bf1852 #e79907 #0ad591">
+                  <canvas style="filter: contrast(1.5)">
+                  </canvas></nebula-client>
+               <span class="home-preview-text">
+                  <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">L</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">u</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">c</span>
+               </span>
+               <img class="home-preview-icon home-preview-icon-img" src="home/icons/sound.png">
+            </div>
+         </div>
+         <span class="home-hello">hello!</span>
+         <br>
+         <a data-slink="" class="home-link home-color-1" href="/about/">
+            <div class="home-menu-icon">
+               <img class="home-menu-icon-img" src="home/icons/glasses.png">
+            </div>about
+         </a>
+         <br>
+         <a data-slink="" class="home-link home-color-2" href="/wares/">
+            <div class="home-menu-icon">
+               <img class="home-menu-icon-img" src="home/icons/pot.png">
+            </div>wares
+         </a>
+         <br>
+         <a data-slink="" class="home-link home-color-3" href="/genart/">
+            <div class="home-menu-icon">
+               <img class="home-menu-icon-img" src="home/icons/art.png">
+            </div>gen. art
+         </a>
+         <br>
+         <a data-slink="" class="home-link home-color-4" href="/music/">
+            <div class="home-menu-icon">
+               <img class="home-menu-icon-img" src="home/icons/sound.png">
+            </div>music
+         </a>
+         <br>
       </div>
-      <span class="home-hello">hello!</span>
-      <!-- <br />
-        <a class="home-link home-color-1" href="/about/">
-          <home-icon src="home/icons/glasses.png" />about
-        </a>
-        <br />
-        <a class="home-link home-color-2" href="/wares/">
-          <home-icon src="home/icons/pot.png" />wares
-        </a>
-        <br />
-        <a class="home-link home-color-3" href="/genart/">
-          <home-icon src="home/icons/art.png" />gen. art
-        </a>
-        <br />
-        <a class="home-link home-color-4" href="/music/">
-          <home-icon src="home/icons/sound.png" />music
-        </a>
-        <br /> -->
-    </div>
-  </div>
+   </div>
 
 </body>
 </html>

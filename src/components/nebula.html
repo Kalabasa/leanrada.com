@@ -8,7 +8,6 @@
   nebula-client > canvas {
     width: 100%;
     height: 100%;
-    image-rendering: pixelated;
   }
 </style>
 
@@ -25,7 +24,7 @@
         this.noise = null;
 
         this.gridSize = 30;
-        this.palette = ["#ff0000", "#00ff00", "#0000ff"];
+        this.palette = ["#ffffff"];
 
         this.lastT = 0;
         this.startT = 0;
@@ -59,13 +58,11 @@
 
         // initialize
         if (!this.context) {
-          canvas.style.filter += ` blur(${Math.ceil(
-            canvas.width / this.gridSize
-          )}px)`;
-          canvas.globalCompositeOperation = "overlay";
+          const cellWidth = Math.ceil(canvas.width / this.gridSize);
+          canvas.width = this.gridSize;
+          canvas.height = this.gridSize;
+          canvas.style.filter += ` blur(${cellWidth * 1.25}px)`;
           this.context = canvas.getContext("2d");
-          this.context.fillStyle = "#000";
-          this.context.fillRect(0, 0, canvas.width, canvas.height);
         }
 
         requestAnimationFrame(() => this.loop());
@@ -88,7 +85,7 @@
         if (t <= this.lastT) return;
         this.lastT = t;
 
-        const initTime = 16;
+        const initTime = 8;
         const alpha =
           t <= this.startT + initTime
             ? 1 * ((this.startT + initTime - t) / initTime)
