@@ -1,0 +1,24 @@
+<div class="markdown">
+  <script render>
+    const { marked } = require("marked");
+
+    for (const child of children) {
+      yield html`${marked.parse(getText(child))}`;
+    }
+
+    function getText(node) {
+      const isElement = node.nodeType === /*ELEMENT_NODE*/1;
+      let text = isElement ? node.outerHTML : node.textContent;
+
+      // detect indentation
+      const indent = text.match(/^\n([^\S\n]+)/)?.[1] ?? "";
+
+      // remove first indent
+      text = "\n" + text.substring(indent.length);
+      // remove the rest of indents
+      text = text.replaceAll("\n" + indent, "\n");
+
+      return text;
+    }
+  </script>
+</div>

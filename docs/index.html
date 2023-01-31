@@ -7,11 +7,12 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: max(40vh, 85vmin);
+      height: 95vh;
     }
 
     .header-content {
       white-space: nowrap;
+      min-width: 80vh;
     }
 
     .header-bg {
@@ -20,15 +21,14 @@
       float: left;
       width: 40vh;
       height: 40vh;
+      box-sizing: content-box;
+      /* circular margin for shape-outside */
+      border: solid transparent;
+      border-width: 0vh 2vh;
       border-radius: 50%;
       shape-outside: circle(calc(50% + 1vh));
+      text-align: initial;
       overflow: hidden;
-    }
-
-    @media (max-aspect-ratio: 4/5) {
-      .header {
-        flex-direction: column;
-      }
     }
 
     .nebula {
@@ -39,9 +39,54 @@
       height: 100%;
     }
 
-    .line {
-      font-size: 3vh;
+    .intro-text {
+      margin-top: 1.4vh;
+      line-height: 1.8;
+      font-size: 2.2vh;
       font-style: italic;
+    }
+
+    @media (max-aspect-ratio: 4/5) {
+      .header {
+        height: 95vh;
+      }
+
+      .header-content {
+        min-width: unset;
+        text-align: center;
+      }
+
+      .header-bg {
+        float: unset;
+      }
+
+      .intro-text {
+        display: block;
+      }
+    }
+
+    .section {
+      max-width: 1200px;
+      margin: 0 auto 180px;
+      padding: 0 60px;
+      font-size: 18px;
+      line-height: 2;
+      text-align: center;
+    }
+
+    .section>p {
+      margin: 30px 0;
+    }
+
+    .section-title {
+      margin: 0 0 36px;
+      font-size: 24px;
+      font-style: italic;
+      font-weight: bold;
+    }
+
+    .about-section {
+      max-width: 520px;
     }
   </style>
   <style>
@@ -86,6 +131,108 @@
     }
   </style>
   <style>
+    .great-time-trigger {
+      text-decoration: underline;
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+  <style>
+    .great-time-counter {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      font-size: 18px;
+      pointer-events: none;
+      transform-origin: top right;
+      animation: great-time-counter-appear 0.6s both;
+    }
+
+    .great-time-counter.flash {
+      background-color: #fff;
+    }
+
+    @keyframes great-time-counter-appear {
+      from {
+        opacity: 0;
+        transform: scale(4);
+      }
+    }
+  </style>
+  <style>
+    .home-stuff-item {
+      display: block;
+      text-decoration: none;
+      text-align: start;
+      color: #fff;
+      background: #2222;
+      overflow: hidden;
+    }
+
+    .home-stuff-item:visited {
+      color: #eee;
+    }
+
+    .home-stuff-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(1) contrast(0.7);
+      mix-blend-mode: multiply;
+      transition: filter 0.3s;
+      transition-delay: 0.3s;
+    }
+
+    .home-stuff-image-container {
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(175deg,
+          #fff 45%,
+          var(--clr0-light) 45%,
+          var(--clr0-light) 50%,
+          #fff 50%,
+          #fff 55%,
+          var(--clr0-light) 55%);
+      background-size: 100% 300%;
+      background-position: bottom;
+      overflow: hidden;
+      transition: background-position 0.6s var(--ease);
+    }
+
+    .home-stuff-item:hover .home-stuff-image {
+      filter: grayscale(0) contrast(0.8);
+      transition-delay: 0s;
+    }
+
+    .home-stuff-item:hover .home-stuff-image-container {
+      background-position: top;
+    }
+
+    .home-stuff-title-bar {
+      padding: 12px 24px;
+      font-size: 18px;
+    }
+
+    .home-stuff-posttitle {
+      font-size: 12px;
+      font-weight: bold;
+      opacity: 0.4;
+    }
+
+    .home-stuff-content {
+      padding: 0 24px 18px;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .home-stuff {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+    }
+  </style>
+  <style>
     @font-face {
       font-family: "Space Mono";
       src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
@@ -98,26 +245,37 @@
     }
 
     @font-face {
-      font-family: "Space Mono";
-      font-weight: bold;
-      src: url("/fonts/SpaceMono-Bold.ttf") format("truetype");
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
     }
 
     @font-face {
-      font-family: "Space Mono";
+      font-family: "Miriam Libre";
       font-weight: bold;
-      font-style: italic;
-      src: url("/fonts/SpaceMono-BoldItalic.ttf") format("truetype");
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
     }
 
     body {
       margin: 0;
-      background-color: #000;
+      background-color: #111;
       color: #fff;
-      font-family: "Space Mono", "Courier New", Courier, monospace;
-      font-size: 10px;
-      line-height: 1.2;
-      letter-spacing: 0;
+      font-family: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+    }
+
+    :root {
+      --clr0: #0ad591;
+      --clr0-light: #52f8c1;
+      --clr0-dark: #079c6b;
+      --clr0-darker: #0d7553;
+      --ease: cubic-bezier(0.6, 0, 0.2, 1);
+    }
+
+    a {
+      color: var(--clr0, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0-dark, #fff);
     }
   </style>
   <script>
@@ -378,26 +536,122 @@
           <canvas style="filter: contrast(1.5)">
           </canvas></nebula-client>
         <div class="home-circle-text">
-          <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-78.75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(78.75deg); transform-origin: 0.5ch 18vh">!</span>
+          <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-67.5deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-60deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-52.5deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(52.5deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(60deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(67.5deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(75deg); transform-origin: 0.5ch 18vh">e</span>
         </div>
         <img class="home-circle-icon home-circle-icon-img" src="home/icons/tada.png">
       </div>
 
-      <div class="line">hello!</div>
-      <div class="line">I'm Lean,</div>
-      <div class="line">.</div>
-      <div class="line">hello</div>
+      <span class="intro-text">
+        <span id="greeting"><span id="home-greeting">hello!</span></span>
+        <br>
+        I'm Lean, a person,
+        <br>
+        a software engineer
+        <br>
+        who likes making stuff,
+        <br>
+        like code, art, and music.
+        <br>
+        <br>
+        nice to meet you.
+        <br>
+        please, <span class="great-time-trigger" onclick="haveAGreatTime()">have a great time.</span>
+      </span>
     </div>
   </div>
 
-  <section>
-    <h1>About me</h1>
+  <div id="great-time-counter" class="great-time-counter">
+    you now have <span id="great-time-num">0</span> great time(s)
+  </div>
+
+  <section class="section about-section">
+    <h2 class="section-title">About me</h2>
+    <p>My name is Lean Rada.</p>
+    <p>I want to build good things using technology.</p>
+    <p>
+      My interests are programming, interactive things, procedural animations,
+      algorithms, art, algorithmic art, music theory, games, and tech.
+    </p>
+    <p>Sufficiently advanced technology is not required to make magic.</p>
   </section>
 
-  <section>
-    <h1>I make stuff</h1>
-    <a href="/projects/canva-photo-editor">Canva Photo Editor</a> 2019
+  <section class="section">
+    <h2 class="section-title">Some things I've made</h2>
+    <div class="home-stuff">
+
+      <a class="home-stuff-item" href="/projects/canva-photo-editor/">
+        <div class="home-stuff-image-container">
+          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+        </div>
+        <div class="home-stuff-title-bar">
+          Canva Photo Editor <span class="home-stuff-posttitle">2019</span>
+        </div>
+        <div class="home-stuff-content">
+          Online photo editing tool.
+        </div>
+      </a>
+      <a class="home-stuff-item" href="/projects/x/">
+        <div class="home-stuff-image-container">
+          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+        </div>
+        <div class="home-stuff-title-bar">
+          Placeholder <span class="home-stuff-posttitle">2020</span>
+        </div>
+        <div class="home-stuff-content"></div>
+      </a>
+      <a class="home-stuff-item" href="/projects/x/">
+        <div class="home-stuff-image-container">
+          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+        </div>
+        <div class="home-stuff-title-bar">
+          Placeholder <span class="home-stuff-posttitle">2020</span>
+        </div>
+        <div class="home-stuff-content"></div>
+      </a>
+      <a class="home-stuff-item" href="/projects/x/">
+        <div class="home-stuff-image-container">
+          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+        </div>
+        <div class="home-stuff-title-bar">
+          Placeholder <span class="home-stuff-posttitle">2020</span>
+        </div>
+        <div class="home-stuff-content"></div>
+      </a>
+
+    </div>
   </section>
 
+  <script>
+    (() => {
+      const container = document.getElementById("great-time-counter");
+      const num = document.getElementById("great-time-num");
+
+      let greatTimes = 0;
+
+      window.haveAGreatTime = function() {
+        greatTimes++;
+        num.innerText = greatTimes;
+        if (greatTimes === 1) {
+          container.style.display = "block";
+        } else {
+          container.classList.add("flash");
+          setTimeout(() => container.classList.remove("flash"), 34);
+        }
+      };
+    })();
+  </script>
+  <script>
+    const greeting = document.getElementById("greeting");
+
+    let text = greeting.textContent;
+    // todo: more?
+    text =
+      pick("Hello!", "What's up ↑", "Hi there →", "Hey there →");
+    greeting.textContent = text;
+
+    function pick(...choices) {
+      return choices[Math.floor(Math.random() * choices.length)];
+    }
+  </script>
 </body>
 </html>

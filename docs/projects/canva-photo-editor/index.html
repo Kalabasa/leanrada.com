@@ -2,6 +2,101 @@
 <head>
   <title>Photo Editor</title>
   <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-darker);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+    }
+
+    .content {
+      max-width: 700px;
+      font-size: 18px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+    }
+
+    .markdown h1,
+    .markdown h2,
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-weight: lighter;
+      font-style: italic;
+      letter-spacing: 0.04em;
+      margin: 36px 0;
+    }
+
+    .markdown h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown h2 {
+      font-size: 150%;
+    }
+
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-size: 120%;
+    }
+
+    .markdown p {
+      font-family: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+      margin: 36px 0;
+    }
+
+    .markdown img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    /* todo: convert to component? <caption> */
+    .markdown .caption {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      font-size: 80%;
+    }
+
+    .markdown .center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* todo: convert to component? <bleed> */
+    .markdown .bleed {
+      display: block;
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .markdown .bleed>img,
+    .markdown .bleed>video,
+    .markdown .bleed>div {
+      margin: 0;
+      position: relative;
+      left: 50%;
+      width: 1400px;
+      max-width: max(1400px, 80vw);
+      transform: translateX(-50%);
+    }
+  </style>
+  <style>
     @font-face {
       font-family: "Space Mono";
       src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
@@ -14,26 +109,37 @@
     }
 
     @font-face {
-      font-family: "Space Mono";
-      font-weight: bold;
-      src: url("/fonts/SpaceMono-Bold.ttf") format("truetype");
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
     }
 
     @font-face {
-      font-family: "Space Mono";
+      font-family: "Miriam Libre";
       font-weight: bold;
-      font-style: italic;
-      src: url("/fonts/SpaceMono-BoldItalic.ttf") format("truetype");
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
     }
 
     body {
       margin: 0;
-      background-color: #000;
+      background-color: #111;
       color: #fff;
-      font-family: "Space Mono", "Courier New", Courier, monospace;
-      font-size: 10px;
-      line-height: 1.2;
-      letter-spacing: 0;
+      font-family: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+    }
+
+    :root {
+      --clr0: #0ad591;
+      --clr0-light: #52f8c1;
+      --clr0-dark: #079c6b;
+      --clr0-darker: #0d7553;
+      --ease: cubic-bezier(0.6, 0, 0.2, 1);
+    }
+
+    a {
+      color: var(--clr0, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0-dark, #fff);
     }
   </style>
 </head>
@@ -42,52 +148,42 @@
 <body>
 
 
-  <!-- prettier-ignore -->
+  <div class="blog-page">
+    <div class="content">
 
-  # Canva Photo Editor
+      <!-- prettier-ignore -->
+      <div class="markdown">
+        <h1 id="photo-editor">Photo Editor</h1>
+        <span class="center">
+          <img class="undefined" src="img/canvaphotoeditor_0.jpg" alt="screenshot of Photo Editor on mobile" srcset="img/canvaphotoeditor_0_75.jpg 75w,img/canvaphotoeditor_0_150.jpg 150w,img/canvaphotoeditor_0_225.jpg 225w,img/canvaphotoeditor_0_300.jpg 300w,img/canvaphotoeditor_0_375.jpg 375w,img/canvaphotoeditor_0_450.jpg 450w" sizes="(max-width:375px) 75px,(max-width:750px) 150px,(max-width:1125px) 225px,(max-width:1500px) 300px,(max-width:1875px) 375px, 450px">
+        </span>
+        <h2 id="edit-photos-online">Edit photos online</h2>
+        <p><strong>Photo Editor</strong> (2019) was an online tool offered by <a href="https://www.canva.com">Canva</a> for simple image editing. It had filters, sliders, and crop, resize, and rotation tools.</p>
+        <p>Note that it's distinct from the Canva design app. This was more of a standalone tool for quick edits, with an ulterior purpose of marketing the primary Canva app.</p>
+        <p><span class="box-note"><strong>Update:</strong> The standalone app has been decommissioned, and photo editing features are now part of the main app.</span></p>
+        <p><span class="bleed"><img src="img/canvaphotoeditor_1.jpg" alt="desktop screenshot"></span></p>
+        <p>In the beginnng, the Photo Editor was a tool made by a third party developer in a proprietary UI framework on top of Angular 1 and Node 5.</p>
+        <p>This version was very old and tbh a bit difficult to maintain and iterate on. It was also not responsive so mobile users were missing out.</p>
+        <p><span><img src="img/canvaphotoeditor_old.jpg" alt="old version">
+            <span class="caption">Old version</span>
+          </span></p>
+        <p>So a redesign was made and the app was rewritten in a more modern stack. The new version looks better, modern, and is responsive.</p>
+        <p>My part in this redesign was coding the webapp and the welcome page.</p>
+        <p><span class="bleed"><img src="img/canvaphotoeditor_3.jpg" alt="welcome page screenshot">
+            <span class="caption">The welcome page</span>
+          </span></p>
+        <p>I wrote the new app in <a href="https://reactjs.org/"><strong>React</strong></a> with <a href="https://mobx.js.org/"><strong>MobX</strong></a>.</p>
+        <p>There were a few WebGL and canvas filter algorithms from the old app that I reimplemented. Had to dip my toes into some fragment shaders for the WebGL version.</p>
+        <p><img src="img/canvaphotoeditor_2.jpg" alt="desktop screenshot"></p>
+        <p>The backend is a simple server written with <a href="https://expressjs.com/"><strong>Express</strong></a> and the whole app was deployed on <a href="https://www.heroku.com/"><strong>Heroku</strong></a>.</p>
+        <p>It was a fun project with a very nice result.</p>
+        <p>After the makeover we saw doubling in signups! 🔥
+        </p>
 
-  <span class="d3d"><span class="mockup-phone">![phone with Photo Editor](../img/canvaphotoeditor_0.jpg)
-      <span class="phone-body"></span>
-    </span></span>
+      </div>
 
-  ## Edit photos online
-
-  **Photo Editor** (2019) is an online tool by Canva for simple image editing. It features pre-set filters, simple adjustment sliders, crop, resize, and rotation tools.
-
-  Update: The standalone app has been decommissioned, and photo editing features are now part of the main app.
-
-  This tool existed primarily as a way to promote the main design platform [Canva](https://www.canva.com). Users coming in to edit photos are likely to have some design needs for their edited images, so there are a few promotional paths to Canva in the photo editor itself.
-
-  <span class="bleed">![desktop screenshot](../img/canvaphotoeditor_1.jpg)</span>
-
-  The Photo Editor had a previous version which was made by a third party developer in a proprietary framework on top of Angular 1 and Node 5. It was a bit difficult to maintain and iterate on. It was also not responsive so we’re missing out on mobile users.
-
-  A redesign and rewrite was needed for future improvement.
-
-  <span class="bleed">![old version](../img/canvaphotoeditor_old.jpg)</span>
-  <span class="caption">Old version</span>
-
-  So around Summer 2019 <small>(Australian Summer 2018–2019)</small>, a redesign was made and the app was rewritten in a more modern stack. The revamped version looks better, more modern, and is responsive.
-
-  ![mobile screenshot](../img/canvaphotoeditor_0.jpg)
-
-  My part in this redesign was the coding of the webapp and the landing page.
-
-  I chose to write the app in [**React**](https://reactjs.org/) with [**MobX**](https://mobx.js.org/). MobX really helped simplify the state management of the whole app.
-
-  There are a few WebGL and canvas filter algorithms from the old app that I reimplemented. I had to dip my toes into some fragment shaders for the WebGL version. The app uses [**glfx.js**](http://evanw.github.io/glfx.js/) for WebGL browsers and [**CamanJS**](http://camanjs.com/) for non-WebGL browsers.
-
-  The backend is a simple server written with [**Express**](https://expressjs.com/) and the whole app was deployed on [**Heroku**](https://www.heroku.com/).
-
-  <span class="bleed">![desktop screenshot](../img/canvaphotoeditor_2.jpg)</span>
-
-  The project was completed in around 2 months.
-
-  <span class="bleed">![landing page screenshot](../img/canvaphotoeditor_3.jpg)</span>
-  <span class="caption">The landing page</span>
-
-  After the revamp we saw doubling in conversion rate (that is, Canva signups), so we can say that the project was a success! 🎉
-
+    </div>
+  </div>
 
 </body>
 </html>

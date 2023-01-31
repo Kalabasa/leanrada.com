@@ -1,0 +1,46 @@
+<div id="great-time-counter" class="great-time-counter">
+  you now have <span id="great-time-num">0</span> great time(s)
+</div>
+
+<script client defer>
+  (() => {
+    const container = document.getElementById("great-time-counter");
+    const num = document.getElementById("great-time-num");
+
+    let greatTimes = 0;
+
+    window.haveAGreatTime = function () {
+      greatTimes++;
+      num.innerText = greatTimes;
+      if (greatTimes === 1) {
+        container.style.display = "block";
+      } else {
+        container.classList.add("flash");
+        setTimeout(() => container.classList.remove("flash"), 34);
+      }
+    };
+  })();
+</script>
+
+<style>
+  .great-time-counter {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    font-size: 18px;
+    pointer-events: none;
+    transform-origin: top right;
+    animation: great-time-counter-appear 0.6s both;
+  }
+  .great-time-counter.flash {
+    background-color: #fff;
+  }
+
+  @keyframes great-time-counter-appear {
+    from {
+      opacity: 0;
+      transform: scale(4);
+    }
+  }
+</style>
