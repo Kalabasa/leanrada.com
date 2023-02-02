@@ -3,236 +3,6 @@
   <title>Hello</title>
   <script client="" defer="" src="https://unpkg.com/perlin-noise-3d@v0.5.4"></script>
   <style>
-    .header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 95vh;
-    }
-
-    .header-content {
-      white-space: nowrap;
-      min-width: 80vh;
-    }
-
-    .header-bg {
-      position: relative;
-      display: block;
-      float: left;
-      width: 40vh;
-      height: 40vh;
-      box-sizing: content-box;
-      /* circular margin for shape-outside */
-      border: solid transparent;
-      border-width: 0vh 2vh;
-      border-radius: 50%;
-      shape-outside: circle(calc(50% + 1vh));
-      text-align: initial;
-      overflow: hidden;
-    }
-
-    .nebula {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .intro-text {
-      margin-top: 1.4vh;
-      line-height: 1.8;
-      font-size: 2.2vh;
-      font-style: italic;
-    }
-
-    @media (max-aspect-ratio: 4/5) {
-      .header {
-        height: 95vh;
-      }
-
-      .header-content {
-        min-width: unset;
-        text-align: center;
-      }
-
-      .header-bg {
-        float: unset;
-      }
-
-      .intro-text {
-        display: block;
-      }
-    }
-
-    .section {
-      max-width: 1200px;
-      margin: 0 auto 180px;
-      padding: 0 60px;
-      font-size: 18px;
-      line-height: 2;
-      text-align: center;
-    }
-
-    .section>p {
-      margin: 30px 0;
-    }
-
-    .section-title {
-      margin: 0 0 36px;
-      font-size: 24px;
-      font-style: italic;
-      font-weight: bold;
-    }
-
-    .about-section {
-      max-width: 520px;
-    }
-  </style>
-  <style>
-    nebula-client>canvas {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-  <style>
-    .home-circle-text {
-      position: relative;
-      margin: 2vh;
-      width: 36vh;
-      height: 36vh;
-      font-size: 3vh;
-      font-style: italic;
-      color: #fff;
-      animation: home-circle-text-animation 7s cubic-bezier(0.785, 0.135, 0.15, 0.86) infinite;
-    }
-
-    @keyframes home-circle-text-animation {
-      to {
-        transform: rotate(-1turn);
-      }
-    }
-  </style>
-  <style>
-    .curved {
-      display: inline-block;
-      width: 0;
-    }
-  </style>
-  <style>
-    .home-circle-icon-img {
-      position: absolute;
-      left: calc(50% - 2.5vh);
-      top: calc(50% - 2.5vh);
-      width: 5vh;
-      height: 5vh;
-      image-rendering: pixelated;
-      filter: invert(1);
-    }
-  </style>
-  <style>
-    .great-time-trigger {
-      text-decoration: underline;
-      cursor: pointer;
-      user-select: none;
-    }
-  </style>
-  <style>
-    .great-time-counter {
-      display: none;
-      position: fixed;
-      top: 0;
-      right: 0;
-      font-size: 18px;
-      pointer-events: none;
-      transform-origin: top right;
-      animation: great-time-counter-appear 0.6s both;
-    }
-
-    .great-time-counter.flash {
-      background-color: #fff;
-    }
-
-    @keyframes great-time-counter-appear {
-      from {
-        opacity: 0;
-        transform: scale(4);
-      }
-    }
-  </style>
-  <style>
-    .home-stuff-item {
-      display: block;
-      text-decoration: none;
-      text-align: start;
-      color: #fff;
-      background: #2222;
-      overflow: hidden;
-    }
-
-    .home-stuff-item:visited {
-      color: #eee;
-    }
-
-    .home-stuff-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: grayscale(1) contrast(0.7);
-      mix-blend-mode: multiply;
-      transition: filter 0.3s;
-      transition-delay: 0.3s;
-    }
-
-    .home-stuff-image-container {
-      width: 100%;
-      height: 300px;
-      background: linear-gradient(175deg,
-          #fff 45%,
-          var(--clr0-light) 45%,
-          var(--clr0-light) 50%,
-          #fff 50%,
-          #fff 55%,
-          var(--clr0-light) 55%);
-      background-size: 100% 300%;
-      background-position: bottom;
-      overflow: hidden;
-      transition: background-position 0.6s var(--ease);
-    }
-
-    .home-stuff-item:hover .home-stuff-image {
-      filter: grayscale(0) contrast(0.8);
-      transition-delay: 0s;
-    }
-
-    .home-stuff-item:hover .home-stuff-image-container {
-      background-position: top;
-    }
-
-    .home-stuff-title-bar {
-      padding: 12px 24px;
-      font-size: 18px;
-    }
-
-    .home-stuff-posttitle {
-      font-size: 12px;
-      font-weight: bold;
-      opacity: 0.4;
-    }
-
-    .home-stuff-content {
-      padding: 0 24px 18px;
-      font-size: 15px;
-    }
-  </style>
-  <style>
-    .home-stuff {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 36px;
-    }
-  </style>
-  <style>
     @font-face {
       font-family: "Space Mono";
       src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
@@ -263,10 +33,10 @@
     }
 
     :root {
+      --bg-clr: #111;
       --clr0: #0ad591;
       --clr0-light: #52f8c1;
-      --clr0-dark: #079c6b;
-      --clr0-darker: #0d7553;
+      --clr0-dark: #018b5d;
       --ease: cubic-bezier(0.6, 0, 0.2, 1);
     }
 
@@ -276,6 +46,289 @@
 
     a:visited {
       color: var(--clr0-dark, #fff);
+    }
+  </style>
+  <style>
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+    }
+  </style>
+  <style>
+    .home-grid-item {
+      display: block;
+      text-decoration: none;
+      text-align: start;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .home-grid-item:visited {
+      color: #eee;
+    }
+
+    .home-grid-image-container {
+      width: 100%;
+      min-height: 200px;
+      aspect-ratio: 16 / 9;
+      border-radius: 18px;
+      background: var(--clr0);
+      overflow: hidden;
+      transition: background 1s;
+    }
+
+    .home-grid-item:hover .home-grid-image-container {
+      background: #fff;
+      transition: background 2s;
+    }
+
+    .home-grid-image {
+      width: 101%;
+      height: 101%;
+      object-fit: cover;
+      object-position: top;
+      filter: contrast(0.8);
+      transform: scale(1);
+      transform-origin: 9px 9px;
+      mix-blend-mode: darken;
+      transition: filter 1s, transform 1s;
+    }
+
+    .home-grid-thumbalign-center .home-grid-image {
+      object-position: center;
+      transform-origin: center;
+    }
+
+    .home-grid-item:hover .home-grid-image {
+      filter: contrast(1);
+      transform: scale(1.1);
+      transition: filter 1s, transform 2s;
+    }
+
+    .home-grid-title-wrap {
+      position: relative;
+      height: 0;
+    }
+
+    .home-grid-title-bar {
+      position: absolute;
+      bottom: 0;
+      border-top-right-radius: 18px;
+      background: var(--bg-clr);
+    }
+
+    .home-grid-title-content {
+      position: relative;
+      padding: 12px 24px 0 0;
+    }
+
+    .home-grid-title-content::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 100%;
+      width: 18px;
+      height: 36px;
+      border-bottom-left-radius: 18px;
+      box-shadow: 0 18px 0 var(--bg-clr);
+    }
+
+    .home-grid-title-content::after {
+      content: "";
+      position: absolute;
+      left: 100%;
+      bottom: 0;
+      width: 36px;
+      height: 18px;
+      border-bottom-left-radius: 18px;
+      box-shadow: -18px 0 0 var(--bg-clr);
+    }
+
+    .home-grid-title {
+      font-size: 21px;
+      font-style: italic;
+      font-weight: bold;
+    }
+
+    .home-grid-posttitle {
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: italic;
+      font-weight: bold;
+      opacity: 0.8;
+    }
+
+    .home-grid-content {
+      margin: 30px 0;
+      line-height: 2;
+    }
+  </style>
+  <style>
+    .great-time-counter {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      font-size: 18px;
+      pointer-events: none;
+      transform-origin: top right;
+      animation: great-time-counter-appear 0.6s both;
+    }
+
+    .great-time-counter.flash {
+      background-color: #fff;
+    }
+
+    @keyframes great-time-counter-appear {
+      from {
+        opacity: 0;
+        transform: scale(4);
+      }
+    }
+  </style>
+  <style>
+    .great-time-trigger {
+      text-decoration: underline;
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+  <style>
+    .home-circle-icon-img {
+      position: absolute;
+      left: calc(50% - 2.5vh);
+      top: calc(50% - 2.5vh);
+      width: 5vh;
+      height: 5vh;
+      image-rendering: pixelated;
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .curved {
+      display: inline-block;
+      width: 0;
+    }
+  </style>
+  <style>
+    .home-circle-text {
+      position: relative;
+      margin: 2vh;
+      width: 36vh;
+      height: 36vh;
+      font-size: 3vh;
+      font-style: italic;
+      color: #fff;
+      animation: home-circle-text-animation 7s cubic-bezier(0.785, 0.135, 0.15, 0.86) infinite;
+    }
+
+    @keyframes home-circle-text-animation {
+      to {
+        transform: rotate(-1turn);
+      }
+    }
+  </style>
+  <style>
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <style>
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 95vh;
+    }
+
+    .header-content {
+      white-space: nowrap;
+      min-width: 80vh;
+    }
+
+    .header-bg {
+      position: relative;
+      display: block;
+      float: left;
+      width: 40vh;
+      height: 40vh;
+      box-sizing: content-box;
+      margin: 0vh 2vh;
+      border-radius: 50%;
+      background: #bf1852;
+      shape-outside: circle(calc(50% + 1vh));
+      text-align: initial;
+      overflow: hidden;
+    }
+
+    .nebula {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .intro-text {
+      margin-top: 1.4vh;
+      line-height: 1.8;
+      font-size: 2.2vh;
+      font-style: italic;
+    }
+
+    .ipa {
+      font-size: 85%;
+      font-style: normal;
+    }
+
+    .ipa>a,
+    .ipa>a:visited {
+      color: inherit;
+    }
+
+    @media (max-aspect-ratio: 4/5) {
+      .header {
+        height: 95vh;
+      }
+
+      .header-content {
+        min-width: unset;
+        text-align: center;
+      }
+
+      .header-bg {
+        float: unset;
+      }
+
+      .intro-text {
+        display: block;
+      }
+    }
+
+    .section {
+      max-width: 1200px;
+      margin: 0 auto 180px;
+      padding: 0 60px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .section>p {
+      margin: 30px 0;
+      line-height: 2;
+    }
+
+    .section-title {
+      margin: 0 0 36px;
+      font-size: 24px;
+      font-style: italic;
+      font-weight: bold;
+    }
+
+    .about-section {
+      max-width: 520px;
     }
   </style>
   <script>
@@ -391,6 +444,22 @@
           }
         };
       }
+
+      window.mousePosition = {
+        x: 0,
+        y: 0
+      };
+      document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+          document.body.addEventListener("mousemove", (event) => {
+            window.mousePosition.x = event.clientX;
+            window.mousePosition.y = event.clientY;
+          });
+        }, {
+          once: true
+        }
+      );
     })();
   </script>
   <script>
@@ -404,8 +473,11 @@
           this.context = null;
           this.noise = null;
 
-          this.gridSize = 30;
+          this.size = 30;
           this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
 
           this.lastT = 0;
           this.startT = 0;
@@ -439,10 +511,11 @@
 
           // initialize
           if (!this.context) {
-            const cellWidth = Math.ceil(canvas.width / this.gridSize);
-            canvas.width = this.gridSize;
-            canvas.height = this.gridSize;
-            canvas.style.filter += ` blur(${cellWidth * 1.25}px)`;
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.size);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.size);
+            canvas.width = this.size;
+            canvas.height = this.size;
+            canvas.style.filter += ` blur(${this.cellWidth * 1.25}px)`;
             this.context = canvas.getContext("2d");
           }
 
@@ -474,19 +547,40 @@
 
           const {
             noise,
-            gridSize,
-            palette
+            size,
+            palette,
+            cellWidth,
+            cellHeight
           } = this;
+          const halfGridSize = size / 2;
+
+          let mouseCell = null;
+          // mousePosition from lib/common
+          if (window.mousePosition) {
+            const {
+              x,
+              y
+            } = window.mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
+            }
+          }
+
           const paletteLength = palette.length;
           const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
           const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
 
-          const cellWidth = Math.ceil(canvas.width / gridSize);
-          const cellHeight = Math.ceil(canvas.height / gridSize);
-          const halfGridSize = gridSize / 2;
-
-          for (let i = 0, x = 0; i < gridSize; i++, x += cellWidth) {
-            for (let j = 0, y = 0; j < gridSize; j++, y += cellHeight) {
+          for (let i = 0; i < size; i++) {
+            for (let j = 0; j < size; j++) {
               const xy = [
                 1000 + (i - halfGridSize) * xScale + Math.sin(t * 0.01) * 2,
                 1000 + (j - halfGridSize) * yScale + Math.cos(t * 0.007) * 2,
@@ -495,15 +589,21 @@
               const p2 = noise.get(...xy, t * 0.03 + 0.5);
               // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
               const p = p1 + p2;
+
+              const mouseProximity =
+                mouseCell == null ?
+                0 :
+                1 - sigmoid(Math.hypot(i - mouseCell.x, j - mouseCell.y) - 4);
+
               const paletteIndex = Math.floor(paletteLength * p);
 
               const rgb = palette[paletteIndex];
-              const a = Math.floor(alpha * 255)
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
                 .toString(16)
                 .padStart(2, "0");
 
               context.fillStyle = `${rgb}${a}`;
-              context.fillRect(x, y, cellWidth, cellHeight);
+              context.fillRect(i, j, 1, 1);
             }
           }
         }
@@ -519,6 +619,10 @@
       noise.perlin_octaves = 1; // ?? defaults
       noise.perlin_amp_falloff = 1;
       return noise;
+    }
+
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
     }
   </script>
 </head>
@@ -536,7 +640,7 @@
           <canvas style="filter: contrast(1.5)">
           </canvas></nebula-client>
         <div class="home-circle-text">
-          <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-67.5deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-60deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-52.5deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-37.5deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-30deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-22.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-15deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-7.5deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(7.5deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(15deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(22.5deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(30deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(37.5deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(52.5deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(60deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(67.5deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(75deg); transform-origin: 0.5ch 18vh">e</span>
+          <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-108.75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-101.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-93.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-86.25deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-78.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-71.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh">p</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(78.75deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(86.25deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(93.75deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(101.25deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(108.75deg); transform-origin: 0.5ch 18vh">e</span>
         </div>
         <img class="home-circle-icon home-circle-icon-img" src="home/icons/tada.png">
       </div>
@@ -544,18 +648,19 @@
       <span class="intro-text">
         <span id="greeting"><span id="home-greeting">hello!</span></span>
         <br>
-        I'm Lean, a person,
+        I'm Lean
+        <span class="ipa">[<a target="_blank" href="http://ipa-reader.xyz/?text=li%CB%88%C9%99n">liˈən</a>]</span>,
         <br>
-        a software engineer
+        software engineer
         <br>
         who likes making stuff,
         <br>
-        like code, art, and music.
+        code, art, and music.
         <br>
         <br>
-        nice to meet you.
+        Nice to meet you.
         <br>
-        please, <span class="great-time-trigger" onclick="haveAGreatTime()">have a great time.</span>
+        Please, <span class="great-time-trigger" onclick="haveAGreatTime()">have a great time.</span>
       </span>
     </div>
   </div>
@@ -570,52 +675,85 @@
     <p>I want to build good things using technology.</p>
     <p>
       My interests are programming, interactive things, procedural animations,
-      algorithms, art, algorithmic art, music theory, games, and tech.
+      algorithms, art, music theory, games, and tech.
     </p>
-    <p>Sufficiently advanced technology is not required to make magic.</p>
   </section>
 
   <section class="section">
     <h2 class="section-title">Some things I've made</h2>
-    <div class="home-stuff">
+    <div class="home-grid">
 
-      <a class="home-stuff-item" href="/projects/canva-photo-editor/">
-        <div class="home-stuff-image-container">
-          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+      <a class="home-grid-item home-grid-thumbalign-center" href="/projects/wikawik/">
+        <div class="home-grid-image-container">
+          <img class="home-grid-image" src="projects/wikawik/media/wikawik.jpg" alt="" srcset="projects/wikawik/media/wikawik_600.jpg 600w" sizes=" 600px">
         </div>
-        <div class="home-stuff-title-bar">
-          Canva Photo Editor <span class="home-stuff-posttitle">2019</span>
+        <div class="home-grid-title-wrap">
+          <div class="home-grid-title-bar">
+            <div class="home-grid-title-content">
+              <div class="home-grid-title">Wikawik</div>
+              <div class="home-grid-posttitle">(2020) Interactive language map</div>
+            </div>
+          </div>
         </div>
-        <div class="home-stuff-content">
-          Online photo editing tool.
+        <div class="home-grid-content">
+          A webapp that shows the diversity of languages in the Philippines.
+          Learn about the local languages. Listen to local songs and other
+          media. Made in vanilla JS with D3.js. Passion project.
         </div>
       </a>
-      <a class="home-stuff-item" href="/projects/x/">
-        <div class="home-stuff-image-container">
-          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+      <a class="home-grid-item home-grid-thumbalign-center" href="/projects/hypertangram/">
+        <div class="home-grid-image-container">
+          <img class="home-grid-image" src="projects/hypertangram/media/hypertangram_0.jpg" alt="" srcset="projects/hypertangram/media/hypertangram_0_600.jpg 600w" sizes=" 600px">
         </div>
-        <div class="home-stuff-title-bar">
-          Placeholder <span class="home-stuff-posttitle">2020</span>
+        <div class="home-grid-title-wrap">
+          <div class="home-grid-title-bar">
+            <div class="home-grid-title-content">
+              <div class="home-grid-title">Hypertangram</div>
+              <div class="home-grid-posttitle">(2018) Geometric puzzle game</div>
+            </div>
+          </div>
         </div>
-        <div class="home-stuff-content"></div>
+        <div class="home-grid-content">
+          A puzzle game about fitting shapes together. Just like tangram, but
+          the pieces are resizable, allowing for more open-ended solutions. Runs
+          on Android. Supports multi-touch interaction! Hobby project.
+        </div>
       </a>
-      <a class="home-stuff-item" href="/projects/x/">
-        <div class="home-stuff-image-container">
-          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+      <a class="home-grid-item home-grid-thumbalign-default" href="/projects/canva-photo-editor/">
+        <div class="home-grid-image-container">
+          <img class="home-grid-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
         </div>
-        <div class="home-stuff-title-bar">
-          Placeholder <span class="home-stuff-posttitle">2020</span>
+        <div class="home-grid-title-wrap">
+          <div class="home-grid-title-bar">
+            <div class="home-grid-title-content">
+              <div class="home-grid-title">Photo Editor</div>
+              <div class="home-grid-posttitle">(2019) Online image editing</div>
+            </div>
+          </div>
         </div>
-        <div class="home-stuff-content"></div>
+        <div class="home-grid-content">
+          A webapp for quick photo edits. Apply filters. Adjust contrast.
+          Sharpen, blur. Crop, rotate, and resize. Made with React, Canvas API,
+          and WebGL. Project at Canva.
+        </div>
       </a>
-      <a class="home-stuff-item" href="/projects/x/">
-        <div class="home-stuff-image-container">
-          <img class="home-stuff-image" src="projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" alt="undefined" srcset="projects/canva-photo-editor/img/canvaphotoeditor_1_600.jpg 600w" sizes=" 600px">
+      <a class="home-grid-item home-grid-thumbalign-center" href="/projects/dimensions/">
+        <div class="home-grid-image-container">
+          <img class="home-grid-image" src="projects/dimensions/media/dimensions_0.jpg" alt="" srcset="projects/dimensions/media/dimensions_0_600.jpg 600w" sizes=" 600px">
         </div>
-        <div class="home-stuff-title-bar">
-          Placeholder <span class="home-stuff-posttitle">2020</span>
+        <div class="home-grid-title-wrap">
+          <div class="home-grid-title-bar">
+            <div class="home-grid-title-content">
+              <div class="home-grid-title">Dimensions</div>
+              <div class="home-grid-posttitle">(2019) Augmented reality generative art</div>
+            </div>
+          </div>
         </div>
-        <div class="home-stuff-content"></div>
+        <div class="home-grid-content">
+          Generative art with extra dimensions. Web-based, uses vanilla js for
+          the generator and a three.js-based mobile webapp for the AR
+          experience. Made for a company event.
+        </div>
       </a>
 
     </div>

@@ -2,21 +2,60 @@
 <head>
   <title>Photo Editor</title>
   <style>
-    .box-note {
-      display: block;
-      padding: 12px 18px;
-      border-radius: 12px;
-      border: solid 2px var(--clr0-darker);
-      box-sizing: border-box;
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    body {
+      margin: 0;
+      background-color: #111;
+      color: #fff;
+      font-family: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+    }
+
+    :root {
+      --bg-clr: #111;
+      --clr0: #0ad591;
+      --clr0-light: #52f8c1;
+      --clr0-dark: #018b5d;
+      --ease: cubic-bezier(0.6, 0, 0.2, 1);
+    }
+
+    a {
+      color: var(--clr0, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0-dark, #fff);
     }
   </style>
   <style>
     .blog-page {
       display: flex;
       justify-content: center;
+      overflow: hidden;
     }
 
     .content {
+      margin: 60px 0;
       max-width: 700px;
       font-size: 18px;
       line-height: 2.2;
@@ -57,89 +96,64 @@
       margin: 36px 0;
     }
 
-    .markdown img {
-      max-width: 100%;
-      max-height: 80vh;
-      border-radius: 12px;
-      text-align: center;
-    }
-
-    /* todo: convert to component? <caption> */
-    .markdown .caption {
-      display: block;
-      text-align: center;
-      margin-top: 12px;
-      font-size: 80%;
+    .markdown hr {
+      margin: 90px -25%;
+      border: solid 1px #222;
     }
 
     .markdown .center {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      text-align: center;
     }
 
-    /* todo: convert to component? <bleed> */
-    .markdown .bleed {
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
       display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .blog-media {
+      text-align: center;
+    }
+
+    .blog-media-bleed {
       margin: 90px 0;
       max-height: 80vh;
     }
 
-    .markdown .bleed>img,
-    .markdown .bleed>video,
-    .markdown .bleed>div {
-      margin: 0;
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+    }
+
+    .blog-media-bleed .blog-media-element {
       position: relative;
       left: 50%;
-      width: 1400px;
-      max-width: max(1400px, 80vw);
+      max-width: 80vw;
       transform: translateX(-50%);
     }
-  </style>
-  <style>
-    @font-face {
-      font-family: "Space Mono";
-      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
-    }
 
-    @font-face {
-      font-family: "Space Mono";
-      font-style: italic;
-      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Miriam Libre";
-      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Miriam Libre";
-      font-weight: bold;
-      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
-    }
-
-    body {
-      margin: 0;
-      background-color: #111;
-      color: #fff;
-      font-family: "Space Mono", monaco, Consolas, Lucida Console, monospace;
-    }
-
-    :root {
-      --clr0: #0ad591;
-      --clr0-light: #52f8c1;
-      --clr0-dark: #079c6b;
-      --clr0-darker: #0d7553;
-      --ease: cubic-bezier(0.6, 0, 0.2, 1);
-    }
-
-    a {
-      color: var(--clr0, #fff);
-    }
-
-    a:visited {
-      color: var(--clr0-dark, #fff);
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
     }
   </style>
 </head>
@@ -154,30 +168,38 @@
       <!-- prettier-ignore -->
       <div class="markdown">
         <h1 id="photo-editor">Photo Editor</h1>
-        <span class="center">
-          <img class="undefined" src="img/canvaphotoeditor_0.jpg" alt="screenshot of Photo Editor on mobile" srcset="img/canvaphotoeditor_0_75.jpg 75w,img/canvaphotoeditor_0_150.jpg 150w,img/canvaphotoeditor_0_225.jpg 225w,img/canvaphotoeditor_0_300.jpg 300w,img/canvaphotoeditor_0_375.jpg 375w,img/canvaphotoeditor_0_450.jpg 450w" sizes="(max-width:375px) 75px,(max-width:750px) 150px,(max-width:1125px) 225px,(max-width:1500px) 300px,(max-width:1875px) 375px, 450px">
-        </span>
+        <div class="blog-media blog-media-default">
+          <img class="blog-media-element" src="img/canvaphotoeditor_0.jpg" alt="screenshot of Photo Editor on mobile" srcset="img/canvaphotoeditor_0_75.jpg 75w,img/canvaphotoeditor_0_150.jpg 150w,img/canvaphotoeditor_0_225.jpg 225w,img/canvaphotoeditor_0_300.jpg 300w,img/canvaphotoeditor_0_375.jpg 375w,img/canvaphotoeditor_0_450.jpg 450w" sizes="(max-width:375px) 75px,(max-width:750px) 150px,(max-width:1125px) 225px,(max-width:1500px) 300px,(max-width:1875px) 375px, 450px">
+        </div>
+
         <h2 id="edit-photos-online">Edit photos online</h2>
         <p><strong>Photo Editor</strong> (2019) was an online tool offered by <a href="https://www.canva.com">Canva</a> for simple image editing. It had filters, sliders, and crop, resize, and rotation tools.</p>
         <p>Note that it's distinct from the Canva design app. This was more of a standalone tool for quick edits, with an ulterior purpose of marketing the primary Canva app.</p>
         <p><span class="box-note"><strong>Update:</strong> The standalone app has been decommissioned, and photo editing features are now part of the main app.</span></p>
-        <p><span class="bleed"><img src="img/canvaphotoeditor_1.jpg" alt="desktop screenshot"></span></p>
+        <div class="blog-media blog-media-bleed">
+          <img class="blog-media-element" src="img/canvaphotoeditor_1.jpg" alt="desktop screenshot" srcset="img/canvaphotoeditor_1_350.jpg 350w,img/canvaphotoeditor_1_700.jpg 700w,img/canvaphotoeditor_1_1050.jpg 1050w,img/canvaphotoeditor_1_1400.jpg 1400w" sizes="(max-width:350px) 350px,(max-width:700px) 700px,(max-width:1050px) 1050px, 1400px">
+        </div>
+
         <p>In the beginnng, the Photo Editor was a tool made by a third party developer in a proprietary UI framework on top of Angular 1 and Node 5.</p>
         <p>This version was very old and tbh a bit difficult to maintain and iterate on. It was also not responsive so mobile users were missing out.</p>
-        <p><span><img src="img/canvaphotoeditor_old.jpg" alt="old version">
-            <span class="caption">Old version</span>
-          </span></p>
+        <div class="blog-media blog-media-default">
+          <img class="blog-media-element" src="img/canvaphotoeditor_old.jpg" alt="old version" srcset="img/canvaphotoeditor_old_350.jpg 350w,img/canvaphotoeditor_old_700.jpg 700w" sizes="(max-width:350px) 350px, 700px"><span class="blog-media-caption">Old version</span>
+        </div>
+
         <p>So a redesign was made and the app was rewritten in a more modern stack. The new version looks better, modern, and is responsive.</p>
         <p>My part in this redesign was coding the webapp and the welcome page.</p>
-        <p><span class="bleed"><img src="img/canvaphotoeditor_3.jpg" alt="welcome page screenshot">
-            <span class="caption">The welcome page</span>
-          </span></p>
+        <div class="blog-media blog-media-bleed">
+          <img class="blog-media-element" src="img/canvaphotoeditor_3.jpg" alt="welcome page screenshot" srcset="img/canvaphotoeditor_3_350.jpg 350w,img/canvaphotoeditor_3_700.jpg 700w,img/canvaphotoeditor_3_1050.jpg 1050w,img/canvaphotoeditor_3_1400.jpg 1400w" sizes="(max-width:350px) 350px,(max-width:700px) 700px,(max-width:1050px) 1050px, 1400px"><span class="blog-media-caption">The welcome page</span>
+        </div>
+
         <p>I wrote the new app in <a href="https://reactjs.org/"><strong>React</strong></a> with <a href="https://mobx.js.org/"><strong>MobX</strong></a>.</p>
         <p>There were a few WebGL and canvas filter algorithms from the old app that I reimplemented. Had to dip my toes into some fragment shaders for the WebGL version.</p>
-        <p><img src="img/canvaphotoeditor_2.jpg" alt="desktop screenshot"></p>
+        <div class="blog-media blog-media-default">
+          <img class="blog-media-element" src="img/canvaphotoeditor_2.jpg" alt="desktop screenshot" srcset="img/canvaphotoeditor_2_350.jpg 350w,img/canvaphotoeditor_2_700.jpg 700w" sizes="(max-width:350px) 350px, 700px">
+        </div>
+
         <p>The backend is a simple server written with <a href="https://expressjs.com/"><strong>Express</strong></a> and the whole app was deployed on <a href="https://www.heroku.com/"><strong>Heroku</strong></a>.</p>
-        <p>It was a fun project with a very nice result.</p>
-        <p>After the makeover we saw doubling in signups! 🔥
+        <p>After the launch we saw doubling in signups! 🔥 It was a fun project.
         </p>
 
       </div>

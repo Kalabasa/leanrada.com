@@ -1,0 +1,329 @@
+<html>
+<head>
+  <title>Dimensions - Part 2: Augmented reality</title>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    body {
+      margin: 0;
+      background-color: #111;
+      color: #fff;
+      font-family: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+    }
+
+    :root {
+      --bg-clr: #111;
+      --clr0: #0ad591;
+      --clr0-light: #52f8c1;
+      --clr0-dark: #018b5d;
+      --ease: cubic-bezier(0.6, 0, 0.2, 1);
+    }
+
+    a {
+      color: var(--clr0, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0-dark, #fff);
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .content {
+      margin: 60px 0;
+      max-width: 700px;
+      font-size: 18px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+    }
+
+    .markdown h1,
+    .markdown h2,
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-weight: lighter;
+      font-style: italic;
+      letter-spacing: 0.04em;
+      margin: 36px 0;
+    }
+
+    .markdown h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown h2 {
+      font-size: 150%;
+    }
+
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-size: 120%;
+    }
+
+    .markdown p {
+      font-family: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+      margin: 36px 0;
+    }
+
+    .markdown hr {
+      margin: 90px -25%;
+      border: solid 1px #222;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+
+<body>
+
+
+  <div class="blog-page">
+    <div class="content">
+
+      <!-- prettier-ignore -->
+      <div class="markdown">
+        <h1 id="dimensions">Dimensions</h1>
+        <video muted="" autoplay="" loop="" playsinline="" style="max-height: 512px; object-fit: cover">
+          <source src="../media/dimensions_3.mp4">
+          <a href="../media/dimensions_3.mp4">Video</a>
+        </video>
+
+        <h2 id="part-2-augmented-reality">Part 2. Augmented reality</h2>
+        <p>The idea of including augmented reality into the art piece was wholly inspired by <a href="https://github.com/jeromeetienne/AR.js"><strong>AR.js</strong></a>, an awesome project that brings fast and easy augmented reality to the web.</p>
+        <iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+
+        <p>The AR.js demo looked really cool and smooth.</p>
+        <p>With augmented reality, the art piece became an art experience. The planned user flow for the experience went like this:</p>
+        <ol>
+          <li>User sees the piece and notices the <strong>QR code</strong>.</li>
+          <li>User whips out smartphone to <strong>scan</strong> the QR code.</li>
+          <li>Smartphone is directed to the <strong>app</strong>.</li>
+          <li>App opens the phone’s camera to <strong>track</strong> the piece in 3D space.</li>
+          <li>App superimposes virtual art on the physical art, <em>augmenting reality</em>. ✨</li>
+        </ol>
+        <p>Implementing object tracking (step 4) proved to be difficult. With AR.js, it required special <strong>markers</strong> in order to track the 3D scene.</p>
+        <p>The prints were already finalized, so I couldn’t add AR markers on it by then. Plus, the piece already had a QR code slapped on it. Adding any more tags would’ve ruined it.</p>
+        <p>I looked around for alternatives like <strong>Tracking.js</strong>, <strong>OpenCV</strong>, and even <strong>TensorFlow</strong>, but ultimately implemented my own <strong>image recognition</strong> algorithm.</p>
+        <hr>
+        <h2 id="recognizing-the-piece">Recognizing the piece</h2>
+        <p><a href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>Image recognition</strong></a> is a computer vision problem of determining whether an image contains some specific object or not. For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera.</p>
+        <span class="bleed">
+          <video muted="" autoplay="" loop="" playsinline="">
+            <source src="../media/dimensions_imagerec.mp4">
+            <a href="../media/dimensions_imagerec.mp4">Demo video</a>
+          </video>
+        </span>
+        <span class="caption">The app recognizes when the target piece has been aligned.</span>
+
+        <p>There exists many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. These days everyone just uses neural networks and deep learning if possible.</p>
+        <p>These technologies power some apps like face filters, but are also used for things like mass camera surveillance.</p>
+        <p>In my case however, I’ve simplified the problem to determining whether any of the three specific art pieces is in the center frame in the user’s camera, or not. No position tracking.</p>
+        <p>This reduced the problem to a yes/no problem.</p>
+        <p>Consequently, the algorithm was relatively simple. It’s just a preprocessing step and a straightforward “feature matching” of the target images.</p>
+        <p>First, some theory. Phone camera sensors don’t actually pick up the true color of an object. The perceived color is affected by room lighting, camera quality, and other factors.</p>
+        <p><span><img src="../media/dimensions_illo1.jpg" alt="diagram">
+            <span class="caption">True color (TC) vs perceived color (PC)</span>
+          </span></p>
+        <p>If we directly used data from the camera feed to compare against the target images, it would fail most of the time. Preprocessing was necessary. Let's call this preprocessing "normilization".</p>
+        <p>I've come up with a model for the perceived color, roughly based on graphics programming illumination models:</p>
+        <pre><code>PC = TC * a + b
+</code></pre>
+        <ul>
+          <li><code>PC</code> is the color perceived from the camera sensor.</li>
+          <li><code>TC</code> (unknown variable) is true color of the material.</li>
+          <li><code>a</code> and <code>b</code> (unknown variables) are parameters that together describe the vague real-world lighting variables like white balance, environmental illumination, camera sensor quality, and other factors.</li>
+        </ul>
+        <p>The algorithm starts by getting the average colors of three predetermined regions over the camera image.</p>
+        <p><span><img src="../media/dimensions_illo2.jpg" alt="diagram">
+            <span class="caption">The regions were specifically chosen to capture key features.</span>
+          </span></p>
+        <p>Let’s call the colors <code>PC1</code>, <code>PC2</code>, and <code>PC3</code>.</p>
+        <p>The top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. This produces two difference colors.</p>
+        <p>Let’s call the resulting colors <code>D1</code> and <code>D2</code>:</p>
+        <p><img src="../media/dimensions_illo3.jpg" alt="diagram"></p>
+        <pre><code>D1 = PC2 - PC1
+D2 = PC3 - PC2
+</code></pre>
+        <p>By subtracting two perceived colors, the unknown lighting variable <code>b</code> could be eliminated:</p>
+        <pre><code>D1 = PC2 - PC1
+  = (TC2 * a + b) - (TC1 * a + b)
+  = TC2 * a - TC1 * a
+  = (TC2 - TC1) * a
+</code></pre>
+        <p>Expanding the <code>PC</code> terms according to the model above will cancel out the <code>b</code> terms, leaving just <code>TC</code> and <code>a</code> terms. </p>
+        <pre><code>D1 = (TC2 - TC1) * a
+D2 = (TC3 - TC2) * a
+</code></pre>
+        <p>To eliminate the remaining lighting variable <code>a</code>, the values were normalized, that is, divided each by the highest value.</p>
+        <p>Let’s call the normalized values <code>N1</code> and <code>N2</code>, for normalized <code>D1</code> and <code>D2</code>, respectively.</p>
+        <p><img src="../media/dimensions_illo4.jpg" alt="diagram"></p>
+        <pre><code>N1 = D1 / max(D1, D2)
+N2 = D2 / max(D1, D2)
+</code></pre>
+        <p>I’m not showing the full solution here, but normalizing will get rid of the common factor <code>a</code>. Thus:</p>
+        <pre><code>N1 = (TC2 - TC1) / max(TC2 - TC1, TC3 - TC2)
+N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
+</code></pre>
+        <p>As you can see the final values <code>N1</code> and <code>N2</code> are not affected by the lighting parameters at all. They are purely derived from true color. <small>According to the model anyway.</small></p>
+        <p>The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various smartphone cameras.</p>
+        <p><span><img src="../media/dimensions_tester.jpg" alt="">
+            <span class="caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized.</span>
+          </span></p>
+        <p>The final step was to combine the RGB channels of the normalized colors into one series of numbers, called the <strong>feature vector</strong> of the image, i.e., a set of numbers that <em>summarize</em> the image.</p>
+        <p><span><img src="../media/dimensions_illo5.jpg" alt="diagram">
+            <span class="caption"><code>featureVector = [N1.r, N1.g, N1.b, N2.r, N2.g, N2.b]</code></span>
+          </span></p>
+        <p>Turning the image into a vector made the problem of comparing image similarity a mathematical one. If the numbers match, then the images match.</p>
+        <p>All it needed was to compare the feature vector of the processed camera image against the feature vector of the target image.</p>
+        <p><span><img src="../media/dimensions_illo6.jpg" alt="diagram">
+            <span class="caption">Euclidean distance can be used to compute vector “similarity”.</span>
+          </span></p>
+        <p>So, in application of theory, first I got the phone’s camera stream via the <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices"><strong>MediaDevice</strong> API</a>, connecting the camera to a <code>&lt;video&gt;</code> element.</p>
+        <pre><code>  On each frame of the `&lt;video&gt;` stream, the image is processed into a feature vector. Then the feature vector is compared against the target vectors.
+
+  If the [distance](https://en.wikipedia.org/wiki/Euclidean_distance) between the vectors are kept below some threshold, then the image is a match.
+
+  Once it gets a match the **augmented reality** experience starts rolling in.
+
+  ---
+
+  ## Augmenting reality
+
+  The vision for the augmented reality part was that the tiles in the piece would come alive, burst out of the piece, and start drawing streaks of paint, ink, or whatever in the air, depending on the tile type.
+
+  ![AR notes](../media/dimensions_arnotes.jpg)
+
+  It was basically going to be a particle system.
+
+  This was rendered using [**three.js**](https://threejs.org/). I’ve used three.js before and it was great, with easy-to-learn APIs and good examples.
+
+  I was quickly able to sketch out virtual objects in space as a prototype.
+
+  &lt;video muted="" autoplay="" loop="" playsinline=""&gt;
+    &lt;source src="../media/dimensions_ar1.mp4"&gt;
+    &lt;a href="../media/dimensions_ar1.mp4"&gt;Prototype video&lt;/a&gt;
+  &lt;/video&gt;
+
+  This was made by overlaying a transparent three.js `&lt;canvas&gt;` onto the `&lt;video&gt;` that’s streaming the camera feed.
+
+  A three.js extension called `DeviceOrientationControls` provides synchronization between the device’s orientation and the virtual camera.
+
+  One caveat though is that only the orientation can be tracked. Tracking movements across space weren’t possible yet, so virtual objects would appear follow the device when it moves.
+
+  The experience was designed around this limitation by keeping the objects at constant distance to the user, subtly hinting that there’s no need to move or walk, only looking around.
+
+  &lt;!-- TODO demo video --&gt;
+
+  &lt;small class="small-block"&gt;There was a bug on iOS Safari with orientation tracking, which apparently was just introduced July 2019, one month before the event. Sadly some iPhone users did not get the full experience.&lt;/small&gt;
+
+  Modeling the tiles as 3D objects were simply extrusions of the tiles’ 2D shape paths, made very easy using three.js’s `ExtrudeGeometry`.
+
+  The “paint” trails were made using an old unmaintained library called [**TrailRendererJS**](https://github.com/mkkellogg/TrailRendererJS), which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.
+
+  ![TrailRenderer example](../media/dimensions_trailex.png)
+
+  The floating tiles’ movement behavior were guided by a smooth triangle wave function:
+
+  &lt;span&gt;![smooth triangle wave function](../media/dimensions_trianglewave2.png)
+    &lt;span class="caption"&gt;`y = arccos(0.95 sin(x))`&lt;/span&gt;
+  &lt;/span&gt;
+
+  This triangle wave path was wrapped around a virtual cylinder around the user’s position.
+
+  With each floating tile following a variant of this path, the result was an organized chaos of criss-crossing particles orbiting the user.
+
+  &lt;video muted="" autoplay="" loop="" playsinline=""&gt;
+    &lt;source src="../media/dimensions_trail.mp4"&gt;
+    &lt;a href="../media/dimensions_trail.mp4"&gt;Demo video&lt;/a&gt;
+  &lt;/video&gt;
+
+  One interesting experiment was when the trails were allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a nice pattern.
+
+  &lt;span&gt;![](../media/dimensions_trailart.png)
+    &lt;span class="caption"&gt;Trail art&lt;/span&gt;
+  &lt;/span&gt;
+
+  When it finally exhibited, I mostly watched from the sidelines, taking notes on how people interacted. It’s like live testing on prod.
+
+  There were some UX issues that had to be fixed. It wasn‘t as seamless as I’ve hoped, and explicit instructions on how to use it were needed.
+
+  It went smoothly for the most part, after a few hotfixes. Seeing people react to it was great! ⭐️
+
+  The iOS bug was never fixed. 🤖
+
+  &lt;span class="bleed"&gt;
+  &lt;div style="display: flex; max-height: 80vh"&gt;
+    &lt;video muted="" autoplay="" loop="" playsinline="" style="flex: 1 1 auto; object-fit: cover; width: 50%"&gt;
+      &lt;source src="../media/dimensions_2.mp4"&gt;
+      &lt;a href="../media/dimensions_2.mp4"&gt;Reaction video&lt;/a&gt;
+    &lt;/video&gt;
+  &lt;/div&gt;
+  &lt;/span&gt;
+
+  You can give it a try right on this page!
+
+  Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.
+
+  &lt;span class="bleed"&gt;![](../media/dimensions_finalset.jpg)&lt;/span&gt;
+  &lt;span class="caption"&gt;Go to [tiny.cc/kdi](https://kalabasa.github.io/dimensions/) on phone if QR doesn’t work.&lt;/span&gt;
+
+  Here’s the final set!
+
+  It has been a really fun and challenging project! 🎉
+&lt;/video&gt;&lt;/canvas&gt;&lt;/video&gt;&lt;/video&gt;
+</code></pre>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+<div class="{'blog-media blog-media-' + (attrs.type ?? 'default')}">
+  <script render>
+    if (isImg(attrs.src)) {
+      // prettier-ignore
+      yield (<responsive-img
+        class="blog-media-element"
+        alt="{attrs.alt}"
+        src="{attrs.src}"
+        spec="{attrs.spec ?? defaultResponsiveImageSpec()}"
+      />);
+    } else if (isVideo(attrs.src)) {
+      // prettier-ignore
+      yield (<video
+        class="blog-media-element"
+        muted
+        autoplay
+        loop
+        aria-label="{attrs.alt}"
+      >
+        <source src="{attrs.src}" />
+        <a href="{attrs.src}">{attrs.alt}</a>
+      </video>);
+    } else {
+      throw new Error("invalid media src: " + attrs.src);
+    }
+
+    if (attrs.caption) {
+      // prettier-ignore
+      yield (<span class="blog-media-caption">{attrs.caption}</span>);
+    }
+  </script>
+</div>
+
+<script static>
+  function isImg(src) {
+    const ext = src.substring(src.length - 4);
+    return ext === ".png" || ext === ".jpg";
+  }
+
+  function isVideo(src) {
+    const ext = src.substring(src.length - 4);
+    return ext === ".mp4";
+  }
+
+  function defaultResponsiveImageSpec() {
+    switch (attrs.type) {
+      case "bleed":
+        return "100% [1400) 1400";
+      default:
+        return "100% [700) 700";
+    }
+  }
+</script>
+
+<style>
+  .blog-media {
+    text-align: center;
+  }
+  .blog-media-bleed {
+    margin: 90px 0;
+    max-height: 80vh;
+  }
+
+  .blog-media-element {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 18px;
+  }
+  .blog-media-bleed .blog-media-element {
+    position: relative;
+    left: 50%;
+    max-width: 80vw;
+    transform: translateX(-50%);
+  }
+
+  .blog-media-caption {
+    display: block;
+    font-size: 15px;
+  }
+</style>

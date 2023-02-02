@@ -1,6 +1,6 @@
 <script render>
   const imgAttrs = await generateImages(attrs.src, attrs.spec);
-  return html`<img class="${attrs.class}" src="${attrs.src}" alt="${attrs.alt}" srcset="${imgAttrs.srcset}" sizes="${imgAttrs.sizes}" />`;
+  return html`<img class="${attrs.class ?? ""}" src="${attrs.src}" alt="${attrs.alt ?? ""}" srcset="${imgAttrs.srcset}" sizes="${imgAttrs.sizes}" />`;
 </script>
 
 <script static>
@@ -13,6 +13,10 @@
   const globalMaxImageSize = 1400;
 
   async function generateImages(src, spec) {
+    if (!fs.existsSync(src)) {
+      throw new Error("Responsive image src does not exist: " + path.resolve(src));
+    }
+
     const image = await fs.promises.readFile(src);
     const imageWidth = await sharp(image)
       .metadata()
@@ -20,6 +24,7 @@
 
     const rules = parseSpec(spec);
     evaluateRelativeSizes(rules, Math.min(imageWidth, globalMaxImageSize));
+    mergeRules(rules);
 
     const srcset = [];
     const sizes = [];
@@ -94,6 +99,28 @@
       };
 
       rules.splice(i, 1, ...subrules);
+    }
+  }
+
+  /**
+   * Merge adjacent rules with same size.
+   *
+   * @param {Rule[]} rules with no relative values
+   */
+  function mergeRules(rules) {
+    let lastRule = rules[rules.length - 1];
+    for (let i = rules.length - 2; i >= 0; i--) {
+      const rule = rules[i];
+      if (
+        rule.size.value === lastRule.size.value &&
+        rule.high === lastRule.low &&
+        (rule.highInclusive || lastRule.lowInclusive)
+      ) {
+        rules.splice(i + 1, 1);
+        rule.high = lastRule.high;
+        rule.highInclusive = lastRule.highInclusive;
+      }
+      lastRule = rule;
     }
   }
 
@@ -181,11 +208,18 @@
       const outStats = fs.statSync(outPath);
       if (outStats.isFile()) {
         const srcStats = fs.statSync(src);
-        if (outStats.mtimeMs > srcStats.mtimeMs) return;
+        if (outStats.mtimeMs >= srcStats.mtimeMs) return;
       }
     }
 
-    await sharp(image).resize(width).toFile(outPath);
+    console.log("Resizing", src, "→", outPath);
+    outPath = path.resolve(outPath);
+    await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
+    await sharp(image)
+      .jpeg({ mozjpeg: true, quality: 95 })
+      .png({ quality: 95 })
+      .resize(width)
+      .toFile(outPath);
   }
 
   function getOutPath(src, width) {

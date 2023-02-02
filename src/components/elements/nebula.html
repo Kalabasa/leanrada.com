@@ -23,8 +23,11 @@
         this.context = null;
         this.noise = null;
 
-        this.gridSize = 30;
+        this.size = 30;
         this.palette = ["#ffffff"];
+
+        this.cellWidth = 1; // placeholder
+        this.cellHeight = 1; // placeholder
 
         this.lastT = 0;
         this.startT = 0;
@@ -58,10 +61,11 @@
 
         // initialize
         if (!this.context) {
-          const cellWidth = Math.ceil(canvas.width / this.gridSize);
-          canvas.width = this.gridSize;
-          canvas.height = this.gridSize;
-          canvas.style.filter += ` blur(${cellWidth * 1.25}px)`;
+          this.cellWidth = Math.ceil(canvas.offsetWidth / this.size);
+          this.cellHeight = Math.ceil(canvas.offsetHeight / this.size);
+          canvas.width = this.size;
+          canvas.height = this.size;
+          canvas.style.filter += ` blur(${this.cellWidth * 1.25}px)`;
           this.context = canvas.getContext("2d");
         }
 
@@ -91,17 +95,33 @@
             ? 1 * ((this.startT + initTime - t) / initTime)
             : 0.016;
 
-        const { noise, gridSize, palette } = this;
+        const { noise, size, palette, cellWidth, cellHeight } = this;
+        const halfGridSize = size / 2;
+
+        let mouseCell = null;
+        // mousePosition from lib/common
+        if (window.mousePosition) {
+          const { x, y } = window.mousePosition;
+          const bounds = canvas.getBoundingClientRect();
+          if (
+            bounds.left < x &&
+            x < bounds.right &&
+            bounds.top < y &&
+            y < bounds.bottom
+          ) {
+            mouseCell = {
+              x: (x - bounds.x) / cellWidth,
+              y: (y - bounds.y) / cellHeight,
+            };
+          }
+        }
+
         const paletteLength = palette.length;
         const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
         const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
 
-        const cellWidth = Math.ceil(canvas.width / gridSize);
-        const cellHeight = Math.ceil(canvas.height / gridSize);
-        const halfGridSize = gridSize / 2;
-
-        for (let i = 0, x = 0; i < gridSize; i++, x += cellWidth) {
-          for (let j = 0, y = 0; j < gridSize; j++, y += cellHeight) {
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
             const xy = [
               1000 + (i - halfGridSize) * xScale + Math.sin(t * 0.01) * 2,
               1000 + (j - halfGridSize) * yScale + Math.cos(t * 0.007) * 2,
@@ -110,15 +130,21 @@
             const p2 = noise.get(...xy, t * 0.03 + 0.5);
             // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
             const p = p1 + p2;
+
+            const mouseProximity =
+              mouseCell == null
+                ? 0
+                : 1 - sigmoid(Math.hypot(i - mouseCell.x, j - mouseCell.y) - 4);
+
             const paletteIndex = Math.floor(paletteLength * p);
 
             const rgb = palette[paletteIndex];
-            const a = Math.floor(alpha * 255)
+            const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
               .toString(16)
               .padStart(2, "0");
 
             context.fillStyle = `${rgb}${a}`;
-            context.fillRect(x, y, cellWidth, cellHeight);
+            context.fillRect(i, j, 1, 1);
           }
         }
       }
@@ -134,5 +160,9 @@
     noise.perlin_octaves = 1; // ?? defaults
     noise.perlin_amp_falloff = 1;
     return noise;
+  }
+
+  function sigmoid(x) {
+    return 1 / (1 + Math.exp(-x));
   }
 </script>
