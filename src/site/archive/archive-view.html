@@ -1,35 +1,66 @@
 <div class="archive-header">
-  <span>💀 You are viewing an old version of my website!</span>
-  <script render>
-    if (attrs.newhref) {
-      // prettier-ignore
-      yield (<btn tag="a" href="{attrs.newhref}">✨ Go to the new page ✨</btn>);
-    } else {
-      // prettier-ignore
-      yield (<btn tag="a" href="/">✨ Go to the new site ✨</btn>);
-    }
-  </script>
+  <div class="archive-message">
+    You are viewing an old version of my website! 💀
+  </div>
+  <div class="archive-btn">
+    <script render>
+      if (attrs.newhref) {
+        // prettier-ignore
+        yield (<btn tag="a" href="{attrs.newhref}">Go to the new page</btn>);
+      } else {
+        // prettier-ignore
+        yield (<btn tag="a" href="/">Go to the new site</btn>);
+      }
+    </script>
+  </div>
 </div>
 <iframe class="archive-iframe" src="{attrs.src}"></iframe>
 
 <style>
   .archive-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    position: absolute;
+    width: 100%;
     height: 72px;
-    padding: 36px;
     font-size: 18px;
     font-weight: bold;
     background: #000;
     color: #fff;
-    box-sizing: border-box;
+    animation: archive-header-enter 2s 1s both;
+    z-index: 1;
+  }
+
+  .archive-message {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .archive-btn {
+    position: absolute;
+    top: 18px;
+    right: 36px;
   }
 
   .archive-iframe {
     border: none;
+    margin-top: 72px;
     width: 100%;
     height: calc(100% - 72px);
     background: #fff;
+    animation: archive-iframe-enter 2s 2s both;
+  }
+
+  @keyframes archive-header-enter {
+    from {
+      height: 50%;
+    }
+  }
+
+  @keyframes archive-iframe-enter {
+    from {
+      filter: grayscale(1) contrast(0.5);
+    }
   }
 </style>
