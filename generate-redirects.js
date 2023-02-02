@@ -2,14 +2,14 @@ const glob = require("glob");
 const path = require("node:path");
 const fs = require("node:fs");
 const { argv } = require("node:process");
-const exp = require("node:constants");
 
 const redirects = [
+  ["works.html", "archive/v3/works.html"],
   ["works/**", "archive/v3/works/**.html"],
-  ["works/canvaphotoeditor.html", "archive/v3/works/canvaphotoeditor.html", "projects/canva-photo-editor/"],
-  ["works/dimensions.html", "archive/v3/works/dimensions.html", "projects/dimensions/"],
-  ["works/hypertangram.html", "archive/v3/works/hypertangram.html", "projects/hypertangram/"],
-  ["works/wikawik.html", "archive/v3/works/wikawik.html", "projects/wikawik/"],
+  ["works/canvaphotoeditor.html", "projects/canva-photo-editor/"],
+  ["works/dimensions.html", "projects/dimensions/"],
+  ["works/hypertangram.html", "projects/hypertangram/"],
+  ["works/wikawik.html", "projects/wikawik/"],
 ];
 
 const siteSrc = path.resolve(__dirname, "src", "site");
@@ -20,8 +20,15 @@ async function main() {
   let expandedRedirects = new Map();
 
   for (const [from, to, newHref] of redirects) {
-    const toFiles = glob.sync(path.resolve(siteSrc, to), { nodir: true });
+    const toFiles = glob.sync(path.resolve(siteSrc, to));
     for (const toFile of toFiles) {
+      if (!toFile.endsWith(".html")) {
+        const stats = fs.lstatSync(toFile);
+        if (stats.isDirectory && !fs.existsSync(path.resolve(toFile, "index.html"))) {
+          continue;
+        }
+      }
+
       const toHref = path.relative(siteSrc, toFile);
 
       let fromHref;
@@ -45,16 +52,22 @@ async function main() {
   await Promise.all(
     Array.from(expandedRedirects.entries())
       .map(async ([from, [to, newHref]]) => {
-        console.log("Generating redirect file", from, "pointing to", to, ...(newHref ? ["with new href", newHref] : []));
+        console.log("Generating redirect for", from, "pointing to", to, ...(newHref ? ["with new href", newHref] : []));
+
         let html;
         if (to.startsWith("archive/")) {
-          html = `<html><page><archive-view src="/${to}" newhref="${newHref ? '/' + newHref : ''}" /></page></html>`;
+          html = `<html><page noheader="true"><archive-view src="/${to}" newhref="${newHref ? '/' + newHref : ''}" /></page></html>`;
         } else {
-          html = `<redirect-page href="/${newHref ?? to}" />`;
+          html = `<html><redirect-page href="/${newHref ?? to}" /></html>`;
         }
-        const outPath = path.resolve(siteSrc, from);
-        await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
-        await fs.promises.writeFile(outPath, html);
+
+        const outPath = path.resolve(siteSrc, from + "/index.html");
+        const outDir = path.dirname(outPath);
+        await fs.promises.mkdir(outDir, { recursive: true });
+        await Promise.all([
+          fs.promises.writeFile(path.resolve(outDir, ".generated"), ""),
+          fs.promises.writeFile(outPath, html)
+        ]);
       })
   );
 }

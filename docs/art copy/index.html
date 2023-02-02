@@ -1,0 +1,231 @@
+<html>
+<head>
+  <title>Art</title>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    body {
+      margin: 0;
+      background-color: #111;
+      color: #fff;
+      font-family: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+    }
+
+    :root {
+      --bg-clr: #111;
+      --clr0: #0ad591;
+      --clr0-light: #52f8c1;
+      --clr0-dark: #018b5d;
+      --ease: cubic-bezier(0.6, 0, 0.2, 1);
+    }
+
+    a {
+      color: var(--clr0, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0-dark, #fff);
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item,
+    .main-header-item:visited {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+    }
+
+    .main-header-item:hover {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      cursor: pointer;
+      z-index: 1;
+    }
+  </style>
+  <style>
+    .notice {
+      margin: auto;
+      padding: 120px 0;
+      width: 600px;
+      font-size: 30px;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <div class="main-header ">
+    <div class="main-header-bar">
+      <a href="/" class="main-header-item">Home</a>
+      <a href="/projects/" class="main-header-item">Works</a>
+      <img class="main-header-icon" src="/icons/tada.png">
+      <a href="/art/" class="main-header-item">Art</a>
+      <a href="/blog/" class="main-header-item">Blog</a>
+    </div>
+  </div>
+
+  <div class="notice">
+    <p>Um, this is embarrasing, but this page is under construction! 🚧</p>
+  </div>
+
+  <script>
+    (() => {
+      const mainHeader = document.querySelector(".main-header");
+      const mainHeaderIcon = document.querySelector(".main-header-icon");
+
+      let currentY = 0;
+      let currentYTarget = 0;
+
+      let mouseHovering = false;
+
+      let lastScrollY = window.scrollY;
+      let lastMouseY = 0;
+      window.addEventListener("scroll", debounce(onScroll));
+      window.addEventListener("mousemove", debounce(onMouseMove, 100));
+
+      function onScroll(event) {
+        const dy = window.scrollY - lastScrollY;
+
+        // move with the page
+        currentY -= dy;
+        if (currentY > 0) {
+          currentY = 0;
+        } else if (currentY < -mainHeader.offsetHeight) {
+          currentY = -mainHeader.offsetHeight;
+        }
+
+        currentYTarget = currentY;
+        updateDOM();
+
+        lastScrollY = window.scrollY;
+      }
+
+      function onMouseMove(event) {
+        const dy = event.clientY - lastMouseY;
+
+        // show when mouse goes near the top
+        const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+        if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+          currentYTarget = 0;
+          mouseHovering = true;
+        } else if (
+          mouseHovering &&
+          dy > 0 &&
+          event.clientY > mainHeader.offsetHeight * 4
+        ) {
+          currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+          mouseHovering = false;
+        }
+
+        updateDOM();
+        lastMouseY = event.clientY;
+      }
+
+      const updateDOM = debounce(() => {
+        mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+
+        if (Math.abs(currentY - currentYTarget) > 1) {
+          currentY += (currentYTarget - currentY) * 0.2;
+          requestAnimationFrame(updateDOM);
+        } else {
+          currentY = currentYTarget;
+        }
+      });
+
+      let iconY = 0;
+      let iconVy = null;
+
+      const fallIcon = debounce(() => {
+        if (iconVy == null) iconVy = -5;
+        iconVy += 0.8;
+        iconY += iconVy;
+        mainHeaderIcon.style.transform = `translateY(${iconY}px)`;
+        if (iconY >= window.innerHeight) {
+          mainHeaderIcon.style.visibility = "hidden";
+        } else {
+          requestAnimationFrame(fallIcon);
+        }
+      });
+
+      mainHeaderIcon.addEventListener("click", fallIcon, {
+        once: true
+      });
+
+      function debounce(fn, ms = 0) {
+        let recentlyFired = false;
+        return (...args) => {
+          if (recentlyFired) return;
+          recentlyFired = true;
+          if (ms === 0) {
+            requestAnimationFrame(() => (recentlyFired = false));
+          } else {
+            setTimeout(() => (recentlyFired = false), ms);
+          }
+          return fn(...args);
+        };
+      }
+    })();
+  </script>
+</body>
+</html>
