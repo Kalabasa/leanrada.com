@@ -2,6 +2,14 @@
   <script render>
     const { marked } = require("marked");
 
+    const renderer = new marked.Renderer();
+    const renderLink = renderer.link;
+    renderer.link = (href, title, text) => {
+      const a = renderLink.call(renderer, href, title, text);
+      return a.replace(/^<a/, "<aa").replace(/a>$/, "aa>");
+    };
+    marked.use({ renderer });
+
     let indent = null;
 
     const mdText = children.map(getMdText).join("");
