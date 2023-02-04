@@ -1,11 +1,11 @@
-<div class="{renderClass()}">
+<header class="{renderClass()}">
   <div class="main-header-bar">
     {renderItem('/', 'Home')}
     <img class="main-header-icon" src="/icons/tada.png" />
     {renderItem('/projects/', 'Works')}
     <div class="main-header-indicator"></div>
   </div>
-</div>
+</header>
 
 <script static>
   function renderClass() {
@@ -64,12 +64,20 @@
     text-transform: uppercase;
     color: #fff;
     backdrop-filter: blur(8px);
-    background: linear-gradient(60deg, #fff2 50%, transparent 50%) no-repeat;
+    background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+    background-repeat: no-repeat;
     background-size: 220% 100%;
     background-position: 115%;
-    transition: background-position 0.4s cubic-bezier(0.2, 0, 0, 1);
+    transition: background-position 0.2s var(--ease);
   }
   .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #fff2 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
     background-position: 0%;
   }
   .main-header-item.select {
@@ -89,10 +97,14 @@
     position: absolute;
     width: 6px;
     height: 6px;
-    left: calc(50% - 3px);
+    left: 50%;
     top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
     border-radius: 50%;
     background: #fff;
+    background-clip: padding-box;
     opacity: 0;
     transition: opacity 50ms;
   }
@@ -114,6 +126,7 @@
     let lastMouseY = 0;
     window.addEventListener("scroll", debounce(onScroll));
     window.addEventListener("mousemove", debounce(onMouseMove, 100));
+    mainHeader.addEventListener("touchstart", onTouchStart);
 
     function onScroll(event) {
       const dy = window.scrollY - lastScrollY;
@@ -151,6 +164,11 @@
 
       updateDOM();
       lastMouseY = event.clientY;
+    }
+
+    function onTouchStart(event) {
+      currentYTarget = 0;
+      updateDOM();
     }
 
     const updateDOM = debounce(() => {

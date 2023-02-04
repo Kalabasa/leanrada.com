@@ -1,10 +1,12 @@
 <script render>
-  if (attrs.tag === "a") {
+  if (attrs.tag === "a" || attrs.tag === "aa") {
     // prettier-ignore
     return (<aa {...attrs} class="{'btn ' + (attrs.class ?? '')}"><slot /></aa>);
-  } else {
+  } else if (!attrs.tag || attrs.tag === "button") {
     // prettier-ignore
     return (<button {...attrs} class="{'btn ' + (attrs.class ?? '')}"><slot /></button>);
+  } else {
+    throw new Error("Invalid tag: " + attrs.tag);
   }
 </script>
 
@@ -14,8 +16,15 @@
     padding: 6px 12px;
     border-radius: 12px;
     border: none;
-    background: var(--clr0-dark);
-    color: #fff;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
     text-decoration: none;
+    background: var(--clr0);
+    color: #fff;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background: var(--clr0-light);
   }
 </style>

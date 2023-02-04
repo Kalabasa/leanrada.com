@@ -1,20 +1,20 @@
 <a
-  class="{'home-grid-item home-grid-thumbalign-' + (attrs.thumbalign ?? 'default')}"
+  class="{'card-grid-item card-grid-thumbalign-' + (attrs.thumbalign ?? 'default')}"
   href="{attrs.href}"
 >
-  <div class="home-grid-image-container">
-    <responsive-img class="home-grid-image" src="{attrs.imgsrc}" spec="600" />
+  <div class="card-grid-image-container">
+    <responsive-img class="card-grid-image" src="{attrs.imgsrc}" spec="600" />
   </div>
-  <div class="home-grid-title-wrap">
-    <div class="home-grid-title-bar">
-      <div class="home-grid-title-content">
-        <div class="home-grid-title">{attrs.title}</div>
-        <div class="home-grid-posttitle">{attrs.posttitle}</div>
+  <div class="card-grid-title-wrap">
+    <div class="card-grid-title-bar">
+      <div class="card-grid-title-content">
+        <div class="card-grid-title">{attrs.title}</div>
+        <div class="card-grid-posttitle">{attrs.posttitle}</div>
       </div>
     </div>
   </div>
-  <div class="home-grid-content">
-    <div class="home-grid-posttitle home-grid-postitle-small">
+  <div class="card-grid-content">
+    <div class="card-grid-posttitle card-grid-postitle-small">
       {attrs.posttitle}
     </div>
     <slot />
@@ -22,32 +22,37 @@
 </a>
 
 <style>
-  .home-grid-item {
+  .card-grid-item {
     display: block;
     text-decoration: none;
     text-align: start;
     color: #fff;
     overflow: hidden;
+    transition: 0.2s var(--ease);
+    transition-property: margin, padding;
   }
-  .home-grid-item:visited {
+  .card-grid-item:visited {
     color: #eee;
   }
+  .card-grid-item:hover {
+    margin: -12px -24px 0;
+    padding-bottom: 12px;
+  }
 
-  .home-grid-image-container {
+  .card-grid-image-container {
     width: 100%;
-    min-height: 200px;
-    aspect-ratio: 16 / 9;
+    height: 340px;
     border-radius: 18px;
     background: var(--clr0);
     overflow: hidden;
     transition: background 1s;
   }
-  .home-grid-item:hover .home-grid-image-container {
+  .card-grid-item:hover .card-grid-image-container {
     background: #fff;
     transition: background 2s;
   }
 
-  .home-grid-image {
+  .card-grid-image {
     width: 101%;
     height: 101%;
     object-fit: cover;
@@ -58,31 +63,32 @@
     mix-blend-mode: darken;
     transition: filter 1s, transform 1s;
   }
-  .home-grid-thumbalign-center .home-grid-image {
+  .card-grid-thumbalign-center .card-grid-image {
     object-position: center;
     transform-origin: center;
   }
-  .home-grid-item:hover .home-grid-image {
+  .card-grid-item:hover .card-grid-image {
     filter: contrast(1);
     transform: scale(1.1);
     transition: filter 1s, transform 2s;
   }
 
-  .home-grid-title-wrap {
+  .card-grid-title-wrap {
     position: relative;
     height: 0;
   }
-  .home-grid-title-bar {
+  .card-grid-title-bar {
     position: absolute;
     bottom: 0;
     border-top-right-radius: 18px;
     background: var(--bg-clr);
   }
-  .home-grid-title-content {
+  .card-grid-title-content {
     position: relative;
     padding: 12px 24px 0 0;
+    transition: padding 0.2s var(--ease);
   }
-  .home-grid-title-content::before {
+  .card-grid-title-content::before {
     content: "";
     position: absolute;
     left: 0;
@@ -92,7 +98,7 @@
     border-bottom-left-radius: 18px;
     box-shadow: 0 18px 0 var(--bg-clr);
   }
-  .home-grid-title-content::after {
+  .card-grid-title-content::after {
     content: "";
     position: absolute;
     left: 100%;
@@ -102,14 +108,17 @@
     border-bottom-left-radius: 18px;
     box-shadow: -18px 0 0 var(--bg-clr);
   }
+  .card-grid-item:hover .card-grid-title-content {
+    padding: 24px;
+  }
 
-  .home-grid-title {
+  .card-grid-title {
     font-size: 21px;
     font-style: italic;
     font-weight: bold;
   }
 
-  .home-grid-posttitle {
+  .card-grid-posttitle {
     margin-top: 12px;
     font-size: 15px;
     font-style: italic;
@@ -117,22 +126,27 @@
     opacity: 0.8;
   }
 
-  .home-grid-postitle-small {
+  .card-grid-postitle-small {
     display: none;
   }
 
   @media (max-width: 600px) {
-    .home-grid-posttitle {
+    .card-grid-posttitle {
       display: none;
       margin: 0 0 18px;
     }
-    .home-grid-postitle-small {
+    .card-grid-postitle-small {
       display: block;
     }
   }
 
-  .home-grid-content {
+  .card-grid-content {
     margin: 30px 0;
     line-height: 2;
+    transition: margin 0.2s var(--ease);
+  }
+  .card-grid-item:hover .card-grid-content {
+    margin-left: 24px;
+    margin-right: 24px;
   }
 </style>

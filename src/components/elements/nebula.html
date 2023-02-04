@@ -31,13 +31,13 @@
 
         this.lastT = 0;
         this.startT = 0;
-        this.initT = getT();
+        this.lootStartT = 0;
 
         this.isVisible = true;
         this.visibilityListener({
           show: () => {
             this.isVisible = true;
-            if (this.isConnected) this.loop();
+            if (this.isConnected) this.startLoop();
           },
           hide: () => (this.isVisible = false),
         });
@@ -51,7 +51,12 @@
           this.palette = paletteAttr.split(" ");
         }
 
-        if (this.isVisible) this.loop();
+        if (this.isVisible) this.startLoop();
+      }
+
+      startLoop() {
+        this.lootStartT = getT();
+        this.loop();
       }
 
       async loop() {
