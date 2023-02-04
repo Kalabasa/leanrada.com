@@ -5,11 +5,9 @@
     <markdown>
       # Dimensions
 
-      <!-- <blog-media -->
-      <video muted autoplay loop playsinline style="max-height: 512px; object-fit: cover">
-        <source src="../media/dimensions_3.mp4">
-        <a href="../media/dimensions_3.mp4">Video</a>
-      </video>
+      <blog-media
+        alt="Video demo"
+        src="../media/dimensions_3.mp4" />
 
       ## Part 2. Augmented reality
 
@@ -17,7 +15,7 @@
 
       <iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-      The AR.js demo looked really cool and smooth.
+      The AR.js demo looked really cool and smooth. I didn't end up using that library though.
 
       With augmented reality, the art piece became an art experience. The planned user flow for the experience went like this:
 
@@ -27,7 +25,7 @@
       1. App opens the phone’s camera to **track** the piece in 3D space.
       1. App superimposes virtual art on the physical art, *augmenting reality*. ✨
 
-      Implementing object tracking (step 4) proved to be difficult. With AR.js, it required special **markers** in order to track the 3D scene.
+      Implementing object tracking (step 4) proved to be difficult. AR.js and others required special **markers** in order to track the 3D scene.
 
       The prints were already finalized, so I couldn’t add AR markers on it by then. Plus, the piece already had a QR code slapped on it. Adding any more tags would’ve ruined it.
 
@@ -37,15 +35,13 @@
 
       ## Recognizing the piece
 
-      [**Image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) is a computer vision problem of determining whether an image contains some specific object or not. For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera.
+      For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera. [**Image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) is a computer vision problem of determining whether an image contains some specific object or not.
 
-      <span class="bleed">
-        <video muted autoplay loop playsinline>
-          <source src="../media/dimensions_imagerec.mp4">
-          <a href="../media/dimensions_imagerec.mp4">Demo video</a>
-        </video>
-      </span>
-      <span class="caption">The app recognizes when the target piece has been aligned.</span>
+      <blog-media
+        type="bleed"
+        alt="Demo video"
+        src="../media/dimensions_imagerec.mp4"
+        caption="The app recognizes when the target piece has been aligned." />
 
       There exists many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. These days everyone just uses neural networks and deep learning if possible.
 
@@ -59,9 +55,10 @@
 
       First, some theory. Phone camera sensors don’t actually pick up the true color of an object. The perceived color is affected by room lighting, camera quality, and other factors.
 
-      <span>![diagram](../media/dimensions_illo1.jpg)
-        <span class="caption">True color (TC) vs perceived color (PC)</span>
-      </span>
+      <blog-media
+        alt="diagram"
+        src="../media/dimensions_illo1.jpg"
+        caption="True color (TC) vs perceived color (PC)" />
 
       If we directly used data from the camera feed to compare against the target images, it would fail most of the time. Preprocessing was necessary. Let's call this preprocessing "normilization".
 
@@ -77,9 +74,10 @@
 
       The algorithm starts by getting the average colors of three predetermined regions over the camera image.
 
-      <span>![diagram](../media/dimensions_illo2.jpg)
-        <span class="caption">The regions were specifically chosen to capture key features.</span>
-      </span>
+      <blog-media
+        alt="diagram"
+        src="../media/dimensions_illo2.jpg"
+        caption="The regions were specifically chosen to capture key features." />
 
       Let’s call the colors `PC1`, `PC2`, and `PC3`.
 
@@ -87,7 +85,9 @@
 
       Let’s call the resulting colors `D1` and `D2`:
 
-      ![diagram](../media/dimensions_illo3.jpg)
+      <blog-media
+        alt="diagram"
+        src="../media/dimensions_illo3.jpg" />
 
       ```
       D1 = PC2 - PC1
@@ -114,7 +114,9 @@
 
       Let’s call the normalized values `N1` and `N2`, for normalized `D1` and `D2`, respectively.
 
-      ![diagram](../media/dimensions_illo4.jpg)
+      <blog-media
+        alt="diagram"
+        src="../media/dimensions_illo4.jpg" />
 
       ```
       N1 = D1 / max(D1, D2)
@@ -132,23 +134,25 @@
 
       The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various smartphone cameras.
 
-      <span>![](../media/dimensions_tester.jpg)
-        <span class="caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized.</span>
-      </span>
+      <blog-media
+        src="../media/dimensions_tester.jpg"
+        caption="Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized." />
 
       The final step was to combine the RGB channels of the normalized colors into one series of numbers, called the **feature vector** of the image, i.e., a set of numbers that *summarize* the image.
 
-      <span>![diagram](../media/dimensions_illo5.jpg)
-        <span class="caption">`featureVector = [N1.r, N1.g, N1.b, N2.r, N2.g, N2.b]`</span>
-      </span>
+      <blog-media
+        alt="diagram"
+        src="../media/dimensions_illo5.jpg"
+        caption="featureVector = [N1.r, N1.g, N1.b, N2.r, N2.g, N2.b]" />
 
       Turning the image into a vector made the problem of comparing image similarity a mathematical one. If the numbers match, then the images match.
 
       All it needed was to compare the feature vector of the processed camera image against the feature vector of the target image.
 
-      <span>![diagram](../media/dimensions_illo6.jpg)
-        <span class="caption">Euclidean distance can be used to compute vector “similarity”.</span>
-      </span>
+      <blog-media
+        alt="diagram"
+        src="../media/dimensions_illo6.jpg"
+        caption="Euclidean distance can be used to compute vector “similarity”" />
 
       So, in application of theory, first I got the phone’s camera stream via the [**MediaDevice** API](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices), connecting the camera to a `&lt;video&gt;` element.
 
@@ -164,7 +168,9 @@
 
       The vision for the augmented reality part was that the tiles in the piece would come alive, burst out of the piece, and start drawing streaks of paint, ink, or whatever in the air, depending on the tile type.
 
-      ![AR notes](../media/dimensions_arnotes.jpg)
+      <blog-media
+        alt="AR notes"
+        src="../media/dimensions_arnotes.jpg" />
 
       It was basically going to be a particle system.
 
@@ -172,10 +178,9 @@
 
       I was quickly able to sketch out virtual objects in space as a prototype.
 
-      <video muted autoplay loop playsinline>
-        <source src="../media/dimensions_ar1.mp4">
-        <a href="../media/dimensions_ar1.mp4">Prototype video</a>
-      </video>
+      <blog-media
+        alt="Prototype video"
+        src="../media/dimensions_ar1.mp4" />
 
       This was made by overlaying a transparent three.js `&lt;canvas&gt;` onto the `&lt;video&gt;` that’s streaming the camera feed.
 
@@ -191,28 +196,30 @@
 
       The “paint” trails were made using an old unmaintained library called [**TrailRendererJS**](https://github.com/mkkellogg/TrailRendererJS), which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.
 
-      ![TrailRenderer example](../media/dimensions_trailex.png)
+      <blog-media
+        alt="TrailRenderer example"
+        src="../media/dimensions_trailex.png" />
 
       The floating tiles’ movement behavior were guided by a smooth triangle wave function:
 
-      <span>![smooth triangle wave function](../media/dimensions_trianglewave2.png)
-        <span class="caption">`y = arccos(0.95 sin(x))`</span>
-      </span>
+      <blog-media
+        alt="smooth triangle wave function"
+        src="../media/dimensions_trianglewave2.png"
+        caption="y = arccos(0.95 sin(x))" />
 
       This triangle wave path was wrapped around a virtual cylinder around the user’s position.
 
       With each floating tile following a variant of this path, the result was an organized chaos of criss-crossing particles orbiting the user.
 
-      <video muted autoplay loop playsinline>
-        <source src="../media/dimensions_trail.mp4">
-        <a href="../media/dimensions_trail.mp4">Demo video</a>
-      </video>
+      <blog-media
+        alt="Demo video"
+        src="../media/dimensions_trail.mp4" />
 
       One interesting experiment was when the trails were allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a nice pattern.
 
-      <span>![](../media/dimensions_trailart.png)
-        <span class="caption">Trail art</span>
-      </span>
+      <blog-media
+        src="../media/dimensions_trailart.png"
+        caption="Trail art" />
 
       When it finally exhibited, I mostly watched from the sidelines, taking notes on how people interacted. It’s like live testing on prod.
 
@@ -222,25 +229,20 @@
 
       The iOS bug was never fixed. 🤖
 
-      <span class="bleed">
-      <div style="display: flex; max-height: 80vh">
-        <video muted autoplay loop playsinline style="flex: 1 1 auto; object-fit: cover; width: 50%">
-          <source src="../media/dimensions_2.mp4">
-          <a href="../media/dimensions_2.mp4">Reaction video</a>
-        </video>
-      </div>
-      </span>
+      <blog-media
+        alt="Reaction video"
+        src="../media/dimensions_2.mp4" />
 
       You can give it a try right on this page!
 
       Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.
 
-      <span class="bleed">![](../media/dimensions_finalset.jpg)</span>
-      <span class="caption">Go to [tiny.cc/kdi](https://kalabasa.github.io/dimensions/) on phone if QR doesn’t work.</span>
+      <blog-media
+        type="bleed"
+        src="../media/dimensions_finalset.jpg"
+        caption="Go to kalabasa.github.io/dimensions/ on phone if QR doesn’t work." />
 
-      Here’s the final set!
-
-      It has been a really fun and challenging project! 🎉
+      It has been a really fun and challenging project! ⭐
     </markdown>
   </blog-page>
 </html>
