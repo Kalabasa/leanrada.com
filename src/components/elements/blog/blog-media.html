@@ -1,33 +1,30 @@
 <div class="{'blog-media blog-media-' + (attrs.type ?? 'default')}">
   <script render>
     if (isImg(attrs.src)) {
-      // prettier-ignore
-      yield (<responsive-img
+      yield html`<responsive-img
         class="blog-media-element"
-        alt="{attrs.alt}"
-        src="{attrs.src}"
-        spec="{attrs.spec ?? defaultResponsiveImageSpec()}"
-      />);
+        alt="${attrs.alt}"
+        src="${attrs.src}"
+        spec="${attrs.spec ?? defaultResponsiveImageSpec()}"
+      />`;
     } else if (isVideo(attrs.src)) {
-      // prettier-ignore
-      yield (<video
+      yield html`<video
         class="blog-media-element"
         muted
         autoplay
         loop
-        aria-label="{attrs.alt}"
+        aria-label="${attrs.alt}"
       >
-        <source src="{attrs.src}" />
-        <a href="{attrs.src}">{attrs.alt}</a>
-      </video>);
+        <source src="${attrs.src}" />
+        <a href="${attrs.src}">${attrs.alt}</a>
+      </video>`;
     } else {
       throw new Error("invalid media src: " + attrs.src);
     }
 
     // todo: convert into slot (need to update compose-html to expose children by named slots)
     if (attrs.caption) {
-      // prettier-ignore
-      yield (<span class="blog-media-caption">{attrs.caption}</span>);
+      yield html`<span class="blog-media-caption">{attrs.caption}</span>`;
     }
   </script>
 </div>

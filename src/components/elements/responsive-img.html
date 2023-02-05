@@ -1,6 +1,6 @@
 <script render>
   const imgAttrs = await generateImages(attrs.src, attrs.spec);
-  return html`<img class="${attrs.class ?? ""}" src="${attrs.src}" alt="${attrs.alt ?? ""}" srcset="${imgAttrs.srcset}" sizes="${imgAttrs.sizes}" />`;
+  return html`<img {...attrs} srcset="${imgAttrs.srcset}" sizes="${imgAttrs.sizes}" />`;
 </script>
 
 <script static>
@@ -13,11 +13,12 @@
   const globalMaxImageSize = 1400;
 
   async function generateImages(src, spec) {
-    if (!fs.existsSync(src)) {
-      throw new Error("Responsive image src does not exist: " + path.resolve(src));
+    const srcFilePath = path.join(__outputDir, src);
+    if (!fs.existsSync(srcFilePath)) {
+      throw new Error("Responsive image src does not exist: " + srcFilePath);
     }
 
-    const image = await fs.promises.readFile(src);
+    const image = await fs.promises.readFile(srcFilePath);
     const imageWidth = await sharp(image)
       .metadata()
       .then((d) => d.width);
@@ -30,13 +31,13 @@
     const sizes = [];
 
     for (const rule of rules) {
-      const path = getOutPath(src, rule.size.value);
-      srcset.push(`${path} ${rule.size.value}w`);
+      const resizedImageSrc = getResizedImageSrc(src, rule.size.value);
+      srcset.push(`${resizedImageSrc} ${rule.size.value}w`);
       sizes.push(
         `${toMediaQuery(rule, sizes.length > 0)} ${rule.size.value}px`
       );
       // no await. generate images in the background
-      generateImage(src, image, rule.size.value, path);
+      generateImage(image, rule.size.value, src, resizedImageSrc);
     }
 
     return {
@@ -203,17 +204,19 @@
     return rules;
   }
 
-  async function generateImage(src, image, width, outPath) {
+  async function generateImage(image, width, src, resizedImageSrc) {
+    const srcFilePath = path.join(__outputDir, src);
+    const outPath = path.join(__outputDir, resizedImageSrc);
+
     if (fs.existsSync(outPath)) {
       const outStats = fs.statSync(outPath);
       if (outStats.isFile()) {
-        const srcStats = fs.statSync(src);
+        const srcStats = fs.statSync(srcFilePath);
         if (outStats.mtimeMs >= srcStats.mtimeMs) return;
       }
     }
 
-    console.log("Resizing", src, "→", outPath);
-    outPath = path.resolve(outPath);
+    console.log("Resizing", src, "→", resizedImageSrc);
     await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
     await sharp(image)
       .jpeg({ mozjpeg: true, quality: 95 })
@@ -222,9 +225,9 @@
       .toFile(outPath);
   }
 
-  function getOutPath(src, width) {
+  function getResizedImageSrc(src, width) {
     const ext = path.extname(src);
     const baseName = path.basename(src, ext);
-    return path.join(path.dirname(src), baseName + "_" + width + ext);
+    return path.join(path.dirname(src), `${baseName}_${width}.generated${ext}`);
   }
 </script>
