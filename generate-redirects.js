@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const { argv } = require("node:process");
 
 const redirects = [
-  ["works.html", "archive/v3/works.html"],
+  ["works.html", "archive/v3/works.html", "projects/"],
   ["works/**", "archive/v3/works/**.html"],
   ["works/canvaphotoeditor.html", "projects/canva-photo-editor/"],
   ["works/dimensions.html", "projects/dimensions/"],
@@ -56,7 +56,7 @@ async function main() {
 
         let html;
         if (to.startsWith("archive/")) {
-          html = `<html><page noheader="true"><archive-view src="/${to}" newhref="${newHref ? '/' + newHref : ''}" /></page></html>`;
+          html = `<html><page noheader="true" nofooter="true"><archive-view src="/${to}" newhref="${newHref ? '/' + newHref : ''}" /></page></html>`;
         } else {
           html = `<html><redirect-page href="/${newHref ?? to}" /></html>`;
         }
