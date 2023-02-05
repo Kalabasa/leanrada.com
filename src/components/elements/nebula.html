@@ -29,6 +29,8 @@
         this.cellWidth = 1; // placeholder
         this.cellHeight = 1; // placeholder
 
+        this.mouseCell = null;
+
         this.lastT = 0;
         this.startT = 0;
         this.lootStartT = 0;
@@ -100,8 +102,8 @@
         const { noise, size, palette, cellWidth, cellHeight } = this;
         const halfGridSize = size / 2;
 
-        let mouseCell = null;
         // mousePosition from lib/common
+        this.mouseCell = null;
         if (window.mousePosition) {
           const { x, y } = window.mousePosition;
           const bounds = canvas.getBoundingClientRect();
@@ -111,7 +113,7 @@
             bounds.top < y &&
             y < bounds.bottom
           ) {
-            mouseCell = {
+            this.mouseCell = {
               x: (x - bounds.x) / cellWidth,
               y: (y - bounds.y) / cellHeight,
             };
@@ -124,19 +126,25 @@
 
         for (let i = 0; i < size; i++) {
           for (let j = 0; j < size; j++) {
+            const mouseProximity =
+              this.mouseCell == null
+                ? 0
+                : 1 -
+                  sigmoid(
+                    Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                  );
+
             const xy = [
               1000 + (i - halfGridSize) * xScale + Math.sin(t * 0.01) * 2,
-              1000 + (j - halfGridSize) * yScale + Math.cos(t * 0.007) * 2,
+              1000 +
+                (j - halfGridSize) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
             ];
             const p1 = noise.get(...xy, t * 0.03);
             const p2 = noise.get(...xy, t * 0.03 + 0.5);
             // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
             const p = p1 + p2;
-
-            const mouseProximity =
-              mouseCell == null
-                ? 0
-                : 1 - sigmoid(Math.hypot(i - mouseCell.x, j - mouseCell.y) - 4);
 
             const paletteIndex = Math.floor(paletteLength * p);
 
@@ -154,7 +162,9 @@
   );
 
   function getT() {
-    return Math.floor((Date.now() * 30) / 1000);
+    const t = (Date.now() * 30) / 1000;
+    // make it smoother while interacting
+    return this.mouseCell ? t : Math.floor(t);
   }
 
   function initNoise() {
