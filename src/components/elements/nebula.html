@@ -11,7 +11,12 @@
   }
 </style>
 
-<script client async src="https://unpkg.com/perlin-noise-3d@v0.5.4"></script>
+<script
+  client
+  defer
+  async
+  src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"
+></script>
 <script client>
   customElements.define(
     "nebula-client",
@@ -64,6 +69,14 @@
       async loop() {
         if (!this.isConnected && !this.isVisible) return;
 
+        if (typeof perlinNoise3d === "undefined") {
+          setTimeout(() => this.loop(), 200);
+          return;
+        } else if (!this.noise) {
+          this.noise = initNoise();
+          this.startT = getT();
+        }
+
         const canvas =
           this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
 
@@ -77,15 +90,9 @@
           this.context = canvas.getContext("2d");
         }
 
-        requestAnimationFrame(() => this.loop());
-
-        if (typeof perlinNoise3d === "undefined") return;
-        if (!this.noise) {
-          this.noise = initNoise();
-          this.startT = getT();
-        }
-
         this.draw(canvas, this.context);
+
+        requestAnimationFrame(() => this.loop());
       }
 
       /**

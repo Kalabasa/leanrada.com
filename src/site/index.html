@@ -1,5 +1,20 @@
 <html>
   <title>Lean's personal website</title>
+
+  <script render>
+    const lines = 7;
+    let styles = "";
+    for (let i = 1; i <= lines; i++) {
+      styles += `
+      .intro-line:nth-of-type(${i}) {
+        animation-delay: ${Math.log(i * 2) * 0.2}s;
+      }`;
+    }
+    return html`<style>
+      ${styles}
+    </style>`;
+  </script>
+
   <page noheader="true">
     <main-header float="true" prehide="true" select="/" />
 
@@ -12,24 +27,29 @@
         </div>
 
         <span class="intro-text">
-          <span id="greeting"><home-greeting /></span>
+          <div class="intro-spacer"></div>
+          <span id="greeting" class="intro-line"><home-greeting /></span>
           <br />
-          I'm Lean
-          <span class="ipa"
-            >[<aa href="http://ipa-reader.xyz/?text=li%CB%88%C9%99n">liˈən</aa
-            >]</span
-          >,
+          <span class="intro-line">
+            I'm Lean
+            <span class="ipa"
+              >[<aa href="http://ipa-reader.xyz/?text=li%CB%88%C9%99n">liˈən</aa
+              >]</span
+            >,
+          </span>
           <br />
-          software engineer
+          <span class="intro-line"> software engineer </span>
           <br />
-          who likes making stuff,
+          <span class="intro-line"> who likes making stuff, </span>
           <br />
-          code, art, and music.
+          <span class="intro-line"> code, art, and music. </span>
           <br />
           <br />
-          Nice to meet you.
+          <span class="intro-line"> Nice to meet you. </span>
           <br />
-          Please, <great-time-trigger>have a great time.</great-time-trigger>
+          <span class="intro-line">
+            Please, <great-time-trigger>have a great time.</great-time-trigger>
+          </span>
         </span>
       </div>
     </section>
@@ -73,7 +93,9 @@
 
   .header-content {
     white-space: nowrap;
+    height: 40vh;
     min-width: 80vh;
+    overflow: hidden;
   }
 
   .header-bg {
@@ -100,10 +122,41 @@
   }
 
   .intro-text {
-    margin-top: 1.4vh;
     line-height: 1.8;
     font-size: 2.2vh;
     font-style: italic;
+    animation: intro-text 0.8s 0.2s cubic-bezier(0, 0.7, 0.4, 1) backwards;
+  }
+  @keyframes intro-text {
+    from {
+      line-height: 8;
+    }
+  }
+
+  .intro-line {
+    display: inline-block;
+    animation: intro-text-drift 0.8s cubic-bezier(0, 0.8, 0.2, 1) both;
+  }
+  @keyframes intro-text-drift {
+    from {
+      transform: translate(-1em, 4em);
+      text-shadow: 0 2em 0 var(--clr0), 0 4em 0 var(--clr1);
+    }
+    to {
+      transform: translate(0, 0);
+      text-shadow: 0 0 0 var(--clr0), 0 0 0 var(--clr1);
+    }
+  }
+
+  .intro-spacer {
+    display: block;
+    height: 0px;
+    animation: intro-spacer 0.4s 0.2s cubic-bezier(0, 0.8, 0.1, 1) backwards;
+  }
+  @keyframes intro-spacer {
+    from {
+      height: 100%;
+    }
   }
 
   .ipa {
@@ -120,6 +173,7 @@
       height: 95vh;
     }
     .header-content {
+      height: auto;
       min-width: unset;
       text-align: center;
     }
@@ -128,6 +182,19 @@
     }
     .intro-text {
       display: block;
+      margin-top: 1.4vh;
+      animation: intro-text-mobile 1s cubic-bezier(0.8, 0.2, 0.2, 0.8);
+    }
+    .intro-spacer {
+      animation: none;
+    }
+  }
+  @keyframes intro-text-mobile {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
     }
   }
 
@@ -156,6 +223,14 @@
       padding: 0 18px;
     }
   }
+  .start-from-top .section {
+    animation: section-appear 0.2s 1s backwards;
+  }
+  @keyframes section-appear {
+    from {
+      opacity: 0;
+    }
+  }
 
   .about-section {
     max-width: 520px;
@@ -168,3 +243,7 @@
     margin-bottom: 60px;
   }
 </style>
+
+<script client defer>
+  document.body.classList.toggle("start-from-top", window.scrollY < 100);
+</script>
