@@ -95,9 +95,14 @@
           });
 
           this.addLifecycleListener(() => {
-            isShowing = false;
+            isShowing = isInViewport(this);
+            if (isShowing) show();
             observer.observe(this);
-            return () => observer.disconnect();
+            return () => {
+              observer.disconnect();
+              if (isShowing) hide();
+              isShowing = false;
+            };
           });
         }
       };
@@ -115,4 +120,14 @@
       { once: true }
     );
   })();
+
+  function isInViewport(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.right > 0 &&
+      rect.bottom > 0 &&
+      rect.left < window.innerWidth &&
+      rect.top < window.innerHeight
+    );
+  }
 </script>
