@@ -1,0 +1,646 @@
+<html>
+<head>
+  <title>Dimensions - Part 2: Augmented reality</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      background-color: var(--bg-clr, #111);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--clr0-light, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .home-link {
+      text-decoration: none;
+    }
+
+    .home-link-icon {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+    }
+
+    .home-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 18px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+    }
+
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
+
+    .main-footer-nav,
+    .main-footer-nav:visited {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item,
+    .main-header-item:visited {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .content {
+      padding: 60px 18px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 18px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown h1,
+    .markdown h2,
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 36px 0;
+    }
+
+    .markdown h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown h2 {
+      font-size: 150%;
+    }
+
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-size: 120%;
+    }
+
+    .markdown p {
+      margin: 36px 0;
+    }
+
+    .markdown hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      background: var(--card-clr);
+    }
+
+    .markdown pre code {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      overflow-y: auto;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .blog-media {
+      text-align: center;
+      /* external margin because it's expected to be in an article */
+      margin: 36px 0;
+    }
+
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+    }
+
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <header class="main-header">
+    <div class="main-header-bar">
+      <a href="/" class="main-header-item ">Home</a>
+      <img class="main-header-icon" src="/icons/tada.png">
+      <a href="/projects/" class="main-header-item ">Works</a>
+      <div class="main-header-indicator"></div>
+    </div>
+  </header>
+
+  <div class="blog-page">
+    <div class="content">
+
+      <!-- prettier-ignore -->
+      <div class="markdown">
+        <h1 id="dimensions">Dimensions</h1>
+        <div class="blog-media blog-media-default">
+          <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Video demo">
+            <source src="/projects/dimensions/media/dimensions_3.mp4">
+            <a href="/projects/dimensions/media/dimensions_3.mp4">Video demo</a>
+          </video>
+        </div>
+
+        <h2 id="part-2-augmented-reality">Part 2. Augmented reality</h2>
+        <p>The idea of including augmented reality into the art piece was wholly inspired by <a target="_blank" href="https://github.com/jeromeetienne/AR.js"><strong>AR.js</strong></a>, an awesome project that brings fast and easy augmented reality to the web.</p>
+        <iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+
+        <p>The AR.js demo looked really cool and smooth. I didn't end up using that library though.</p>
+        <p>With augmented reality, the art piece became an art experience. The planned user flow for the experience went like this:</p>
+        <ol>
+          <li>User sees the piece and notices the <strong>QR code</strong>.</li>
+          <li>User whips out smartphone to <strong>scan</strong> the QR code.</li>
+          <li>Smartphone is directed to the <strong>app</strong>.</li>
+          <li>App opens the phone’s camera to <strong>track</strong> the piece in 3D space.</li>
+          <li>App superimposes virtual art on the physical art, <em>augmenting reality</em>. ✨</li>
+        </ol>
+        <p>Implementing object tracking (step 4) proved to be difficult. AR.js and others required special <strong>markers</strong> in order to track the 3D scene.</p>
+        <p>The prints were already finalized, so I couldn’t add AR markers on it by then. Plus, the piece already had a QR code slapped on it. Adding any more tags would’ve ruined it.</p>
+        <p>I looked around for alternatives like <strong>Tracking.js</strong>, <strong>OpenCV</strong>, and even <strong>TensorFlow</strong>, but ultimately implemented my own <strong>image recognition</strong> algorithm.</p>
+        <hr>
+        <h2 id="recognizing-the-piece">Recognizing the piece</h2>
+        <p>For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera. <a target="_blank" href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>Image recognition</strong></a> is a computer vision problem of determining whether an image contains some specific object or not.</p>
+        <div class="blog-media blog-media-bleed">
+          <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Demo video">
+            <source src="/projects/dimensions/media/dimensions_imagerec.mp4">
+            <a href="/projects/dimensions/media/dimensions_imagerec.mp4">Demo video</a>
+          </video><span class="blog-media-caption">The app recognizes when the target piece has been aligned.</span>
+        </div>
+
+        <p>There exists many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. These days everyone just uses neural networks and deep learning if possible.</p>
+        <p>These technologies power some apps like face filters, but are also used for things like mass camera surveillance.</p>
+        <p>In my case however, I’ve simplified the problem to determining whether any of the three specific art pieces is in the center frame in the user’s camera, or not. No position tracking.</p>
+        <p>This reduced the problem to a yes/no problem.</p>
+        <p>Consequently, the algorithm was relatively simple. It’s just a preprocessing step and a straightforward “feature matching” of the target images.</p>
+        <p>First, some theory. Phone camera sensors don’t actually pick up the true color of an object. The perceived color is affected by room lighting, camera quality, and other factors.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_illo1_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo1_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo1.jpg" spec="100% [700) 700"><span class="blog-media-caption">True color (TC) vs perceived color (PC)</span>
+        </div>
+
+        <p>If we directly used data from the camera feed to compare against the target images, it would fail almost all the time.</p>
+        <p>Some kind of preprocessing was necessary. Let's call this preprocessing "normalization".</p>
+        <p>To begin solving the normalization problem, I've come up with a model for the perceived color, roughly based on graphics programming illumination models:</p>
+        <pre><code>PC = TC * a + b
+</code></pre>
+        <ul>
+          <li><code>PC</code> is the color perceived from the camera sensor.</li>
+          <li><code>TC</code> (unknown variable) is true color of the material.</li>
+          <li><code>a</code> and <code>b</code> (unknown variables) are parameters that together describe the vague real-world lighting variables like white balance, environmental illumination, camera sensor quality, and other factors.</li>
+        </ul>
+        <p>The algorithm starts by getting the average colors of three predetermined regions over the camera image.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_illo2_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo2_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo2.jpg" spec="100% [700) 700"><span class="blog-media-caption">The regions were specifically chosen to capture key features.</span>
+        </div>
+
+        <p>Let’s call the colors <code>PC1</code>, <code>PC2</code>, and <code>PC3</code>.</p>
+        <p>The top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. This produces two difference colors.</p>
+        <p>Let’s call the resulting colors <code>D1</code> and <code>D2</code>:</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_illo3_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo3_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo3.jpg" spec="100% [700) 700">
+        </div>
+
+        <pre><code>D1 = PC2 - PC1
+D2 = PC3 - PC2
+</code></pre>
+        <p>By subtracting two perceived colors, the unknown lighting variable <code>b</code> could be eliminated:</p>
+        <pre><code>D1 = PC2 - PC1
+  = (TC2 * a + b) - (TC1 * a + b)
+  = TC2 * a - TC1 * a
+  = (TC2 - TC1) * a
+</code></pre>
+        <p>Expanding the <code>PC</code> terms according to the model above will cancel out the <code>b</code> terms, leaving just <code>TC</code> and <code>a</code> terms. </p>
+        <pre><code>D1 = (TC2 - TC1) * a
+D2 = (TC3 - TC2) * a
+</code></pre>
+        <p>To eliminate the remaining lighting variable <code>a</code>, the values were normalized, that is, divided each by the highest value.</p>
+        <p>Let’s call the normalized values <code>N1</code> and <code>N2</code>, for normalized <code>D1</code> and <code>D2</code>, respectively.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_illo4_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo4_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo4.jpg" spec="100% [700) 700">
+        </div>
+
+        <pre><code>N1 = D1 / max(D1, D2)
+N2 = D2 / max(D1, D2)
+</code></pre>
+        <p>I’m not showing the full solution here, but normalizing will get rid of the common factor <code>a</code>. Thus:</p>
+        <pre><code>N1 = (TC2 - TC1) / max(TC2 - TC1, TC3 - TC2)
+N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
+</code></pre>
+        <p>As you can see the final values <code>N1</code> and <code>N2</code> are not affected by the lighting parameters at all. They are purely derived from true color. <small>According to the model anyway.</small></p>
+        <p>The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various smartphone cameras.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_tester_350.generated.jpg 350w,/projects/dimensions/media/dimensions_tester_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_tester.jpg" spec="100% [700) 700"><span class="blog-media-caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized.</span>
+        </div>
+
+        <p>The final step was to combine the RGB channels of the normalized colors into one series of numbers, called the <strong>feature vector</strong> of the image, i.e., a set of numbers that <em>summarize</em> the image.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_illo5_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo5_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo5.jpg" spec="100% [700) 700"><span class="blog-media-caption">featureVector = [N1.r, N1.g, N1.b, N2.r, N2.g, N2.b]</span>
+        </div>
+
+        <p>Turning the image into a vector made the problem of comparing image similarity a mathematical one. If the numbers match, then the images match.</p>
+        <p>All it needed was to compare the feature vector of the processed camera image against the feature vector of the target image.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_illo6_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo6_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo6.jpg" spec="100% [700) 700"><span class="blog-media-caption">Euclidean distance can be used to compute vector “similarity”</span>
+        </div>
+
+        <p>So, in application of theory, first I got the phone’s camera stream via the <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices"><strong>MediaDevice</strong> API</a>, connecting the camera to a <code>&lt;video&gt;</code> element.</p>
+        <p>On each frame of the <code>&lt;video&gt;</code> stream, the image is processed into a feature vector. Then the feature vector is compared against the target vectors.</p>
+        <p>If the <a target="_blank" href="https://en.wikipedia.org/wiki/Euclidean_distance">distance</a> between the vectors are kept below some threshold, then the image is a match.</p>
+        <p>Once it gets a match the <strong>augmented reality</strong> experience starts rolling in.</p>
+        <hr>
+        <h2 id="augmenting-reality">Augmenting reality</h2>
+        <p>The vision for the augmented reality part was that the tiles in the piece would come alive, burst out of the piece, and start drawing streaks of paint, ink, or whatever in the air, depending on the tile type.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_arnotes_300.generated.jpg 300w,/projects/dimensions/media/dimensions_arnotes_600.generated.jpg 600w,/projects/dimensions/media/dimensions_arnotes_700.generated.jpg 700w" sizes="(max-width:300px) 300px,not (min-width:700px) 600px, 700px" class="blog-media-element" alt="AR notes" src="/projects/dimensions/media/dimensions_arnotes.jpg" spec="100% [700) 700">
+        </div>
+
+        <p>It was basically going to be a particle system.</p>
+        <p>This was rendered using <a target="_blank" href="https://threejs.org/"><strong>three.js</strong></a>. I’ve used three.js before and it was great, with easy-to-learn APIs and good examples.</p>
+        <p>I was quickly able to sketch out virtual objects in space as a prototype.</p>
+        <div class="blog-media blog-media-default">
+          <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Prototype video">
+            <source src="/projects/dimensions/media/dimensions_ar1.mp4">
+            <a href="/projects/dimensions/media/dimensions_ar1.mp4">Prototype video</a>
+          </video>
+        </div>
+
+        <p>This was made by overlaying a transparent three.js <code>&lt;canvas&gt;</code> onto the <code>&lt;video&gt;</code> that’s streaming the camera feed.</p>
+        <p>A three.js extension called <code>DeviceOrientationControls</code> provides synchronization between the device’s orientation and the virtual camera.</p>
+        <p>One caveat though is that only the orientation can be tracked. Tracking movements across space weren’t possible yet, so virtual objects would appear follow the device when it moves.</p>
+        <p>The experience was designed around this limitation by keeping the objects at constant distance to the user, subtly hinting that there’s no need to move or walk, only looking around.</p>
+        <p><small class="small-block">There was a bug on iOS Safari with orientation tracking, which apparently was just introduced July 2019, one month before the event. Sadly some iPhone users did not get the full experience.</small></p>
+        <p>Modeling the tiles as 3D objects were simply extrusions of the tiles’ 2D shape paths, made very easy using three.js’s <code>ExtrudeGeometry</code>.</p>
+        <p>The “paint” trails were made using an old unmaintained library called <a target="_blank" href="https://github.com/mkkellogg/TrailRendererJS"><strong>TrailRendererJS</strong></a>, which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_trailex_350.generated.png 350w,/projects/dimensions/media/dimensions_trailex_700.generated.png 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="TrailRenderer example" src="/projects/dimensions/media/dimensions_trailex.png" spec="100% [700) 700">
+        </div>
+
+        <p>The floating tiles’ movement behavior were guided by a smooth triangle wave function:</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_trianglewave2_300.generated.png 300w,/projects/dimensions/media/dimensions_trianglewave2_600.generated.png 600w,/projects/dimensions/media/dimensions_trianglewave2_700.generated.png 700w" sizes="(max-width:300px) 300px,not (min-width:700px) 600px, 700px" class="blog-media-element" alt="smooth triangle wave function" src="/projects/dimensions/media/dimensions_trianglewave2.png" spec="100% [700) 700"><span class="blog-media-caption">y = arccos(0.95 sin(x))</span>
+        </div>
+
+        <p>This triangle wave path was wrapped around a virtual cylinder around the user’s position.</p>
+        <p>With each floating tile following a variant of this path, the result was an organized chaos of criss-crossing particles orbiting the user.</p>
+        <div class="blog-media blog-media-default">
+          <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Demo video">
+            <source src="/projects/dimensions/media/dimensions_trail.mp4">
+            <a href="/projects/dimensions/media/dimensions_trail.mp4">Demo video</a>
+          </video>
+        </div>
+
+        <p>One interesting experiment was when the trails were allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a nice pattern.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/dimensions/media/dimensions_trailart_350.generated.png 350w,/projects/dimensions/media/dimensions_trailart_700.generated.png 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_trailart.png" spec="100% [700) 700"><span class="blog-media-caption">Trail art</span>
+        </div>
+
+        <p>When it finally exhibited, I mostly watched from the sidelines, taking notes on how people interacted. It’s like live testing on prod.</p>
+        <p>There were some UX issues that had to be fixed. It wasn‘t as seamless as I’ve hoped, and explicit instructions on how to use it were needed.</p>
+        <p>It went smoothly for the most part, after a few hotfixes. Seeing people react to it was great! ⭐️</p>
+        <p>The iOS bug was never fixed. 🤖</p>
+        <div class="blog-media blog-media-default">
+          <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Reaction video">
+            <source src="/projects/dimensions/media/dimensions_2.mp4">
+            <a href="/projects/dimensions/media/dimensions_2.mp4">Reaction video</a>
+          </video>
+        </div>
+
+        <p>You can give it a try right on this page!</p>
+        <p>Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.</p>
+        <div class="blog-media blog-media-bleed">
+          <img srcset="/projects/dimensions/media/dimensions_finalset_350.generated.jpg 350w,/projects/dimensions/media/dimensions_finalset_700.generated.jpg 700w,/projects/dimensions/media/dimensions_finalset_1050.generated.jpg 1050w,/projects/dimensions/media/dimensions_finalset_1400.generated.jpg 1400w" sizes="(max-width:350px) 350px,(max-width:700px) 700px,(max-width:1050px) 1050px, 1400px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_finalset.jpg" spec="100% [1400) 1400"><span class="blog-media-caption">Go to kalabasa.github.io/dimensions/ on phone if QR doesn’t work.</span>
+        </div>
+
+        <p>It has been a really fun and challenging project! ⭐
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="main-footer">
+    <div>
+      <p class="main-footer-line">
+        <a target="null" class="main-footer-nav" href="/">Home</a> ·
+        <a target="null" class="main-footer-nav" href="/projects/">Works</a>
+      </p>
+      <p class="main-footer-line">(C) 2023 Lean Rada</p>
+    </div>
+    <div>
+      <h2 class="main-footer-links-heading">On the web</h2>
+      <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
+        <img class="home-link-icon" src="/icons/linkedin.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
+        <img class="home-link-icon" src="/icons/codepen.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+        <img class="home-link-icon" src="/icons/stackoverflow.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
+        <img class="home-link-icon" src="/icons/github.png">
+      </a>
+    </div>
+  </footer>
+  <script>
+    (() => {
+      const mainHeader = document.querySelector(".main-header");
+
+      let currentY = 0;
+      let currentYTarget = 0;
+
+      let mouseHovering = false;
+
+      let lastScrollY = window.scrollY;
+      let lastMouseY = 0;
+      window.addEventListener("scroll", debounce(onScroll));
+      window.addEventListener("mousemove", debounce(onMouseMove, 100));
+      mainHeader.addEventListener("touchstart", onTouchStart);
+
+      function onScroll(event) {
+        const dy = window.scrollY - lastScrollY;
+
+        // move with the page
+        currentY -= dy;
+        if (currentY > 0) {
+          currentY = 0;
+        } else if (currentY < -mainHeader.offsetHeight) {
+          currentY = -mainHeader.offsetHeight;
+        }
+
+        currentYTarget = currentY;
+        updateDOM();
+
+        lastScrollY = window.scrollY;
+      }
+
+      function onMouseMove(event) {
+        const dy = event.clientY - lastMouseY;
+
+        // show when mouse goes near the top
+        const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+        if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+          currentYTarget = 0;
+          mouseHovering = true;
+        } else if (
+          mouseHovering &&
+          dy > 0 &&
+          event.clientY > mainHeader.offsetHeight * 4
+        ) {
+          currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+          mouseHovering = false;
+        }
+
+        updateDOM();
+        lastMouseY = event.clientY;
+      }
+
+      function onTouchStart(event) {
+        currentYTarget = 0;
+        updateDOM();
+      }
+
+      const updateDOM = debounce(() => {
+        mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+
+        const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
+        mainHeader.classList.toggle("hidden", isHidden);
+
+        if (Math.abs(currentY - currentYTarget) > 1) {
+          currentY += (currentYTarget - currentY) * 0.2;
+          requestAnimationFrame(updateDOM);
+        } else {
+          currentY = currentYTarget;
+        }
+      });
+
+      if (mainHeader.classList.contains("prehide")) {
+        currentY = currentYTarget = -mainHeader.offsetHeight;
+        updateDOM();
+      }
+
+      function debounce(fn, ms = 0) {
+        let recentlyFired = false;
+        return (...args) => {
+          if (recentlyFired) return;
+          recentlyFired = true;
+          if (ms === 0) {
+            requestAnimationFrame(() => (recentlyFired = false));
+          } else {
+            setTimeout(() => (recentlyFired = false), ms);
+          }
+          return fn(...args);
+        };
+      }
+    })();
+  </script>
+</body>
+</html>

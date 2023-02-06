@@ -1,0 +1,343 @@
+<html>
+<head>
+  <title>Art</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      background-color: var(--bg-clr, #111);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--clr0-light, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .home-link {
+      text-decoration: none;
+    }
+
+    .home-link-icon {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+    }
+
+    .home-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 18px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+    }
+
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
+
+    .main-footer-nav,
+    .main-footer-nav:visited {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item,
+    .main-header-item:visited {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+    }
+  </style>
+  <style>
+    .notice {
+      margin: auto;
+      padding: 120px 0;
+      width: 600px;
+      font-size: 30px;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <header class="main-header">
+    <div class="main-header-bar">
+      <a href="/" class="main-header-item ">Home</a>
+      <img class="main-header-icon" src="/icons/tada.png">
+      <a href="/projects/" class="main-header-item ">Works</a>
+      <div class="main-header-indicator"></div>
+    </div>
+  </header>
+
+  <div class="notice">
+    <p>This new page is under construction! 🚧</p>
+  </div>
+
+  <footer class="main-footer">
+    <div>
+      <p class="main-footer-line">
+        <a target="null" class="main-footer-nav" href="/">Home</a> ·
+        <a target="null" class="main-footer-nav" href="/projects/">Works</a>
+      </p>
+      <p class="main-footer-line">(C) 2023 Lean Rada</p>
+    </div>
+    <div>
+      <h2 class="main-footer-links-heading">On the web</h2>
+      <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
+        <img class="home-link-icon" src="/icons/linkedin.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
+        <img class="home-link-icon" src="/icons/codepen.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+        <img class="home-link-icon" src="/icons/stackoverflow.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
+        <img class="home-link-icon" src="/icons/github.png">
+      </a>
+    </div>
+  </footer>
+  <script>
+    (() => {
+      const mainHeader = document.querySelector(".main-header");
+
+      let currentY = 0;
+      let currentYTarget = 0;
+
+      let mouseHovering = false;
+
+      let lastScrollY = window.scrollY;
+      let lastMouseY = 0;
+      window.addEventListener("scroll", debounce(onScroll));
+      window.addEventListener("mousemove", debounce(onMouseMove, 100));
+      mainHeader.addEventListener("touchstart", onTouchStart);
+
+      function onScroll(event) {
+        const dy = window.scrollY - lastScrollY;
+
+        // move with the page
+        currentY -= dy;
+        if (currentY > 0) {
+          currentY = 0;
+        } else if (currentY < -mainHeader.offsetHeight) {
+          currentY = -mainHeader.offsetHeight;
+        }
+
+        currentYTarget = currentY;
+        updateDOM();
+
+        lastScrollY = window.scrollY;
+      }
+
+      function onMouseMove(event) {
+        const dy = event.clientY - lastMouseY;
+
+        // show when mouse goes near the top
+        const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+        if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+          currentYTarget = 0;
+          mouseHovering = true;
+        } else if (
+          mouseHovering &&
+          dy > 0 &&
+          event.clientY > mainHeader.offsetHeight * 4
+        ) {
+          currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+          mouseHovering = false;
+        }
+
+        updateDOM();
+        lastMouseY = event.clientY;
+      }
+
+      function onTouchStart(event) {
+        currentYTarget = 0;
+        updateDOM();
+      }
+
+      const updateDOM = debounce(() => {
+        mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+
+        const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
+        mainHeader.classList.toggle("hidden", isHidden);
+
+        if (Math.abs(currentY - currentYTarget) > 1) {
+          currentY += (currentYTarget - currentY) * 0.2;
+          requestAnimationFrame(updateDOM);
+        } else {
+          currentY = currentYTarget;
+        }
+      });
+
+      if (mainHeader.classList.contains("prehide")) {
+        currentY = currentYTarget = -mainHeader.offsetHeight;
+        updateDOM();
+      }
+
+      function debounce(fn, ms = 0) {
+        let recentlyFired = false;
+        return (...args) => {
+          if (recentlyFired) return;
+          recentlyFired = true;
+          if (ms === 0) {
+            requestAnimationFrame(() => (recentlyFired = false));
+          } else {
+            setTimeout(() => (recentlyFired = false), ms);
+          }
+          return fn(...args);
+        };
+      }
+    })();
+  </script>
+</body>
+</html>

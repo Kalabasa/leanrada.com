@@ -1,0 +1,600 @@
+<html>
+<head>
+  <title>Photo Editor</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      background-color: var(--bg-clr, #111);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--clr0-light, #fff);
+    }
+
+    a:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .home-link {
+      text-decoration: none;
+    }
+
+    .home-link-icon {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+    }
+
+    .home-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 18px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+    }
+
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
+
+    .main-footer-nav,
+    .main-footer-nav:visited {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item,
+    .main-header-item:visited {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .content {
+      padding: 60px 18px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 18px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown h1,
+    .markdown h2,
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 36px 0;
+    }
+
+    .markdown h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown h2 {
+      font-size: 150%;
+    }
+
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-size: 120%;
+    }
+
+    .markdown p {
+      margin: 36px 0;
+    }
+
+    .markdown hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      background: var(--card-clr);
+    }
+
+    .markdown pre code {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      overflow-y: auto;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .project-info-card {
+      font-family: var(--default-font);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .project-info-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .project-info-card-title {
+      flex: 0 0 auto;
+      align-self: stretch;
+      position: relative;
+      margin-right: 12px;
+      padding: 12px 18px 6px 12px;
+      border-radius: 18px 18px 0 0;
+      font-style: italic;
+      text-decoration: underline;
+      background-color: var(--card-clr);
+    }
+
+    .project-info-card-title::after {
+      content: "";
+      position: absolute;
+      left: 100%;
+      bottom: 0;
+      width: 36px;
+      height: 18px;
+      border-bottom-left-radius: 18px;
+      box-shadow: -18px 0 0 var(--card-clr);
+    }
+
+    .project-info-card-fields {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: 1fr 1fr;
+      padding: 12px;
+      border-radius: 0 18px 18px 18px;
+      background-color: var(--card-clr);
+    }
+
+    @media (max-width: 600px) {
+      .project-info-card-fields {
+        display: block;
+      }
+    }
+
+    .project-info-card-field {
+      display: flex;
+    }
+
+    .project-info-card-field-label {
+      padding: 6px;
+      font-style: italic;
+    }
+
+    .project-info-card-field-value {
+      padding: 6px;
+      font-weight: bold;
+    }
+  </style>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .blog-media {
+      text-align: center;
+      /* external margin because it's expected to be in an article */
+      margin: 36px 0;
+    }
+
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+    }
+
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <header class="main-header">
+    <div class="main-header-bar">
+      <a href="/" class="main-header-item ">Home</a>
+      <img class="main-header-icon" src="/icons/tada.png">
+      <a href="/projects/" class="main-header-item ">Works</a>
+      <div class="main-header-indicator"></div>
+    </div>
+  </header>
+
+  <div class="blog-page">
+    <div class="content">
+
+      <!-- prettier-ignore -->
+      <div class="markdown">
+        <h1 id="photo-editor">Photo Editor</h1>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/canva-photo-editor/img/canvaphotoeditor_0_75.generated.jpg 75w,/projects/canva-photo-editor/img/canvaphotoeditor_0_150.generated.jpg 150w,/projects/canva-photo-editor/img/canvaphotoeditor_0_225.generated.jpg 225w,/projects/canva-photo-editor/img/canvaphotoeditor_0_300.generated.jpg 300w,/projects/canva-photo-editor/img/canvaphotoeditor_0_375.generated.jpg 375w,/projects/canva-photo-editor/img/canvaphotoeditor_0_450.generated.jpg 450w" sizes="(max-width:375px) 75px,(max-width:750px) 150px,(max-width:1125px) 225px,(max-width:1500px) 300px,(max-width:1875px) 375px, 450px" class="blog-media-element" alt="screenshot of Photo Editor on mobile" src="/projects/canva-photo-editor/img/canvaphotoeditor_0.jpg" spec="20%">
+        </div>
+
+        <h2 id="edit-photos-online">Edit photos online</h2>
+        <p><strong>Photo Editor</strong> (2019) was an online tool offered by <a target="_blank" href="https://www.canva.com">Canva</a> for simple image editing. It had filters, sliders, and crop, resize, and rotation tools.</p>
+        <p>Note that it's distinct from the Canva design app. This was more of a standalone tool for quick edits, with an ulterior purpose of marketing the primary Canva app.</p>
+        <p><span class="box-note "><strong>Update:</strong> The standalone app has been decommissioned, and photo editing features are now part of the main app.</span></p>
+        <aside class="project-info-card">
+          <div class="project-info-card-header">
+            <div class="project-info-card-title">Project details</div>
+
+          </div>
+          <div class="project-info-card-fields">
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">released</div>
+              <div class="project-info-card-field-value">2019</div>
+            </div>
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">role</div>
+              <div class="project-info-card-field-value">developer</div>
+            </div>
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">platform</div>
+              <div class="project-info-card-field-value">Web</div>
+            </div>
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">tech</div>
+              <div class="project-info-card-field-value">React, canvas, WebGL, MobX</div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="blog-media blog-media-bleed">
+          <img srcset="/projects/canva-photo-editor/img/canvaphotoeditor_1_350.generated.jpg 350w,/projects/canva-photo-editor/img/canvaphotoeditor_1_700.generated.jpg 700w,/projects/canva-photo-editor/img/canvaphotoeditor_1_1050.generated.jpg 1050w,/projects/canva-photo-editor/img/canvaphotoeditor_1_1400.generated.jpg 1400w" sizes="(max-width:350px) 350px,(max-width:700px) 700px,(max-width:1050px) 1050px, 1400px" class="blog-media-element" alt="desktop screenshot" src="/projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" spec="100% [1400) 1400">
+        </div>
+
+        <p>In the beginnng, the Photo Editor was a tool made by a third party developer in a proprietary UI framework on top of Angular 1 and Node 5.</p>
+        <p>This version was very old and tbh a bit difficult to maintain and iterate on. It was also not responsive so mobile users were missing out.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/canva-photo-editor/img/canvaphotoeditor_old_350.generated.jpg 350w,/projects/canva-photo-editor/img/canvaphotoeditor_old_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="old version" src="/projects/canva-photo-editor/img/canvaphotoeditor_old.jpg" spec="100% [700) 700"><span class="blog-media-caption">Old version</span>
+        </div>
+
+        <p>So a redesign was made and the app was rewritten in a more modern stack. The new version looks better, modern, and is responsive.</p>
+        <p>My part in this redesign was coding the webapp and the welcome page.</p>
+        <div class="blog-media blog-media-bleed">
+          <img srcset="/projects/canva-photo-editor/img/canvaphotoeditor_3_350.generated.jpg 350w,/projects/canva-photo-editor/img/canvaphotoeditor_3_700.generated.jpg 700w,/projects/canva-photo-editor/img/canvaphotoeditor_3_1050.generated.jpg 1050w,/projects/canva-photo-editor/img/canvaphotoeditor_3_1400.generated.jpg 1400w" sizes="(max-width:350px) 350px,(max-width:700px) 700px,(max-width:1050px) 1050px, 1400px" class="blog-media-element" alt="welcome page screenshot" src="/projects/canva-photo-editor/img/canvaphotoeditor_3.jpg" spec="100% [1400) 1400"><span class="blog-media-caption">The welcome page</span>
+        </div>
+
+        <p>I wrote the new app in <a target="_blank" href="https://reactjs.org/"><strong>React</strong></a> with <a target="_blank" href="https://mobx.js.org/"><strong>MobX</strong></a>.</p>
+        <p>There were a few WebGL and canvas filter algorithms from the old app that I reimplemented. Had to dip my toes into some fragment shaders for the WebGL version.</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/canva-photo-editor/img/canvaphotoeditor_2_350.generated.jpg 350w,/projects/canva-photo-editor/img/canvaphotoeditor_2_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="desktop screenshot" src="/projects/canva-photo-editor/img/canvaphotoeditor_2.jpg" spec="100% [700) 700">
+        </div>
+
+        <p>The backend is a simple server written with <a target="_blank" href="https://expressjs.com/"><strong>Express</strong></a> and the whole app was deployed on <a target="_blank" href="https://www.heroku.com/"><strong>Heroku</strong></a>.</p>
+        <p>After the launch we saw doubling in signups! 🔥 It was a fun project.
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="main-footer">
+    <div>
+      <p class="main-footer-line">
+        <a target="null" class="main-footer-nav" href="/">Home</a> ·
+        <a target="null" class="main-footer-nav" href="/projects/">Works</a>
+      </p>
+      <p class="main-footer-line">(C) 2023 Lean Rada</p>
+    </div>
+    <div>
+      <h2 class="main-footer-links-heading">On the web</h2>
+      <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
+        <img class="home-link-icon" src="/icons/linkedin.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
+        <img class="home-link-icon" src="/icons/codepen.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+        <img class="home-link-icon" src="/icons/stackoverflow.png">
+      </a>
+      <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
+        <img class="home-link-icon" src="/icons/github.png">
+      </a>
+    </div>
+  </footer>
+  <script>
+    (() => {
+      const mainHeader = document.querySelector(".main-header");
+
+      let currentY = 0;
+      let currentYTarget = 0;
+
+      let mouseHovering = false;
+
+      let lastScrollY = window.scrollY;
+      let lastMouseY = 0;
+      window.addEventListener("scroll", debounce(onScroll));
+      window.addEventListener("mousemove", debounce(onMouseMove, 100));
+      mainHeader.addEventListener("touchstart", onTouchStart);
+
+      function onScroll(event) {
+        const dy = window.scrollY - lastScrollY;
+
+        // move with the page
+        currentY -= dy;
+        if (currentY > 0) {
+          currentY = 0;
+        } else if (currentY < -mainHeader.offsetHeight) {
+          currentY = -mainHeader.offsetHeight;
+        }
+
+        currentYTarget = currentY;
+        updateDOM();
+
+        lastScrollY = window.scrollY;
+      }
+
+      function onMouseMove(event) {
+        const dy = event.clientY - lastMouseY;
+
+        // show when mouse goes near the top
+        const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+        if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+          currentYTarget = 0;
+          mouseHovering = true;
+        } else if (
+          mouseHovering &&
+          dy > 0 &&
+          event.clientY > mainHeader.offsetHeight * 4
+        ) {
+          currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+          mouseHovering = false;
+        }
+
+        updateDOM();
+        lastMouseY = event.clientY;
+      }
+
+      function onTouchStart(event) {
+        currentYTarget = 0;
+        updateDOM();
+      }
+
+      const updateDOM = debounce(() => {
+        mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+
+        const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
+        mainHeader.classList.toggle("hidden", isHidden);
+
+        if (Math.abs(currentY - currentYTarget) > 1) {
+          currentY += (currentYTarget - currentY) * 0.2;
+          requestAnimationFrame(updateDOM);
+        } else {
+          currentY = currentYTarget;
+        }
+      });
+
+      if (mainHeader.classList.contains("prehide")) {
+        currentY = currentYTarget = -mainHeader.offsetHeight;
+        updateDOM();
+      }
+
+      function debounce(fn, ms = 0) {
+        let recentlyFired = false;
+        return (...args) => {
+          if (recentlyFired) return;
+          recentlyFired = true;
+          if (ms === 0) {
+            requestAnimationFrame(() => (recentlyFired = false));
+          } else {
+            setTimeout(() => (recentlyFired = false), ms);
+          }
+          return fn(...args);
+        };
+      }
+    })();
+  </script>
+</body>
+</html>
