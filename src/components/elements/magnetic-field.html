@@ -36,14 +36,15 @@
             hide: () => (this.isVisible = false),
           });
 
-          document.addEventListener("click", () => {
-            this.ripple();
+          document.addEventListener("click", (event) => {
+            if (event.target.tagName === "A") return;
+            this.ripple(getMousePos(this));
           });
         }
 
-        ripple() {
+        ripple(center) {
           this.ripples.push({
-            center: getMousePos(this),
+            center,
             radius: 0,
           });
         }
@@ -101,7 +102,9 @@
               let angle = mousePos
                 ? Math.atan2(mousePos.x - x, mousePos.y - y) +
                   (Math.PI * sigmoid(mouseDist / 60 - 6)) / 2
-                : 0;
+                : (x + y) / 300;
+
+              angle += t * 0.02;
 
               let color = [0x22, 0x22, 0x22];
               const highlightColor = [0x54, 0xf8, 0xc1];
