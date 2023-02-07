@@ -114,18 +114,38 @@
     .gallery-grid {
       display: grid;
       justify-content: center;
-      grid-template-columns: repeat(auto-fit, calc(min(300px, 100%)));
-      padding: 24px;
+      margin: auto;
+      max-width: 900px;
+      grid-template-columns: repeat(3, 1fr);
       gap: 30px;
+    }
+
+    @media (max-width: 900px) {
+      .gallery-grid {
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
   <style>
+    .gallery-grid-item-block {
+      position: relative;
+      width: 100%;
+      /* aspect ratio trick*/
+      padding-bottom: 100%;
+    }
+
     .gallery-grid-item,
     .gallery-grid-item:visited {
-      position: relative;
+      position: absolute;
       display: block;
-      width: 300px;
-      height: 300px;
+      width: 100%;
+      height: 100%;
       border-radius: 18px;
       text-decoration: none;
       color: #fff;
@@ -164,7 +184,7 @@
       font-size: 18px;
       font-style: italic;
       font-weight: bold;
-      line-height: 1.8;
+      line-height: 1.6;
       text-align: center;
       visibility: hidden;
       z-index: 0;
@@ -189,17 +209,24 @@
     }
 
     .gallery-grid-item.selected .gallery-grid-label::after {
-      content: "🡥";
+      content: "↗";
       position: absolute;
       right: 18px;
       top: 18px;
       width: 18px;
       height: 18px;
-      line-height: 14px;
-      background: #fff;
-      color: var(--clr0-dark);
+      font-size: 24px;
+      line-height: 16px;
       font-style: normal;
       font-weight: bold;
+      background: #fff;
+      color: var(--clr0-dark);
+    }
+
+    @media (max-width: 800px) {
+      .gallery-grid-label {
+        font-size: 15px;
+      }
     }
   </style>
   <style>
@@ -207,7 +234,6 @@
       display: grid;
       justify-content: center;
       grid-template-columns: repeat(auto-fit, calc(min(546px, 100%)));
-      padding: 24px;
       gap: 60px;
     }
   </style>
@@ -342,6 +368,10 @@
     }
 
     @media (max-width: 600px) {
+      .card-grid-image-container {
+        height: 280px;
+      }
+
       .card-grid-posttitle {
         display: none;
         margin: 0 0 18px;
@@ -422,8 +452,8 @@
     .home-circle-text {
       position: relative;
       margin: 2vh;
-      width: 36vh;
-      height: 36vh;
+      width: 100%;
+      height: 100%;
       font-size: 3vh;
       font-style: italic;
       color: #fff;
@@ -535,7 +565,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 95vh;
+      height: clamp(95vh, 600px, 100vh);
     }
 
     .header-content {
@@ -566,6 +596,15 @@
       top: 0;
       width: 100%;
       height: 100%;
+    }
+
+    .header-circle-text-big {
+      width: 36vh;
+      height: 36vh;
+    }
+
+    .header-circle-text-small {
+      display: none;
     }
 
     .intro-text {
@@ -622,7 +661,9 @@
 
     @media (max-aspect-ratio: 4/5) {
       .header {
-        height: 95vh;
+        height: auto;
+        min-height: 95vh;
+        margin: 60px 0;
       }
 
       .header-content {
@@ -632,12 +673,25 @@
       }
 
       .header-bg {
-        float: unset;
+        display: inline-block;
+        float: none;
+        width: 30vh;
+        height: 30vh;
+      }
+
+      .header-circle-text-big {
+        display: none;
+      }
+
+      .header-circle-text-small {
+        display: block;
+        width: 26vh;
+        height: 26vh;
       }
 
       .intro-text {
         display: block;
-        margin-top: 1.4vh;
+        margin-top: 4vh;
         font-size: 18px;
         animation: intro-text-mobile 1s cubic-bezier(0.8, 0.2, 0.2, 0.8);
       }
@@ -891,14 +945,15 @@
               hide: () => (this.isVisible = false),
             });
 
-            document.addEventListener("click", () => {
-              this.ripple();
+            document.addEventListener("click", (event) => {
+              if (event.target.tagName === "A") return;
+              this.ripple(getMousePos(this));
             });
           }
 
-          ripple() {
+          ripple(center) {
             this.ripples.push({
-              center: getMousePos(this),
+              center,
               radius: 0,
             });
           }
@@ -956,7 +1011,9 @@
                 let angle = mousePos ?
                   Math.atan2(mousePos.x - x, mousePos.y - y) +
                   (Math.PI * sigmoid(mouseDist / 60 - 6)) / 2 :
-                  0;
+                  (x + y) / 300;
+
+                angle += t * 0.02;
 
                 let color = [0x22, 0x22, 0x22];
                 const highlightColor = [0x54, 0xf8, 0xc1];
@@ -1270,8 +1327,11 @@
         <nebula-client class="nebula" palette="#e79907 #bf1852 #4d4aff #0ad591">
           <canvas style="filter: contrast(1.5)">
           </canvas></nebula-client>
-        <div class="home-circle-text">
+        <div class="home-circle-text header-circle-text-big">
           <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-108.75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-101.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-93.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-86.25deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-78.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-71.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh">p</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(78.75deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(86.25deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(93.75deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(101.25deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(108.75deg); transform-origin: 0.5ch 18vh">e</span>
+        </div>
+        <div class="home-circle-text header-circle-text-small">
+          <span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-76.5deg); transform-origin: 0.5ch 13vh">W</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-68deg); transform-origin: 0.5ch 13vh">e</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-59.5deg); transform-origin: 0.5ch 13vh">l</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-51deg); transform-origin: 0.5ch 13vh">c</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-42.5deg); transform-origin: 0.5ch 13vh">o</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-34deg); transform-origin: 0.5ch 13vh">m</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-25.5deg); transform-origin: 0.5ch 13vh">e</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-17deg); transform-origin: 0.5ch 13vh"> </span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-8.5deg); transform-origin: 0.5ch 13vh">t</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 13vh">o</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(8.5deg); transform-origin: 0.5ch 13vh"> </span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(17deg); transform-origin: 0.5ch 13vh">m</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(25.5deg); transform-origin: 0.5ch 13vh">y</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(34deg); transform-origin: 0.5ch 13vh"> </span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(42.5deg); transform-origin: 0.5ch 13vh">s</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(51deg); transform-origin: 0.5ch 13vh">i</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(59.5deg); transform-origin: 0.5ch 13vh">t</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(68deg); transform-origin: 0.5ch 13vh">e</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(76.5deg); transform-origin: 0.5ch 13vh">!</span>
         </div>
         <img class="home-circle-icon home-circle-icon-img" src="/icons/tada.png">
       </div>
@@ -1295,7 +1355,7 @@
         <span class="intro-line"> Nice to meet you. </span>
         <br>
         <span class="intro-line">
-          Please, <span class="great-time-trigger" onclick="haveAGreatTime()">have a great time.</span>
+          Please, <span class="great-time-trigger" onclick="haveAGreatTime(event)">have a great time.</span>
         </span>
       </span>
     </div>
@@ -1431,30 +1491,42 @@
     <h2 class="section-title">From the lab</h2>
     <div class="gallery-grid">
 
-      <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2023/18/">
-        <img srcset="/labs/wc-sim-18_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/wc-sim-18.png" spec="300">
-        <span class="gallery-grid-label">Watercolour simulator [Warning: GPU heavy]</span>
-      </a>
-      <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2023/09/">
-        <img srcset="/labs/wc-sim-9_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/wc-sim-9.png" spec="300">
-        <span class="gallery-grid-label">Flowers in simulated watercolour [Warning: GPU heavy]</span>
-      </a>
-      <a target="_blank" class="gallery-grid-item" href="https://codepen.io/kalabasa/pen/OJLQEWY">
-        <video class="gallery-grid-media" muted="" autoplay="" loop="" src="/labs/3d-hamburger.mp4"></video>
-        <span class="gallery-grid-label">3D hamburger menu animation</span>
-      </a>
-      <a target="_blank" class="gallery-grid-item" href="https://codepen.io/kalabasa/pen/oVMOZK">
-        <img srcset="/labs/pure-css-ai-tic-tac-toe_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/pure-css-ai-tic-tac-toe.png" spec="300">
-        <span class="gallery-grid-label">Tic-tac-toe AI written in pure CSS. Can you beat a stylesheet?</span>
-      </a>
-      <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2022/04/">
-        <img srcset="/labs/floridablanca_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/floridablanca.png" spec="300">
-        <span class="gallery-grid-label">Floridablanca - flow art generator</span>
-      </a>
-      <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2023/28/">
-        <img srcset="/labs/poetry-gen_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/poetry-gen.png" spec="300">
-        <span class="gallery-grid-label">Poetry generator</span>
-      </a>
+      <div class="gallery-grid-item-block">
+        <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2023/18/">
+          <img srcset="/labs/wc-sim-18_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/wc-sim-18.png" spec="300">
+          <span class="gallery-grid-label">Watercolour simulator [Warning: GPU heavy]</span>
+        </a>
+      </div>
+      <div class="gallery-grid-item-block">
+        <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2023/09/">
+          <img srcset="/labs/wc-sim-9_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/wc-sim-9.png" spec="300">
+          <span class="gallery-grid-label">Flowers in simulated watercolour [Warning: GPU heavy]</span>
+        </a>
+      </div>
+      <div class="gallery-grid-item-block">
+        <a target="_blank" class="gallery-grid-item" href="https://codepen.io/kalabasa/pen/OJLQEWY">
+          <video class="gallery-grid-media" muted="" autoplay="" loop="" src="/labs/3d-hamburger.opt.mp4"></video>
+          <span class="gallery-grid-label">3D hamburger menu animation</span>
+        </a>
+      </div>
+      <div class="gallery-grid-item-block">
+        <a target="_blank" class="gallery-grid-item" href="https://codepen.io/kalabasa/pen/oVMOZK">
+          <img srcset="/labs/pure-css-ai-tic-tac-toe_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/pure-css-ai-tic-tac-toe.png" spec="300">
+          <span class="gallery-grid-label">Tic-tac-toe AI written in pure CSS. Can you beat a stylesheet?</span>
+        </a>
+      </div>
+      <div class="gallery-grid-item-block">
+        <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2022/04/">
+          <img srcset="/labs/floridablanca_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/floridablanca.png" spec="300">
+          <span class="gallery-grid-label">Floridablanca - flow art generator</span>
+        </a>
+      </div>
+      <div class="gallery-grid-item-block">
+        <a target="_blank" class="gallery-grid-item" href="https://leanrada.com/genuary_2023/28/">
+          <img srcset="/labs/poetry-gen_300.generated.png 300w" sizes=" 300px" class="gallery-grid-media" src="/labs/poetry-gen.png" spec="300">
+          <span class="gallery-grid-label">Poetry generator</span>
+        </a>
+      </div>
 
     </div>
   </section>
@@ -1462,8 +1534,8 @@
   <footer class="main-footer">
     <div>
       <p class="main-footer-line">
-        <a target="null" class="main-footer-nav" href="/">Home</a> ·
-        <a target="null" class="main-footer-nav" href="/projects/">Works</a>
+        <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+        <a target="_self" class="main-footer-nav" href="/projects/">Works</a>
       </p>
       <p class="main-footer-line">(C) 2023 Lean Rada</p>
     </div>
@@ -1525,7 +1597,10 @@
 
       let greatTimes = 0;
 
-      window.haveAGreatTime = function() {
+      window.haveAGreatTime = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
         greatTimes++;
         num.innerText = greatTimes;
         if (greatTimes === 1) {
