@@ -28,4 +28,4 @@ git add .nojekyll
 
 git commit -m "Deploy"
 git diff HEAD~
-echo "Run `git push` to deploy"
+echo "Run 'git push' to deploy"
