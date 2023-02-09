@@ -1,31 +1,35 @@
 #!/usr/bin/env bash
 set -e
 
-git status --porcelain
+if [[ `git status --porcelain` ]]; then
+  echo "Unclean work dir"
+  exit
+fi
 
 # Build project
-git branch -f build
-git checkout build
-
 yarn install
 yarn clean
 yarn build
 
-git add -f "docs/"
-git commit -m "Deploy"
+# Update prod in a worktree. master == prod
+git worktree add -f prod master
 
-# Update prod. master == prod
-git checkout -f master
+# Copy build files to prod
+rsync -Pr --del docs/ prod/docs
 
-rm -rf node_modules/
-git rm -rf .
-git clean -df
-
-git checkout -f build -- "docs/"
-
+# Commit prod changes
+cd prod
 touch .nojekyll
-git add .nojekyll
+git add docs .nojekyll
 
-git commit -m "Deploy"
-git diff HEAD~
-echo "Run 'git push' to deploy"
+if [[ -n `git diff --quiet` ]]; then
+  git commit -m "Deploy"
+  git diff HEAD~
+  git push
+else
+  echo "No changes to deploy"
+fi
+
+cd ..
+rm -r prod
+git worktree prune
