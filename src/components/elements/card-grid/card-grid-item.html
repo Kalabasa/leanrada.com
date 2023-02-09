@@ -1,9 +1,9 @@
 <a
-  class="{'card-grid-item card-grid-thumbalign-' + (attrs.thumbalign ?? 'default')}"
-  href="{attrs.href}"
+  :class="'card-grid-item card-grid-thumbalign-' + (attrs.thumbalign ?? 'default')"
+  :href="attrs.href"
 >
   <div class="card-grid-image-container">
-    <responsive-img class="card-grid-image" src="{attrs.imgsrc}" spec="600" />
+    <responsive-img class="card-grid-image" :src="attrs.imgsrc" spec="600" />
   </div>
   <div class="card-grid-title-wrap">
     <div class="card-grid-title-bar">
@@ -37,6 +37,23 @@
   .card-grid-item:hover {
     margin: -12px -24px 0;
     padding-bottom: 12px;
+  }
+  .card-grid-animated .card-grid-item {
+    animation: card-grid-item-reveal 0.8s var(--ease) backwards;
+    animation-delay: var(--card-grid-item-delay);
+  }
+  @keyframes card-grid-item-reveal {
+    0% {
+      clip-path: inset(20% 100% 60% 0 round 18px);
+      filter: brightness(0);
+    }
+    50% {
+      clip-path: inset(20% 0 60% 0 round 18px);
+      filter: brightness(1);
+    }
+    100% {
+      clip-path: inset(0 0 0 0 round 18px);
+    }
   }
 
   .card-grid-image-container {
@@ -140,19 +157,6 @@
     display: none;
   }
 
-  @media (max-width: 600px) {
-    .card-grid-image-container {
-      height: 280px;
-    }
-    .card-grid-posttitle {
-      display: none;
-      margin: 0 0 18px;
-    }
-    .card-grid-postitle-small {
-      display: block;
-    }
-  }
-
   .card-grid-content {
     margin: 30px 0;
     font-size: 15px;
@@ -162,5 +166,50 @@
   .card-grid-item:hover .card-grid-content {
     margin-left: 24px;
     margin-right: 24px;
+  }
+
+  .card-grid-animated .card-grid-title {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.8s);
+  }
+  .card-grid-animated .card-grid-posttitle {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1)
+      backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.9s);
+  }
+
+  @keyframes card-grid-text-reveal {
+    from {
+      transform: translateY(-100%);
+      clip-path: inset(100% 0 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .card-grid-animated .card-grid-content {
+    animation: card-grid-content 0.6s 1.5s backwards;
+  }
+  @keyframes card-grid-content {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .card-grid-content {
+      margin: 18px 0;
+    }
+    .card-grid-image-container {
+      height: 280px;
+    }
+    .card-grid-posttitle {
+      display: none;
+      margin: 0 0 12px;
+    }
+    .card-grid-postitle-small {
+      display: block;
+    }
   }
 </style>

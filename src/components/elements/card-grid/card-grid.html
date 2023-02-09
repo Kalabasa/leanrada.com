@@ -1,6 +1,19 @@
-<div class="card-grid">
+<div :class="'card-grid' + (attrs.animated ? ' card-grid-animated' : '')">
   <slot />
 </div>
+
+<script render>
+  let styles = "";
+  for (let i = 1; i <= children.length; i++) {
+    styles += `
+    .card-grid > *:nth-child(${i}) {
+      --card-grid-item-delay: ${Math.min(i - 1, Math.log(i * 8)) * 0.3}s;
+    }`;
+  }
+  return html`<style>
+    ${styles}
+  </style>`;
+</script>
 
 <style>
   .card-grid {
