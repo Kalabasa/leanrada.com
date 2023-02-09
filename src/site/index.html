@@ -1,26 +1,11 @@
 <html>
   <title>Lean's personal website</title>
-
-  <script render>
-    const lines = 7;
-    let styles = "";
-    for (let i = 1; i <= lines; i++) {
-      styles += `
-      .intro-line:nth-of-type(${i}) {
-        animation-delay: ${Math.log(i * 2) * 0.2}s;
-      }`;
-    }
-    return html`<style>
-      ${styles}
-    </style>`;
-  </script>
-
   <page noheader="true">
     <main-header float="true" prehide="true" select="/" />
 
     <section class="header">
       <div class="header-content">
-        <div class="header-bg">
+        <div class="header-circle">
           <nebula class="nebula" palette="#e79907 #bf1852 #4d4aff #0ad591" />
           <home-circle-text
             class="header-circle-text-big"
@@ -93,6 +78,20 @@
       <home-labs />
     </section>
   </page>
+
+  <script render>
+    const lines = 7;
+    let styles = "";
+    for (let i = 1; i <= lines; i++) {
+      styles += `
+      .intro-line:nth-of-type(${i}) {
+        animation-delay: ${0.1 + Math.log(i * 2) * 0.2}s;
+      }`;
+    }
+    return html`<style>
+      ${styles}
+    </style>`;
+  </script>
 </html>
 
 <style>
@@ -110,7 +109,7 @@
     overflow: hidden;
   }
 
-  .header-bg {
+  .header-circle {
     position: relative;
     display: block;
     float: left;
@@ -123,6 +122,15 @@
     shape-outside: circle(calc(50% + 1vh));
     text-align: initial;
     overflow: hidden;
+    animation: header-circle 0.5s cubic-bezier(1, 0, 0.9, 1);
+  }
+  @keyframes header-circle {
+    from {
+      clip-path: circle(2.5vh);
+    }
+    to {
+      clip-path: circle(50%);
+    }
   }
 
   .nebula {
@@ -144,7 +152,7 @@
     line-height: 1.8;
     font-size: 2.2vh;
     font-style: italic;
-    animation: intro-text 0.8s 0.2s cubic-bezier(0, 0.7, 0.4, 1) backwards;
+    animation: intro-text 0.8s 0.4s cubic-bezier(0, 0.7, 0.4, 1) backwards;
   }
   @keyframes intro-text {
     from {
@@ -154,7 +162,7 @@
 
   .intro-line {
     display: inline-block;
-    animation: intro-text-drift 0.8s cubic-bezier(0, 0.8, 0.2, 1) both;
+    animation: intro-text-drift 0.9s cubic-bezier(0, 0.8, 0.2, 1) both;
   }
   @keyframes intro-text-drift {
     from {
@@ -170,7 +178,7 @@
   .intro-spacer {
     display: block;
     height: 0px;
-    animation: intro-spacer 0.4s 0.2s cubic-bezier(0, 0.8, 0.1, 1) backwards;
+    animation: intro-spacer 0.4s 0.4s cubic-bezier(0, 0.8, 0.1, 1) backwards;
   }
   @keyframes intro-spacer {
     from {
@@ -198,7 +206,7 @@
       min-width: unset;
       text-align: center;
     }
-    .header-bg {
+    .header-circle {
       display: inline-block;
       float: none;
       width: 30vh;
