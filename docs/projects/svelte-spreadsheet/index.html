@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>Projects</title>
+  <title>Svelte Spreadsheet</title>
   <script client="" defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -257,144 +257,216 @@
     }
   </style>
   <style>
-    .card-grid {
-      display: grid;
+    .blog-page {
+      display: flex;
       justify-content: center;
-      grid-template-columns: repeat(auto-fit, calc(min(546px, 100%)));
-      gap: 60px;
+      overflow: hidden;
     }
 
-    @media (max-width: 900px) {
-      .card-grid {
-        gap: 30px;
-      }
+    .content {
+      padding: 60px 18px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 18px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
     }
 
-    @media (prefers-reduced-motion) {
-      .card-grid * {
-        animation: none !important;
-      }
+    .markdown h1,
+    .markdown h2,
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 36px 0;
+    }
+
+    .markdown h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown h2 {
+      font-size: 150%;
+    }
+
+    .markdown h3,
+    .markdown h4,
+    .markdown h5,
+    .markdown h6 {
+      font-size: 120%;
+    }
+
+    .markdown p {
+      margin: 36px 0;
+    }
+
+    .markdown hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      background: var(--card-clr);
+    }
+
+    .markdown pre code {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      overflow-y: auto;
+    }
+
+    .markdown blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
     }
   </style>
   <style>
-    .card-grid-item {
-      display: block;
-      text-decoration: none;
-      text-align: start;
-      color: #fff;
-      overflow: hidden;
-      transition: 0.2s var(--ease);
-      transition-property: margin, padding;
+    .blog-media {
+      text-align: center;
+      /* external margin because it's expected to be in an article */
+      margin: 36px 0;
     }
 
-    .card-grid-item:visited {
-      color: #eee;
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
     }
 
-    .card-grid-item:hover {
-      margin: -12px -24px 0;
-      padding-bottom: 12px;
-    }
-
-    .card-grid-animated .card-grid-item {
-      animation: card-grid-item-reveal 0.8s var(--ease) backwards;
-      animation-delay: var(--card-grid-item-delay);
-    }
-
-    @keyframes card-grid-item-reveal {
-      0% {
-        clip-path: inset(20% 100% 60% 0 round 18px);
-        filter: brightness(0);
-      }
-
-      50% {
-        clip-path: inset(20% 0 60% 0 round 18px);
-        filter: brightness(1);
-      }
-
-      100% {
-        clip-path: inset(0 0 0 0 round 18px);
-      }
-    }
-
-    .card-grid-image-container {
-      position: relative;
-      width: 100%;
-      height: 340px;
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
       border-radius: 18px;
-      overflow: hidden;
-      z-index: 0;
     }
 
-    .card-grid-image-container::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      background: var(--clr0);
-      mix-blend-mode: darken;
-      transition: background 1s;
-    }
-
-    .card-grid-item:hover .card-grid-image-container::after {
-      background: #fff;
-      transition: background 2s;
-    }
-
-    .card-grid-image {
-      width: 101%;
-      height: 101%;
-      object-fit: cover;
-      object-position: top;
-      filter: contrast(0.8);
-      transform: scale(1);
-      transform-origin: 9px 9px;
-      transition: filter 1s, transform 1s;
-    }
-
-    .card-grid-thumbalign-center .card-grid-image {
-      object-position: center;
-      transform-origin: center;
-    }
-
-    .card-grid-item:hover .card-grid-image {
-      filter: contrast(1);
-      transform: scale(1.1);
-      transition: filter 1s, transform 2s;
-    }
-
-    .card-grid-title-wrap {
+    .blog-media-bleed .blog-media-element {
       position: relative;
-      height: 0;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
     }
 
-    .card-grid-title-bar {
-      position: absolute;
-      bottom: 0;
-      border-top-right-radius: 18px;
-      background: var(--bg-clr);
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .project-info-card {
+      font-family: var(--default-font);
+      font-size: 15px;
+      line-height: 1.6;
     }
 
-    .card-grid-title-content {
+    .project-info-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .project-info-card-title {
+      flex: 0 0 auto;
+      align-self: stretch;
       position: relative;
-      padding: 12px 24px 0 0;
-      transition: padding 0.2s var(--ease);
+      margin-right: 12px;
+      padding: 12px 18px 6px 12px;
+      border-radius: 18px 18px 0 0;
+      font-style: italic;
+      text-decoration: underline;
+      background-color: var(--card-clr);
     }
 
-    .card-grid-title-content::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 100%;
-      width: 18px;
-      height: 36px;
-      border-bottom-left-radius: 18px;
-      box-shadow: 0 18px 0 var(--bg-clr);
-    }
-
-    .card-grid-title-content::after {
+    .project-info-card-title::after {
       content: "";
       position: absolute;
       left: 100%;
@@ -402,146 +474,55 @@
       width: 36px;
       height: 18px;
       border-bottom-left-radius: 18px;
-      box-shadow: -18px 0 0 var(--bg-clr);
+      box-shadow: -18px 0 0 var(--card-clr);
     }
 
-    .card-grid-item:hover .card-grid-title-content {
-      padding: 24px;
-    }
-
-    .card-grid-title {
-      font-size: 21px;
-      font-style: italic;
-      font-weight: bold;
-    }
-
-    .card-grid-posttitle {
-      margin-top: 12px;
-      font-size: 15px;
-      font-style: italic;
-      font-weight: bold;
-      opacity: 0.8;
-    }
-
-    .card-grid-postitle-small {
-      display: none;
-    }
-
-    .card-grid-content {
-      margin: 30px 0;
-      font-size: 15px;
-      line-height: 2;
-      transition: margin 0.2s var(--ease);
-    }
-
-    .card-grid-item:hover .card-grid-content {
-      margin-left: 24px;
-      margin-right: 24px;
-    }
-
-    .card-grid-animated .card-grid-title {
-      animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
-      animation-delay: calc(var(--card-grid-item-delay) + 0.8s);
-    }
-
-    .card-grid-animated .card-grid-posttitle {
-      animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
-      animation-delay: calc(var(--card-grid-item-delay) + 0.9s);
-    }
-
-    @keyframes card-grid-text-reveal {
-      from {
-        transform: translateY(-100%);
-        clip-path: inset(100% 0 0 0);
-      }
-
-      to {
-        clip-path: inset(0 0 0 0);
-      }
-    }
-
-    .card-grid-animated .card-grid-content {
-      animation: card-grid-content 0.6s 1.5s backwards;
-    }
-
-    @keyframes card-grid-content {
-      from {
-        opacity: 0;
-      }
+    .project-info-card-fields {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: 1fr 1fr;
+      padding: 12px;
+      border-radius: 0 18px 18px 18px;
+      background-color: var(--card-clr);
     }
 
     @media (max-width: 600px) {
-      .card-grid-content {
-        margin: 18px 0;
-      }
-
-      .card-grid-image-container {
-        height: 280px;
-      }
-
-      .card-grid-posttitle {
-        display: none;
-        margin: 0 0 12px;
-      }
-
-      .card-grid-postitle-small {
+      .project-info-card-fields {
         display: block;
       }
     }
-  </style>
-  <style>
-    .box-note {
-      display: block;
-      padding: 12px 18px;
-      border-radius: 12px;
-      border: solid 2px var(--clr0-dark);
-      box-sizing: border-box;
+
+    .project-info-card-field {
+      display: flex;
     }
-  </style>
-  <style>
-    .title {
-      margin: 90px 0 60px;
-      font-size: 30px;
+
+    .project-info-card-field-label {
+      padding: 6px;
       font-style: italic;
+    }
+
+    .project-info-card-field-value {
+      padding: 6px;
       font-weight: bold;
-      text-align: center;
+    }
+  </style>
+  <style>
+    .btn,
+    .btn:visited {
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: none;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-decoration: none;
+      background: var(--clr0);
+      color: #fff;
+      cursor: pointer;
     }
 
-    .content {
-      margin: 60px 18px 90px;
-      max-width: 2400px;
-    }
-
-    .notice {
-      font-size: 18px;
-      animation: notice 1s 3s backwards;
-    }
-
-    @keyframes notice {
-      from {
-        opacity: 0;
-      }
-    }
-
-    .construct {
-      margin: 12px 0;
-      text-align: center;
-      filter: hue-rotate(80deg);
-      animation: construct 3s linear infinite;
-    }
-
-    .construct-gif {
-      height: 18px;
-    }
-
-    @keyframes construct {
-      from {
-        filter: hue-rotate(0deg);
-      }
-
-      to {
-        filter: hue-rotate(360deg);
-      }
+    .btn:hover {
+      background: var(--clr0-light);
     }
   </style>
   <script>
@@ -896,241 +877,82 @@
     <div class="main-header-bar">
       <a href="/" class="main-header-item ">Home</a>
       <img class="main-header-icon" src="/icons/tada.png">
-      <a href="/projects/" class="main-header-item select">Works</a>
+      <a href="/projects/" class="main-header-item ">Works</a>
       <div class="main-header-indicator"></div>
     </div>
   </header>
 
-  <h1 class="title">Check these out</h1>
-  <div class="content">
-    <div class="card-grid  card-grid-animated project-grid">
+  <div class="blog-page">
+    <div class="content">
 
-      <a class="card-grid-item card-grid-thumbalign-center" href="/projects/wikawik/">
-        <div class="card-grid-image-container">
-          <img srcset="/projects/wikawik/media/wikawik_600.generated.jpg 600w" sizes=" 600px" class="card-grid-image" src="/projects/wikawik/media/wikawik.jpg" spec="600">
-        </div>
-        <div class="card-grid-title-wrap">
-          <div class="card-grid-title-bar">
-            <div class="card-grid-title-content">
-              <div class="card-grid-title">Wikawik</div>
-              <div class="card-grid-posttitle">(2020) Interactive language map</div>
+      <!-- prettier-ignore -->
+      <div class="markdown">
+        <h1 id="svelte-spreadsheet">Svelte Spreadsheet</h1>
+        <p class="center-flex">
+          <iframe src="https://kalabasa.github.io/sheetz/" width="960" height="420"></iframe>
+        </p>
+
+        <aside class="project-info-card">
+          <div class="project-info-card-header">
+            <div class="project-info-card-title">Project details</div>
+            <a target="_blank" class="btn " tag="a" href="https://kalabasa.github.io/sheetz/">
+              Try it out
+            </a>
+          </div>
+          <div class="project-info-card-fields">
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">released</div>
+              <div class="project-info-card-field-value">2020</div>
+            </div>
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">role</div>
+              <div class="project-info-card-field-value">creator</div>
+            </div>
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">platform</div>
+              <div class="project-info-card-field-value">Web</div>
+            </div>
+            <div class="project-info-card-field">
+              <div class="project-info-card-field-label">tech</div>
+              <div class="project-info-card-field-value">Svelte</div>
             </div>
           </div>
-        </div>
-        <div class="card-grid-content">
-          <div class="card-grid-posttitle card-grid-postitle-small">
-            (2020) Interactive language map
-          </div>
+        </aside>
 
-          A webapp that shows the diversity of languages in the Philippines. Learn
-          about the local languages. Listen to local songs and other media. Made in
-          vanilla JS with D3.js. Passion project.
-
-        </div>
-      </a>
-      <a class="card-grid-item card-grid-thumbalign-center" href="/projects/hypertangram/">
-        <div class="card-grid-image-container">
-          <img srcset="/projects/hypertangram/media/hypertangram_0_600.generated.jpg 600w" sizes=" 600px" class="card-grid-image" src="/projects/hypertangram/media/hypertangram_0.jpg" spec="600">
-        </div>
-        <div class="card-grid-title-wrap">
-          <div class="card-grid-title-bar">
-            <div class="card-grid-title-content">
-              <div class="card-grid-title">Hypertangram</div>
-              <div class="card-grid-posttitle">(2018) Geometric puzzle game</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-grid-content">
-          <div class="card-grid-posttitle card-grid-postitle-small">
-            (2018) Geometric puzzle game
-          </div>
-
-          A puzzle game about fitting shapes together. Just like tangram, but the
-          pieces are resizable! Runs on Android. Supports multi-touch interactions for
-          rotating and resizing! Hobby project.
-
-        </div>
-      </a>
-      <a class="card-grid-item card-grid-thumbalign-default" href="/projects/canva-photo-editor/">
-        <div class="card-grid-image-container">
-          <img srcset="/projects/canva-photo-editor/img/canvaphotoeditor_1_600.generated.jpg 600w" sizes=" 600px" class="card-grid-image" src="/projects/canva-photo-editor/img/canvaphotoeditor_1.jpg" spec="600">
-        </div>
-        <div class="card-grid-title-wrap">
-          <div class="card-grid-title-bar">
-            <div class="card-grid-title-content">
-              <div class="card-grid-title">Photo Editor</div>
-              <div class="card-grid-posttitle">(2019) Online image editing</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-grid-content">
-          <div class="card-grid-posttitle card-grid-postitle-small">
-            (2019) Online image editing
-          </div>
-
-          A webapp for quick photo edits. Apply filters. Adjust contrast. Sharpen,
-          blur. Crop, rotate, and resize. Made with React, Canvas API, and WebGL.
-          Project at Canva.
-
-        </div>
-      </a>
-      <a class="card-grid-item card-grid-thumbalign-center" href="/projects/dimensions/">
-        <div class="card-grid-image-container">
-          <img srcset="/projects/dimensions/media/dimensions_0_600.generated.jpg 600w" sizes=" 600px" class="card-grid-image" src="/projects/dimensions/media/dimensions_0.jpg" spec="600">
-        </div>
-        <div class="card-grid-title-wrap">
-          <div class="card-grid-title-bar">
-            <div class="card-grid-title-content">
-              <div class="card-grid-title">Dimensions</div>
-              <div class="card-grid-posttitle">(2019) Augmented reality generative art</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-grid-content">
-          <div class="card-grid-posttitle card-grid-postitle-small">
-            (2019) Augmented reality generative art
-          </div>
-
-          Generative art with extra dimensions. Web-based, uses Vue.js for the
-          generator and a three.js-based mobile webapp for the AR experience. Made for
-          a company event.
-
-        </div>
-      </a>
-      <a class="card-grid-item card-grid-thumbalign-center" href="/projects/blitz-coding/">
-        <div class="card-grid-image-container">
-          <img srcset="/projects/blitz-coding/media/hero_600.generated.png 600w" sizes=" 600px" class="card-grid-image" src="/projects/blitz-coding/media/hero.png" spec="600">
-        </div>
-        <div class="card-grid-title-wrap">
-          <div class="card-grid-title-bar">
-            <div class="card-grid-title-content">
-              <div class="card-grid-title">BlitzCoding</div>
-              <div class="card-grid-posttitle">(2021) Coding game</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-grid-content">
-          <div class="card-grid-posttitle card-grid-postitle-small">
-            (2021) Coding game
-          </div>
-
-          Fast-paced JavaScript coding game. Test your JS knowledge and quick wits in 5 minutes! Random modifiers and language restrictions escalate the challenge to wtf levels.
-
-        </div>
-      </a> <a class="card-grid-item card-grid-thumbalign-default" href="/projects/svelte-spreadsheet/">
-        <div class="card-grid-image-container">
-          <img srcset="/projects/svelte-spreadsheet/media/sheetz_600.generated.jpg 600w" sizes=" 600px" class="card-grid-image" src="/projects/svelte-spreadsheet/media/sheetz.jpg" spec="600">
-        </div>
-        <div class="card-grid-title-wrap">
-          <div class="card-grid-title-bar">
-            <div class="card-grid-title-content">
-              <div class="card-grid-title">Svelte Spreadsheet</div>
-              <div class="card-grid-posttitle">(2020) Spreadsheet test app</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-grid-content">
-          <div class="card-grid-posttitle card-grid-postitle-small">
-            (2020) Spreadsheet test app
-          </div>
-
-          A simple spreadsheet webapp made as a test to try out the Svelte web framework.
-
-        </div>
-      </a>
-
-      <div class="notice">
-        <span class="box-note ">
-          <div class="construct">
-            <img class="construct-gif" src="/projects/construct.gif">
-          </div>
-          <p>
-            Oops! You caught me in the act of migrating data from the old
-            site! 🤫
+        <p>A very simple spreadsheet built with <a target="_blank" href="https://svelte.dev">Svelte</a>.</p>
+        <p>I discovered Svelte in 2019. It’s really interesting - a reactive component-based framework without the runtime bulk. There is no VDOM! Apparently, the DOM is updated directly with precise efficiency.</p>
+        <blockquote>
+          <p>Svelte is a radical new approach to building user interfaces. Whereas traditional frameworks like React and Vue do the bulk of their work in the browser, Svelte shifts that work into a compile step that happens when you build your app.
+            <cite>Svelte website (2023)</cite>
           </p>
-          <p>
-            Would you like to take a look at the
-            <a target="_self" href="/works.html">old site</a> for more projects?
-          </p>
-        </span>
+        </blockquote>
+        <p>So, I wanted to try it on a simple webapp. A spreadsheet app seems to be a good case for this. See, a cell can have formulas, which are derived from other cells. The spreadsheet model is inherently <em>reactive</em>.</p>
+        <p>Among the modern reactive UI frameworks, Svelte syntax is most similar to Vue, with one notable distinction: The script part is not required to be a subclass / object / function. It’s plain flat script!</p>
+        <div class="blog-media blog-media-default">
+          <img srcset="/projects/svelte-spreadsheet/media/sheetz_code_350.generated.png 350w,/projects/svelte-spreadsheet/media/sheetz_code_700.generated.png 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="example code" src="/projects/svelte-spreadsheet/media/sheetz_code.png" spec="100% [700) 700">
+        </div>
+
+        <p>It’s somehow liberating to not have to extend framework classes or follow pre-defined object shapes. There is no <em>"framework"</em>.</p>
+        <p>The Svelte compiler acheives this by statically analyzing the source then tailoring the code to update the DOM at the correct times and places.</p>
+        <p>Verdict: Very cool 👍</p>
+        <h3 id="spreadsheet-features">Spreadsheet features</h3>
+        <ul>
+          <li>Formulas (arithmetic only). Javascript syntax. (<code>=1 + 2</code>)</li>
+          <li>Absolute references. (<code>=A1 + A2</code>)</li>
+          <li>Error detection (cyclic reference detection, syntax errors).</li>
+        </ul>
+        <h3 id="not-implemented-yet">Not implemented (yet?)</h3>
+        <ul>
+          <li>Math functions.</li>
+          <li>Relative references.</li>
+          <li>Lazy evaluation.</li>
+        </ul>
+        <p><a target="_blank" href="https://github.com/Kalabasa/sheetz">Source on Github!</a>.
+        </p>
+
       </div>
 
-
     </div>
-
-    <style>
-      .card-grid>*:nth-child(1) {
-        --card-grid-item-delay: 0s;
-      }
-
-      .card-grid>*:nth-child(2) {
-        --card-grid-item-delay: 0.3s;
-      }
-
-      .card-grid>*:nth-child(3) {
-        --card-grid-item-delay: 0.6s;
-      }
-
-      .card-grid>*:nth-child(4) {
-        --card-grid-item-delay: 0.8999999999999999s;
-      }
-
-      .card-grid>*:nth-child(5) {
-        --card-grid-item-delay: 1.1066638362341807s;
-      }
-
-      .card-grid>*:nth-child(6) {
-        --card-grid-item-delay: 1.1613603032723672s;
-      }
-
-      .card-grid>*:nth-child(7) {
-        --card-grid-item-delay: 1.207605507220545s;
-      }
-
-      .card-grid>*:nth-child(8) {
-        --card-grid-item-delay: 1.2476649250079015s;
-      }
-
-      .card-grid>*:nth-child(9) {
-        --card-grid-item-delay: 1.2829998357048165s;
-      }
-
-      .card-grid>*:nth-child(10) {
-        --card-grid-item-delay: 1.3146079904021644s;
-      }
-
-      .card-grid>*:nth-child(11) {
-        --card-grid-item-delay: 1.343201044343462s;
-      }
-
-      .card-grid>*:nth-child(12) {
-        --card-grid-item-delay: 1.3693044574403508s;
-      }
-
-      .card-grid>*:nth-child(13) {
-        --card-grid-item-delay: 1.3933172697424117s;
-      }
-
-      .card-grid>*:nth-child(14) {
-        --card-grid-item-delay: 1.4155496613885281s;
-      }
-
-      .card-grid>*:nth-child(15) {
-        --card-grid-item-delay: 1.4362475228346137s;
-      }
-
-      .card-grid>*:nth-child(16) {
-        --card-grid-item-delay: 1.4556090791758851s;
-      }
-
-      .card-grid>*:nth-child(17) {
-        --card-grid-item-delay: 1.4737964657208156s;
-      }
-
-      .card-grid>*:nth-child(18) {
-        --card-grid-item-delay: 1.4909439898728s;
-      }
-    </style>
   </div>
 
   <footer class="main-footer">
@@ -1260,20 +1082,6 @@
           }
           return fn(...args);
         };
-      }
-    })();
-  </script>
-  <script>
-    (() => {
-      const seenKey = "seenProjectGridAnimation";
-      const seenTimes = Number.parseInt(sessionStorage.getItem(seenKey) || 0);
-
-      const shouldAnimate = seenTimes < 2 && window.scrollY < 50;
-      const projectGrid = document.querySelector(".project-grid");
-      projectGrid.classList.toggle("card-grid-animated", shouldAnimate);
-
-      if (shouldAnimate) {
-        sessionStorage.setItem(seenKey, seenTimes + 1);
       }
     })();
   </script>
