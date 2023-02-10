@@ -3,7 +3,7 @@
   <page header-select="/projects/">
     <h1 class="title">Check these out</h1>
     <div class="content">
-      <projects-card-grid>
+      <projects-card-grid class="project-grid" animated="true">
         <div class="notice">
           <box-note>
             <div class="construct">
@@ -66,3 +66,18 @@
     }
   }
 </style>
+
+<script client defer>
+  (() => {
+    const seenKey = "seenProjectGridAnimation";
+    const seenTimes = Number.parseInt(sessionStorage.getItem(seenKey) || 0);
+
+    const shouldAnimate = seenTimes < 2 && window.scrollY < 50;
+    const projectGrid = document.querySelector(".project-grid");
+    projectGrid.classList.toggle("card-grid-animated", shouldAnimate);
+
+    if (shouldAnimate) {
+      sessionStorage.setItem(seenKey, seenTimes + 1);
+    }
+  })();
+</script>
