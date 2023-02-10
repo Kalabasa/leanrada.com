@@ -903,7 +903,7 @@
 
   <h1 class="title">Check these out</h1>
   <div class="content">
-    <div class="card-grid card-grid-animated">
+    <div class="card-grid  card-grid-animated project-grid">
 
       <a class="card-grid-item card-grid-thumbalign-center" href="/projects/wikawik/">
         <div class="card-grid-image-container">
@@ -1232,6 +1232,20 @@
           }
           return fn(...args);
         };
+      }
+    })();
+  </script>
+  <script>
+    (() => {
+      const seenKey = "seenProjectGridAnimation";
+      const seenTimes = Number.parseInt(sessionStorage.getItem(seenKey) || 0);
+
+      const shouldAnimate = seenTimes < 2 && window.scrollY < 50;
+      const projectGrid = document.querySelector(".project-grid");
+      projectGrid.classList.toggle("card-grid-animated", shouldAnimate);
+
+      if (shouldAnimate) {
+        sessionStorage.setItem(seenKey, seenTimes + 1);
       }
     })();
   </script>
