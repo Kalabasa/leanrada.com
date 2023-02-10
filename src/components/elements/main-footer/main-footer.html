@@ -1,19 +1,27 @@
 <footer class="main-footer">
-  <div>
+  <div class="main-footer-content-part">
     <p class="main-footer-line">
       <aa class="main-footer-nav" href="/">Home</aa> ·
       <aa class="main-footer-nav" href="/projects/">Works</aa>
     </p>
     <p class="main-footer-line">(C) {new Date().getFullYear()} Lean Rada</p>
   </div>
-  <div>
+  <div class="main-footer-content-part">
     <h2 class="main-footer-links-heading">On the web</h2>
     <main-footer-links />
   </div>
+  <nebula
+    class="main-footer-nebula"
+    palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591"
+    width="40"
+    height="10"
+  />
+  <button class="main-footer-top-btn" aria-label="Back to top">^</button>
 </footer>
 
 <style>
   .main-footer {
+    position: relative;
     display: flex;
     justify-content: space-between;
     gap: 60px;
@@ -22,6 +30,7 @@
     font-weight: bold;
     background: var(--clr0);
     color: #000;
+    overflow: hidden;
   }
 
   .main-footer-links-heading {
@@ -41,9 +50,66 @@
     color: #fff;
   }
 
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
   @media (max-width: 700px) {
     .main-footer {
       flex-direction: column-reverse;
     }
   }
 </style>
+
+<script client defer>
+  (() => {
+    const topBtn = document.querySelector(".main-footer-top-btn");
+    topBtn.addEventListener("click", () => {
+      window.scrollTo(0, 0);
+    });
+  })();
+</script>

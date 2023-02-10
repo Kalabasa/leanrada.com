@@ -1,6 +1,6 @@
 <common />
 
-<nebula-client :class="attrs.class" :palette="attrs.palette">
+<nebula-client {...attrs}>
   <canvas style="filter: contrast(1.5)" />
 </nebula-client>
 
@@ -29,12 +29,14 @@
           this.context = null;
           this.noise = null;
 
-          this.size = 30;
+          this.gridWidth = 30;
+          this.gridHeight = 30;
           this.palette = ["#ffffff"];
 
           this.cellWidth = 1; // placeholder
           this.cellHeight = 1; // placeholder
 
+          this.useMouse = false;
           this.mouseCell = null;
 
           this.lastT = 0;
@@ -54,6 +56,18 @@
         connectedCallback() {
           super.connectedCallback();
 
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
           const paletteAttr = this.getAttribute("palette");
           if (paletteAttr) {
             this.palette = paletteAttr.split(" ");
@@ -61,7 +75,7 @@
         }
 
         startLoop() {
-          this.loopStartT = this.getT();
+          this.loopStartT = this.lastT = this.getT();
           this.loop();
         }
 
@@ -83,11 +97,13 @@
 
           // initialize
           if (!this.context) {
-            this.cellWidth = Math.ceil(canvas.offsetWidth / this.size);
-            this.cellHeight = Math.ceil(canvas.offsetHeight / this.size);
-            canvas.width = this.size;
-            canvas.height = this.size;
-            canvas.style.filter += ` blur(${this.cellWidth * 1.25}px)`;
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+              Math.min(this.cellWidth, this.cellHeight) * 1.25
+            }px)`;
             this.context = canvas.getContext("2d");
           }
 
@@ -103,16 +119,24 @@
         draw(canvas, context) {
           const t = this.getT();
           if (t <= this.lastT) return;
+
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
           this.lastT = t;
 
-          const alpha = 0.016;
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight,
+          } = this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
 
-          const { noise, size, palette, cellWidth, cellHeight } = this;
-          const halfGridSize = size / 2;
-
-          // mousePosition from lib/common
           this.mouseCell = null;
-          if (window.mousePosition) {
+          // mousePosition from lib/common
+          if (this.useMouse && window.mousePosition) {
             const { x, y } = window.mousePosition;
             const bounds = canvas.getBoundingClientRect();
             if (
@@ -132,8 +156,8 @@
           const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
           const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
 
-          for (let i = 0; i < size; i++) {
-            for (let j = 0; j < size; j++) {
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
               const mouseProximity =
                 this.mouseCell == null
                   ? 0
@@ -143,9 +167,9 @@
                     );
 
               const xy = [
-                1000 + (i - halfGridSize) * xScale + Math.sin(t * 0.01) * 2,
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
                 1000 +
-                  (j - halfGridSize) * yScale +
+                  (j - halfGridHeight) * yScale +
                   Math.cos(t * 0.007) * 2 +
                   -mouseProximity,
               ];
