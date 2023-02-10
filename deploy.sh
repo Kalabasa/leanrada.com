@@ -2,7 +2,7 @@
 set -e
 
 if [[ `git status --porcelain` ]]; then
-  echo "Unclean work dir"
+  echo >&2 "Unclean work dir"
   exit
 fi
 
@@ -22,12 +22,12 @@ cd prod
 touch .nojekyll
 git add docs .nojekyll
 
-if [[ -n `git diff --quiet` ]]; then
+if ! [[ `git diff-index --cached --quiet` ]]; then
   git commit -m "Deploy"
   git diff HEAD~
   git push
 else
-  echo "No changes to deploy"
+  echo >&2 "No changes to deploy"
 fi
 
 cd ..
