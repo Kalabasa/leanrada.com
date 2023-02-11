@@ -10,6 +10,7 @@ const redirects = [
   ["works/dimensions.html", "projects/dimensions/"],
   ["works/hypertangram.html", "projects/hypertangram/"],
   ["works/wikawik.html", "projects/wikawik/"],
+  ["works/sheetz.html", "projects/svelte-spreadsheet/"],
 ];
 
 const siteSrc = path.resolve(__dirname, "src", "site");
