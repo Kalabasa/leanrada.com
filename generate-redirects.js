@@ -11,6 +11,8 @@ const redirects = [
   ["works/hypertangram.html", "projects/hypertangram/"],
   ["works/wikawik.html", "projects/wikawik/"],
   ["works/sheetz.html", "projects/svelte-spreadsheet/"],
+  ["works/dynastymap.html", "projects/dynaviz/"],
+  ["works/freeformgesturedetector.html", "projects/freeform-gesture-detector/"],
 ];
 
 const siteSrc = path.resolve(__dirname, "src", "site");
