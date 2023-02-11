@@ -1,6 +1,5 @@
 <html>
 <head>
-  <title>Dimensions - Part 2: Augmented reality</title>
   <script client="" defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -92,6 +91,8 @@
       background: var(--clr0);
       color: #000;
       overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 220x;
     }
 
     .main-footer-links-heading {
@@ -232,8 +233,14 @@
       height: 48px;
       border-radius: 50%;
       image-rendering: pixelated;
+      object-fit: cover;
+      object-position: center left;
       filter: invert(1);
       backdrop-filter: blur(8px) invert(1);
+    }
+
+    .main-header-icon:hover {
+      object-position: center right;
     }
 
     .main-header-indicator {
@@ -788,11 +795,11 @@
 
 
 <body>
-
+  <title>Dimensions - Part 2: Augmented reality · leanrada.com</title>
   <header class="main-header">
     <div class="main-header-bar">
       <a href="/" class="main-header-item ">Home</a>
-      <img class="main-header-icon" src="/icons/tada.png">
+      <img class="main-header-icon" src="/icons/tadaw_sheet.png">
       <a href="/projects/" class="main-header-item ">Works</a>
       <div class="main-header-indicator"></div>
     </div>
@@ -844,7 +851,7 @@
         <p>Consequently, the algorithm was relatively simple. It’s just a preprocessing step and a straightforward “feature matching” of the target images.</p>
         <p>First, some theory. Phone camera sensors don’t actually pick up the true color of an object. The perceived color is affected by room lighting, camera quality, and other factors.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_illo1_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo1_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo1.jpg" spec="100% [700) 700"><span class="blog-media-caption">True color (TC) vs perceived color (PC)</span>
+          <img srcset="/projects/dimensions/media/dimensions_illo1_332.generated.jpg 332w,/projects/dimensions/media/dimensions_illo1_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo1.jpg" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">True color (TC) vs perceived color (PC)</span>
         </div>
 
         <p>If we directly used data from the camera feed to compare against the target images, it would fail almost all the time.</p>
@@ -859,14 +866,14 @@
         </ul>
         <p>The algorithm starts by getting the average colors of three predetermined regions over the camera image.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_illo2_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo2_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo2.jpg" spec="100% [700) 700"><span class="blog-media-caption">The regions were specifically chosen to capture key features.</span>
+          <img srcset="/projects/dimensions/media/dimensions_illo2_332.generated.jpg 332w,/projects/dimensions/media/dimensions_illo2_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo2.jpg" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">The regions were specifically chosen to capture key features.</span>
         </div>
 
         <p>Let’s call the colors <code>PC1</code>, <code>PC2</code>, and <code>PC3</code>.</p>
         <p>The top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. This produces two difference colors.</p>
         <p>Let’s call the resulting colors <code>D1</code> and <code>D2</code>:</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_illo3_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo3_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo3.jpg" spec="100% [700) 700">
+          <img srcset="/projects/dimensions/media/dimensions_illo3_332.generated.jpg 332w,/projects/dimensions/media/dimensions_illo3_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo3.jpg" spec="100% [664) 664" loading="lazy">
         </div>
 
         <pre><code>D1 = PC2 - PC1
@@ -885,7 +892,7 @@ D2 = (TC3 - TC2) * a
         <p>To eliminate the remaining lighting variable <code>a</code>, the values were normalized, that is, divided each by the highest value.</p>
         <p>Let’s call the normalized values <code>N1</code> and <code>N2</code>, for normalized <code>D1</code> and <code>D2</code>, respectively.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_illo4_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo4_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo4.jpg" spec="100% [700) 700">
+          <img srcset="/projects/dimensions/media/dimensions_illo4_332.generated.jpg 332w,/projects/dimensions/media/dimensions_illo4_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo4.jpg" spec="100% [664) 664" loading="lazy">
         </div>
 
         <pre><code>N1 = D1 / max(D1, D2)
@@ -898,18 +905,18 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
         <p>As you can see the final values <code>N1</code> and <code>N2</code> are not affected by the lighting parameters at all. They are purely derived from true color. <small>According to the model anyway.</small></p>
         <p>The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various smartphone cameras.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_tester_350.generated.jpg 350w,/projects/dimensions/media/dimensions_tester_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_tester.jpg" spec="100% [700) 700"><span class="blog-media-caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized.</span>
+          <img srcset="/projects/dimensions/media/dimensions_tester_332.generated.jpg 332w,/projects/dimensions/media/dimensions_tester_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_tester.jpg" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized.</span>
         </div>
 
         <p>The final step was to combine the RGB channels of the normalized colors into one series of numbers, called the <strong>feature vector</strong> of the image, i.e., a set of numbers that <em>summarize</em> the image.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_illo5_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo5_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo5.jpg" spec="100% [700) 700"><span class="blog-media-caption">featureVector = [N1.r, N1.g, N1.b, N2.r, N2.g, N2.b]</span>
+          <img srcset="/projects/dimensions/media/dimensions_illo5_332.generated.jpg 332w,/projects/dimensions/media/dimensions_illo5_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo5.jpg" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">featureVector = [N1.r, N1.g, N1.b, N2.r, N2.g, N2.b]</span>
         </div>
 
         <p>Turning the image into a vector made the problem of comparing image similarity a mathematical one. If the numbers match, then the images match.</p>
         <p>All it needed was to compare the feature vector of the processed camera image against the feature vector of the target image.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_illo6_350.generated.jpg 350w,/projects/dimensions/media/dimensions_illo6_700.generated.jpg 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo6.jpg" spec="100% [700) 700"><span class="blog-media-caption">Euclidean distance can be used to compute vector “similarity”</span>
+          <img srcset="/projects/dimensions/media/dimensions_illo6_332.generated.jpg 332w,/projects/dimensions/media/dimensions_illo6_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/projects/dimensions/media/dimensions_illo6.jpg" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">Euclidean distance can be used to compute vector “similarity”</span>
         </div>
 
         <p>So, in application of theory, first I got the phone’s camera stream via the <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices"><strong>MediaDevice</strong> API</a>, connecting the camera to a <code>&lt;video&gt;</code> element.</p>
@@ -920,7 +927,7 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
         <h2 id="augmenting-reality">Augmenting reality</h2>
         <p>The vision for the augmented reality part was that the tiles in the piece would come alive, burst out of the piece, and start drawing streaks of paint, ink, or whatever in the air, depending on the tile type.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_arnotes_300.generated.jpg 300w,/projects/dimensions/media/dimensions_arnotes_600.generated.jpg 600w,/projects/dimensions/media/dimensions_arnotes_700.generated.jpg 700w" sizes="(max-width:300px) 300px,not (min-width:700px) 600px, 700px" class="blog-media-element" alt="AR notes" src="/projects/dimensions/media/dimensions_arnotes.jpg" spec="100% [700) 700">
+          <img srcset="/projects/dimensions/media/dimensions_arnotes_300.generated.jpg 300w,/projects/dimensions/media/dimensions_arnotes_600.generated.jpg 600w,/projects/dimensions/media/dimensions_arnotes_664.generated.jpg 664w" sizes="(max-width:300px) 300px,not (min-width:664px) 600px, 664px" class="blog-media-element" alt="AR notes" src="/projects/dimensions/media/dimensions_arnotes.jpg" spec="100% [664) 664" loading="lazy">
         </div>
 
         <p>It was basically going to be a particle system.</p>
@@ -941,12 +948,12 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
         <p>Modeling the tiles as 3D objects were simply extrusions of the tiles’ 2D shape paths, made very easy using three.js’s <code>ExtrudeGeometry</code>.</p>
         <p>The “paint” trails were made using an old unmaintained library called <a target="_blank" href="https://github.com/mkkellogg/TrailRendererJS"><strong>TrailRendererJS</strong></a>, which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_trailex_350.generated.png 350w,/projects/dimensions/media/dimensions_trailex_700.generated.png 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="TrailRenderer example" src="/projects/dimensions/media/dimensions_trailex.png" spec="100% [700) 700">
+          <img srcset="/projects/dimensions/media/dimensions_trailex_332.generated.png 332w,/projects/dimensions/media/dimensions_trailex_664.generated.png 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="TrailRenderer example" src="/projects/dimensions/media/dimensions_trailex.png" spec="100% [664) 664" loading="lazy">
         </div>
 
         <p>The floating tiles’ movement behavior were guided by a smooth triangle wave function:</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_trianglewave2_300.generated.png 300w,/projects/dimensions/media/dimensions_trianglewave2_600.generated.png 600w,/projects/dimensions/media/dimensions_trianglewave2_700.generated.png 700w" sizes="(max-width:300px) 300px,not (min-width:700px) 600px, 700px" class="blog-media-element" alt="smooth triangle wave function" src="/projects/dimensions/media/dimensions_trianglewave2.png" spec="100% [700) 700"><span class="blog-media-caption">y = arccos(0.95 sin(x))</span>
+          <img srcset="/projects/dimensions/media/dimensions_trianglewave2_300.generated.png 300w,/projects/dimensions/media/dimensions_trianglewave2_600.generated.png 600w,/projects/dimensions/media/dimensions_trianglewave2_664.generated.png 664w" sizes="(max-width:300px) 300px,not (min-width:664px) 600px, 664px" class="blog-media-element" alt="smooth triangle wave function" src="/projects/dimensions/media/dimensions_trianglewave2.png" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">y = arccos(0.95 sin(x))</span>
         </div>
 
         <p>This triangle wave path was wrapped around a virtual cylinder around the user’s position.</p>
@@ -960,7 +967,7 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
 
         <p>One interesting experiment was when the trails were allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a nice pattern.</p>
         <div class="blog-media blog-media-default">
-          <img srcset="/projects/dimensions/media/dimensions_trailart_350.generated.png 350w,/projects/dimensions/media/dimensions_trailart_700.generated.png 700w" sizes="(max-width:350px) 350px, 700px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_trailart.png" spec="100% [700) 700"><span class="blog-media-caption">Trail art</span>
+          <img srcset="/projects/dimensions/media/dimensions_trailart_332.generated.png 332w,/projects/dimensions/media/dimensions_trailart_664.generated.png 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_trailart.png" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">Trail art</span>
         </div>
 
         <p>When it finally exhibited, I mostly watched from the sidelines, taking notes on how people interacted. It’s like live testing on prod.</p>
@@ -977,7 +984,7 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
         <p>You can give it a try right on this page!</p>
         <p>Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.</p>
         <div class="blog-media blog-media-bleed">
-          <img srcset="/projects/dimensions/media/dimensions_finalset_350.generated.jpg 350w,/projects/dimensions/media/dimensions_finalset_700.generated.jpg 700w,/projects/dimensions/media/dimensions_finalset_1050.generated.jpg 1050w,/projects/dimensions/media/dimensions_finalset_1400.generated.jpg 1400w" sizes="(max-width:350px) 350px,(max-width:700px) 700px,(max-width:1050px) 1050px, 1400px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_finalset.jpg" spec="100% [1400) 1400"><span class="blog-media-caption">Go to kalabasa.github.io/dimensions/ on phone if QR doesn’t work.</span>
+          <img srcset="/projects/dimensions/media/dimensions_finalset_400.generated.jpg 400w,/projects/dimensions/media/dimensions_finalset_800.generated.jpg 800w,/projects/dimensions/media/dimensions_finalset_894.generated.jpg 894w,/projects/dimensions/media/dimensions_finalset_1146.generated.jpg 1146w,/projects/dimensions/media/dimensions_finalset_1400.generated.jpg 1400w" sizes="(max-width:400px) 400px,not (min-width:800px) 800px,(max-width:1117px) 894px,(max-width:1433px) 1146px, 1400px" class="blog-media-element" alt="undefined" src="/projects/dimensions/media/dimensions_finalset.jpg" spec="100% [800) 80% [1750) 1400" loading="lazy"><span class="blog-media-caption">Go to kalabasa.github.io/dimensions/ on phone if QR doesn’t work.</span>
         </div>
 
         <p>It has been a really fun and challenging project! ⭐
