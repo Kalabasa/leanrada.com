@@ -1,12 +1,19 @@
 <div class="{'blog-media blog-media-' + (attrs.type ?? 'default')}">
   <script render>
     // todo: extract img/video adapter to generic component (reuse outside blog)
-    if (isImg(attrs.src)) {
+    if (isResizeableImg(attrs.src)) {
       yield html`<responsive-img
         class="blog-media-element"
         alt="${attrs.alt}"
         src="${attrs.src}"
         spec="${attrs.spec ?? defaultResponsiveImageSpec()}"
+        loading="lazy"
+      />`;
+    } else if (isImg(attrs.src)) {
+      yield html`<img
+        class="blog-media-element"
+        alt="${attrs.alt}"
+        src="${attrs.src}"
         loading="lazy"
       />`;
     } else if (isVideo(attrs.src)) {
@@ -35,9 +42,14 @@
 </div>
 
 <script static>
-  function isImg(src) {
+  function isResizeableImg(src) {
     const ext = src.substring(src.length - 4);
     return ext === ".png" || ext === ".jpg";
+  }
+
+  function isImg(src) {
+    const ext = src.substring(src.length - 4);
+    return ext === ".gif";
   }
 
   function isVideo(src) {
