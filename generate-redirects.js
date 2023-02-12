@@ -13,6 +13,7 @@ const redirects = [
   ["works/sheetz.html", "projects/svelte-spreadsheet/"],
   ["works/dynastymap.html", "projects/dynaviz/"],
   ["works/freeformgesturedetector.html", "projects/freeform-gesture-detector/"],
+  ["works/planetdefense.html", "projects/planet-defense/"],
 ];
 
 const siteSrc = path.resolve(__dirname, "src", "site");
