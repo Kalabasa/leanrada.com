@@ -33,14 +33,15 @@ async function main() {
     }
 
     for (const toFile of toFiles) {
+      const stats = fs.lstatSync(toFile);
+
       if (!toFile.endsWith(".html")) {
-        const stats = fs.lstatSync(toFile);
         if (stats.isDirectory && !fs.existsSync(path.resolve(toFile, "index.html"))) {
           throw new Error("Missing destination index.html. from/to: " + from + " → " + to);
         }
       }
 
-      const toHref = path.relative(siteSrc, toFile);
+      const toHref = path.relative(siteSrc, toFile) + (stats.isDirectory && !toFile.endsWith(".html") ? '/' : '');
 
       let fromHref;
       const toPrefix = to.indexOf("*");
