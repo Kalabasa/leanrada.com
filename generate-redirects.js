@@ -14,6 +14,8 @@ const redirects = [
   ["works/dynastymap.html", "projects/dynaviz/"],
   ["works/freeformgesturedetector.html", "projects/freeform-gesture-detector/"],
   ["works/planetdefense.html", "projects/planet-defense/"],
+  ["works/canvapasko.html", "projects/canva-pasko/"],
+  ["works/miniforts.html", "projects/miniforts/"],
 ];
 
 const siteSrc = path.resolve(__dirname, "src", "site");
@@ -25,11 +27,16 @@ async function main() {
 
   for (const [from, to, newHref] of redirects) {
     const toFiles = glob.sync(path.resolve(siteSrc, to));
+
+    if (!toFiles.length) {
+      throw new Error("No destination files found. from/to: " + from + " → " + to);
+    }
+
     for (const toFile of toFiles) {
       if (!toFile.endsWith(".html")) {
         const stats = fs.lstatSync(toFile);
         if (stats.isDirectory && !fs.existsSync(path.resolve(toFile, "index.html"))) {
-          continue;
+          throw new Error("Missing destination index.html. from/to: " + from + " → " + to);
         }
       }
 
