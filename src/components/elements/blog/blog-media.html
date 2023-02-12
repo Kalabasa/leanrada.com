@@ -8,6 +8,8 @@
         src="${attrs.src}"
         spec="${attrs.spec ?? defaultResponsiveImageSpec()}"
         loading="lazy"
+        width="${await imgWidth(attrs.src)}"
+        style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isImg(attrs.src)) {
       yield html`<img
@@ -15,9 +17,12 @@
         alt="${attrs.alt}"
         src="${attrs.src}"
         loading="lazy"
+        width="${await imgWidth(attrs.src)}"
+        style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isVideo(attrs.src)) {
       // todo: video placeholders
+      // todo: aspect-ratio
       // todo: <responsive-video> component
       yield html`<video
         class="blog-media-element"
@@ -42,6 +47,10 @@
 </div>
 
 <script static>
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const sharp = require("sharp");
+
   function isResizeableImg(src) {
     const ext = src.substring(src.length - 4);
     return ext === ".png" || ext === ".jpg";
@@ -64,6 +73,33 @@
       default:
         return "100% [664) 664";
     }
+  }
+
+  async function imgWidth(src) {
+    const { width } = await imgSize(src);
+    return width;
+  }
+
+  async function imgHeight(src) {
+    const { height } = await imgSize(src);
+    return height;
+  }
+
+  async function imgStyle(src) {
+    const { width, height } = await imgSize(src);
+    return `aspect-ratio: ${width / height}`;
+  }
+
+  async function imgSize(src) {
+    const srcFilePath = path.join(__outputDir, src);
+    if (!fs.existsSync(srcFilePath)) {
+      throw new Error("Blog-media image src does not exist: " + srcFilePath);
+    }
+
+    const image = await fs.promises.readFile(srcFilePath);
+    return await sharp(image)
+      .metadata()
+      .then((d) => ({ width: d.width, height: d.height }));
   }
 </script>
 
