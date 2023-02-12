@@ -76,30 +76,51 @@
   }
 
   async function imgWidth(src) {
-    const { width } = await imgSize(src);
+    const {
+      metadata: { width },
+    } = await imgData(src);
     return width;
   }
 
   async function imgHeight(src) {
-    const { height } = await imgSize(src);
+    const {
+      metadata: { height },
+    } = await imgData(src);
     return height;
   }
 
   async function imgStyle(src) {
-    const { width, height } = await imgSize(src);
-    return `aspect-ratio: ${width / height}`;
+    const {
+      metadata: { width, height },
+      stats: { dominant },
+    } = await imgData(src);
+
+    const { r, g, b } = dominant;
+    const bg =
+      "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+
+    return `aspect-ratio: ${width / height}; background: ${bg}`;
   }
 
-  async function imgSize(src) {
-    const srcFilePath = path.join(__outputDir, src);
-    if (!fs.existsSync(srcFilePath)) {
-      throw new Error("Blog-media image src does not exist: " + srcFilePath);
-    }
+  const cache = {};
+  async function imgData(src) {
+    if (!cache[src]) {
+      const srcFilePath = path.join(__outputDir, src);
+      if (!fs.existsSync(srcFilePath)) {
+        throw new Error("Blog-media image src does not exist: " + srcFilePath);
+      }
 
-    const image = await fs.promises.readFile(srcFilePath);
-    return await sharp(image)
-      .metadata()
-      .then((d) => ({ width: d.width, height: d.height }));
+      console.log("Analyzing img:", srcFilePath);
+      const image = await fs.promises.readFile(srcFilePath);
+      const sharpObj = sharp(image);
+      const [metadata, stats] = await Promise.all([
+        sharpObj.metadata(),
+        sharpObj.stats(),
+      ]);
+
+      cache[src] = { metadata, stats };
+    }
+    return cache[src];
   }
 </script>
 
