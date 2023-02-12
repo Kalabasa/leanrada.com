@@ -1,0 +1,1089 @@
+<html>
+<head>
+    <title>Dynaviz · leanrada.com</title>
+    <script defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        @font-face {
+            font-family: "Space Mono";
+            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Space Mono";
+            font-style: italic;
+            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Miriam Libre";
+            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Miriam Libre";
+            font-weight: bold;
+            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+        }
+
+        :root {
+            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+            --bg-clr: #111;
+            --card-clr: #222;
+            --clr0-light: #54f8c1;
+            --clr0: #0ad591;
+            --clr0-dark: #018b5d;
+            --clr1: #df2063;
+
+            --ease: cubic-bezier(0.8, 0, 1, 1);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--default-font, monospace);
+            background-color: var(--bg-clr, #111);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        a {
+            color: var(--clr0-light, #fff);
+        }
+
+        a:visited {
+            color: var(--clr0, #fff);
+        }
+    </style>
+    <style>
+        nebula-client>canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <style>
+        .home-link {
+            text-decoration: none;
+        }
+
+        .home-link-icon {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        .home-link-icon:hover {
+            filter: invert(1);
+        }
+    </style>
+    <style>
+        .main-footer {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            gap: 60px;
+            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+            font-size: 18px;
+            font-weight: bold;
+            background: var(--clr0);
+            color: #000;
+            overflow: hidden;
+            content-visibility: auto;
+            contain-intrinsic-height: 220x;
+        }
+
+        .main-footer-links-heading {
+            margin: 0 0 18px;
+            font-size: inherit;
+        }
+
+        .main-footer-line {
+            margin: 0 0 18px;
+        }
+
+        .main-footer-nav,
+        .main-footer-nav:visited {
+            color: #000;
+        }
+
+        .main-footer-nav:hover {
+            color: #fff;
+        }
+
+        .main-footer-content-part {
+            z-index: 1;
+        }
+
+        .main-footer-nebula {
+            position: absolute;
+            left: -30%;
+            top: -30%;
+            width: 160%;
+            height: 160%;
+            z-index: 0;
+        }
+
+        .main-footer-top-btn {
+            z-index: 2;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 72px;
+            height: 36px;
+            padding-right: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            border-bottom-left-radius: 18px;
+            background: var(--bg-clr);
+            color: var(--clr0-light);
+            font: inherit;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .main-footer-top-btn:hover {
+            color: var(--clr1);
+        }
+
+        .main-footer-top-btn::before {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 36px;
+            height: 18px;
+            border-top-right-radius: 18px;
+            transform: translateX(-72px);
+            box-shadow: 18px 0 0 var(--bg-clr);
+        }
+
+        @media (max-width: 700px) {
+            .main-footer {
+                flex-direction: column-reverse;
+            }
+        }
+    </style>
+    <style>
+        .main-header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            padding: 0 calc(25% - 150px);
+            z-index: 100;
+            box-sizing: border-box;
+        }
+
+        .main-header.float {
+            position: fixed;
+        }
+
+        .main-header-bar {
+            position: relative;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: flex-end;
+            height: 100%;
+        }
+
+        .main-header-item,
+        .main-header-item:visited {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 6ch;
+            height: 36px;
+            padding: 0 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+            color: #fff;
+            backdrop-filter: blur(8px);
+            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+            background-repeat: no-repeat;
+            background-size: 220% 100%;
+            background-position: 115%;
+            transition: background-position 0.2s var(--ease);
+        }
+
+        .main-header-item:hover {
+            background-image: linear-gradient(60deg,
+                    #fff2 50%,
+                    #fff 50%,
+                    #fff 60%,
+                    transparent 60%);
+            background-position: 0%;
+        }
+
+        .main-header-item.select {
+            background: #fff2;
+        }
+
+        .main-header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            image-rendering: pixelated;
+            object-fit: cover;
+            object-position: center left;
+            filter: invert(1);
+            backdrop-filter: blur(8px) invert(1);
+        }
+
+        .main-header-icon:hover {
+            object-position: center right;
+        }
+
+        .main-header-indicator {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            left: 50%;
+            top: calc(100% + 12px);
+            transform: translate(-50%, -50%);
+            /* border acts as extended touch area */
+            border: solid 6mm transparent;
+            border-radius: 50%;
+            background: #fff;
+            background-clip: padding-box;
+            opacity: 0;
+            transition: opacity 50ms;
+        }
+
+        .main-header.hidden .main-header-indicator {
+            opacity: 0.8;
+        }
+    </style>
+    <style>
+        .blog-page {
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .content {
+            padding: 60px 18px;
+            width: 100%;
+            max-width: 700px;
+            font-family: var(--reading-font, sans-serif);
+            font-size: 18px;
+            line-height: 2.2;
+            letter-spacing: 0.02em;
+            color: #ddd;
+            box-sizing: border-box;
+        }
+
+        .markdown h1,
+        .markdown h2,
+        .markdown h3,
+        .markdown h4,
+        .markdown h5,
+        .markdown h6 {
+            font-family: var(--default-font, monospace);
+            font-weight: lighter;
+            font-style: italic;
+            line-height: 1.6;
+            letter-spacing: 0.04em;
+            margin: 36px 0;
+        }
+
+        .markdown h1 {
+            text-align: center;
+            font-size: 200%;
+        }
+
+        .markdown h2 {
+            font-size: 150%;
+        }
+
+        .markdown h3,
+        .markdown h4,
+        .markdown h5,
+        .markdown h6 {
+            font-size: 120%;
+        }
+
+        .markdown p {
+            margin: 36px 0;
+        }
+
+        .markdown hr {
+            width: 36px;
+            margin: 90px auto;
+            border: solid 1.5px #ccc;
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .markdown code {
+            display: inline-block;
+            padding: 0 6px;
+            border-radius: 6px;
+            font-family: var(--default-font, monospace);
+            background: var(--card-clr);
+        }
+
+        .markdown pre code {
+            display: block;
+            padding: 18px;
+            border-radius: 18px;
+            line-height: 1.6;
+            overflow-y: auto;
+        }
+
+        .markdown blockquote {
+            position: relative;
+            margin: 0;
+            padding: 18px 24px;
+            border-radius: 18px;
+            border: solid 1px var(--clr0);
+            font-size: 21px;
+        }
+
+        .markdown blockquote::before {
+            content: "";
+            position: absolute;
+            right: 100%;
+            top: 0;
+            height: 24px;
+            width: 24px;
+            border-bottom: solid 1px var(--clr0);
+            box-sizing: border-box;
+        }
+
+        .markdown blockquote::after {
+            content: "";
+            position: absolute;
+            right: 100%;
+            top: 24px;
+            bottom: 18px;
+            width: 24px;
+            border-top-right-radius: 24px;
+            border: solid var(--clr0);
+            border-width: 1px 1px 0 0;
+            box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+            box-sizing: border-box;
+        }
+
+        .markdown blockquote> :first-child {
+            margin-top: 0;
+        }
+
+        .markdown blockquote> :last-child {
+            margin-bottom: 0;
+        }
+
+        .markdown blockquote cite {
+            display: block;
+            margin-top: 12px;
+            font-size: 15px;
+            font-style: inherit;
+        }
+
+        .markdown blockquote cite::before {
+            content: "—";
+        }
+
+        .markdown iframe {
+            max-width: calc(100vw - 18px);
+            border: none;
+            border-radius: 18px;
+            background: #fff;
+        }
+
+        .markdown .center {
+            text-align: center;
+        }
+
+        .markdown .center-flex {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* todo: convert to component <caption>, reuse across <blog-media> */
+        .markdown .caption {
+            display: block;
+            font-size: 15px;
+        }
+    </style>
+    <style>
+        .project-info-card {
+            font-family: var(--default-font);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .project-info-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .project-info-card-title {
+            flex: 0 0 auto;
+            align-self: stretch;
+            position: relative;
+            margin-right: 12px;
+            padding: 12px 18px 6px 12px;
+            border-radius: 18px 18px 0 0;
+            font-style: italic;
+            text-decoration: underline;
+            background-color: var(--card-clr);
+        }
+
+        .project-info-card-title::after {
+            content: "";
+            position: absolute;
+            left: 100%;
+            bottom: 0;
+            width: 36px;
+            height: 18px;
+            border-bottom-left-radius: 18px;
+            box-shadow: -18px 0 0 var(--card-clr);
+        }
+
+        .project-info-card-fields {
+            display: grid;
+            grid-auto-flow: column;
+            grid-template-rows: 1fr 1fr;
+            padding: 12px;
+            border-radius: 0 18px 18px 18px;
+            background-color: var(--card-clr);
+        }
+
+        @media (max-width: 600px) {
+            .project-info-card-fields {
+                display: block;
+            }
+        }
+
+        .project-info-card-field {
+            display: flex;
+        }
+
+        .project-info-card-field-label {
+            padding: 6px;
+            font-style: italic;
+        }
+
+        .project-info-card-field-value {
+            padding: 6px;
+            font-weight: bold;
+        }
+    </style>
+    <style>
+        .blog-media {
+            text-align: center;
+            /* external margin because it's expected to be in an article */
+            margin: 36px 0;
+        }
+
+        .blog-media-bleed {
+            margin: 90px 0;
+            max-height: 80vh;
+        }
+
+        .blog-media-element {
+            display: inline-block;
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 18px;
+        }
+
+        .blog-media-bleed .blog-media-element {
+            position: relative;
+            left: 50%;
+            max-width: max(min(100vw, 800px), 80vw);
+            transform: translateX(-50%);
+        }
+
+        .blog-media-caption {
+            display: block;
+            font-size: 15px;
+        }
+    </style>
+    <script>
+        (() => {
+            globalThis.BaseElement = createBaseElement(HTMLElement);
+
+            const lifecycleListeners = Symbol("lifecycleListeners");
+
+            function createBaseElement(superClass) {
+                return class BaseElement extends superClass {
+                    constructor() {
+                        super();
+                        this[lifecycleListeners] = [];
+                    }
+                    connectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.connect());
+                    }
+                    disconnectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.disconnect());
+                    }
+
+                    /**
+                     * @param factory {() => () => void}
+                     */
+                    addLifecycleListener(factory) {
+                        let cleanup = () => {};
+                        const connect = () => (cleanup = factory());
+                        const disconnect = () => cleanup();
+
+                        this[lifecycleListeners].push({
+                            connect,
+                            disconnect
+                        });
+
+                        if (this.isConnected) {
+                            connect();
+                        }
+                    }
+
+                    /**
+                     * @param selector {string}
+                     */
+                    asyncQuerySelector(selector) {
+                        const obj = {
+                            exists: false,
+                            element: null,
+                        };
+
+                        obj.promise = new Promise((resolve) => {
+                            const observer = new MutationObserver(() => {
+                                obj.element = this.querySelector(selector);
+                                if (obj.element) {
+                                    resolve(obj.element);
+                                    obj.exists = true;
+                                    observer.disconnect();
+                                }
+                            });
+
+                            this.addLifecycleListener(() => {
+                                observer.observe(this, {
+                                    childList: true,
+                                    subtree: true
+                                });
+                                return () => observer.disconnect();
+                            });
+                        });
+
+                        return obj;
+                    }
+
+                    /**
+                     * @param target {Element}
+                     * @param event {string}
+                     * @param callback {Function}
+                     */
+                    aliveListener(target, event, callback) {
+                        this.addLifecycleListener(() => {
+                            target.addEventListener(event, callback);
+                            return () => target.removeEventListener(event, callback);
+                        });
+                    }
+
+                    /**
+                     * @param callbacks {object}
+                     * @param callbacks.show {Function}
+                     * @param callbacks.hide {Function}
+                     */
+                    visibilityListener({
+                        show,
+                        hide
+                    }) {
+                        let isShowing = false;
+
+                        const observer = new IntersectionObserver((entries) => {
+                            for (const entry of entries) {
+                                if (entry.target !== this) continue;
+                                if (isShowing !== entry.isIntersecting) {
+                                    isShowing = entry.isIntersecting;
+                                    if (isShowing) {
+                                        show();
+                                    } else {
+                                        hide();
+                                    }
+                                }
+                            }
+                        });
+
+                        this.addLifecycleListener(() => {
+                            isShowing = isInViewport(this);
+                            if (isShowing) show();
+                            observer.observe(this);
+                            return () => {
+                                observer.disconnect();
+                                if (isShowing) hide();
+                                isShowing = false;
+                            };
+                        });
+                    }
+                };
+            }
+
+            window.mousePosition = {
+                x: 0,
+                y: 0
+            };
+            document.addEventListener(
+                "DOMContentLoaded",
+                () => {
+                    document.body.addEventListener("mousemove", (event) => {
+                        window.mousePosition.x = event.clientX;
+                        window.mousePosition.y = event.clientY;
+                    });
+                }, {
+                    once: true
+                }
+            );
+        })();
+
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.right > 0 &&
+                rect.bottom > 0 &&
+                rect.left < window.innerWidth &&
+                rect.top < window.innerHeight
+            );
+        }
+    </script>
+    <script>
+        (() => {
+            customElements.define(
+                "nebula-client",
+                class Nebula extends BaseElement {
+                    constructor() {
+                        super();
+
+                        this.asyncCanvas = this.asyncQuerySelector("canvas");
+                        this.context = null;
+                        this.noise = null;
+
+                        this.gridWidth = 30;
+                        this.gridHeight = 30;
+                        this.palette = ["#ffffff"];
+
+                        this.cellWidth = 1; // placeholder
+                        this.cellHeight = 1; // placeholder
+
+                        this.useMouse = false;
+                        this.mouseCell = null;
+
+                        this.lastT = 0;
+                        this.startT = 0;
+                        this.loopStartT = 0;
+
+                        this.isVisible = false;
+                        this.visibilityListener({
+                            show: () => {
+                                this.isVisible = true;
+                                this.startLoop();
+                            },
+                            hide: () => (this.isVisible = false),
+                        });
+                    }
+
+                    connectedCallback() {
+                        super.connectedCallback();
+
+                        this.useMouse = this.getAttribute("mouse") != null;
+
+                        const gridWidth = this.getAttribute("width");
+                        if (gridWidth) {
+                            this.gridWidth = Number.parseInt(gridWidth);
+                        }
+
+                        const gridHeight = this.getAttribute("height");
+                        if (gridHeight) {
+                            this.gridHeight = Number.parseInt(gridHeight);
+                        }
+
+                        const paletteAttr = this.getAttribute("palette");
+                        if (paletteAttr) {
+                            this.palette = paletteAttr.split(" ");
+                        }
+                    }
+
+                    startLoop() {
+                        this.loopStartT = this.lastT = this.getT();
+                        this.loop();
+                    }
+
+                    async loop() {
+                        if (!this.isVisible) {
+                            return;
+                        }
+
+                        if (typeof perlinNoise3d === "undefined") {
+                            setTimeout(() => this.loop(), 200);
+                            return;
+                        } else if (!this.noise) {
+                            this.noise = initNoise();
+                            this.startT = this.getT();
+                        }
+
+                        const canvas =
+                            this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
+
+                        // initialize
+                        if (!this.context) {
+                            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+                            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+                            canvas.width = this.gridWidth;
+                            canvas.height = this.gridHeight;
+                            canvas.style.filter += ` blur(${
+              Math.min(this.cellWidth, this.cellHeight) * 1.25
+            }px)`;
+                            this.context = canvas.getContext("2d");
+                        }
+
+                        this.draw(canvas, this.context);
+
+                        requestAnimationFrame(() => this.loop());
+                    }
+
+                    /**
+                     * @param canvas {HTMLCanvasElement}
+                     * @param context {CanvasRenderingContext2D}
+                     */
+                    draw(canvas, context) {
+                        const t = this.getT();
+                        if (t <= this.lastT) return;
+
+                        const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+                        this.lastT = t;
+
+                        const {
+                            noise,
+                            gridWidth,
+                            gridHeight,
+                            palette,
+                            cellWidth,
+                            cellHeight,
+                        } = this;
+                        const halfGridWidth = gridWidth / 2;
+                        const halfGridHeight = gridHeight / 2;
+
+                        this.mouseCell = null;
+                        // mousePosition from lib/common
+                        if (this.useMouse && window.mousePosition) {
+                            const {
+                                x,
+                                y
+                            } = window.mousePosition;
+                            const bounds = canvas.getBoundingClientRect();
+                            if (
+                                bounds.left < x &&
+                                x < bounds.right &&
+                                bounds.top < y &&
+                                y < bounds.bottom
+                            ) {
+                                this.mouseCell = {
+                                    x: (x - bounds.x) / cellWidth,
+                                    y: (y - bounds.y) / cellHeight,
+                                };
+                            }
+                        }
+
+                        const paletteLength = palette.length;
+                        const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+                        const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+                        for (let i = 0; i < gridWidth; i++) {
+                            for (let j = 0; j < gridHeight; j++) {
+                                const mouseProximity =
+                                    this.mouseCell == null ?
+                                    0 :
+                                    1 -
+                                    sigmoid(
+                                        Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                                    );
+
+                                const xy = [
+                                    1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                                    1000 +
+                                    (j - halfGridHeight) * yScale +
+                                    Math.cos(t * 0.007) * 2 +
+                                    -mouseProximity,
+                                ];
+                                const p1 = noise.get(...xy, t * 0.03);
+                                const p2 = noise.get(...xy, t * 0.03 + 0.5);
+                                // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+                                const p = p1 + p2;
+
+                                const paletteIndex = Math.floor(paletteLength * p);
+
+                                const rgb = palette[paletteIndex];
+                                const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                                    .toString(16)
+                                    .padStart(2, "0");
+
+                                context.fillStyle = `${rgb}${a}`;
+                                context.fillRect(i, j, 1, 1);
+                            }
+                        }
+                    }
+
+                    getT() {
+                        const t = (Date.now() * 30) / 1000;
+                        // make it smoother while interacting
+                        return this.mouseCell ? t : Math.floor(t);
+                    }
+                }
+            );
+
+            function initNoise() {
+                const noise = new perlinNoise3d();
+                noise.perlin_octaves = 1; // ?? defaults
+                noise.perlin_amp_falloff = 1;
+                return noise;
+            }
+
+            function sigmoid(x) {
+                return 1 / (1 + Math.exp(-x));
+            }
+        })();
+    </script>
+</head>
+
+
+<body>
+
+    <header class="main-header">
+        <div class="main-header-bar">
+            <a href="/" class="main-header-item ">Home</a>
+            <img class="main-header-icon" src="/icons/tadaw_sheet.png">
+            <a href="/projects/" class="main-header-item ">Works</a>
+            <div class="main-header-indicator"></div>
+        </div>
+    </header>
+
+    <div class="blog-page">
+        <div class="content">
+
+            <!-- prettier-ignore -->
+            <div class="markdown">
+                <h1 id="dynaviz">Dynaviz</h1>
+                <div class="blog-media blog-media-default">
+                    <img srcset="/projects/dynaviz/media/dynastymap_logo_200.generated.png 200w" sizes=" 200px" class="blog-media-element" alt="logo" src="/projects/dynaviz/media/dynastymap_logo.png" spec="200" loading="lazy">
+                </div>
+
+                <h2 id="visualization-of-political-dynasties-in-the-philippines">Visualization of political dynasties in the Philippines.</h2>
+                <p>In Philippine politics, political dynasties are widespread. They are families who have maintained power for multiple generations through control of political positions.</p>
+                <p>Political dynasties have long been associated with corruption, as they are able to use their power to pursue their own interests at the expense of the public.</p>
+                <p>Using data visualization, we'll be able to see their prevalence across the country and gain insights about the correlation of dynasties with poverty and development.</p>
+                <aside class="project-info-card">
+                    <div class="project-info-card-header">
+                        <div class="project-info-card-title">Project details</div>
+
+                    </div>
+                    <div class="project-info-card-fields">
+                        <div class="project-info-card-field">
+                            <div class="project-info-card-field-label">released</div>
+                            <div class="project-info-card-field-value">2015</div>
+                        </div>
+                        <div class="project-info-card-field">
+                            <div class="project-info-card-field-label">role</div>
+                            <div class="project-info-card-field-value">developer</div>
+                        </div>
+                        <div class="project-info-card-field">
+                            <div class="project-info-card-field-label">platform</div>
+                            <div class="project-info-card-field-value">Web</div>
+                        </div>
+                        <div class="project-info-card-field">
+                            <div class="project-info-card-field-label">tech</div>
+                            <div class="project-info-card-field-value">React, Leaflet, D3, GeoJSON, Python</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="blog-media blog-media-default">
+                    <img srcset="/projects/dynaviz/media/dynastymap_tags_250.generated.png 250w,/projects/dynaviz/media/dynastymap_tags_500.generated.png 500w,/projects/dynaviz/media/dynastymap_tags_664.generated.png 664w" sizes="(max-width:250px) 250px,not (min-width:664px) 500px, 664px" class="blog-media-element" alt="visualization of dynasties" src="/projects/dynaviz/media/dynastymap_tags.png" spec="100% [664) 664" loading="lazy">
+                </div>
+
+                <p><small>Yep, Pacquiao, boxing world champion, has (had?) his own dynasty too. Members include brothers, sister-in-law, and his wife.</small></p>
+                <p><strong>Dynaviz</strong> (2015) is a webapp for visualizing political dynasties. It's a tool for exploring the prevalence and characteristics of dynasties across the country while comparing them against other variables such as population, poverty indices, and education levels.</p>
+                <p>This was a final project of mine as an undergraduate student at the University of the Philippines.</p>
+                <div class="blog-media blog-media-default">
+                    <img srcset="/projects/dynaviz/media/dynastymap_biv_328.generated.jpg 328w,/projects/dynaviz/media/dynastymap_biv_655.generated.jpg 655w,/projects/dynaviz/media/dynastymap_biv_664.generated.jpg 664w" sizes="(max-width:328px) 328px,not (min-width:664px) 655px, 664px" class="blog-media-element" alt="bivariate choropleth" src="/projects/dynaviz/media/dynastymap_biv.jpg" spec="100% [664) 664" loading="lazy">
+                </div>
+
+                <p>Main features of the app are: computation of political dynasty indicators in <abbr title="Local Government Units">LGUs</abbr>, and visualization of dynasties along with various user-uploaded datasets.</p>
+                <div class="blog-media blog-media-bleed">
+                    <img srcset="/projects/dynaviz/media/dynastymap_1_400.generated.jpg 400w,/projects/dynaviz/media/dynastymap_1_800.generated.jpg 800w,/projects/dynaviz/media/dynastymap_1_832.generated.jpg 832w,/projects/dynaviz/media/dynastymap_1_1024.generated.jpg 1024w,/projects/dynaviz/media/dynastymap_1_1400.generated.jpg 1400w" sizes="(max-width:400px) 400px,not (min-width:800px) 800px,(max-width:1040px) 832px,not (min-width:1750px) 1024px, 1400px" class="blog-media-element" alt="screenshot" src="/projects/dynaviz/media/dynastymap_1.jpg" spec="100% [800) 80% [1750) 1400" loading="lazy"><span class="blog-media-caption">Visualizing political family names and sizes</span>
+                </div>
+
+                <p>The map shows family names with sizes proportional to the number of positions held by that family.</p>
+                <p>I also used some political dynasty indicators developed by <a target="_blank" href="https://archium.ateneo.edu/asog-pubs/101/">Mendoza et al (2013)</a> for supplementary visualizations.</p>
+                <div class="blog-media blog-media-bleed">
+                    <img srcset="/projects/dynaviz/media/dynastymap_2_400.generated.jpg 400w,/projects/dynaviz/media/dynastymap_2_800.generated.jpg 800w,/projects/dynaviz/media/dynastymap_2_832.generated.jpg 832w,/projects/dynaviz/media/dynastymap_2_1024.generated.jpg 1024w,/projects/dynaviz/media/dynastymap_2_1400.generated.jpg 1400w" sizes="(max-width:400px) 400px,not (min-width:800px) 800px,(max-width:1040px) 832px,not (min-width:1750px) 1024px, 1400px" class="blog-media-element" alt="detail view" src="/projects/dynaviz/media/dynastymap_2.jpg" spec="100% [800) 80% [1750) 1400" loading="lazy">
+                </div>
+
+                <p>This webapp is an <abbr title="single-page application">SPA</abbr> made with <a target="_blank" href="https://reactjs.org"><strong>React</strong></a> and <a target="_blank" href="http://backbonejs.org">Backbone.js</a>. I used <a target="_blank" href="https://leafletjs.com">Leaflet</a> and <a target="_blank" href="https://d3js.org/">D3.js</a> for the visualizations.</p>
+                <p>Server-side is <strong>PHP</strong> with <a target="_blank" href="https://www.slimframework.com">Slim</a> and <a target="_blank" href="https://medoo.in">Medoo</a>. The two frameworks are pretty light in terms of API, which was good. PHP is taxing enough as it is.</p>
+                <p>I used <strong>Python</strong> for data processing, i.e., computation of dynasty variables, GeoJSON map tiles subdivision, and some CSV/GeoJSON preprocessing.</p>
+                <div class="blog-media blog-media-default">
+                    <img srcset="/projects/dynaviz/media/wireframe_332.generated.png 332w,/projects/dynaviz/media/wireframe_664.generated.png 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="undefined" src="/projects/dynaviz/media/wireframe.png" spec="100% [664) 664" loading="lazy"><span class="blog-media-caption">Wireframe design</span>
+                </div>
+
+                <p>I got the data from <a target="_blank" href="https://www.comelec.gov.ph">COMELEC</a> and <a target="_blank" href="https://www.gov.ph/data">Open Data PH</a>.</p>
+                <p>I had to scrape election results (for 2015) from COMELEC's website because they didn’t have an API or anything. I guess the dynasties also somehow hindered the government's information technology departments. lol</p>
+                <div class="blog-media blog-media-default">
+                    <img srcset="/projects/dynaviz/media/dynastymap_compare_250.generated.png 250w,/projects/dynaviz/media/dynastymap_compare_500.generated.png 500w,/projects/dynaviz/media/dynastymap_compare_664.generated.png 664w" sizes="(max-width:250px) 250px,not (min-width:664px) 500px, 664px" class="blog-media-element" alt="comparing datasets" src="/projects/dynaviz/media/dynastymap_compare.png" spec="100% [664) 664" loading="lazy">
+                </div>
+
+                <hr>
+                <p>This project was developed as a requirement (Special Problem) for my Computer Science B.S. degree at UP Manila. The idea of political dynasty visualization came from one of my professors. It was also inspired by Hans Rosling’s visualizations and <a target="_blank" href="https://www.gapminder.org/tools">Trendalyzer</a>.</p>
+                <p>An instance of the app was hosted on the university’s server, but apparently my user account has already been purged from the server. So, no demo for you! :P
+                </p>
+
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="main-footer-content-part">
+            <p class="main-footer-line">
+                <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+                <a target="_self" class="main-footer-nav" href="/projects/">Works</a>
+            </p>
+            <p class="main-footer-line">(C) 2023 Lean Rada</p>
+        </div>
+        <div class="main-footer-content-part">
+            <h2 class="main-footer-links-heading">On the web</h2>
+            <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
+                <img class="home-link-icon" src="/icons/linkedin.png">
+            </a>
+            <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
+                <img class="home-link-icon" src="/icons/codepen.png">
+            </a>
+            <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+                <img class="home-link-icon" src="/icons/stackoverflow.png">
+            </a>
+            <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
+                <img class="home-link-icon" src="/icons/github.png">
+            </a>
+        </div>
+
+
+        <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+            <canvas style="filter: contrast(1.5)">
+            </canvas></nebula-client>
+        <button class="main-footer-top-btn" aria-label="Back to top">^</button>
+    </footer>
+    <script>
+        (() => {
+            const topBtn = document.querySelector(".main-footer-top-btn");
+            topBtn.addEventListener("click", () => {
+                window.scrollTo(0, 0);
+            });
+        })();
+    </script>
+    <script>
+        (() => {
+            const mainHeader = document.querySelector(".main-header");
+
+            let currentY = 0;
+            let currentYTarget = 0;
+
+            let mouseHovering = false;
+
+            let lastScrollY = window.scrollY;
+            let lastMouseY = 0;
+            window.addEventListener("scroll", debounce(onScroll));
+            window.addEventListener("mousemove", debounce(onMouseMove, 100));
+            mainHeader.addEventListener("touchstart", onTouchStart);
+
+            function onScroll(event) {
+                const dy = window.scrollY - lastScrollY;
+
+                // move with the page
+                currentY -= dy;
+                if (currentY > 0) {
+                    currentY = 0;
+                } else if (currentY < -mainHeader.offsetHeight) {
+                    currentY = -mainHeader.offsetHeight;
+                }
+
+                currentYTarget = currentY;
+                updateDOM();
+
+                lastScrollY = window.scrollY;
+            }
+
+            function onMouseMove(event) {
+                const dy = event.clientY - lastMouseY;
+
+                // show when mouse goes near the top
+                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+                    currentYTarget = 0;
+                    mouseHovering = true;
+                } else if (
+                    mouseHovering &&
+                    dy > 0 &&
+                    event.clientY > mainHeader.offsetHeight * 4
+                ) {
+                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+                    mouseHovering = false;
+                }
+
+                updateDOM();
+                lastMouseY = event.clientY;
+            }
+
+            function onTouchStart(event) {
+                currentYTarget = 0;
+                updateDOM();
+            }
+
+            const updateDOM = debounce(() => {
+                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+
+                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
+                mainHeader.classList.toggle("hidden", isHidden);
+
+                if (Math.abs(currentY - currentYTarget) > 1) {
+                    currentY += (currentYTarget - currentY) * 0.2;
+                    requestAnimationFrame(updateDOM);
+                } else {
+                    currentY = currentYTarget;
+                }
+            });
+
+            if (mainHeader.classList.contains("prehide")) {
+                currentY = currentYTarget = -mainHeader.offsetHeight;
+                updateDOM();
+            }
+
+            function debounce(fn, ms = 0) {
+                let recentlyFired = false;
+                return (...args) => {
+                    if (recentlyFired) return;
+                    recentlyFired = true;
+                    if (ms === 0) {
+                        requestAnimationFrame(() => (recentlyFired = false));
+                    } else {
+                        setTimeout(() => (recentlyFired = false), ms);
+                    }
+                    return fn(...args);
+                };
+            }
+        })();
+    </script>
+</body>
+</html>

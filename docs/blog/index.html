@@ -1,766 +1,767 @@
 <html>
 <head>
-  <script client="" defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <style>
-    @font-face {
-      font-family: "Space Mono";
-      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Space Mono";
-      font-style: italic;
-      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Miriam Libre";
-      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Miriam Libre";
-      font-weight: bold;
-      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
-    }
-
-    :root {
-      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
-      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
-
-      --bg-clr: #111;
-      --card-clr: #222;
-      --clr0-light: #54f8c1;
-      --clr0: #0ad591;
-      --clr0-dark: #018b5d;
-      --clr1: #df2063;
-
-      --ease: cubic-bezier(0.8, 0, 1, 1);
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: var(--default-font, monospace);
-      background-color: var(--bg-clr, #111);
-      color: #fff;
-      overflow-x: hidden;
-    }
-
-    a {
-      color: var(--clr0-light, #fff);
-    }
-
-    a:visited {
-      color: var(--clr0, #fff);
-    }
-  </style>
-  <style>
-    nebula-client>canvas {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-  <style>
-    .home-link {
-      text-decoration: none;
-    }
-
-    .home-link-icon {
-      width: 48px;
-      height: 48px;
-      image-rendering: pixelated;
-    }
-
-    .home-link-icon:hover {
-      filter: invert(1);
-    }
-  </style>
-  <style>
-    .main-footer {
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      gap: 60px;
-      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
-      font-size: 18px;
-      font-weight: bold;
-      background: var(--clr0);
-      color: #000;
-      overflow: hidden;
-      content-visibility: auto;
-      contain-intrinsic-height: 220x;
-    }
-
-    .main-footer-links-heading {
-      margin: 0 0 18px;
-      font-size: inherit;
-    }
-
-    .main-footer-line {
-      margin: 0 0 18px;
-    }
-
-    .main-footer-nav,
-    .main-footer-nav:visited {
-      color: #000;
-    }
-
-    .main-footer-nav:hover {
-      color: #fff;
-    }
-
-    .main-footer-content-part {
-      z-index: 1;
-    }
-
-    .main-footer-nebula {
-      position: absolute;
-      left: -30%;
-      top: -30%;
-      width: 160%;
-      height: 160%;
-      z-index: 0;
-    }
-
-    .main-footer-top-btn {
-      z-index: 2;
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 72px;
-      height: 36px;
-      padding-right: 18px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: none;
-      border-bottom-left-radius: 18px;
-      background: var(--bg-clr);
-      color: var(--clr0-light);
-      font: inherit;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .main-footer-top-btn:hover {
-      color: var(--clr1);
-    }
-
-    .main-footer-top-btn::before {
-      content: "";
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 36px;
-      height: 18px;
-      border-top-right-radius: 18px;
-      transform: translateX(-72px);
-      box-shadow: 18px 0 0 var(--bg-clr);
-    }
-
-    @media (max-width: 700px) {
-      .main-footer {
-        flex-direction: column-reverse;
-      }
-    }
-  </style>
-  <style>
-    .main-header {
-      position: sticky;
-      top: 0;
-      width: 100%;
-      height: 60px;
-      padding: 0 calc(25% - 150px);
-      z-index: 100;
-      box-sizing: border-box;
-    }
-
-    .main-header.float {
-      position: fixed;
-    }
-
-    .main-header-bar {
-      position: relative;
-      display: flex;
-      justify-content: space-evenly;
-      align-items: flex-end;
-      height: 100%;
-    }
-
-    .main-header-item,
-    .main-header-item:visited {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      width: 6ch;
-      height: 36px;
-      padding: 0 18px;
-      border-radius: 18px;
-      font-size: 15px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      text-decoration: none;
-      text-transform: uppercase;
-      color: #fff;
-      backdrop-filter: blur(8px);
-      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
-      background-repeat: no-repeat;
-      background-size: 220% 100%;
-      background-position: 115%;
-      transition: background-position 0.2s var(--ease);
-    }
-
-    .main-header-item:hover {
-      background-image: linear-gradient(60deg,
-          #fff2 50%,
-          #fff 50%,
-          #fff 60%,
-          transparent 60%);
-      background-position: 0%;
-    }
-
-    .main-header-item.select {
-      background: #fff2;
-    }
-
-    .main-header-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      image-rendering: pixelated;
-      object-fit: cover;
-      object-position: center left;
-      filter: invert(1);
-      backdrop-filter: blur(8px) invert(1);
-    }
-
-    .main-header-icon:hover {
-      object-position: center right;
-    }
-
-    .main-header-indicator {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      left: 50%;
-      top: calc(100% + 12px);
-      transform: translate(-50%, -50%);
-      /* border acts as extended touch area */
-      border: solid 6mm transparent;
-      border-radius: 50%;
-      background: #fff;
-      background-clip: padding-box;
-      opacity: 0;
-      transition: opacity 50ms;
-    }
-
-    .main-header.hidden .main-header-indicator {
-      opacity: 0.8;
-    }
-  </style>
-  <style>
-    .notice {
-      margin: auto;
-      padding: 120px 0;
-      width: 600px;
-      font-size: 30px;
-    }
-  </style>
-  <script>
-    (() => {
-      globalThis.BaseElement = createBaseElement(HTMLElement);
-
-      const lifecycleListeners = Symbol("lifecycleListeners");
-
-      function createBaseElement(superClass) {
-        return class BaseElement extends superClass {
-          constructor() {
-            super();
-            this[lifecycleListeners] = [];
-          }
-          connectedCallback() {
-            this[lifecycleListeners].forEach((it) => it.connect());
-          }
-          disconnectedCallback() {
-            this[lifecycleListeners].forEach((it) => it.disconnect());
-          }
-
-          /**
-           * @param factory {() => () => void}
-           */
-          addLifecycleListener(factory) {
-            let cleanup = () => {};
-            const connect = () => (cleanup = factory());
-            const disconnect = () => cleanup();
-
-            this[lifecycleListeners].push({
-              connect,
-              disconnect
-            });
-
-            if (this.isConnected) {
-              connect();
-            }
-          }
-
-          /**
-           * @param selector {string}
-           */
-          asyncQuerySelector(selector) {
-            const obj = {
-              exists: false,
-              element: null,
-            };
-
-            obj.promise = new Promise((resolve) => {
-              const observer = new MutationObserver(() => {
-                obj.element = this.querySelector(selector);
-                if (obj.element) {
-                  resolve(obj.element);
-                  obj.exists = true;
-                  observer.disconnect();
-                }
-              });
-
-              this.addLifecycleListener(() => {
-                observer.observe(this, {
-                  childList: true,
-                  subtree: true
-                });
-                return () => observer.disconnect();
-              });
-            });
-
-            return obj;
-          }
-
-          /**
-           * @param target {Element}
-           * @param event {string}
-           * @param callback {Function}
-           */
-          aliveListener(target, event, callback) {
-            this.addLifecycleListener(() => {
-              target.addEventListener(event, callback);
-              return () => target.removeEventListener(event, callback);
-            });
-          }
-
-          /**
-           * @param callbacks {object}
-           * @param callbacks.show {Function}
-           * @param callbacks.hide {Function}
-           */
-          visibilityListener({
-            show,
-            hide
-          }) {
-            let isShowing = false;
-
-            const observer = new IntersectionObserver((entries) => {
-              for (const entry of entries) {
-                if (entry.target !== this) continue;
-                if (isShowing !== entry.isIntersecting) {
-                  isShowing = entry.isIntersecting;
-                  if (isShowing) {
-                    show();
-                  } else {
-                    hide();
-                  }
-                }
-              }
-            });
-
-            this.addLifecycleListener(() => {
-              isShowing = isInViewport(this);
-              if (isShowing) show();
-              observer.observe(this);
-              return () => {
-                observer.disconnect();
-                if (isShowing) hide();
-                isShowing = false;
-              };
-            });
-          }
-        };
-      }
-
-      window.mousePosition = {
-        x: 0,
-        y: 0
-      };
-      document.addEventListener(
-        "DOMContentLoaded",
-        () => {
-          document.body.addEventListener("mousemove", (event) => {
-            window.mousePosition.x = event.clientX;
-            window.mousePosition.y = event.clientY;
-          });
-        }, {
-          once: true
+    <title>Blog · leanrada.com</title>
+    <script defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        @font-face {
+            font-family: "Space Mono";
+            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
         }
-      );
-    })();
 
-    function isInViewport(element) {
-      const rect = element.getBoundingClientRect();
-      return (
-        rect.right > 0 &&
-        rect.bottom > 0 &&
-        rect.left < window.innerWidth &&
-        rect.top < window.innerHeight
-      );
-    }
-  </script>
-  <script>
-    (() => {
-      customElements.define(
-        "nebula-client",
-        class Nebula extends BaseElement {
-          constructor() {
-            super();
+        @font-face {
+            font-family: "Space Mono";
+            font-style: italic;
+            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+        }
 
-            this.asyncCanvas = this.asyncQuerySelector("canvas");
-            this.context = null;
-            this.noise = null;
+        @font-face {
+            font-family: "Miriam Libre";
+            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+        }
 
-            this.gridWidth = 30;
-            this.gridHeight = 30;
-            this.palette = ["#ffffff"];
+        @font-face {
+            font-family: "Miriam Libre";
+            font-weight: bold;
+            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+        }
 
-            this.cellWidth = 1; // placeholder
-            this.cellHeight = 1; // placeholder
+        :root {
+            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
 
-            this.useMouse = false;
-            this.mouseCell = null;
+            --bg-clr: #111;
+            --card-clr: #222;
+            --clr0-light: #54f8c1;
+            --clr0: #0ad591;
+            --clr0-dark: #018b5d;
+            --clr1: #df2063;
 
-            this.lastT = 0;
-            this.startT = 0;
-            this.loopStartT = 0;
+            --ease: cubic-bezier(0.8, 0, 1, 1);
+        }
 
-            this.isVisible = false;
-            this.visibilityListener({
-              show: () => {
-                this.isVisible = true;
-                this.startLoop();
-              },
-              hide: () => (this.isVisible = false),
-            });
-          }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--default-font, monospace);
+            background-color: var(--bg-clr, #111);
+            color: #fff;
+            overflow-x: hidden;
+        }
 
-          connectedCallback() {
-            super.connectedCallback();
+        a {
+            color: var(--clr0-light, #fff);
+        }
 
-            this.useMouse = this.getAttribute("mouse") != null;
+        a:visited {
+            color: var(--clr0, #fff);
+        }
+    </style>
+    <style>
+        nebula-client>canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <style>
+        .home-link {
+            text-decoration: none;
+        }
 
-            const gridWidth = this.getAttribute("width");
-            if (gridWidth) {
-              this.gridWidth = Number.parseInt(gridWidth);
+        .home-link-icon {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        .home-link-icon:hover {
+            filter: invert(1);
+        }
+    </style>
+    <style>
+        .main-footer {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            gap: 60px;
+            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+            font-size: 18px;
+            font-weight: bold;
+            background: var(--clr0);
+            color: #000;
+            overflow: hidden;
+            content-visibility: auto;
+            contain-intrinsic-height: 220x;
+        }
+
+        .main-footer-links-heading {
+            margin: 0 0 18px;
+            font-size: inherit;
+        }
+
+        .main-footer-line {
+            margin: 0 0 18px;
+        }
+
+        .main-footer-nav,
+        .main-footer-nav:visited {
+            color: #000;
+        }
+
+        .main-footer-nav:hover {
+            color: #fff;
+        }
+
+        .main-footer-content-part {
+            z-index: 1;
+        }
+
+        .main-footer-nebula {
+            position: absolute;
+            left: -30%;
+            top: -30%;
+            width: 160%;
+            height: 160%;
+            z-index: 0;
+        }
+
+        .main-footer-top-btn {
+            z-index: 2;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 72px;
+            height: 36px;
+            padding-right: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            border-bottom-left-radius: 18px;
+            background: var(--bg-clr);
+            color: var(--clr0-light);
+            font: inherit;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .main-footer-top-btn:hover {
+            color: var(--clr1);
+        }
+
+        .main-footer-top-btn::before {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 36px;
+            height: 18px;
+            border-top-right-radius: 18px;
+            transform: translateX(-72px);
+            box-shadow: 18px 0 0 var(--bg-clr);
+        }
+
+        @media (max-width: 700px) {
+            .main-footer {
+                flex-direction: column-reverse;
+            }
+        }
+    </style>
+    <style>
+        .main-header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            padding: 0 calc(25% - 150px);
+            z-index: 100;
+            box-sizing: border-box;
+        }
+
+        .main-header.float {
+            position: fixed;
+        }
+
+        .main-header-bar {
+            position: relative;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: flex-end;
+            height: 100%;
+        }
+
+        .main-header-item,
+        .main-header-item:visited {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 6ch;
+            height: 36px;
+            padding: 0 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+            color: #fff;
+            backdrop-filter: blur(8px);
+            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+            background-repeat: no-repeat;
+            background-size: 220% 100%;
+            background-position: 115%;
+            transition: background-position 0.2s var(--ease);
+        }
+
+        .main-header-item:hover {
+            background-image: linear-gradient(60deg,
+                    #fff2 50%,
+                    #fff 50%,
+                    #fff 60%,
+                    transparent 60%);
+            background-position: 0%;
+        }
+
+        .main-header-item.select {
+            background: #fff2;
+        }
+
+        .main-header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            image-rendering: pixelated;
+            object-fit: cover;
+            object-position: center left;
+            filter: invert(1);
+            backdrop-filter: blur(8px) invert(1);
+        }
+
+        .main-header-icon:hover {
+            object-position: center right;
+        }
+
+        .main-header-indicator {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            left: 50%;
+            top: calc(100% + 12px);
+            transform: translate(-50%, -50%);
+            /* border acts as extended touch area */
+            border: solid 6mm transparent;
+            border-radius: 50%;
+            background: #fff;
+            background-clip: padding-box;
+            opacity: 0;
+            transition: opacity 50ms;
+        }
+
+        .main-header.hidden .main-header-indicator {
+            opacity: 0.8;
+        }
+    </style>
+    <style>
+        .notice {
+            margin: auto;
+            padding: 120px 0;
+            width: 600px;
+            font-size: 30px;
+        }
+    </style>
+    <script>
+        (() => {
+            globalThis.BaseElement = createBaseElement(HTMLElement);
+
+            const lifecycleListeners = Symbol("lifecycleListeners");
+
+            function createBaseElement(superClass) {
+                return class BaseElement extends superClass {
+                    constructor() {
+                        super();
+                        this[lifecycleListeners] = [];
+                    }
+                    connectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.connect());
+                    }
+                    disconnectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.disconnect());
+                    }
+
+                    /**
+                     * @param factory {() => () => void}
+                     */
+                    addLifecycleListener(factory) {
+                        let cleanup = () => {};
+                        const connect = () => (cleanup = factory());
+                        const disconnect = () => cleanup();
+
+                        this[lifecycleListeners].push({
+                            connect,
+                            disconnect
+                        });
+
+                        if (this.isConnected) {
+                            connect();
+                        }
+                    }
+
+                    /**
+                     * @param selector {string}
+                     */
+                    asyncQuerySelector(selector) {
+                        const obj = {
+                            exists: false,
+                            element: null,
+                        };
+
+                        obj.promise = new Promise((resolve) => {
+                            const observer = new MutationObserver(() => {
+                                obj.element = this.querySelector(selector);
+                                if (obj.element) {
+                                    resolve(obj.element);
+                                    obj.exists = true;
+                                    observer.disconnect();
+                                }
+                            });
+
+                            this.addLifecycleListener(() => {
+                                observer.observe(this, {
+                                    childList: true,
+                                    subtree: true
+                                });
+                                return () => observer.disconnect();
+                            });
+                        });
+
+                        return obj;
+                    }
+
+                    /**
+                     * @param target {Element}
+                     * @param event {string}
+                     * @param callback {Function}
+                     */
+                    aliveListener(target, event, callback) {
+                        this.addLifecycleListener(() => {
+                            target.addEventListener(event, callback);
+                            return () => target.removeEventListener(event, callback);
+                        });
+                    }
+
+                    /**
+                     * @param callbacks {object}
+                     * @param callbacks.show {Function}
+                     * @param callbacks.hide {Function}
+                     */
+                    visibilityListener({
+                        show,
+                        hide
+                    }) {
+                        let isShowing = false;
+
+                        const observer = new IntersectionObserver((entries) => {
+                            for (const entry of entries) {
+                                if (entry.target !== this) continue;
+                                if (isShowing !== entry.isIntersecting) {
+                                    isShowing = entry.isIntersecting;
+                                    if (isShowing) {
+                                        show();
+                                    } else {
+                                        hide();
+                                    }
+                                }
+                            }
+                        });
+
+                        this.addLifecycleListener(() => {
+                            isShowing = isInViewport(this);
+                            if (isShowing) show();
+                            observer.observe(this);
+                            return () => {
+                                observer.disconnect();
+                                if (isShowing) hide();
+                                isShowing = false;
+                            };
+                        });
+                    }
+                };
             }
 
-            const gridHeight = this.getAttribute("height");
-            if (gridHeight) {
-              this.gridHeight = Number.parseInt(gridHeight);
-            }
+            window.mousePosition = {
+                x: 0,
+                y: 0
+            };
+            document.addEventListener(
+                "DOMContentLoaded",
+                () => {
+                    document.body.addEventListener("mousemove", (event) => {
+                        window.mousePosition.x = event.clientX;
+                        window.mousePosition.y = event.clientY;
+                    });
+                }, {
+                    once: true
+                }
+            );
+        })();
 
-            const paletteAttr = this.getAttribute("palette");
-            if (paletteAttr) {
-              this.palette = paletteAttr.split(" ");
-            }
-          }
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.right > 0 &&
+                rect.bottom > 0 &&
+                rect.left < window.innerWidth &&
+                rect.top < window.innerHeight
+            );
+        }
+    </script>
+    <script>
+        (() => {
+            customElements.define(
+                "nebula-client",
+                class Nebula extends BaseElement {
+                    constructor() {
+                        super();
 
-          startLoop() {
-            this.loopStartT = this.lastT = this.getT();
-            this.loop();
-          }
+                        this.asyncCanvas = this.asyncQuerySelector("canvas");
+                        this.context = null;
+                        this.noise = null;
 
-          async loop() {
-            if (!this.isVisible) {
-              return;
-            }
+                        this.gridWidth = 30;
+                        this.gridHeight = 30;
+                        this.palette = ["#ffffff"];
 
-            if (typeof perlinNoise3d === "undefined") {
-              setTimeout(() => this.loop(), 200);
-              return;
-            } else if (!this.noise) {
-              this.noise = initNoise();
-              this.startT = this.getT();
-            }
+                        this.cellWidth = 1; // placeholder
+                        this.cellHeight = 1; // placeholder
 
-            const canvas =
-              this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
+                        this.useMouse = false;
+                        this.mouseCell = null;
 
-            // initialize
-            if (!this.context) {
-              this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
-              this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
-              canvas.width = this.gridWidth;
-              canvas.height = this.gridHeight;
-              canvas.style.filter += ` blur(${
+                        this.lastT = 0;
+                        this.startT = 0;
+                        this.loopStartT = 0;
+
+                        this.isVisible = false;
+                        this.visibilityListener({
+                            show: () => {
+                                this.isVisible = true;
+                                this.startLoop();
+                            },
+                            hide: () => (this.isVisible = false),
+                        });
+                    }
+
+                    connectedCallback() {
+                        super.connectedCallback();
+
+                        this.useMouse = this.getAttribute("mouse") != null;
+
+                        const gridWidth = this.getAttribute("width");
+                        if (gridWidth) {
+                            this.gridWidth = Number.parseInt(gridWidth);
+                        }
+
+                        const gridHeight = this.getAttribute("height");
+                        if (gridHeight) {
+                            this.gridHeight = Number.parseInt(gridHeight);
+                        }
+
+                        const paletteAttr = this.getAttribute("palette");
+                        if (paletteAttr) {
+                            this.palette = paletteAttr.split(" ");
+                        }
+                    }
+
+                    startLoop() {
+                        this.loopStartT = this.lastT = this.getT();
+                        this.loop();
+                    }
+
+                    async loop() {
+                        if (!this.isVisible) {
+                            return;
+                        }
+
+                        if (typeof perlinNoise3d === "undefined") {
+                            setTimeout(() => this.loop(), 200);
+                            return;
+                        } else if (!this.noise) {
+                            this.noise = initNoise();
+                            this.startT = this.getT();
+                        }
+
+                        const canvas =
+                            this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
+
+                        // initialize
+                        if (!this.context) {
+                            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+                            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+                            canvas.width = this.gridWidth;
+                            canvas.height = this.gridHeight;
+                            canvas.style.filter += ` blur(${
               Math.min(this.cellWidth, this.cellHeight) * 1.25
             }px)`;
-              this.context = canvas.getContext("2d");
+                            this.context = canvas.getContext("2d");
+                        }
+
+                        this.draw(canvas, this.context);
+
+                        requestAnimationFrame(() => this.loop());
+                    }
+
+                    /**
+                     * @param canvas {HTMLCanvasElement}
+                     * @param context {CanvasRenderingContext2D}
+                     */
+                    draw(canvas, context) {
+                        const t = this.getT();
+                        if (t <= this.lastT) return;
+
+                        const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+                        this.lastT = t;
+
+                        const {
+                            noise,
+                            gridWidth,
+                            gridHeight,
+                            palette,
+                            cellWidth,
+                            cellHeight,
+                        } = this;
+                        const halfGridWidth = gridWidth / 2;
+                        const halfGridHeight = gridHeight / 2;
+
+                        this.mouseCell = null;
+                        // mousePosition from lib/common
+                        if (this.useMouse && window.mousePosition) {
+                            const {
+                                x,
+                                y
+                            } = window.mousePosition;
+                            const bounds = canvas.getBoundingClientRect();
+                            if (
+                                bounds.left < x &&
+                                x < bounds.right &&
+                                bounds.top < y &&
+                                y < bounds.bottom
+                            ) {
+                                this.mouseCell = {
+                                    x: (x - bounds.x) / cellWidth,
+                                    y: (y - bounds.y) / cellHeight,
+                                };
+                            }
+                        }
+
+                        const paletteLength = palette.length;
+                        const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+                        const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+                        for (let i = 0; i < gridWidth; i++) {
+                            for (let j = 0; j < gridHeight; j++) {
+                                const mouseProximity =
+                                    this.mouseCell == null ?
+                                    0 :
+                                    1 -
+                                    sigmoid(
+                                        Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                                    );
+
+                                const xy = [
+                                    1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                                    1000 +
+                                    (j - halfGridHeight) * yScale +
+                                    Math.cos(t * 0.007) * 2 +
+                                    -mouseProximity,
+                                ];
+                                const p1 = noise.get(...xy, t * 0.03);
+                                const p2 = noise.get(...xy, t * 0.03 + 0.5);
+                                // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+                                const p = p1 + p2;
+
+                                const paletteIndex = Math.floor(paletteLength * p);
+
+                                const rgb = palette[paletteIndex];
+                                const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                                    .toString(16)
+                                    .padStart(2, "0");
+
+                                context.fillStyle = `${rgb}${a}`;
+                                context.fillRect(i, j, 1, 1);
+                            }
+                        }
+                    }
+
+                    getT() {
+                        const t = (Date.now() * 30) / 1000;
+                        // make it smoother while interacting
+                        return this.mouseCell ? t : Math.floor(t);
+                    }
+                }
+            );
+
+            function initNoise() {
+                const noise = new perlinNoise3d();
+                noise.perlin_octaves = 1; // ?? defaults
+                noise.perlin_amp_falloff = 1;
+                return noise;
             }
 
-            this.draw(canvas, this.context);
-
-            requestAnimationFrame(() => this.loop());
-          }
-
-          /**
-           * @param canvas {HTMLCanvasElement}
-           * @param context {CanvasRenderingContext2D}
-           */
-          draw(canvas, context) {
-            const t = this.getT();
-            if (t <= this.lastT) return;
-
-            const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
-            this.lastT = t;
-
-            const {
-              noise,
-              gridWidth,
-              gridHeight,
-              palette,
-              cellWidth,
-              cellHeight,
-            } = this;
-            const halfGridWidth = gridWidth / 2;
-            const halfGridHeight = gridHeight / 2;
-
-            this.mouseCell = null;
-            // mousePosition from lib/common
-            if (this.useMouse && window.mousePosition) {
-              const {
-                x,
-                y
-              } = window.mousePosition;
-              const bounds = canvas.getBoundingClientRect();
-              if (
-                bounds.left < x &&
-                x < bounds.right &&
-                bounds.top < y &&
-                y < bounds.bottom
-              ) {
-                this.mouseCell = {
-                  x: (x - bounds.x) / cellWidth,
-                  y: (y - bounds.y) / cellHeight,
-                };
-              }
+            function sigmoid(x) {
+                return 1 / (1 + Math.exp(-x));
             }
-
-            const paletteLength = palette.length;
-            const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
-            const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
-
-            for (let i = 0; i < gridWidth; i++) {
-              for (let j = 0; j < gridHeight; j++) {
-                const mouseProximity =
-                  this.mouseCell == null ?
-                  0 :
-                  1 -
-                  sigmoid(
-                    Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
-                  );
-
-                const xy = [
-                  1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
-                  1000 +
-                  (j - halfGridHeight) * yScale +
-                  Math.cos(t * 0.007) * 2 +
-                  -mouseProximity,
-                ];
-                const p1 = noise.get(...xy, t * 0.03);
-                const p2 = noise.get(...xy, t * 0.03 + 0.5);
-                // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
-                const p = p1 + p2;
-
-                const paletteIndex = Math.floor(paletteLength * p);
-
-                const rgb = palette[paletteIndex];
-                const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
-                  .toString(16)
-                  .padStart(2, "0");
-
-                context.fillStyle = `${rgb}${a}`;
-                context.fillRect(i, j, 1, 1);
-              }
-            }
-          }
-
-          getT() {
-            const t = (Date.now() * 30) / 1000;
-            // make it smoother while interacting
-            return this.mouseCell ? t : Math.floor(t);
-          }
-        }
-      );
-
-      function initNoise() {
-        const noise = new perlinNoise3d();
-        noise.perlin_octaves = 1; // ?? defaults
-        noise.perlin_amp_falloff = 1;
-        return noise;
-      }
-
-      function sigmoid(x) {
-        return 1 / (1 + Math.exp(-x));
-      }
-    })();
-  </script>
+        })();
+    </script>
 </head>
 
 
 <body>
-  <title>Blog · leanrada.com</title>
-  <header class="main-header">
-    <div class="main-header-bar">
-      <a href="/" class="main-header-item ">Home</a>
-      <img class="main-header-icon" src="/icons/tadaw_sheet.png">
-      <a href="/projects/" class="main-header-item ">Works</a>
-      <div class="main-header-indicator"></div>
-    </div>
-  </header>
 
-  <div class="notice">
-    <p>This new page is under construction! ✍</p>
-  </div>
+    <header class="main-header">
+        <div class="main-header-bar">
+            <a href="/" class="main-header-item ">Home</a>
+            <img class="main-header-icon" src="/icons/tadaw_sheet.png">
+            <a href="/projects/" class="main-header-item ">Works</a>
+            <div class="main-header-indicator"></div>
+        </div>
+    </header>
 
-  <footer class="main-footer">
-    <div class="main-footer-content-part">
-      <p class="main-footer-line">
-        <a target="_self" class="main-footer-nav" href="/">Home</a> ·
-        <a target="_self" class="main-footer-nav" href="/projects/">Works</a>
-      </p>
-      <p class="main-footer-line">(C) 2023 Lean Rada</p>
-    </div>
-    <div class="main-footer-content-part">
-      <h2 class="main-footer-links-heading">On the web</h2>
-      <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
-        <img class="home-link-icon" src="/icons/linkedin.png">
-      </a>
-      <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
-        <img class="home-link-icon" src="/icons/codepen.png">
-      </a>
-      <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
-        <img class="home-link-icon" src="/icons/stackoverflow.png">
-      </a>
-      <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
-        <img class="home-link-icon" src="/icons/github.png">
-      </a>
+    <div class="notice">
+        <p>This new page is under construction! ✍</p>
     </div>
 
+    <footer class="main-footer">
+        <div class="main-footer-content-part">
+            <p class="main-footer-line">
+                <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+                <a target="_self" class="main-footer-nav" href="/projects/">Works</a>
+            </p>
+            <p class="main-footer-line">(C) 2023 Lean Rada</p>
+        </div>
+        <div class="main-footer-content-part">
+            <h2 class="main-footer-links-heading">On the web</h2>
+            <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
+                <img class="home-link-icon" src="/icons/linkedin.png">
+            </a>
+            <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
+                <img class="home-link-icon" src="/icons/codepen.png">
+            </a>
+            <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+                <img class="home-link-icon" src="/icons/stackoverflow.png">
+            </a>
+            <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
+                <img class="home-link-icon" src="/icons/github.png">
+            </a>
+        </div>
 
-    <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
-      <canvas style="filter: contrast(1.5)">
-      </canvas></nebula-client>
-    <button class="main-footer-top-btn" aria-label="Back to top">^</button>
-  </footer>
-  <script>
-    (() => {
-      const topBtn = document.querySelector(".main-footer-top-btn");
-      topBtn.addEventListener("click", () => {
-        window.scrollTo(0, 0);
-      });
-    })();
-  </script>
-  <script>
-    (() => {
-      const mainHeader = document.querySelector(".main-header");
 
-      let currentY = 0;
-      let currentYTarget = 0;
+        <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+            <canvas style="filter: contrast(1.5)">
+            </canvas></nebula-client>
+        <button class="main-footer-top-btn" aria-label="Back to top">^</button>
+    </footer>
+    <script>
+        (() => {
+            const topBtn = document.querySelector(".main-footer-top-btn");
+            topBtn.addEventListener("click", () => {
+                window.scrollTo(0, 0);
+            });
+        })();
+    </script>
+    <script>
+        (() => {
+            const mainHeader = document.querySelector(".main-header");
 
-      let mouseHovering = false;
+            let currentY = 0;
+            let currentYTarget = 0;
 
-      let lastScrollY = window.scrollY;
-      let lastMouseY = 0;
-      window.addEventListener("scroll", debounce(onScroll));
-      window.addEventListener("mousemove", debounce(onMouseMove, 100));
-      mainHeader.addEventListener("touchstart", onTouchStart);
+            let mouseHovering = false;
 
-      function onScroll(event) {
-        const dy = window.scrollY - lastScrollY;
+            let lastScrollY = window.scrollY;
+            let lastMouseY = 0;
+            window.addEventListener("scroll", debounce(onScroll));
+            window.addEventListener("mousemove", debounce(onMouseMove, 100));
+            mainHeader.addEventListener("touchstart", onTouchStart);
 
-        // move with the page
-        currentY -= dy;
-        if (currentY > 0) {
-          currentY = 0;
-        } else if (currentY < -mainHeader.offsetHeight) {
-          currentY = -mainHeader.offsetHeight;
-        }
+            function onScroll(event) {
+                const dy = window.scrollY - lastScrollY;
 
-        currentYTarget = currentY;
-        updateDOM();
+                // move with the page
+                currentY -= dy;
+                if (currentY > 0) {
+                    currentY = 0;
+                } else if (currentY < -mainHeader.offsetHeight) {
+                    currentY = -mainHeader.offsetHeight;
+                }
 
-        lastScrollY = window.scrollY;
-      }
+                currentYTarget = currentY;
+                updateDOM();
 
-      function onMouseMove(event) {
-        const dy = event.clientY - lastMouseY;
+                lastScrollY = window.scrollY;
+            }
 
-        // show when mouse goes near the top
-        const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
-        if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
-          currentYTarget = 0;
-          mouseHovering = true;
-        } else if (
-          mouseHovering &&
-          dy > 0 &&
-          event.clientY > mainHeader.offsetHeight * 4
-        ) {
-          currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
-          mouseHovering = false;
-        }
+            function onMouseMove(event) {
+                const dy = event.clientY - lastMouseY;
 
-        updateDOM();
-        lastMouseY = event.clientY;
-      }
+                // show when mouse goes near the top
+                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+                    currentYTarget = 0;
+                    mouseHovering = true;
+                } else if (
+                    mouseHovering &&
+                    dy > 0 &&
+                    event.clientY > mainHeader.offsetHeight * 4
+                ) {
+                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+                    mouseHovering = false;
+                }
 
-      function onTouchStart(event) {
-        currentYTarget = 0;
-        updateDOM();
-      }
+                updateDOM();
+                lastMouseY = event.clientY;
+            }
 
-      const updateDOM = debounce(() => {
-        mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+            function onTouchStart(event) {
+                currentYTarget = 0;
+                updateDOM();
+            }
 
-        const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
-        mainHeader.classList.toggle("hidden", isHidden);
+            const updateDOM = debounce(() => {
+                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
 
-        if (Math.abs(currentY - currentYTarget) > 1) {
-          currentY += (currentYTarget - currentY) * 0.2;
-          requestAnimationFrame(updateDOM);
-        } else {
-          currentY = currentYTarget;
-        }
-      });
+                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
+                mainHeader.classList.toggle("hidden", isHidden);
 
-      if (mainHeader.classList.contains("prehide")) {
-        currentY = currentYTarget = -mainHeader.offsetHeight;
-        updateDOM();
-      }
+                if (Math.abs(currentY - currentYTarget) > 1) {
+                    currentY += (currentYTarget - currentY) * 0.2;
+                    requestAnimationFrame(updateDOM);
+                } else {
+                    currentY = currentYTarget;
+                }
+            });
 
-      function debounce(fn, ms = 0) {
-        let recentlyFired = false;
-        return (...args) => {
-          if (recentlyFired) return;
-          recentlyFired = true;
-          if (ms === 0) {
-            requestAnimationFrame(() => (recentlyFired = false));
-          } else {
-            setTimeout(() => (recentlyFired = false), ms);
-          }
-          return fn(...args);
-        };
-      }
-    })();
-  </script>
+            if (mainHeader.classList.contains("prehide")) {
+                currentY = currentYTarget = -mainHeader.offsetHeight;
+                updateDOM();
+            }
+
+            function debounce(fn, ms = 0) {
+                let recentlyFired = false;
+                return (...args) => {
+                    if (recentlyFired) return;
+                    recentlyFired = true;
+                    if (ms === 0) {
+                        requestAnimationFrame(() => (recentlyFired = false));
+                    } else {
+                        setTimeout(() => (recentlyFired = false), ms);
+                    }
+                    return fn(...args);
+                };
+            }
+        })();
+    </script>
 </body>
 </html>
