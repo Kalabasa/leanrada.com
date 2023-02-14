@@ -1,9 +1,14 @@
 <aa class="project-item" :href="attrs.href">
   <responsive-img class="project-item-img" :src="attrs.imgsrc" spec="90" />
   <span class="project-item-title">{attrs.title}</span>
-  <span class="project-item-posttitle">{attrs.posttitle}</span>
+  <script render>
+    if (attrs.posttitle)
+      return html`<span class="project-item-posttitle"
+        >${attrs.posttitle}</span
+      >`;
+  </script>
   <span class="project-item-content"><slot /></span>
-  <span class="project-item-link">{attrs.link}</span>
+  <span :class="linkClass(attrs.href)">{attrs.link}</span>
 </aa>
 
 <style>
@@ -73,8 +78,12 @@
     font-weight: bold;
     color: #999;
   }
-  .project-item-link::after {
+  .project-item-link-internal::after {
     content: "→";
+    display: inline-block;
+  }
+  .project-item-link-external::after {
+    content: "↗";
     display: inline-block;
   }
 
@@ -95,3 +104,16 @@
     }
   }
 </style>
+
+<script static>
+  const { isExternal } = require("../../lib/is_external.js");
+
+  function linkClass(href) {
+    return (
+      "project-item-link " +
+      (isExternal(href)
+        ? "project-item-link-external"
+        : "project-item-link-internal")
+    );
+  }
+</script>
