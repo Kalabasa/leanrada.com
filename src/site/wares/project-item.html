@@ -1,5 +1,7 @@
 <aa class="project-item" :href="attrs.href">
-  <responsive-img class="project-item-img" :src="attrs.imgsrc" spec="90" />
+  <div class="project-item-img-container">
+    <responsive-img class="project-item-img" :src="attrs.imgsrc" spec="90" />
+  </div>
   <span class="project-item-title">{attrs.title}</span>
   <script render>
     if (attrs.posttitle)
@@ -36,12 +38,20 @@
     border-bottom-left-radius: 18px;
   }
 
-  .project-item-img {
+  .project-item-img-container {
     flex: 0 0 auto;
     width: 90px;
     height: 100%;
-    object-fit: cover;
+    background: var(--clr0);
+    overflow: hidden;
     pointer-events: none;
+    transition: all 0.2s var(--ease);
+    transition-property: border-radius, height, background;
+  }
+  .project-item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .project-item-title {
@@ -108,7 +118,7 @@
         "img __ __ __";
       height: 72px;
     }
-    .project-item-img {
+    .project-item-img-container {
       grid-area: img;
       align-self: center;
     }
@@ -165,6 +175,12 @@
     .project-item:hover {
       background: var(--card-clr);
     }
+    .project-item:hover .project-item-img-container {
+      background: #fff;
+    }
+    .project-item-img {
+      mix-blend-mode: darken;
+    }
     .project-item:hover .project-item-content {
       border-radius: 6px;
       white-space: normal;
@@ -181,10 +197,12 @@
         overflow: visible;
         z-index: 1;
       }
-      .project-item:hover .project-item-img {
+      .project-item-img-container {
+        height: inherit;
+      }
+      .project-item:hover .project-item-img-container {
         height: 90px;
         border-radius: 18px;
-        box-shadow: 0 0 6px #0006;
       }
     }
   }
