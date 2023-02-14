@@ -17,7 +17,9 @@
   }
 
   function renderItem(href, label) {
-    return html`<a href="${href}" class="${renderItemClass(href)}">${label}</a>`;
+    return html`<a href="${href}" class="${renderItemClass(href)}"
+      >${label}</a
+    >`;
   }
 
   function renderItemClass(href) {
@@ -106,6 +108,8 @@
     transform: translate(-50%, -50%);
     /* border acts as extended touch area */
     border: solid 6mm transparent;
+    border-left-width: 45vh;
+    border-right-width: 45vh;
     border-radius: 50%;
     background: #fff;
     background-clip: padding-box;
@@ -120,16 +124,20 @@
 <script client defer>
   (() => {
     const mainHeader = document.querySelector(".main-header");
+    const indicator = document.querySelector(".main-header-indicator");
 
     let currentY = 0;
     let currentYTarget = 0;
 
     let mouseHovering = false;
 
+    let isTouch = false;
     let lastScrollY = window.scrollY;
-    let lastMouseY = 0;
+    let lastCursorY = 0;
     window.addEventListener("scroll", debounce(onScroll));
     window.addEventListener("mousemove", debounce(onMouseMove, 100));
+    window.addEventListener("touchstart", onWindowTouchStart);
+    window.addEventListener("touchmove", onWindowTouchMove);
     mainHeader.addEventListener("touchstart", onTouchStart);
 
     function onScroll(event) {
@@ -150,7 +158,9 @@
     }
 
     function onMouseMove(event) {
-      const dy = event.clientY - lastMouseY;
+      if (isTouch) return;
+
+      const dy = event.clientY - lastCursorY;
 
       // show when mouse goes near the top
       const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
@@ -167,12 +177,37 @@
       }
 
       updateDOM();
-      lastMouseY = event.clientY;
+      lastCursorY = event.clientY;
+    }
+
+    function onWindowTouchStart(event) {
+      isTouch = true;
+      lastCursorY = event.touches[0].clientY;
+    }
+    function onWindowTouchMove(event) {
+      const dy = event.touches[0].clientY - lastCursorY;
+
+      // move with touch but only if at edge
+      if (window.scrollY <= 0 && dy > 0) {
+        currentY += dy;
+        if (currentY >= 0) {
+          currentY = 0;
+          document.body.style.overscrollBehaviorY = null;
+        } else if (currentY < 0) {
+          document.body.style.overscrollBehaviorY = "none";
+        }
+
+        currentYTarget = currentY;
+        updateDOM();
+      }
+
+      lastCursorY = event.touches[0].clientY;
     }
 
     function onTouchStart(event) {
       currentYTarget = 0;
       updateDOM();
+      console.log("onTouchStart");
     }
 
     const updateDOM = debounce(() => {
@@ -190,6 +225,7 @@
     });
 
     if (mainHeader.classList.contains("prehide")) {
+      document.body.style.overscrollBehaviorY = "none";
       currentY = currentYTarget = -mainHeader.offsetHeight;
       updateDOM();
     }
