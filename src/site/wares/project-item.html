@@ -12,8 +12,7 @@
 </aa>
 
 <style>
-  .project-item,
-  .project-item:visited {
+  .project-item {
     position: relative;
     display: flex;
     justify-content: stretch;
@@ -21,10 +20,13 @@
     height: 42px;
     border-bottom: solid 1px var(--card-clr);
     font-size: 18px;
-    color: inherit;
     text-decoration: inherit;
     white-space: nowrap;
     overflow: hidden;
+  }
+  .project-item,
+  .project-item:visited {
+    color: inherit;
   }
 
   .project-item:first-child {
@@ -46,29 +48,31 @@
     flex: 0 0 auto;
     margin-left: 18px;
     font-weight: bold;
-    color: #ffff;
+    color: var(--text-clr);
   }
 
   .project-item-posttitle {
     display: flex;
     flex: 0 0 auto;
-    color: #999;
+    color: var(--text2-clr);
   }
   .project-item-posttitle::before {
     content: "·";
-    margin: 0 12px;
+    margin: 0 6px;
   }
 
   .project-item-content {
     display: flex;
+    align-items: center;
     flex: 1 1 auto;
-    color: #999;
+    color: var(--text2-clr);
     text-overflow: ellipsis;
     overflow: hidden;
+    pointer-events: none;
   }
   .project-item-content::before {
     content: "·";
-    margin: 0 12px;
+    margin: 0 6px;
   }
 
   .project-item-link {
@@ -76,7 +80,7 @@
     margin: 0 18px 0 24px;
     font-size: 15px;
     font-weight: bold;
-    color: #999;
+    color: var(--text2-clr);
   }
   .project-item-link-internal::after {
     content: "→";
@@ -87,20 +91,101 @@
     display: inline-block;
   }
 
+  @media (max-width: 1600px) {
+    .project-item {
+      font-size: 15px;
+    }
+  }
+  @media (max-width: 1200px) {
+    .project-item {
+      display: grid;
+      grid-template-columns: min-content min-content 1fr min-content;
+      grid-template-rows: 12px 1fr 1fr 12px;
+      grid-template-areas:
+        "img _ _ _"
+        "img title posttitle link"
+        "img content content content"
+        "img __ __ __";
+      height: 72px;
+    }
+    .project-item-img {
+      grid-area: img;
+      align-self: center;
+    }
+    .project-item-title {
+      grid-area: title;
+      margin-left: 12px;
+    }
+    .project-item-posttitle {
+      grid-area: posttitle;
+    }
+    .project-item-content {
+      grid-area: content;
+      margin-left: 12px;
+    }
+    .project-item-content::before {
+      display: none;
+    }
+    .project-item-link {
+      grid-area: link;
+      font-size: 12px;
+    }
+  }
+  @media (max-width: 600px) {
+    .project-item {
+      display: grid;
+      grid-template-columns: min-content 12px 1fr;
+      grid-template-rows: 12px min-content min-content min-content 12px;
+      grid-template-areas:
+        "img _ __"
+        "img _ title"
+        "img _ content"
+        "img _ link"
+        "img _ ___";
+      height: auto;
+    }
+    .project-item-title {
+      margin: 0 0 6px;
+    }
+    .project-item-content {
+      margin: 0;
+      white-space: normal;
+    }
+    .project-item-posttitle {
+      display: none;
+    }
+    .project-item-link {
+      margin: 0;
+      text-align: right;
+      text-decoration: underline;
+    }
+  }
+
   @media (hover: hover) {
     .project-item:hover {
-      overflow: visible;
       background: var(--card-clr);
     }
-    .project-item:hover .project-item-img {
-      height: 90px;
-      border-radius: 18px;
-      z-index: 1;
-      box-shadow: 0 12px 0 #0008, 0 -12px 0 #0008;
+    .project-item:hover .project-item-content {
+      border-radius: 6px;
+      white-space: normal;
+      background: var(--card-clr);
+      overflow: visible;
     }
     .project-item:hover .project-item-link {
       color: var(--clr0-light);
       text-decoration: underline;
+    }
+
+    @media not (max-width: 1200px) {
+      .project-item:hover {
+        overflow: visible;
+        z-index: 1;
+      }
+      .project-item:hover .project-item-img {
+        height: 90px;
+        border-radius: 18px;
+        box-shadow: 0 0 6px #0006;
+      }
     }
   }
 </style>
