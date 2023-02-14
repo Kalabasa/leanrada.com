@@ -4,18 +4,19 @@ const fs = require("node:fs");
 const { argv } = require("node:process");
 
 const redirects = [
-  ["works.html", "archive/v3/works.html", "projects/"],
+  ["projects", "wares/"],
+  ["works.html", "archive/v3/works.html", "wares/"],
   ["works/**", "archive/v3/works/**.html"],
-  ["works/canvaphotoeditor.html", "projects/canva-photo-editor/"],
-  ["works/dimensions.html", "projects/dimensions/"],
-  ["works/hypertangram.html", "projects/hypertangram/"],
-  ["works/wikawik.html", "projects/wikawik/"],
-  ["works/sheetz.html", "projects/svelte-spreadsheet/"],
-  ["works/dynastymap.html", "projects/dynaviz/"],
-  ["works/freeformgesturedetector.html", "projects/freeform-gesture-detector/"],
-  ["works/planetdefense.html", "projects/planet-defense/"],
-  ["works/canvapasko.html", "projects/canva-pasko/"],
-  ["works/miniforts.html", "projects/miniforts/"],
+  ["works/canvaphotoeditor.html", "wares/canva-photo-editor/"],
+  ["works/dimensions.html", "wares/dimensions/"],
+  ["works/hypertangram.html", "wares/hypertangram/"],
+  ["works/wikawik.html", "wares/wikawik/"],
+  ["works/sheetz.html", "wares/svelte-spreadsheet/"],
+  ["works/dynastymap.html", "wares/dynaviz/"],
+  ["works/freeformgesturedetector.html", "wares/freeform-gesture-detector/"],
+  ["works/planetdefense.html", "wares/planet-defense/"],
+  ["works/canvapasko.html", "wares/canva-pasko/"],
+  ["works/miniforts.html", "wares/miniforts/"],
 ];
 
 const siteSrc = path.resolve(__dirname, "src", "site");
