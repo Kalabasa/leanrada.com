@@ -18,6 +18,7 @@ const redirects = [
   ["works/canvapasko.html", "wares/canva-pasko/"],
   ["works/miniforts.html", "wares/miniforts/"],
   ["works/canvaenterprise.html", "wares/canva-enterprise/"],
+  ["works/canvalogomaker.html", "wares/canva-logo-maker/"],
   ["projects/*/index.html", "wares/*/index.html"],
   ["projects", "wares/"],
 ];
