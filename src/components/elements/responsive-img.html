@@ -9,10 +9,14 @@
   const process = require("node:process");
   const sharp = require("sharp");
 
+  const prod = process.env.NODE_ENV === "production";
+
   const intermediateStepSize = 400;
   const globalMaxImageSize = 1400;
 
   async function generateImages(src, spec) {
+    if (!prod) return {};
+
     const srcFilePath = path.join(__outputDir, src);
     if (!fs.existsSync(srcFilePath)) {
       throw new Error("Responsive image src does not exist: " + srcFilePath);

@@ -4,20 +4,22 @@
     if (isResizeableImg(attrs.src)) {
       yield html`<responsive-img
         class="blog-media-element"
-        alt="${attrs.alt}"
+        alt="${attrs.alt ?? ''}"
         src="${attrs.src}"
         spec="${attrs.spec ?? defaultResponsiveImageSpec()}"
         loading="lazy"
-        width="${await imgWidth(attrs.src)}"
+        width="${await imgWidthAttr(attrs.src)}"
+        height="${await imgHeightAttr(attrs.src)}"
         style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isImg(attrs.src)) {
       yield html`<img
         class="blog-media-element"
-        alt="${attrs.alt}"
+        alt="${attrs.alt ?? ''}"
         src="${attrs.src}"
         loading="lazy"
-        width="${await imgWidth(attrs.src)}"
+        width="${await imgWidthAttr(attrs.src)}"
+        height="${await imgHeightAttr(attrs.src)}"
         style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isVideo(attrs.src)) {
@@ -29,7 +31,7 @@
         muted
         autoplay
         loop
-        aria-label="${attrs.alt}"
+        aria-label="${attrs.alt ?? ''}"
         ${attrs.playbackRate ? 'onloadstart="this.playbackRate = ' + attrs.playbackRate + '"' : ''}
       >
         <source src="${attrs.src}" />
@@ -50,6 +52,11 @@
   const fs = require("node:fs");
   const path = require("node:path");
   const sharp = require("sharp");
+
+  const prod = process.env.NODE_ENV === "production";
+
+  // server can't know client's viewport, so we assume this
+  const priorAspectRatio = 2 / 3;
 
   function isResizeableImg(src) {
     const ext = src.substring(src.length - 4);
@@ -75,21 +82,31 @@
     }
   }
 
-  async function imgWidth(src) {
+  async function isWide(src) {
     const {
-      metadata: { width },
+      metadata: { width, height },
     } = await imgData(src);
-    return width;
+
+    return width > height * priorAspectRatio;
   }
 
-  async function imgHeight(src) {
-    const {
-      metadata: { height },
-    } = await imgData(src);
-    return height;
+  async function imgWidthAttr(src) {
+    if (!prod) return "";
+    return (await isWide(src))
+      ? attrs.type === "bleed"
+        ? "400%"
+        : "100%"
+      : "";
+  }
+
+  async function imgHeightAttr(src) {
+    if (!prod) return "";
+    return (await isWide(src)) ? "" : "100%";
   }
 
   async function imgStyle(src) {
+    if (!prod) return "";
+
     const {
       metadata: { width, height },
       stats: { dominant },
@@ -153,3 +170,38 @@
     font-size: 15px;
   }
 </style>
+
+<script client defer>
+  (() => {
+    const blogMediaElementImages = document.querySelectorAll(
+      "img.blog-media-element"
+    );
+
+    for (const img of blogMediaElementImages) {
+      if (watchImage(img)) {
+        const intervalID = setInterval(() => watchImage(img, intervalID), 200);
+      }
+      img.addEventListener("load", onLoadImage);
+    }
+
+    function watchImage(img, intervalID) {
+      if (img.naturalWidth > 0 || img.naturalHeight) {
+        img.style.objectPosition = null;
+        img.removeAttribute("width");
+        img.removeAttribute("height");
+
+        if (intervalID != undefined) clearInterval(intervalID);
+        return false;
+      } else {
+        if (!img.style.objectPosition) {
+          img.style.objectPosition = "100vw";
+        }
+        return true;
+      }
+    }
+
+    function onLoadImage(event) {
+      event.currentTarget.style.background = null;
+    }
+  })();
+</script>
