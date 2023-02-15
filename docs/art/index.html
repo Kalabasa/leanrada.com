@@ -39,6 +39,9 @@
             --clr0-dark: #018b5d;
             --clr1: #df2063;
 
+            --text-clr: #fff;
+            --text2-clr: #777;
+
             --ease: cubic-bezier(0.8, 0, 1, 1);
         }
 
@@ -47,7 +50,7 @@
             min-height: 100vh;
             font-family: var(--default-font, monospace);
             background-color: var(--bg-clr, #111);
-            color: #fff;
+            color: var(--text-clr, #fff);
             overflow-x: hidden;
         }
 
@@ -253,6 +256,8 @@
             transform: translate(-50%, -50%);
             /* border acts as extended touch area */
             border: solid 6mm transparent;
+            border-left-width: 45vh;
+            border-right-width: 45vh;
             border-radius: 50%;
             background: #fff;
             background-clip: padding-box;
@@ -624,7 +629,7 @@
         <div class="main-header-bar">
             <a href="/" class="main-header-item ">Home</a>
             <img class="main-header-icon" src="/icons/tadaw_sheet.png">
-            <a href="/projects/" class="main-header-item ">Works</a>
+            <a href="/wares/" class="main-header-item ">Wares</a>
             <div class="main-header-indicator"></div>
         </div>
     </header>
@@ -637,7 +642,7 @@
         <div class="main-footer-content-part">
             <p class="main-footer-line">
                 <a target="_self" class="main-footer-nav" href="/">Home</a> ·
-                <a target="_self" class="main-footer-nav" href="/projects/">Works</a>
+                <a target="_self" class="main-footer-nav" href="/wares/">Software</a>
             </p>
             <p class="main-footer-line">(C) 2023 Lean Rada</p>
         </div>
@@ -674,16 +679,20 @@
     <script>
         (() => {
             const mainHeader = document.querySelector(".main-header");
+            const indicator = document.querySelector(".main-header-indicator");
 
             let currentY = 0;
             let currentYTarget = 0;
 
             let mouseHovering = false;
 
+            let isTouch = false;
             let lastScrollY = window.scrollY;
-            let lastMouseY = 0;
+            let lastCursorY = 0;
             window.addEventListener("scroll", debounce(onScroll));
             window.addEventListener("mousemove", debounce(onMouseMove, 100));
+            window.addEventListener("touchstart", onWindowTouchStart);
+            window.addEventListener("touchmove", onWindowTouchMove);
             mainHeader.addEventListener("touchstart", onTouchStart);
 
             function onScroll(event) {
@@ -704,7 +713,9 @@
             }
 
             function onMouseMove(event) {
-                const dy = event.clientY - lastMouseY;
+                if (isTouch) return;
+
+                const dy = event.clientY - lastCursorY;
 
                 // show when mouse goes near the top
                 const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
@@ -721,12 +732,38 @@
                 }
 
                 updateDOM();
-                lastMouseY = event.clientY;
+                lastCursorY = event.clientY;
+            }
+
+            function onWindowTouchStart(event) {
+                isTouch = true;
+                lastCursorY = event.touches[0].clientY;
+            }
+
+            function onWindowTouchMove(event) {
+                const dy = event.touches[0].clientY - lastCursorY;
+
+                // move with touch but only if at edge
+                if (window.scrollY <= 0 && dy > 0) {
+                    currentY += dy;
+                    if (currentY >= 0) {
+                        currentY = 0;
+                        document.body.style.overscrollBehaviorY = null;
+                    } else if (currentY < 0) {
+                        document.body.style.overscrollBehaviorY = "none";
+                    }
+
+                    currentYTarget = currentY;
+                    updateDOM();
+                }
+
+                lastCursorY = event.touches[0].clientY;
             }
 
             function onTouchStart(event) {
                 currentYTarget = 0;
                 updateDOM();
+                console.log("onTouchStart");
             }
 
             const updateDOM = debounce(() => {
@@ -744,6 +781,7 @@
             });
 
             if (mainHeader.classList.contains("prehide")) {
+                document.body.style.overscrollBehaviorY = "none";
                 currentY = currentYTarget = -mainHeader.offsetHeight;
                 updateDOM();
             }
