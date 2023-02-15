@@ -23,7 +23,6 @@ touch .nojekyll
 git add docs .nojekyll
 
 if ! [[ `git diff-index --cached --quiet` ]]; then
-  git diff --cached
   git commit -m "Deploy"
   git push
 else
