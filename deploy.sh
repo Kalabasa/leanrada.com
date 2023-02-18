@@ -19,8 +19,8 @@ rsync -Pr --del docs/ prod/docs
 
 # Commit prod changes
 cd prod
-touch .nojekyll
-git add docs .nojekyll
+touch docs/.nojekyll
+git add docs
 
 if ! [[ `git diff-index --cached --quiet` ]]; then
   git commit -m "Deploy"
