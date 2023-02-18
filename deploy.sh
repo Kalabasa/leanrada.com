@@ -22,7 +22,7 @@ cd prod
 touch docs/.nojekyll
 git add docs
 
-if ! [[ `git diff-index --cached --quiet` ]]; then
+if ! [[ `git diff-index --cached --quiet HEAD` ]]; then
   git commit -m "Deploy"
   git push
 else
