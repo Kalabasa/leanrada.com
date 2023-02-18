@@ -40,7 +40,7 @@
             --clr1: #df2063;
 
             --text-clr: #fff;
-            --text2-clr: #777;
+            --text2-clr: #999;
 
             --ease: cubic-bezier(0.8, 0, 1, 1);
         }
@@ -52,14 +52,6 @@
             background-color: var(--bg-clr, #111);
             color: var(--text-clr, #fff);
             overflow-x: hidden;
-        }
-
-        a {
-            color: var(--clr0-light, #fff);
-        }
-
-        a:visited {
-            color: var(--clr0, #fff);
         }
     </style>
     <style>
@@ -108,8 +100,7 @@
             margin: 0 0 18px;
         }
 
-        .main-footer-nav,
-        .main-footer-nav:visited {
+        .main-footer-nav {
             color: #000;
         }
 
@@ -182,6 +173,7 @@
             padding: 0 calc(25% - 150px);
             z-index: 100;
             box-sizing: border-box;
+            pointer-events: none;
         }
 
         .main-header.float {
@@ -196,8 +188,7 @@
             height: 100%;
         }
 
-        .main-header-item,
-        .main-header-item:visited {
+        .main-header-item {
             display: inline-flex;
             justify-content: center;
             align-items: center;
@@ -216,6 +207,7 @@
             background-repeat: no-repeat;
             background-size: 220% 100%;
             background-position: 115%;
+            pointer-events: all;
             transition: background-position 0.2s var(--ease);
         }
 
@@ -241,6 +233,7 @@
             object-position: center left;
             filter: invert(1);
             backdrop-filter: blur(8px) invert(1);
+            pointer-events: all;
         }
 
         .main-header-icon:hover {
@@ -267,6 +260,7 @@
 
         .main-header.hidden .main-header-indicator {
             opacity: 0.8;
+            pointer-events: all;
         }
     </style>
     <style>
@@ -433,6 +427,15 @@
         }
     </style>
     <style>
+        .text-link {
+            color: var(--clr0-light, #fff);
+        }
+
+        .text-link:visited {
+            color: var(--clr0, #fff);
+        }
+    </style>
+    <style>
         .project-info-card {
             font-family: var(--default-font);
             font-size: 15px;
@@ -518,6 +521,7 @@
     </style>
     <style>
         .blog-media {
+            position: relative;
             text-align: center;
             /* external margin because it's expected to be in an article */
             margin: 36px 0;
@@ -533,6 +537,7 @@
             max-width: 100%;
             max-height: 80vh;
             border-radius: 18px;
+            box-sizing: border-box;
         }
 
         .blog-media-bleed .blog-media-element {
@@ -540,6 +545,10 @@
             left: 50%;
             max-width: max(min(100vw, 800px), 80vw);
             transform: translateX(-50%);
+        }
+
+        .blog-media-windowed .blog-media-element {
+            border-radius: 0;
         }
 
         .blog-media-caption {
@@ -915,7 +924,7 @@
                 </div>
 
                 <h2 id="a-game-about-building-and-defending-a-fort">A game about building and defending a fort.</h2>
-                <p>In 2021, I started making a small base-builder RTS game. It runs on the <a target="_blank" href="https://www.minetest.net/"><strong>Minetest</strong></a> voxel game engine.</p>
+                <p>In 2021, I started making a small base-builder RTS game. It runs on the <a target="_blank" class="text-link " href="https://www.minetest.net/"><strong>Minetest</strong></a> voxel game engine.</p>
                 <aside class="project-info-card">
                     <div class="project-info-card-header">
                         <div class="project-info-card-title">Project details</div>
@@ -969,12 +978,12 @@
                 <hr>
                 <h2 id="the-scripting-language">The scripting language</h2>
                 <p>Minetest uses <strong>Lua</strong> as its scripting language. I didn’t like Lua.</p>
-                <p>So MiniForts was written in <strong>TypeScript</strong>. Then I used <a target="_blank" href="https://typescripttolua.github.io/"><strong>TypeScriptToLua</strong></a>.</p>
+                <p>So MiniForts was written in <strong>TypeScript</strong>. Then I used <a target="_blank" class="text-link " href="https://typescripttolua.github.io/"><strong>TypeScriptToLua</strong></a>.</p>
                 <p>With the addition of <code>.d.ts</code> declaration files, I was able to use Minetest’s API in a type-safe way. It also unlocked fancy OOP, very useful in developing a game, and JSX! More on JSX in the following section.</p>
                 <hr>
                 <h2 id="the-gui-engine">The GUI engine</h2>
                 <p>One major problem was Minetest’s <strong>GUI system</strong>. I say it’s not very usable. It uses absolute positioning and has a lack of nesting or layouting. Interaction and UI updates are procedural.</p>
-                <p>To solve this I used <a target="_blank" href="https://www.typescriptlang.org/docs/handbook/jsx.html"><strong>JSX</strong></a>, an XML-like syntax for defining UI in code.</p>
+                <p>To solve this I used <a target="_blank" class="text-link " href="https://www.typescriptlang.org/docs/handbook/jsx.html"><strong>JSX</strong></a>, an XML-like syntax for defining UI in code.</p>
                 <p>But Minetest is not a web browser. There isn’t anything in Minetest that knows how to render JSX elements. I had to create a <strong>GUI engine</strong> within the game that takes in JSX elements and renders it via Minetest’s APIs and that also works with the server-driven UI system that Minetest has.</p>
                 <p>The end-result was a more flexible GUI system, with bonus reactive data-binding and callbacks.</p>
                 <table class="bleed">
@@ -1007,11 +1016,11 @@
                 <h2 id="pathfinding">Pathfinding</h2>
                 <p>Minetest has a built-in ground-based A* pathfinding algorithm, implemented in C++, exposed via the Lua API.</p>
                 <p>I’ve found that the built-in pathfinder wasn’t sufficient for this game. This game has multiple agents with different locomotion types, a complex 3D terrain, and destructible walls.</p>
-                <p>I ended up implementing a hierarchical pathfinding algorithm with a structure similar to <a target="_blank" href="https://www.youtube.com/watch?v=RMBQn_sg7DA"><strong>RimWorld</strong>’s region system</a>, also inspired by <a target="_blank" href="https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large"><strong>Castle Story</strong>’s pathfinder</a>.</p>
+                <p>I ended up implementing a hierarchical pathfinding algorithm with a structure similar to <a target="_blank" class="text-link " href="https://www.youtube.com/watch?v=RMBQn_sg7DA"><strong>RimWorld</strong>’s region system</a>, also inspired by <a target="_blank" class="text-link " href="https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large"><strong>Castle Story</strong>’s pathfinder</a>.</p>
                 <div class="blog-media blog-media-bleed">
                     <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
                         <source src="/wares/miniforts/media/miniforts_path.mp4">
-                        <a href="/wares/miniforts/media/miniforts_path.mp4">undefined</a>
+                        <a href="/wares/miniforts/media/miniforts_path.mp4"></a>
                     </video><span class="blog-media-caption">Pathfinder debug view in action</span>
                 </div>
 
@@ -1024,7 +1033,7 @@
                 <div class="blog-media blog-media-bleed">
                     <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
                         <source src="/wares/miniforts/media/miniforts_order_path.mp4">
-                        <a href="/wares/miniforts/media/miniforts_order_path.mp4">undefined</a>
+                        <a href="/wares/miniforts/media/miniforts_order_path.mp4"></a>
                     </video><span class="blog-media-caption">Very fast pathfinding over large distances</span>
                 </div>
 

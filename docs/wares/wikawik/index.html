@@ -40,7 +40,7 @@
             --clr1: #df2063;
 
             --text-clr: #fff;
-            --text2-clr: #777;
+            --text2-clr: #999;
 
             --ease: cubic-bezier(0.8, 0, 1, 1);
         }
@@ -52,14 +52,6 @@
             background-color: var(--bg-clr, #111);
             color: var(--text-clr, #fff);
             overflow-x: hidden;
-        }
-
-        a {
-            color: var(--clr0-light, #fff);
-        }
-
-        a:visited {
-            color: var(--clr0, #fff);
         }
     </style>
     <style>
@@ -108,8 +100,7 @@
             margin: 0 0 18px;
         }
 
-        .main-footer-nav,
-        .main-footer-nav:visited {
+        .main-footer-nav {
             color: #000;
         }
 
@@ -182,6 +173,7 @@
             padding: 0 calc(25% - 150px);
             z-index: 100;
             box-sizing: border-box;
+            pointer-events: none;
         }
 
         .main-header.float {
@@ -196,8 +188,7 @@
             height: 100%;
         }
 
-        .main-header-item,
-        .main-header-item:visited {
+        .main-header-item {
             display: inline-flex;
             justify-content: center;
             align-items: center;
@@ -216,6 +207,7 @@
             background-repeat: no-repeat;
             background-size: 220% 100%;
             background-position: 115%;
+            pointer-events: all;
             transition: background-position 0.2s var(--ease);
         }
 
@@ -241,6 +233,7 @@
             object-position: center left;
             filter: invert(1);
             backdrop-filter: blur(8px) invert(1);
+            pointer-events: all;
         }
 
         .main-header-icon:hover {
@@ -267,6 +260,7 @@
 
         .main-header.hidden .main-header-indicator {
             opacity: 0.8;
+            pointer-events: all;
         }
     </style>
     <style>
@@ -433,6 +427,15 @@
         }
     </style>
     <style>
+        .text-link {
+            color: var(--clr0-light, #fff);
+        }
+
+        .text-link:visited {
+            color: var(--clr0, #fff);
+        }
+    </style>
+    <style>
         .project-info-card {
             font-family: var(--default-font);
             font-size: 15px;
@@ -518,6 +521,7 @@
     </style>
     <style>
         .blog-media {
+            position: relative;
             text-align: center;
             /* external margin because it's expected to be in an article */
             margin: 36px 0;
@@ -533,6 +537,7 @@
             max-width: 100%;
             max-height: 80vh;
             border-radius: 18px;
+            box-sizing: border-box;
         }
 
         .blog-media-bleed .blog-media-element {
@@ -540,6 +545,10 @@
             left: 50%;
             max-width: max(min(100vw, 800px), 80vw);
             transform: translateX(-50%);
+        }
+
+        .blog-media-windowed .blog-media-element {
+            border-radius: 0;
         }
 
         .blog-media-caption {
@@ -918,10 +927,10 @@
                 <p>According to the <em>diksiyonaryo</em>: <strong>“wikawik”</strong> is a Filipino word, meaning <em>madaldal</em> or talkative or chatty.</p>
                 <blockquote>
                     <p><strong>wikawik</strong> [wi·ká·wik] <em>adjective</em><br>talks a lot.
-                        <cite><a target="_blank" href="https://diksiyonaryo.ph/search/wikawik">diksiyonaryo.ph</a></cite>
+                        <cite><a target="_blank" class="text-link " href="https://diksiyonaryo.ph/search/wikawik">diksiyonaryo.ph</a></cite>
                     </p>
                 </blockquote>
-                <p><a target="_blank" href="https://kalabasa.github.io/wikawik/">Wikawik</a>, on the other hand, is a webapp that showcases the various languages spoken in the Philippines.</p>
+                <p><a target="_blank" class="text-link " href="https://kalabasa.github.io/wikawik/">Wikawik</a>, on the other hand, is a webapp that showcases the various languages spoken in the Philippines.</p>
                 <aside class="project-info-card">
                     <div class="project-info-card-header">
                         <div class="project-info-card-title">Project details</div>
@@ -951,7 +960,7 @@
 
                 <p>There are over 100 languages spoken across the Philippine archipelago.</p>
                 <p>It’s amazing how diverse the language landscape of the Philippines is, yet it is rarely treasured or celebrated in the Philippines.</p>
-                <p>In my grade school years in the Philippines, we celebrated <a target="_blank" href="https://en.wikipedia.org/wiki/Buwan_ng_Wika"><strong><em>Buwan ng Wika</em></strong></a> (Month of Language) every August, but they never actually taught us about languages in the Philippines. It was only ever about Tagalog. Now that I’m older, I got a wider appreciation of the languages in the Philippines.</p>
+                <p>In my grade school years in the Philippines, we celebrated <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Buwan_ng_Wika"><strong><em>Buwan ng Wika</em></strong></a> (Month of Language) every August, but they never actually taught us about languages in the Philippines. It was only ever about Tagalog. Now that I’m older, I got a wider appreciation of the languages in the Philippines.</p>
                 <div class="blog-media blog-media-default">
                     <img srcset="/wares/wikawik/media/wikawik_mob_332.generated.jpg 332w,/wares/wikawik/media/wikawik_mob_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="webapp" src="/wares/wikawik/media/wikawik_mob.jpg" spec="100% [664) 664" loading="lazy" width="" height="100%" style="aspect-ratio: 0.5625; background: #48c8d8">
                 </div>
@@ -1002,8 +1011,8 @@
                 <p>The research needed for the app was probably the most time-consuming thing I did for this project. For comparison, I finished implementing the main visualization interface in one week. The data cleanup and research took about a month.</p>
                 <p>The data was primarily based on the <strong>Philippine Statistics Authority’s 2010 Census</strong>. The census surveyed, among other things, the main languages spoken at home in sampled households across the country.</p>
                 <p>But it got a little messy. There were inconsistencies throughout the data. Even the PSA and the KWF don’t agree on which are dialects and which are languages.</p>
-                <p>For example, look into Thinking Machine’s story about <a target="_blank" href="https://stories.thinkingmachin.es/philippine-languages/"><strong>The language landscape of the Philippines</strong></a>. That visualization was based on raw PSA data.</p>
-                <p>One example issue with raw PSA data is, you won’t find the <a target="_blank" href="https://en.wikipedia.org/wiki/Rinconada_Bikol_language">Rinconada language</a> in there. PSA classified this language and other Bicol languages as one “Bikol/Bicol”. On the contrary, KWF classifies these non-mutually-intelligible languages separately.</p>
+                <p>For example, look into Thinking Machine’s story about <a target="_blank" class="text-link " href="https://stories.thinkingmachin.es/philippine-languages/"><strong>The language landscape of the Philippines</strong></a>. That visualization was based on raw PSA data.</p>
+                <p>One example issue with raw PSA data is, you won’t find the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Rinconada_Bikol_language">Rinconada language</a> in there. PSA classified this language and other Bicol languages as one “Bikol/Bicol”. On the contrary, KWF classifies these non-mutually-intelligible languages separately.</p>
                 <p>There were many such cases of mismatch and misrepresentation in PSA data, which is sad.</p>
                 <p>That’s why a combination of other sources were used to supplement or correct this data, like the KWF Atlas, Ethnologue, Glottolog, and more.</p>
                 <div class="blog-media blog-media-default">
@@ -1026,7 +1035,7 @@
                 </div>
 
                 <p>It was a fun and educational project. It made me appreciate the Philippine languages more and discover a glimpse of the cultures around the Philippines!</p>
-                <p>Here’s a link to the <a target="_blank" href="https://kalabasa.github.io/wikawik/">webapp</a>. Salamat sa pagbisita!
+                <p>Here’s a link to the <a target="_blank" class="text-link " href="https://kalabasa.github.io/wikawik/">webapp</a>. Salamat sa pagbisita!
                 </p>
 
             </div>

@@ -40,7 +40,7 @@
             --clr1: #df2063;
 
             --text-clr: #fff;
-            --text2-clr: #777;
+            --text2-clr: #999;
 
             --ease: cubic-bezier(0.8, 0, 1, 1);
         }
@@ -52,14 +52,6 @@
             background-color: var(--bg-clr, #111);
             color: var(--text-clr, #fff);
             overflow-x: hidden;
-        }
-
-        a {
-            color: var(--clr0-light, #fff);
-        }
-
-        a:visited {
-            color: var(--clr0, #fff);
         }
     </style>
     <style>
@@ -108,8 +100,7 @@
             margin: 0 0 18px;
         }
 
-        .main-footer-nav,
-        .main-footer-nav:visited {
+        .main-footer-nav {
             color: #000;
         }
 
@@ -182,6 +173,7 @@
             padding: 0 calc(25% - 150px);
             z-index: 100;
             box-sizing: border-box;
+            pointer-events: none;
         }
 
         .main-header.float {
@@ -196,8 +188,7 @@
             height: 100%;
         }
 
-        .main-header-item,
-        .main-header-item:visited {
+        .main-header-item {
             display: inline-flex;
             justify-content: center;
             align-items: center;
@@ -216,6 +207,7 @@
             background-repeat: no-repeat;
             background-size: 220% 100%;
             background-position: 115%;
+            pointer-events: all;
             transition: background-position 0.2s var(--ease);
         }
 
@@ -241,6 +233,7 @@
             object-position: center left;
             filter: invert(1);
             backdrop-filter: blur(8px) invert(1);
+            pointer-events: all;
         }
 
         .main-header-icon:hover {
@@ -267,6 +260,7 @@
 
         .main-header.hidden .main-header-indicator {
             opacity: 0.8;
+            pointer-events: all;
         }
     </style>
     <style>
@@ -433,7 +427,17 @@
         }
     </style>
     <style>
+        .text-link {
+            color: var(--clr0-light, #fff);
+        }
+
+        .text-link:visited {
+            color: var(--clr0, #fff);
+        }
+    </style>
+    <style>
         .blog-media {
+            position: relative;
             text-align: center;
             /* external margin because it's expected to be in an article */
             margin: 36px 0;
@@ -449,6 +453,7 @@
             max-width: 100%;
             max-height: 80vh;
             border-radius: 18px;
+            box-sizing: border-box;
         }
 
         .blog-media-bleed .blog-media-element {
@@ -456,6 +461,10 @@
             left: 50%;
             max-width: max(min(100vw, 800px), 80vw);
             transform: translateX(-50%);
+        }
+
+        .blog-media-windowed .blog-media-element {
+            border-radius: 0;
         }
 
         .blog-media-caption {
@@ -834,7 +843,7 @@
                 </div>
 
                 <h2 id="part-2-augmented-reality">Part 2. Augmented reality</h2>
-                <p>The idea of including augmented reality into the art piece was wholly inspired by <a target="_blank" href="https://github.com/jeromeetienne/AR.js"><strong>AR.js</strong></a>, an awesome project that brings fast and easy augmented reality to the web.</p>
+                <p>The idea of including augmented reality into the art piece was wholly inspired by <a target="_blank" class="text-link " href="https://github.com/jeromeetienne/AR.js"><strong>AR.js</strong></a>, an awesome project that brings fast and easy augmented reality to the web.</p>
                 <iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
 
                 <p>The AR.js demo looked really cool and smooth. I didn't end up using that library though.</p>
@@ -851,7 +860,7 @@
                 <p>I looked around for alternatives like <strong>Tracking.js</strong>, <strong>OpenCV</strong>, and even <strong>TensorFlow</strong>, but ultimately implemented my own <strong>image recognition</strong> algorithm.</p>
                 <hr>
                 <h2 id="recognizing-the-piece">Recognizing the piece</h2>
-                <p>For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera. <a target="_blank" href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>Image recognition</strong></a> is a computer vision problem of determining whether an image contains some specific object or not.</p>
+                <p>For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera. <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>Image recognition</strong></a> is a computer vision problem of determining whether an image contains some specific object or not.</p>
                 <div class="blog-media blog-media-bleed">
                     <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Demo video">
                         <source src="/wares/dimensions/media/dimensions_imagerec.mp4">
@@ -934,9 +943,9 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
                     <img srcset="/wares/dimensions/media/dimensions_illo6_332.generated.jpg 332w,/wares/dimensions/media/dimensions_illo6_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/wares/dimensions/media/dimensions_illo6.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8"><span class="blog-media-caption">Euclidean distance can be used to compute vector “similarity”</span>
                 </div>
 
-                <p>So, in application of theory, first I got the phone’s camera stream via the <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices"><strong>MediaDevice</strong> API</a>, connecting the camera to a <code>&lt;video&gt;</code> element.</p>
+                <p>So, in application of theory, first I got the phone’s camera stream via the <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices"><strong>MediaDevice</strong> API</a>, connecting the camera to a <code>&lt;video&gt;</code> element.</p>
                 <p>On each frame of the <code>&lt;video&gt;</code> stream, the image is processed into a feature vector. Then the feature vector is compared against the target vectors.</p>
-                <p>If the <a target="_blank" href="https://en.wikipedia.org/wiki/Euclidean_distance">distance</a> between the vectors are kept below some threshold, then the image is a match.</p>
+                <p>If the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Euclidean_distance">distance</a> between the vectors are kept below some threshold, then the image is a match.</p>
                 <p>Once it gets a match the <strong>augmented reality</strong> experience starts rolling in.</p>
                 <hr>
                 <h2 id="augmenting-reality">Augmenting reality</h2>
@@ -946,7 +955,7 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
                 </div>
 
                 <p>It was basically going to be a particle system.</p>
-                <p>This was rendered using <a target="_blank" href="https://threejs.org/"><strong>three.js</strong></a>. I’ve used three.js before and it was great, with easy-to-learn APIs and good examples.</p>
+                <p>This was rendered using <a target="_blank" class="text-link " href="https://threejs.org/"><strong>three.js</strong></a>. I’ve used three.js before and it was great, with easy-to-learn APIs and good examples.</p>
                 <p>I was quickly able to sketch out virtual objects in space as a prototype.</p>
                 <div class="blog-media blog-media-default">
                     <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Prototype video">
@@ -961,7 +970,7 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
                 <p>The experience was designed around this limitation by keeping the objects at constant distance to the user, subtly hinting that there’s no need to move or walk, only looking around.</p>
                 <p><small class="small-block">There was a bug on iOS Safari with orientation tracking, which apparently was just introduced July 2019, one month before the event. Sadly some iPhone users did not get the full experience.</small></p>
                 <p>Modeling the tiles as 3D objects were simply extrusions of the tiles’ 2D shape paths, made very easy using three.js’s <code>ExtrudeGeometry</code>.</p>
-                <p>The “paint” trails were made using an old unmaintained library called <a target="_blank" href="https://github.com/mkkellogg/TrailRendererJS"><strong>TrailRendererJS</strong></a>, which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.</p>
+                <p>The “paint” trails were made using an old unmaintained library called <a target="_blank" class="text-link " href="https://github.com/mkkellogg/TrailRendererJS"><strong>TrailRendererJS</strong></a>, which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.</p>
                 <div class="blog-media blog-media-default">
                     <img srcset="/wares/dimensions/media/dimensions_trailex_332.generated.png 332w,/wares/dimensions/media/dimensions_trailex_664.generated.png 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="TrailRenderer example" src="/wares/dimensions/media/dimensions_trailex.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3913934426229508; background: #080808">
                 </div>
