@@ -1,10 +1,40 @@
 <div class="{'blog-media blog-media-' + (attrs.type ?? 'default')}">
   <script render>
+    if (attrs.type === "windowed") {
+      yield html`<window-decor title="${attrs.caption}">${renderMediaElementArray()}</window-decor>`;
+    } else {
+      yield* renderMediaElement();
+      if (attrs.caption) {
+        yield html`<span class="blog-media-caption">${attrs.caption}</span>`;
+      }
+    }
+  </script>
+</div>
+
+<script static>
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const sharp = require("sharp");
+
+  const prod = process.env.NODE_ENV === "production";
+
+  // server can't know client's viewport, so we assume this
+  const priorAspectRatio = 2 / 3;
+
+  async function renderMediaElementArray() {
+    const array = [];
+    for await (const item of renderMediaElement()) {
+      array.push(item);
+    }
+    return array;
+  }
+
+  async function* renderMediaElement() {
     // todo: extract img/video adapter to generic component (reuse outside blog)
     if (isResizeableImg(attrs.src)) {
       yield html`<responsive-img
         class="blog-media-element"
-        alt="${attrs.alt ?? ''}"
+        alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
         spec="${attrs.spec ?? defaultResponsiveImageSpec()}"
         loading="lazy"
@@ -15,7 +45,7 @@
     } else if (isImg(attrs.src)) {
       yield html`<img
         class="blog-media-element"
-        alt="${attrs.alt ?? ''}"
+        alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
         loading="lazy"
         width="${await imgWidthAttr(attrs.src)}"
@@ -31,8 +61,10 @@
         muted
         autoplay
         loop
-        aria-label="${attrs.alt ?? ''}"
-        ${attrs.playbackRate ? 'onloadstart="this.playbackRate = ' + attrs.playbackRate + '"' : ''}
+        aria-label="${attrs.alt ?? ""}"
+        ${attrs.playbackRate
+          ? 'onloadstart="this.playbackRate = ' + attrs.playbackRate + '"'
+          : ""}
       >
         <source src="${attrs.src}" />
         <a href="${attrs.src}">${attrs.alt}</a>
@@ -40,23 +72,7 @@
     } else {
       throw new Error("invalid media src: " + attrs.src);
     }
-
-    // todo: convert into slot (need to update compose-html to expose children by named slots)
-    if (attrs.caption) {
-      yield html`<span class="blog-media-caption">${attrs.caption}</span>`;
-    }
-  </script>
-</div>
-
-<script static>
-  const fs = require("node:fs");
-  const path = require("node:path");
-  const sharp = require("sharp");
-
-  const prod = process.env.NODE_ENV === "production";
-
-  // server can't know client's viewport, so we assume this
-  const priorAspectRatio = 2 / 3;
+  }
 
   function isResizeableImg(src) {
     const ext = src.substring(src.length - 4);
@@ -143,6 +159,7 @@
 
 <style>
   .blog-media {
+    position: relative;
     text-align: center;
     /* external margin because it's expected to be in an article */
     margin: 36px 0;
@@ -157,12 +174,16 @@
     max-width: 100%;
     max-height: 80vh;
     border-radius: 18px;
+    box-sizing: border-box;
   }
   .blog-media-bleed .blog-media-element {
     position: relative;
     left: 50%;
     max-width: max(min(100vw, 800px), 80vw);
     transform: translateX(-50%);
+  }
+  .blog-media-windowed .blog-media-element {
+    border-radius: 0;
   }
 
   .blog-media-caption {
