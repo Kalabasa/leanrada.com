@@ -1,0 +1,42 @@
+<div
+  :class="'text-with-bg ' + (attrs.class ?? '')"
+  :style="'--text-with-bg-color: ' + attrs.color"
+>
+  <script render>
+    const tag = attrs.tag ? attrs.tag.replace(/\W/g, "") : "span";
+    return html`<${tag} class="text-with-bg-span"><slot /></${tag}>`;
+  </script>
+</div>
+
+<style>
+  .text-with-bg-span {
+    display: inline;
+    margin: 0;
+    padding: 0.7em 18px;
+    padding: 0.35lh 18px;
+    border-radius: 18px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    font: inherit;
+    background: var(--text-with-bg-color);
+  }
+</style>
+
+<script client defer>
+  (() => {
+    const observer = new ResizeObserver((entries) => {
+      console.log(entries);
+    });
+
+    const texts = document.querySelectorAll(".text-with-bg");
+    for (const text of texts) {
+      observer.observe(text);
+    }
+
+    function updateCorners(element) {
+      const range = document.createRange();
+      range.selectNode(element);
+      console.log(range.getClientRects());
+    }
+  })();
+</script>
