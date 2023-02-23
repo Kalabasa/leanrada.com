@@ -7,7 +7,7 @@
   >
     {attrs.title}
   </text-with-bg>
-  <div class="blog-header-hero"></div>
+  <responsive-img class="blog-header-hero" :src="attrs.heroimgsrc" spec="100% [800) 80%" />
   <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
     <path />
   </svg>
@@ -19,10 +19,10 @@
     margin-top: 60px;
     position: relative;
     left: 50%;
-    width: 60vh;
-    min-width: 800px;
+    height: 600px;
+    width: max(800px, 60vw);
     transform: translateX(-50%);
-    padding-bottom: 40vh;
+    box-sizing: border-box;
   }
 
   .blog-header-title {
@@ -35,21 +35,25 @@
     text-align: left;
     z-index: 2;
   }
+  .blog-header-title-inner {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
   /* Wrap lines in an angle */
   .blog-header-title::before {
     content: "";
-    width: 400px;
-    height: 40vh;
+    width: 50%;
+    height: 600px;
     float: right;
     shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
   }
 
   .blog-header-hero {
     position: absolute;
-    left: 24px;
-    right: 0;
-    top: 0;
-    bottom: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     border-radius: 18px;
     background: cyan;
     z-index: -1;
@@ -61,6 +65,21 @@
     pointer-events: none;
     fill: var(--bg-clr);
     z-index: 1;
+  }
+
+  @media (max-width: 800px) {
+    .blog-header {
+      width: 100vw;
+      width: 100svw;
+      height: 400px;
+      padding-right: 36px;
+    }
+    .blog-header-title {
+      font-size: clamp(24px, 20px + 2vw, 36px);
+    }
+    .blog-header-title::before {
+      content: none;
+    }
   }
 </style>
 
@@ -80,7 +99,7 @@
         requestAnimationFrame(() => updateDecorations())
       )
     );
-    observer.observe(titleInner);
+    observer.observe(header);
 
     // Add inner corner radius decorations using SVG
     function updateDecorations() {
@@ -158,7 +177,7 @@
 
         // Special corners for the hero background
         // Top edge
-        if (r1.top < heroRect.top && r1.bottom > heroRect.top) {
+        if (r1.top <= heroRect.top && r1.bottom > heroRect.top) {
           pathCommands.push(
             drawInnerCorner(
               offsetLeft + r1.right - 1,
@@ -169,7 +188,7 @@
           );
         }
         // Left edge
-        if (r1.left < heroRect.left && r1.right > heroRect.left) {
+        if (r1.left <= heroRect.left && r1.right > heroRect.left) {
           pathCommands.push(
             drawInnerCorner(
               offsetLeft + heroRect.left - 1,

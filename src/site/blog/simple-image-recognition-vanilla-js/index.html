@@ -1,0 +1,276 @@
+<html>
+  <page-title title="Simple image recognition with vanilla JavaScript" />
+  <blog-page>
+    <!-- prettier-ignore -->
+    <markdown>
+      <blog-header
+        title="Simple image recognition with vanilla JavaScript"
+        :heroimgsrc="url('hero.png')" />
+      <blog-author date="24 Feb 2023" />
+
+      Hello! I'm going to write about an [**image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) (or image classification) problem that I faced while making an augmented reality art project.
+
+      <blog-media
+        alt="Image recognition illustration"
+        :src="url('image-recognition.png')" />
+
+      My particular problem was detecting whether a printed picture of a certain art piece was being held in front of the camera, in which case the app would then start applying AR effects on it.
+
+      <blog-media
+        alt="Demo video"
+        :src="url('demo.mp4')"
+        caption="The app should recognize when the target art piece has been aligned." />
+
+      There exists many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. There are even libraries that can solve this out-of-the-box. Hovewer, my solution didn't use any of those. I couldn’t resist the challenge of rolling out my own while learning something along the way!
+
+      <box-note>**TL;DR** - It converts the camera image into a feature vector then compares that against a predefined target reference.</box-note>
+
+      ## Color and illumination theory 
+
+      First, let's think about the problem. We get an image from the camera feed, read some pixels, then classify whether it matches a predefined target image or not. Everything starts with a camera image.
+      
+      However, cameras don’t actually pick up the *true color* of an object. The *perceived color* is affected by room lighting, camera quality, and other factors.
+
+      <blog-media
+        alt="diagram"
+        :src="url('tc-vs-pc.jpg')"
+        caption="True color (TC) vs perceived color (PC)" />
+
+      If we had used just the raw pixel data from the camera feed to directly compare against the target image, then it would almost always fail due to lighting differences and other factors.
+ 
+      We need to somehow "normalize" the input image so that calculations would be robust against lighting variances.
+
+      To begin solving the normalization problem, I've come up with a model for the perceived color, roughly based on graphics programming illumination models.
+
+      Here's the equation:
+
+      ```
+      PC = TC * a + b
+      ```
+
+      * `PC` is the color perceived from the camera sensor.
+      * `TC` (unknown variable) is the true color of the material.
+      * `a` and `b` (unknown variables) are parameters that together describe the vague real-world lighting variables like white balance, environmental illumination, camera sensor quality, and other factors.
+
+      The algorithm starts by getting the average colors of three predetermined regions over the camera image. These regions are specific to my art piece, but the algorithm can be generalized to any configuration of at least three regions.
+
+      <blog-media
+        alt="diagram"
+        :src="url('dimensions_illo2.jpg')"
+        caption="The regions were specifically chosen to capture key features." />
+
+      Let’s call the colors `PC1`, `PC2`, and `PC3`.
+
+      The top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. This produces two difference colors.
+
+      Let’s call the resulting colors `D1` and `D2`:
+
+      <blog-media
+        alt="diagram"
+        :src="url('dimensions_illo3.jpg')" />
+
+      <code-block :code="`\
+// To subtract two colors, we subtract each RGB component
+const d1 = {
+  r: pc1.r - pc2.r,
+  g: pc1.g - pc2.g,
+  b: pc1.b - pc2.b
+};
+const d2 = {
+  r: pc2.r - pc3.r,
+  g: pc2.g - pc3.g,
+  b: pc2.b - pc3.b
+};`" />
+
+      By subtracting two perceived colors, the unknown lighting variable `b` could be eliminated, as shown in this derivation:
+
+      ```
+      D1 = PC2 - PC1
+        = (TC2 * a + b) - (TC1 * a + b)
+        = TC2 * a - TC1 * a
+        = (TC2 - TC1) * a
+      ```
+
+      Therefore, `D1` and `D2` can be shown to be derived from true colors, but multiplied by the lighting variable `a`:
+
+      ```
+      D1 = (TC2 - TC1) * a
+      D2 = (TC3 - TC2) * a
+      ```
+
+      To eliminate the remaining lighting variable `a`, the values are "normalized", that is, divided each by the brightest color.
+
+      Let’s call the normalized values `N1` and `N2`, for normalized `D1` and `D2`, respectively.
+
+      <blog-media
+        alt="diagram"
+        :src="url('dimensions_illo4.jpg')" />
+
+        ```
+        N1 = D1 / max(D1, D2)
+        N2 = D2 / max(D1, D2)
+        ```
+  
+        Here's the code for that:
+
+        <code-block :code="`\
+// Get 'max(D1, D2)'
+const d1Magnitude = Math.hypot(d1.r, d1.g, d1.b);
+const d2Magnitude = Math.hypot(d2.r, d2.g, d2.b);
+const maxColor =
+    d1Magnitude > d2Magnitude ? d1 : d2;
+
+// Add 0.01 to avoid division by zero
+const n1 = {
+  r: d1.r / (maxColor.r + 0.01),
+  g: d1.g / (maxColor.g + 0.01),
+  b: d1.b / (maxColor.b + 0.01),
+};
+const n2 = {
+  r: d2.r / (maxColor.r + 0.01),
+  g: d2.g / (maxColor.g + 0.01),
+  b: d2.b / (maxColor.b + 0.01),
+};`" />
+
+      I’m not showing the full derivation here, but normalizing will get rid of the common factor `a`. Quick explanation is that, if you divide some value by another value which has a common factor, then the common factor would be cancelled out.
+      
+      Thus, if we expand all the terms:
+
+      ```
+      N1 = (TC2 - TC1) / max(TC2 - TC1, TC3 - TC2)
+      N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
+      ```
+
+      As you can see, the final values `N1` and `N2` are not affected by the lighting parameters at all. They are purely derived from true color. <small>According to the model anyway.</small>
+
+      The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various smartphone cameras. The algorithm will be working purely on true color data.
+
+      <blog-media
+        :src="url('dimensions_tester.jpg')"
+        caption="Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized by the algorithm." />
+
+      ## Feature vectors 
+
+      Now, let's forget about "colors" for a moment and start looking at the individual RGB channel values. Each color has three values corresponding to the red, green, and blue channels. These are simply numbers, interpreted as colors by computer display systems.
+
+      <blog-media
+        :src="url('rgb.png')"
+        caption="A color is composed of RGB values" />
+
+      So from the normalized colors `N1` and `N2`, we can get their component values. We get six numerical values, three from each.
+    
+      These six numbers can be rolled into one combined series of numbers, which we'll call the **feature vector** of the image, that is, a set of numbers that *summarizes* the image.
+
+      <blog-media
+        alt="diagram"
+        :src="url('dimensions_illo5.jpg')" />
+
+      By turning colors into vectors, we move away from the complexity and subjectivity of colors and transition into the realm of numbers, where things are objective and computable.
+    
+      <code-block :code="`\
+const featureVector = [
+  n1.r,
+  n1.g,
+  n1.b,
+  n2.r,
+  n2.g,
+  n2.b,
+];`" />
+      
+      Essentially, we convert the entire image into a vector. This makes the problem of comparing image similarity a mathematical one. If the numbers match, then the images match.
+
+      Now, we just need the feature vector of the *target* image. We can obtain this by precomputing the same normalization step on the target image and saving the resulting feature vector as hardcoded values in the app. In my project, I got a couple more samples from real photos of the print for good measure.
+
+      <code-block :code="`\
+// (original + real sample 1 + real sample 2) / 3
+const referenceFeatureVector = [
+  (
+    -0.3593924173784146 +
+    -0.3030924568415693 +
+    -0.27620639981601575
+  ) / 3,
+  (
+    -0.611915816235142 +
+    -0.590167832630535 +
+    -0.5946857824325745
+  ) / 3,
+  (
+    -0.498629075974555 +
+    -0.4975375806689763 +
+    -0.49879828486061084
+  ) / 3,
+  (
+    0.35716016633879705 +
+    0.4556467533062926 +
+    0.47164734468790415
+  ) / 3,
+  (
+    0.17718492626963767 +
+    0.1053991137797178 +
+    0.13449453064454686
+  ) / 3,
+  (
+    0.2980055137889341 +
+    0.30589264583678 +
+    0.2811110391693084
+  ) / 3
+];`" />
+
+      Now that we have the feature vector of the camera image and the feature vector of the target image, we can directly compare them. Remember, vector similarity is a proxy for image similarity.
+
+      <blog-media
+        alt="diagram"
+        :src="url('dimensions_illo6.jpg')" />
+      
+      We can use Euclidean distance to compare vector "similarity". 
+
+      <code-block :code="`\
+const vectorDistance = Math.hypot(
+  ...featureVector.map(
+    (value, index) =>
+        referenceFeatureVector[index] - value
+  )
+);
+
+if (vectorDistance < THRESHOLD) {
+  // Image recognized!
+}`" />
+
+      If the distance between the two vectors is small enough (by some threshold), then it's a match!
+
+      And that's it! That's the algorithm. Convert the input image into a feature vector then compare that against a precomputed target vector. The image detection code totals less than 200 lines and doesn’t require an external library! It was launched as part of the AR art app that accompanied the exhibit.
+
+      ## Conclusion
+
+      In this post, I wrote about my thinking process and showed some code for how one might roll their own image detection algorithm. I hope this post was useful to you!
+      
+      My solution was tailored to the specific target images that I had, but there’s nothing preventing it from being generalized to other image shapes and sizes.
+
+      The resulting algorithm was straightforward, has little code, and very fast. It can run in real time on a smartphone, on every frame of its camera feed for example.
+
+      ### Areas for improvement
+
+      One big downside of this approach was that it had no regard to *positioning*, whether it was 2D or 3D position. The input image had to be in the exact orientation as the target image. There's no object tracking or localization.
+      
+      For my project, I didn't need positioning as I had a specifically designed user flow that forces an alignment. But for general use cases, one may need to add additional steps like looping through subsections of the image.
+
+      While I have also tested the robustness of the normalization via testing in poor conditions, it may not be able to handle extreme lighting conditions, such as a very dim environment, or a bright neon-lighted environment where the white balance is unnatural, or even some shadows on the surface.
+      
+      In the end, I built this algorithm to solve a particular application in art (and it was successful at that!). The goal was not to build a general-purpose algorithm. There are libraries for that now. 😄
+
+      ### Demo!
+
+      You may try the finished product here!
+      
+      Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.
+
+      <blog-media
+        type="bleed"
+        :src="url('/wares/dimensions/media/dimensions_finalset.jpg')"
+        caption="Go to kalabasa.github.io/dimensions/ on phone if QR doesn’t work." />
+
+      <box-note>Read more about the [Dimensions AR art project](/wares/dimensions/)!</box-note>
+
+    </markdown>
+  </blog-page>
+</html>
