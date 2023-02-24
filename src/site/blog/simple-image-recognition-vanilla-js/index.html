@@ -6,24 +6,26 @@
       <blog-header
         title="Simple image recognition with vanilla JavaScript"
         :heroimgsrc="url('hero.png')" />
-      <blog-author date="24 Feb 2023" />
 
-      Hello! I'm going to write about an [**image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) (or image classification) problem that I faced while making an augmented reality art project.
+      <blog-post-info date="24 Feb 2023" read-mins="7" />
+
+      Hello reader! I'll write about an [**image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) (or image classification) problem I faced while making an [augmented reality art project](/wares/dimensions/).
 
       <blog-media
         alt="Image recognition illustration"
-        :src="url('image-recognition.png')" />
+        :src="url('image-recognition.png')"
+        caption="Image recognition problems come in different forms."/>
 
-      My particular problem was detecting whether a printed picture of a certain art piece was being held in front of the camera, in which case the app would then start applying AR effects on it.
+      My problem was detecting whether a printed picture of a certain art piece was being held in front of the camera, in which case the app would then start applying AR effects.
 
       <blog-media
         alt="Demo video"
         :src="url('demo.mp4')"
         caption="The app should recognize when the target art piece has been aligned." />
 
-      There exists many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. There are even libraries that can solve this out-of-the-box. Hovewer, my solution didn't use any of those. I couldn’t resist the challenge of rolling out my own while learning something along the way!
+      There exist many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. There are even libraries that can solve this out of the box. However, my solution didn't use any of those. I couldn’t resist the challenge of rolling out my own while learning something along the way!
 
-      <box-note>**TL;DR** - It converts the camera image into a feature vector then compares that against a predefined target reference.</box-note>
+      <box-note>**TL;DR** - It converts the camera image into a feature vector and then compares that against a predefined target reference.</box-note>
 
       ## Color and illumination theory 
 
@@ -61,7 +63,48 @@
 
       Let’s call the colors `PC1`, `PC2`, and `PC3`.
 
-      The top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. This produces two difference colors.
+      To get these colors, you can either read over the pixels in those regions and average them, or downsample the image and sample pixels directly (likely faster). I used the former.
+
+      <code-block :code="`\
+// <video> element streams the camera, not shown here how
+video = document.getElementById('video');
+// <canvas> to hold a video frame for reading pixels
+canvas = document.getElementById('canvas'); 
+
+// Capture a video frame into the canvas
+const canvasContext = canvas.getContext('2d');
+canvasContext.drawImage(video, 0, 0, width, height);
+const imageData = canvasContext
+    .getImageData(0, 0, width, height)
+    .data;
+
+// Get the colors
+const pc1 = getRegionAverageColor(imageData, regionRect1);
+const pc2 = getRegionAverageColor(imageData, regionRect2);
+const pc3 = getRegionAverageColor(imageData, regionRect3);
+
+function getRegionAverageColor(imageData, rect) {
+  const lineStride = 4 * width;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  for (let j = rect.y; j < rect.y + rect.height; j++) {
+    for (let i = rect.x; i < rect.x + rect.width; i++) {
+      r += imageData[j * lineStride + i * 4] / 0xff;
+      g += imageData[j * lineStride + i * 4 + 1] / 0xff;
+      b += imageData[j * lineStride + i * 4 + 2] / 0xff;
+    }
+  }
+  const count = rect.width * rect.height;
+  return {
+    r: r / count,
+    g: g / count,
+    b: b / count
+  };
+}`" />
+      Refer to these MDN articles [Manipulating_video_using_canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas) and [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) for details about the Web APIs.
+
+      After getting the colors, we can start processing them. First, the top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. The order doesn't really matter. This produces two difference colors.
 
       Let’s call the resulting colors `D1` and `D2`:
 
@@ -98,7 +141,7 @@ const d2 = {
       D2 = (TC3 - TC2) * a
       ```
 
-      To eliminate the remaining lighting variable `a`, the values are "normalized", that is, divided each by the brightest color.
+      To eliminate the remaining lighting variable `a`, the values are "normalized", that is, divided by the brightest color value.
 
       Let’s call the normalized values `N1` and `N2`, for normalized `D1` and `D2`, respectively.
 
@@ -107,32 +150,32 @@ const d2 = {
         :src="url('dimensions_illo4.jpg')" />
 
         ```
-        N1 = D1 / max(D1, D2)
-        N2 = D2 / max(D1, D2)
+        N1 = D1 / max(|D1|, |D2|)
+        N2 = D2 / max(|D1|, |D2|)
         ```
   
         Here's the code for that:
 
         <code-block :code="`\
-// Get 'max(D1, D2)'
+// Get 'max(|D1|, |D2|)'
 const d1Magnitude = Math.hypot(d1.r, d1.g, d1.b);
 const d2Magnitude = Math.hypot(d2.r, d2.g, d2.b);
-const maxColor =
-    d1Magnitude > d2Magnitude ? d1 : d2;
 
-// Add 0.01 to avoid division by zero
+// Add 0.001 to avoid division by zero
+const max = Math.max(d1Magnitude, d2Magnitude) + 0.001;
+
 const n1 = {
-  r: d1.r / (maxColor.r + 0.01),
-  g: d1.g / (maxColor.g + 0.01),
-  b: d1.b / (maxColor.b + 0.01),
+  r: d1.r / max,
+  g: d1.g / max,
+  b: d1.b / max,
 };
 const n2 = {
-  r: d2.r / (maxColor.r + 0.01),
-  g: d2.g / (maxColor.g + 0.01),
-  b: d2.b / (maxColor.b + 0.01),
+  r: d2.r / max,
+  g: d2.g / max,
+  b: d2.b / max,
 };`" />
 
-      I’m not showing the full derivation here, but normalizing will get rid of the common factor `a`. Quick explanation is that, if you divide some value by another value which has a common factor, then the common factor would be cancelled out.
+      I’m not showing the full derivation here, but normalizing will get rid of the common factor `a`. The handwavy explanation is that, if you divide some value by another value and both have a common factor, then the common factor would be canceled out.
       
       Thus, if we expand all the terms:
 
@@ -242,19 +285,19 @@ if (vectorDistance < THRESHOLD) {
 
       ## Conclusion
 
-      In this post, I wrote about my thinking process and showed some code for how one might roll their own image detection algorithm. I hope this post was useful to you!
+      In this post, I wrote about my thinking process and showed some code for how one might develop their own image detection algorithm. I hope this post was useful to you!
       
-      My solution was tailored to the specific target images that I had, but there’s nothing preventing it from being generalized to other image shapes and sizes.
+      My solution was tailored to the specific target images that I had, but nothing's preventing it from being generalized to other image shapes and sizes.
 
-      The resulting algorithm was straightforward, has little code, and very fast. It can run in real time on a smartphone, on every frame of its camera feed for example.
+      The resulting algorithm was straightforward, has little code, and was very fast. It can run in real-time on a smartphone, on every frame of its camera feed for example.
 
       ### Areas for improvement
 
-      One big downside of this approach was that it had no regard to *positioning*, whether it was 2D or 3D position. The input image had to be in the exact orientation as the target image. There's no object tracking or localization.
+      One big downside of this approach was that it had no regard for *positioning*, whether it was a 2D or a 3D position. The input image had to be in the exact orientation as the target image. There's no object tracking or localization.
       
       For my project, I didn't need positioning as I had a specifically designed user flow that forces an alignment. But for general use cases, one may need to add additional steps like looping through subsections of the image.
 
-      While I have also tested the robustness of the normalization via testing in poor conditions, it may not be able to handle extreme lighting conditions, such as a very dim environment, or a bright neon-lighted environment where the white balance is unnatural, or even some shadows on the surface.
+      While I have tested the robustness of the normalization in various conditions, it may not handle extreme lighting conditions, such as a very dim environment or a bright neon-lighted environment where the white balance is unnatural. Furthermore, irregular lighting conditions like shadows or reflections on the surface would likely degrade its accuracy.
       
       In the end, I built this algorithm to solve a particular application in art (and it was successful at that!). The goal was not to build a general-purpose algorithm. There are libraries for that now. 😄
 
@@ -267,10 +310,9 @@ if (vectorDistance < THRESHOLD) {
       <blog-media
         type="bleed"
         :src="url('/wares/dimensions/media/dimensions_finalset.jpg')"
-        caption="Go to kalabasa.github.io/dimensions/ on phone if QR doesn’t work." />
+        caption="Go to kalabasa.github.io/dimensions/ on your phone if QR doesn’t work." />
 
-      <box-note>Read more about the [Dimensions AR art project](/wares/dimensions/)!</box-note>
-
+      <box-note>Wanna learn more about the surrounding project that this image detection algorithm was just a small part of? Read more about the [Dimensions project](/wares/dimensions/)!</box-note>
     </markdown>
   </blog-page>
 </html>
