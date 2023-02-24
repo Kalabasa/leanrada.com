@@ -9,6 +9,7 @@ if [[ `git status --porcelain` ]]; then
   exit
 fi
 
+# Do generated files
 node scripts/clean-redirects.js
 node scripts/generate-redirects.js
 
