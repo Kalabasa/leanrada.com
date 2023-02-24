@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 set -e
 
+cd "$(dirname "$0")"/..
+pwd
+
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean work dir"
+  exit
+fi
+
+node scripts/clean-redirects.js
+node scripts/generate-redirects.js
+
+if [[ `git status --porcelain` ]]; then
+  echo >&2 "Unclean generated files"
   exit
 fi
 

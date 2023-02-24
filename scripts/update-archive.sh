@@ -1,5 +1,8 @@
 #!/bin/sh
 
+cd "$(dirname "$0")"/..
+pwd
+
 # Sync v3
 git worktree add update-archive-worktree 4c3b2d086b4bc099adad31f56ebf3bc4c443bffb
 

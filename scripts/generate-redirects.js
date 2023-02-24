@@ -4,6 +4,9 @@ const path = require("node:path");
 const fs = require("node:fs");
 const { argv } = require("node:process");
 
+process.chdir(path.resolve(__dirname, ".."));
+console.log(process.cwd());
+
 const redirects = [
   ["works.html", "archive/v3/works.html", "wares/"],
   ["works/**", "archive/v3/works/**.html"],
@@ -23,7 +26,7 @@ const redirects = [
   ["projects", "wares/"],
 ];
 
-const siteSrc = path.resolve(__dirname, "src", "site");
+const siteSrc = path.resolve(__dirname, "..", "src", "site");
 const dryRun = argv.includes("--dry-run");
 
 main();

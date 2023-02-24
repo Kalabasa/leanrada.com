@@ -4,12 +4,15 @@ const path = require("node:path");
 const fs = require("node:fs");
 const { argv } = require("node:process");
 
+process.chdir(path.resolve(__dirname, ".."));
+console.log(process.cwd());
+
 const generatedDirContents = [
   ".generated",
   "index.html",
 ];
 
-const siteSrc = path.resolve(__dirname, "src", "site");
+const siteSrc = path.resolve(__dirname, "..", "src", "site");
 const dryRun = argv.includes("--dry-run");
 
 main();
