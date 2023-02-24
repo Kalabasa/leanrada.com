@@ -1,32 +1,31 @@
 <html>
   <page-title title="Blog" />
   <page header-select="/blog/">
-    <div class="notice">
-      <img :src="url('construct.gif')" />
-      <p>Woops, I haven't published any articles on this blog yet!</p>
-      <p>
-        I put this stub page up for now because I needed something to balance
-        the header menu. 😅
-      </p>
-      <p>
-        I will be writing about programming, graphics, image processing,
-        generative art, and more! ✍
-      </p>
-      <p>Stay tuned!</p>
-    </div>
+      <content-header title="Writing" />
+      <div class="blog-list">
+        <script render>
+          for (const item of index){
+            yield html`<blog-list-item href="${item.href}" date="${item.date}">${item.title}</blog-list-item>`;
+          }
+        </script>
+      </div>
+      <div class="stay-tuned">Stay tuned for more! 👀</div>
   </page>
 </html>
 
+<script static>
+  const index = require("./index.generated.json");
+  index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+</script>
+
 <style>
-  .notice {
-    margin: auto;
-    padding: 120px 12px;
-    max-width: 600px;
-    height: 60vh;
-    font-size: 18px;
+  .blog-list {
+    margin: 60px auto;
+    max-width: 800px;
   }
-  .notice img {
-    display: block;
-    margin: auto;
+  .stay-tuned {
+    margin: 90px auto;
+    max-width: 800px;
+    text-align: center;
   }
 </style>
