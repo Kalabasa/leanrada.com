@@ -695,7 +695,6 @@
             width: 5vh;
             height: 5vh;
             object-fit: cover;
-            object-position: center left;
             image-rendering: pixelated;
             filter: invert(1);
         }
@@ -796,14 +795,14 @@
             border-radius: 50%;
             image-rendering: pixelated;
             object-fit: cover;
-            object-position: center left;
+            object-position: 0 0;
             filter: invert(1);
             backdrop-filter: blur(8px) invert(1);
             pointer-events: all;
         }
 
         .main-header-icon:hover {
-            object-position: center right;
+            object-position: 100% 0;
         }
 
         @media (max-width: 450px) {
@@ -910,6 +909,10 @@
             display: none;
         }
 
+        .header-icon {
+            object-position: 0 0;
+        }
+
         .header-circle:hover .curved {
             color: transparent;
             clip-path: inset(0.8ex -1ch 0);
@@ -927,7 +930,7 @@
         }
 
         .header-circle:hover .header-icon {
-            object-position: center right;
+            object-position: 20% 0;
         }
 
         .intro-text {
@@ -975,10 +978,18 @@
         .ipa {
             font-size: 85%;
             font-style: normal;
+            text-decoration: none;
+            color: inherit;
         }
 
-        .ipa>a {
-            color: inherit;
+        .ipa-text {
+            text-decoration: underline;
+        }
+
+        .ipa-icon {
+            display: inline-block;
+            transform: scale(0.6);
+            filter: brightness(8);
         }
 
         @media (max-aspect-ratio: 4/5) {
@@ -1635,7 +1646,7 @@
                 <div class="main-header-bar">
                     <a href="/" class="main-header-item select">Home</a>
                     <a href="/wares/" class="main-header-item ">Wares</a>
-                    <img class="main-header-icon" src="/icons/tadaw_sheet.png">
+                    <img class="main-header-icon" src="/icons/yay_sheet.png">
                     <a href="/art/" class="main-header-item ">Art</a>
                     <a href="/blog/" class="main-header-item ">Blog</a>
                     <div class="main-header-indicator"></div>
@@ -1656,7 +1667,7 @@
                         <div class="home-circle-text header-circle-text-small">
                             <span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-81deg); transform-origin: 0.5ch 13vh">W</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-72deg); transform-origin: 0.5ch 13vh">e</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-63deg); transform-origin: 0.5ch 13vh">l</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-54deg); transform-origin: 0.5ch 13vh">c</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-45deg); transform-origin: 0.5ch 13vh">o</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-36deg); transform-origin: 0.5ch 13vh">m</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-27deg); transform-origin: 0.5ch 13vh">e</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-18deg); transform-origin: 0.5ch 13vh"> </span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(-9deg); transform-origin: 0.5ch 13vh">t</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(0deg); transform-origin: 0.5ch 13vh">o</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(9deg); transform-origin: 0.5ch 13vh"> </span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(18deg); transform-origin: 0.5ch 13vh">m</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(27deg); transform-origin: 0.5ch 13vh">y</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(36deg); transform-origin: 0.5ch 13vh"> </span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(45deg); transform-origin: 0.5ch 13vh">s</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(54deg); transform-origin: 0.5ch 13vh">i</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(63deg); transform-origin: 0.5ch 13vh">t</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(72deg); transform-origin: 0.5ch 13vh">e</span><span class="curved" style="transform: translateX(calc(13vh - 0.5ch)) rotate(81deg); transform-origin: 0.5ch 13vh">!</span>
                         </div>
-                        <img class="home-circle-icon header-icon" src="/icons/tadah_sheet.png">
+                        <img class="home-circle-icon header-icon" src="/icons/yay_sheet.png">
                     </div>
 
                     <span class="intro-text">
@@ -1665,7 +1676,7 @@
                         <br>
                         <span class="intro-line">
                             I'm Lean
-                            <span class="ipa">[<a target="_blank" href="http://ipa-reader.xyz/?text=li%CB%88%C9%99n">liˈən</a>]</span>,
+                            <a target="_blank" class="ipa" href="https://ipa-reader.xyz/?text=lian">/<span class="ipa-text">liˈan</span>/<span class="ipa-icon">🔊</span></a>,
                         </span>
                         <br>
                         <span class="intro-line"> software engineer </span>
@@ -2138,7 +2149,49 @@
         })();
     </script>
     <script>
-        document.body.classList.toggle("start-from-top", window.scrollY < 100);
+        (() => {
+            document.body.classList.toggle("start-from-top", window.scrollY < 100);
+
+            const yayIcon = document.querySelector(".header-icon");
+            const sayLean = new Audio("/lean.mp3");
+            let sayTime = 0;
+
+            const ipa = document.querySelector(".ipa");
+            ipa.addEventListener("click", (event) => {
+                if (sayLean.readyState >= /*HAVE_ENOUGH_DATA*/ 4) {
+                    event.preventDefault();
+                    sayLean.play();
+                }
+            });
+
+            function animateYay() {
+                const t = (Date.now() - sayTime) / (sayLean.duration * 1000);
+
+                if (t >= 1) {
+                    yayIcon.style.objectPosition = null;
+                } else {
+                    const frame = Math.floor(lerp(0, 3, t));
+                    if (frame >= 0 && frame <= 2) {
+                        yayIcon.style.objectPosition = 40 + (frame % 3) * 20 + "% 0";
+                    } else if (frame > 2) {
+                        yayIcon.style.objectPosition = "40% 0";
+                    } else {
+                        yayIcon.style.objectPosition = null;
+                    }
+                    requestAnimationFrame(animateYay);
+                }
+            }
+
+            sayLean.addEventListener("play", () => {
+                // hardcoded offset
+                sayTime = Date.now() + 300;
+                animateYay();
+            });
+
+            function lerp(a, b, t) {
+                return a + (b - a) * t;
+            }
+        })();
     </script>
 </body>
 </html>
