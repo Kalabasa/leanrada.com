@@ -21,13 +21,13 @@ fi
 # Build project
 yarn install
 yarn clean
-yarn build
+yarn build-prod
 
 # Update prod in a worktree. master == prod
 git worktree add -f prod master
 
 # Copy build files to prod
-rsync -Pr --del docs/ prod/docs
+rsync -Pr --del out/site prod/docs
 
 # Commit prod changes
 cd prod

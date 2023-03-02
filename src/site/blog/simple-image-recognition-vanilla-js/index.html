@@ -9,7 +9,7 @@
 
       <blog-post-info date="25 Feb 2023" read-mins="7" />
 
-      Hello reader! I'll write about an [**image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) (or image classification) problem I faced while making an [augmented reality art project](/wares/dimensions/).
+      Hello reader! I’ll write about an [**image recognition**](https://en.wikipedia.org/wiki/Computer_vision#Recognition) (or image classification) problem I faced while making an [augmented reality art project](/wares/dimensions/).
 
       <blog-media
         alt="Image recognition illustration"
@@ -23,13 +23,13 @@
         :src="url('demo.mp4')"
         caption="The app should recognize when the target art piece has been aligned." />
 
-      There exist many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. There are even libraries that can solve this out of the box. However, my solution didn't use any of those. I couldn’t resist the challenge of rolling out my own while learning something along the way!
+      There exist many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. There are even libraries that can solve this out of the box. However, my solution didn’t use any of those. I couldn’t resist the challenge of rolling out my own while learning something along the way!
 
       <box-note>**TL;DR** - It converts the camera image into a feature vector and then compares that against a predefined target reference.</box-note>
 
       ## Color and illumination theory 
 
-      First, let's think about the problem. We get an image from the camera feed, read some pixels, then classify whether it matches a predefined target image or not. Everything starts with a camera image.
+      First, let’s think about the problem. We get an image from the camera feed, read some pixels, then classify whether it matches a predefined target image or not. Everything starts with a camera image.
       
       However, cameras don’t actually pick up the *true color* of an object. The *perceived color* is affected by room lighting, camera quality, and other factors.
 
@@ -42,9 +42,9 @@
  
       We need to somehow "normalize" the input image so that calculations would be robust against lighting variances.
 
-      To begin solving the normalization problem, I've come up with a model for the perceived color, roughly based on graphics programming illumination models.
+      To begin solving the normalization problem, I’ve come up with a model for the perceived color, roughly based on graphics programming illumination models.
 
-      Here's the equation:
+      Here’s the equation:
 
       ```
       PC = TC * a + b
@@ -104,7 +104,7 @@ function getRegionAverageColor(imageData, rect) {
 }`" />
       Refer to these MDN articles [Manipulating_video_using_canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas) and [ImageData](https://developer.mozilla.org/en-US/docs/Web/API/ImageData) for details about the Web APIs.
 
-      After getting the colors, we can start processing them. First, the top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. The order doesn't really matter. This produces two difference colors.
+      After getting the colors, we can start processing them. First, the top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. The order doesn’t really matter. This produces two difference colors.
 
       Let’s call the resulting colors `D1` and `D2`:
 
@@ -154,7 +154,7 @@ const d2 = {
         N2 = D2 / max(|D1|, |D2|)
         ```
   
-        Here's the code for that:
+        Here’s the code for that:
 
         <code-block :code="`\
 // Get 'max(|D1|, |D2|)'
@@ -186,7 +186,7 @@ const n2 = {
 
       As you can see, the final values `N1` and `N2` are not affected by the lighting parameters at all. They are purely derived from true color. <small>According to the model anyway.</small>
 
-      The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various smartphone cameras. The algorithm will be working purely on true color data.
+      The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various phone cameras. The algorithm will be working purely on true color data.
 
       <blog-media
         :src="url('dimensions_tester.jpg')"
@@ -194,7 +194,7 @@ const n2 = {
 
       ## Feature vectors 
 
-      Now, let's forget about "colors" for a moment and start looking at the individual RGB channel values. Each color has three values corresponding to the red, green, and blue channels. These are simply numbers, interpreted as colors by computer display systems.
+      Now, let’s forget about "colors" for a moment and start looking at the individual RGB channel values. Each color has three values corresponding to the red, green, and blue channels. These are simply numbers, interpreted as colors by computer display systems.
 
       <blog-media
         :src="url('rgb.png')"
@@ -202,7 +202,7 @@ const n2 = {
 
       So from the normalized colors `N1` and `N2`, we can get their component values. We get six numerical values, three from each.
     
-      These six numbers can be rolled into one combined series of numbers, which we'll call the **feature vector** of the image, that is, a set of numbers that *summarizes* the image.
+      These six numbers can be rolled into one combined series of numbers, which we’ll call the **feature vector** of the image, that is, a set of numbers that *summarizes* the image.
 
       <blog-media
         alt="diagram"
@@ -279,23 +279,23 @@ if (vectorDistance < THRESHOLD) {
   // Image recognized!
 }`" />
 
-      If the distance between the two vectors is small enough (by some threshold), then it's a match!
+      If the distance between the two vectors is small enough (by some threshold), then it’s a match!
 
-      And that's it! That's the algorithm. Convert the input image into a feature vector then compare that against a precomputed target vector. The image detection code totals less than 200 lines and doesn’t require an external library! It was launched as part of the AR art app that accompanied the exhibit.
+      And that’s it! That’s the algorithm. Convert the input image into a feature vector then compare that against a precomputed target vector. The image detection code totals less than 200 lines and doesn’t require an external library! It was launched as part of the AR art app that accompanied the exhibit.
 
       ## Conclusion
 
       In this post, I wrote about my thinking process and showed some code for how one might develop their own image detection algorithm. I hope this post was useful to you!
       
-      My solution was tailored to the specific target images that I had, but nothing's preventing it from being generalized to other image shapes and sizes.
+      My solution was tailored to the specific target images that I had, but nothing’s preventing it from being generalized to other image shapes and sizes.
 
-      The resulting algorithm was straightforward, has little code, and was very fast. It can run in real-time on a smartphone, on every frame of its camera feed for example.
+      The resulting algorithm was straightforward, has little code, and was very fast. It can run in real-time on a phone, on every frame of its camera feed for example.
 
       ### Areas for improvement
 
-      One big downside of this approach was that it had no regard for *positioning*, whether it was a 2D or a 3D position. The input image had to be in the exact orientation as the target image. There's no object tracking or localization.
+      One big downside of this approach was that it had no regard for *positioning*, whether it was a 2D or a 3D position. The input image had to be in the exact orientation as the target image. There’s no object tracking or localization.
       
-      For my project, I didn't need positioning as I had a specifically designed user flow that forces an alignment. But for general use cases, one may need to add additional steps like looping through subsections of the image.
+      For my project, I didn’t need positioning as I had a specifically designed user flow that forces an alignment. But for general use cases, one may need to add additional steps like looping through subsections of the image.
 
       While I have tested the robustness of the normalization in various conditions, it may not handle extreme lighting conditions, such as a very dim environment or a bright neon-lighted environment where the white balance is unnatural. Furthermore, irregular lighting conditions like shadows or reflections on the surface would likely degrade its accuracy.
       
@@ -305,7 +305,7 @@ if (vectorDistance < THRESHOLD) {
 
       You may try the finished product here!
       
-      Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.
+      Simply open this page on a desktop, and then point your phone camera to the following image, assuming your camera app has a QR code scanning feature.
 
       <blog-media
         type="bleed"
