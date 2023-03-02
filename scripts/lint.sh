@@ -4,5 +4,5 @@ set -e
 cd "$(dirname "$0")"/..
 pwd
 
-yarn build
-npx textlint -f pretty-error "docs/wares/*/**/*.html" "docs/blog/*/**/*.html"
+yarn build-dev > /dev/null
+npx textlint -o out/lint.txt --no-color -f pretty-error "out/site/wares/*/**/*.html" "out/site/blog/*/**/*.html"

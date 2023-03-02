@@ -9,11 +9,13 @@
     "sharp": "^0.31.3"
   },
   "scripts": {
-    "build": "NODE_ENV=production compose-html --config compose-html.json",
+    "build": "compose-html --config compose-html.json",
+    "build-dev": "NODE_ENV=development yarn build",
+    "build-prod": "NODE_ENV=production yarn build",
     "dev": "yarn watch & yarn serve",
-    "watch": "chokidar 'src/**' -c 'compose-html --config compose-html.json' --initial --throttle 2000",
-    "serve": "python3 -m http.server --directory docs",
-    "clean": "rimraf docs"
+    "watch": "chokidar 'src/**' -c 'yarn build-dev' --initial --throttle 2000",
+    "serve": "python3 -m http.server --directory out/site",
+    "clean": "rimraf out"
   },
   "devDependencies": {
     "chalk": "4",
