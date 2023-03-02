@@ -1,0 +1,1245 @@
+<html>
+<head>
+    <title>First post! · leanrada.com</title>
+    <script defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        @font-face {
+            font-family: "Space Mono";
+            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Space Mono";
+            font-style: italic;
+            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Miriam Libre";
+            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Miriam Libre";
+            font-weight: bold;
+            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+        }
+
+        :root {
+            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+            --bg-clr: #111;
+            --card-clr: #222;
+            --clr0-light: #54f8c1;
+            --clr0: #0ad591;
+            --clr0-dark: #018b5d;
+            --clr1: #df2063;
+
+            --text-clr: #fff;
+            --text2-clr: #999;
+
+            --ease: cubic-bezier(0.8, 0, 1, 1);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--default-font, monospace);
+            background-color: var(--bg-clr, #111);
+            color: var(--text-clr, #fff);
+            overflow-x: hidden;
+        }
+
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .page-wrapper-content {
+            flex: 1 1 auto;
+        }
+    </style>
+    <style>
+        nebula-client>canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <style>
+        .home-link {
+            text-decoration: none;
+        }
+
+        .home-link-icon {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        .home-link-icon:hover {
+            filter: invert(1);
+        }
+    </style>
+    <style>
+        .main-footer {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            gap: 60px;
+            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+            font-size: 18px;
+            font-weight: bold;
+            background: var(--clr0);
+            color: #000;
+            overflow: hidden;
+            content-visibility: auto;
+            contain-intrinsic-height: 220x;
+        }
+
+        .main-footer-links-heading {
+            margin: 0 0 18px;
+            font-size: inherit;
+        }
+
+        .main-footer-line {
+            margin: 0 0 18px;
+        }
+
+        .main-footer-nav {
+            color: #000;
+        }
+
+        .main-footer-nav:hover {
+            color: #fff;
+        }
+
+        .main-footer-content-part {
+            z-index: 1;
+        }
+
+        .main-footer-nebula {
+            position: absolute;
+            left: -30%;
+            top: -30%;
+            width: 160%;
+            height: 160%;
+            z-index: 0;
+        }
+
+        .main-footer-top-btn {
+            z-index: 2;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 72px;
+            height: 36px;
+            padding-right: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            border-bottom-left-radius: 18px;
+            background: var(--bg-clr);
+            color: var(--clr0-light);
+            font: inherit;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .main-footer-top-btn:hover {
+            color: var(--clr1);
+        }
+
+        .main-footer-top-btn::before {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 36px;
+            height: 18px;
+            border-top-right-radius: 18px;
+            transform: translateX(-72px);
+            box-shadow: 18px 0 0 var(--bg-clr);
+        }
+
+        @media (max-width: 700px) {
+            .main-footer {
+                flex-direction: column-reverse;
+            }
+        }
+    </style>
+    <style>
+        .main-header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            padding: 0 calc(25% - 150px);
+            z-index: 100;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        .main-header.float {
+            position: fixed;
+        }
+
+        .main-header-bar {
+            position: relative;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: flex-end;
+            height: 100%;
+        }
+
+        .main-header-item {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 6ch;
+            height: 36px;
+            padding: 0 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+            color: #fff;
+            backdrop-filter: blur(8px);
+            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+            background-repeat: no-repeat;
+            background-size: 220% 100%;
+            background-position: 115%;
+            pointer-events: all;
+            transition: background-position 0.2s var(--ease);
+        }
+
+        .main-header-item:hover {
+            background-image: linear-gradient(60deg,
+                    #fff2 50%,
+                    #fff 50%,
+                    #fff 60%,
+                    transparent 60%);
+            background-position: 0%;
+        }
+
+        .main-header-item.select {
+            background: #fff2;
+        }
+
+        .main-header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            image-rendering: pixelated;
+            object-fit: cover;
+            object-position: 0 0;
+            filter: invert(1);
+            backdrop-filter: blur(8px) invert(1);
+            pointer-events: all;
+        }
+
+        .main-header-icon:hover {
+            object-position: 100% 0;
+        }
+
+        @media (max-width: 450px) {
+            .main-header-icon {
+                display: none;
+            }
+        }
+
+        .main-header-indicator {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            left: 50%;
+            top: calc(100% + 12px);
+            transform: translate(-50%, -50%);
+            /* border acts as extended touch area */
+            border: solid 6mm transparent;
+            border-left-width: 45vw;
+            border-right-width: 45vw;
+            border-radius: 50%;
+            background: #fff;
+            background-clip: padding-box;
+            opacity: 0;
+            transition: opacity 50ms;
+        }
+
+        .main-header.hidden .main-header-indicator {
+            opacity: 0.8;
+            pointer-events: all;
+        }
+    </style>
+    <style>
+        .blog-page {
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .content {
+            padding: 60px 18px;
+            width: 100%;
+            max-width: 700px;
+            font-family: var(--reading-font, sans-serif);
+            font-size: 18px;
+            line-height: 2.2;
+            letter-spacing: 0.02em;
+            color: #ddd;
+            box-sizing: border-box;
+        }
+
+        .markdown>h1,
+        .markdown>h2,
+        .markdown>h3,
+        .markdown>h4,
+        .markdown>h5,
+        .markdown>h6 {
+            font-family: var(--default-font, monospace);
+            font-weight: lighter;
+            font-style: italic;
+            line-height: 1.6;
+            letter-spacing: 0.04em;
+            margin: 36px 0;
+        }
+
+        .markdown>h1 {
+            text-align: center;
+            font-size: 200%;
+        }
+
+        .markdown>h2 {
+            font-size: 150%;
+        }
+
+        .markdown>h3,
+        .markdown>h4,
+        .markdown>h5,
+        .markdown>h6 {
+            font-size: 120%;
+        }
+
+        .markdown>p {
+            margin: 36px 0;
+        }
+
+        .markdown>hr {
+            width: 36px;
+            margin: 90px auto;
+            border: solid 1.5px #ccc;
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .markdown code:not([class]):not([class]) {
+            display: inline-block;
+            padding: 0 6px;
+            border-radius: 6px;
+            font-family: var(--default-font, monospace);
+            background: var(--card-clr);
+        }
+
+        .markdown>pre:not([class])>code:not([class]) {
+            display: block;
+            padding: 18px;
+            border-radius: 18px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .markdown>blockquote {
+            position: relative;
+            margin: 0;
+            padding: 18px 24px;
+            border-radius: 18px;
+            border: solid 1px var(--clr0);
+            font-size: 21px;
+        }
+
+        .markdown>blockquote::before {
+            content: "";
+            position: absolute;
+            right: 100%;
+            top: 0;
+            height: 24px;
+            width: 24px;
+            border-bottom: solid 1px var(--clr0);
+            box-sizing: border-box;
+        }
+
+        .markdown>blockquote::after {
+            content: "";
+            position: absolute;
+            right: 100%;
+            top: 24px;
+            bottom: 18px;
+            width: 24px;
+            border-top-right-radius: 24px;
+            border: solid var(--clr0);
+            border-width: 1px 1px 0 0;
+            box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+            box-sizing: border-box;
+        }
+
+        .markdown>blockquote> :first-child {
+            margin-top: 0;
+        }
+
+        .markdown>blockquote> :last-child {
+            margin-bottom: 0;
+        }
+
+        .markdown>blockquote cite {
+            display: block;
+            margin-top: 12px;
+            font-size: 15px;
+            font-style: inherit;
+        }
+
+        .markdown>blockquote cite::before {
+            content: "—";
+        }
+
+        .markdown>iframe {
+            max-width: calc(100vw - 18px);
+            border: none;
+            border-radius: 18px;
+            background: #fff;
+        }
+
+        .markdown .center {
+            text-align: center;
+        }
+
+        .markdown .center-flex {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+        .markdown .bleed {
+            position: relative;
+            left: 50%;
+            width: 100vh;
+            max-width: max(min(100vw, 800px), 80vw);
+            transform: translateX(-50%);
+        }
+
+        /* todo: convert to component <caption>, reuse across <blog-media> */
+        .markdown .caption {
+            display: block;
+            font-size: 15px;
+        }
+    </style>
+    <style>
+        .blog-post-info {
+            margin: 24px 0 0;
+            font-family: var(--default-font);
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            filter: grayscale(1) contrast(4);
+            opacity: 0.8;
+        }
+    </style>
+    <style>
+        .text-with-bg-span {
+            display: inline;
+            margin: 0;
+            padding: 0.7em;
+            padding: 0.35lh;
+            border-radius: 18px;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+            font: inherit;
+            background: var(--text-with-bg-color);
+        }
+    </style>
+    <style>
+        .blog-header {
+            isolation: isolate;
+            margin-top: 60px;
+            position: relative;
+            left: 50%;
+            height: 600px;
+            width: max(800px, 60vw);
+            transform: translateX(-50%);
+            box-sizing: border-box;
+        }
+
+        .blog-header-title {
+            position: relative;
+            max-width: 800px;
+            font-family: var(--default-font);
+            font-size: 36px;
+            font-weight: bold;
+            font-style: italic;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .blog-header-title-inner {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        /* Wrap lines in an angle */
+        .blog-header-title::before {
+            content: "";
+            width: 50%;
+            height: 600px;
+            float: right;
+            shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+
+        .blog-header-hero {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 18px;
+            background: cyan;
+            z-index: -1;
+        }
+
+        .blog-header-decor {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            fill: var(--bg-clr);
+            z-index: 1;
+        }
+
+        @media (max-width: 800px) {
+            .blog-header {
+                width: 100vw;
+                width: 100svw;
+                height: 400px;
+                padding-right: 36px;
+            }
+
+            .blog-header-title {
+                font-size: clamp(24px, 20px + 2vw, 36px);
+            }
+
+            .blog-header-title::before {
+                content: none;
+            }
+        }
+    </style>
+    <script>
+        (() => {
+            globalThis.BaseElement = createBaseElement(HTMLElement);
+
+            const lifecycleListeners = Symbol("lifecycleListeners");
+
+            function createBaseElement(superClass) {
+                return class BaseElement extends superClass {
+                    constructor() {
+                        super();
+                        this[lifecycleListeners] = [];
+                    }
+                    connectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.connect());
+                    }
+                    disconnectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.disconnect());
+                    }
+
+                    /**
+                     * @param factory {() => () => void}
+                     */
+                    addLifecycleListener(factory) {
+                        let cleanup = () => {};
+                        const connect = () => (cleanup = factory());
+                        const disconnect = () => cleanup();
+
+                        this[lifecycleListeners].push({
+                            connect,
+                            disconnect
+                        });
+
+                        if (this.isConnected) {
+                            connect();
+                        }
+                    }
+
+                    /**
+                     * @param selector {string}
+                     */
+                    asyncQuerySelector(selector) {
+                        const obj = {
+                            exists: false,
+                            element: null,
+                        };
+
+                        obj.promise = new Promise((resolve) => {
+                            const observer = new MutationObserver(() => {
+                                obj.element = this.querySelector(selector);
+                                if (obj.element) {
+                                    resolve(obj.element);
+                                    obj.exists = true;
+                                    observer.disconnect();
+                                }
+                            });
+
+                            this.addLifecycleListener(() => {
+                                observer.observe(this, {
+                                    childList: true,
+                                    subtree: true
+                                });
+                                return () => observer.disconnect();
+                            });
+                        });
+
+                        return obj;
+                    }
+
+                    /**
+                     * @param target {Element}
+                     * @param event {string}
+                     * @param callback {Function}
+                     */
+                    aliveListener(target, event, callback) {
+                        this.addLifecycleListener(() => {
+                            target.addEventListener(event, callback);
+                            return () => target.removeEventListener(event, callback);
+                        });
+                    }
+
+                    /**
+                     * @param callbacks {object}
+                     * @param callbacks.show {Function}
+                     * @param callbacks.hide {Function}
+                     */
+                    visibilityListener({
+                        show,
+                        hide
+                    }) {
+                        let isShowing = false;
+
+                        const observer = new IntersectionObserver((entries) => {
+                            for (const entry of entries) {
+                                if (entry.target !== this) continue;
+                                if (isShowing !== entry.isIntersecting) {
+                                    isShowing = entry.isIntersecting;
+                                    if (isShowing) {
+                                        show();
+                                    } else {
+                                        hide();
+                                    }
+                                }
+                            }
+                        });
+
+                        this.addLifecycleListener(() => {
+                            isShowing = isInViewport(this);
+                            if (isShowing) show();
+                            observer.observe(this);
+                            return () => {
+                                observer.disconnect();
+                                if (isShowing) hide();
+                                isShowing = false;
+                            };
+                        });
+                    }
+                };
+            }
+
+            window.mousePosition = {
+                x: 0,
+                y: 0
+            };
+            document.addEventListener(
+                "DOMContentLoaded",
+                () => {
+                    document.body.addEventListener("mousemove", (event) => {
+                        window.mousePosition.x = event.clientX;
+                        window.mousePosition.y = event.clientY;
+                    });
+                }, {
+                    once: true
+                }
+            );
+        })();
+
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.right > 0 &&
+                rect.bottom > 0 &&
+                rect.left < window.innerWidth &&
+                rect.top < window.innerHeight
+            );
+        }
+    </script>
+    <script>
+        (() => {
+            customElements.define(
+                "nebula-client",
+                class Nebula extends BaseElement {
+                    constructor() {
+                        super();
+
+                        this.asyncCanvas = this.asyncQuerySelector("canvas");
+                        this.context = null;
+                        this.noise = null;
+
+                        this.gridWidth = 30;
+                        this.gridHeight = 30;
+                        this.palette = ["#ffffff"];
+
+                        this.cellWidth = 1; // placeholder
+                        this.cellHeight = 1; // placeholder
+
+                        this.useMouse = false;
+                        this.mouseCell = null;
+
+                        this.lastT = 0;
+                        this.startT = 0;
+                        this.loopStartT = 0;
+
+                        this.isVisible = false;
+                        this.visibilityListener({
+                            show: () => {
+                                this.isVisible = true;
+                                this.startLoop();
+                            },
+                            hide: () => (this.isVisible = false),
+                        });
+                    }
+
+                    connectedCallback() {
+                        super.connectedCallback();
+
+                        this.useMouse = this.getAttribute("mouse") != null;
+
+                        const gridWidth = this.getAttribute("width");
+                        if (gridWidth) {
+                            this.gridWidth = Number.parseInt(gridWidth);
+                        }
+
+                        const gridHeight = this.getAttribute("height");
+                        if (gridHeight) {
+                            this.gridHeight = Number.parseInt(gridHeight);
+                        }
+
+                        const paletteAttr = this.getAttribute("palette");
+                        if (paletteAttr) {
+                            this.palette = paletteAttr.split(" ");
+                        }
+                    }
+
+                    startLoop() {
+                        this.loopStartT = this.lastT = this.getT();
+                        this.loop();
+                    }
+
+                    async loop() {
+                        if (!this.isVisible) {
+                            return;
+                        }
+
+                        if (typeof perlinNoise3d === "undefined") {
+                            setTimeout(() => this.loop(), 200);
+                            return;
+                        } else if (!this.noise) {
+                            this.noise = initNoise();
+                            this.startT = this.getT();
+                        }
+
+                        const canvas =
+                            this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
+
+                        // initialize
+                        if (!this.context) {
+                            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+                            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+                            canvas.width = this.gridWidth;
+                            canvas.height = this.gridHeight;
+                            canvas.style.filter += ` blur(${
+              Math.min(this.cellWidth, this.cellHeight) * 1.25
+            }px)`;
+                            this.context = canvas.getContext("2d");
+                        }
+
+                        this.draw(canvas, this.context);
+
+                        requestAnimationFrame(() => this.loop());
+                    }
+
+                    /**
+                     * @param canvas {HTMLCanvasElement}
+                     * @param context {CanvasRenderingContext2D}
+                     */
+                    draw(canvas, context) {
+                        const t = this.getT();
+                        if (t <= this.lastT) return;
+
+                        const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+                        this.lastT = t;
+
+                        const {
+                            noise,
+                            gridWidth,
+                            gridHeight,
+                            palette,
+                            cellWidth,
+                            cellHeight,
+                        } = this;
+                        const halfGridWidth = gridWidth / 2;
+                        const halfGridHeight = gridHeight / 2;
+
+                        this.mouseCell = null;
+                        // mousePosition from lib/common
+                        if (this.useMouse && window.mousePosition) {
+                            const {
+                                x,
+                                y
+                            } = window.mousePosition;
+                            const bounds = canvas.getBoundingClientRect();
+                            if (
+                                bounds.left < x &&
+                                x < bounds.right &&
+                                bounds.top < y &&
+                                y < bounds.bottom
+                            ) {
+                                this.mouseCell = {
+                                    x: (x - bounds.x) / cellWidth,
+                                    y: (y - bounds.y) / cellHeight,
+                                };
+                            }
+                        }
+
+                        const paletteLength = palette.length;
+                        const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+                        const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+                        for (let i = 0; i < gridWidth; i++) {
+                            for (let j = 0; j < gridHeight; j++) {
+                                const mouseProximity =
+                                    this.mouseCell == null ?
+                                    0 :
+                                    1 -
+                                    sigmoid(
+                                        Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                                    );
+
+                                const xy = [
+                                    1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                                    1000 +
+                                    (j - halfGridHeight) * yScale +
+                                    Math.cos(t * 0.007) * 2 +
+                                    -mouseProximity,
+                                ];
+                                const p1 = noise.get(...xy, t * 0.03);
+                                const p2 = noise.get(...xy, t * 0.03 + 0.5);
+                                // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+                                const p = p1 + p2;
+
+                                const paletteIndex = Math.floor(paletteLength * p);
+
+                                const rgb = palette[paletteIndex];
+                                const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                                    .toString(16)
+                                    .padStart(2, "0");
+
+                                context.fillStyle = `${rgb}${a}`;
+                                context.fillRect(i, j, 1, 1);
+                            }
+                        }
+                    }
+
+                    getT() {
+                        const t = (Date.now() * 30) / 1000;
+                        // make it smoother while interacting
+                        return this.mouseCell ? t : Math.floor(t);
+                    }
+                }
+            );
+
+            function initNoise() {
+                const noise = new perlinNoise3d();
+                noise.perlin_octaves = 1; // ?? defaults
+                noise.perlin_amp_falloff = 1;
+                return noise;
+            }
+
+            function sigmoid(x) {
+                return 1 / (1 + Math.exp(-x));
+            }
+        })();
+    </script>
+</head>
+
+
+<body>
+
+    <div class="page-wrapper">
+        <header class="main-header">
+            <div class="main-header-bar">
+                <a href="/" class="main-header-item ">Home</a>
+                <a href="/wares/" class="main-header-item ">Wares</a>
+                <img class="main-header-icon" src="/icons/yay_sheet.png">
+                <a href="/art/" class="main-header-item ">Art</a>
+                <a href="/blog/" class="main-header-item ">Blog</a>
+                <div class="main-header-indicator"></div>
+            </div>
+        </header>
+        <div class="page-wrapper-content">
+
+            <div class="blog-page">
+                <div class="content">
+
+                    <!-- prettier-ignore -->
+                    <div class="markdown">
+                        <div class="blog-header">
+                            <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                                <h1 class="text-with-bg-span blog-header-title-inner">
+                                    First post!!111
+                                </h1>
+                            </div>
+                            <img srcset="/blog/first-post/hero_400.generated.png 400w,/blog/first-post/hero_800.generated.png 800w,/blog/first-post/hero_894.generated.png 894w,/blog/first-post/hero_1146.generated.png 1146w,/blog/first-post/hero_1400.generated.png 1400w" sizes="(max-width:400px) 400px,not (min-width:800px) 800px,(max-width:1117px) 894px,(max-width:1433px) 1146px, 1400px" class="blog-header-hero" src="/blog/first-post/hero.png" spec="100% [800) 80%">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                                <path></path>
+                            </svg>
+                        </div>
+
+                        <div class="blog-post-info">
+                            📅 24 Feb 2023 · 📖 1 min read
+                        </div>
+
+                        <p>I’m starting a blog!</p>
+                        <p>I’ve done some blogging in the past (for gamedev), and I already do write-ups for my projects, so I think it’d be good to officially keep a blog!</p>
+                        <p>I have some ideas to populate the first few posts, then we’ll see how it goes from there.</p>
+                        <p>Watch this space!
+                        </p>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+        <footer class="main-footer">
+            <div class="main-footer-content-part">
+                <p class="main-footer-line">
+                    <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+                    <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
+                    <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
+                    <a target="_self" class="main-footer-nav" href="/blog/">Blog</a>
+                </p>
+                <p class="main-footer-line">(C) 2023 Lean Rada</p>
+            </div>
+            <div class="main-footer-content-part">
+                <h2 class="main-footer-links-heading">On the web</h2>
+                <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
+                    <img class="home-link-icon" src="/icons/linkedin.png">
+                </a>
+                <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
+                    <img class="home-link-icon" src="/icons/codepen.png">
+                </a>
+                <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+                    <img class="home-link-icon" src="/icons/stackoverflow.png">
+                </a>
+                <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
+                    <img class="home-link-icon" src="/icons/github.png">
+                </a>
+            </div>
+
+
+            <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+                <canvas style="filter: contrast(1.5)">
+                </canvas></nebula-client>
+            <button class="main-footer-top-btn" aria-label="Back to top">^</button>
+        </footer>
+    </div>
+    <script>
+        (() => {
+            const topBtn = document.querySelector(".main-footer-top-btn");
+            topBtn.addEventListener("click", () => {
+                window.scrollTo(0, 0);
+            });
+        })();
+    </script>
+    <script>
+        (() => {
+            const mainHeader = document.querySelector(".main-header");
+            const indicator = document.querySelector(".main-header-indicator");
+
+            let currentY = 0;
+            let currentYTarget = 0;
+
+            let mouseHovering = false;
+
+            let isTouch = false;
+            let lastScrollY = window.scrollY;
+            let lastCursorY = 0;
+            window.addEventListener("scroll", debounce(onScroll));
+            window.addEventListener("mousemove", debounce(onMouseMove, 100));
+            window.addEventListener("touchstart", onWindowTouchStart);
+            window.addEventListener("touchmove", onWindowTouchMove);
+            mainHeader.addEventListener("touchstart", onTouchStart);
+
+            function onScroll(event) {
+                const dy = window.scrollY - lastScrollY;
+
+                // move with the page
+                currentY -= dy;
+                if (currentY > 0) {
+                    currentY = 0;
+                } else if (currentY < -mainHeader.offsetHeight) {
+                    currentY = -mainHeader.offsetHeight;
+                }
+
+                currentYTarget = currentY;
+                updateDOM();
+
+                lastScrollY = window.scrollY;
+            }
+
+            function onMouseMove(event) {
+                if (isTouch) return;
+
+                const dy = event.clientY - lastCursorY;
+
+                // show when mouse goes near the top
+                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+                    currentYTarget = 0;
+                    mouseHovering = true;
+                } else if (
+                    mouseHovering &&
+                    dy > 0 &&
+                    event.clientY > mainHeader.offsetHeight * 4
+                ) {
+                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+                    mouseHovering = false;
+                }
+
+                updateDOM();
+                lastCursorY = event.clientY;
+            }
+
+            function onWindowTouchStart(event) {
+                isTouch = true;
+                lastCursorY = event.touches[0].clientY;
+            }
+
+            function onWindowTouchMove(event) {
+                const dy = event.touches[0].clientY - lastCursorY;
+
+                // move with touch but only if at edge
+                if (window.scrollY <= 0 && dy > 0) {
+                    currentY += dy;
+                    if (currentY >= 0) {
+                        currentY = 0;
+                        document.body.style.overscrollBehaviorY = null;
+                    } else if (currentY < 0) {
+                        document.body.style.overscrollBehaviorY = "none";
+                    }
+
+                    currentYTarget = currentY;
+                    updateDOM();
+                }
+
+                lastCursorY = event.touches[0].clientY;
+            }
+
+            function onTouchStart(event) {
+                currentYTarget = 0;
+                updateDOM();
+                console.log("onTouchStart");
+            }
+
+            const updateDOM = debounce(() => {
+                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+
+                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
+                mainHeader.classList.toggle("hidden", isHidden);
+
+                if (Math.abs(currentY - currentYTarget) > 1) {
+                    currentY += (currentYTarget - currentY) * 0.2;
+                    requestAnimationFrame(updateDOM);
+                } else {
+                    currentY = currentYTarget;
+                }
+            });
+
+            if (mainHeader.classList.contains("prehide")) {
+                document.body.style.overscrollBehaviorY = "none";
+                currentY = currentYTarget = -mainHeader.offsetHeight;
+                updateDOM();
+            }
+
+            function debounce(fn, ms = 0) {
+                let recentlyFired = false;
+                return (...args) => {
+                    if (recentlyFired) return;
+                    recentlyFired = true;
+                    if (ms === 0) {
+                        requestAnimationFrame(() => (recentlyFired = false));
+                    } else {
+                        setTimeout(() => (recentlyFired = false), ms);
+                    }
+                    return fn(...args);
+                };
+            }
+        })();
+    </script>
+    <script>
+        (() => {
+            const header = document.querySelector(".blog-header");
+            const hero = document.querySelector(".blog-header-hero");
+            const title = header.querySelector(".blog-header-title");
+            const titleInner = title.querySelector(".blog-header-title-inner");
+            const decor = header.querySelector(".blog-header-decor");
+            const decorPath = decor.querySelector("path");
+
+            updateDecorations();
+            const observer = new ResizeObserver(() =>
+                // Wait for layout
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => updateDecorations())
+                )
+            );
+            observer.observe(header);
+
+            // Add inner corner radius decorations using SVG
+            function updateDecorations() {
+                const radius = 18;
+
+                const parent = header.getBoundingClientRect();
+                const heroRect = hero.getBoundingClientRect();
+
+                const range = document.createRange();
+                range.selectNode(titleInner);
+                const rects = [...range.getClientRects()];
+
+                const offsetLeft = -parent.left;
+                const offsetTop = -parent.top;
+                decor.setAttribute("width", Math.floor(heroRect.width));
+                decor.setAttribute("height", Math.floor(heroRect.height));
+
+                const pathCommands = [];
+                // Find intersections between title rects, find and decorate the corners
+                // O(n^2), but n is ~3, so total of ~9 iterations, is fine
+                for (let i = 0; i < rects.length; i++) {
+                    const r1 = rects[i];
+                    for (let j = i + 1; j < rects.length; j++) {
+                        const r2 = rects[j];
+                        if (!rectsIntersect(r1, r2)) continue;
+
+                        // Technically there are four potential inner corners
+                        // But for this specific design, top-left & bottom-left won't be possible
+
+                        // Top right corner
+                        if (r1.top < r2.top - radius && r1.right < r2.right - radius) {
+                            pathCommands.push(
+                                drawInnerCorner(
+                                    offsetLeft + r1.right - 1,
+                                    offsetTop + r2.top + 1,
+                                    offsetLeft + Math.min(r1.right + radius, r2.right - radius),
+                                    offsetTop + Math.max(r2.top - radius, r1.top + radius)
+                                )
+                            );
+                        } else if (r1.top > r2.top + radius && r1.right > r2.right + radius) {
+                            pathCommands.push(
+                                drawInnerCorner(
+                                    offsetLeft + r2.right - 1,
+                                    offsetTop + r1.top + 1,
+                                    offsetLeft + Math.min(r2.right + radius, r1.right - radius),
+                                    offsetTop + Math.max(r1.top - radius, r2.top + radius)
+                                )
+                            );
+                        }
+
+                        // Bottom right corner
+                        if (r1.bottom > r2.bottom + radius && r1.right < r2.right - radius) {
+                            pathCommands.push(
+                                drawInnerCorner(
+                                    offsetLeft + r1.right - 1,
+                                    offsetTop + r2.bottom - 1,
+                                    offsetLeft + Math.min(r1.right + radius, r2.right - radius),
+                                    offsetTop + Math.min(r2.bottom + radius, r1.bottom - radius)
+                                )
+                            );
+                        } else if (
+                            r1.bottom < r2.bottom - radius &&
+                            r1.right > r2.right + radius
+                        ) {
+                            pathCommands.push(
+                                drawInnerCorner(
+                                    offsetLeft + r2.right - 1,
+                                    offsetTop + r1.bottom - 1,
+                                    offsetLeft + Math.min(r2.right + radius, r1.right - radius),
+                                    offsetTop + Math.min(r1.bottom + radius, r2.bottom - radius)
+                                )
+                            );
+                        }
+                    }
+
+                    // Special corners for the hero background
+                    // Top edge
+                    if (r1.top <= heroRect.top && r1.bottom > heroRect.top) {
+                        pathCommands.push(
+                            drawInnerCorner(
+                                offsetLeft + r1.right - 1,
+                                offsetTop + heroRect.top - 1,
+                                offsetLeft + r1.right + radius,
+                                offsetTop + heroRect.top + radius
+                            )
+                        );
+                    }
+                    // Left edge
+                    if (r1.left <= heroRect.left && r1.right > heroRect.left) {
+                        pathCommands.push(
+                            drawInnerCorner(
+                                offsetLeft + heroRect.left - 1,
+                                offsetTop + r1.bottom - 1,
+                                offsetLeft + heroRect.left + radius,
+                                offsetTop + r1.bottom + radius
+                            )
+                        );
+                    }
+                }
+
+                decorPath.setAttribute("d", pathCommands.join(" "));
+            }
+
+            function rectsIntersect(r1, r2) {
+                return (
+                    r1.right > r2.left &&
+                    r1.left < r2.right &&
+                    r1.bottom > r2.top &&
+                    r1.top < r2.bottom
+                );
+            }
+
+            function drawInnerCorner(x, y, pointX, pointY) {
+                const radiusX = Math.abs(x - pointX);
+                const radiusY = Math.abs(y - pointY);
+                const dir = (Math.sign((x - pointX) * (y - pointY)) + 1) / 2;
+                return (
+                    `M ${x} ${y} ` +
+                    `L ${x} ${pointY} ` +
+                    `A ${radiusX},${radiusY} 0 0 ${dir} ${pointX} ${y} ` +
+                    `L ${x} ${y}`
+                );
+            }
+        })();
+    </script>
+</body>
+</html>
