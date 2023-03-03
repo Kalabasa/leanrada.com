@@ -27,7 +27,7 @@ yarn build-prod
 git worktree add -f prod master
 
 # Copy build files to prod
-rsync -Pr --del out/site prod/docs
+rsync -Pr --del out/site/ prod/docs/
 
 # Commit prod changes
 cd prod
