@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/favicon.png">
+    <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
     <style>
         @font-face {
             font-family: "Space Mono";
@@ -1097,7 +1098,7 @@
                             📅 25 Feb 2023 · 📖 7 min read
                         </div>
 
-                        <p>Hello reader! I'll write about an <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>image recognition</strong></a> (or image classification) problem I faced while making an <a target="_self" class="text-link " href="/wares/dimensions/">augmented reality art project</a>.</p>
+                        <p>Hello reader! I’ll write about an <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>image recognition</strong></a> (or image classification) problem I faced while making an <a target="_self" class="text-link " href="/wares/dimensions/">augmented reality art project</a>.</p>
                         <div class="blog-media blog-media-default">
                             <img srcset="/blog/simple-image-recognition-vanilla-js/image-recognition_332.generated.png 332w,/blog/simple-image-recognition-vanilla-js/image-recognition_664.generated.png 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="Image recognition illustration" src="/blog/simple-image-recognition-vanilla-js/image-recognition.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #48c8d8"><span class="blog-media-caption">Image recognition problems come in different forms.</span>
                         </div>
@@ -1110,10 +1111,10 @@
                             </video><span class="blog-media-caption">The app should recognize when the target art piece has been aligned.</span>
                         </div>
 
-                        <p>There exist many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. There are even libraries that can solve this out of the box. However, my solution didn't use any of those. I couldn’t resist the challenge of rolling out my own while learning something along the way!</p>
+                        <p>There exist many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. There are even libraries that can solve this out of the box. However, my solution didn’t use any of those. I couldn’t resist the challenge of rolling out my own while learning something along the way!</p>
                         <p><span class="box-note "><strong>TL;DR</strong> - It converts the camera image into a feature vector and then compares that against a predefined target reference.</span></p>
                         <h2 id="color-and-illumination-theory">Color and illumination theory</h2>
-                        <p>First, let's think about the problem. We get an image from the camera feed, read some pixels, then classify whether it matches a predefined target image or not. Everything starts with a camera image.</p>
+                        <p>First, let’s think about the problem. We get an image from the camera feed, read some pixels, then classify whether it matches a predefined target image or not. Everything starts with a camera image.</p>
                         <p>However, cameras don’t actually pick up the <em>true color</em> of an object. The <em>perceived color</em> is affected by room lighting, camera quality, and other factors.</p>
                         <div class="blog-media blog-media-default">
                             <img srcset="/blog/simple-image-recognition-vanilla-js/tc-vs-pc_332.generated.jpg 332w,/blog/simple-image-recognition-vanilla-js/tc-vs-pc_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/blog/simple-image-recognition-vanilla-js/tc-vs-pc.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8"><span class="blog-media-caption">True color (TC) vs perceived color (PC)</span>
@@ -1121,8 +1122,8 @@
 
                         <p>If we had used just the raw pixel data from the camera feed to directly compare against the target image, then it would almost always fail due to lighting differences and other factors.</p>
                         <p>We need to somehow "normalize" the input image so that calculations would be robust against lighting variances.</p>
-                        <p>To begin solving the normalization problem, I've come up with a model for the perceived color, roughly based on graphics programming illumination models.</p>
-                        <p>Here's the equation:</p>
+                        <p>To begin solving the normalization problem, I’ve come up with a model for the perceived color, roughly based on graphics programming illumination models.</p>
+                        <p>Here’s the equation:</p>
                         <pre><code>PC = TC * a + b
 </code></pre>
                         <ul>
@@ -1174,7 +1175,7 @@ canvasContext<span class="token punctuation">.</span><span class="token function
   <span class="token punctuation">}</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
                         <p>Refer to these MDN articles <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas">Manipulating_video_using_canvas</a> and <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/ImageData">ImageData</a> for details about the Web APIs.</p>
-                        <p>After getting the colors, we can start processing them. First, the top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. The order doesn't really matter. This produces two difference colors.</p>
+                        <p>After getting the colors, we can start processing them. First, the top (PC1) and middle (PC2) colors are subtracted, as well as the middle (PC2) and bottom (PC3); like a 1-dimensional convolution. The order doesn’t really matter. This produces two difference colors.</p>
                         <p>Let’s call the resulting colors <code>D1</code> and <code>D2</code>:</p>
                         <div class="blog-media blog-media-default">
                             <img srcset="/blog/simple-image-recognition-vanilla-js/dimensions_illo3_332.generated.jpg 332w,/blog/simple-image-recognition-vanilla-js/dimensions_illo3_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/blog/simple-image-recognition-vanilla-js/dimensions_illo3.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
@@ -1211,7 +1212,7 @@ D2 = (TC3 - TC2) * a
                         <pre><code>N1 = D1 / max(|D1|, |D2|)
 N2 = D2 / max(|D1|, |D2|)
 </code></pre>
-                        <p> Here's the code for that:</p>
+                        <p> Here’s the code for that:</p>
                         <pre class="code-block"><code class="code-block-code"><span class="token comment">// Get 'max(|D1|, |D2|)'</span>
 <span class="token keyword">const</span> d1Magnitude <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>d1<span class="token punctuation">.</span>r<span class="token punctuation">,</span> d1<span class="token punctuation">.</span>g<span class="token punctuation">,</span> d1<span class="token punctuation">.</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token keyword">const</span> d2Magnitude <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>d2<span class="token punctuation">.</span>r<span class="token punctuation">,</span> d2<span class="token punctuation">.</span>g<span class="token punctuation">,</span> d2<span class="token punctuation">.</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -1236,19 +1237,19 @@ N2 = D2 / max(|D1|, |D2|)
 N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
 </code></pre>
                         <p>As you can see, the final values <code>N1</code> and <code>N2</code> are not affected by the lighting parameters at all. They are purely derived from true color. <small>According to the model anyway.</small></p>
-                        <p>The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various smartphone cameras. The algorithm will be working purely on true color data.</p>
+                        <p>The point of this preprocessing was so that the algorithm can be robust across different lighting conditions and various phone cameras. The algorithm will be working purely on true color data.</p>
                         <div class="blog-media blog-media-default">
                             <img srcset="/blog/simple-image-recognition-vanilla-js/dimensions_tester_332.generated.jpg 332w,/blog/simple-image-recognition-vanilla-js/dimensions_tester_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="" src="/blog/simple-image-recognition-vanilla-js/dimensions_tester.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #d8c8b8"><span class="blog-media-caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized by the algorithm.</span>
                         </div>
 
                         <h2 id="feature-vectors">Feature vectors</h2>
-                        <p>Now, let's forget about "colors" for a moment and start looking at the individual RGB channel values. Each color has three values corresponding to the red, green, and blue channels. These are simply numbers, interpreted as colors by computer display systems.</p>
+                        <p>Now, let’s forget about "colors" for a moment and start looking at the individual RGB channel values. Each color has three values corresponding to the red, green, and blue channels. These are simply numbers, interpreted as colors by computer display systems.</p>
                         <div class="blog-media blog-media-default">
                             <img srcset="/blog/simple-image-recognition-vanilla-js/rgb_332.generated.png 332w,/blog/simple-image-recognition-vanilla-js/rgb_664.generated.png 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="" src="/blog/simple-image-recognition-vanilla-js/rgb.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #282828"><span class="blog-media-caption">A color is composed of RGB values</span>
                         </div>
 
                         <p>So from the normalized colors <code>N1</code> and <code>N2</code>, we can get their component values. We get six numerical values, three from each.</p>
-                        <p>These six numbers can be rolled into one combined series of numbers, which we'll call the <strong>feature vector</strong> of the image, that is, a set of numbers that <em>summarizes</em> the image.</p>
+                        <p>These six numbers can be rolled into one combined series of numbers, which we’ll call the <strong>feature vector</strong> of the image, that is, a set of numbers that <em>summarizes</em> the image.</p>
                         <div class="blog-media blog-media-default">
                             <img srcset="/blog/simple-image-recognition-vanilla-js/dimensions_illo5_332.generated.jpg 332w,/blog/simple-image-recognition-vanilla-js/dimensions_illo5_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="diagram" src="/blog/simple-image-recognition-vanilla-js/dimensions_illo5.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
                         </div>
@@ -1316,20 +1317,20 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
   <span class="token comment">// Image recognized!</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>If the distance between the two vectors is small enough (by some threshold), then it's a match!</p>
-                        <p>And that's it! That's the algorithm. Convert the input image into a feature vector then compare that against a precomputed target vector. The image detection code totals less than 200 lines and doesn’t require an external library! It was launched as part of the AR art app that accompanied the exhibit.</p>
+                        <p>If the distance between the two vectors is small enough (by some threshold), then it’s a match!</p>
+                        <p>And that’s it! That’s the algorithm. Convert the input image into a feature vector then compare that against a precomputed target vector. The image detection code totals less than 200 lines and doesn’t require an external library! It was launched as part of the AR art app that accompanied the exhibit.</p>
                         <h2 id="conclusion">Conclusion</h2>
                         <p>In this post, I wrote about my thinking process and showed some code for how one might develop their own image detection algorithm. I hope this post was useful to you!</p>
-                        <p>My solution was tailored to the specific target images that I had, but nothing's preventing it from being generalized to other image shapes and sizes.</p>
-                        <p>The resulting algorithm was straightforward, has little code, and was very fast. It can run in real-time on a smartphone, on every frame of its camera feed for example.</p>
+                        <p>My solution was tailored to the specific target images that I had, but nothing’s preventing it from being generalized to other image shapes and sizes.</p>
+                        <p>The resulting algorithm was straightforward, has little code, and was very fast. It can run in real-time on a phone, on every frame of its camera feed for example.</p>
                         <h3 id="areas-for-improvement">Areas for improvement</h3>
-                        <p>One big downside of this approach was that it had no regard for <em>positioning</em>, whether it was a 2D or a 3D position. The input image had to be in the exact orientation as the target image. There's no object tracking or localization.</p>
-                        <p>For my project, I didn't need positioning as I had a specifically designed user flow that forces an alignment. But for general use cases, one may need to add additional steps like looping through subsections of the image.</p>
+                        <p>One big downside of this approach was that it had no regard for <em>positioning</em>, whether it was a 2D or a 3D position. The input image had to be in the exact orientation as the target image. There’s no object tracking or localization.</p>
+                        <p>For my project, I didn’t need positioning as I had a specifically designed user flow that forces an alignment. But for general use cases, one may need to add additional steps like looping through subsections of the image.</p>
                         <p>While I have tested the robustness of the normalization in various conditions, it may not handle extreme lighting conditions, such as a very dim environment or a bright neon-lighted environment where the white balance is unnatural. Furthermore, irregular lighting conditions like shadows or reflections on the surface would likely degrade its accuracy.</p>
                         <p>In the end, I built this algorithm to solve a particular application in art (and it was successful at that!). The goal was not to build a general-purpose algorithm. There are libraries for that now. 😄</p>
                         <h3 id="demo">Demo!</h3>
                         <p>You may try the finished product here!</p>
-                        <p>Simply open this page on a desktop, and then point your smartphone camera to the following image, assuming your camera app has a QR code scanning feature.</p>
+                        <p>Simply open this page on a desktop, and then point your phone camera to the following image, assuming your camera app has a QR code scanning feature.</p>
                         <div class="blog-media blog-media-bleed">
                             <img srcset="/wares/dimensions/media/dimensions_finalset_400.generated.jpg 400w,/wares/dimensions/media/dimensions_finalset_800.generated.jpg 800w,/wares/dimensions/media/dimensions_finalset_894.generated.jpg 894w,/wares/dimensions/media/dimensions_finalset_1146.generated.jpg 1146w,/wares/dimensions/media/dimensions_finalset_1400.generated.jpg 1400w" sizes="(max-width:400px) 400px,not (min-width:800px) 800px,(max-width:1117px) 894px,(max-width:1433px) 1146px, 1400px" class="blog-media-element" alt="" src="/wares/dimensions/media/dimensions_finalset.jpg" spec="100% [800) 80% [1750) 1400" loading="lazy" width="400%" height="" style="aspect-ratio: 2.296875; background: #080808"><span class="blog-media-caption">Go to kalabasa.github.io/dimensions/ on your phone if QR doesn’t work.</span>
                         </div>
