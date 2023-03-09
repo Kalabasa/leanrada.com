@@ -9,7 +9,6 @@ truncate -s 0 out/lint.txt
 
 yarn build-dev > /dev/null
 
-npx textlint -o out/lint.txt --no-color -f pretty-error "out/site/wares/*/**/*.html" "out/site/notes/*/**/*.
-html"
+npx textlint -o out/lint.txt --no-color -f pretty-error "out/site/wares/*/**/*.html" "out/site/notes/*/**/*.html"
 
 cat out/lint.txt
