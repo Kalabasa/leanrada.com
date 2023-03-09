@@ -12,6 +12,7 @@ fi
 # Do generated files
 node scripts/clean-redirects.js
 node scripts/generate-redirects.js
+node scripts/update-blog-index.js
 
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean generated files"
