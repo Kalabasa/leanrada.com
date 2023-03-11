@@ -19,10 +19,21 @@ const redirects = [
   ["works/freeformgesturedetector.html", "wares/freeform-gesture-detector/"],
   ["works/planetdefense.html", "wares/planet-defense/"],
   ["works/canvapasko.html", "wares/canva-pasko/"],
-  ["works/miniforts.html", "wares/miniforts/"],
+  ["works/miniforts.html", "wares/miniforts/"], // inbound
   ["works/canvaenterprise.html", "wares/canva-enterprise/"],
   ["works/canvalogomaker.html", "wares/canva-logo-maker/"],
-  ["projects/*/index.html", "wares/*/index.html"],
+  ["projects/canvaphotoeditor/", "wares/canva-photo-editor/"],
+  ["projects/dimensions/", "wares/dimensions/"],
+  ["projects/hypertangram/", "wares/hypertangram/"],
+  ["projects/wikawik/", "wares/wikawik/"],
+  ["projects/sheetz/", "wares/svelte-spreadsheet/"],
+  ["projects/dynastymap/", "wares/dynaviz/"],
+  ["projects/freeformgesturedetector/", "wares/freeform-gesture-detector/"],
+  ["projects/planetdefense/", "wares/planet-defense/"],
+  ["projects/canvapasko/", "wares/canva-pasko/"],
+  ["projects/miniforts/", "wares/miniforts/"],
+  ["projects/canvaenterprise/", "wares/canva-enterprise/"],
+  ["projects/canvalogomaker/", "wares/canva-logo-maker/"],
   ["projects", "wares/"],
 ];
 
