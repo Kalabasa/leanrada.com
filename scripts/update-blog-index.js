@@ -1,5 +1,5 @@
+#!/usr/bin/env node
 const glob = require("glob");
-const chalk = require("chalk");
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const cheerio = require('cheerio');

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const glob = require("glob");
 const chalk = require("chalk");
 const path = require("node:path");
