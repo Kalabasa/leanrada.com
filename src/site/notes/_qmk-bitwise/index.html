@@ -1,0 +1,174 @@
+<html>
+  <page-title title="Developing a bitwise keyboard input method" />
+  <blog-page>
+    <!-- prettier-ignore -->
+    <markdown>
+      <blog-header
+        title="Developing a bitwise keyboard input method"
+        :heroimgsrc="url('hero.jpg')" />
+
+      <blog-post-info date="16 Mar 2023" read-mins="3" />
+
+      This post is about how I achieved the power of 15 keys using just 4 keys on the keyboard. I go over the motivation, the design, and the implementation. At the end, I wrap the solution into a small library. Maybe you’ll find it useful!
+
+      ## Rationale
+
+      I use a compact keyboard called the **Lily58** as my main keyboard. It’s a column-staggered split keyboard.
+
+      <blog-media
+        alt="Photo of a Lily58 keyboard"
+        :src="url('lily58.jpg')"
+        caption="The Lily58 keyboard. Photo from github.com/kata0510/Lily58" />
+
+      As the name implies, it has only 58 buttons instead of the normal 80+ buttons. Space was limited and I had to fit all the letters, numbers, symbols, and other unique keys that I need. To do that I utilized layers and modes, but they could only do so much.
+
+      The function keys (F1, F2, F3, etc) were particularly cumbersome. I don’t use them very often, yet they take a lot of space. Not very space-efficient, as you can see with my previous function key layout:
+
+      <blog-media
+        :src="url('prevlayout.png')"
+        caption="My previous layout with function keys on the right half of the keyboard. It’s on a layer that I call the &quot;function layer&quot;." />
+
+      Luckily, the Lily58 is programmable! Using a framework slash firmware called QMK, I was able to program the keyboard to add whatever functionality I wanted. And that’s exactly how I optimized the space.
+
+      ## The scheme
+
+      <!-- textlint-disable -->
+
+      To make space for other keys, I devised a different way to input function keys, a **bitwise input scheme**. In this scheme, you input in terms of bits; there is one key for each bit. For example, take four keys; if we assign them to bits 1, 2, 4, and 8, we can represent any number from 0 to 15 by pressing a combination of those keys.
+
+      <!-- textlint-enable -->
+
+      <bitwise-key-demo />
+      <div class="caption center">Interactive diagram! Click the buttons to toggle the corresponding bits.</div>
+
+      With 15 different combinations, we have more than enough inputs to cover the function keys. Each decimal number is directly mapped to a function key in a 1-to-1 correspondence. For example, pressing the bit combination for decimal 1 will input F1, pressing the combination for decimal 2 will input F2, and so on.
+
+      <box-note>
+        Did you know that there are 24 function keys in total? These are the F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F18, F19, F20, F21, F22, F23, and F24 keys.
+      </box-note>
+
+      ## Implementation
+
+      So how does it work? Let’s dive into the practical details.
+
+      First of all, the implementation doesn’t care about timing, so you can press the buttons as sloppily as you want. The key thing is that the algorithm waits for you to release all the buttons before committing the resulting combination.
+
+      To do this, we need a way to keep track of the state of the bits. Let’s use an unsigned integer variable to store it.
+
+      When a button is pressed, its corresponding bit is set to 1. But when released, we do not necessarily clear the bit back to 0. There will be a separate mechanism for flushing the accumulated bits.
+
+      Let’s call the variable `accumulator`.
+
+      <code-block language="clike" :code="`\
+static uint8_t accumulator = 0;
+
+bool on_press(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  accumulator |= (1 << index);
+}
+`" />
+
+      Now, the accumulated bits will only be evaluated when all of the buttons have been released. A quick way of knowing when that happens is to watch for the last button to be released. To do this, another integer variable tracks how many buttons are currently being pressed.
+
+      <code-block language="clike" :code="`\
+// Keep count of keys being pressed
+static uint8_t pressed_keys = 0;
+static uint8_t accumulator = 0;
+
+bool on_press(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  // Count key being pressed
+  pressed_keys++;
+
+  accumulator |= (1 << index);
+}
+
+bool on_release(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  // Count key being released
+  pressed_keys--;
+}
+`" />
+
+      Once the last button is released, it is time to flush the input. The resulting decimal number is mapped to a function key that will finally be sent to the computer.
+
+      <code-block language="clike" :code="`\
+bool on_release(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  pressed_keys--;
+
+  // When all keys have been released, flush the input
+  if (pressed_keys <= 0) {
+    // Map accumulated value to the corresponding F-key code
+    send_to_computer(FUNCTION_KEYS[accumulator]);
+
+    // Reset state for next round
+    pressed_keys = 0;
+    accumulator = 0;
+  }
+}
+`" />
+
+      And that’s about it! This is how I got more space on my keyboard. As a bonus, it forces me to practice converting decimal to binary! 😂
+      
+      Of course, the code shown here skips some details and totally lacks integration with the QMK framework, but you get the gist.
+
+      There’s one limitation to this approach though: you cannot hold down a function key. It will only send the function key at the end when the last button has been released. I haven’t found a need to hold down function keys so it’s not a problem for me right now.
+
+      I recreated the algorithm in JavaScript/Web as a live demo here! Try it out!
+
+      <bitwise-key-demo mode="full" />
+      <div class="caption center">Demo! You need to use a keyboard for this. Put your input focus on this box and start pressing combinations!</div>
+
+      ## How to get it
+
+      If you use QMK you can easily integrate this with your own keymap. Here’s a step-by-step on how you may use this utility:
+
+      ### Step 1: Define the bit keys.
+      
+      First, define the keys you want to use as bit input in an array called `bitwise_f_keys`.
+      
+      <!-- textlint-disable -->
+
+      For example, if you wanted to repurpose F1, F2, F3, and F4 to represent the four bits, write the following in your `keymap.c`:
+
+      <!-- textlint-enable -->
+
+      <code-block language="clike" :code="`\
+const uint16_t bitwise_f_keys[] = { KC_F1, KC_F2, KC_F3, KC_F4 };
+uint8_t NUM_BITWISE_F_KEYS =
+    sizeof(bitwise_f_keys) / sizeof(uint16_t);
+`" />
+
+      Note: `NUM_BITWISE_F_KEYS` is also required as an optimization.
+
+      ### Step 2: Hook up the utility.
+      
+      Hook it up by calling `process_bitwise_f()` at the top of your `process_record_user()`.
+
+      <code-block language="clike" :code="`\
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  if (!process_bitwise_f(keycode, record)) return false;
+
+  /* ... */
+
+  return true;
+}
+`" />
+
+      ### Step 3: Include the utility in your project.
+      
+      Finally, copy [`bitwise_f.h`](https://raw.githubusercontent.com/Kalabasa/qmk_firmware/06c44268ffe692932cbe15448926fa01bcbe9e64/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.h) and [`bitwise_f.c`](https://raw.githubusercontent.com/Kalabasa/qmk_firmware/06c44268ffe692932cbe15448926fa01bcbe9e64/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.c) into your keymap directory, and include `bitwise_f.c` in your `rules.mk` build file.
+
+      Don’t forget to `#include "dir/where/you/copied/bitwise_f.h"` in your `keymap.c`!
+    </markdown>
+  </blog-page>
+</html>
