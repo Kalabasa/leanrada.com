@@ -7,7 +7,7 @@
         title="Developing a bitwise keyboard input method"
         :heroimgsrc="url('hero.jpg')" />
 
-      <blog-post-info date="16 Mar 2023" read-mins="3" />
+      <blog-post-info date="16 Mar 2023" read-mins="4" />
 
       This post is about how I achieved the power of 15 keys using just 4 keys on the keyboard. I go over the motivation, the design, and the implementation. At the end, I wrap the solution into a small library. Maybe you’ll find it useful!
 
@@ -20,13 +20,13 @@
         :src="url('lily58.jpg')"
         caption="The Lily58 keyboard. Photo from github.com/kata0510/Lily58" />
 
-      As the name implies, it has only 58 buttons instead of the normal 80+ buttons. Space was limited and I had to fit all the letters, numbers, symbols, and other unique keys that I need. To do that I utilized layers and modes, but they could only do so much.
+      As the name implies, it has only 58 buttons instead of the normal 80+ buttons. Space was limited and it was hard to fit all the letters, numbers, symbols, and other unique keys that I need.
 
-      The function keys (F1, F2, F3, etc) were particularly cumbersome. I don’t use them very often, yet they take a lot of space. Not very space-efficient, as you can see with my previous function key layout:
+      The function keys (F1, F2, F3, etc) were particularly cumbersome. I don’t use them very often, yet they take a lot of space. You can see with my previous function key layout that they’re not very space-efficient:
 
       <blog-media
         :src="url('prevlayout.png')"
-        caption="My previous layout with function keys on the right half of the keyboard. It’s on a layer that I call the &quot;function layer&quot;." />
+        caption="My previous layout with function keys on the right half of the keyboard. It’s on a layer that I call the “function layer”." />
 
       Luckily, the Lily58 is programmable! Using a framework slash firmware called QMK, I was able to program the keyboard to add whatever functionality I wanted. And that’s exactly how I optimized the space.
 
@@ -41,10 +41,12 @@
       <bitwise-key-demo />
       <div class="caption center">Interactive diagram! Click the buttons to toggle the corresponding bits.</div>
 
-      With 15 different combinations, we have more than enough inputs to cover the function keys. Each decimal number is directly mapped to a function key in a 1-to-1 correspondence. For example, pressing the bit combination for decimal 1 will input F1, pressing the combination for decimal 2 will input F2, and so on.
+      With 15 different combinations, we have more than enough inputs to cover the function keys! Each decimal number is directly mapped to a function key in a 1-to-1 correspondence. For example, pressing the bit combination for decimal 1 will input F1, pressing the combination for decimal 2 will input F2, and so on.
 
       <box-note>
-        Did you know that there are 24 function keys in total? These are the F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F18, F19, F20, F21, F22, F23, and F24 keys.
+        <p>Did you know that there are 24 function keys in total?</p>
+        <p>These are the F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F18, F19, F20, F21, F22, F23, and F24 keys.</p>
+        <p>Bit wise, we’d need just 5 bits - 5 keys to cover all 24 function keys.</p>
       </box-note>
 
       ## Implementation
@@ -53,7 +55,7 @@
 
       First of all, the implementation doesn’t care about timing, so you can press the buttons as sloppily as you want. The key thing is that the algorithm waits for you to release all the buttons before committing the resulting combination.
 
-      To do this, we need a way to keep track of the state of the bits. Let’s use an unsigned integer variable to store it.
+      To do any of this, we need a way to keep track of the state of the bits. Let’s use an unsigned integer variable to store it.
 
       When a button is pressed, its corresponding bit is set to 1. But when released, we do not necessarily clear the bit back to 0. There will be a separate mechanism for flushing the accumulated bits.
 
@@ -62,7 +64,7 @@
       <code-block language="clike" :code="`\
 static uint8_t accumulator = 0;
 
-bool on_press(uint16_t keycode) {
+void on_press(uint16_t keycode) {
   int index = get_bit_index(keycode);
   if (index == -1) return;
 
@@ -77,7 +79,7 @@ bool on_press(uint16_t keycode) {
 static uint8_t pressed_keys = 0;
 static uint8_t accumulator = 0;
 
-bool on_press(uint16_t keycode) {
+void on_press(uint16_t keycode) {
   int index = get_bit_index(keycode);
   if (index == -1) return;
 
@@ -87,7 +89,7 @@ bool on_press(uint16_t keycode) {
   accumulator |= (1 << index);
 }
 
-bool on_release(uint16_t keycode) {
+void on_release(uint16_t keycode) {
   int index = get_bit_index(keycode);
   if (index == -1) return;
 
@@ -99,7 +101,7 @@ bool on_release(uint16_t keycode) {
       Once the last button is released, it is time to flush the input. The resulting decimal number is mapped to a function key that will finally be sent to the computer.
 
       <code-block language="clike" :code="`\
-bool on_release(uint16_t keycode) {
+void on_release(uint16_t keycode) {
   int index = get_bit_index(keycode);
   if (index == -1) return;
 
