@@ -1242,7 +1242,7 @@ void <span class="token function">on_press</span><span class="token punctuation"
 
                         <p>Now, the accumulated bits will only be evaluated when all of the buttons have been released. A quick way of knowing when that happens is to watch for the last button to be released. To do this, another integer variable tracks how many buttons are currently being pressed.</p>
                         <pre class="code-block"><code class="code-block-code"><span class="token comment">// Keep count of keys being pressed</span>
-static uint8_t pressed_keys <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+static int8_t pressed_keys <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
 static uint8_t accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
 
 void <span class="token function">on_press</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -1336,7 +1336,8 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
 
                         <h3 id="step-3-include-the-library-in-your-project">Step 3: Include the library in your project.</h3>
                         <p>Finally, copy <a target="_blank" class="text-link " href="https://raw.githubusercontent.com/Kalabasa/qmk_firmware/06c44268ffe692932cbe15448926fa01bcbe9e64/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.h"><code>bitwise_f.h</code></a> and <a target="_blank" class="text-link " href="https://raw.githubusercontent.com/Kalabasa/qmk_firmware/06c44268ffe692932cbe15448926fa01bcbe9e64/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.c"><code>bitwise_f.c</code></a> into your keymap directory, and include <code>bitwise_f.c</code> in your <code>rules.mk</code> build file.</p>
-                        <p>Don’t forget to <code>#include "dir/where/you/copied/bitwise_f.h"</code> in your <code>keymap.c</code>!
+                        <p>Don’t forget to <code>#include "dir/where/you/copied/bitwise_f.h"</code> in your <code>keymap.c</code>!</p>
+                        <p><span class="box-note ">Props to reddit user hakbraley for helping improve the code!</span>
                         </p>
 
                     </div>
@@ -1539,6 +1540,7 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
                 }
 
                 const state = full ? [0, 0, 0, 0] : [0, 1, 1, 0];
+                const down = [0, 0, 0, 0];
                 resultNum = full ? 0 : 6;
                 renderState();
 
@@ -1547,16 +1549,14 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
                         digits[i].style.pointerEvents = "none";
                     }
 
-                    let downCount = 0;
-
                     demo.addEventListener("keydown", (event) => {
                         event.preventDefault();
                         const index = hotkeys.indexOf(event.key.toUpperCase());
 
                         if (index < 0) return;
-                        if (state[index] !== 0) return;
 
-                        downCount++;
+                        if (down[index] !== 0) return;
+                        down[index] = 1;
 
                         state[index] = 1;
                         resultNum = 0;
@@ -1569,12 +1569,11 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
                         const index = hotkeys.indexOf(event.key.toUpperCase());
 
                         if (index < 0) return;
-                        if (state[index] === 0) return;
 
-                        downCount--;
+                        if (down[index] === 0) return;
+                        down[index] = 0;
 
-                        if (downCount <= 0) {
-                            downCount = 0;
+                        if (down.reduce((sum, b) => sum + b) === 0) {
                             resultNum = Number.parseInt(state.slice().reverse().join(""), 2);
                             state.forEach((_, i) => (state[i] = 0));
                         }
