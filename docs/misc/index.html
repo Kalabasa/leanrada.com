@@ -1,0 +1,1131 @@
+<html>
+<head>
+    <title>leanrada.com</title>
+    <script defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+    <style>
+        @font-face {
+            font-family: "Space Mono";
+            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Space Mono";
+            font-style: italic;
+            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Miriam Libre";
+            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+        }
+
+        @font-face {
+            font-family: "Miriam Libre";
+            font-weight: bold;
+            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+        }
+
+        :root {
+            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+            --bg-clr: #111;
+            --card-clr: #222;
+            --clr0-light: #54f8c1;
+            --clr0: #0ad591;
+            --clr0-dark: #018b5d;
+            --clr1: #df2063;
+
+            --text-clr: #fff;
+            --text2-clr: #999;
+
+            --ease: cubic-bezier(0.8, 0, 1, 1);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--default-font, monospace);
+            background-color: var(--bg-clr, #111);
+            color: var(--text-clr, #fff);
+            overflow-x: hidden;
+        }
+
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .page-wrapper-content {
+            flex: 1 1 auto;
+        }
+    </style>
+    <style>
+        nebula-client>canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <style>
+        .home-link {
+            text-decoration: none;
+        }
+
+        .home-link-icon {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        .home-link-icon:hover {
+            filter: invert(1);
+        }
+    </style>
+    <style>
+        .main-footer {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            gap: 60px;
+            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+            font-size: 18px;
+            font-weight: bold;
+            background: var(--clr0);
+            color: #000;
+            overflow: hidden;
+            content-visibility: auto;
+            contain-intrinsic-height: 220x;
+        }
+
+        .main-footer-links-heading {
+            margin: 0 0 18px;
+            font-size: inherit;
+        }
+
+        .main-footer-line {
+            margin: 0 0 18px;
+        }
+
+        .main-footer-nav {
+            color: #000;
+        }
+
+        .main-footer-nav:hover {
+            color: #fff;
+        }
+
+        .main-footer-content-part {
+            z-index: 1;
+        }
+
+        .main-footer-nebula {
+            position: absolute;
+            left: -30%;
+            top: -30%;
+            width: 160%;
+            height: 160%;
+            z-index: 0;
+        }
+
+        .main-footer-top-btn {
+            z-index: 2;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 72px;
+            height: 36px;
+            padding-right: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            border-bottom-left-radius: 18px;
+            background: var(--bg-clr);
+            color: var(--clr0-light);
+            font: inherit;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .main-footer-top-btn:hover {
+            color: var(--clr1);
+        }
+
+        .main-footer-top-btn::before {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 36px;
+            height: 18px;
+            border-top-right-radius: 18px;
+            transform: translateX(-72px);
+            box-shadow: 18px 0 0 var(--bg-clr);
+        }
+
+        @media (max-width: 700px) {
+            .main-footer {
+                flex-direction: column-reverse;
+            }
+        }
+    </style>
+    <style>
+        .main-header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            padding: 0 calc(25% - 150px);
+            z-index: 100;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        .main-header.float {
+            position: fixed;
+        }
+
+        .main-header-bar {
+            position: relative;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: flex-end;
+            height: 100%;
+        }
+
+        .main-header-item {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 6ch;
+            height: 36px;
+            padding: 0 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+            color: #fff;
+            backdrop-filter: blur(8px);
+            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+            background-repeat: no-repeat;
+            background-size: 220% 100%;
+            background-position: 115%;
+            pointer-events: all;
+            transition: background-position 0.2s var(--ease);
+        }
+
+        .main-header-item:hover {
+            background-image: linear-gradient(60deg,
+                    #fff2 50%,
+                    #fff 50%,
+                    #fff 60%,
+                    transparent 60%);
+            background-position: 0%;
+        }
+
+        .main-header-item.select {
+            background: #fff2;
+        }
+
+        .main-header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            image-rendering: pixelated;
+            object-fit: cover;
+            object-position: 0 0;
+            filter: invert(1);
+            backdrop-filter: blur(8px) invert(1);
+            pointer-events: all;
+        }
+
+        .main-header-icon:hover {
+            object-position: 100% 0;
+        }
+
+        @media (max-width: 450px) {
+            .main-header-icon {
+                display: none;
+            }
+        }
+
+        .main-header-indicator {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            left: 50%;
+            top: calc(100% + 12px);
+            transform: translate(-50%, -50%);
+            /* border acts as extended touch area */
+            border: solid 6mm transparent;
+            border-left-width: 45vw;
+            border-right-width: 45vw;
+            border-radius: 50%;
+            background: #fff;
+            background-clip: padding-box;
+            opacity: 0;
+            transition: opacity 50ms;
+        }
+
+        .main-header.hidden .main-header-indicator {
+            opacity: 0.8;
+            pointer-events: all;
+        }
+    </style>
+    <style>
+        .text-link {
+            color: var(--clr0-light, #fff);
+        }
+
+        .text-link:visited {
+            color: var(--clr0, #fff);
+        }
+    </style>
+    <style>
+        .content-header {
+            margin: 90px 0 60px;
+            padding: 0 18px;
+        }
+
+        .content-header-title {
+            margin: 0 0 6px;
+            font-size: 30px;
+            font-style: italic;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .content-header-subtitle {
+            margin: 6px 0 0;
+            font-size: 18px;
+            font-style: italic;
+            text-align: center;
+            color: var(--text2-clr);
+        }
+    </style>
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(27em, 100%), 1fr));
+            margin: 0 -1px -1px 0;
+        }
+
+        .section {
+            margin: -1px 0 0 -1px;
+            padding: 18px;
+            border: solid 1px var(--card-clr);
+            font-family: var(--reading-font);
+        }
+
+        .section-title {
+            margin: 0 0 18px;
+            font-family: var(--default-font);
+            font-size: 18px;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .section p {
+            margin: 12px 0;
+        }
+
+        .section p:first-child {
+            margin-top: 0;
+        }
+
+        .single-section {
+            text-align: center;
+        }
+
+        .details {
+            padding: 12px;
+        }
+
+        .summary {
+            margin-left: -12px;
+            font-family: var(--default-font);
+            font-weight: bold;
+            color: var(--text2-clr);
+            cursor: pointer;
+        }
+
+        .summary-highlighted {
+            color: var(--clr0-light);
+        }
+
+        .summary:hover {
+            color: var(--text-clr);
+        }
+
+        .img {
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        .img-small {
+            max-width: 200px;
+        }
+
+        .big-number {
+            margin: 36px;
+            font-size: 48px;
+            font-family: var(--default-font);
+            font-weight: bold;
+        }
+
+        .hit-digit {
+            margin: 0 1.5px;
+            padding: 0 6px;
+            border: solid 1px var(--text2-clr);
+            border-radius: 6px;
+        }
+    </style>
+    <script>
+        (() => {
+            globalThis.BaseElement = createBaseElement(HTMLElement);
+
+            const lifecycleListeners = Symbol("lifecycleListeners");
+
+            function createBaseElement(superClass) {
+                return class BaseElement extends superClass {
+                    constructor() {
+                        super();
+                        this[lifecycleListeners] = [];
+                    }
+                    connectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.connect());
+                    }
+                    disconnectedCallback() {
+                        this[lifecycleListeners].forEach((it) => it.disconnect());
+                    }
+
+                    /**
+                     * @param factory {() => () => void}
+                     */
+                    addLifecycleListener(factory) {
+                        let cleanup = () => {};
+                        const connect = () => (cleanup = factory());
+                        const disconnect = () => cleanup();
+
+                        this[lifecycleListeners].push({
+                            connect,
+                            disconnect
+                        });
+
+                        if (this.isConnected) {
+                            connect();
+                        }
+                    }
+
+                    /**
+                     * @param selector {string}
+                     */
+                    asyncQuerySelector(selector) {
+                        const obj = {
+                            exists: false,
+                            element: null,
+                        };
+
+                        obj.promise = new Promise((resolve) => {
+                            const observer = new MutationObserver(() => {
+                                obj.element = this.querySelector(selector);
+                                if (obj.element) {
+                                    resolve(obj.element);
+                                    obj.exists = true;
+                                    observer.disconnect();
+                                }
+                            });
+
+                            this.addLifecycleListener(() => {
+                                observer.observe(this, {
+                                    childList: true,
+                                    subtree: true
+                                });
+                                return () => observer.disconnect();
+                            });
+                        });
+
+                        return obj;
+                    }
+
+                    /**
+                     * @param target {Element}
+                     * @param event {string}
+                     * @param callback {Function}
+                     */
+                    aliveListener(target, event, callback) {
+                        this.addLifecycleListener(() => {
+                            target.addEventListener(event, callback);
+                            return () => target.removeEventListener(event, callback);
+                        });
+                    }
+
+                    /**
+                     * @param callbacks {object}
+                     * @param callbacks.show {Function}
+                     * @param callbacks.hide {Function}
+                     */
+                    visibilityListener({
+                        show,
+                        hide
+                    }) {
+                        let isShowing = false;
+
+                        const observer = new IntersectionObserver((entries) => {
+                            for (const entry of entries) {
+                                if (entry.target !== this) continue;
+                                if (isShowing !== entry.isIntersecting) {
+                                    isShowing = entry.isIntersecting;
+                                    if (isShowing) {
+                                        show();
+                                    } else {
+                                        hide();
+                                    }
+                                }
+                            }
+                        });
+
+                        this.addLifecycleListener(() => {
+                            isShowing = isInViewport(this);
+                            if (isShowing) show();
+                            observer.observe(this);
+                            return () => {
+                                observer.disconnect();
+                                if (isShowing) hide();
+                                isShowing = false;
+                            };
+                        });
+                    }
+                };
+            }
+
+            window.mousePosition = {
+                x: 0,
+                y: 0
+            };
+            document.addEventListener(
+                "DOMContentLoaded",
+                () => {
+                    document.body.addEventListener("mousemove", (event) => {
+                        window.mousePosition.x = event.clientX;
+                        window.mousePosition.y = event.clientY;
+                    });
+                }, {
+                    once: true
+                }
+            );
+        })();
+
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.right > 0 &&
+                rect.bottom > 0 &&
+                rect.left < window.innerWidth &&
+                rect.top < window.innerHeight
+            );
+        }
+    </script>
+    <script>
+        (() => {
+            customElements.define(
+                "nebula-client",
+                class Nebula extends BaseElement {
+                    constructor() {
+                        super();
+
+                        this.asyncCanvas = this.asyncQuerySelector("canvas");
+                        this.context = null;
+                        this.noise = null;
+
+                        this.gridWidth = 30;
+                        this.gridHeight = 30;
+                        this.palette = ["#ffffff"];
+
+                        this.cellWidth = 1; // placeholder
+                        this.cellHeight = 1; // placeholder
+
+                        this.useMouse = false;
+                        this.mouseCell = null;
+
+                        this.lastT = 0;
+                        this.startT = 0;
+                        this.loopStartT = 0;
+
+                        this.isVisible = false;
+                        this.visibilityListener({
+                            show: () => {
+                                this.isVisible = true;
+                                this.startLoop();
+                            },
+                            hide: () => (this.isVisible = false),
+                        });
+                    }
+
+                    connectedCallback() {
+                        super.connectedCallback();
+
+                        this.useMouse = this.getAttribute("mouse") != null;
+
+                        const gridWidth = this.getAttribute("width");
+                        if (gridWidth) {
+                            this.gridWidth = Number.parseInt(gridWidth);
+                        }
+
+                        const gridHeight = this.getAttribute("height");
+                        if (gridHeight) {
+                            this.gridHeight = Number.parseInt(gridHeight);
+                        }
+
+                        const paletteAttr = this.getAttribute("palette");
+                        if (paletteAttr) {
+                            this.palette = paletteAttr.split(" ");
+                        }
+                    }
+
+                    startLoop() {
+                        this.loopStartT = this.lastT = this.getT();
+                        this.loop();
+                    }
+
+                    async loop() {
+                        if (!this.isVisible) {
+                            return;
+                        }
+
+                        if (typeof perlinNoise3d === "undefined") {
+                            setTimeout(() => this.loop(), 200);
+                            return;
+                        } else if (!this.noise) {
+                            this.noise = initNoise();
+                            this.startT = this.getT();
+                        }
+
+                        const canvas =
+                            this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
+
+                        // initialize
+                        if (!this.context) {
+                            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+                            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+                            canvas.width = this.gridWidth;
+                            canvas.height = this.gridHeight;
+                            canvas.style.filter += ` blur(${
+              Math.min(this.cellWidth, this.cellHeight) * 1.25
+            }px)`;
+                            this.context = canvas.getContext("2d");
+                        }
+
+                        this.draw(canvas, this.context);
+
+                        requestAnimationFrame(() => this.loop());
+                    }
+
+                    /**
+                     * @param canvas {HTMLCanvasElement}
+                     * @param context {CanvasRenderingContext2D}
+                     */
+                    draw(canvas, context) {
+                        const t = this.getT();
+                        if (t <= this.lastT) return;
+
+                        const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+                        this.lastT = t;
+
+                        const {
+                            noise,
+                            gridWidth,
+                            gridHeight,
+                            palette,
+                            cellWidth,
+                            cellHeight,
+                        } = this;
+                        const halfGridWidth = gridWidth / 2;
+                        const halfGridHeight = gridHeight / 2;
+
+                        this.mouseCell = null;
+                        // mousePosition from lib/common
+                        if (this.useMouse && window.mousePosition) {
+                            const {
+                                x,
+                                y
+                            } = window.mousePosition;
+                            const bounds = canvas.getBoundingClientRect();
+                            if (
+                                bounds.left < x &&
+                                x < bounds.right &&
+                                bounds.top < y &&
+                                y < bounds.bottom
+                            ) {
+                                this.mouseCell = {
+                                    x: (x - bounds.x) / cellWidth,
+                                    y: (y - bounds.y) / cellHeight,
+                                };
+                            }
+                        }
+
+                        const paletteLength = palette.length;
+                        const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+                        const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+                        for (let i = 0; i < gridWidth; i++) {
+                            for (let j = 0; j < gridHeight; j++) {
+                                const mouseProximity =
+                                    this.mouseCell == null ?
+                                    0 :
+                                    1 -
+                                    sigmoid(
+                                        Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                                    );
+
+                                const xy = [
+                                    1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                                    1000 +
+                                    (j - halfGridHeight) * yScale +
+                                    Math.cos(t * 0.007) * 2 +
+                                    -mouseProximity,
+                                ];
+                                const p1 = noise.get(...xy, t * 0.03);
+                                const p2 = noise.get(...xy, t * 0.03 + 0.5);
+                                // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+                                const p = p1 + p2;
+
+                                const paletteIndex = Math.floor(paletteLength * p);
+
+                                const rgb = palette[paletteIndex];
+                                const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                                    .toString(16)
+                                    .padStart(2, "0");
+
+                                context.fillStyle = `${rgb}${a}`;
+                                context.fillRect(i, j, 1, 1);
+                            }
+                        }
+                    }
+
+                    getT() {
+                        const t = (Date.now() * 30) / 1000;
+                        // make it smoother while interacting
+                        return this.mouseCell ? t : Math.floor(t);
+                    }
+                }
+            );
+
+            function initNoise() {
+                const noise = new perlinNoise3d();
+                noise.perlin_octaves = 1; // ?? defaults
+                noise.perlin_amp_falloff = 1;
+                return noise;
+            }
+
+            function sigmoid(x) {
+                return 1 / (1 + Math.exp(-x));
+            }
+        })();
+    </script>
+</head>
+
+
+<body>
+
+    <div class="page-wrapper">
+        <header class="main-header">
+            <div class="main-header-bar">
+                <a href="/" class="main-header-item ">Home</a>
+                <a href="/wares/" class="main-header-item ">Wares</a>
+                <img class="main-header-icon" src="/icons/yay_sheet.png">
+                <a href="/art/" class="main-header-item ">Art</a>
+                <a href="/notes/" class="main-header-item ">Notes</a>
+                <div class="main-header-indicator"></div>
+            </div>
+        </header>
+        <div class="page-wrapper-content">
+
+            <div class="content-header">
+                <h1 class="content-header-title">Random facts</h1>
+
+            </div>
+
+            <div class="grid">
+                <section class="section">
+                    <h2 class="section-title">Professional history</h2>
+                    <p>(i.e. paid work 💸)</p>
+                    <p>Here’s a peek of my career so far:</p>
+                    <details class="details">
+                        <summary class="summary summary-highlighted">
+                            Google (present)
+                        </summary>
+                        <p>
+                            Working on <strong>Google Maps</strong>, specifically Maps for
+                            Android Auto and Automotive. In short, Maps <em>for cars</em>.
+                        </p>
+                        <p>
+                            Cars are unique as a computer hardware. We’re solving different user
+                            interaction paradigms, like rotary controls, touchscreens being a
+                            liability to the driver, and wild screen sizes and ratios that make
+                            regular responsive design unviable.
+                        </p>
+                    </details>
+                    <details class="details">
+                        <summary class="summary summary-highlighted">Canva (2018)</summary>
+                        <p>
+                            <strong>
+                                <a target="_blank" class="text-link " href="https://www.canva.com/">Canva</a>
+                            </strong>
+                            is a creative platform where you can design anything.
+                        </p>
+                        <p>
+                            I built many things here, from frontend to backend, pages and
+                            webapps, and more!
+                        </p>
+                    </details>
+                    <details class="details">
+                        <summary class="summary summary-highlighted">Convene (2015)</summary>
+                        <p>
+                            <strong>
+                                <a target="_blank" class="text-link " href="https://www.azeusconvene.com/">Convene</a>
+                            </strong>
+                            is a collaborative platform. One of its main components is a
+                            real-time collaborative document reviewing tool where you can make
+                            annotations, comments, sticky notes, and drawings on documents with
+                            other users. It can even act as a virtual whiteboard (just use a
+                            blank document to “review”)!
+                        </p>
+                        <p>
+                            I worked on the Android app where we implemented real-time chat,
+                            touch gestures for multi-user drawing, and other features.
+                        </p>
+                    </details>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Unprofessional history</h2>
+                    <p>(i.e. unpaid work 💙)</p>
+                    <p>
+                        Here are some open source projects where I contributed some code
+                        (sporadically):
+                    </p>
+                    <ul>
+                        <li>
+                            <a target="_blank" class="text-link " href="https://github.com/robolectric/robolectric">robolectric/robolectric</a>
+                            Android testing framework
+                        </li>
+                        <li>
+                            <a target="_blank" class="text-link " href="https://github.com/minetest/minetest">minetest/minetest</a>
+                            C++ game/engine
+                        </li>
+                        <li>
+                            <a target="_blank" class="text-link " href="https://github.com/mapbox/polylabel">mapbox/polylabel</a>
+                            JS map library
+                        </li>
+                        <li>
+                            <a target="_blank" class="text-link " href="https://github.com/canva-public/rocketbot">canva-public/rocketbot</a>
+                            JS CI tool
+                        </li>
+                        <li>
+                            <a target="_blank" class="text-link " href="https://github.com/Kalabasa/FreeformGestureDetector">Kalabasa/FreeformGestureDetector</a>
+                            Android interaction library
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Odd jobs</h2>
+                    <p>Long ago when I was a high school student, I freelanced.</p>
+                    <details class="details">
+                        <summary class="summary summary-highlighted">
+                            Flash ads programmer
+                        </summary>
+                        <p>
+                            I created <em>interactive, procedurally animated</em> Internet ads
+                            in Flash for clients who wanted to advertise (i.e., annoy users) on
+                            the information superhighway™.
+                        </p>
+                        <p>Indirectly contributed to the rise of ad-blockers.</p>
+                    </details>
+                    <details class="details">
+                        <summary class="summary summary-highlighted">
+                            Powerpoint “engineer”
+                        </summary>
+                        <p>
+                            I created <em>interactive, animated</em> Powerpoint presentations
+                            about biochemsitry for some learning institute whose name I’ve
+                            already forgotten.
+                        </p>
+                    </details>
+                </section>
+
+                <section class="section single-section">
+                    <p>You are visitor number</p>
+                    <p class="big-number">
+                        <span class="hit-digit">0</span><span class="hit-digit">0</span><span class="hit-digit">1</span><span class="hit-digit">8</span><span class="hit-digit">6</span>
+                    </p>
+                    <p>Thank you for visiting the site!</p>
+                </section>
+
+                <section class="section single-section">
+                    <p class="big-number">486</p>
+                    <p>I have 486 reputation on Stack Overflow!</p>
+                </section>
+
+                <section class="section single-section">
+                    <a title="TeerapatL., CC BY-SA 4.0 <https://creativecommons.org/licenses/by-sa/4.0>, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Halo-Halo.webp">
+                        <img class="img img-small" alt="Halo-Halo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Halo-Halo.webp/512px-Halo-Halo.webp.png">
+                    </a>
+                    <p>My favorite dessert is halo-halo.</p>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Clonk</h2>
+
+                    <img srcset="/misc/clonk_800.generated.jpg 800w" sizes=" 800px" class="img" alt="Clonk Rage screenshot" src="/misc/clonk.jpg" spec="800">
+
+                    <p>
+                        My all-time favorite video game is
+                        <strong><a target="_blank" class="text-link " href="http://clonk.de/">Clonk</a></strong>. It’s a series of 2D games with destructible terrain (a
+                        “falling-sand game”) featuring a mix of action, strategy, idle,
+                        sandbox, platforming, and puzzle gameplay. Here’s the
+                        <a target="_blank" class="text-link " href="https://youtu.be/p83_ONA9qyw">official trailer</a>.
+                    </p>
+
+                    <details class="details">
+                        <summary class="summary">Story</summary>
+                        <p>
+                            I’ve spent countless hours of my childhood playing this game and
+                            tinkering with its modding features.
+                        </p>
+                        <p>
+                            The game has a built-in mod framework with its own C-like scripting
+                            language called <strong>C4Script</strong> (It has pointers!). It was
+                            my first programming experience!
+                        </p>
+                        <p>
+                            I started by making custom levels and scenarios. Then moved on to
+                            tweaking, adding behavior to existing objects, making too many bomb
+                            variants. The most fun I had was when I reached the point where I
+                            could design and implement my own magic spells and particle effects!
+                            I even tried to make AI enemy characters.
+                        </p>
+                        <p>
+                            I believe that this game played a big part in shaping who I am
+                            today.
+                        </p>
+                    </details>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Notessimo</h2>
+
+                    <img srcset="/misc/notessimo_800.generated.jpg 800w" sizes=" 800px" class="img" alt="Old Notessimo screenshot" src="/misc/notessimo.jpg" spec="800">
+
+                    <p>
+                        One of my hobbies is composing music. It all started with
+                        <strong><a target="_blank" class="text-link " href="https://notessimo.net/">Notessimo</a></strong>, a free Flash game that I stumbled upon Kongregate.
+                    </p>
+
+                    <details class="details">
+                        <summary class="summary">Story</summary>
+                        <p>
+                            Well, as a kid, I’ve always played computer games. In my quest for
+                            new games, I found Notessimo through the Flash game portal
+                            Kongregate. It’s a simple easy-to-use music composition software,
+                            similar to the
+                            <a target="_blank" class="text-link " href="https://youtu.be/hil1F2T19GY">music maker part of the SNES game Mario Paint</a>.
+                        </p>
+                        <p>
+                            I then found out that the game had an official website
+                            <a target="_blank" class="text-link " href="https://web.archive.org/web/20110225211953/http://notessimo.net/">notessimo.net</a>
+                            which was just a phpBB forum back then. The forum community around
+                            the game were very encouraging and helpful which really helped me
+                            develop this music interest.
+                        </p>
+                        <p>
+                            Before long, I was producing song after song and eventually got
+                            <a target="_blank" class="text-link " href="https://notessimo.net/s/563LcitYfn">a song featured</a>
+                            on the home page!
+                        </p>
+                        <p>
+                            I eventually moved to a “real” <abbr title="Digital Audio Workstation">DAW</abbr>, but I will always remember
+                            fondly the Flash game Notessimo.
+                        </p>
+                    </details>
+                </section>
+            </div>
+
+        </div>
+        <footer class="main-footer">
+            <div class="main-footer-content-part">
+                <p class="main-footer-line">
+                    <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+                    <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
+                    <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
+                    <a target="_self" class="main-footer-nav" href="/notes/">Notes</a>
+                </p>
+                <p class="main-footer-line">(C) 2023 Lean Rada</p>
+            </div>
+            <div class="main-footer-content-part">
+                <h2 class="main-footer-links-heading">On the web</h2>
+                <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
+                    <img class="home-link-icon" src="/icons/linkedin.png">
+                </a>
+                <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
+                    <img class="home-link-icon" src="/icons/codepen.png">
+                </a>
+                <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+                    <img class="home-link-icon" src="/icons/stackoverflow.png">
+                </a>
+                <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
+                    <img class="home-link-icon" src="/icons/github.png">
+                </a>
+            </div>
+
+
+            <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+                <canvas style="filter: contrast(1.5)">
+                </canvas></nebula-client>
+            <button class="main-footer-top-btn" aria-label="Back to top">^</button>
+        </footer>
+    </div>
+    <script>
+        (() => {
+            const topBtn = document.querySelector(".main-footer-top-btn");
+            topBtn.addEventListener("click", () => {
+                window.scrollTo(0, 0);
+            });
+        })();
+    </script>
+    <script>
+        (() => {
+            const mainHeader = document.querySelector(".main-header");
+            const indicator = document.querySelector(".main-header-indicator");
+
+            let currentY = 0;
+            let currentYTarget = 0;
+
+            let mouseHovering = false;
+
+            let isTouch = false;
+            let lastScrollY = window.scrollY;
+            let lastCursorY = 0;
+            window.addEventListener("scroll", debounce(onScroll));
+            window.addEventListener("mousemove", debounce(onMouseMove, 100));
+            window.addEventListener("touchstart", onWindowTouchStart);
+            window.addEventListener("touchmove", onWindowTouchMove);
+            mainHeader.addEventListener("touchstart", onTouchStart);
+
+            function onScroll(event) {
+                const dy = window.scrollY - lastScrollY;
+
+                // move with the page
+                currentY -= dy;
+                if (currentY > 0) {
+                    currentY = 0;
+                } else if (currentY < -mainHeader.offsetHeight) {
+                    currentY = -mainHeader.offsetHeight;
+                }
+
+                currentYTarget = currentY;
+                updateDOM();
+
+                lastScrollY = window.scrollY;
+            }
+
+            function onMouseMove(event) {
+                if (isTouch) return;
+
+                const dy = event.clientY - lastCursorY;
+
+                // show when mouse goes near the top
+                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
+                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
+                    currentYTarget = 0;
+                    mouseHovering = true;
+                } else if (
+                    mouseHovering &&
+                    dy > 0 &&
+                    event.clientY > mainHeader.offsetHeight * 4
+                ) {
+                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
+                    mouseHovering = false;
+                }
+
+                updateDOM();
+                lastCursorY = event.clientY;
+            }
+
+            function onWindowTouchStart(event) {
+                isTouch = true;
+                lastCursorY = event.touches[0].clientY;
+            }
+
+            function onWindowTouchMove(event) {
+                const dy = event.touches[0].clientY - lastCursorY;
+
+                // move with touch but only if at edge
+                if (window.scrollY <= 0 && dy > 0) {
+                    currentY += dy;
+                    if (currentY >= 0) {
+                        currentY = 0;
+                        document.body.style.overscrollBehaviorY = null;
+                    } else if (currentY < 0) {
+                        document.body.style.overscrollBehaviorY = "none";
+                    }
+
+                    currentYTarget = currentY;
+                    updateDOM();
+                }
+
+                lastCursorY = event.touches[0].clientY;
+            }
+
+            function onTouchStart(event) {
+                currentYTarget = 0;
+                updateDOM();
+                console.log("onTouchStart");
+            }
+
+            const updateDOM = debounce(() => {
+                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
+
+                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
+                mainHeader.classList.toggle("hidden", isHidden);
+
+                if (Math.abs(currentY - currentYTarget) > 1) {
+                    currentY += (currentYTarget - currentY) * 0.2;
+                    requestAnimationFrame(updateDOM);
+                } else {
+                    currentY = currentYTarget;
+                }
+            });
+
+            if (mainHeader.classList.contains("prehide")) {
+                document.body.style.overscrollBehaviorY = "none";
+                currentY = currentYTarget = -mainHeader.offsetHeight;
+                updateDOM();
+            }
+
+            function debounce(fn, ms = 0) {
+                let recentlyFired = false;
+                return (...args) => {
+                    if (recentlyFired) return;
+                    recentlyFired = true;
+                    if (ms === 0) {
+                        requestAnimationFrame(() => (recentlyFired = false));
+                    } else {
+                        setTimeout(() => (recentlyFired = false), ms);
+                    }
+                    return fn(...args);
+                };
+            }
+        })();
+    </script>
+</body>
+</html>
