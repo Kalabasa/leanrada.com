@@ -9,7 +9,7 @@ if [[ `git status --porcelain` ]]; then
   exit
 fi
 
-# Update in a worktree.
+# Perform the update in a worktree
 git worktree add -f update src
 cd update
 
@@ -20,7 +20,7 @@ node scripts/update-hits.js
 # Commit updates
 git add .
 
-if ! [[ `git diff-index --cached --quiet HEAD` ]]; then
+if ! git diff-index --cached --quiet HEAD; then
   git commit -m "Automated regular data update."
   git push
 else
