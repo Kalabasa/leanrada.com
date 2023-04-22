@@ -8,10 +8,19 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    environment: update-data
 
     steps:
       - uses: actions/checkout@v3
         with:
           ref: src
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - uses: borales/actions-yarn@v4
+        with:
+          cmd: install
 
       - run: scripts/update.sh
