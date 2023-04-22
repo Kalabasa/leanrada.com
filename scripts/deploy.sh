@@ -33,6 +33,9 @@ rsync -Pr --del out/site/ prod/docs/
 # Copy static files to prod
 rsync -Pr prod-static/ prod/
 
+# Copy github files to prod
+rsync -Pr --del .github/ prod/.github/
+
 # Commit prod changes
 cd prod
 git add .
