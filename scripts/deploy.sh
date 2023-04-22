@@ -30,10 +30,12 @@ git worktree add -f prod master
 # Copy build files to prod
 rsync -Pr --del out/site/ prod/docs/
 
+# Copy static files to prod
+rsync -Pr prod-static/ prod/
+
 # Commit prod changes
 cd prod
-touch docs/.nojekyll
-git add docs
+git add .
 
 if ! git diff-index --cached --quiet HEAD; then
   git commit -m "Deploy"
