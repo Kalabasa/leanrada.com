@@ -25,6 +25,7 @@ npm run clean
 npm run build-prod
 
 # Update prod in a worktree. master == prod
+git fetch
 git worktree add -f prod master
 
 # Copy build files to prod

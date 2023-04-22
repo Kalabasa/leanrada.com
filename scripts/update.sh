@@ -10,6 +10,7 @@ if [[ `git status --porcelain` ]]; then
 fi
 
 # Perform the update in a worktree
+git fetch
 git worktree add -f update src
 cd update
 
