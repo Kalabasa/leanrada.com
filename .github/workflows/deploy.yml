@@ -1,0 +1,22 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment: github-pages
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: src
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 19
+
+      - run: npm install
+
+      - run: scripts/deploy.sh
