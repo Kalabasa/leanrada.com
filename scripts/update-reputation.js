@@ -3,8 +3,6 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const fetch = require("node-fetch");
 
-const cacheTTL = 1000 * 60 * 60 * 24 * 30;
-
 if (require.main === module) {
   process.chdir(path.resolve(__dirname, ".."));
   console.log(process.cwd());
@@ -26,19 +24,10 @@ async function getReputation() {
 }
 
 async function updateReputation(outFile) {
-  const updateTime = Date.now();
-
-  try {
-    if (fs.existsSync(outFile)) {
-      const data = JSON.parse(fs.readFileSync(outFile));
-      if (data.updateTime + cacheTTL > updateTime) return;
-    }
-  } catch (e) { }
-
   try {
     console.log("Updating reputation");
     const reputation = await getReputation();
-    await fs.writeFile(outFile, JSON.stringify({ updateTime, reputation }));
+    await fs.writeFile(outFile, JSON.stringify({ reputation }));
     console.log("Reputation written to file:", outFile);
   } catch (e) {
     console.log("Error updating reputation:", e);

@@ -3,7 +3,6 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const fetch = require("node-fetch");
 
-const cacheTTL = 1000 * 60 * 60 * 24;
 const apiKey = process.env.GOATCOUNTER_API_KEY;
 
 if (!apiKey) {
@@ -36,19 +35,10 @@ async function getHits() {
 }
 
 async function updateHits(outFile) {
-  const updateTime = Date.now();
-
-  try {
-    if (fs.existsSync(outFile)) {
-      const data = JSON.parse(fs.readFileSync(outFile));
-      if (data.updateTime + cacheTTL > updateTime) return;
-    }
-  } catch (e) { }
-
   try {
     console.log("Updating hits");
     const hits = await getHits();
-    await fs.writeFile(outFile, JSON.stringify({ updateTime, hits }));
+    await fs.writeFile(outFile, JSON.stringify({ hits }));
     console.log("Hits written to file:", outFile);
   } catch (e) {
     console.log("Error updating hits:", e);
@@ -56,5 +46,5 @@ async function updateHits(outFile) {
 }
 
 module.exports = {
-  updateReputation: updateHits,
+  updateHits,
 };
