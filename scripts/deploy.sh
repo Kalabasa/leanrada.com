@@ -20,9 +20,9 @@ if [[ `git status --porcelain` ]]; then
 fi
 
 # Build project
-yarn install
-yarn clean
-yarn build-prod
+npm install
+npm run clean
+npm run build-prod
 
 # Update prod in a worktree. master == prod
 git worktree add -f prod master

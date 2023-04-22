@@ -7,7 +7,7 @@ pwd
 touch out/lint.txt
 truncate -s 0 out/lint.txt
 
-yarn build-dev > /dev/null
+npm run build-dev > /dev/null
 
 npx textlint -o out/lint.txt --no-color -f pretty-error "out/site/wares/*/**/*.html" "out/site/notes/*/**/*.html"
 
