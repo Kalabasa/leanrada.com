@@ -22,6 +22,8 @@ node scripts/update-hits.js
 git add .
 
 if ! git diff-index --cached --quiet HEAD; then
+  git config --worktree user.email "Kalabasa@users.noreply.github.com"
+  git config --worktree user.name "Kalabasa"
   git commit -m "Automated regular data update."
   git push
 else
