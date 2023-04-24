@@ -42,6 +42,7 @@ cd prod
 git add .
 
 if ! git diff-index --cached --quiet HEAD; then
+  git config extensions.worktreeConfig true
   git config --worktree user.email "Kalabasa@users.noreply.github.com"
   git config --worktree user.name "Kalabasa"
   git commit -m "Deploy"
