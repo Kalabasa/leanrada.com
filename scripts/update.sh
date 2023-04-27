@@ -11,7 +11,7 @@ fi
 
 # Perform the update in a worktree
 git fetch
-git worktree add -f update src
+git worktree add -f update origin/src
 cd update
 
 # Update
@@ -26,7 +26,7 @@ if ! git diff-index --cached --quiet HEAD; then
   git config --worktree user.email "Kalabasa@users.noreply.github.com"
   git config --worktree user.name "Kalabasa"
   git commit -m "Automated regular data update."
-  git push
+  git push origin HEAD:src
 else
   echo >&2 "No updates to commit"
 fi

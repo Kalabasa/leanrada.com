@@ -26,7 +26,7 @@ npm run build-prod
 
 # Update prod in a worktree. master == prod
 git fetch
-git worktree add -f prod master
+git worktree add -f prod origin/master
 
 # Copy build files to prod
 rsync -Pr --del out/site/ prod/docs/
@@ -46,7 +46,7 @@ if ! git diff-index --cached --quiet HEAD; then
   git config --worktree user.email "Kalabasa@users.noreply.github.com"
   git config --worktree user.name "Kalabasa"
   git commit -m "Deploy"
-  git push
+  git push origin HEAD:master
 else
   echo >&2 "No changes to deploy"
 fi
