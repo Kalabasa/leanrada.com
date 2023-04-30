@@ -26,30 +26,46 @@
 
       Before starting to build anything complex, it's important to start small and think about basic elements. Unlike JavaScript, HTML and CSS are declarative languages. They don't have procedures or functions, control flow, if-statements, and the like. Instead they have markup and rules. We’ll build upon these rules to create complex game logic.
       
-      For starters, let’s do something that’s fairly common on the web: **styling a checkbox’s on and off state**. To do this, use the `:checked` pseudo-class selector to react to the checkbox’s state:
+      For starters, let’s do something that’s fairly common on the web: **custom checkbox styles**. To do this, use the `:checked` pseudo-class selector to react to the checkbox’s state and the **sibling combinator** `~` to apply the style on a separate span element that acts as a fake visual checkbox:
       
-      (demo of checkbox)
+      <div class="demo-box demo1">
+        <label><input type="checkbox" /><span></span> Check this out</label>
+      </div>
       
       <code-block language="css" :code="`\
-input:checked {
-  background: blue;
+input:checked ~ span {
+  background-color: blue;
+  transform: rotate(45deg);
 }
 `" />
 
-      Next, we can use CSS trickery to turn this into a machine that tells you whether you need an umbrella today! I used the **sibling combinator** `~` to connect the inputs to a separate output.
+      You will realize that the sibling combinator applies beyond styling boxes next to inputs. We can do some action at a distance, for example:
 
-      (demo of [is raining?] → take umbrella)
-
+      <div class="demo-box demo2">
+        <input type="checkbox" id="demo2_input" />
+        <label for="demo2_input">Is it raining?</label>
+        <p>As you know, when it rains, water falls down from the sky. This may cause wetness. An umbrella is a device which shields the user from falling particles such as the aforementioned rainwater.</p>
+        <fieldset class="advice">
+          <legend>Advice</legend>
+          <span class="take-umbrella">Take an umbrella today!</span>
+          <span class="no-umbrella">No need for an umbrella!</span>
+        </fieldset>
+      </div>
+      
       <code-block language="css" :code="`\
-input:checked ~ .advise .take-umbrella {
+input:checked ~ .advice .take-umbrella {
 	visibility: visible;
 }
-input:checked ~ .advise .no-umbrella {
+input:checked ~ .advice .no-umbrella {
 	visibility: hidden;
 }
 `" />
 
-      As you will see later, the sibling combinator `~` can be very useful for complex CSS interactions.
+      Let’s take this to the next level with a bit of CSS trickery. And with `&lt;label&gt;`’s `for` attribute enabling even more action at a distance, we can make pretty much any kind of UI we want!
+
+      <css-rain-machine-demo />
+
+      As you will see later, the sibling combinator `~` can be very useful for these CSS interactions.
 
       ### OR
 
@@ -58,8 +74,8 @@ input:checked ~ .advise .no-umbrella {
       (demo of [is raining?, is sunny?] → take umbrella or parasol)
 
       <code-block language="css" :code="`\
-input#raining:checked ~ .advise .take-umbrella,
-input#sunny:checked ~ .advise .take-umbrella {
+input#raining:checked ~ .advice .take-umbrella,
+input#sunny:checked ~ .advice .take-umbrella {
   visibility: visible;
 }
 
@@ -250,3 +266,48 @@ input[value=&quot;1&quot;]:checked
     </markdown>
   </blog-page>
 </html>
+
+<style>
+  .demo-box {
+    border-radius: 12px;
+    background-color: #eee;
+    color: #000;
+    padding: 12px;
+  }
+
+  .demo1 label {
+    cursor: pointer;
+  }
+  .demo1 input {
+    appearance: none;
+  }
+  .demo1 span {
+    display: inline-block;
+    width: 1ch;
+    height: 1ch;
+    border: solid 2px blue;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  .demo1 input:checked ~ span {
+    background-color: blue;
+    transform: rotate(45deg);
+  }
+
+  .demo2 .advice {
+    min-height: 2em;
+    min-height: 2lh;
+  }
+  .demo2 .advice span {
+    display: block;
+    position: absolute;
+  }
+  .demo2 .take-umbrella {
+    visibility: hidden;
+  }
+  .demo2 input:checked ~ .advice .take-umbrella {
+    visibility: visible;
+  }
+  .demo2 input:checked ~ .advice .no-umbrella {
+    visibility: hidden;
+  }
+</style>
