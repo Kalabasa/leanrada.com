@@ -1,0 +1,252 @@
+<html>
+  <page-title title="How I built Tic-tac-toe game AI in pure CSS" />
+  <blog-page>
+    <!-- prettier-ignore -->
+    <markdown>
+      <blog-header
+        title="How I built Tic-tac-toe game AI in pure CSS"
+        :heroimgsrc="url('hero.png')" />
+
+      <blog-post-info date="5 May 2023" read-mins="1" />
+
+      As a software developer, I'm always looking for new and fun ways to challenge myself. Some time ago, I decided to implement Tic-Tac-Toe with a computer-controlled enemy using only HTML and CSS. That is, no JavaScript! While I already knew the possibility of advanced interactions with CSS (e.g. fancy checkboxes), I wanted to see how far I could take it.
+
+      Here’s a CodePen of it! Can you beat a stylesheet in a game of tic-tac-toe?
+      
+      <p class="codepen" data-height="700" data-theme-id="dark" data-default-tab="result" data-slug-hash="oVMOZK" data-user="kalabasa" style="height: 300px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;">
+        <span>See the Pen <a href="https://codepen.io/kalabasa/pen/oVMOZK">
+        Pure CSS Tic Tac Toe AI</a> by Kalabasa (<a href="https://codepen.io/kalabasa">@kalabasa</a>)
+        on <a href="https://codepen.io">CodePen</a>.</span>
+      </p>
+      <script async src="https://cpwebassets.codepen.io/assets/embed/ei.js"></script>
+
+      In this post, I will write about how I arrived at the solution. Let’s start with the fundamentals before working our way up to the final solution.
+
+      ## Building blocks
+
+      Before starting to build anything complex, it's important to start small and think about basic elements. Unlike JavaScript, HTML and CSS are declarative languages. They don't have procedures or functions, control flow, if-statements, and the like. Instead they have markup and rules. We’ll build upon these rules to create complex game logic.
+      
+      For starters, let’s do something that’s fairly common on the web: **styling a checkbox’s on and off state**. To do this, use the `:checked` pseudo-class selector to react to the checkbox’s state:
+      
+      (demo of checkbox)
+      
+      <code-block language="css" :code="`\
+input:checked {
+  background: blue;
+}
+`" />
+
+      Next, we can use CSS trickery to turn this into a machine that tells you whether you need an umbrella today! I used the **sibling combinator** `~` to connect the inputs to a separate output.
+
+      (demo of [is raining?] → take umbrella)
+
+      <code-block language="css" :code="`\
+input:checked ~ .advise .take-umbrella {
+	visibility: visible;
+}
+input:checked ~ .advise .no-umbrella {
+	visibility: hidden;
+}
+`" />
+
+      As you will see later, the sibling combinator `~` can be very useful for complex CSS interactions.
+
+      ### OR
+
+      A single binary input with 1:1 correspondence to outputs is not very exciting, is it? Let’s add another input and then implement an **OR** construct to determine the output. In CSS this can be easily achieved by a **selector list** (i.e., comma-separated selectors).
+
+      (demo of [is raining?, is sunny?] → take umbrella or parasol)
+
+      <code-block language="css" :code="`\
+input#raining:checked ~ .advise .take-umbrella,
+input#sunny:checked ~ .advise .take-umbrella {
+  visibility: visible;
+}
+
+/* General form: if [C1] or [C2] then [R]*/
+[C1] ~ [R element],
+[C2] ~ [R element] {
+  [R effect]
+}
+`" />
+
+      ### AND
+
+      How about **AND**? We can implement an AND construct too! This involves chaining the inputs with sibling combinators in a single selector.
+
+      (demo of [is raining?, is windy?] → take raincoat)
+
+      <code-block language="css" :code="`\
+input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
+  visibility: visible;
+}
+
+/* General form: if [C1] and [C2] then [R]*/
+[C1] ~ [C2] ~ [R element] {
+  [R effect]
+}
+`" />
+
+      Another basic computing operator aside from AND and OR is the **NOT** operator. We don’t really need that here, but for the record, there’s the `:not()` pseudo-class in CSS.
+
+      ## Prototype: Three-in-a-row
+
+      As a proof of concept and precursor to Tic-tac-toe, let’s build a Three-in-a-row game. We’ll use a 3x3 array of checkbox inputs and the AND and OR constructs.
+
+      (demo of three-in-a-row)
+
+      <code-block language="css" :code="`\
+#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win {
+  visibility: visible;
+}
+`" />
+
+      Let’s take a closer look at the first line:
+
+      <code-block language="css" :code="`\
+/* if [box #1 marked] and [box #2 marked] and [box #3 marked] then [win] */
+#1:checked ~ #2:checked ~ #3:checked ~ .win
+`" />
+
+      Here we see an AND rule with 3 operands. The operands correspond to the three boxes in the top row (boxes #1, #2, and #3). We can conclude that this particular rule allows the player to win by specifically marking the three boxes in the top row.
+
+      But there are 8 such ways to win the game. Hence this 3-operand AND rule is repeated 8 times to cover **each possible winning combination. They are then concatenated together into one big OR rule, as doing any one of them is sufficient to win the game.
+
+      <code-block language="css" :code="`\
+/*
+ * if
+ *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
+ *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
+ *   or ([#7 marked] and [#8 marked] and [#9 marked]) // bottom row
+ *   .
+ *   :
+ *   or ([#3 marked] and [#5 marked] and [#7 marked]) // upward diagonal
+ * then
+ *   [win]
+ */
+#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win {
+  visibility: visible;
+}
+`" />
+
+      ## Taking turns
+
+      So far, the order of your inputs doesn't matter. You can even undo your inputs by unchecking the boxes under the hood! There's always a path to every other state in the game.
+
+      That won’t fly in a game of Tic-tac-toe! In Tic-tac-toe, players take turns incrementally adding marks on the board. No backsies! There are also terminal states where no further input is possible, such as a win or a draw.
+
+      To implement turns and wins, we need a way to "consume" inputs. We can do this by hiding inputs when they are consumed. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.
+
+      (demo of sequential input / “wizard” dialog)
+
+      What I did to make Tic-tac-toe’s turn-based input was make multiple sets of the 3x3 input board, that is, one set of 3x3 inputs for each turn. Each set is exclusively visible only on its turn.
+
+      (illustration)
+
+      And here’s a demo of sequential inputs. Note that I used `radio` type inputs here, but that’s just semantics.
+
+      (demo input sets)
+
+      <code-block language="css" :code="`\
+/* Hide turn 1 inputs when turn 1 is played */
+input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_1&quot;] {
+	display: none;
+}
+/* Show next turn's inputs */
+input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
+	visibility: visible;
+}
+/* And so on... */
+`" />
+
+      Notice in the above demo that you can put marks on the same spot repeatedly. You’re not supposed to be able to play on the same space twice, so we also need to hide these invalid inputs.
+
+      <code-block language="css" :code="`\
+/* Hide inputs of the same space in subsequent turns when it is played */
+input[value=&quot;1&quot;]:checked ~ input[value=&quot;1&quot;],
+input[value=&quot;2&quot;]:checked ~ input[value=&quot;2&quot;],
+input[value=&quot;3&quot;]:checked ~ input[value=&quot;3&quot;]
+... {
+	display: none;
+}
+`" />
+
+      ## Game AI
+
+      <box-note>
+        Note I’m using the more specific term “game AI”, because the term “AI” has come to mean some learning machine nowadays. Game AI simply means NPCs or computer-controlled agents.
+      </box-note>
+
+      First of all, understand that Tic-tac-toe is a solved game, which means there exists a perfect strategy. For every move, there is a known optimal counter move.
+
+      This is perfect for CSS as it’s just a bunch of static declarations. We can list all of the optimal moves and directly translate them into CSS declarations!
+
+      As a side-effect, the AI would never lose. But that’s not a bad thing at all!
+
+      The rules are, essentially, something like these:
+
+      (gif of block)
+
+      “Block potential loss” If X(1) AND X(2) then O(3)
+
+      <code-block language="css" :code="`\
+input[value=&quot;1&quot;]:checked
+~ input[value=&quot;2&quot;]:checked
+~ .o3 {
+  visibility: visible,
+}
+`" />
+
+      (gif of win)
+
+      “Winning move” If O(3) and O(7) then O(5)
+
+      We can’t really check for the current state of the game, like the AI’s previous moves, beyond the player’s inputs. There is no direct translation of O(3) and O(7) into CSS conditions. How would the AI know that a third *O* is the winning move if it can’t check the first and second *O*s?
+
+      Well, since the AI is deterministic, we know specifically how those previous *O*s came about - those are just static responses to previous inputs which are defined in previous rules!
+
+      <code-block language="css" :code="`\
+input[value=&quot;1&quot;]:checked
+~ input[value=&quot;2&quot;]:checked /* We know X(1) and X(2) produces O(3) */
+~ input[value=&quot;4&quot;]:checked /* X(1) and X(4) produces O(7) */
+.o5 { /* Therefore, X(1) & X(2) & X(4) <=> O(3) & O(7) */
+  visibility: visible,
+}
+`" />
+
+      <box-note>
+        ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
+      </box-note>
+
+      Alright, now that we can implement game AI rules in CSS, what are the actual rules? We know that the rules must exhaustively cover every possible move in Tic-tac-toe. Is there a list of all the optimal moves, like a cheatsheet?
+
+      Well, there is a cheatsheet, but it’s for humans.
+
+      (Tic-tac-toe cheatsheet for humans)
+
+      It’s not really feasible to write CSS based on this, unless you have more than 60,480 hours to spare.
+
+      What I did was I wrote a program that generates the rules from an exhaustive search of the game state space. It simulated all possible moves in Tic-tac-toe, recorded the ones that lead to a win or a draw, and saved those winning moves as rules.
+
+      (pseudo-code)
+
+      The program directly outputs CSS so there’s no need for a translation like in the examples above. This CSS output is directly used in the game.
+
+      (Link to codepen)
+    </markdown>
+  </blog-page>
+</html>
