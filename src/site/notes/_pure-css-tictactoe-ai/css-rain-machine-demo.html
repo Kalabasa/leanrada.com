@@ -1,14 +1,157 @@
-<div class="css-rain-machine-demo">
-  <input input="css-rain-machine-rainy" type="checkbox" />
-  <input input="css-rain-machine-sunny" type="checkbox" />
-  <input input="css-rain-machine-windy" type="checkbox" />
+<div
+  :class="'css-rain-machine-demo css-rain-machine-demo-' + (attrs.demoNumber)"
+>
+  <input
+    class="css-rain-machine-rainy"
+    :id="'css-rain-machine-rainy--' + attrs.demoNumber"
+    type="checkbox"
+  />
+  <input
+    class="css-rain-machine-sunny"
+    :id="'css-rain-machine-sunny--' + attrs.demoNumber"
+    type="checkbox"
+  />
+  <input
+    class="css-rain-machine-windy"
+    :id="'css-rain-machine-windy--' + attrs.demoNumber"
+    type="checkbox"
+  />
 
   <div class="css-rain-machine-box">
-    <div class="css-rain-machine-screen"></div>
+    <div class="css-rain-machine-screen">
+      <img class="css-rain-machine-umbrella" :src="url('./umbrella.png')" />
+      <img class="css-rain-machine-raincoat" :src="url('./raincoat.png')" />
+    </div>
     <div class="css-rain-machine-controls">
-      <label for="css-rain-machine-rainy">Rainy</label>
-      <label for="css-rain-machine-sunny">Sunny</label>
-      <label for="css-rain-machine-windy">Windy</label>
+      <label
+        class="css-rain-machine-rainy"
+        :for="'css-rain-machine-rainy--' + attrs.demoNumber"
+        >Rainy</label
+      >
+      <label
+        class="css-rain-machine-sunny"
+        :for="'css-rain-machine-sunny--' + attrs.demoNumber"
+        >Sunny</label
+      >
+      <label
+        class="css-rain-machine-windy"
+        :for="'css-rain-machine-windy--' + attrs.demoNumber"
+        >Windy</label
+      >
     </div>
   </div>
 </div>
+
+<style>
+  .css-rain-machine-demo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+  }
+  .css-rain-machine-demo > input {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+    appearance: none;
+  }
+  .css-rain-machine-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px;
+    padding: 30px;
+    border-radius: 20px;
+    border-top: solid 1px #88bde0;
+    background-color: #628ab8;
+    box-shadow: 0 40px 0 #587ba3;
+    margin-bottom: 40px; /* match box-shadow */
+    box-sizing: border-box;
+  }
+  .css-rain-machine-screen {
+    position: relative;
+    width: 340px;
+    height: 340px;
+    border-radius: 8px;
+    border-bottom: solid 1px #88bde0;
+    background-color: #1b2c2b;
+  }
+  .css-rain-machine-screen > img {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 20px #50e66c44);
+    opacity: 0;
+  }
+  .css-rain-machine-controls {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .css-rain-machine-controls > label {
+    flex: 0 0 auto;
+    min-width: 60px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 20px;
+    text-transform: uppercase;
+    background-color: #eff2f3;
+    color: #4c5052;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #b6c4c9;
+    display: none; /* overridden per demo number */
+  }
+  .css-rain-machine-demo label.css-rain-machine-rainy,
+  .css-rain-machine-demo.css-rain-machine-demo-2 label.css-rain-machine-sunny,
+  .css-rain-machine-demo.css-rain-machine-demo-3 label.css-rain-machine-windy {
+    display: block;
+  }
+  .css-rain-machine-demo
+    > input.css-rain-machine-rainy:checked
+    ~ .css-rain-machine-box
+    label.css-rain-machine-rainy,
+  .css-rain-machine-demo
+    > input.css-rain-machine-sunny:checked
+    ~ .css-rain-machine-box
+    label.css-rain-machine-sunny,
+  .css-rain-machine-demo
+    > input.css-rain-machine-windy:checked
+    ~ .css-rain-machine-box
+    label.css-rain-machine-windy {
+    transform: translateY(5px);
+    background-color: #b6c4c9;
+    box-shadow: 0 0 0 #b6c4c9;
+  }
+  .css-rain-machine-demo.css-rain-machine-demo-1
+    > input.css-rain-machine-rainy:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-umbrella {
+    opacity: 1;
+  }
+  .css-rain-machine-demo.css-rain-machine-demo-2
+    > input.css-rain-machine-rainy:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-umbrella,
+  .css-rain-machine-demo.css-rain-machine-demo-2
+    > input.css-rain-machine-sunny:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-umbrella {
+    opacity: 1;
+  }
+  .css-rain-machine-demo.css-rain-machine-demo-3
+    > input.css-rain-machine-rainy:checked
+    ~ input.css-rain-machine-windy:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-raincoat {
+    opacity: 1;
+  }
+</style>
