@@ -22,6 +22,8 @@
 
       In this post, I will write about how I arrived at the solution. Let’s start with the fundamentals before working our way up to the final solution.
 
+      Disclaimer: This is an experiment only. Never do this in real life!
+
       ## Building blocks
 
       Before starting to build anything complex, it's important to start small and think about basic elements. Unlike JavaScript, HTML and CSS are declarative languages. They don't have procedures or functions, control flow, if-statements, and the like. Instead they have markup and rules. We’ll build upon these rules to create complex game logic.
@@ -131,7 +133,9 @@ input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
 }
 `" />
 
-      Let’s take a closer look at the first line:
+      Yes, it’s kinda hacky, but that is to be expected when you’re forcing logic into CSS. Btw, the CSS for the real Tic-tac-toe logic is over 9000 lines. I never said it would be clean.
+
+      Anyway, let’s take a closer look at the first line:
 
       <code-block language="css" :code="`\
 /* if [box #1 marked] and [box #2 marked] and [box #3 marked] then [win] */
@@ -172,46 +176,36 @@ input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
 
       That won’t fly in a game of Tic-tac-toe! In Tic-tac-toe, players take turns incrementally adding marks on the board. No backsies! There are also terminal states where no further input is possible, such as a win or a draw.
 
-      To implement turns and wins, we need a way to "consume" inputs. We can do this by hiding inputs when they are consumed. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.
+      To implement turns and wins, we need a way to "consume" inputs. We can do this by hiding inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.
 
       (demo of sequential input / “wizard” dialog)
 
-      What I did to make Tic-tac-toe’s turn-based input was make multiple sets of the 3x3 input board, that is, one set of 3x3 inputs for each turn. Each set is exclusively visible only on its turn.
+      What I did to make Tic-tac-toe’s turn-based input was make multiple sets of the 3x3 input board, that is, one set of 3x3 inputs for each turn. Each set is exclusively interactable only on its turn.
 
       (illustration)
 
       And here’s a demo of sequential inputs. Note that I used `radio` type inputs here, but that’s just semantics.
 
-      (demo input sets)
+      <css-three-in-a-row-seq demo-number="1" />
+
+      <box-note>I was only able to implement up to three turns here. And no win conditions! It has been&hellip; a little tedious. 😓</box-note>
 
       <code-block language="css" :code="`\
-/* Hide turn 1 inputs when turn 1 is played */
+/* Disable turn 1 inputs when turn 1 is played */
 input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_1&quot;] {
-	display: none;
+	pointer-events: none;
 }
-/* Show next turn's inputs */
+/* Enable next turn's inputs */
 input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
-	visibility: visible;
+	pointer-events: all;
 }
 /* And so on... */
-`" />
-
-      Notice in the above demo that you can put marks on the same spot repeatedly. You’re not supposed to be able to play on the same space twice, so we also need to hide these invalid inputs.
-
-      <code-block language="css" :code="`\
-/* Hide inputs of the same space in subsequent turns when it is played */
-input[value=&quot;1&quot;]:checked ~ input[value=&quot;1&quot;],
-input[value=&quot;2&quot;]:checked ~ input[value=&quot;2&quot;],
-input[value=&quot;3&quot;]:checked ~ input[value=&quot;3&quot;]
-... {
-	display: none;
-}
 `" />
 
       ## Game AI
 
       <box-note>
-        Note I’m using the more specific term “game AI”, because the term “AI” has come to mean some learning machine nowadays. Game AI simply means NPCs or computer-controlled agents.
+        I’m using the more specific term “game AI”, because the term “AI” has come to mean some learning machine nowadays. Game AI simply means NPCs or computer-controlled agents.
       </box-note>
 
       First of all, understand that Tic-tac-toe is a solved game, which means there exists a perfect strategy. For every move, there is a known optimal counter move.
