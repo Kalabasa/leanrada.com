@@ -178,17 +178,11 @@ input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
 
       To implement turns and wins, we need a way to "consume" inputs. We can do this by hiding inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.
 
-      (demo of sequential input / “wizard” dialog)
+      For Tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of 3x3 inputs for each turn. They are stacked on top of each other. Each set is exclusively interactable only on its turn.
 
-      What I did to make Tic-tac-toe’s turn-based input was make multiple sets of the 3x3 input board, that is, one set of 3x3 inputs for each turn. Each set is exclusively interactable only on its turn.
-
-      (illustration)
-
-      And here’s a demo of sequential inputs. Note that I used `radio` type inputs here, but that’s just semantics.
-
-      <css-three-in-a-row-seq demo-number="1" />
-
-      <box-note>I was only able to implement up to three turns here. And no win conditions! It has been&hellip; a little tedious. 😓</box-note>
+      <blog-media
+        alt="input sets illustration"
+        :src="url('./input_sets.mp4')" />
 
       <code-block language="css" :code="`\
 /* Disable turn 1 inputs when turn 1 is played */
@@ -202,6 +196,12 @@ input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
 /* And so on... */
 `" />
 
+      And here’s a demo of sequential inputs. Note that I used `radio` type inputs here, but that’s just semantics.
+
+      <box-note>I was only able to implement up to three turns here. And no win conditions! It has been&hellip; a little tedious. 😓</box-note>
+
+      <css-three-in-a-row-seq demo-number="1" />
+
       ## Game AI
 
       <box-note>
@@ -214,11 +214,15 @@ input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
 
       As a side-effect, the AI would never lose. But that’s not a bad thing at all!
 
-      The rules are, essentially, something like these:
+      The rules are essentially a bunch of if-then statements, such as these ones:
 
-      (gif of block)
+      ### Blocking
 
-      “Block potential loss” If X(1) AND X(2) then O(3)
+      Example rule: _If **X(1)** and **X(2)** then **O(3)**._
+
+      In English, if X was played at box #1 (top-left) and another X is at #2 (top-center), then block by playing O at box #3 (top-right).
+
+      (In these exambles, X is the player and O is the AI.)
 
       <code-block language="css" :code="`\
 input[value=&quot;1&quot;]:checked
@@ -228,11 +232,17 @@ input[value=&quot;1&quot;]:checked
 }
 `" />
 
-      (gif of win)
+      <blog-media
+        alt="blocking rule animation"
+        :src="url('./blocking.mp4')" />
 
-      “Winning move” If O(3) and O(7) then O(5)
+      ### Winning moves
 
-      We can’t really check for the current state of the game, like the AI’s previous moves, beyond the player’s inputs. There is no direct translation of O(3) and O(7) into CSS conditions. How would the AI know that a third *O* is the winning move if it can’t check the first and second *O*s?
+      Example rule: _If **O(3)** and **O(7)** then **O(5)**._
+
+      If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win by playing O at box #5 (center).
+
+      Now, this rule’s conditions require that we know the location of the AI’s previous moves. But we can’t really check for the current state of the game beyond the player’s inputs. There is no direct translation of **O(3)** and **O(7)** into CSS conditions. How would the AI know that a third *O* is the winning move if it can’t check the first and second *O*s?
 
       Well, since the AI is deterministic, we know specifically how those previous *O*s came about - those are just static responses to previous inputs which are defined in previous rules!
 
@@ -240,10 +250,16 @@ input[value=&quot;1&quot;]:checked
 input[value=&quot;1&quot;]:checked
 ~ input[value=&quot;2&quot;]:checked /* We know X(1) and X(2) produces O(3) */
 ~ input[value=&quot;4&quot;]:checked /* X(1) and X(4) produces O(7) */
-.o5 { /* Therefore, X(1) & X(2) & X(4) <=> O(3) & O(7) */
+/* Therefore, X(1) & X(2) & X(4) is equivalent to O(3) & O(7). */
+/* If X(1) & X(2) & X(4) then O(5) is a winnng move! */
+.o5 {
   visibility: visible,
 }
 `" />
+
+      <blog-media
+        alt="winning rule animation"
+        :src="url('./winning.mp4')" />
 
       <box-note>
         ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
@@ -253,7 +269,9 @@ input[value=&quot;1&quot;]:checked
 
       Well, there is a cheatsheet, but it’s for humans.
 
-      (Tic-tac-toe cheatsheet for humans)
+      <a href="https://xkcd.com/832/">
+        <blog-media src="https://imgs.xkcd.com/comics/tic_tac_toe.png" />
+      </a>
 
       It’s not really feasible to write CSS based on this, unless you have more than 60,480 hours to spare.
 
