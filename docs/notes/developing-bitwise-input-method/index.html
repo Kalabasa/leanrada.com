@@ -1166,7 +1166,7 @@
                                     Developing a bitwise keyboard input method
                                 </h1>
                             </div>
-                            <img srcset="/notes/developing-bitwise-input-method/hero_400.generated.jpg 400w,/notes/developing-bitwise-input-method/hero_800.generated.jpg 800w,/notes/developing-bitwise-input-method/hero_894.generated.jpg 894w,/notes/developing-bitwise-input-method/hero_1146.generated.jpg 1146w,/notes/developing-bitwise-input-method/hero_1400.generated.jpg 1400w" sizes="(max-width:400px) 400px,not (min-width:800px) 800px,(max-width:1117px) 894px,(max-width:1433px) 1146px, 1400px" class="blog-header-hero" src="/notes/developing-bitwise-input-method/hero.jpg" spec="100% [800) 80%">
+                            <img srcset="/notes/developing-bitwise-input-method/hero_800.generated.jpg 800w,/notes/developing-bitwise-input-method/hero_1020.generated.jpg 1020w,/notes/developing-bitwise-input-method/hero_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/developing-bitwise-input-method/hero.jpg" spec="100% [800) 80%">
                             <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
                                 <path></path>
                             </svg>
@@ -1180,13 +1180,13 @@
                         <h2 id="rationale">Rationale</h2>
                         <p>I use a compact keyboard called the <strong>Lily58</strong> as my main keyboard. It’s a column-staggered split keyboard.</p>
                         <div class="blog-media blog-media-default">
-                            <img srcset="/notes/developing-bitwise-input-method/lily58_332.generated.jpg 332w,/notes/developing-bitwise-input-method/lily58_664.generated.jpg 664w" sizes="(max-width:332px) 332px, 664px" class="blog-media-element" alt="Photo of a Lily58 keyboard" src="/notes/developing-bitwise-input-method/lily58.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4994780793319415; background: #e8f8f8"><span class="blog-media-caption">The Lily58 keyboard. Photo from github.com/kata0510/Lily58</span>
+                            <img srcset="/notes/developing-bitwise-input-method/lily58_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Photo of a Lily58 keyboard" src="/notes/developing-bitwise-input-method/lily58.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4994780793319415; background: #e8f8f8"><span class="blog-media-caption">The Lily58 keyboard. Photo from github.com/kata0510/Lily58</span>
                         </div>
 
                         <p>As the name implies, it has only 58 buttons instead of the normal 80+ buttons. Space was limited and it was hard to fit all the letters, numbers, symbols, and other unique keys that I need.</p>
                         <p>The function keys (F1, F2, F3, etc) were particularly cumbersome. I don’t use them very often, yet they take a lot of space. You can see with my previous function key layout that they’re not very space-efficient:</p>
                         <div class="blog-media blog-media-default">
-                            <img srcset="/notes/developing-bitwise-input-method/prevlayout_328.generated.png 328w,/notes/developing-bitwise-input-method/prevlayout_656.generated.png 656w,/notes/developing-bitwise-input-method/prevlayout_664.generated.png 664w" sizes="(max-width:328px) 328px,not (min-width:664px) 656px, 664px" class="blog-media-element" alt="" src="/notes/developing-bitwise-input-method/prevlayout.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.1672597864768683; background: #f8f8f8"><span class="blog-media-caption">My previous layout with function keys on the right half of the keyboard. It’s on a layer that I call the “function layer”.</span>
+                            <img srcset="/notes/developing-bitwise-input-method/prevlayout_656.generated.png 656w,/notes/developing-bitwise-input-method/prevlayout_664.generated.png 664w" sizes="not (min-width:664px) 656px, 664px" class="blog-media-element" alt="" src="/notes/developing-bitwise-input-method/prevlayout.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.1672597864768683; background: #f8f8f8"><span class="blog-media-caption">My previous layout with function keys on the right half of the keyboard. It’s on a layer that I call the “function layer”.</span>
                         </div>
 
                         <p>Luckily, the Lily58 is <strong>programmable</strong>! Using the framework slash firmware called <a target="_blank" class="text-link " href="https://qmk.fm/">QMK</a>, I can program the keyboard to add whatever functionality I wanted. And that’s exactly how I optimized the function keys’ space usage.</p>
@@ -1237,8 +1237,7 @@ void <span class="token function">on_press</span><span class="token punctuation"
   <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
 
   accumulator <span class="token operator">|</span><span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;</span><span class="token operator">&lt;</span> index<span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
-</code></pre>
+<span class="token punctuation">}</span></code></pre>
 
                         <p>Now, the accumulated bits will only be evaluated when all of the buttons have been released. A quick way of knowing when that happens is to watch for the last button to be released. To do this, another integer variable tracks how many buttons are currently being pressed.</p>
                         <pre class="code-block"><code class="code-block-code"><span class="token comment">// Keep count of keys being pressed</span>
@@ -1261,8 +1260,7 @@ void <span class="token function">on_release</span><span class="token punctuatio
 
   <span class="token comment">// Count key being released</span>
   pressed_keys<span class="token operator">--</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
-</code></pre>
+<span class="token punctuation">}</span></code></pre>
 
                         <p>Once the last button is released, it is time to flush the input. The resulting decimal number is mapped to a function key that will finally be sent to the computer.</p>
                         <pre class="code-block"><code class="code-block-code">void <span class="token function">on_release</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -1280,8 +1278,7 @@ void <span class="token function">on_release</span><span class="token punctuatio
     pressed_keys <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
     accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
   <span class="token punctuation">}</span>
-<span class="token punctuation">}</span>
-</code></pre>
+<span class="token punctuation">}</span></code></pre>
 
                         <p>And that’s about it! This is how I got more space on my keyboard. As a bonus, it forces me to practice converting decimal to binary! 😂</p>
                         <p>Of course, the code shown here skips some details and totally lacks integration with the QMK framework, but you get the gist.</p>
@@ -1319,8 +1316,7 @@ void <span class="token function">on_release</span><span class="token punctuatio
 
                         <pre class="code-block"><code class="code-block-code">const uint16_t bitwise_f_keys<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">{</span> KC_F1<span class="token punctuation">,</span> KC_F2<span class="token punctuation">,</span> KC_F3<span class="token punctuation">,</span> KC_F4 <span class="token punctuation">}</span><span class="token punctuation">;</span>
 uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
-    <span class="token function">sizeof</span><span class="token punctuation">(</span>bitwise_f_keys<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token function">sizeof</span><span class="token punctuation">(</span>uint16_t<span class="token punctuation">)</span><span class="token punctuation">;</span>
-</code></pre>
+    <span class="token function">sizeof</span><span class="token punctuation">(</span>bitwise_f_keys<span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token function">sizeof</span><span class="token punctuation">(</span>uint16_t<span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
 
                         <p>Note: <code>NUM_BITWISE_F_KEYS</code> is also required.</p>
                         <h3 id="step-2-hook-up-the-library">Step 2: Hook up the library.</h3>
@@ -1331,8 +1327,7 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
   <span class="token comment">/* ... */</span>
 
   <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
-</code></pre>
+<span class="token punctuation">}</span></code></pre>
 
                         <h3 id="step-3-include-the-library-in-your-project">Step 3: Include the library in your project.</h3>
                         <p>Finally, copy <a target="_blank" class="text-link " href="https://raw.githubusercontent.com/Kalabasa/qmk_firmware/06c44268ffe692932cbe15448926fa01bcbe9e64/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.h"><code>bitwise_f.h</code></a> and <a target="_blank" class="text-link " href="https://raw.githubusercontent.com/Kalabasa/qmk_firmware/06c44268ffe692932cbe15448926fa01bcbe9e64/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.c"><code>bitwise_f.c</code></a> into your keymap directory, and include <code>bitwise_f.c</code> in your <code>rules.mk</code> build file.</p>
