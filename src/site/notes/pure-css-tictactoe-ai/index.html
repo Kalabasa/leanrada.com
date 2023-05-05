@@ -20,10 +20,10 @@
       </p>
       <script async src="https://cpwebassets.codepen.io/assets/embed/ei.js"></script>
 
-      In this post, I’ll write about how I arrived at the solution, but let’s start with the fundamentals first.
+      In this post, I’ll write about the steps I took to make it, starting with the fundamentals.
 
       <box-note>
-        Disclaimer: This is an experiment only. Never do this in real life!
+        Disclaimer: This was an experiment only. Never do this in production code!
       </box-note>
 
       ## Building blocks
@@ -47,7 +47,7 @@
 
       On the CSS side, the real checkbox input is hidden, while the span is styled as a checkbox in its stead.
 
-      Now here’s the important part, we’ll use the `:checked` pseudo-class and the **sibling combinator** `~` to make it all  work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the fake checkbox span element.
+      Now here’s the important part, we’ll use the `:checked` pseudo-class and the **sibling combinator** `~` to make it all  work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the separate fake checkbox element.
 
       <code-block language="css" :code="`
 input:checked ~ span {
@@ -56,16 +56,16 @@ input:checked ~ span {
 }
 `" />
 
-      And that’s it, basically. Custom checkboxes!
+      Custom checkboxes! Easy.
 
       ### Action at a distance
 
-      Now, the sibling combinator applies beyond styling boxes next to inputs. We can perform some “action at a distance”, for example:
+      The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”, for example:
 
       <div class="demo-box demo2">
         <input type="checkbox" id="demo2_input" />
         <label for="demo2_input">Is it raining?</label>
-        <p>As you know, when it rains, water falls down from the sky. This may cause wetness. An umbrella is a device which shields the user from falling particles such as the aforementioned rainwater.</p>
+        <p>As you know, when it rains, water falls down from the sky. This may cause undesired wetness. An umbrella is a device which shields the user from falling particles such as the aforementioned rainwater.</p>
         <fieldset class="advice">
           <legend>Advice</legend>
           <span class="take-umbrella">Take an umbrella today!</span>
@@ -88,15 +88,15 @@ input:checked ~ .advice .no-umbrella {
 
       Let’s take this to the next level, shall we?
       
-      Using the `&lt;label&gt;`’s `for` attribute, we can get event more action at a distance. We can make pretty much any kind of UI we want!
+      Using the `&lt;label&gt;`’s `for` attribute, we can get even more action at a distance. We can make pretty much any kind of UI we want!
 
-      Presenting... the weather-advice-o-matic! 🌈
+      Presenting&hellip; the weather-advice-o-matic! 🌈 Go ahead, press the button!
 
       <css-rain-machine-demo demo-number="1" />
 
       ### OR
 
-      A single button is not very exciting, is it? Let’s add another input and implement an **OR** construct to determine the output. That is, if A or B then C.
+      A single button is not very exciting, is it? Let’s add another input and implement an **OR** construct to determine the output. I mean this kind of thing: "if A or B then C".
 
       In CSS this can be easily achieved by using a **selector list** (i.e., comma-separated selectors).
 
@@ -105,15 +105,13 @@ input#raining:checked ~ .advice .take-umbrella,
 input#sunny:checked ~ .advice .take-umbrella {
   visibility: visible;
 }
-
-/* General form: if [C1] or [C2] then [R]*/
-[C1] ~ [R element],
-[C2] ~ [R element] {
-  [R effect]
-}
 `" />
 
+      Now, weather-advice-o-matic can make decisions based on two parameters!
+
       <css-rain-machine-demo demo-number="2" />
+
+      (If RAINY or SUNNY then UMBRELLA)
 
       ### AND
 
@@ -123,26 +121,40 @@ input#sunny:checked ~ .advice .take-umbrella {
 input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
   visibility: visible;
 }
-
-/* General form: if [C1] and [C2] then [R]*/
-[C1] ~ [C2] ~ [R element] {
-  [R effect]
-}
 `" />
+
+      What’s this? Weather-advice-o-matic can now make nuanced decisions! Wow! Careful, it might be sentient!!!
 
       <css-rain-machine-demo demo-number="3" />
 
-      Another basic computing operator aside from AND and OR is the **NOT** operator. We don’t really need that here, but for the record, there’s the `:not()` pseudo-class in CSS.
+      (If RAINY and WINDY then RAINCOAT)
+
+      Here’s a summary of what we have so far:
+
+      <code-block language="css" :code="`
+/* if A or B then C */
+A ~ C,
+B ~ C {
+  C
+}
+
+/* if A and B then C */
+A ~ B ~ C {
+  C
+}
+`" />
+
+      Another basic computing operator aside from AND and OR is the **NOT** operator. We don’t really need that here, but for the record, there’s the `:not()` pseudo-class in CSS. You can figure that out.
 
       ## Prototype: Three-in-a-row
 
-      As a proof of concept and precursor to tic-tac-toe, let’s look at this three-in-a-row game. 
+      As a proof of concept and precursor to tic-tac-toe, let’s look at this three-in-a-row game.
 
       <css-three-in-a-row />
 
-      This is a 3x3 array of checkbox inputs. Each box is numbered 1 to 9 starting from the top-left box going left-to-right by line.
+      This is a 3x3 array of checkbox inputs. Internally, each box is numbered 1 to 9 starting from the top-left box going left-to-right linewise.
 
-      And here are the rules in CSS for implementing the win condition:
+      Here are the rules for implementing the win condition in CSS:
 
       <code-block language="css" :code="`
 #1:checked ~ #2:checked ~ #3:checked ~ .win,
@@ -157,9 +169,9 @@ input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
 }
 `" />
 
-      It’s kinda hacky, yes, but that is expected when you’re forcing logic into CSS. The CSS for tic-tac-toe goes over 9000 lines! I never said it would be clean.
+      Yes, it’s kinda hacky, but that is expected when you force logic into CSS. For comparison, the CSS for tic-tac-toe goes over 9000 lines! I never said it would be clean.
 
-      Anyway, these 8 rules correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers *every possible winning combination*. Here’s the code with comments:
+      Anyway, these 8 lines correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers *every possible winning combination*. The pseudocode in the comment helps illustrate this:
 
       <code-block language="css" :code="`
 /*
@@ -187,11 +199,11 @@ input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
 
       ## Taking turns
 
-      So far, the order of your inputs doesn’t matter. You can even undo your inputs by unchecking the boxes under the hood! That won’t fly in a game of tic-tac-toe, where we take turns incrementally marking the board. No backsies!
+      So far, the order of your inputs doesn’t matter. You can even undo your inputs by unchecking the boxes (Try it above). That won’t fly in a game of tic-tac-toe, where we take turns incrementally marking the board. No backsies!
 
-      We need a way to “consume” inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.
+      We need a way to **“consume”** inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.
 
-      So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of 3x3 inputs for each turn. Stacked on top of each other. Each set is only interactable on its turn.
+      So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn. Stacked on top of each other, each set is only interactable on its turn.
 
       <blog-media
         alt="input sets illustration"
@@ -211,11 +223,11 @@ input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
 
       Here’s little a demo of sequential inputs:
 
-      <box-note>I was only able to implement up to three turns here. The exponential growth of rules had gotten really tedious to write!</box-note>
+      <box-note>I was only able to implement up to three turns here. The exponential growth of rules has gotten really tedious to write!</box-note>
 
       <css-three-in-a-row-seq demo-number="1" />
 
-      With the power of sequecning, we’re starting to recreate the power of state machines and procedural programming!
+      With the power of sequencing, we’re starting to recreate the power of state machines and procedural programming!
 
       <blog-media
         alt="Look What They Need To Mimic A Fraction Of Our Power meme"
@@ -233,17 +245,17 @@ input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
 
       As a side-effect, the AI would never lose. But that’s not a bad thing at all. Here, the CSS will style on you.
 
-      The rules are essentially a bunch of if-then statements for every scenario, such as these ones:
+      The rules are essentially a bunch of if-then statements for every scenario. Here are a couple of them:
 
       ### Blocking
 
       Example rule: _If **X(1)** and **X(2)** then **O(3)**._
 
-      In English, if an X was played at box #1 (top-left) and another X is at #2 (top-center), then block by playing O at box #3 (top-right).
+      In English, if an X was played at box #1 (top-left) and another X is at #2 (top-center), then block the top row by playing O at box #3 (top-right).
 
       (In these examples, X is the player and O is the AI.)
 
-      In CSS,
+      In CSS, that translates to:
 
       <code-block language="css" :code="`
 input[value=&quot;1&quot;]:checked
@@ -261,7 +273,7 @@ input[value=&quot;1&quot;]:checked
 
       Another example: _If **O(3)** and **O(7)** then **O(5)**._
 
-      If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win by playing O at box #5 (center).
+      If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).
 
       Now, this rule needs knowledge of the AI’s previous moves. But we can’t really check for that as they’re not inputs. There is no direct translation of **O(3)** and **O(7)** into CSS conditions.
       
@@ -282,9 +294,9 @@ input[value=&quot;1&quot;]:checked
         ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
       </box-note>
 
-      Alright, now that we can implement game AI rules in CSS, what are the actual rules?  Is there a list of all the optimal moves, like a cheatsheet?
+      Alright, so the game AI is really just a bunch of if-statements of the form *“if [inputs leading up to a scenario], then [show optimal response]”*, **for every scenario**. Problem is, how do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?
 
-      Well, there is one, but it’s for humans.
+      Actually, there is one, but it’s for humans.
 
       <text-link href="https://xkcd.com/832/">
         <blog-media
@@ -292,7 +304,7 @@ input[value=&quot;1&quot;]:checked
           caption="xkcd/832" />
       </text-link>
 
-      It’s not really feasible these rules by hand, unless you have more than 60,480 hours to spare.
+      It’s not really feasible to write rules based on this by hand, unless you have more than 60,480 hours to spare.
 
       What I did was write some kind of [minimax algorithm](https://en.wikipedia.org/wiki/Minimax) to generate all the rules. The algorithm semi-exhaustively searched the game state space, while recording the moves that lead to a win or a draw, and saved those moves as rules.
 
@@ -390,7 +402,7 @@ function printCSS(xPlays: number[], oPlay: number) {
 
       ## Conclusion
 
-      It was a very interesting project. I’m curious how far this could go. A JS to CSS transpiler, perhaps?
+      It was a very interesting project. I’m curious how far CSS machines like this could go. A JS to CSS transpiler, perhaps?
       
       This project serves as a reminder that there are always new and exciting ways to waste our time doing impractical things, and that sometimes fun solutions come from thinking outside of the (check)box.
 
