@@ -31,7 +31,14 @@
 
   async function* renderMediaElement() {
     // todo: extract img/video adapter to generic component (reuse outside blog)
-    if (isResizeableImg(attrs.src)) {
+    if (isExternal(attrs.src)) {
+      yield html`<img
+        class="blog-media-element"
+        alt="${attrs.alt ?? ""}"
+        src="${attrs.src}"
+        loading="lazy"
+      />`;
+    } else if (isResizeableImg(attrs.src)) {
       yield html`<responsive-img
         class="blog-media-element"
         alt="${attrs.alt ?? ""}"
@@ -75,7 +82,6 @@
   }
 
   function isResizeableImg(src) {
-    if (/^(\w+:)?\/\/.*$/.test(src.trim())) return false;
     const ext = src.substring(src.length - 4);
     return ext === ".png" || ext === ".jpg";
   }
@@ -88,6 +94,10 @@
   function isVideo(src) {
     const ext = src.substring(src.length - 4);
     return ext === ".mp4";
+  }
+
+  function isExternal(src) {
+    return /^(\w+:)?\/\/.*$/.test(src.trim());
   }
 
   function defaultResponsiveImageSpec() {
