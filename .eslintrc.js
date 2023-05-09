@@ -2,7 +2,8 @@ module.exports = {
   ignorePatterns: [
     "out/site/archive/v3/**",
     "out/site/google*.html",
-    "out/site/**/*.html/index.html",
+    "out/site/projects/", // redirects
+    "out/site/**/*.html/index.html", // redirects
   ],
   rules: {
     "@html-eslint/require-lang": "error",
