@@ -4,11 +4,19 @@ set -e
 cd "$(dirname "$0")"/..
 pwd
 
-touch out/lint.txt
-truncate -s 0 out/lint.txt
-
 npm run build-dev > /dev/null
 
-npx textlint -o out/lint.txt --no-color -f pretty-error "out/site/wares/*/**/*.html" "out/site/notes/*/**/*.html"
+truncate -s 0 out/textlint.tmp
+npx textlint -o out/textlint.tmp -f pretty-error "out/site/wares/*/**/*.html" "out/site/notes/*/**/*.html"
 
-cat out/lint.txt
+truncate -s 0 out/eslint.tmp
+! npx eslint -o out/eslint.tmp "out/site/**/*.html"
+
+truncate -s 0 out/lint.tmp
+cat out/textlint.tmp >> out/lint.tmp
+cat out/eslint.tmp >> out/lint.tmp
+cat out/lint.tmp
+
+truncate -s 0 out/lint
+cat out/lint.tmp | npx strip-ansi > out/lint
+echo "Lint report written at out/lint"
