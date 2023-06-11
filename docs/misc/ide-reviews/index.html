@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-    <title>Random facts · leanrada.com</title>
+    <title>IDE reviews · leanrada.com</title>
     <script defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -290,6 +290,15 @@
         }
     </style>
     <style>
+        .box-note {
+            display: block;
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: solid 2px var(--clr0-dark);
+            box-sizing: border-box;
+        }
+    </style>
+    <style>
         .content-header {
             margin: 90px 0 60px;
             padding: 0 18px;
@@ -312,101 +321,108 @@
         }
     </style>
     <style>
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(27em, 100%), 1fr));
-            margin: 0 -1px -1px 0;
-        }
-
         .section {
-            margin: -1px 0 0 -1px;
-            padding: 18px;
-            border: solid 1px var(--card-clr);
-            font-family: var(--reading-font);
+            margin: 24px auto 48px;
+            padding: 0 24px;
+            max-width: 800px;
+            box-sizing: border-box;
         }
 
-        .section-title {
-            margin: 0 0 18px;
-            font-family: var(--default-font);
-            font-size: 18px;
-            font-weight: bold;
-            font-style: italic;
+        .screenshot {
+            width: 100%;
         }
 
-        .section p {
-            margin: 12px 0;
-        }
-
-        .section p:first-child {
-            margin-top: 0;
-        }
-
-        .single-section {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
+        .body,
         .details {
-            padding: 12px;
+            font-family: var(--reading-font);
+            font-size: 18px;
+            line-height: 30px;
         }
 
         .summary {
-            margin-left: -12px;
-            font-family: var(--default-font);
-            font-weight: bold;
-            color: var(--text2-clr);
+            text-decoration: underline;
             cursor: pointer;
         }
 
-        .summary-highlighted {
-            color: var(--clr0-light);
+        .ui-notepad {
+            margin-top: 12px;
+            border-style: solid;
+            border-image-source: var(--src);
+            border-image-slice: 69 170 62 175 fill;
+            border-width: 69 170 62 175;
         }
 
-        .summary:hover {
-            color: var(--text-clr);
+        .content-notepad {
+            position: relative;
+            inset: -15px -147px -17px -168px;
+            width: calc(100% + 147px + 168px);
+            color: black;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 18px;
         }
 
-        .img {
-            width: 100%;
-            border-radius: 12px;
+        .ui-flashdevelop {
+            display: grid;
+            grid-template: 48px 1fr 47px / 1fr 249px;
+            grid-template-areas:
+                "top top"
+                "content side"
+                "bottom bottom";
         }
 
-        .img-small {
-            max-width: 200px;
+        .ui-flashdevelop-top {
+            grid-area: top;
+            background: var(--src) top left;
         }
 
-        .big-number {
-            margin: 36px;
-            font-size: 48px;
-            font-family: var(--default-font);
-            font-weight: bold;
+        .ui-flashdevelop-side {
+            grid-area: side;
+            border-style: solid;
+            border-image: var(--src);
+            border-image-slice: 124 1 21 5 fill;
+            border-width: 124 1 21 5;
         }
 
-        .hit-digit {
-            margin: 0 1.5px;
-            padding: 0 6px;
-            border: solid 1px var(--text2-clr);
-            border-radius: 6px;
+        .ui-flashdevelop-bottom {
+            grid-area: bottom;
+            background: var(--src) top left;
         }
 
-        .game-icon-row {
-            display: flex;
-            justify-content: center;
-            gap: 8%;
-            width: 100%;
+        .content-flashdevelop {
+            grid-area: content;
+            border-style: solid;
+            border-image: var(--src);
+            border-image-slice: 21 1 1 61 fill;
+            border-width: 21 1 1 61;
+            position: relative;
+            color: black;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 15px;
+            font-smooth: never;
         }
 
-        .game-icon {
-            width: 15%;
-            image-rendering: pixelated;
+        @media (max-width: 720px) {
+            .ui-flashdevelop {
+                display: grid;
+                grid-template-areas:
+                    "top top"
+                    "content content"
+                    "bottom bottom";
+            }
         }
 
-        .fave-color {
-            padding: 0 0.25em;
-            border-radius: 6px;
+        .fl-keyword {
+            color: #00f;
+        }
+
+        .fl-string {
+            color: #808;
+        }
+
+        .content-notepad p,
+        .content-flashdevelop p {
+            margin: 18px 0;
+            margin: 1lh 0;
         }
     </style>
     <script>
@@ -771,317 +787,149 @@
         <div class="page-wrapper-content">
 
             <div class="content-header">
-                <h1 class="content-header-title">Random facts</h1>
-
+                <h1 class="content-header-title">IDE reviews</h1>
+                <div class="content-header-subtitle">Also a history of all the IDEs I’ve ever used</div>
             </div>
 
-            <div class="grid">
-                <section class="section single-section">
-                    <p>👤 You are visitor number</p>
-                    <p class="big-number">
-                        <span class="hit-digit">0</span><span class="hit-digit">0</span><span class="hit-digit">2</span><span class="hit-digit">7</span><span class="hit-digit">4</span>
-                    </p>
-                    <p>Thank you for visiting my website!</p>
-                </section>
-
-                <section class="section">
-                    <h2 class="section-title">Professional history</h2>
-                    <p>(i.e. paid work 💸)</p>
-                    <p>Here’s a peek of my career so far:</p>
-                    <details class="details">
-                        <summary class="summary summary-highlighted">
-                            Google (present)
-                        </summary>
+            <section class="section">
+                <h2>Notepad.exe</h2>
+                <span class="box-note ">
+                    Note: Sometimes the review is embedded inside the editor UI, like this
+                    one. Watch out for the insides!
+                </span>
+                <div class="ui-notepad" style="--src:url('/misc/ide-reviews/notepad.png')">
+                    <div class="content-notepad">
+                        ._____________.<br>
+                        | notepad.exe |<br>
+                        |________[7/10]<br>
                         <p>
-                            Working on <strong>Google Maps</strong>, specifically Maps for
-                            Android Auto and Automotive. In short, Maps <em>for cars</em>.
+                            Ah, Notepad, the default text editor in Microsoft Windows XP, my OS
+                            not-by-choice back when I didn’t know what “programming” was and
+                            only cared about making mods for a game called Clonk. The game used
+                            a C-like language, but I didn’t know that nor anything about syntax
+                            and syntax coloring and other good editor stuff.
                         </p>
                         <p>
-                            Cars are unique as a computer hardware. We’re solving different user
-                            interaction paradigms, like rotary controls, touchscreens being a
-                            liability to the driver, and wild screen sizes and ratios that make
-                            regular responsive design unviable.
-                        </p>
-                    </details>
-                    <details class="details">
-                        <summary class="summary summary-highlighted">Canva (2018)</summary>
-                        <p>
-                            <strong>
-                                <a target="_blank" class="text-link " href="https://www.canva.com/">Canva</a>
-                            </strong>
-                            is a creative platform where you can design anything.
+                            However, it got the job done. You open a file, you save it. It’s
+                            compatible with any programming language, any build tool. In fact
+                            it’s not incompatible with anything! Except Unix line endings.
                         </p>
                         <p>
-                            I built many things here, from frontend to backend, pages and
-                            webapps, and more!
+                            Due to its simplicity and speed (tho it’s not really fast when large
+                            files), I give it a 7/10. Note that Windowses 7/10 being the only
+                            good versions of Windows is purely coincidental.
                         </p>
-                    </details>
-                    <details class="details">
-                        <summary class="summary summary-highlighted">Convene (2015)</summary>
-                        <p>
-                            <strong>
-                                <a target="_blank" class="text-link " href="https://www.azeusconvene.com/">Convene</a>
-                            </strong>
-                            is a collaborative platform. One of its main components is a
-                            real-time collaborative document reviewing tool where you can make
-                            annotations, comments, sticky notes, and drawings on documents with
-                            other users. It can even act as a virtual whiteboard (just use a
-                            blank document to “review”)!
-                        </p>
-                        <p>
-                            I worked on the Android app where we implemented real-time chat,
-                            touch gestures for multi-user drawing, and other features.
-                        </p>
-                    </details>
-                </section>
-
-                <section class="section">
-                    <h2 class="section-title">Unprofessional history</h2>
-                    <p>(i.e. unpaid work 💙)</p>
-                    <p>
-                        Here are some open source projects where I contributed some code
-                        (sporadically):
-                    </p>
-                    <ul>
-                        <li>
-                            <a target="_blank" class="text-link " href="https://github.com/robolectric/robolectric">robolectric/robolectric</a>
-                            Android testing framework
-                        </li>
-                        <li>
-                            <a target="_blank" class="text-link " href="https://github.com/minetest/minetest">minetest/minetest</a>
-                            C++ game/engine
-                        </li>
-                        <li>
-                            <a target="_blank" class="text-link " href="https://github.com/mapbox/polylabel">mapbox/polylabel</a>
-                            JS map library
-                        </li>
-                        <li>
-                            <a target="_blank" class="text-link " href="https://github.com/canva-public/rocketbot">canva-public/rocketbot</a>
-                            JS CI tool
-                        </li>
-                        <li>
-                            <a target="_blank" class="text-link " href="https://github.com/Kalabasa/FreeformGestureDetector">Kalabasa/FreeformGestureDetector</a>
-                            Android interaction library
-                        </li>
-                    </ul>
-                </section>
-
-                <section class="section">
-                    <h2 class="section-title">Odd jobs</h2>
-                    <p>Long ago when I was a high school student, I freelanced.</p>
-                    <details class="details">
-                        <summary class="summary summary-highlighted">
-                            Flash ads programmer
-                        </summary>
-                        <p>
-                            I created <em>interactive, procedurally animated</em> Internet ads
-                            in Flash for clients who wanted to advertise (i.e., annoy users) on
-                            the information superhighway™.
-                        </p>
-                        <p>Indirectly contributed to the rise of ad-blockers.</p>
-                    </details>
-                    <details class="details">
-                        <summary class="summary summary-highlighted">
-                            Powerpoint “engineer”
-                        </summary>
-                        <p>
-                            I created <em>interactive, animated</em> Powerpoint presentations
-                            about biochemsitry for some learning institute whose name I’ve
-                            already forgotten.
-                        </p>
-                    </details>
-                </section>
-
-                <section class="section single-section">
-                    <p class="big-number">496</p>
-                    <p>I have 496 reputation on Stack Overflow!</p>
-                </section>
-
-                <section class="section single-section">
-                    <a title="TeerapatL., CC BY-SA 4.0 <https://creativecommons.org/licenses/by-sa/4.0>, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Halo-Halo.webp">
-                        <img class="img img-small" alt="Halo-Halo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Halo-Halo.webp/512px-Halo-Halo.webp.png">
-                    </a>
-                    <p>
-                        My favorite dessert is
-                        <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Halo-halo">halo-halo</a>. 😋
-                    </p>
-                </section>
-
-                <section class="section single-section">
-                    <p>I’m based in Sydney 🇦🇺,<br>but I’m from the Philippines! 🇵🇭</p>
-                </section>
-
-                <section class="section single-section">
-                    <p>
-                        🎓 I studied <strong>computer science</strong> at the
-                        <strong>University&nbsp;of&nbsp;the&nbsp;Philippines</strong>!
-                    </p>
-                    <p>
-                        The University of the Philippines was established when the Philippines
-                        was still a territory / colony of the United States. The university
-                        was destroyed during the World&nbsp;War&nbsp;2. Uh, those are your
-                        random facts, I guess.
-                    </p>
-                </section>
-
-                <section class="section">
-                    <h2 class="section-title">Clonk</h2>
-
-                    <img srcset="/misc/clonk_800.generated.jpg 800w" sizes=" 800px" class="img" alt="Clonk Rage screenshot" src="/misc/clonk.jpg" spec="800">
-
-                    <p>
-                        My all-time favorite video game is
-                        <strong><a target="_blank" class="text-link " href="http://clonk.de/">Clonk</a></strong>. It’s a series of 2D games with destructible terrain (a
-                        “falling-sand game”) featuring a mix of action, strategy, idle,
-                        sandbox, platforming, and puzzle gameplay. Here’s the
-                        <a target="_blank" class="text-link " href="https://youtu.be/p83_ONA9qyw">official trailer</a>.
-                    </p>
-
-                    <details class="details">
-                        <summary class="summary">Story</summary>
-                        <p>
-                            I’ve spent countless hours of my childhood playing this game and
-                            tinkering with its modding features.
-                        </p>
-                        <p>
-                            The game has a built-in mod framework with its own C-like scripting
-                            language called <strong>C4Script</strong> (It has pointers!). It was
-                            my first programming experience!
-                        </p>
-                        <p>
-                            I started by making custom levels and scenarios. Then moved on to
-                            tweaking, adding behavior to existing objects, making too many bomb
-                            variants. The most fun I had was when I reached the point where I
-                            could design and implement my own magic spells and particle effects!
-                            I even tried to make AI enemy characters.
-                        </p>
-                        <p>
-                            I believe that this game played a big part in shaping who I am
-                            today.
-                        </p>
-                    </details>
-                </section>
-
-                <section class="section">
-                    <h2 class="section-title">Notessimo</h2>
-
-                    <img srcset="/misc/notessimo_800.generated.jpg 800w" sizes=" 800px" class="img" alt="Old Notessimo screenshot" src="/misc/notessimo.jpg" spec="800">
-
-                    <p>
-                        One of my hobbies is composing music. It all started with
-                        <strong><a target="_blank" class="text-link " href="https://notessimo.net/">Notessimo</a></strong>, a free Flash game that I stumbled upon Kongregate.
-                    </p>
-
-                    <details class="details">
-                        <summary class="summary">Story</summary>
-                        <p>
-                            Well, as a kid, I’ve always played computer games. In my quest for
-                            new games, I found Notessimo through the Flash game portal
-                            Kongregate. It’s a simple easy-to-use music composition software,
-                            similar to the
-                            <a target="_blank" class="text-link " href="https://youtu.be/hil1F2T19GY">music maker part of the SNES game Mario Paint</a>.
-                        </p>
-                        <p>
-                            I then found out that the game had an official website
-                            <a target="_blank" class="text-link " href="https://web.archive.org/web/20110225211953/http://notessimo.net/">notessimo.net</a>
-                            which was just a phpBB forum back then. The forum community around
-                            the game were very encouraging and helpful which really helped me
-                            develop this music interest.
-                        </p>
-                        <p>
-                            Before long, I was producing song after song and eventually got
-                            <a target="_blank" class="text-link " href="https://notessimo.net/s/563LcitYfn">a song featured</a>
-                            on the home page!
-                        </p>
-                        <p>
-                            I eventually moved to a “real”
-                            <abbr title="Digital Audio Workstation">DAW</abbr>, but I will
-                            always remember fondly the Flash game Notessimo.
-                        </p>
-                    </details>
-                </section>
-
-                <section class="section single-section">
-                    <p class="big-number">1000</p>
-                    <p>I can count up to 1000, but have never done so.</p>
-                </section>
-
-                <section class="section single-section">
-                    <div class="game-icon-row">
-                        <img class="game-icon" alt="Dota 2 logo" src="/misc/dota_icon.png">
-                        <img class="game-icon" alt="Factorio logo" src="/misc/factorio_icon.png">
                     </div>
-                    <p>
-                        The game I spent the most time on Steam is currently
-                        <strong>Dota 2</strong>, followed by <strong>Factorio</strong>.
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Macromedia Flash 8</h2>
+                <div>
+                    <img srcset="/misc/ide-reviews/macromedia-flash-8_800.generated.png 800w" sizes=" 800px" class="screenshot" alt="screeshot of Macromedia Flash 8" src="/misc/ide-reviews/macromedia-flash-8.png" spec="100% [800) 800">
+                    <p class="body">
                     </p>
-                </section>
-
-                <section class="section single-section">
-                    <p>I’m currently playing:</p>
-
-                    <img srcset="/misc/totk_800.generated.jpg 800w" sizes=" 800px" class="img" alt="The Legend of Zelda: Tears of the Kingdom screenshot" src="/misc/totk.jpg" spec="800">
-
-                    <p><strong>The Legend of Zelda: Tears of the Kingdom!</strong></p>
-                </section>
-
-                <section class="section single-section">
-                    <p>I’m was playing this, but Tears of the Kingdom got released:</p>
-
-                    <img srcset="/misc/zelda1_800.generated.png 800w" sizes=" 800px" class="img" alt="The Legend of Zelda screenshot" src="/misc/zelda1.png" spec="800">
-
-                    <p><strong>The Legend of Zelda!</strong></p>
-                </section>
-
-                <section class="section">
-                    <h2 class="section-title">IDE reviews</h2>
-                    <p>
-                        I reviewed IDEs so you don’t have to. Well, you don’t have to either
-                        way.
-                    </p>
-                    <p>
-                        Here are my
+                    <details class="details">
+                        <summary class="summary">What is Macromedia Flash?</summary>
                         <strong>
-                            <a target="_self" class="text-link " href="./ide-reviews/">IDE reviews</a>
-                        </strong>
-                        (you’re not gonna believe #14!)
+                            <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Adobe_Flash">
+                                Macromedia Flash</a></strong>, or just Flash, was a Web browser plugin that everyone had back in
+                        the day before JS was powerful enough. It was used for animations,
+                        interactive experiences, Web games, Web ads, YouTube, you name it.
+                        It was the platform of all webapps before the term webapp became a
+                        thing. It was also the name of the authoring software, or IDE.
+                    </details>
+                    <p></p>
+                    <p class="body">
+                        This IDE, as you can see, was very much focused on the
+                        <strong>graphics and animation</strong> part of the authoring
+                        experience, not so much on the programming side of rich Web
+                        applications. Scripts existed merely as augmentation of objects in the
+                        scene.
                     </p>
-                </section>
-
-                <section class="section">
-                    <p>My 15 minutes of internet fame:</p>
-                    <ul>
-                        <li>
-                            <a target="_self" class="text-link " href="/wikawik/">Wikawik</a> language map seems
-                            to get some visitors regularly from the Philippines.
-                        </li>
-                        <li>
-                            <a target="_blank" class="text-link " href="https://powdertoy.co.uk/Browse/View.html?ID=865481">My Game of Life simulation</a>
-                            on
-                            <a target="_blank" class="text-link " href="https://powdertoy.co.uk/">The Powder Toy</a>, an open-source falling-sand sandbox game, was a frontpager and is
-                            still getting views!
-                        </li>
-                        <li>
-                            I got
-                            <a target="_blank" class="text-link " href="https://notessimo.net/s/563LcitYfn">featured</a>
-                            on <a target="_blank" class="text-link " href="https://notessimo.net/">Notessimo</a>, a
-                            music-maker software!
-                        </li>
-                        <li>
-                            I got featured on
-                            <a target="_blank" class="text-link " href="https://incredibots.com/">Incredibots</a>,
-                            a physics sandbox game! Sadly, no link.
-                        </li>
-                    </ul>
-                </section>
-
-                <section class="section single-section">
-                    <p class="big-number fave-color" style="background-color: #3f6c86">
-                        #3F6C86
+                    <p class="body">
+                        I didn’t care for the graphical, scene-graph-oriented development and
+                        preferred pure programming with text and text files. Same reason why I
+                        don’t like the Unity Editor. So it’s a 6/10 for me.
                     </p>
-                    <p>is my favorite color<br>as of 12&nbsp;June&nbsp;2023</p>
-                </section>
-            </div>
+                </div>
+            </section>
+            <!-- <section class="section">
+      <h2>Adobe Flash CS3-or-whatever</h2>
+    </section> -->
+            <section class="section">
+                <h2>FlashDevelop</h2>
+                <div class="ui-flashdevelop">
+                    <div class="content-flashdevelop" style="--src:url('/misc/ide-reviews/flashdevelop-content.png')">
+                        .______________.<br>
+                        | FlashDevelop |<br>
+                        |_________[9/10]<br>
+                        <p>
+                            FlashDevelop was a code-first Flash IDE. My first experience
+                            <span class="fl-keyword">with</span> a
+                            <span class="fl-string">“real”</span> programming IDE
+                            <span class="fl-keyword">with</span> refactoring, build
+                            configurations, logging, libraries, and more.
+                        </p>
+                        <p>
+                            I like how it renders code <span class="fl-keyword">in</span> bitmap
+                            fonts. Very crisp <span class="fl-keyword">in</span> the old CRT
+                            monitors <span class="fl-keyword">with</span> 800x600 screen
+                            resolution. I customized it
+                            <span class="fl-keyword">with</span> some downloaded programming
+                            fonts too.
+                        </p>
+                        <p>
+                            Extremely lightweight compared to the alternative Adobe Flash.
+                            It<span class="fl-string">’s simple and fast. Plus code completion, snippets, and
+                                REFACTORING IN ActionScript!? It’</span>s a high 9/10.
+                        </p>
+                        <p>
+                            My only problem was when some clients wanted the .fla file
+                            (Adobe<span class="fl-string">’s file format for Flash projects). But that’</span>s not a real problem.
+                        </p>
+                    </div>
+                    <div class="ui-flashdevelop-top" style="--src:url('/misc/ide-reviews/flashdevelop-top.png')"></div>
+                    <div class="ui-flashdevelop-side" style="--src:url('/misc/ide-reviews/flashdevelop-side.png')"></div>
+                    <div class="ui-flashdevelop-bottom" style="--src:url('/misc/ide-reviews/flashdevelop-bottom.png')"></div>
+                </div>
+            </section>
+            <section class="section">
+                <h2>Code::Blocks</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>Vim</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>Eclipse</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>Android Studio</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>Sublime Text</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>Visual Studio Code</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>IntelliJ IDEA Community Edition</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>IntelliJ IDEA Ultimate Edition</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
+            <section class="section">
+                <h2>Cider V</h2>
+                <div>🚧 Review coming soon! 🚧</div>
+            </section>
 
         </div>
         <footer class="main-footer">
