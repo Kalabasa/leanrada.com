@@ -1,19 +1,25 @@
 <html lang="en">
   <page-title title="Notes" />
   <page header-select="/notes/">
-      <content-header title="Notes / Blog" />
-      <div class="blog-list">
-        <script render>
-          for (const item of index){
-            yield html`<blog-list-item href="${item.href}" date="${item.date}">${item.title}</blog-list-item>`;
-          }
-        </script>
-      </div>
+    <content-header
+      title="Notes / Blog"
+      subtitle="An index of notes, stories, anything really."
+    />
+    <div class="blog-list">
+      <script render>
+        for (const item of index){
+          yield html`<blog-list-item href="${item.href}" date="${item.date}">${item.title}</blog-list-item>`;
+        }
+      </script>
+    </div>
   </page>
 </html>
 
 <script static>
-  const index = require("./index.generated.json");
+  const generatedIndex = require("./index.generated.json");
+  const staticIndex = require("./index.static.json");
+
+  const index = generatedIndex.concat(staticIndex);
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 </script>
 

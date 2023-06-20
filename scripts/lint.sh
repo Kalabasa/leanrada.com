@@ -7,7 +7,10 @@ pwd
 npm run build-dev > /dev/null
 
 truncate -s 0 out/textlint.tmp
-npx textlint -o out/textlint.tmp -f pretty-error "out/site/wares/*/**/*.html" "out/site/notes/*/**/*.html"
+npx textlint -o out/textlint.tmp -f pretty-error \
+  "out/site/wares/*/**/*.html" \
+  "out/site/notes/*/**/*.html" \
+  "out/site/misec/ide-reviews/index.html"
 
 truncate -s 0 out/eslint.tmp
 ! npx eslint -o out/eslint.tmp "out/site/**/*.html"

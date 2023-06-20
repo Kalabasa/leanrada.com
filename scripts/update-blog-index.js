@@ -16,9 +16,12 @@ main();
 async function main() {
   const subPages = glob.sync(path.resolve(blogDir, "*", "index.html"));
 
-  const index = await Promise.all(subPages.map(async page => {
+  const index = (await Promise.all(subPages.map(async page => {
     const dir = path.dirname(page);
     const href = path.relative(siteSrc, dir);
+
+    // Underscore-prefixed directories are unpublished.
+    if (path.basename(dir).startsWith("_")) return null;
 
     // Yep, scraping my own source code
     const code = await fs.readFile(page);
@@ -30,7 +33,7 @@ async function main() {
     const title = header.attr("title");
     const date = info.attr("date");
     return { href: `/${href}/`, title, date };
-  }));
+  }))).filter(it => it);
 
   console.log(index);
   if (!dryRun) {
