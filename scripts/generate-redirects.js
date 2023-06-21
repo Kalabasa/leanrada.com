@@ -8,11 +8,14 @@ const { argv } = require("node:process");
 process.chdir(path.resolve(__dirname, ".."));
 console.log(process.cwd());
 
+// [from, to, newHref?]
 const redirects = [
   ["works.html", "archive/v3/works.html", "wares/"],
   ["works/**", "archive/v3/works/**.html"],
   ["works/canvaphotoeditor.html", "wares/photo-editor/"],
   ["works/dimensions.html", "wares/dimensions/"],
+  ["works/dimensions1.html", "wares/dimensions/part-one-generative-art.html"],
+  ["works/dimensions2.html", "wares/dimensions/part-two-augmented-reality.html"],
   ["works/hypertangram.html", "wares/hypertangram/"],
   ["works/wikawik.html", "wares/wikawik/"],
   ["works/sheetz.html", "wares/svelte-spreadsheet/"],
@@ -59,14 +62,18 @@ async function main() {
 
       const isToDir = stats.isDirectory && !toFile.endsWith(".html");
       const isToIndexFile = toFile.endsWith("/index.html");
+      const isToHtmlFile = toFile.endsWith(".html");
 
       if (isToDir && !fs.existsSync(path.resolve(toFile, "index.html"))) {
         throw new Errow("Missing destination index.html. from/to: " + from + " → " + toFile);
       }
 
-      const cleanPath = isToIndexFile
-        ? toFile.substring(0, toFile.length - "index.html".length)
-        : toFile;
+      const cleanPath =
+        isToIndexFile
+          ? toFile.substring(0, toFile.length - "index.html".length)
+          : isToHtmlFile
+            ? toFile.substring(0, toFile.length - ".html".length)
+            : toFile;
       const trailingSlash = isToIndexFile || isToDir ? "/" : "";
       const toHref = path.relative(siteSrc, cleanPath) + trailingSlash;
 
