@@ -11,7 +11,7 @@ console.log(process.cwd());
 const redirects = [
   ["works.html", "archive/v3/works.html", "wares/"],
   ["works/**", "archive/v3/works/**.html"],
-  ["works/canvaphotoeditor.html", "wares/canva-photo-editor/"],
+  ["works/canvaphotoeditor.html", "wares/photo-editor/"],
   ["works/dimensions.html", "wares/dimensions/"],
   ["works/hypertangram.html", "wares/hypertangram/"],
   ["works/wikawik.html", "wares/wikawik/"],
@@ -23,7 +23,7 @@ const redirects = [
   ["works/miniforts.html", "wares/miniforts/"], // inbound
   ["works/canvaenterprise.html", "wares/canva-enterprise/"],
   ["works/canvalogomaker.html", "wares/canva-logo-maker/"],
-  ["projects/canvaphotoeditor/", "wares/canva-photo-editor/"],
+  ["projects/canvaphotoeditor/", "wares/photo-editor/"],
   ["projects/dimensions/", "wares/dimensions/"],
   ["projects/hypertangram/", "wares/hypertangram/"],
   ["projects/wikawik/", "wares/wikawik/"],
@@ -36,6 +36,7 @@ const redirects = [
   ["projects/canvaenterprise/", "wares/canva-enterprise/"],
   ["projects/canvalogomaker/", "wares/canva-logo-maker/"],
   ["projects", "wares/"],
+  ["wares/canva-photo-editor", "wares/photo-editor"],
 ];
 
 const siteSrc = path.resolve(__dirname, "..", "src", "site");
