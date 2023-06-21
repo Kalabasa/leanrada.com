@@ -23,7 +23,7 @@ const redirects = [
   ["works/freeformgesturedetector.html", "wares/freeform-gesture-detector/"],
   ["works/planetdefense.html", "wares/planet-defense/"],
   ["works/canvapasko.html", "wares/canva-pasko/"],
-  ["works/miniforts.html", "wares/miniforts/"], // inbound
+  ["works/miniforts.html", "wares/miniforts/"], // inbound link, external referrer, don't delete
   ["works/canvaenterprise.html", "wares/canva-enterprise/"],
   ["works/canvalogomaker.html", "wares/canva-logo-maker/"],
   ["projects/canvaphotoeditor/", "wares/photo-editor/"],
