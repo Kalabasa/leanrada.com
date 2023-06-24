@@ -19,7 +19,7 @@
     width="40"
     height="10"
   />
-  <button class="main-footer-top-btn" aria-label="Back to top">^</button>
+  <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
 </footer>
 
 <style>
@@ -68,19 +68,22 @@
   }
 
   .main-footer-top-btn {
+    display: block;
     z-index: 2;
     position: absolute;
     right: 0;
     top: 0;
     width: 72px;
     height: 36px;
-    padding-right: 18px;
+    padding-right: 9px;
+    box-sizing: border-box;
     display: flex;
     justify-content: center;
     align-items: center;
     border: none;
     border-bottom-left-radius: 18px;
     background: var(--bg-clr);
+    text-decoration: none;
     color: var(--clr0-light);
     font: inherit;
     font-size: 18px;
@@ -110,10 +113,25 @@
 </style>
 
 <script client defer>
+  // subtle smooth scroll
   (() => {
+    let top = 0;
+
     const topBtn = document.querySelector(".main-footer-top-btn");
-    topBtn.addEventListener("click", () => {
-      window.scrollTo(0, 0);
+    topBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      top = 200;
+      loop();
     });
+
+    function loop() {
+      top *= 0.6;
+      window.scrollTo(0, top);
+      if (top < 1) {
+        window.scrollTo(0, 0);
+      } else {
+        requestAnimationFrame(loop);
+      }
+    }
   })();
 </script>
