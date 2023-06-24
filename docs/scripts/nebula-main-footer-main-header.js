@@ -192,11 +192,26 @@
   })();
 
 
+  // subtle smooth scroll
   (() => {
+    let top = 0;
+
     const topBtn = document.querySelector(".main-footer-top-btn");
-    topBtn.addEventListener("click", () => {
-      window.scrollTo(0, 0);
+    topBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      top = 200;
+      loop();
     });
+
+    function loop() {
+      top *= 0.6;
+      window.scrollTo(0, top);
+      if (top < 1) {
+        window.scrollTo(0, 0);
+      } else {
+        requestAnimationFrame(loop);
+      }
+    }
   })();
 
 
