@@ -25,21 +25,40 @@
           const connect = () => (cleanup = factory());
           const disconnect = () => cleanup();
 
-          this[lifecycleListeners].push({ connect, disconnect });
-
           if (this.isConnected) {
             connect();
+            const listener = {
+              // already connected, avoid calling back connect() twice
+              connect: () => {},
+              disconnect: () => {
+                disconnect();
+                // after disconnection, be normal listener
+                listener.connect = connect;
+                listener.disconnect = disconnect;
+              },
+            };
+            this[lifecycleListeners].push(listener);
+          } else {
+            this[lifecycleListeners].push({ connect, disconnect });
           }
         }
 
         /**
          * @param selector {string}
+         * @returns {{ exists: boolean, element: HTMLElement | null, promise: Promise<HTMLElement> }}
          */
         asyncQuerySelector(selector) {
           const obj = {
             exists: false,
             element: null,
           };
+
+          obj.element = this.querySelector(selector);
+          if (obj.element) {
+            obj.exists = true;
+            obj.promise = Promise.resolve(obj.element);
+            return obj;
+          }
 
           obj.promise = new Promise((resolve) => {
             const observer = new MutationObserver(() => {
