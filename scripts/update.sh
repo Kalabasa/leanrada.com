@@ -6,7 +6,7 @@ pwd
 
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean work dir"
-  exit
+  exit 1
 fi
 
 # Perform the update in a worktree

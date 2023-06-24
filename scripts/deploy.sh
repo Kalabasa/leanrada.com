@@ -6,7 +6,7 @@ pwd
 
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean work dir"
-  exit
+  exit 1
 fi
 
 # Do generated files
@@ -16,7 +16,7 @@ node scripts/update-blog-index.js
 
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean generated files"
-  exit
+  exit 1
 fi
 
 # Build project
