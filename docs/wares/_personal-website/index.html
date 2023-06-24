@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
     <title>Personal website · leanrada.com</title>
-    <script defer="" async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
+    <script async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/favicon.png">
@@ -50,6 +50,8 @@
             margin: 0;
             min-height: 100vh;
             font-family: var(--default-font, monospace);
+            font-size: 15px;
+            font-display: swap;
             background-color: var(--bg-clr, #111);
             color: var(--text-clr, #fff);
             overflow-x: hidden;
@@ -72,17 +74,17 @@
         }
     </style>
     <style>
-        .home-link {
+        .main-footer-link {
             text-decoration: none;
         }
 
-        .home-link-icon {
-            width: 48px;
-            height: 48px;
+        .main-footer-link-icon {
+            width: 32px;
+            height: 32px;
             image-rendering: pixelated;
         }
 
-        .home-link-icon:hover {
+        .main-footer-link-icon:hover {
             filter: invert(1);
         }
     </style>
@@ -93,7 +95,7 @@
             justify-content: space-between;
             gap: 60px;
             padding: 60px calc(max(60px, 50vw - 600px)) 60px;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: bold;
             background: var(--clr0);
             color: #000;
@@ -292,7 +294,7 @@
             width: 100%;
             max-width: 700px;
             font-family: var(--reading-font, sans-serif);
-            font-size: 18px;
+            font-size: 16px;
             line-height: 2.2;
             letter-spacing: 0.02em;
             color: #ddd;
@@ -447,349 +449,7 @@
             font-size: 15px;
         }
     </style>
-    <script>
-        (() => {
-            globalThis.BaseElement = createBaseElement(HTMLElement);
-
-            const lifecycleListeners = Symbol("lifecycleListeners");
-
-            function createBaseElement(superClass) {
-                return class BaseElement extends superClass {
-                    constructor() {
-                        super();
-                        this[lifecycleListeners] = [];
-                    }
-                    connectedCallback() {
-                        this[lifecycleListeners].forEach((it) => it.connect());
-                    }
-                    disconnectedCallback() {
-                        this[lifecycleListeners].forEach((it) => it.disconnect());
-                    }
-
-                    /**
-                     * @param factory {() => () => void}
-                     */
-                    addLifecycleListener(factory) {
-                        let cleanup = () => {};
-                        const connect = () => (cleanup = factory());
-                        const disconnect = () => cleanup();
-
-                        this[lifecycleListeners].push({
-                            connect,
-                            disconnect
-                        });
-
-                        if (this.isConnected) {
-                            connect();
-                        }
-                    }
-
-                    /**
-                     * @param selector {string}
-                     */
-                    asyncQuerySelector(selector) {
-                        const obj = {
-                            exists: false,
-                            element: null,
-                        };
-
-                        obj.promise = new Promise((resolve) => {
-                            const observer = new MutationObserver(() => {
-                                obj.element = this.querySelector(selector);
-                                if (obj.element) {
-                                    resolve(obj.element);
-                                    obj.exists = true;
-                                    observer.disconnect();
-                                }
-                            });
-
-                            this.addLifecycleListener(() => {
-                                observer.observe(this, {
-                                    childList: true,
-                                    subtree: true
-                                });
-                                return () => observer.disconnect();
-                            });
-                        });
-
-                        return obj;
-                    }
-
-                    /**
-                     * @param target {Element}
-                     * @param event {string}
-                     * @param callback {Function}
-                     */
-                    aliveListener(target, event, callback) {
-                        this.addLifecycleListener(() => {
-                            target.addEventListener(event, callback);
-                            return () => target.removeEventListener(event, callback);
-                        });
-                    }
-
-                    /**
-                     * @param callbacks {object}
-                     * @param callbacks.show {Function}
-                     * @param callbacks.hide {Function}
-                     */
-                    visibilityListener({
-                        show,
-                        hide
-                    }) {
-                        let isShowing = false;
-
-                        const observer = new IntersectionObserver((entries) => {
-                            for (const entry of entries) {
-                                if (entry.target !== this) continue;
-                                if (isShowing !== entry.isIntersecting) {
-                                    isShowing = entry.isIntersecting;
-                                    if (isShowing) {
-                                        show();
-                                    } else {
-                                        hide();
-                                    }
-                                }
-                            }
-                        });
-
-                        this.addLifecycleListener(() => {
-                            isShowing = isInViewport(this);
-                            if (isShowing) show();
-                            observer.observe(this);
-                            return () => {
-                                observer.disconnect();
-                                if (isShowing) hide();
-                                isShowing = false;
-                            };
-                        });
-                    }
-                };
-            }
-
-            window.mousePosition = {
-                x: 0,
-                y: 0
-            };
-            document.addEventListener(
-                "DOMContentLoaded",
-                () => {
-                    document.body.addEventListener("mousemove", (event) => {
-                        window.mousePosition.x = event.clientX;
-                        window.mousePosition.y = event.clientY;
-                    });
-                }, {
-                    once: true
-                }
-            );
-        })();
-
-        function isInViewport(element) {
-            const rect = element.getBoundingClientRect();
-            return (
-                rect.right > 0 &&
-                rect.bottom > 0 &&
-                rect.left < window.innerWidth &&
-                rect.top < window.innerHeight
-            );
-        }
-    </script>
-    <script>
-        (() => {
-            customElements.define(
-                "nebula-client",
-                class Nebula extends BaseElement {
-                    constructor() {
-                        super();
-
-                        this.asyncCanvas = this.asyncQuerySelector("canvas");
-                        this.context = null;
-                        this.noise = null;
-
-                        this.gridWidth = 30;
-                        this.gridHeight = 30;
-                        this.palette = ["#ffffff"];
-
-                        this.cellWidth = 1; // placeholder
-                        this.cellHeight = 1; // placeholder
-
-                        this.useMouse = false;
-                        this.mouseCell = null;
-
-                        this.lastT = 0;
-                        this.startT = 0;
-                        this.loopStartT = 0;
-
-                        this.isVisible = false;
-                        this.visibilityListener({
-                            show: () => {
-                                this.isVisible = true;
-                                this.startLoop();
-                            },
-                            hide: () => (this.isVisible = false),
-                        });
-                    }
-
-                    connectedCallback() {
-                        super.connectedCallback();
-
-                        this.useMouse = this.getAttribute("mouse") != null;
-
-                        const gridWidth = this.getAttribute("width");
-                        if (gridWidth) {
-                            this.gridWidth = Number.parseInt(gridWidth);
-                        }
-
-                        const gridHeight = this.getAttribute("height");
-                        if (gridHeight) {
-                            this.gridHeight = Number.parseInt(gridHeight);
-                        }
-
-                        const paletteAttr = this.getAttribute("palette");
-                        if (paletteAttr) {
-                            this.palette = paletteAttr.split(" ");
-                        }
-                    }
-
-                    startLoop() {
-                        this.loopStartT = this.lastT = this.getT();
-                        this.loop();
-                    }
-
-                    async loop() {
-                        if (!this.isVisible) {
-                            return;
-                        }
-
-                        if (typeof perlinNoise3d === "undefined") {
-                            setTimeout(() => this.loop(), 200);
-                            return;
-                        } else if (!this.noise) {
-                            this.noise = initNoise();
-                            this.startT = this.getT();
-                        }
-
-                        const canvas =
-                            this.asyncCanvas.value ?? (await this.asyncCanvas.promise);
-
-                        // initialize
-                        if (!this.context) {
-                            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
-                            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
-                            canvas.width = this.gridWidth;
-                            canvas.height = this.gridHeight;
-                            canvas.style.filter += ` blur(${
-              Math.min(this.cellWidth, this.cellHeight) * 1.25
-            }px)`;
-                            this.context = canvas.getContext("2d");
-                        }
-
-                        this.draw(canvas, this.context);
-
-                        requestAnimationFrame(() => this.loop());
-                    }
-
-                    /**
-                     * @param canvas {HTMLCanvasElement}
-                     * @param context {CanvasRenderingContext2D}
-                     */
-                    draw(canvas, context) {
-                        const t = this.getT();
-                        if (t <= this.lastT) return;
-
-                        const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
-                        this.lastT = t;
-
-                        const {
-                            noise,
-                            gridWidth,
-                            gridHeight,
-                            palette,
-                            cellWidth,
-                            cellHeight,
-                        } = this;
-                        const halfGridWidth = gridWidth / 2;
-                        const halfGridHeight = gridHeight / 2;
-
-                        this.mouseCell = null;
-                        // mousePosition from lib/common
-                        if (this.useMouse && window.mousePosition) {
-                            const {
-                                x,
-                                y
-                            } = window.mousePosition;
-                            const bounds = canvas.getBoundingClientRect();
-                            if (
-                                bounds.left < x &&
-                                x < bounds.right &&
-                                bounds.top < y &&
-                                y < bounds.bottom
-                            ) {
-                                this.mouseCell = {
-                                    x: (x - bounds.x) / cellWidth,
-                                    y: (y - bounds.y) / cellHeight,
-                                };
-                            }
-                        }
-
-                        const paletteLength = palette.length;
-                        const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
-                        const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
-
-                        for (let i = 0; i < gridWidth; i++) {
-                            for (let j = 0; j < gridHeight; j++) {
-                                const mouseProximity =
-                                    this.mouseCell == null ?
-                                    0 :
-                                    1 -
-                                    sigmoid(
-                                        Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
-                                    );
-
-                                const xy = [
-                                    1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
-                                    1000 +
-                                    (j - halfGridHeight) * yScale +
-                                    Math.cos(t * 0.007) * 2 +
-                                    -mouseProximity,
-                                ];
-                                const p1 = noise.get(...xy, t * 0.03);
-                                const p2 = noise.get(...xy, t * 0.03 + 0.5);
-                                // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
-                                const p = p1 + p2;
-
-                                const paletteIndex = Math.floor(paletteLength * p);
-
-                                const rgb = palette[paletteIndex];
-                                const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
-                                    .toString(16)
-                                    .padStart(2, "0");
-
-                                context.fillStyle = `${rgb}${a}`;
-                                context.fillRect(i, j, 1, 1);
-                            }
-                        }
-                    }
-
-                    getT() {
-                        const t = (Date.now() * 30) / 1000;
-                        // make it smoother while interacting
-                        return this.mouseCell ? t : Math.floor(t);
-                    }
-                }
-            );
-
-            function initNoise() {
-                const noise = new perlinNoise3d();
-                noise.perlin_octaves = 1; // ?? defaults
-                noise.perlin_amp_falloff = 1;
-                return noise;
-            }
-
-            function sigmoid(x) {
-                return 1 / (1 + Math.exp(-x));
-            }
-        })();
-    </script>
+    <script src="/scripts/common.js"></script>
 </head>
 
 
@@ -799,7 +459,7 @@
         <header class="main-header">
             <div class="main-header-bar">
                 <a href="/" class="main-header-item ">Home</a>
-                <a href="/wares/" class="main-header-item ">Wares</a>
+                <a href="/wares/" class="main-header-item select">Wares</a>
                 <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
                 <a href="/art/" class="main-header-item ">Art</a>
                 <a href="/notes/" class="main-header-item ">Notes</a>
@@ -843,17 +503,17 @@
             </div>
             <div class="main-footer-content-part">
                 <h2 class="main-footer-links-heading">On the web</h2>
-                <a target="_blank" class="home-link" href="https://www.linkedin.com/in/leanrada/">
-                    <img class="home-link-icon" alt="LinkedIn" src="/icons/linkedin.png">
+                <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
+                    <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
                 </a>
-                <a target="_blank" class="home-link" href="https://codepen.io/kalabasa">
-                    <img class="home-link-icon" alt="CodePen" src="/icons/codepen.png">
+                <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
+                    <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
                 </a>
-                <a target="_blank" class="home-link" href="https://stackoverflow.com/users/3144156/kalabasa">
-                    <img class="home-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png">
+                <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+                    <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
                 </a>
-                <a target="_blank" class="home-link" href="https://github.com/Kalabasa">
-                    <img class="home-link-icon" alt="GitHub" src="/icons/github.png">
+                <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa">
+                    <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
                 </a>
             </div>
 
@@ -864,15 +524,8 @@
             <button class="main-footer-top-btn" aria-label="Back to top">^</button>
         </footer>
     </div>
-    <script>
-        (() => {
-            const topBtn = document.querySelector(".main-footer-top-btn");
-            topBtn.addEventListener("click", () => {
-                window.scrollTo(0, 0);
-            });
-        })();
-    </script>
-    <script>
+    <script defer="" src="/scripts/nebula-main-footer-main-header.js"></script>
+    <script defer="">
         (() => {
             const mainHeader = document.querySelector(".main-header");
             const indicator = document.querySelector(".main-header-indicator");
