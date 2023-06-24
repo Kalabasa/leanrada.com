@@ -60,6 +60,7 @@ async function main() {
     for (const toFile of toFiles) {
       const stats = fs.lstatSync(toFile);
 
+      const isArchive = path.relative(siteSrc, toFile).startsWith("archive/");
       const isToDir = stats.isDirectory && !toFile.endsWith(".html");
       const isToIndexFile = toFile.endsWith("/index.html");
       const isToHtmlFile = toFile.endsWith(".html");
@@ -71,7 +72,7 @@ async function main() {
       const cleanPath =
         isToIndexFile
           ? toFile.substring(0, toFile.length - "index.html".length)
-          : isToHtmlFile
+          : (isToHtmlFile && !isArchive)
             ? toFile.substring(0, toFile.length - ".html".length)
             : toFile;
       const trailingSlash = isToIndexFile || isToDir ? "/" : "";
