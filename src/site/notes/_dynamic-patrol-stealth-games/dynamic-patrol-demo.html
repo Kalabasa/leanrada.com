@@ -1,0 +1,81 @@
+<common />
+
+<dynamic-patrol-demo-client {...attrs} />
+
+<style>
+  dynamic-patrol-demo-client {
+    display: block;
+    min-height: 500px;
+    min-width: 500px;
+    border-radius: 12px;
+    background: white;
+  }
+</style>
+
+<script async src="/vendor/two.min.js"></script>
+<!-- Warn: This relative URL is brittle -->
+<script async src="./dynamic-patrol-demo.js"></script>
+
+<script client defer>
+  (() => {
+    customElements.define(
+      "dynamic-patrol-demo-client",
+      class DynamicPatrolDemoClient extends BaseElement {
+        constructor() {
+          super();
+          this.two = null;
+          this.model = null;
+          this.isVisible = false;
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+          this.preinit();
+        }
+
+        disconnectedCallback() {
+          super.disconnectedCallback();
+          this.two = null;
+          this.model = null;
+          this.replaceChildren();
+        }
+
+        preinit() {
+          if (
+            typeof Two === "undefined" ||
+            typeof DynamicPatrolDemo === "undefined"
+          ) {
+            setTimeout(() => this.preinit(), 200);
+          } else {
+            this.init();
+          }
+        }
+
+        init() {
+          if (!this.isConnected) return;
+
+          this.two = new Two({ fitted: true });
+          this.two.appendTo(this);
+          this.two.addEventListener("update", this.update);
+
+          this.model = new DynamicPatrolDemo();
+
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.two.play();
+            },
+            hide: () => {
+              this.two.pause();
+              this.isVisible = false;
+            },
+          });
+        }
+
+        update = () => {
+          
+        };
+      }
+    );
+  })();
+</script>
