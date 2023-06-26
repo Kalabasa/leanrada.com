@@ -3,7 +3,9 @@ module.exports = {
     "out/site/archive/v*/**",
     "out/site/google*.html",
     "out/site/projects/", // redirects
+    "out/site/works/", // redirects
     "out/site/**/*.html/index.html", // redirects
+    "out/site/wares/canva-photo-editor/index.html", // redirect
   ],
   rules: {
     "@html-eslint/require-lang": "error",
