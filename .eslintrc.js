@@ -1,6 +1,6 @@
 module.exports = {
   ignorePatterns: [
-    "out/site/archive/v3/**",
+    "out/site/archive/v*/**",
     "out/site/google*.html",
     "out/site/projects/", // redirects
     "out/site/**/*.html/index.html", // redirects
