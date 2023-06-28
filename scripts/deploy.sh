@@ -5,6 +5,7 @@ cd "$(dirname "$0")"/..
 pwd
 
 if [[ `git status --porcelain` ]]; then
+  git status
   echo >&2 "Unclean work dir"
   exit 1
 fi
