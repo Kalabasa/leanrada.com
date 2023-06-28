@@ -1,4 +1,4 @@
-const DynamicPatrolDemo = (() => {
+export default (() => {
   const WALL = "#";
   const FLOOR = ".";
 
@@ -18,7 +18,20 @@ const DynamicPatrolDemo = (() => {
         [WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL],
         [WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL]
       ];
+      this.guards = [];
+      this.targets = [];
       console.log(this);
+    }
+
+    addGuard(x, y, heading) {
+      this.guards.push({
+        x, y, heading,
+        path: []
+      });
+    }
+
+    addTarget(x, y) {
+      this.targets.push({x, y});
     }
   }
 })();

@@ -13,10 +13,11 @@
 </style>
 
 <script async src="/vendor/two.min.js"></script>
-<!-- Warn: This relative URL is brittle -->
-<script async src="./dynamic-patrol-demo.js"></script>
 
-<script client defer>
+<script type="module" client defer>
+  // Warn: URL is relative to the page, not the component
+  import DynamicPatrolDemo from "./dynamic-patrol-demo.mjs";
+
   (() => {
     customElements.define(
       "dynamic-patrol-demo-client",
@@ -40,15 +41,13 @@
           this.replaceChildren();
         }
 
-        preinit() {
-          if (
-            typeof Two === "undefined" ||
-            typeof DynamicPatrolDemo === "undefined"
-          ) {
-            setTimeout(() => this.preinit(), 200);
-          } else {
-            this.init();
-          }
+        async preinit() {
+          await globalThis.waitFor(
+            () =>
+              typeof Two !== "undefined" &&
+              typeof DynamicPatrolDemo !== "undefined"
+          );
+          this.init();
         }
 
         init() {
@@ -72,9 +71,7 @@
           });
         }
 
-        update = () => {
-          
-        };
+        update = () => {};
       }
     );
   })();

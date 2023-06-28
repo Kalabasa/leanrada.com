@@ -83,9 +83,10 @@
           }
 
           if (typeof perlinNoise3d === "undefined") {
-            setTimeout(() => this.loop(), 200);
-            return;
-          } else if (!this.noise) {
+            await globalThis.waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+          
+          if (!this.noise) {
             this.noise = initNoise();
             this.startT = this.getT();
           }

@@ -127,26 +127,38 @@
       };
     }
 
-    window.mousePosition = { x: 0, y: 0 };
+    globalThis.mousePosition = { x: 0, y: 0 };
     document.addEventListener(
       "DOMContentLoaded",
       () => {
         document.body.addEventListener("mousemove", (event) => {
-          window.mousePosition.x = event.clientX;
-          window.mousePosition.y = event.clientY;
+          globalThis.mousePosition.x = event.clientX;
+          globalThis.mousePosition.y = event.clientY;
         });
       },
       { once: true }
     );
-  })();
 
-  function isInViewport(element) {
-    const rect = element.getBoundingClientRect();
-    return (
-      rect.right > 0 &&
-      rect.bottom > 0 &&
-      rect.left < window.innerWidth &&
-      rect.top < window.innerHeight
-    );
-  }
+    globalThis.waitFor = async function (condition) {
+      if (condition()) return Promise.resolve();
+
+      return new Promise((resolve) => {
+        wait();
+        function wait() {
+          if (condition()) resolve();
+          else setTimeout(wait, 200);
+        }
+      });
+    };
+
+    function isInViewport(element) {
+      const rect = element.getBoundingClientRect();
+      return (
+        rect.right > 0 &&
+        rect.bottom > 0 &&
+        rect.left < window.innerWidth &&
+        rect.top < window.innerHeight
+      );
+    }
+  })();
 </script>
