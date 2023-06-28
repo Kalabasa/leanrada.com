@@ -10,9 +10,9 @@
   }
 </style>
 
-<script async src="/vendor/two.min.js"></script>
-
 <script type="module" client defer>
+  import Two from "/lib/vendor/two.module.js";
+  import { waitFor } from "/lib/wait_for.mjs";
   import { BaseElement } from "/lib/base_element.mjs";
   // Warn: Module path is relative to the page, not the component
   import DynamicPatrolDemo from "./dynamic-patrol-demo.mjs";
@@ -29,7 +29,7 @@
 
       connectedCallback() {
         super.connectedCallback();
-        this.preinit();
+        this.init();
       }
 
       disconnectedCallback() {
@@ -37,15 +37,6 @@
         this.two = null;
         this.model = null;
         this.replaceChildren();
-      }
-
-      async preinit() {
-        await globalThis.waitFor(
-          () =>
-            typeof Two !== "undefined" &&
-            typeof DynamicPatrolDemo !== "undefined"
-        );
-        this.init();
       }
 
       init() {
