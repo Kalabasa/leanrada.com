@@ -1,795 +1,1018 @@
 <html lang="en">
 <head>
-    <script async="" src="https://cpwebassets.codepen.io/assets/embed/ei.js"></script>
-    <title>How I built tic-tac-toe game AI in pure CSS · leanrada.com</title>
-    <script async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
-    <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
-    <style>
-        @font-face {
-            font-family: "Space Mono";
-            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
-        }
-
-        @font-face {
-            font-family: "Space Mono";
-            font-style: italic;
-            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
-        }
-
-        @font-face {
-            font-family: "Miriam Libre";
-            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
-        }
-
-        @font-face {
-            font-family: "Miriam Libre";
-            font-weight: bold;
-            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
-        }
-
-        :root {
-            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
-            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
-
-            --bg-clr: #111;
-            --card-clr: #222;
-            --clr0-light: #54f8c1;
-            --clr0: #0ad591;
-            --clr0-dark: #018b5d;
-            --clr1: #df2063;
-
-            --text-clr: #fff;
-            --text2-clr: #999;
-
-            --ease: cubic-bezier(0.8, 0, 1, 1);
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            font-display: swap;
-            background-color: var(--bg-clr, #111);
-            color: var(--text-clr, #fff);
-            overflow-x: hidden;
-        }
-
-        .page-wrapper {
-            display: flex;
-            flex-direction: column;
-            min-height: 100%;
-        }
-
-        .page-wrapper-content {
-            flex: 1 1 auto;
-        }
-    </style>
-    <style>
-        nebula-client>canvas {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-    <style>
-        .main-footer-link {
-            text-decoration: none;
-        }
-
-        .main-footer-link-icon {
-            width: 32px;
-            height: 32px;
-            image-rendering: pixelated;
-        }
-
-        .main-footer-link-icon:hover {
-            filter: invert(1);
-        }
-    </style>
-    <style>
-        .main-footer {
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            gap: 60px;
-            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
-            font-size: 15px;
-            font-weight: bold;
-            background: var(--clr0);
-            color: #000;
-            overflow: hidden;
-            content-visibility: auto;
-            contain-intrinsic-height: 220x;
-        }
-
-        .main-footer-links-heading {
-            margin: 0 0 18px;
-            font-size: inherit;
-        }
-
-        .main-footer-line {
-            margin: 0 0 18px;
-        }
-
-        .main-footer-nav {
-            color: #000;
-        }
-
-        .main-footer-nav:hover {
-            color: #fff;
-        }
-
-        .main-footer-content-part {
-            z-index: 1;
-        }
-
-        .main-footer-nebula {
-            position: absolute;
-            left: -30%;
-            top: -30%;
-            width: 160%;
-            height: 160%;
-            z-index: 0;
-        }
-
-        .main-footer-top-btn {
-            display: block;
-            z-index: 2;
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 72px;
-            height: 36px;
-            padding-right: 9px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: none;
-            border-bottom-left-radius: 18px;
-            background: var(--bg-clr);
-            text-decoration: none;
-            color: var(--clr0-light);
-            font: inherit;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .main-footer-top-btn:hover {
-            color: var(--clr1);
-        }
-
-        .main-footer-top-btn::before {
-            content: "";
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 36px;
-            height: 18px;
-            border-top-right-radius: 18px;
-            transform: translateX(-72px);
-            box-shadow: 18px 0 0 var(--bg-clr);
-        }
-
-        @media (max-width: 700px) {
-            .main-footer {
-                flex-direction: column-reverse;
-            }
-        }
-    </style>
-    <style>
-        .main-header {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            height: 60px;
-            padding: 0 calc(25% - 150px);
-            z-index: 100;
-            box-sizing: border-box;
-            pointer-events: none;
-        }
-
-        .main-header.float {
-            position: fixed;
-        }
-
-        .main-header-bar {
-            position: relative;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: flex-end;
-            height: 100%;
-        }
-
-        .main-header-item {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 6ch;
-            height: 36px;
-            padding: 0 18px;
-            border-radius: 18px;
-            font-size: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-decoration: none;
-            text-transform: uppercase;
-            color: #fff;
-            backdrop-filter: blur(8px);
-            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
-            background-repeat: no-repeat;
-            background-size: 220% 100%;
-            background-position: 115%;
-            pointer-events: all;
-            transition: background-position 0.2s var(--ease);
-        }
-
-        .main-header-item:hover {
-            background-image: linear-gradient(60deg,
-                    #fff2 50%,
-                    #fff 50%,
-                    #fff 60%,
-                    transparent 60%);
-            background-position: 0%;
-        }
-
-        .main-header-item.select {
-            background: #fff2;
-        }
-
-        .main-header-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            image-rendering: pixelated;
-            object-fit: cover;
-            object-position: 0 0;
-            filter: invert(1);
-            backdrop-filter: blur(8px) invert(1);
-            pointer-events: all;
-        }
-
-        .main-header-icon:hover {
-            object-position: 100% 0;
-        }
-
-        @media (max-width: 450px) {
-            .main-header-icon {
-                display: none;
-            }
-        }
-
-        .main-header-indicator {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            left: 50%;
-            top: calc(100% + 12px);
-            transform: translate(-50%, -50%);
-            /* border acts as extended touch area */
-            border: solid 6mm transparent;
-            border-left-width: 45vw;
-            border-right-width: 45vw;
-            border-radius: 50%;
-            background: #fff;
-            background-clip: padding-box;
-            opacity: 0;
-            transition: opacity 50ms;
-        }
-
-        .main-header.hidden .main-header-indicator {
-            opacity: 0.8;
-            pointer-events: all;
-        }
-    </style>
-    <style>
-        .blog-page {
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .content {
-            padding: 60px 18px;
-            width: 100%;
-            max-width: 700px;
-            font-family: var(--reading-font, sans-serif);
-            font-size: 16px;
-            line-height: 2.2;
-            letter-spacing: 0.02em;
-            color: #ddd;
-            box-sizing: border-box;
-        }
-
-        .markdown>h1,
-        .markdown>h2,
-        .markdown>h3,
-        .markdown>h4,
-        .markdown>h5,
-        .markdown>h6 {
-            font-family: var(--default-font, monospace);
-            font-weight: lighter;
-            font-style: italic;
-            line-height: 1.6;
-            letter-spacing: 0.04em;
-            margin: 48px 0 36px;
-        }
-
-        .markdown>h1 {
-            text-align: center;
-            font-size: 200%;
-        }
-
-        .markdown>h2 {
-            font-size: 150%;
-        }
-
-        .markdown>h3,
-        .markdown>h4,
-        .markdown>h5,
-        .markdown>h6 {
-            font-size: 120%;
-            font-weight: bold;
-        }
-
-        .markdown>p {
-            margin: 36px 0;
-        }
-
-        .markdown>hr {
-            width: 36px;
-            margin: 90px auto;
-            border: solid 1.5px #ccc;
-            background: #ccc;
-            border-radius: 3px;
-        }
-
-        .markdown code:not([class]):not([class]) {
-            display: inline-block;
-            padding: 0 6px;
-            border-radius: 6px;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            background: var(--card-clr);
-        }
-
-        .markdown>pre:not([class])>code:not([class]) {
-            display: block;
-            padding: 18px;
-            border-radius: 18px;
-            line-height: 1.6;
-            font-size: 15px;
-            overflow-x: auto;
-        }
-
-        .markdown>blockquote {
-            position: relative;
-            margin: 0;
-            padding: 18px 24px;
-            border-radius: 18px;
-            border: solid 1px var(--clr0);
-            font-size: 21px;
-        }
-
-        .markdown>blockquote::before {
-            content: "";
-            position: absolute;
-            right: 100%;
-            top: 0;
-            height: 24px;
-            width: 24px;
-            border-bottom: solid 1px var(--clr0);
-            box-sizing: border-box;
-        }
-
-        .markdown>blockquote::after {
-            content: "";
-            position: absolute;
-            right: 100%;
-            top: 24px;
-            bottom: 18px;
-            width: 24px;
-            border-top-right-radius: 24px;
-            border: solid var(--clr0);
-            border-width: 1px 1px 0 0;
-            box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
-            box-sizing: border-box;
-        }
+  <script async="" src="https://cpwebassets.codepen.io/assets/embed/ei.js"></script>
+  <title>How I built tic-tac-toe game AI in pure CSS · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
+        }
+
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
+        }
+
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
 
-        .markdown>blockquote> :first-child {
-            margin-top: 0;
-        }
-
-        .markdown>blockquote> :last-child {
-            margin-bottom: 0;
-        }
-
-        .markdown>blockquote cite {
-            display: block;
-            margin-top: 12px;
-            font-size: 15px;
-            font-style: inherit;
-        }
-
-        .markdown>blockquote cite::before {
-            content: "—";
-        }
-
-        .markdown>iframe,
-        .markdown>p>iframe {
-            max-width: calc(100vw - 18px);
-            border: none;
-            border-radius: 18px;
-            background: #fff;
-        }
-
-        .markdown .center {
-            text-align: center;
-        }
-
-        .markdown .center-flex {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
-        .markdown .bleed {
-            position: relative;
-            left: 50%;
-            width: 100vh;
-            max-width: max(min(100vw, 800px), 80vw);
-            transform: translateX(-50%);
-        }
-
-        /* todo: convert to component <caption>, reuse across <blog-media> */
-        .markdown .caption {
-            display: block;
-            font-size: 15px;
-        }
-    </style>
-    <style>
-        .text-link {
-            color: var(--clr0-light, #fff);
-        }
-
-        .text-link:visited {
-            color: var(--clr0, #fff);
-        }
-    </style>
-    <style>
-        .css-three-in-a-row-seq {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 400px;
-        }
-
-        .css-three-in-a-row-seq>input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-            appearance: none;
-        }
-
-        .css-three-in-a-row-seq-box {
-            position: relative;
-            width: 400px;
-            height: 400px;
-        }
-
-        .css-three-in-a-row-seq-grid {
-            position: absolute;
-            inset: 0;
-            display: grid;
-            grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
-            pointer-events: none;
-        }
-
-        .css-three-in-a-row-seq-grid>label {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: solid 4px var(--text2-clr);
-            margin: 0 -4px -4px 0;
-            font-family: var(--default-font);
-            font-size: 100px;
-            line-height: 1;
-            cursor: pointer;
-            color: transparent;
-            transition: color 0.1s;
-        }
-
-        .css-three-in-a-row-seq-grid>label:hover {
-            background-color: #fff1;
-        }
-
-        /* Rules for enabling the appropriate set of inputs per turn */
-
-        .css-three-in-a-row-seq label[for^="css-three-in-a-row-seq-1"] {
-            pointer-events: all;
-        }
-
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"] {
-            pointer-events: none;
-        }
-
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"] {
-            pointer-events: all;
-        }
-
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"] {
-            pointer-events: none;
-        }
-
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"] {
-            pointer-events: all;
-        }
-
-        /* Rules for showing markers */
-
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="1"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="2"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="3"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="3"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="4"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="4"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="5"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="5"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="6"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="6"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="7"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="7"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="8"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="8"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="9"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="9"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="1"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="2"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="3"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="3"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="4"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="4"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="5"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="5"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="6"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="6"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="7"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="7"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="8"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="8"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="9"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="9"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="1"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="2"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="3"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="3"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="4"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="4"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="5"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="5"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="6"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="6"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="7"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="7"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="8"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="8"],
-        .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="9"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="9"] {
-            color: var(--text-clr);
-        }
-    </style>
-    <style>
-        .blog-media {
-            position: relative;
-            text-align: center;
-            /* external margin because it’s expected to be in an article */
-            margin: 36px 0;
-        }
-
-        .blog-media-bleed {
-            margin: 90px 0;
-            max-height: 80vh;
-        }
-
-        .blog-media-element {
-            display: inline-block;
-            max-width: 100%;
-            max-height: 80vh;
-            border-radius: 18px;
-            box-sizing: border-box;
-        }
-
-        .blog-media-bleed .blog-media-element {
-            position: relative;
-            left: 50%;
-            max-width: max(min(100vw, 800px), 80vw);
-            transform: translateX(-50%);
-        }
-
-        .blog-media-windowed .blog-media-element {
-            border-radius: 0;
-        }
-
-        .blog-media-caption {
-            display: block;
-            font-size: 15px;
-        }
-    </style>
-    <style>
-        .css-three-in-a-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 400px;
-        }
-
-        .css-three-in-a-row>input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-            appearance: none;
-        }
-
-        .css-three-in-a-row-box {
-            position: relative;
-            display: grid;
-            grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
-            width: 400px;
-            height: 400px;
-        }
-
-        .css-three-in-a-row-box>label {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: solid 4px var(--text2-clr);
-            margin: 0 -4px -4px 0;
-            font-family: var(--default-font);
-            font-size: 100px;
-            line-height: 1;
-            cursor: pointer;
-            color: transparent;
-            transition: color 0.1s;
-        }
-
-        .css-three-in-a-row-box>label:hover {
-            background-color: #fff1;
-        }
-
-        .css-three-in-a-row>input#css-three-in-a-row-1:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-1"],
-        .css-three-in-a-row>input#css-three-in-a-row-2:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-2"],
-        .css-three-in-a-row>input#css-three-in-a-row-3:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-3"],
-        .css-three-in-a-row>input#css-three-in-a-row-4:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-4"],
-        .css-three-in-a-row>input#css-three-in-a-row-5:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-5"],
-        .css-three-in-a-row>input#css-three-in-a-row-6:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-6"],
-        .css-three-in-a-row>input#css-three-in-a-row-7:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-7"],
-        .css-three-in-a-row>input#css-three-in-a-row-8:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-8"],
-        .css-three-in-a-row>input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-9"] {
-            color: var(--text-clr);
-        }
-
-        .css-three-in-a-row-win {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: var(--default-font);
-            font-size: min(150px, 5vw);
-            font-weight: bold;
-            line-height: 1;
-            color: greenyellow;
-            text-shadow: 0 0.1em 0 green;
-            opacity: 0;
-            transform: scale(0.5);
-            transition: opacity 0.1s 0.2s, transform 0.3s 0.2s;
-            pointer-events: none;
-        }
-
-        .css-three-in-a-row>input#css-three-in-a-row-1:checked~input#css-three-in-a-row-2:checked~input#css-three-in-a-row-3:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
-        .css-three-in-a-row>input#css-three-in-a-row-4:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-6:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
-        .css-three-in-a-row>input#css-three-in-a-row-7:checked~input#css-three-in-a-row-8:checked~input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
-        .css-three-in-a-row>input#css-three-in-a-row-1:checked~input#css-three-in-a-row-4:checked~input#css-three-in-a-row-7:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
-        .css-three-in-a-row>input#css-three-in-a-row-2:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-8:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
-        .css-three-in-a-row>input#css-three-in-a-row-3:checked~input#css-three-in-a-row-6:checked~input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
-        .css-three-in-a-row>input#css-three-in-a-row-1:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
-        .css-three-in-a-row>input#css-three-in-a-row-3:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-7:checked~.css-three-in-a-row-box>.css-three-in-a-row-win {
-            opacity: 1;
-            transform: scale(1);
-        }
-    </style>
-    <style>
-        .css-rain-machine-demo {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-        }
-
-        .css-rain-machine-demo>input {
-            opacity: 0;
-            position: absolute;
-            pointer-events: none;
-            appearance: none;
-        }
-
-        .css-rain-machine-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 400px;
-            padding: 30px;
-            border-radius: 20px;
-            border-top: solid 1px #88bde0;
-            background-color: #628ab8;
-            box-shadow: 0 40px 0 #587ba3;
-            margin-bottom: 40px;
-            /* match box-shadow */
-            box-sizing: border-box;
-        }
-
-        .css-rain-machine-screen {
-            position: relative;
-            width: 340px;
-            height: 340px;
-            border-radius: 8px;
-            border-bottom: solid 1px #88bde0;
-            background-color: #1b2c2b;
-        }
-
-        .css-rain-machine-screen>img {
-            display: block;
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            image-rendering: pixelated;
-            filter: drop-shadow(0 0 20px #50e66c44);
-            opacity: 0;
-        }
-
-        .css-rain-machine-controls {
-            display: flex;
-            padding: 20px;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .css-rain-machine-controls>label {
-            flex: 0 0 auto;
-            min-width: 60px;
-            padding: 5px 10px;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-family: "Courier New", Courier, monospace;
-            font-size: 16px;
-            font-weight: bold;
-            line-height: 20px;
-            text-transform: uppercase;
-            background-color: #eff2f3;
-            color: #4c5052;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #b6c4c9;
-            display: none;
-            /* overridden per demo number */
-        }
-
-        .css-rain-machine-demo label.css-rain-machine-rainy,
-        .css-rain-machine-demo.css-rain-machine-demo-2 label.css-rain-machine-sunny,
-        .css-rain-machine-demo.css-rain-machine-demo-3 label.css-rain-machine-windy {
-            display: block;
-        }
-
-        .css-rain-machine-demo>input.css-rain-machine-rainy:checked~.css-rain-machine-box label.css-rain-machine-rainy,
-        .css-rain-machine-demo>input.css-rain-machine-sunny:checked~.css-rain-machine-box label.css-rain-machine-sunny,
-        .css-rain-machine-demo>input.css-rain-machine-windy:checked~.css-rain-machine-box label.css-rain-machine-windy {
-            transform: translateY(5px);
-            background-color: #b6c4c9;
-            box-shadow: 0 0 0 #b6c4c9;
-        }
+          this.draw(canvas, this.context);
 
-        .css-rain-machine-demo.css-rain-machine-demo-1>input.css-rain-machine-rainy:checked~.css-rain-machine-box .css-rain-machine-umbrella {
-            opacity: 1;
+          requestAnimationFrame(() => this.loop());
         }
 
-        .css-rain-machine-demo.css-rain-machine-demo-2>input.css-rain-machine-rainy:checked~.css-rain-machine-box .css-rain-machine-umbrella,
-        .css-rain-machine-demo.css-rain-machine-demo-2>input.css-rain-machine-sunny:checked~.css-rain-machine-box .css-rain-machine-umbrella {
-            opacity: 1;
-        }
-
-        .css-rain-machine-demo.css-rain-machine-demo-3>input.css-rain-machine-rainy:checked~input.css-rain-machine-windy:checked~.css-rain-machine-box .css-rain-machine-raincoat {
-            opacity: 1;
-        }
-    </style>
-    <style>
         /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
+
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
+
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
+
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
+            }
+          }
+
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
+
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
+
+              const paletteIndex = Math.floor(paletteLength * p);
+
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
+
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
+            }
+          }
+        }
+
+        getT() {
+          const t = (Date.now() * 30) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
+        }
+      }
+    );
+
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
+
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
+
+      --text-clr: #fff;
+      --text2-clr: #999;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <style>
+    .main-footer-link {
+      text-decoration: none;
+    }
+
+    .main-footer-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 220x;
+    }
+
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
+
+    .main-footer-nav {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    .main-footer-content-part {
+      z-index: 1;
+    }
+
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
+
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
+
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
+
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
+
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .content {
+      padding: 60px 18px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown>h1,
+    .markdown>h2,
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 48px 0 36px;
+    }
+
+    .markdown>h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown>h2 {
+      font-size: 150%;
+    }
+
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    .markdown>p {
+      margin: 36px 0;
+    }
+
+    .markdown>table {
+      border-collapse: collapse;
+      background-color: var(--card-clr);
+      border-radius: 12px;
+    }
+
+    .markdown>table th,
+    .markdown>table td {
+      text-align: start;
+      padding: 9px 12px;
+      padding-inline-end: 18px;
+      border-bottom: solid 1px #444;
+    }
+
+    .markdown>table>tbody>tr:last-child>td {
+      border-bottom: none;
+    }
+
+    .markdown>hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code:not([class]):not([class]) {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      background: var(--card-clr);
+    }
+
+    .markdown>pre:not([class])>code:not([class]) {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      font-size: 15px;
+      overflow-x: auto;
+    }
+
+    .markdown>blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown>blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown>blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown>blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown>blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown>iframe,
+    .markdown>p>iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+    .markdown .bleed {
+      position: relative;
+      left: 50%;
+      width: 100vh;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
+
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .css-three-in-a-row-seq {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 400px;
+    }
+
+    .css-three-in-a-row-seq>input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      appearance: none;
+    }
+
+    .css-three-in-a-row-seq-box {
+      position: relative;
+      width: 400px;
+      height: 400px;
+    }
+
+    .css-three-in-a-row-seq-grid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
+      pointer-events: none;
+    }
+
+    .css-three-in-a-row-seq-grid>label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: solid 4px var(--text2-clr);
+      margin: 0 -4px -4px 0;
+      font-family: var(--default-font);
+      font-size: 100px;
+      line-height: 1;
+      cursor: pointer;
+      color: transparent;
+      transition: color 0.1s;
+    }
+
+    .css-three-in-a-row-seq-grid>label:hover {
+      background-color: #fff1;
+    }
+
+    /* Rules for enabling the appropriate set of inputs per turn */
+
+    .css-three-in-a-row-seq label[for^="css-three-in-a-row-seq-1"] {
+      pointer-events: all;
+    }
+
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"] {
+      pointer-events: none;
+    }
+
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"] {
+      pointer-events: all;
+    }
+
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"] {
+      pointer-events: none;
+    }
+
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"] {
+      pointer-events: all;
+    }
+
+    /* Rules for showing markers */
+
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="1"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="2"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="3"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="3"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="4"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="4"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="5"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="5"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="6"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="6"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="7"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="7"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="8"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="8"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-1"][value="9"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-1"][data-value="9"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="1"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="2"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="3"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="3"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="4"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="4"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="5"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="5"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="6"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="6"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="7"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="7"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="8"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="8"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-2"][value="9"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-2"][data-value="9"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="1"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="1"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="2"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="2"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="3"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="3"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="4"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="4"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="5"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="5"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="6"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="6"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="7"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="7"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="8"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="8"],
+    .css-three-in-a-row-seq>input[name="css-three-in-a-row-seq-3"][value="9"]:checked~.css-three-in-a-row-seq-box label[for^="css-three-in-a-row-seq-3"][data-value="9"] {
+      color: var(--text-clr);
+    }
+  </style>
+  <style>
+    .blog-media {
+      position: relative;
+      text-align: center;
+      /* external margin because it’s expected to be in an article */
+      margin: 36px 0;
+    }
+
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+      box-sizing: border-box;
+    }
+
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    .blog-media-windowed .blog-media-element {
+      border-radius: 0;
+    }
+
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .css-three-in-a-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 400px;
+    }
+
+    .css-three-in-a-row>input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      appearance: none;
+    }
+
+    .css-three-in-a-row-box {
+      position: relative;
+      display: grid;
+      grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
+      width: 400px;
+      height: 400px;
+    }
+
+    .css-three-in-a-row-box>label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: solid 4px var(--text2-clr);
+      margin: 0 -4px -4px 0;
+      font-family: var(--default-font);
+      font-size: 100px;
+      line-height: 1;
+      cursor: pointer;
+      color: transparent;
+      transition: color 0.1s;
+    }
+
+    .css-three-in-a-row-box>label:hover {
+      background-color: #fff1;
+    }
+
+    .css-three-in-a-row>input#css-three-in-a-row-1:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-1"],
+    .css-three-in-a-row>input#css-three-in-a-row-2:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-2"],
+    .css-three-in-a-row>input#css-three-in-a-row-3:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-3"],
+    .css-three-in-a-row>input#css-three-in-a-row-4:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-4"],
+    .css-three-in-a-row>input#css-three-in-a-row-5:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-5"],
+    .css-three-in-a-row>input#css-three-in-a-row-6:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-6"],
+    .css-three-in-a-row>input#css-three-in-a-row-7:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-7"],
+    .css-three-in-a-row>input#css-three-in-a-row-8:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-8"],
+    .css-three-in-a-row>input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>label[for="css-three-in-a-row-9"] {
+      color: var(--text-clr);
+    }
+
+    .css-three-in-a-row-win {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: var(--default-font);
+      font-size: min(150px, 5vw);
+      font-weight: bold;
+      line-height: 1;
+      color: greenyellow;
+      text-shadow: 0 0.1em 0 green;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.1s 0.2s, transform 0.3s 0.2s;
+      pointer-events: none;
+    }
+
+    .css-three-in-a-row>input#css-three-in-a-row-1:checked~input#css-three-in-a-row-2:checked~input#css-three-in-a-row-3:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
+    .css-three-in-a-row>input#css-three-in-a-row-4:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-6:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
+    .css-three-in-a-row>input#css-three-in-a-row-7:checked~input#css-three-in-a-row-8:checked~input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
+    .css-three-in-a-row>input#css-three-in-a-row-1:checked~input#css-three-in-a-row-4:checked~input#css-three-in-a-row-7:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
+    .css-three-in-a-row>input#css-three-in-a-row-2:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-8:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
+    .css-three-in-a-row>input#css-three-in-a-row-3:checked~input#css-three-in-a-row-6:checked~input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
+    .css-three-in-a-row>input#css-three-in-a-row-1:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-9:checked~.css-three-in-a-row-box>.css-three-in-a-row-win,
+    .css-three-in-a-row>input#css-three-in-a-row-3:checked~input#css-three-in-a-row-5:checked~input#css-three-in-a-row-7:checked~.css-three-in-a-row-box>.css-three-in-a-row-win {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
+  <style>
+    .css-rain-machine-demo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    .css-rain-machine-demo>input {
+      opacity: 0;
+      position: absolute;
+      pointer-events: none;
+      appearance: none;
+    }
+
+    .css-rain-machine-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 400px;
+      padding: 30px;
+      border-radius: 20px;
+      border-top: solid 1px #88bde0;
+      background-color: #628ab8;
+      box-shadow: 0 40px 0 #587ba3;
+      margin-bottom: 40px;
+      /* match box-shadow */
+      box-sizing: border-box;
+    }
+
+    .css-rain-machine-screen {
+      position: relative;
+      width: 340px;
+      height: 340px;
+      border-radius: 8px;
+      border-bottom: solid 1px #88bde0;
+      background-color: #1b2c2b;
+    }
+
+    .css-rain-machine-screen>img {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 20px #50e66c44);
+      opacity: 0;
+    }
+
+    .css-rain-machine-controls {
+      display: flex;
+      padding: 20px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .css-rain-machine-controls>label {
+      flex: 0 0 auto;
+      min-width: 60px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 16px;
+      font-weight: bold;
+      line-height: 20px;
+      text-transform: uppercase;
+      background-color: #eff2f3;
+      color: #4c5052;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #b6c4c9;
+      display: none;
+      /* overridden per demo number */
+    }
+
+    .css-rain-machine-demo label.css-rain-machine-rainy,
+    .css-rain-machine-demo.css-rain-machine-demo-2 label.css-rain-machine-sunny,
+    .css-rain-machine-demo.css-rain-machine-demo-3 label.css-rain-machine-windy {
+      display: block;
+    }
+
+    .css-rain-machine-demo>input.css-rain-machine-rainy:checked~.css-rain-machine-box label.css-rain-machine-rainy,
+    .css-rain-machine-demo>input.css-rain-machine-sunny:checked~.css-rain-machine-box label.css-rain-machine-sunny,
+    .css-rain-machine-demo>input.css-rain-machine-windy:checked~.css-rain-machine-box label.css-rain-machine-windy {
+      transform: translateY(5px);
+      background-color: #b6c4c9;
+      box-shadow: 0 0 0 #b6c4c9;
+    }
+
+    .css-rain-machine-demo.css-rain-machine-demo-1>input.css-rain-machine-rainy:checked~.css-rain-machine-box .css-rain-machine-umbrella {
+      opacity: 1;
+    }
+
+    .css-rain-machine-demo.css-rain-machine-demo-2>input.css-rain-machine-rainy:checked~.css-rain-machine-box .css-rain-machine-umbrella,
+    .css-rain-machine-demo.css-rain-machine-demo-2>input.css-rain-machine-sunny:checked~.css-rain-machine-box .css-rain-machine-umbrella {
+      opacity: 1;
+    }
+
+    .css-rain-machine-demo.css-rain-machine-demo-3>input.css-rain-machine-rainy:checked~input.css-rain-machine-windy:checked~.css-rain-machine-box .css-rain-machine-raincoat {
+      opacity: 1;
+    }
+  </style>
+  <style>
+    /**
  * Modified by Kalabasa.
  * Based on:
  * a11y-dark theme for JavaScript, CSS, and HTML
@@ -797,452 +1020,451 @@
  * @author ericwbailey
  */
 
-        .code-block .token.comment,
-        .code-block .token.prolog,
-        .code-block .token.doctype,
-        .code-block .token.cdata {
-            color: #628b9e;
-            font-style: italic;
-        }
+    .code-block .token.comment,
+    .code-block .token.prolog,
+    .code-block .token.doctype,
+    .code-block .token.cdata {
+      color: #628b9e;
+      font-style: italic;
+    }
 
-        .code-block .token.punctuation {
-            color: #fefefe;
-        }
+    .code-block .token.punctuation {
+      color: #fefefe;
+    }
 
-        .code-block .token.property,
-        .code-block .token.tag,
-        .code-block .token.constant,
-        .code-block .token.symbol,
-        .code-block .token.deleted {
-            color: #ffa07a;
-        }
+    .code-block .token.property,
+    .code-block .token.tag,
+    .code-block .token.constant,
+    .code-block .token.symbol,
+    .code-block .token.deleted {
+      color: #ffa07a;
+    }
 
-        .code-block .token.boolean,
-        .code-block .token.number {
-            color: #00e0e0;
-        }
+    .code-block .token.boolean,
+    .code-block .token.number {
+      color: #00e0e0;
+    }
 
-        .code-block .token.selector,
-        .code-block .token.attr-name,
-        .code-block .token.string,
-        .code-block .token.char,
-        .code-block .token.builtin,
-        .code-block .token.inserted {
-            color: #abe338;
-        }
+    .code-block .token.selector,
+    .code-block .token.attr-name,
+    .code-block .token.string,
+    .code-block .token.char,
+    .code-block .token.builtin,
+    .code-block .token.inserted {
+      color: #abe338;
+    }
 
-        .code-block .token.operator,
-        .code-block .token.entity,
-        .code-block .token.url,
-        .code-block .token.variable {
-            color: #00e0e0;
-        }
+    .code-block .token.operator,
+    .code-block .token.entity,
+    .code-block .token.url,
+    .code-block .token.variable {
+      color: #00e0e0;
+    }
 
-        .code-block .token.atrule,
-        .code-block .token.attr-value,
-        .code-block .token.function {
-            color: #ffd700;
-        }
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function {
+      color: #ffd700;
+    }
 
-        .code-block .token.keyword {
-            color: #00e0e0;
-        }
+    .code-block .token.keyword {
+      color: #00e0e0;
+    }
 
-        .code-block .token.regex,
-        .code-block .token.important {
-            color: #ffd700;
-        }
+    .code-block .token.regex,
+    .code-block .token.important {
+      color: #ffd700;
+    }
 
-        .code-block .token.important,
-        .code-block .token.bold {
-            font-weight: bold;
-        }
+    .code-block .token.important,
+    .code-block .token.bold {
+      font-weight: bold;
+    }
 
-        .code-block .token.italic {
-            font-style: italic;
-        }
+    .code-block .token.italic {
+      font-style: italic;
+    }
 
-        .code-block .token.entity {
-            cursor: help;
-        }
+    .code-block .token.entity {
+      cursor: help;
+    }
 
-        @media screen and (-ms-high-contrast: active) {
-            .code-block .token.important {
-                background: highlight;
-                color: window;
-                font-weight: normal;
-            }
+    @media screen and (-ms-high-contrast: active) {
+      .code-block .token.important {
+        background: highlight;
+        color: window;
+        font-weight: normal;
+      }
 
-            .code-block .token.atrule,
-            .code-block .token.attr-value,
-            .code-block .token.function,
-            .code-block .token.keyword,
-            .code-block .token.operator,
-            .code-block .token.selector {
-                font-weight: bold;
-            }
+      .code-block .token.atrule,
+      .code-block .token.attr-value,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.selector {
+        font-weight: bold;
+      }
 
-            .code-block .token.attr-value,
-            .code-block .token.comment,
-            .code-block .token.doctype,
-            .code-block .token.function,
-            .code-block .token.keyword,
-            .code-block .token.operator,
-            .code-block .token.property,
-            .code-block .token.string {
-                color: highlight;
-            }
+      .code-block .token.attr-value,
+      .code-block .token.comment,
+      .code-block .token.doctype,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.property,
+      .code-block .token.string {
+        color: highlight;
+      }
 
-            .code-block .token.attr-value,
-            .code-block .token.url {
-                font-weight: normal;
-            }
-        }
-    </style>
-    <style>
-        .code-block-code {
-            display: block;
-            padding: 18px;
-            border-radius: 18px;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            line-height: 1.6;
-            background: var(--card-clr);
-            white-space: pre;
-            overflow-x: auto;
-        }
-    </style>
-    <style>
-        .box-note {
-            display: block;
-            padding: 12px 18px;
-            border-radius: 12px;
-            border: solid 2px var(--clr0-dark);
-            box-sizing: border-box;
-        }
-    </style>
-    <style>
-        .blog-post-info {
-            margin: 24px 0 0;
-            font-family: var(--default-font);
-            font-size: 12px;
-            font-weight: bold;
-            text-align: center;
-            color: var(--text2-clr);
-        }
-    </style>
-    <style>
-        .text-with-bg-span {
-            display: inline;
-            margin: 0;
-            padding: 0.7em;
-            padding: 0.35lh;
-            border-radius: 18px;
-            box-decoration-break: clone;
-            -webkit-box-decoration-break: clone;
-            font: inherit;
-            background: var(--text-with-bg-color);
-        }
-    </style>
-    <style>
-        .blog-header {
-            isolation: isolate;
-            margin-top: 60px;
-            position: relative;
-            left: 50%;
-            height: 600px;
-            width: max(800px, 60vw);
-            transform: translateX(-50%);
-            box-sizing: border-box;
-        }
+      .code-block .token.attr-value,
+      .code-block .token.url {
+        font-weight: normal;
+      }
+    }
+  </style>
+  <style>
+    .code-block-code {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      line-height: 1.6;
+      background: var(--card-clr);
+      white-space: pre;
+      overflow-x: auto;
+    }
+  </style>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .blog-post-info {
+      margin: 24px 0 0;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+  </style>
+  <style>
+    .text-with-bg-span {
+      display: inline;
+      margin: 0;
+      padding: 0.7em;
+      padding: 0.35lh;
+      border-radius: 18px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      font: inherit;
+      background: var(--text-with-bg-color);
+    }
+  </style>
+  <style>
+    .blog-header {
+      isolation: isolate;
+      margin-top: 60px;
+      position: relative;
+      left: 50%;
+      height: 600px;
+      width: max(800px, 60vw);
+      transform: translateX(-50%);
+      box-sizing: border-box;
+    }
 
-        .blog-header-title {
-            position: relative;
-            max-width: 800px;
-            font-family: var(--default-font);
-            font-size: 36px;
-            font-weight: bold;
-            font-style: italic;
-            text-align: left;
-            z-index: 2;
-        }
+    .blog-header-title {
+      position: relative;
+      max-width: 800px;
+      font-family: var(--default-font);
+      font-size: 36px;
+      font-weight: bold;
+      font-style: italic;
+      text-align: left;
+      z-index: 2;
+    }
 
-        .blog-header-title-inner {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-        }
+    .blog-header-title-inner {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
 
-        /* Wrap lines in an angle */
-        .blog-header-title::before {
-            content: "";
-            width: 50%;
-            height: 600px;
-            float: right;
-            shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
-        }
+    /* Wrap lines in an angle */
+    .blog-header-title::before {
+      content: "";
+      width: 50%;
+      height: 600px;
+      float: right;
+      shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
 
-        .blog-header-hero {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 18px;
-            background: cyan;
-            z-index: -1;
-        }
+    .blog-header-hero {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      background: cyan;
+      z-index: -1;
+    }
 
-        .blog-header-decor {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            fill: var(--bg-clr);
-            z-index: 1;
-        }
+    .blog-header-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      fill: var(--bg-clr);
+      z-index: 1;
+    }
 
-        @media (max-width: 800px) {
-            .blog-header {
-                width: 100vw;
-                width: 100svw;
-                height: 400px;
-                padding-right: 36px;
-            }
+    @media (max-width: 800px) {
+      .blog-header {
+        width: 100vw;
+        width: 100svw;
+        height: 400px;
+        padding-right: 36px;
+      }
 
-            .blog-header-title {
-                font-size: clamp(24px, 20px + 2vw, 36px);
-            }
+      .blog-header-title {
+        font-size: clamp(24px, 20px + 2vw, 36px);
+      }
 
-            .blog-header-title::before {
-                content: none;
-            }
-        }
-    </style>
-    <style>
-        .demo-box {
-            border-radius: 12px;
-            background-color: #eee;
-            color: #000;
-            padding: 12px;
-            user-select: none;
-        }
+      .blog-header-title::before {
+        content: none;
+      }
+    }
+  </style>
+  <style>
+    .demo-box {
+      border-radius: 12px;
+      background-color: #eee;
+      color: #000;
+      padding: 12px;
+      user-select: none;
+    }
 
-        .demo1 label {
-            cursor: pointer;
-        }
+    .demo1 label {
+      cursor: pointer;
+    }
 
-        .demo1 input {
-            appearance: none;
-        }
+    .demo1 input {
+      appearance: none;
+    }
 
-        .demo1 span {
-            display: inline-block;
-            width: 1ch;
-            height: 1ch;
-            border: solid 2px red;
-            transition: background-color 0.3s, transform 0.2s;
-        }
+    .demo1 span {
+      display: inline-block;
+      width: 1ch;
+      height: 1ch;
+      border: solid 2px red;
+      transition: background-color 0.3s, transform 0.2s;
+    }
 
-        .demo1 input:checked~span {
-            background-color: red;
-            transform: rotate(45deg);
-        }
+    .demo1 input:checked~span {
+      background-color: red;
+      transform: rotate(45deg);
+    }
 
-        .demo2 .advice {
-            min-height: 2em;
-            min-height: 2lh;
-        }
+    .demo2 .advice {
+      min-height: 2em;
+      min-height: 2lh;
+    }
 
-        .demo2 .advice span {
-            display: block;
-            position: absolute;
-        }
+    .demo2 .advice span {
+      display: block;
+      position: absolute;
+    }
 
-        .demo2 .take-umbrella {
-            visibility: hidden;
-        }
+    .demo2 .take-umbrella {
+      visibility: hidden;
+    }
 
-        .demo2 input:checked~.advice .take-umbrella {
-            visibility: visible;
-        }
+    .demo2 input:checked~.advice .take-umbrella {
+      visibility: visible;
+    }
 
-        .demo2 input:checked~.advice .no-umbrella {
-            visibility: hidden;
-        }
-    </style>
-    <script src="/scripts/common.js"></script>
+    .demo2 input:checked~.advice .no-umbrella {
+      visibility: hidden;
+    }
+  </style>
 </head>
 
 
 <body>
 
-    <div class="page-wrapper">
-        <header class="main-header">
-            <div class="main-header-bar">
-                <a href="/" class="main-header-item ">Home</a>
-                <a href="/wares/" class="main-header-item ">Wares</a>
-                <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
-                <a href="/art/" class="main-header-item ">Art</a>
-                <a href="/notes/" class="main-header-item select">Notes</a>
-                <div class="main-header-indicator"></div>
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/notes/" class="main-header-item select">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  How I built tic-tac-toe game AI in pure CSS
+                </h1>
+              </div>
+              <img srcset="/notes/pure-css-tictactoe-ai/hero_800.generated.jpg 800w,/notes/pure-css-tictactoe-ai/hero_1020.generated.jpg 1020w,/notes/pure-css-tictactoe-ai/hero_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/pure-css-tictactoe-ai/hero.jpg" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
             </div>
-        </header>
-        <div class="page-wrapper-content">
 
-            <div class="blog-page">
-                <div class="content">
+            <div class="blog-post-info">
+              5 May 2023 · 11 min read
+            </div>
 
-                    <!-- prettier-ignore -->
-                    <div class="markdown">
-                        <div class="blog-header">
-                            <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
-                                <h1 class="text-with-bg-span blog-header-title-inner">
-                                    How I built tic-tac-toe game AI in pure CSS
-                                </h1>
-                            </div>
-                            <img srcset="/notes/pure-css-tictactoe-ai/hero_800.generated.jpg 800w,/notes/pure-css-tictactoe-ai/hero_1020.generated.jpg 1020w,/notes/pure-css-tictactoe-ai/hero_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/pure-css-tictactoe-ai/hero.jpg" alt="" spec="100% [800) 80%">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
-                                <path></path>
-                            </svg>
-                        </div>
-
-                        <div class="blog-post-info">
-                            5 May 2023 · 11 min read
-                        </div>
-
-                        <p>As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only <strong>HTML</strong> and <strong>CSS</strong>. That is, no JavaScript! We already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.</p>
-                        <p>Here’s a CodePen of it! Can you beat a style sheet in a game of tic-tac-toe?</p>
-                        <p class="codepen" data-height="700" data-theme-id="dark" data-default-tab="result" data-slug-hash="oVMOZK" data-user="kalabasa" style="height: 300px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;">
-                            <span>See the Pen <a href="https://codepen.io/kalabasa/pen/oVMOZK">
-                                    Pure CSS Tic Tac Toe AI</a> by Kalabasa (<a href="https://codepen.io/kalabasa">@kalabasa</a>)
-                                on <a href="https://codepen.io">CodePen</a>.</span>
-                        </p>
+            <p>As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only <strong>HTML</strong> and <strong>CSS</strong>. That is, no JavaScript! We already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.</p>
+            <p>Here’s a CodePen of it! Can you beat a style sheet in a game of tic-tac-toe?</p>
+            <p class="codepen" data-height="700" data-theme-id="dark" data-default-tab="result" data-slug-hash="oVMOZK" data-user="kalabasa" style="height: 300px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;">
+              <span>See the Pen <a href="https://codepen.io/kalabasa/pen/oVMOZK">
+                  Pure CSS Tic Tac Toe AI</a> by Kalabasa (<a href="https://codepen.io/kalabasa">@kalabasa</a>)
+                on <a href="https://codepen.io">CodePen</a>.</span>
+            </p>
 
 
-                        <p>In this post, I’ll write about the steps I took to make it, starting with the fundamentals.</p>
-                        <span class="box-note ">
-                            Disclaimer: This was an experiment only. Never do this in production code!
-                        </span>
+            <p>In this post, I’ll write about the steps I took to make it, starting with the fundamentals.</p>
+            <span class="box-note ">
+              Disclaimer: This was an experiment only. Never do this in production code!
+            </span>
 
-                        <h2 id="building-blocks">Building blocks</h2>
-                        <p>Before starting to build anything complex, it’s important to start small and think about the basic elements. Unlike JavaScript, HTML and CSS are declarative languages. We can’t have procedures or functions, control flow, if-statements, and the like. Instead what we have are markup and rules. We’ll build upon these rules to create complex game logic.</p>
-                        <p>For starters, let’s do something that’s fairly common on the web: <strong>custom checkbox styles</strong>.</p>
-                        <div class="demo-box demo1">
-                            <label><input type="checkbox"><span></span> Check this out</label>
-                            <div><small>(these demos are interactive!)</small></div>
-                        </div>
+            <h2 id="building-blocks">Building blocks</h2>
+            <p>Before starting to build anything complex, it’s important to start small and think about the basic elements. Unlike JavaScript, HTML and CSS are declarative languages. We can’t have procedures or functions, control flow, if-statements, and the like. Instead what we have are markup and rules. We’ll build upon these rules to create complex game logic.</p>
+            <p>For starters, let’s do something that’s fairly common on the web: <strong>custom checkbox styles</strong>.</p>
+            <div class="demo-box demo1">
+              <label><input type="checkbox"><span></span> Check this out</label>
+              <div><small>(these demos are interactive!)</small></div>
+            </div>
 
-                        <p>To do this, we need an extra element for the checkbox visuals, like an empty span element.</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>label</span><span class="token punctuation">&gt;</span></span>
+            <p>To do this, we need an extra element for the checkbox visuals, like an empty span element.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>label</span><span class="token punctuation">&gt;</span></span>
   <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>checkbox<span class="token punctuation">"</span></span> <span class="token punctuation">/&gt;</span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">&gt;</span></span> Check this out
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>label</span><span class="token punctuation">&gt;</span></span></code></pre>
 
-                        <p>On the CSS side, the real checkbox input is hidden, while the span is styled as a checkbox in its stead.</p>
-                        <p>Now here’s the important part, we’ll use the <code>:checked</code> pseudo-class and the <strong>sibling combinator</strong> <code>~</code> to make it all work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the separate fake checkbox element.</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ span</span> <span class="token punctuation">{</span>
+            <p>On the CSS side, the real checkbox input is hidden, while the span is styled as a checkbox in its stead.</p>
+            <p>Now here’s the important part, we’ll use the <code>:checked</code> pseudo-class and the <strong>sibling combinator</strong> <code>~</code> to make it all work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the separate fake checkbox element.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ span</span> <span class="token punctuation">{</span>
   <span class="token property">background-color</span><span class="token punctuation">:</span> red<span class="token punctuation">;</span>
   <span class="token property">transform</span><span class="token punctuation">:</span> <span class="token function">rotate</span><span class="token punctuation">(</span>45deg<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>Custom checkboxes! Easy.</p>
-                        <h3 id="action-at-a-distance">Action at a distance</h3>
-                        <p>The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”, for example:</p>
-                        <div class="demo-box demo2">
-                            <input type="checkbox" id="demo2_input">
-                            <label for="demo2_input">Is it raining?</label>
-                            <p>As you know, when it rains, water falls down from the sky. This may cause undesired wetness. An umbrella is a device which shields the user from falling particles such as the aforementioned rainwater.</p>
-                            <fieldset class="advice">
-                                <legend>Advice</legend>
-                                <span class="take-umbrella">Take an umbrella today!</span>
-                                <span class="no-umbrella">No need for an umbrella!</span>
-                            </fieldset>
-                        </div>
+            <p>Custom checkboxes! Easy.</p>
+            <h3 id="action-at-a-distance">Action at a distance</h3>
+            <p>The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”, for example:</p>
+            <div class="demo-box demo2">
+              <input type="checkbox" id="demo2_input">
+              <label for="demo2_input">Is it raining?</label>
+              <p>As you know, when it rains, water falls down from the sky. This may cause undesired wetness. An umbrella is a device which shields the user from falling particles such as the aforementioned rainwater.</p>
+              <fieldset class="advice">
+                <legend>Advice</legend>
+                <span class="take-umbrella">Take an umbrella today!</span>
+                <span class="no-umbrella">No need for an umbrella!</span>
+              </fieldset>
+            </div>
 
-                        <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
+            <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
     <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 <span class="token selector">input:checked ~ .advice .no-umbrella</span> <span class="token punctuation">{</span>
     <span class="token property">visibility</span><span class="token punctuation">:</span> hidden<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>As you’ll see later, the sibling combinator <code>~</code> can be very useful for these types of interactions.</p>
-                        <h3 id="the-next-level">The next level</h3>
-                        <p>Let’s take this to the next level, shall we?</p>
-                        <p>Using the <code>&lt;label&gt;</code>’s <code>for</code> attribute, we can get even more action at a distance. We can make pretty much any kind of UI we want!</p>
-                        <p>Presenting… the weather-advice-o-matic! 🌈 Go ahead, press the button!</p>
-                        <div class="css-rain-machine-demo css-rain-machine-demo-1">
-                            <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--1" type="checkbox">
-                            <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--1" type="checkbox">
-                            <input class="css-rain-machine-windy" id="css-rain-machine-windy--1" type="checkbox">
+            <p>As you’ll see later, the sibling combinator <code>~</code> can be very useful for these types of interactions.</p>
+            <h3 id="the-next-level">The next level</h3>
+            <p>Let’s take this to the next level, shall we?</p>
+            <p>Using the <code>&lt;label&gt;</code>’s <code>for</code> attribute, we can get even more action at a distance. We can make pretty much any kind of UI we want!</p>
+            <p>Presenting… the weather-advice-o-matic! 🌈 Go ahead, press the button!</p>
+            <div class="css-rain-machine-demo css-rain-machine-demo-1">
+              <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--1" type="checkbox">
+              <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--1" type="checkbox">
+              <input class="css-rain-machine-windy" id="css-rain-machine-windy--1" type="checkbox">
 
-                            <div class="css-rain-machine-box">
-                                <div class="css-rain-machine-screen">
-                                    <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
-                                    <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
-                                </div>
-                                <div class="css-rain-machine-controls">
-                                    <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--1">Rainy</label>
-                                    <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--1">Sunny</label>
-                                    <label class="css-rain-machine-windy" for="css-rain-machine-windy--1">Windy</label>
-                                </div>
-                            </div>
-                        </div>
+              <div class="css-rain-machine-box">
+                <div class="css-rain-machine-screen">
+                  <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
+                  <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
+                </div>
+                <div class="css-rain-machine-controls">
+                  <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--1">Rainy</label>
+                  <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--1">Sunny</label>
+                  <label class="css-rain-machine-windy" for="css-rain-machine-windy--1">Windy</label>
+                </div>
+              </div>
+            </div>
 
-                        <h3 id="or">OR</h3>
-                        <p>A single button is not very exciting, is it? Let’s add another input and implement an <strong>OR</strong> construct to determine the output. I mean this kind of thing: "if A or B then C".</p>
-                        <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (i.e., comma-separated selectors).</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ .advice .take-umbrella,
+            <h3 id="or">OR</h3>
+            <p>A single button is not very exciting, is it? Let’s add another input and implement an <strong>OR</strong> construct to determine the output. I mean this kind of thing: "if A or B then C".</p>
+            <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (i.e., comma-separated selectors).</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ .advice .take-umbrella,
 input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>Now, weather-advice-o-matic can make decisions based on two parameters!</p>
-                        <div class="css-rain-machine-demo css-rain-machine-demo-2">
-                            <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--2" type="checkbox">
-                            <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--2" type="checkbox">
-                            <input class="css-rain-machine-windy" id="css-rain-machine-windy--2" type="checkbox">
+            <p>Now, weather-advice-o-matic can make decisions based on two parameters!</p>
+            <div class="css-rain-machine-demo css-rain-machine-demo-2">
+              <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--2" type="checkbox">
+              <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--2" type="checkbox">
+              <input class="css-rain-machine-windy" id="css-rain-machine-windy--2" type="checkbox">
 
-                            <div class="css-rain-machine-box">
-                                <div class="css-rain-machine-screen">
-                                    <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
-                                    <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
-                                </div>
-                                <div class="css-rain-machine-controls">
-                                    <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--2">Rainy</label>
-                                    <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--2">Sunny</label>
-                                    <label class="css-rain-machine-windy" for="css-rain-machine-windy--2">Windy</label>
-                                </div>
-                            </div>
-                        </div>
+              <div class="css-rain-machine-box">
+                <div class="css-rain-machine-screen">
+                  <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
+                  <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
+                </div>
+                <div class="css-rain-machine-controls">
+                  <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--2">Rainy</label>
+                  <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--2">Sunny</label>
+                  <label class="css-rain-machine-windy" for="css-rain-machine-windy--2">Windy</label>
+                </div>
+              </div>
+            </div>
 
-                        <p>(If RAINY or SUNNY then UMBRELLA)</p>
-                        <h3 id="and">AND</h3>
-                        <p>How about <strong>AND</strong>? We can implement an AND construct too! This involves chaining the inputs together in a single selector using sibling combinators.</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span class="token punctuation">{</span>
+            <p>(If RAINY or SUNNY then UMBRELLA)</p>
+            <h3 id="and">AND</h3>
+            <p>How about <strong>AND</strong>? We can implement an AND construct too! This involves chaining the inputs together in a single selector using sibling combinators.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>What’s this? Weather-advice-o-matic can now make nuanced decisions! Wow! Careful, it might be sentient!!!</p>
-                        <div class="css-rain-machine-demo css-rain-machine-demo-3">
-                            <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--3" type="checkbox">
-                            <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--3" type="checkbox">
-                            <input class="css-rain-machine-windy" id="css-rain-machine-windy--3" type="checkbox">
+            <p>What’s this? Weather-advice-o-matic can now make nuanced decisions! Wow! Careful, it might be sentient!!!</p>
+            <div class="css-rain-machine-demo css-rain-machine-demo-3">
+              <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--3" type="checkbox">
+              <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--3" type="checkbox">
+              <input class="css-rain-machine-windy" id="css-rain-machine-windy--3" type="checkbox">
 
-                            <div class="css-rain-machine-box">
-                                <div class="css-rain-machine-screen">
-                                    <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
-                                    <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
-                                </div>
-                                <div class="css-rain-machine-controls">
-                                    <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--3">Rainy</label>
-                                    <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--3">Sunny</label>
-                                    <label class="css-rain-machine-windy" for="css-rain-machine-windy--3">Windy</label>
-                                </div>
-                            </div>
-                        </div>
+              <div class="css-rain-machine-box">
+                <div class="css-rain-machine-screen">
+                  <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
+                  <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
+                </div>
+                <div class="css-rain-machine-controls">
+                  <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--3">Rainy</label>
+                  <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--3">Sunny</label>
+                  <label class="css-rain-machine-windy" for="css-rain-machine-windy--3">Windy</label>
+                </div>
+              </div>
+            </div>
 
-                        <p>(If RAINY and WINDY then RAINCOAT)</p>
-                        <p>Here’s a summary of what we have so far:</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">/* if A or B then C */</span>
+            <p>(If RAINY and WINDY then RAINCOAT)</p>
+            <p>Here’s a summary of what we have so far:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">/* if A or B then C */</span>
 <span class="token selector">A ~ C,
 B ~ C</span> <span class="token punctuation">{</span>
   C
@@ -1253,37 +1475,37 @@ B ~ C</span> <span class="token punctuation">{</span>
   C
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>Another basic computing operator aside from AND and OR is the <strong>NOT</strong> operator. We don’t really need that here, but for the record, there’s the <code>:not()</code> pseudo-class in CSS. You can figure that out.</p>
-                        <h2 id="prototype-three-in-a-row">Prototype: Three-in-a-row</h2>
-                        <p>As a proof of concept and precursor to tic-tac-toe, let’s look at this three-in-a-row game.</p>
-                        <div class="css-three-in-a-row">
-                            <input id="css-three-in-a-row-1" type="checkbox">
-                            <input id="css-three-in-a-row-2" type="checkbox">
-                            <input id="css-three-in-a-row-3" type="checkbox">
-                            <input id="css-three-in-a-row-4" type="checkbox">
-                            <input id="css-three-in-a-row-5" type="checkbox">
-                            <input id="css-three-in-a-row-6" type="checkbox">
-                            <input id="css-three-in-a-row-7" type="checkbox">
-                            <input id="css-three-in-a-row-8" type="checkbox">
-                            <input id="css-three-in-a-row-9" type="checkbox">
+            <p>Another basic computing operator aside from AND and OR is the <strong>NOT</strong> operator. We don’t really need that here, but for the record, there’s the <code>:not()</code> pseudo-class in CSS. You can figure that out.</p>
+            <h2 id="prototype-three-in-a-row">Prototype: Three-in-a-row</h2>
+            <p>As a proof of concept and precursor to tic-tac-toe, let’s look at this three-in-a-row game.</p>
+            <div class="css-three-in-a-row">
+              <input id="css-three-in-a-row-1" type="checkbox">
+              <input id="css-three-in-a-row-2" type="checkbox">
+              <input id="css-three-in-a-row-3" type="checkbox">
+              <input id="css-three-in-a-row-4" type="checkbox">
+              <input id="css-three-in-a-row-5" type="checkbox">
+              <input id="css-three-in-a-row-6" type="checkbox">
+              <input id="css-three-in-a-row-7" type="checkbox">
+              <input id="css-three-in-a-row-8" type="checkbox">
+              <input id="css-three-in-a-row-9" type="checkbox">
 
-                            <div class="css-three-in-a-row-box">
-                                <label for="css-three-in-a-row-1">X</label>
-                                <label for="css-three-in-a-row-2">X</label>
-                                <label for="css-three-in-a-row-3">X</label>
-                                <label for="css-three-in-a-row-4">X</label>
-                                <label for="css-three-in-a-row-5">X</label>
-                                <label for="css-three-in-a-row-6">X</label>
-                                <label for="css-three-in-a-row-7">X</label>
-                                <label for="css-three-in-a-row-8">X</label>
-                                <label for="css-three-in-a-row-9">X</label>
-                                <div class="css-three-in-a-row-win">WINNER</div>
-                            </div>
-                        </div>
+              <div class="css-three-in-a-row-box">
+                <label for="css-three-in-a-row-1">X</label>
+                <label for="css-three-in-a-row-2">X</label>
+                <label for="css-three-in-a-row-3">X</label>
+                <label for="css-three-in-a-row-4">X</label>
+                <label for="css-three-in-a-row-5">X</label>
+                <label for="css-three-in-a-row-6">X</label>
+                <label for="css-three-in-a-row-7">X</label>
+                <label for="css-three-in-a-row-8">X</label>
+                <label for="css-three-in-a-row-9">X</label>
+                <div class="css-three-in-a-row-win">WINNER</div>
+              </div>
+            </div>
 
-                        <p>This is a 3x3 array of checkbox inputs. Internally, each box is numbered 1 to 9 starting from the top-left box going left-to-right linewise.</p>
-                        <p>Here are the rules for implementing the win condition in CSS:</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
+            <p>This is a 3x3 array of checkbox inputs. Internally, each box is numbered 1 to 9 starting from the top-left box going left-to-right row-wise.</p>
+            <p>Here are the rules for implementing the win condition in CSS:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
 #4:checked ~ #5:checked ~ #6:checked ~ .win,
 #7:checked ~ #8:checked ~ #9:checked ~ .win,
 #1:checked ~ #4:checked ~ #7:checked ~ .win,
@@ -1294,9 +1516,9 @@ B ~ C</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>Yes, it’s kinda hacky, but that is expected when you force logic into CSS. For comparison, the CSS for tic-tac-toe goes over 9000 lines! I never said it would be clean.</p>
-                        <p>Anyway, these 8 lines correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers <em>every possible winning combination</em>. The pseudocode in the comment helps illustrate this:</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">/*
+            <p>Yes, it’s kinda hacky, but that is expected when you force logic into CSS. For comparison, the CSS for tic-tac-toe goes over 9000 lines! I never said it would be clean.</p>
+            <p>Anyway, these 8 lines correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers <em>every possible winning combination</em>. The pseudocode in the comment helps illustrate this:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">/*
  * if
  *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
  *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
@@ -1318,18 +1540,18 @@ B ~ C</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <h2 id="taking-turns">Taking turns</h2>
-                        <p>So far, the order of your inputs doesn’t matter. You can even undo your inputs by unchecking the boxes (Try it above). That won’t fly in a game of tic-tac-toe, where we take turns incrementally marking the board. No backsies!</p>
-                        <p>We need a way to <strong>“consume”</strong> inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.</p>
-                        <p>So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn. Stacked on top of each other, each set is only interactable on its turn.</p>
-                        <div class="blog-media blog-media-default">
-                            <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="input sets illustration">
-                                <source src="/notes/pure-css-tictactoe-ai/input_sets.mp4">
-                                <a href="/notes/pure-css-tictactoe-ai/input_sets.mp4">input sets illustration</a>
-                            </video>
-                        </div>
+            <h2 id="taking-turns">Taking turns</h2>
+            <p>So far, the order of your inputs doesn’t matter. You can even undo your inputs by unchecking the boxes (Try it above). That won’t fly in a game of tic-tac-toe, where we take turns incrementally marking the board. No backsies!</p>
+            <p>We need a way to <strong>“consume”</strong> inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.</p>
+            <p>So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn. Stacked on top of each other, each set is only interactable on its turn.</p>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="input sets illustration">
+                <source src="/notes/pure-css-tictactoe-ai/input_sets.mp4">
+                <a href="/notes/pure-css-tictactoe-ai/input_sets.mp4">input sets illustration</a>
+              </video>
+            </div>
 
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">/* Disable turn 1 inputs when turn 1 is played */</span>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">/* Disable turn 1 inputs when turn 1 is played */</span>
 <span class="token selector">input[name="turn_1"]:checked ~ input[name="turn_1"]</span> <span class="token punctuation">{</span>
     <span class="token property">pointer-events</span><span class="token punctuation">:</span> none<span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
@@ -1339,113 +1561,113 @@ B ~ C</span> <span class="token punctuation">{</span>
 <span class="token punctuation">}</span>
 <span class="token comment">/* And so on... */</span></code></pre>
 
-                        <p>Here’s little a demo of sequential inputs:</p>
-                        <p><span class="box-note ">I was only able to implement up to three turns here. The exponential growth of rules has gotten really tedious to write!</span></p>
-                        <form class="css-three-in-a-row-seq">
-                            <input id="css-three-in-a-row-seq-1-1" type="radio" name="css-three-in-a-row-seq-1" value="1">
-                            <input id="css-three-in-a-row-seq-1-2" type="radio" name="css-three-in-a-row-seq-1" value="2">
-                            <input id="css-three-in-a-row-seq-1-3" type="radio" name="css-three-in-a-row-seq-1" value="3">
-                            <input id="css-three-in-a-row-seq-1-4" type="radio" name="css-three-in-a-row-seq-1" value="4">
-                            <input id="css-three-in-a-row-seq-1-5" type="radio" name="css-three-in-a-row-seq-1" value="5">
-                            <input id="css-three-in-a-row-seq-1-6" type="radio" name="css-three-in-a-row-seq-1" value="6">
-                            <input id="css-three-in-a-row-seq-1-7" type="radio" name="css-three-in-a-row-seq-1" value="7">
-                            <input id="css-three-in-a-row-seq-1-8" type="radio" name="css-three-in-a-row-seq-1" value="8">
-                            <input id="css-three-in-a-row-seq-1-9" type="radio" name="css-three-in-a-row-seq-1" value="9">
+            <p>Here’s little a demo of sequential inputs:</p>
+            <p><span class="box-note ">I was only able to implement up to three turns here. The exponential growth of rules has gotten really tedious to write!</span></p>
+            <form class="css-three-in-a-row-seq">
+              <input id="css-three-in-a-row-seq-1-1" type="radio" name="css-three-in-a-row-seq-1" value="1">
+              <input id="css-three-in-a-row-seq-1-2" type="radio" name="css-three-in-a-row-seq-1" value="2">
+              <input id="css-three-in-a-row-seq-1-3" type="radio" name="css-three-in-a-row-seq-1" value="3">
+              <input id="css-three-in-a-row-seq-1-4" type="radio" name="css-three-in-a-row-seq-1" value="4">
+              <input id="css-three-in-a-row-seq-1-5" type="radio" name="css-three-in-a-row-seq-1" value="5">
+              <input id="css-three-in-a-row-seq-1-6" type="radio" name="css-three-in-a-row-seq-1" value="6">
+              <input id="css-three-in-a-row-seq-1-7" type="radio" name="css-three-in-a-row-seq-1" value="7">
+              <input id="css-three-in-a-row-seq-1-8" type="radio" name="css-three-in-a-row-seq-1" value="8">
+              <input id="css-three-in-a-row-seq-1-9" type="radio" name="css-three-in-a-row-seq-1" value="9">
 
-                            <input id="css-three-in-a-row-seq-2-1" type="radio" name="css-three-in-a-row-seq-2" value="1">
-                            <input id="css-three-in-a-row-seq-2-2" type="radio" name="css-three-in-a-row-seq-2" value="2">
-                            <input id="css-three-in-a-row-seq-2-3" type="radio" name="css-three-in-a-row-seq-2" value="3">
-                            <input id="css-three-in-a-row-seq-2-4" type="radio" name="css-three-in-a-row-seq-2" value="4">
-                            <input id="css-three-in-a-row-seq-2-5" type="radio" name="css-three-in-a-row-seq-2" value="5">
-                            <input id="css-three-in-a-row-seq-2-6" type="radio" name="css-three-in-a-row-seq-2" value="6">
-                            <input id="css-three-in-a-row-seq-2-7" type="radio" name="css-three-in-a-row-seq-2" value="7">
-                            <input id="css-three-in-a-row-seq-2-8" type="radio" name="css-three-in-a-row-seq-2" value="8">
-                            <input id="css-three-in-a-row-seq-2-9" type="radio" name="css-three-in-a-row-seq-2" value="9">
+              <input id="css-three-in-a-row-seq-2-1" type="radio" name="css-three-in-a-row-seq-2" value="1">
+              <input id="css-three-in-a-row-seq-2-2" type="radio" name="css-three-in-a-row-seq-2" value="2">
+              <input id="css-three-in-a-row-seq-2-3" type="radio" name="css-three-in-a-row-seq-2" value="3">
+              <input id="css-three-in-a-row-seq-2-4" type="radio" name="css-three-in-a-row-seq-2" value="4">
+              <input id="css-three-in-a-row-seq-2-5" type="radio" name="css-three-in-a-row-seq-2" value="5">
+              <input id="css-three-in-a-row-seq-2-6" type="radio" name="css-three-in-a-row-seq-2" value="6">
+              <input id="css-three-in-a-row-seq-2-7" type="radio" name="css-three-in-a-row-seq-2" value="7">
+              <input id="css-three-in-a-row-seq-2-8" type="radio" name="css-three-in-a-row-seq-2" value="8">
+              <input id="css-three-in-a-row-seq-2-9" type="radio" name="css-three-in-a-row-seq-2" value="9">
 
-                            <input id="css-three-in-a-row-seq-3-1" type="radio" name="css-three-in-a-row-seq-3" value="1">
-                            <input id="css-three-in-a-row-seq-3-2" type="radio" name="css-three-in-a-row-seq-3" value="2">
-                            <input id="css-three-in-a-row-seq-3-3" type="radio" name="css-three-in-a-row-seq-3" value="3">
-                            <input id="css-three-in-a-row-seq-3-4" type="radio" name="css-three-in-a-row-seq-3" value="4">
-                            <input id="css-three-in-a-row-seq-3-5" type="radio" name="css-three-in-a-row-seq-3" value="5">
-                            <input id="css-three-in-a-row-seq-3-6" type="radio" name="css-three-in-a-row-seq-3" value="6">
-                            <input id="css-three-in-a-row-seq-3-7" type="radio" name="css-three-in-a-row-seq-3" value="7">
-                            <input id="css-three-in-a-row-seq-3-8" type="radio" name="css-three-in-a-row-seq-3" value="8">
-                            <input id="css-three-in-a-row-seq-3-9" type="radio" name="css-three-in-a-row-seq-3" value="9">
-                            <div class="css-three-in-a-row-seq-box">
-                                <div class="css-three-in-a-row-seq-grid">
-                                    <label for="css-three-in-a-row-seq-1-1" data-value="1"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-2" data-value="2"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-3" data-value="3"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-4" data-value="4"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-5" data-value="5"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-6" data-value="6"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-7" data-value="7"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-8" data-value="8"> 1 </label>
-                                    <label for="css-three-in-a-row-seq-1-9" data-value="9"> 1 </label>
-                                </div>
-                                <div class="css-three-in-a-row-seq-grid">
-                                    <label for="css-three-in-a-row-seq-2-1" data-value="1"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-2" data-value="2"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-3" data-value="3"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-4" data-value="4"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-5" data-value="5"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-6" data-value="6"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-7" data-value="7"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-8" data-value="8"> 2 </label>
-                                    <label for="css-three-in-a-row-seq-2-9" data-value="9"> 2 </label>
-                                </div>
-                                <div class="css-three-in-a-row-seq-grid">
-                                    <label for="css-three-in-a-row-seq-3-1" data-value="1"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-2" data-value="2"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-3" data-value="3"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-4" data-value="4"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-5" data-value="5"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-6" data-value="6"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-7" data-value="7"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-8" data-value="8"> 3 </label>
-                                    <label for="css-three-in-a-row-seq-3-9" data-value="9"> 3 </label>
-                                </div>
-                            </div>
-                        </form>
+              <input id="css-three-in-a-row-seq-3-1" type="radio" name="css-three-in-a-row-seq-3" value="1">
+              <input id="css-three-in-a-row-seq-3-2" type="radio" name="css-three-in-a-row-seq-3" value="2">
+              <input id="css-three-in-a-row-seq-3-3" type="radio" name="css-three-in-a-row-seq-3" value="3">
+              <input id="css-three-in-a-row-seq-3-4" type="radio" name="css-three-in-a-row-seq-3" value="4">
+              <input id="css-three-in-a-row-seq-3-5" type="radio" name="css-three-in-a-row-seq-3" value="5">
+              <input id="css-three-in-a-row-seq-3-6" type="radio" name="css-three-in-a-row-seq-3" value="6">
+              <input id="css-three-in-a-row-seq-3-7" type="radio" name="css-three-in-a-row-seq-3" value="7">
+              <input id="css-three-in-a-row-seq-3-8" type="radio" name="css-three-in-a-row-seq-3" value="8">
+              <input id="css-three-in-a-row-seq-3-9" type="radio" name="css-three-in-a-row-seq-3" value="9">
+              <div class="css-three-in-a-row-seq-box">
+                <div class="css-three-in-a-row-seq-grid">
+                  <label for="css-three-in-a-row-seq-1-1" data-value="1"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-2" data-value="2"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-3" data-value="3"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-4" data-value="4"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-5" data-value="5"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-6" data-value="6"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-7" data-value="7"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-8" data-value="8"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-9" data-value="9"> 1 </label>
+                </div>
+                <div class="css-three-in-a-row-seq-grid">
+                  <label for="css-three-in-a-row-seq-2-1" data-value="1"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-2" data-value="2"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-3" data-value="3"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-4" data-value="4"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-5" data-value="5"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-6" data-value="6"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-7" data-value="7"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-8" data-value="8"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-9" data-value="9"> 2 </label>
+                </div>
+                <div class="css-three-in-a-row-seq-grid">
+                  <label for="css-three-in-a-row-seq-3-1" data-value="1"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-2" data-value="2"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-3" data-value="3"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-4" data-value="4"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-5" data-value="5"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-6" data-value="6"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-7" data-value="7"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-8" data-value="8"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-9" data-value="9"> 3 </label>
+                </div>
+              </div>
+            </form>
 
-                        <p>With the power of sequencing, we’re starting to recreate the power of state machines and procedural programming!</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/pure-css-tictactoe-ai/meme_500.generated.jpg 500w,/notes/pure-css-tictactoe-ai/meme_664.generated.jpg 664w" sizes="not (min-width:664px) 500px, 664px" class="blog-media-element" alt="Look What They Need To Mimic A Fraction Of Our Power meme" src="/notes/pure-css-tictactoe-ai/meme.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.8960573476702509; background: #f8f8f8">
-                        </div>
+            <p>With the power of sequencing, we’re starting to recreate the power of state machines and procedural programming!</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/pure-css-tictactoe-ai/meme_500.generated.jpg 500w,/notes/pure-css-tictactoe-ai/meme_664.generated.jpg 664w" sizes="not (min-width:664px) 500px, 664px" class="blog-media-element" alt="Look What They Need To Mimic A Fraction Of Our Power meme" src="/notes/pure-css-tictactoe-ai/meme.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.8960573476702509; background: #f8f8f8">
+            </div>
 
-                        <h2 id="game-ai">Game AI</h2>
-                        <span class="box-note ">
-                            I’m referring to the more specific term “game AI” here, because the term “AI” has come to mean some learning machine nowadays. Game AI simply means NPCs or computer-controlled agents.
-                        </span>
+            <h2 id="game-ai">Game AI</h2>
+            <span class="box-note ">
+              I’m referring to the more specific term “game AI” here, because the term “AI” has come to mean some learning machine nowadays. Game AI simply means NPCs or computer-controlled agents.
+            </span>
 
-                        <p>Tic-tac-toe is a <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Solved_game">solved game</a>, which means there exists a perfect strategy. For every move, there is a known optimal counter move.</p>
-                        <p>This is perfect for CSS as it’s just a bunch of static declarations. We can list all of the optimal moves and directly translate them into CSS declarations!</p>
-                        <p>As a side-effect, the AI would never lose. But that’s not a bad thing at all. Here, the CSS will style on you.</p>
-                        <p>The rules are essentially a bunch of if-then statements for every scenario. Here are a couple of them:</p>
-                        <h3 id="blocking">Blocking</h3>
-                        <p>Example rule: <em>If <strong>X(1)</strong> and <strong>X(2)</strong> then <strong>O(3)</strong>.</em></p>
-                        <p>In English, if an X was played at box #1 (top-left) and another X is at #2 (top-center), then block the top row by playing O at box #3 (top-right).</p>
-                        <p>(In these examples, X is the player and O is the AI.)</p>
-                        <p>In CSS, that translates to:</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token selector">input[value="1"]:checked
+            <p>Tic-tac-toe is a <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Solved_game">solved game</a>, which means there exists a perfect strategy. For every move, there is a known optimal counter move.</p>
+            <p>This is perfect for CSS as it’s just a bunch of static declarations. We can list all of the optimal moves and directly translate them into CSS declarations!</p>
+            <p>As a side-effect, the AI would never lose. But that’s not a bad thing at all. Here, the CSS will style on you.</p>
+            <p>The rules are essentially a bunch of if-then statements for every scenario. Here are a couple of them:</p>
+            <h3 id="blocking">Blocking</h3>
+            <p>Example rule: <em>If <strong>X(1)</strong> and <strong>X(2)</strong> then <strong>O(3)</strong>.</em></p>
+            <p>In English, if an X was played at box #1 (top-left) and another X is at #2 (top-center), then block the top row by playing O at box #3 (top-right).</p>
+            <p>(In these examples, X is the player and O is the AI.)</p>
+            <p>In CSS, that translates to:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token selector">input[value="1"]:checked
 ~ input[value="2"]:checked
 ~ .o3</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">,</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <div class="blog-media blog-media-default">
-                            <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="blocking rule animation">
-                                <source src="/notes/pure-css-tictactoe-ai/blocking.mp4">
-                                <a href="/notes/pure-css-tictactoe-ai/blocking.mp4">blocking rule animation</a>
-                            </video>
-                        </div>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="blocking rule animation">
+                <source src="/notes/pure-css-tictactoe-ai/blocking.mp4">
+                <a href="/notes/pure-css-tictactoe-ai/blocking.mp4">blocking rule animation</a>
+              </video>
+            </div>
 
-                        <h3 id="winning-moves">Winning moves</h3>
-                        <p>Another example: <em>If <strong>O(3)</strong> and <strong>O(7)</strong> then <strong>O(5)</strong>.</em></p>
-                        <p>If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).</p>
-                        <p>Now, this rule needs knowledge of the AI’s previous moves. But we can’t really check for that as they’re not inputs. There is no direct translation of <strong>O(3)</strong> and <strong>O(7)</strong> into CSS conditions.</p>
-                        <p>But since the AI is deterministic, we already know how those previous <em>O</em>s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute <strong>O(3)</strong> with the inputs that produced it, such as <strong>X(1)</strong> &amp; <strong>X(2)</strong>.</p>
-                        <pre class="code-block"><code class="code-block-code">input[value=<span class="token string">"1"</span>]<span class="token punctuation">:</span>checked
+            <h3 id="winning-moves">Winning moves</h3>
+            <p>Another example: <em>If <strong>O(3)</strong> and <strong>O(7)</strong> then <strong>O(5)</strong>.</em></p>
+            <p>If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).</p>
+            <p>Now, this rule needs knowledge of the AI’s previous moves. But we can’t really check for that as they’re not inputs. There is no direct translation of <strong>O(3)</strong> and <strong>O(7)</strong> into CSS conditions.</p>
+            <p>But since the AI is deterministic, we already know how those previous <em>O</em>s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute <strong>O(3)</strong> with the inputs that produced it, such as <strong>X(1)</strong> &amp; <strong>X(2)</strong>.</p>
+            <pre class="code-block"><code class="code-block-code">input[value=<span class="token string">"1"</span>]<span class="token punctuation">:</span>checked
 ~ input[value=<span class="token string">"2"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* We know X(1) and X(2) produces O(3) */</span>
 ~ input[value=<span class="token string">"4"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* X(1) and X(4) produces O(7) */</span>
 <span class="token selector">.o5</span> <span class="token punctuation">{</span>
@@ -1454,22 +1676,22 @@ B ~ C</span> <span class="token punctuation">{</span>
 <span class="token comment">/* Therefore, X(1) &amp; X(2) &amp; X(4) is equivalent to O(3) &amp; O(7). */</span>
 <span class="token comment">/* If X(1) &amp; X(2) &amp; X(4) then O(5) is a winning move! */</span></code></pre>
 
-                        <span class="box-note ">
-                            ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
-                        </span>
+            <span class="box-note ">
+              ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
+            </span>
 
-                        <p>Alright, so the game AI is really just a bunch of if-statements of the form <em>“if [inputs leading up to a scenario], then [show optimal response]”</em>, <strong>for every scenario</strong>. Problem is, how do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?</p>
-                        <p>Actually, there is one, but it’s for humans.</p>
-                        <a target="_blank" class="text-link " href="https://xkcd.com/832/">
-                            <div class="blog-media blog-media-default">
-                                <img class="blog-media-element" alt="" src="https://imgs.xkcd.com/comics/tic_tac_toe.png" loading="lazy"><span class="blog-media-caption">xkcd/832</span>
-                            </div>
-                        </a>
+            <p>Alright, so the game AI is really just a bunch of if-statements of the form <em>“if [inputs leading up to a scenario], then [show optimal response]”</em>, <strong>for every scenario</strong>. Problem is, how do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?</p>
+            <p>Actually, there is one, but it’s for humans.</p>
+            <a target="_blank" class="text-link " href="https://xkcd.com/832/">
+              <div class="blog-media blog-media-default">
+                <img class="blog-media-element" alt="" src="https://imgs.xkcd.com/comics/tic_tac_toe.png" loading="lazy"><span class="blog-media-caption">xkcd/832</span>
+              </div>
+            </a>
 
-                        <p>It’s not really feasible to write rules based on this by hand, unless you have more than 60,480 hours to spare.</p>
-                        <p>What I did was write some kind of <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Minimax">minimax algorithm</a> to generate all the rules. The algorithm semi-exhaustively searched the game state space, while recording the moves that lead to a win or a draw, and saved those moves as rules.</p>
-                        <p>I lost the original code (trashed it after finishing the project), but here’s an untested recreation of the algorithm:</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
+            <p>It’s not really feasible to write rules based on this by hand, unless you have more than 60,480 hours to spare.</p>
+            <p>What I did was write some kind of <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Minimax">minimax algorithm</a> to generate all the rules. The algorithm semi-exhaustively searched the game state space, while recording the moves that lead to a win or a draw, and saved those moves as rules.</p>
+            <p>I lost the original code (trashed it after finishing the project), but here’s an untested recreation of the algorithm:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
  * Evaluates a game state having these parameters: last plays of player X,
  * the player who has the current turn, and the current board state.
  *
@@ -1541,8 +1763,8 @@ B ~ C</span> <span class="token punctuation">{</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>And here’s the function that outputs CSS:</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
+            <p>And here’s the function that outputs CSS:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
  * Print CSS rule for the given game state and O's next play.
  */</span>
 <span class="token keyword">function</span> <span class="token function">printCSS</span><span class="token punctuation">(</span><span class="token parameter"><span class="token literal-property property">xPlays</span><span class="token operator">:</span> number<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token literal-property property">oPlay</span><span class="token operator">:</span> number</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -1554,180 +1776,99 @@ B ~ C</span> <span class="token punctuation">{</span>
     <span class="token operator">+</span> <span class="token string">' { visibility: visible; }'</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>The CSS output is directly used in the game. Debugging this was a pain, but luckily I only got a couple of miscalculations (if I recall correctly).</p>
-                        <h2 id="conclusion">Conclusion</h2>
-                        <p>It was a very interesting project. I’m curious how far CSS machines like this could go. A JS to CSS transpiler, perhaps?</p>
-                        <p>This project serves as a reminder that there are always new and exciting ways to waste our time doing impractical things, and that sometimes fun solutions come from thinking outside of the (check)box.</p>
-                        <p><a target="_blank" class="text-link " href="https://codepen.io/kalabasa/pen/oVMOZK">Here’s the link to the CodePen!</a>
-                        </p>
+            <p>The CSS output is directly used in the game. Debugging this was a pain, but luckily I only got a couple of miscalculations (if I recall correctly).</p>
+            <h2 id="conclusion">Conclusion</h2>
+            <p>It was a very interesting project. I’m curious how far CSS machines like this could go. A JS to CSS transpiler, perhaps?</p>
+            <span class="box-note ">
+              <strong>See also:</strong> <a target="_blank" class="text-link " href="https://silon.slaks.net/">silon.slaks.net - Adders and logic gates in pure CSS</a> (I found this after writing this article)
+            </span>
 
-                    </div>
+            <p>This project serves as a reminder that there are always new and exciting ways to waste our time doing impractical things, and that sometimes fun solutions come from thinking outside of the (check)box.</p>
+            <p><a target="_blank" class="text-link " href="https://codepen.io/kalabasa/pen/oVMOZK">Here’s the link to the CodePen!</a>
+            </p>
 
-                </div>
-            </div>
+          </div>
 
         </div>
-        <footer class="main-footer">
-            <div class="main-footer-content-part">
-                <p class="main-footer-line">
-                    <a target="_self" class="main-footer-nav" href="/">Home</a> ·
-                    <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
-                    <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
-                    <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
-                    <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
-                </p>
-                <p class="main-footer-line">(C) 2023 Lean Rada</p>
-            </div>
-            <div class="main-footer-content-part">
-                <h2 class="main-footer-links-heading">On the web</h2>
-                <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
-                    <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
-                    <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
-                    <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
-                    <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
-                </a>
-            </div>
+      </div>
 
-
-            <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
-                <canvas style="filter: contrast(1.5)">
-                </canvas></nebula-client>
-            <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
-        </footer>
     </div>
-    <script defer="" src="/scripts/nebula-main-footer-main-header.js"></script>
-    <script defer="">
-        (() => {
-            const mainHeader = document.querySelector(".main-header");
-            const indicator = document.querySelector(".main-header-indicator");
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+          <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">(C) 2023 Lean Rada</p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)">
+        </canvas></nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
 
-            let currentY = 0;
-            let currentYTarget = 0;
 
-            let mouseHovering = false;
 
-            let isTouch = false;
-            let lastScrollY = window.scrollY;
-            let lastCursorY = 0;
-            window.addEventListener("scroll", debounce(onScroll));
-            window.addEventListener("mousemove", debounce(onMouseMove, 100));
-            window.addEventListener("touchstart", onWindowTouchStart);
-            window.addEventListener("touchmove", onWindowTouchMove);
-            mainHeader.addEventListener("touchstart", onTouchStart);
 
-            function onScroll(event) {
-                const dy = window.scrollY - lastScrollY;
 
-                // move with the page
-                currentY -= dy;
-                if (currentY > 0) {
-                    currentY = 0;
-                } else if (currentY < -mainHeader.offsetHeight) {
-                    currentY = -mainHeader.offsetHeight;
-                }
 
-                currentYTarget = currentY;
-                updateDOM();
 
-                lastScrollY = window.scrollY;
-            }
 
-            function onMouseMove(event) {
-                if (isTouch) return;
 
-                const dy = event.clientY - lastCursorY;
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+    (() => {
+      const blogMediaElementImages = document.querySelectorAll(
+        "img.blog-media-element"
+      );
 
-                // show when mouse goes near the top
-                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
-                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
-                    currentYTarget = 0;
-                    mouseHovering = true;
-                } else if (
-                    mouseHovering &&
-                    dy > 0 &&
-                    event.clientY > mainHeader.offsetHeight * 4
-                ) {
-                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
-                    mouseHovering = false;
-                }
+      for (const img of blogMediaElementImages) {
+        if (watchImage(img)) {
+          const intervalID = setInterval(() => watchImage(img, intervalID), 200);
+        }
+        img.addEventListener("load", onLoadImage);
+      }
 
-                updateDOM();
-                lastCursorY = event.clientY;
-            }
+      function watchImage(img, intervalID) {
+        if (img.naturalWidth > 0 || img.naturalHeight) {
+          img.style.objectPosition = null;
+          img.removeAttribute("width");
+          img.removeAttribute("height");
 
-            function onWindowTouchStart(event) {
-                isTouch = true;
-                lastCursorY = event.touches[0].clientY;
-            }
+          if (intervalID != undefined) clearInterval(intervalID);
+          return false;
+        } else {
+          if (!img.style.objectPosition) {
+            img.style.objectPosition = "100vw";
+          }
+          return true;
+        }
+      }
 
-            function onWindowTouchMove(event) {
-                const dy = event.touches[0].clientY - lastCursorY;
-
-                // move with touch but only if at edge
-                if (window.scrollY <= 0 && dy > 0) {
-                    currentY += dy;
-                    if (currentY >= 0) {
-                        currentY = 0;
-                        document.body.style.overscrollBehaviorY = null;
-                    } else if (currentY < 0) {
-                        document.body.style.overscrollBehaviorY = "none";
-                    }
-
-                    currentYTarget = currentY;
-                    updateDOM();
-                }
-
-                lastCursorY = event.touches[0].clientY;
-            }
-
-            function onTouchStart(event) {
-                currentYTarget = 0;
-                updateDOM();
-                console.log("onTouchStart");
-            }
-
-            const updateDOM = debounce(() => {
-                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
-
-                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
-                mainHeader.classList.toggle("hidden", isHidden);
-
-                if (Math.abs(currentY - currentYTarget) > 1) {
-                    currentY += (currentYTarget - currentY) * 0.2;
-                    requestAnimationFrame(updateDOM);
-                } else {
-                    currentY = currentYTarget;
-                }
-            });
-
-            if (mainHeader.classList.contains("prehide")) {
-                document.body.style.overscrollBehaviorY = "none";
-                currentY = currentYTarget = -mainHeader.offsetHeight;
-                updateDOM();
-            }
-
-            function debounce(fn, ms = 0) {
-                let recentlyFired = false;
-                return (...args) => {
-                    if (recentlyFired) return;
-                    recentlyFired = true;
-                    if (ms === 0) {
-                        requestAnimationFrame(() => (recentlyFired = false));
-                    } else {
-                        setTimeout(() => (recentlyFired = false), ms);
-                    }
-                    return fn(...args);
-                };
-            }
-        })();
-    </script>
-    <script defer="" src="/scripts/blog-media.js"></script>
-    <script defer="" src="/scripts/blog-header.js"></script>
+      function onLoadImage(event) {
+        event.currentTarget.style.background = null;
+      }
+    })();
+  </script>
+  <script defer="" src="/scripts/blog-header.js"></script>
 </body>
 </html>

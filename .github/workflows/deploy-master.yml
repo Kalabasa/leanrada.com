@@ -2,6 +2,8 @@ name: deploy
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 22 * * *'
   workflow_run:
     workflows: [update-data]
     types:
@@ -21,5 +23,12 @@ jobs:
           node-version: 19
 
       - run: npm install
+
+      - name: Cache build artifacts
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: build
+          key: build
 
       - run: scripts/deploy.sh

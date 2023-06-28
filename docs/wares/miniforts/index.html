@@ -1,931 +1,1068 @@
 <html lang="en">
 <head>
-    <title>MiniForts · leanrada.com</title>
-    <script async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
-    <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
-    <style>
-        @font-face {
-            font-family: "Space Mono";
-            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+  <title>MiniForts · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
         }
 
-        @font-face {
-            font-family: "Space Mono";
-            font-style: italic;
-            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
         }
 
-        @font-face {
-            font-family: "Miriam Libre";
-            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
         }
 
-        @font-face {
-            font-family: "Miriam Libre";
-            font-weight: bold;
-            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
+
+          this.draw(canvas, this.context);
+
+          requestAnimationFrame(() => this.loop());
         }
 
-        :root {
-            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
-            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+        /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
 
-            --bg-clr: #111;
-            --card-clr: #222;
-            --clr0-light: #54f8c1;
-            --clr0: #0ad591;
-            --clr0-dark: #018b5d;
-            --clr1: #df2063;
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
 
-            --text-clr: #fff;
-            --text2-clr: #999;
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
 
-            --ease: cubic-bezier(0.8, 0, 1, 1);
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            font-display: swap;
-            background-color: var(--bg-clr, #111);
-            color: var(--text-clr, #fff);
-            overflow-x: hidden;
-        }
-
-        .page-wrapper {
-            display: flex;
-            flex-direction: column;
-            min-height: 100%;
-        }
-
-        .page-wrapper-content {
-            flex: 1 1 auto;
-        }
-    </style>
-    <style>
-        nebula-client>canvas {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-    <style>
-        .main-footer-link {
-            text-decoration: none;
-        }
-
-        .main-footer-link-icon {
-            width: 32px;
-            height: 32px;
-            image-rendering: pixelated;
-        }
-
-        .main-footer-link-icon:hover {
-            filter: invert(1);
-        }
-    </style>
-    <style>
-        .main-footer {
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            gap: 60px;
-            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
-            font-size: 15px;
-            font-weight: bold;
-            background: var(--clr0);
-            color: #000;
-            overflow: hidden;
-            content-visibility: auto;
-            contain-intrinsic-height: 220x;
-        }
-
-        .main-footer-links-heading {
-            margin: 0 0 18px;
-            font-size: inherit;
-        }
-
-        .main-footer-line {
-            margin: 0 0 18px;
-        }
-
-        .main-footer-nav {
-            color: #000;
-        }
-
-        .main-footer-nav:hover {
-            color: #fff;
-        }
-
-        .main-footer-content-part {
-            z-index: 1;
-        }
-
-        .main-footer-nebula {
-            position: absolute;
-            left: -30%;
-            top: -30%;
-            width: 160%;
-            height: 160%;
-            z-index: 0;
-        }
-
-        .main-footer-top-btn {
-            display: block;
-            z-index: 2;
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 72px;
-            height: 36px;
-            padding-right: 9px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: none;
-            border-bottom-left-radius: 18px;
-            background: var(--bg-clr);
-            text-decoration: none;
-            color: var(--clr0-light);
-            font: inherit;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .main-footer-top-btn:hover {
-            color: var(--clr1);
-        }
-
-        .main-footer-top-btn::before {
-            content: "";
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 36px;
-            height: 18px;
-            border-top-right-radius: 18px;
-            transform: translateX(-72px);
-            box-shadow: 18px 0 0 var(--bg-clr);
-        }
-
-        @media (max-width: 700px) {
-            .main-footer {
-                flex-direction: column-reverse;
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
             }
-        }
-    </style>
-    <style>
-        .main-header {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            height: 60px;
-            padding: 0 calc(25% - 150px);
-            z-index: 100;
-            box-sizing: border-box;
-            pointer-events: none;
-        }
+          }
 
-        .main-header.float {
-            position: fixed;
-        }
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
 
-        .main-header-bar {
-            position: relative;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: flex-end;
-            height: 100%;
-        }
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
 
-        .main-header-item {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 6ch;
-            height: 36px;
-            padding: 0 18px;
-            border-radius: 18px;
-            font-size: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-decoration: none;
-            text-transform: uppercase;
-            color: #fff;
-            backdrop-filter: blur(8px);
-            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
-            background-repeat: no-repeat;
-            background-size: 220% 100%;
-            background-position: 115%;
-            pointer-events: all;
-            transition: background-position 0.2s var(--ease);
-        }
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
 
-        .main-header-item:hover {
-            background-image: linear-gradient(60deg,
-                    #fff2 50%,
-                    #fff 50%,
-                    #fff 60%,
-                    transparent 60%);
-            background-position: 0%;
-        }
+              const paletteIndex = Math.floor(paletteLength * p);
 
-        .main-header-item.select {
-            background: #fff2;
-        }
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
 
-        .main-header-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            image-rendering: pixelated;
-            object-fit: cover;
-            object-position: 0 0;
-            filter: invert(1);
-            backdrop-filter: blur(8px) invert(1);
-            pointer-events: all;
-        }
-
-        .main-header-icon:hover {
-            object-position: 100% 0;
-        }
-
-        @media (max-width: 450px) {
-            .main-header-icon {
-                display: none;
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
             }
+          }
         }
 
-        .main-header-indicator {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            left: 50%;
-            top: calc(100% + 12px);
-            transform: translate(-50%, -50%);
-            /* border acts as extended touch area */
-            border: solid 6mm transparent;
-            border-left-width: 45vw;
-            border-right-width: 45vw;
-            border-radius: 50%;
-            background: #fff;
-            background-clip: padding-box;
-            opacity: 0;
-            transition: opacity 50ms;
+        getT() {
+          const t = (Date.now() * 30) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
         }
+      }
+    );
 
-        .main-header.hidden .main-header-indicator {
-            opacity: 0.8;
-            pointer-events: all;
-        }
-    </style>
-    <style>
-        .blog-page {
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-        }
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
 
-        .content {
-            padding: 60px 18px;
-            width: 100%;
-            max-width: 700px;
-            font-family: var(--reading-font, sans-serif);
-            font-size: 16px;
-            line-height: 2.2;
-            letter-spacing: 0.02em;
-            color: #ddd;
-            box-sizing: border-box;
-        }
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
 
-        .markdown>h1,
-        .markdown>h2,
-        .markdown>h3,
-        .markdown>h4,
-        .markdown>h5,
-        .markdown>h6 {
-            font-family: var(--default-font, monospace);
-            font-weight: lighter;
-            font-style: italic;
-            line-height: 1.6;
-            letter-spacing: 0.04em;
-            margin: 48px 0 36px;
-        }
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
 
-        .markdown>h1 {
-            text-align: center;
-            font-size: 200%;
-        }
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
 
-        .markdown>h2 {
-            font-size: 150%;
-        }
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
 
-        .markdown>h3,
-        .markdown>h4,
-        .markdown>h5,
-        .markdown>h6 {
-            font-size: 120%;
-            font-weight: bold;
-        }
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
 
-        .markdown>p {
-            margin: 36px 0;
-        }
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
 
-        .markdown>hr {
-            width: 36px;
-            margin: 90px auto;
-            border: solid 1.5px #ccc;
-            background: #ccc;
-            border-radius: 3px;
-        }
+      --text-clr: #fff;
+      --text2-clr: #999;
 
-        .markdown code:not([class]):not([class]) {
-            display: inline-block;
-            padding: 0 6px;
-            border-radius: 6px;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            background: var(--card-clr);
-        }
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
 
-        .markdown>pre:not([class])>code:not([class]) {
-            display: block;
-            padding: 18px;
-            border-radius: 18px;
-            line-height: 1.6;
-            font-size: 15px;
-            overflow-x: auto;
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
 
-        .markdown>blockquote {
-            position: relative;
-            margin: 0;
-            padding: 18px 24px;
-            border-radius: 18px;
-            border: solid 1px var(--clr0);
-            font-size: 21px;
-        }
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
 
-        .markdown>blockquote::before {
-            content: "";
-            position: absolute;
-            right: 100%;
-            top: 0;
-            height: 24px;
-            width: 24px;
-            border-bottom: solid 1px var(--clr0);
-            box-sizing: border-box;
-        }
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <style>
+    .main-footer-link {
+      text-decoration: none;
+    }
 
-        .markdown>blockquote::after {
-            content: "";
-            position: absolute;
-            right: 100%;
-            top: 24px;
-            bottom: 18px;
-            width: 24px;
-            border-top-right-radius: 24px;
-            border: solid var(--clr0);
-            border-width: 1px 1px 0 0;
-            box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
-            box-sizing: border-box;
-        }
+    .main-footer-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
 
-        .markdown>blockquote> :first-child {
-            margin-top: 0;
-        }
+    .main-footer-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 220x;
+    }
 
-        .markdown>blockquote> :last-child {
-            margin-bottom: 0;
-        }
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
 
-        .markdown>blockquote cite {
-            display: block;
-            margin-top: 12px;
-            font-size: 15px;
-            font-style: inherit;
-        }
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
 
-        .markdown>blockquote cite::before {
-            content: "—";
-        }
+    .main-footer-nav {
+      color: #000;
+    }
 
-        .markdown>iframe,
-        .markdown>p>iframe {
-            max-width: calc(100vw - 18px);
-            border: none;
-            border-radius: 18px;
-            background: #fff;
-        }
+    .main-footer-nav:hover {
+      color: #fff;
+    }
 
-        .markdown .center {
-            text-align: center;
-        }
+    .main-footer-content-part {
+      z-index: 1;
+    }
 
-        .markdown .center-flex {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
 
-        /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
-        .markdown .bleed {
-            position: relative;
-            left: 50%;
-            width: 100vh;
-            max-width: max(min(100vw, 800px), 80vw);
-            transform: translateX(-50%);
-        }
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-        /* todo: convert to component <caption>, reuse across <blog-media> */
-        .markdown .caption {
-            display: block;
-            font-size: 15px;
-        }
-    </style>
-    <style>
-        .text-link {
-            color: var(--clr0-light, #fff);
-        }
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
 
-        .text-link:visited {
-            color: var(--clr0, #fff);
-        }
-    </style>
-    <style>
-        .project-info-card {
-            font-family: var(--default-font);
-            font-size: 15px;
-            line-height: 1.6;
-        }
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
 
-        .project-info-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
 
-        .project-info-card-title {
-            flex: 0 0 auto;
-            align-self: stretch;
-            position: relative;
-            margin-right: 12px;
-            padding: 12px 18px 6px 12px;
-            border-radius: 18px 18px 0 0;
-            font-style: italic;
-            text-decoration: underline;
-            background-color: var(--card-clr);
-        }
+    .main-header.float {
+      position: fixed;
+    }
 
-        .project-info-card-title::after {
-            content: "";
-            position: absolute;
-            left: 100%;
-            bottom: 0;
-            width: 36px;
-            height: 18px;
-            border-bottom-left-radius: 18px;
-            box-shadow: -18px 0 0 var(--card-clr);
-        }
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
 
-        .project-info-card-fields {
-            display: grid;
-            grid-auto-flow: column;
-            grid-template-rows: 1fr 1fr;
-            padding: 12px;
-            border-radius: 0 18px 18px 18px;
-            background-color: var(--card-clr);
-        }
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
 
-        @media (max-width: 600px) {
-            .project-info-card-fields {
-                display: block;
-            }
-        }
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
 
-        .project-info-card-field {
-            display: flex;
-        }
+    .main-header-item.select {
+      background: #fff2;
+    }
 
-        .project-info-card-field-label {
-            padding: 6px;
-            font-style: italic;
-        }
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
 
-        .project-info-card-field-value {
-            padding: 6px;
-            font-weight: bold;
-        }
-    </style>
-    <style>
-        .btn,
-        .btn:visited {
-            padding: 6px 12px;
-            border-radius: 12px;
-            border: none;
-            font-family: var(--default-font);
-            font-size: 12px;
-            font-weight: bold;
-            text-decoration: none;
-            background: var(--clr0);
-            color: #fff;
-            cursor: pointer;
-        }
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
 
-        .btn:hover {
-            background: var(--clr0-light);
-        }
-    </style>
-    <style>
-        .blog-media {
-            position: relative;
-            text-align: center;
-            /* external margin because it’s expected to be in an article */
-            margin: 36px 0;
-        }
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
 
-        .blog-media-bleed {
-            margin: 90px 0;
-            max-height: 80vh;
-        }
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
 
-        .blog-media-element {
-            display: inline-block;
-            max-width: 100%;
-            max-height: 80vh;
-            border-radius: 18px;
-            box-sizing: border-box;
-        }
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-        .blog-media-bleed .blog-media-element {
-            position: relative;
-            left: 50%;
-            max-width: max(min(100vw, 800px), 80vw);
-            transform: translateX(-50%);
-        }
+    .content {
+      padding: 60px 18px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
 
-        .blog-media-windowed .blog-media-element {
-            border-radius: 0;
-        }
+    .markdown>h1,
+    .markdown>h2,
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 48px 0 36px;
+    }
 
-        .blog-media-caption {
-            display: block;
-            font-size: 15px;
-        }
-    </style>
-    <script src="/scripts/common.js"></script>
+    .markdown>h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown>h2 {
+      font-size: 150%;
+    }
+
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    .markdown>p {
+      margin: 36px 0;
+    }
+
+    .markdown>table {
+      border-collapse: collapse;
+      background-color: var(--card-clr);
+      border-radius: 12px;
+    }
+
+    .markdown>table th,
+    .markdown>table td {
+      text-align: start;
+      padding: 9px 12px;
+      padding-inline-end: 18px;
+      border-bottom: solid 1px #444;
+    }
+
+    .markdown>table>tbody>tr:last-child>td {
+      border-bottom: none;
+    }
+
+    .markdown>hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code:not([class]):not([class]) {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      background: var(--card-clr);
+    }
+
+    .markdown>pre:not([class])>code:not([class]) {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      font-size: 15px;
+      overflow-x: auto;
+    }
+
+    .markdown>blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown>blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown>blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown>blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown>blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown>iframe,
+    .markdown>p>iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+    .markdown .bleed {
+      position: relative;
+      left: 50%;
+      width: 100vh;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
+
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .project-info-card {
+      font-family: var(--default-font);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .project-info-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .project-info-card-title {
+      flex: 0 0 auto;
+      align-self: stretch;
+      position: relative;
+      margin-right: 12px;
+      padding: 12px 18px 6px 12px;
+      border-radius: 18px 18px 0 0;
+      font-style: italic;
+      text-decoration: underline;
+      background-color: var(--card-clr);
+    }
+
+    .project-info-card-title::after {
+      content: "";
+      position: absolute;
+      left: 100%;
+      bottom: 0;
+      width: 36px;
+      height: 18px;
+      border-bottom-left-radius: 18px;
+      box-shadow: -18px 0 0 var(--card-clr);
+    }
+
+    .project-info-card-fields {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: 1fr 1fr;
+      padding: 12px;
+      border-radius: 0 18px 18px 18px;
+      background-color: var(--card-clr);
+    }
+
+    @media (max-width: 600px) {
+      .project-info-card-fields {
+        display: block;
+      }
+    }
+
+    .project-info-card-field {
+      display: flex;
+    }
+
+    .project-info-card-field-label {
+      padding: 6px;
+      font-style: italic;
+    }
+
+    .project-info-card-field-value {
+      padding: 6px;
+      font-weight: bold;
+    }
+  </style>
+  <style>
+    .btn,
+    .btn:visited {
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: none;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-decoration: none;
+      background: var(--clr0);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--clr0-light);
+    }
+  </style>
+  <style>
+    .blog-media {
+      position: relative;
+      text-align: center;
+      /* external margin because it’s expected to be in an article */
+      margin: 36px 0;
+    }
+
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+      box-sizing: border-box;
+    }
+
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    .blog-media-windowed .blog-media-element {
+      border-radius: 0;
+    }
+
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
 </head>
 
 
 <body>
 
-    <div class="page-wrapper">
-        <header class="main-header">
-            <div class="main-header-bar">
-                <a href="/" class="main-header-item ">Home</a>
-                <a href="/wares/" class="main-header-item select">Wares</a>
-                <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
-                <a href="/art/" class="main-header-item ">Art</a>
-                <a href="/notes/" class="main-header-item ">Notes</a>
-                <div class="main-header-indicator"></div>
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/wares/" class="main-header-item select">Wares</a>
+        <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/notes/" class="main-header-item ">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <h1 id="miniforts">MiniForts</h1>
+            <div class="blog-media blog-media-default">
+              <img srcset="/wares/miniforts/media/miniforts_header_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="preview" src="/wares/miniforts/media/miniforts_header.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.9617647058823529; background: #a8b888">
             </div>
-        </header>
-        <div class="page-wrapper-content">
 
-            <div class="blog-page">
-                <div class="content">
-
-                    <!-- prettier-ignore -->
-                    <div class="markdown">
-                        <h1 id="miniforts">MiniForts</h1>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/wares/miniforts/media/miniforts_header_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="preview" src="/wares/miniforts/media/miniforts_header.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.9617647058823529; background: #a8b888">
-                        </div>
-
-                        <h2 id="a-game-about-building-and-defending-a-fort">A game about building and defending a fort.</h2>
-                        <p>In 2021, I started making a small base-builder RTS game. It runs on the <a target="_blank" class="text-link " href="https://www.minetest.net/"><strong>Minetest</strong></a> voxel game engine.</p>
-                        <aside class="project-info-card">
-                            <div class="project-info-card-header">
-                                <div class="project-info-card-title">Project details</div>
-                                <a target="_blank" class="btn " tag="a" href="https://github.com/Kalabasa/mini_forts">
-                                    View source
-                                </a>
-                            </div>
-                            <div class="project-info-card-fields">
-                                <div class="project-info-card-field">
-                                    <div class="project-info-card-field-label">status</div>
-                                    <div class="project-info-card-field-value">unreleased</div>
-                                </div>
-                                <div class="project-info-card-field">
-                                    <div class="project-info-card-field-label">role</div>
-                                    <div class="project-info-card-field-value">creator</div>
-                                </div>
-                                <div class="project-info-card-field">
-                                    <div class="project-info-card-field-label">platform</div>
-                                    <div class="project-info-card-field-value">Minetest</div>
-                                </div>
-                                <div class="project-info-card-field">
-                                    <div class="project-info-card-field-label">tech</div>
-                                    <div class="project-info-card-field-value">Lua, JSX</div>
-                                </div>
-                            </div>
-                        </aside>
-
-                        <p>The goal of this game is to defend a central core from invaders. The player commands minions to build up a fort around the core.</p>
-                        <div class="blog-media blog-media-bleed">
-                            <img class="blog-media-element" alt="minion shooting a slug" src="/wares/miniforts/media/miniforts_0.gif" loading="lazy" width="400%" height="" style="aspect-ratio: 1.807909604519774; background: #484858">
-                        </div>
-
-                        <p>Minions are indirectly commanded by putting construction orders in the world.</p>
-                        <div class="blog-media blog-media-default">
-                            <img class="blog-media-element" alt="gif" src="/wares/miniforts/media/miniforts_2.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.807909604519774; background: #b8b858">
-                        </div>
-
-                        <p>It has some rudimentary physics, where structures disconnected from the ground get destroyed.</p>
-                        <div class="blog-media blog-media-default">
-                            <img class="blog-media-element" alt="gif" src="/wares/miniforts/media/miniforts_3.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.807909604519774; background: #b8b858">
-                        </div>
-
-                        <p>The game is not <em>complete</em>, but it’s decent enough for a few minutes of gameplay.</p>
-                        <div class="blog-media blog-media-bleed">
-                            <img class="blog-media-element" alt="minions building a wall" src="/wares/miniforts/media/miniforts_1.gif" loading="lazy" width="400%" height="" style="aspect-ratio: 1.807909604519774; background: #88d8a8">
-                        </div>
-
-                        <p>The game’s development slowed down as I found myself being limited with Minetest’s API and engine - particularly its client-server limitations. I guess it’s because Minetest is a first-person creative-survival voxel game "engine" - a Minecraft clone, if you will. It’s not particularly suited for a base-builder RTS experience.</p>
-                        <p>Here, I’ll write about some of the major and minor limitations and the solutions I came up with.</p>
-                        <hr>
-                        <h2 id="the-scripting-language">The scripting language</h2>
-                        <p>Minetest uses <strong>Lua</strong> as its scripting language, which I found limited for the scale of the project. For MiniForts, I needed strong-typing, advanced OOP, and some scalable UI DSL.</p>
-                        <p>So MiniForts was written in <strong>TypeScript</strong>. I used <a target="_blank" class="text-link " href="https://typescripttolua.github.io/"><strong>TypeScriptToLua</strong></a> to convert it to Lua that the game understands.</p>
-                        <p>With the addition of custom <code>.d.ts</code> declaration files, I was able to use Minetest’s API in a type-safe way. TypeScript also unlocked fancy OOP, very useful in developing a game, and JSX! More on JSX in the following section.</p>
-                        <hr>
-                        <h2 id="the-gui-engine">The GUI engine</h2>
-                        <p>One major problem was Minetest’s <strong>GUI system</strong>. It uses a procedural GUI model, where interactions and UI updates are procedural, as opposed to the modern declarative UI model. Furthermore, it uses absolute positioning and has a lack of nesting or layouting.</p>
-                        <p>To solve this I used <a target="_blank" class="text-link " href="https://www.typescriptlang.org/docs/handbook/jsx.html"><strong>JSX</strong></a>, an XML-like syntax for defining UI in code.</p>
-                        <p>But Minetest is not a web browser. There isn’t anything in Minetest that knows how to render JSX elements. I had to create a <strong>GUI engine</strong> within the game that takes in JSX elements and renders it via Minetest’s APIs and that also works with the server-driven UI system that Minetest has.</p>
-                        <p>The end-result was a more flexible GUI system, with bonus reactive data-binding and callbacks.</p>
-                        <table class="bleed">
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="blog-media blog-media-default">
-                                            <img srcset="/wares/miniforts/media/miniforts_formspec_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="" src="/wares/miniforts/media/miniforts_formspec.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 1.5443037974683544; background: #282838"><span class="blog-media-caption">Minetest’s formspec</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="blog-media blog-media-default">
-                                            <img srcset="/wares/miniforts/media/miniforts_tsx_500.generated.png 500w" sizes=" 500px" class="blog-media-element" alt="" src="/wares/miniforts/media/miniforts_tsx.png" spec="500" loading="lazy" width="100%" height="" style="aspect-ratio: 2.518987341772152; background: #282838"><span class="blog-media-caption">JSX (TSX) version</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <p>Here’s an example layout which is the HUD that shows the player’s current resources in the upper-right corner of the screen:</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/wares/miniforts/media/miniforts_hud_407.generated.png 407w,/wares/miniforts/media/miniforts_hud_664.generated.png 664w" sizes="not (min-width:664px) 407px, 664px" class="blog-media-element" alt="hud" src="/wares/miniforts/media/miniforts_hud.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.6612244897959183; background: #a8b888">
-                        </div>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/wares/miniforts/media/miniforts_hud_code_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="hud code" src="/wares/miniforts/media/miniforts_hud_code.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4572864321608041; background: #282838">
-                        </div>
-
-                        <p>It was pretty interesting to recreate a React-like environment on top of a very limited GUI API.</p>
-                        <hr>
-                        <h2 id="pathfinding">Pathfinding</h2>
-                        <p>Minetest has a built-in ground-based A* pathfinding algorithm, implemented in C++, exposed via the Lua API.</p>
-                        <p>I’ve found that the built-in pathfinder wasn’t sufficient for this game. This game has multiple agents with different locomotion types, a complex 3D terrain, and destructible walls.</p>
-                        <p>I ended up implementing a hierarchical pathfinding algorithm with a structure similar to <a target="_blank" class="text-link " href="https://www.youtube.com/watch?v=RMBQn_sg7DA"><strong>RimWorld</strong>’s region system</a>, also inspired by <a target="_blank" class="text-link " href="https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large"><strong>Castle Story</strong>’s pathfinder</a>.</p>
-                        <div class="blog-media blog-media-bleed">
-                            <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
-                                <source src="/wares/miniforts/media/miniforts_path.mp4">
-                                <a href="/wares/miniforts/media/miniforts_path.mp4"></a>
-                            </video><span class="blog-media-caption">Pathfinder debug view in action</span>
-                        </div>
-
-                        <p>The system divides the world into <em>components</em>, each of which is a volume that contains a set of positions reachable from one another.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/wares/miniforts/media/miniforts_debug_path_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="debug pathfinding" src="/wares/miniforts/media/miniforts_debug_path.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.0161764705882352; background: #98b898"><span class="blog-media-caption">Component debug view</span>
-                        </div>
-
-                        <p>The pathfinder then finds a path through the component-level first, which is very fast, and only resolving voxel-level paths when the agent is trying to move within a component.</p>
-                        <div class="blog-media blog-media-bleed">
-                            <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
-                                <source src="/wares/miniforts/media/miniforts_order_path.mp4">
-                                <a href="/wares/miniforts/media/miniforts_order_path.mp4"></a>
-                            </video><span class="blog-media-caption">Very fast pathfinding over large distances</span>
-                        </div>
-
-                        <hr>
-                        <h2 id="world-generation">World generation</h2>
-                        <p>At the time, I was only able to create one world type - the Forest.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/wares/miniforts/media/miniforts_forest0_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="forest" src="/wares/miniforts/media/miniforts_forest0.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9228550829127613; background: #88d8f8">
-                        </div>
-
-                        <p>The terrain is a combination of stepped gradient noise maps generated from Minetest’s Perlin noise generator.</p>
-                        <p>The trees are positioned by placing points in a 2D grid and randomizing their locations within their grid cell.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/wares/miniforts/media/miniforts_forest1_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="forest" src="/wares/miniforts/media/miniforts_forest1.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.9617647058823529; background: #88c8d8">
-                        </div>
-
-                        <p>The roots are generated from the difference of two gradient noise maps, creating these snaking patterns, with height falloff based on the nearest tree.</p>
-                        <hr>
-                        <h2 id="the-art">The art</h2>
-                        <p>I like pixel art. It’s easy to make passable results.</p>
-                        <div class="blog-media blog-media-bleed">
-                            <img srcset="/wares/miniforts/media/miniforts_art_800.generated.png 800w,/wares/miniforts/media/miniforts_art_1020.generated.png 1020w,/wares/miniforts/media/miniforts_art_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-media-element" alt="art collection" src="/wares/miniforts/media/miniforts_art.png" spec="100% [800) 80% [1750) 1400" loading="lazy" width="400%" height="" style="aspect-ratio: 1.7777777777777777; background: #f8f8f8"><span class="blog-media-caption">See also, botom right corner, unfinished enemy type: the Dung Beetle. It would place blocks of dirt against your fort walls which would allow other enemies to climb over!</span>
-                        </div>
-
-                        <p>I struggled with the ground textures a lot. I realized that what’s more important at this resolution is the readability of something rather than the details of it.</p>
-                        <div class="blog-media blog-media-bleed">
-                            <img class="blog-media-element" alt="grass comparison" src="/wares/miniforts/media/miniforts_grass.gif" loading="lazy" width="400%" height="" style="aspect-ratio: 1.5852941176470587; background: #a8b888">
-                        </div>
-
-                        <p>A lot of inspiration was drawn from <strong>The Legend of Zelda: The Minish Cap</strong>, which had similar miniature environments.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/wares/miniforts/media/miniforts_zelda_302.generated.jpg 302w,/wares/miniforts/media/miniforts_zelda_664.generated.jpg 664w" sizes="not (min-width:664px) 302px, 664px" class="blog-media-element" alt="minish cap" src="/wares/miniforts/media/miniforts_zelda.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.51; background: #78e8a8"><span class="blog-media-caption">Source: zeldaspalace.com</span>
-                        </div>
-
-                        <hr>
-                        <p>In the end, I was not able to publish this game to the game community because I felt like it was still incomplete in terms of features. The base game and systems were pretty good though. Anyway, it was still a fun project and a good nourishment for my game development hobby.
-                        </p>
-
-                    </div>
-
+            <h2 id="a-game-about-building-and-defending-a-fort">A game about building and defending a fort.</h2>
+            <p>In 2021, I started making a small base-builder RTS game. It runs on the <a target="_blank" class="text-link " href="https://www.minetest.net/"><strong>Minetest</strong></a> voxel game engine.</p>
+            <aside class="project-info-card">
+              <div class="project-info-card-header">
+                <div class="project-info-card-title">Project details</div>
+                <a target="_blank" class="btn " tag="a" href="https://github.com/Kalabasa/mini_forts">
+                  View source
+                </a>
+              </div>
+              <div class="project-info-card-fields">
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">status</div>
+                  <div class="project-info-card-field-value">unreleased</div>
                 </div>
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">role</div>
+                  <div class="project-info-card-field-value">creator</div>
+                </div>
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">platform</div>
+                  <div class="project-info-card-field-value">Minetest</div>
+                </div>
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">tech</div>
+                  <div class="project-info-card-field-value">Lua, JSX</div>
+                </div>
+              </div>
+            </aside>
+
+            <p>The goal of this game is to defend a central core from invaders. The player commands minions to build up a fort around the core.</p>
+            <div class="blog-media blog-media-bleed">
+              <img class="blog-media-element" alt="minion shooting a slug" src="/wares/miniforts/media/miniforts_0.gif" loading="lazy" width="400%" height="" style="aspect-ratio: 1.807909604519774; background: #484858">
             </div>
+
+            <p>Minions are indirectly commanded by putting construction orders in the world.</p>
+            <div class="blog-media blog-media-default">
+              <img class="blog-media-element" alt="gif" src="/wares/miniforts/media/miniforts_2.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.807909604519774; background: #b8b858">
+            </div>
+
+            <p>It has some rudimentary physics, where structures disconnected from the ground get destroyed.</p>
+            <div class="blog-media blog-media-default">
+              <img class="blog-media-element" alt="gif" src="/wares/miniforts/media/miniforts_3.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.807909604519774; background: #b8b858">
+            </div>
+
+            <p>The game is not <em>complete</em>, but it’s decent enough for a few minutes of gameplay.</p>
+            <div class="blog-media blog-media-bleed">
+              <img class="blog-media-element" alt="minions building a wall" src="/wares/miniforts/media/miniforts_1.gif" loading="lazy" width="400%" height="" style="aspect-ratio: 1.807909604519774; background: #88d8a8">
+            </div>
+
+            <p>The game’s development slowed down as I found myself being limited with Minetest’s API and engine - particularly its client-server limitations. I guess it’s because Minetest is a first-person creative-survival voxel game "engine" - a Minecraft clone, if you will. It’s not particularly suited for a base-builder RTS experience.</p>
+            <p>Here, I’ll write about some of the major and minor limitations and the solutions I came up with.</p>
+            <hr>
+            <h2 id="the-scripting-language">The scripting language</h2>
+            <p>Minetest uses <strong>Lua</strong> as its scripting language, which I found limited for the scale of the project. For MiniForts, I needed strong-typing, advanced OOP, and some scalable UI DSL.</p>
+            <p>So MiniForts was written in <strong>TypeScript</strong>. I used <a target="_blank" class="text-link " href="https://typescripttolua.github.io/"><strong>TypeScriptToLua</strong></a> to convert it to Lua that the game understands.</p>
+            <p>With the addition of custom <code>.d.ts</code> declaration files, I was able to use Minetest’s API in a type-safe way. TypeScript also unlocked fancy OOP, very useful in developing a game, and JSX! More on JSX in the following section.</p>
+            <hr>
+            <h2 id="the-gui-engine">The GUI engine</h2>
+            <p>One major problem was Minetest’s <strong>GUI system</strong>. It uses a procedural GUI model, where interactions and UI updates are procedural, as opposed to the modern declarative UI model. Furthermore, it uses absolute positioning and has a lack of nesting or layouting.</p>
+            <p>To solve this I used <a target="_blank" class="text-link " href="https://www.typescriptlang.org/docs/handbook/jsx.html"><strong>JSX</strong></a>, an XML-like syntax for defining UI in code.</p>
+            <p>But Minetest is not a web browser. There isn’t anything in Minetest that knows how to render JSX elements. I had to create a <strong>GUI engine</strong> within the game that takes in JSX elements and renders it via Minetest’s APIs and that also works with the server-driven UI system that Minetest has.</p>
+            <p>The end-result was a more flexible GUI system, with bonus reactive data-binding and callbacks.</p>
+            <table class="bleed">
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="blog-media blog-media-default">
+                      <img srcset="/wares/miniforts/media/miniforts_formspec_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="" src="/wares/miniforts/media/miniforts_formspec.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 1.5443037974683544; background: #282838"><span class="blog-media-caption">Minetest’s formspec</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="blog-media blog-media-default">
+                      <img srcset="/wares/miniforts/media/miniforts_tsx_500.generated.png 500w" sizes=" 500px" class="blog-media-element" alt="" src="/wares/miniforts/media/miniforts_tsx.png" spec="500" loading="lazy" width="100%" height="" style="aspect-ratio: 2.518987341772152; background: #282838"><span class="blog-media-caption">JSX (TSX) version</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>Here’s an example layout which is the HUD that shows the player’s current resources in the upper-right corner of the screen:</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/wares/miniforts/media/miniforts_hud_407.generated.png 407w,/wares/miniforts/media/miniforts_hud_664.generated.png 664w" sizes="not (min-width:664px) 407px, 664px" class="blog-media-element" alt="hud" src="/wares/miniforts/media/miniforts_hud.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.6612244897959183; background: #a8b888">
+            </div>
+            <div class="blog-media blog-media-default">
+              <img srcset="/wares/miniforts/media/miniforts_hud_code_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="hud code" src="/wares/miniforts/media/miniforts_hud_code.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4572864321608041; background: #282838">
+            </div>
+
+            <p>It was pretty interesting to recreate a React-like environment on top of a very limited GUI API.</p>
+            <hr>
+            <h2 id="pathfinding">Pathfinding</h2>
+            <p>Minetest has a built-in ground-based A* pathfinding algorithm, implemented in C++, exposed via the Lua API.</p>
+            <p>I’ve found that the built-in pathfinder wasn’t sufficient for this game. This game has multiple agents with different locomotion types, a complex 3D terrain, and destructible walls.</p>
+            <p>I ended up implementing a hierarchical pathfinding algorithm with a structure similar to <a target="_blank" class="text-link " href="https://www.youtube.com/watch?v=RMBQn_sg7DA"><strong>RimWorld</strong>’s region system</a>, also inspired by <a target="_blank" class="text-link " href="https://www.gdcvault.com/play/1025151/Hierarchical-Dynamic-Pathfinding-for-Large"><strong>Castle Story</strong>’s pathfinder</a>.</p>
+            <div class="blog-media blog-media-bleed">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
+                <source src="/wares/miniforts/media/miniforts_path.mp4">
+                <a href="/wares/miniforts/media/miniforts_path.mp4"></a>
+              </video><span class="blog-media-caption">Pathfinder debug view in action</span>
+            </div>
+
+            <p>The system divides the world into <em>components</em>, each of which is a volume that contains a set of positions reachable from one another.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/wares/miniforts/media/miniforts_debug_path_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="debug pathfinding" src="/wares/miniforts/media/miniforts_debug_path.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.0161764705882352; background: #98b898"><span class="blog-media-caption">Component debug view</span>
+            </div>
+
+            <p>The pathfinder then finds a path through the component-level first, which is very fast, and only resolving voxel-level paths when the agent is trying to move within a component.</p>
+            <div class="blog-media blog-media-bleed">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
+                <source src="/wares/miniforts/media/miniforts_order_path.mp4">
+                <a href="/wares/miniforts/media/miniforts_order_path.mp4"></a>
+              </video><span class="blog-media-caption">Very fast pathfinding over large distances</span>
+            </div>
+
+            <hr>
+            <h2 id="world-generation">World generation</h2>
+            <p>At the time, I was only able to create one world type - the Forest.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/wares/miniforts/media/miniforts_forest0_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="forest" src="/wares/miniforts/media/miniforts_forest0.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9228550829127613; background: #88d8f8">
+            </div>
+
+            <p>The terrain is a combination of stepped gradient noise maps generated from Minetest’s Perlin noise generator.</p>
+            <p>The trees are positioned by placing points in a 2D grid and randomizing their locations within their grid cell.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/wares/miniforts/media/miniforts_forest1_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="forest" src="/wares/miniforts/media/miniforts_forest1.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.9617647058823529; background: #88c8d8">
+            </div>
+
+            <p>The roots are generated from the difference of two gradient noise maps, creating these snaking patterns, with height falloff based on the nearest tree.</p>
+            <hr>
+            <h2 id="the-art">The art</h2>
+            <p>I like pixel art. It’s easy to make passable results.</p>
+            <div class="blog-media blog-media-bleed">
+              <img srcset="/wares/miniforts/media/miniforts_art_800.generated.png 800w,/wares/miniforts/media/miniforts_art_1020.generated.png 1020w,/wares/miniforts/media/miniforts_art_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-media-element" alt="art collection" src="/wares/miniforts/media/miniforts_art.png" spec="100% [800) 80% [1750) 1400" loading="lazy" width="400%" height="" style="aspect-ratio: 1.7777777777777777; background: #f8f8f8"><span class="blog-media-caption">See also, botom right corner, unfinished enemy type: the Dung Beetle. It would place blocks of dirt against your fort walls which would allow other enemies to climb over!</span>
+            </div>
+
+            <p>I struggled with the ground textures a lot. I realized that what’s more important at this resolution is the readability of something rather than the details of it.</p>
+            <div class="blog-media blog-media-bleed">
+              <img class="blog-media-element" alt="grass comparison" src="/wares/miniforts/media/miniforts_grass.gif" loading="lazy" width="400%" height="" style="aspect-ratio: 1.5852941176470587; background: #a8b888">
+            </div>
+
+            <p>A lot of inspiration was drawn from <strong>The Legend of Zelda: The Minish Cap</strong>, which had similar miniature environments.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/wares/miniforts/media/miniforts_zelda_302.generated.jpg 302w,/wares/miniforts/media/miniforts_zelda_664.generated.jpg 664w" sizes="not (min-width:664px) 302px, 664px" class="blog-media-element" alt="minish cap" src="/wares/miniforts/media/miniforts_zelda.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.51; background: #78e8a8"><span class="blog-media-caption">Source: zeldaspalace.com</span>
+            </div>
+
+            <hr>
+            <p>In the end, I was not able to publish this game to the game community because I felt like it was still incomplete in terms of features. The base game and systems were pretty good though. Anyway, it was still a fun project and a good nourishment for my game development hobby.
+            </p>
+
+          </div>
 
         </div>
-        <footer class="main-footer">
-            <div class="main-footer-content-part">
-                <p class="main-footer-line">
-                    <a target="_self" class="main-footer-nav" href="/">Home</a> ·
-                    <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
-                    <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
-                    <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
-                    <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
-                </p>
-                <p class="main-footer-line">(C) 2023 Lean Rada</p>
-            </div>
-            <div class="main-footer-content-part">
-                <h2 class="main-footer-links-heading">On the web</h2>
-                <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
-                    <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
-                    <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
-                    <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
-                    <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
-                </a>
-            </div>
+      </div>
 
-
-            <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
-                <canvas style="filter: contrast(1.5)">
-                </canvas></nebula-client>
-            <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
-        </footer>
     </div>
-    <script defer="" src="/scripts/nebula-main-footer-main-header.js"></script>
-    <script defer="">
-        (() => {
-            const mainHeader = document.querySelector(".main-header");
-            const indicator = document.querySelector(".main-header-indicator");
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+          <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">(C) 2023 Lean Rada</p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)">
+        </canvas></nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
 
-            let currentY = 0;
-            let currentYTarget = 0;
 
-            let mouseHovering = false;
 
-            let isTouch = false;
-            let lastScrollY = window.scrollY;
-            let lastCursorY = 0;
-            window.addEventListener("scroll", debounce(onScroll));
-            window.addEventListener("mousemove", debounce(onMouseMove, 100));
-            window.addEventListener("touchstart", onWindowTouchStart);
-            window.addEventListener("touchmove", onWindowTouchMove);
-            mainHeader.addEventListener("touchstart", onTouchStart);
 
-            function onScroll(event) {
-                const dy = window.scrollY - lastScrollY;
 
-                // move with the page
-                currentY -= dy;
-                if (currentY > 0) {
-                    currentY = 0;
-                } else if (currentY < -mainHeader.offsetHeight) {
-                    currentY = -mainHeader.offsetHeight;
-                }
 
-                currentYTarget = currentY;
-                updateDOM();
 
-                lastScrollY = window.scrollY;
-            }
 
-            function onMouseMove(event) {
-                if (isTouch) return;
 
-                const dy = event.clientY - lastCursorY;
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+    (() => {
+      const blogMediaElementImages = document.querySelectorAll(
+        "img.blog-media-element"
+      );
 
-                // show when mouse goes near the top
-                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
-                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
-                    currentYTarget = 0;
-                    mouseHovering = true;
-                } else if (
-                    mouseHovering &&
-                    dy > 0 &&
-                    event.clientY > mainHeader.offsetHeight * 4
-                ) {
-                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
-                    mouseHovering = false;
-                }
+      for (const img of blogMediaElementImages) {
+        if (watchImage(img)) {
+          const intervalID = setInterval(() => watchImage(img, intervalID), 200);
+        }
+        img.addEventListener("load", onLoadImage);
+      }
 
-                updateDOM();
-                lastCursorY = event.clientY;
-            }
+      function watchImage(img, intervalID) {
+        if (img.naturalWidth > 0 || img.naturalHeight) {
+          img.style.objectPosition = null;
+          img.removeAttribute("width");
+          img.removeAttribute("height");
 
-            function onWindowTouchStart(event) {
-                isTouch = true;
-                lastCursorY = event.touches[0].clientY;
-            }
+          if (intervalID != undefined) clearInterval(intervalID);
+          return false;
+        } else {
+          if (!img.style.objectPosition) {
+            img.style.objectPosition = "100vw";
+          }
+          return true;
+        }
+      }
 
-            function onWindowTouchMove(event) {
-                const dy = event.touches[0].clientY - lastCursorY;
-
-                // move with touch but only if at edge
-                if (window.scrollY <= 0 && dy > 0) {
-                    currentY += dy;
-                    if (currentY >= 0) {
-                        currentY = 0;
-                        document.body.style.overscrollBehaviorY = null;
-                    } else if (currentY < 0) {
-                        document.body.style.overscrollBehaviorY = "none";
-                    }
-
-                    currentYTarget = currentY;
-                    updateDOM();
-                }
-
-                lastCursorY = event.touches[0].clientY;
-            }
-
-            function onTouchStart(event) {
-                currentYTarget = 0;
-                updateDOM();
-                console.log("onTouchStart");
-            }
-
-            const updateDOM = debounce(() => {
-                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
-
-                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
-                mainHeader.classList.toggle("hidden", isHidden);
-
-                if (Math.abs(currentY - currentYTarget) > 1) {
-                    currentY += (currentYTarget - currentY) * 0.2;
-                    requestAnimationFrame(updateDOM);
-                } else {
-                    currentY = currentYTarget;
-                }
-            });
-
-            if (mainHeader.classList.contains("prehide")) {
-                document.body.style.overscrollBehaviorY = "none";
-                currentY = currentYTarget = -mainHeader.offsetHeight;
-                updateDOM();
-            }
-
-            function debounce(fn, ms = 0) {
-                let recentlyFired = false;
-                return (...args) => {
-                    if (recentlyFired) return;
-                    recentlyFired = true;
-                    if (ms === 0) {
-                        requestAnimationFrame(() => (recentlyFired = false));
-                    } else {
-                        setTimeout(() => (recentlyFired = false), ms);
-                    }
-                    return fn(...args);
-                };
-            }
-        })();
-    </script>
-    <script defer="" src="/scripts/blog-media.js"></script>
+      function onLoadImage(event) {
+        event.currentTarget.style.background = null;
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Flip-Flop Logic Simulator | Documentation</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+
+<link rel="stylesheet" type="text/css" href="res/style.css" />
+
+</head>
+<body>
+
+<div class="css_sux">
+<div class="main nobuttons">
+    <h1>Flip-Flop Logic Simulator</h1>
+    <p class="menu"><a href="index.html">Simulator</a> | <a href="about.html">About</a> | <a href="doc.html">Documentation</a></p>
+    <h2>Source</h2> 
+    <p>As <b>Flip-Flop Logic Simulator</b> (FLS) is written in JavaScript, its source is accessible to anyone
+    by just viewing the source of the Simulator page. <a href="res/flipflop.js" target="_new">Here</a> is a
+    direct link to the source code.</p>
+    <p><b></b></b>
+    <h2>Overview</h2>
+     <p>The JavaScript code is divided into 6 parts: Starter, Numbers, Types, Functions, Table, Helpers.</p>
+     <p>The actual process is divided into 4 main parts: GUI, Input Parsing, Function Evaluation, Table Generation.</p>
+    <div class="frame">
+	<h2>GUI</h2>
+        <p>The bulk of the GUI is composed of the HTML in index.html and the auxiliary functions in Starter and Helpers.
+        The specific elements of each "part" is also covered in the Numbers, Types, Functions, Table parts.</p>
+        
+        <h2>Input Parsing</h2>
+        <p>The GUI is heavily involved in taking inputs. As you can see, the inputs for each part of the simulation
+        depend on the previous one. They are dynamically generated.</p>
+        <p>The <b>validateFunc</b> function under the Functions part is responsible for making sure the formats of
+        the input boolean functions are correct. It utilizes a weight system to ensure valid pairs of parenteheses.
+        The rest of the boolean function is validated with a regular expression (regex):</p>
+        <p style = "text-align: center;"><i>\s*((\(*\s*[a-z10]\s*(\)?'?)+)+\s*\+\s*)*(\(*\s*[a-z10]\s*(\)?'?)+)+\s*</i></p>
+        
+        <h2>Function Evaluation & Table Generation</h2>
+        <p>The evaluation of the boolean functions is made easy by JavaScripts built-in <b>eval()</b> function.
+        Here it can be found implicitly used in the <b>evalFunc()</b> in the guise of the line:</p>
+        <p style = "text-align: center;"><i>var func = new Function("vars", "return " + str + ";");</i><</p>
+        <p><b>eval()</b> is infamous for being a security vulnerability as it is prone to JavaScript injection
+        or the running of malicious code by a user. We still chose to use it annyway because (1)as an educational
+        project, there is little to compromise in FLS and (2)it really simplifies the process of evaluating functions.</p>
+        <p>There is one problem with <b>eval()</b> however: it can only read functions in the format used in most
+        programming languages e.g., && for AND, || for OR, ! for NOT. A function such as:</p>
+        <p style = "text-align: center;"><i>ab + c(d'e)'</i></p>
+        <p>must be converted to</p>
+        <p style = "text-align: center;">A && B || C && !(!D && E)</p>
+        <p>The <b>convertFunc()</b> accomplishes this via a programmatic approach for the NOT operators and
+        a handful of regex replacements for the rest.</p>
+        <p>The values of the State Table are then determined from the inputs and the flip-flop functions. The
+        specific flip-flop logic/behaviors are taken care of by the <b>evalFF()</b> function.</p>
+</div>
+
+<div id="footer">
+&copy 2013 lean&marx
+</div>
+
+</body>
+</html>

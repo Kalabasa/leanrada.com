@@ -1,682 +1,768 @@
 <html lang="en">
 <head>
-    <title>Art · leanrada.com</title>
-    <script async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
-    <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
-    <style>
-        @font-face {
-            font-family: "Space Mono";
-            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+  <title>Art · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
         }
 
-        @font-face {
-            font-family: "Space Mono";
-            font-style: italic;
-            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
         }
 
-        @font-face {
-            font-family: "Miriam Libre";
-            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
         }
 
-        @font-face {
-            font-family: "Miriam Libre";
-            font-weight: bold;
-            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
+
+          this.draw(canvas, this.context);
+
+          requestAnimationFrame(() => this.loop());
         }
 
-        :root {
-            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
-            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+        /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
 
-            --bg-clr: #111;
-            --card-clr: #222;
-            --clr0-light: #54f8c1;
-            --clr0: #0ad591;
-            --clr0-dark: #018b5d;
-            --clr1: #df2063;
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
 
-            --text-clr: #fff;
-            --text2-clr: #999;
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
 
-            --ease: cubic-bezier(0.8, 0, 1, 1);
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            font-display: swap;
-            background-color: var(--bg-clr, #111);
-            color: var(--text-clr, #fff);
-            overflow-x: hidden;
-        }
-
-        .page-wrapper {
-            display: flex;
-            flex-direction: column;
-            min-height: 100%;
-        }
-
-        .page-wrapper-content {
-            flex: 1 1 auto;
-        }
-    </style>
-    <style>
-        nebula-client>canvas {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-    <style>
-        .main-footer-link {
-            text-decoration: none;
-        }
-
-        .main-footer-link-icon {
-            width: 32px;
-            height: 32px;
-            image-rendering: pixelated;
-        }
-
-        .main-footer-link-icon:hover {
-            filter: invert(1);
-        }
-    </style>
-    <style>
-        .main-footer {
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            gap: 60px;
-            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
-            font-size: 15px;
-            font-weight: bold;
-            background: var(--clr0);
-            color: #000;
-            overflow: hidden;
-            content-visibility: auto;
-            contain-intrinsic-height: 220x;
-        }
-
-        .main-footer-links-heading {
-            margin: 0 0 18px;
-            font-size: inherit;
-        }
-
-        .main-footer-line {
-            margin: 0 0 18px;
-        }
-
-        .main-footer-nav {
-            color: #000;
-        }
-
-        .main-footer-nav:hover {
-            color: #fff;
-        }
-
-        .main-footer-content-part {
-            z-index: 1;
-        }
-
-        .main-footer-nebula {
-            position: absolute;
-            left: -30%;
-            top: -30%;
-            width: 160%;
-            height: 160%;
-            z-index: 0;
-        }
-
-        .main-footer-top-btn {
-            display: block;
-            z-index: 2;
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 72px;
-            height: 36px;
-            padding-right: 9px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: none;
-            border-bottom-left-radius: 18px;
-            background: var(--bg-clr);
-            text-decoration: none;
-            color: var(--clr0-light);
-            font: inherit;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .main-footer-top-btn:hover {
-            color: var(--clr1);
-        }
-
-        .main-footer-top-btn::before {
-            content: "";
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 36px;
-            height: 18px;
-            border-top-right-radius: 18px;
-            transform: translateX(-72px);
-            box-shadow: 18px 0 0 var(--bg-clr);
-        }
-
-        @media (max-width: 700px) {
-            .main-footer {
-                flex-direction: column-reverse;
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
             }
-        }
-    </style>
-    <style>
-        .main-header {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            height: 60px;
-            padding: 0 calc(25% - 150px);
-            z-index: 100;
-            box-sizing: border-box;
-            pointer-events: none;
-        }
+          }
 
-        .main-header.float {
-            position: fixed;
-        }
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
 
-        .main-header-bar {
-            position: relative;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: flex-end;
-            height: 100%;
-        }
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
 
-        .main-header-item {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 6ch;
-            height: 36px;
-            padding: 0 18px;
-            border-radius: 18px;
-            font-size: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-decoration: none;
-            text-transform: uppercase;
-            color: #fff;
-            backdrop-filter: blur(8px);
-            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
-            background-repeat: no-repeat;
-            background-size: 220% 100%;
-            background-position: 115%;
-            pointer-events: all;
-            transition: background-position 0.2s var(--ease);
-        }
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
 
-        .main-header-item:hover {
-            background-image: linear-gradient(60deg,
-                    #fff2 50%,
-                    #fff 50%,
-                    #fff 60%,
-                    transparent 60%);
-            background-position: 0%;
-        }
+              const paletteIndex = Math.floor(paletteLength * p);
 
-        .main-header-item.select {
-            background: #fff2;
-        }
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
 
-        .main-header-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            image-rendering: pixelated;
-            object-fit: cover;
-            object-position: 0 0;
-            filter: invert(1);
-            backdrop-filter: blur(8px) invert(1);
-            pointer-events: all;
-        }
-
-        .main-header-icon:hover {
-            object-position: 100% 0;
-        }
-
-        @media (max-width: 450px) {
-            .main-header-icon {
-                display: none;
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
             }
+          }
         }
 
-        .main-header-indicator {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            left: 50%;
-            top: calc(100% + 12px);
-            transform: translate(-50%, -50%);
-            /* border acts as extended touch area */
-            border: solid 6mm transparent;
-            border-left-width: 45vw;
-            border-right-width: 45vw;
-            border-radius: 50%;
-            background: #fff;
-            background-clip: padding-box;
-            opacity: 0;
-            transition: opacity 50ms;
+        getT() {
+          const t = (Date.now() * 30) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
         }
+      }
+    );
 
-        .main-header.hidden .main-header-indicator {
-            opacity: 0.8;
-            pointer-events: all;
-        }
-    </style>
-    <style>
-        .art-grid {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            flex-wrap: wrap;
-            gap: max(24px, 2vw) 2vw;
-        }
-    </style>
-    <style>
-        .art-grid-item {
-            flex: 0 1 auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            color: var(--text-clr);
-        }
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
 
-        .art-grid-img {
-            position: relative;
-            flex: 1 1 auto;
-            height: 40vmin;
-            border-radius: 3px;
-        }
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
 
-        .art-grid-caption {
-            flex: 0 0 auto;
-            margin-top: 6px;
-            font-family: var(--reading-font);
-            font-size: 15px;
-            text-align: center;
-        }
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
 
-        @media (hover: hover) {
-            .art-grid-item {
-                text-decoration: none;
-            }
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
 
-            .art-grid-item:hover {
-                text-decoration: underline;
-            }
-        }
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
 
-        @media (max-width: 400px) {
-            .art-grid-img {
-                width: auto;
-                height: auto;
-                max-width: 150px;
-            }
-        }
-    </style>
-    <style>
-        .content-header {
-            margin: 90px 0 60px;
-            padding: 0 18px;
-        }
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
 
-        .content-header-title {
-            margin: 0 0 6px;
-            font-size: 27px;
-            font-style: italic;
-            font-weight: bold;
-            text-align: center;
-        }
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
 
-        .content-header-subtitle {
-            margin: 6px 0 0;
-            font-size: 18px;
-            font-style: italic;
-            text-align: center;
-            color: var(--text2-clr);
-        }
-    </style>
-    <style>
-        .showcase {
-            position: relative;
-            max-width: 80vh;
-            max-height: 80vh;
-            aspect-ratio: 1;
-            margin: auto;
-            overflow: hidden;
-        }
+      --text-clr: #fff;
+      --text2-clr: #999;
 
-        .showcase-fb {
-            left: 47%;
-            width: 40%;
-            top: 0%;
-            height: 40%;
-        }
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
 
-        .showcase-dm {
-            left: 47%;
-            width: 24%;
-            top: 42%;
-            height: 32%;
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
 
-        .showcase-jq {
-            left: 20%;
-            width: 25%;
-            top: 19%;
-            height: 25%;
-        }
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
 
-        .showcase-ln {
-            left: 73%;
-            width: 25%;
-            top: 42%;
-            height: 20%;
-        }
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <style>
+    .main-footer-link {
+      text-decoration: none;
+    }
 
-        .showcase-wc {
-            left: 12%;
-            width: 33%;
-            top: 46%;
-            height: 39%;
-        }
+    .main-footer-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
 
-        .showcase-sdf {
-            left: 2%;
-            width: 16%;
-            top: 28%;
-            height: 16%;
-        }
+    .main-footer-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 220x;
+    }
 
-        .intro-paragraph {
-            margin: 30px auto;
-            padding: 0 12px;
-            max-width: 600px;
-            font-size: 15px;
-            text-align: center;
-        }
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
 
-        .content {
-            margin: 60px auto 90px;
-            padding: 0 12px;
-            max-width: 1200px;
-        }
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
 
-        .selected-title {
-            margin: 0 0 36px;
-            font-size: 21px;
-            font-weight: bold;
-            font-style: italic;
-            text-align: center;
-        }
-    </style>
-    <script src="/scripts/common.js"></script>
+    .main-footer-nav {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    .main-footer-content-part {
+      z-index: 1;
+    }
+
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
+
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
+
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
+
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
+
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .art-grid {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: max(24px, 2vw) 2vw;
+    }
+  </style>
+  <style>
+    .art-grid-item {
+      flex: 0 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      color: var(--text-clr);
+    }
+
+    .art-grid-img {
+      position: relative;
+      flex: 1 1 auto;
+      height: 40vmin;
+      border-radius: 3px;
+    }
+
+    .art-grid-caption {
+      flex: 0 0 auto;
+      margin-top: 6px;
+      font-family: var(--reading-font);
+      font-size: 15px;
+      text-align: center;
+    }
+
+    @media (hover: hover) {
+      .art-grid-item {
+        text-decoration: none;
+      }
+
+      .art-grid-item:hover {
+        text-decoration: underline;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .art-grid-img {
+        width: auto;
+        height: auto;
+        max-width: 150px;
+      }
+    }
+  </style>
+  <style>
+    .content-header {
+      margin: 90px 0 60px;
+      padding: 0 18px;
+    }
+
+    .content-header-title {
+      margin: 0 0 6px;
+      font-size: 27px;
+      font-style: italic;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .content-header-subtitle {
+      margin: 6px 0 0;
+      font-size: 18px;
+      font-style: italic;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+  </style>
+  <style>
+    .showcase {
+      position: relative;
+      max-width: 80vh;
+      max-height: 80vh;
+      aspect-ratio: 1;
+      margin: auto;
+      overflow: hidden;
+    }
+
+    .showcase-fb {
+      left: 47%;
+      width: 40%;
+      top: 0%;
+      height: 40%;
+    }
+
+    .showcase-dm {
+      left: 47%;
+      width: 24%;
+      top: 42%;
+      height: 32%;
+    }
+
+    .showcase-jq {
+      left: 20%;
+      width: 25%;
+      top: 19%;
+      height: 25%;
+    }
+
+    .showcase-ln {
+      left: 73%;
+      width: 25%;
+      top: 42%;
+      height: 20%;
+    }
+
+    .showcase-wc {
+      left: 12%;
+      width: 33%;
+      top: 46%;
+      height: 39%;
+    }
+
+    .showcase-sdf {
+      left: 2%;
+      width: 16%;
+      top: 28%;
+      height: 16%;
+    }
+
+    .intro-paragraph {
+      margin: 30px auto;
+      padding: 0 12px;
+      max-width: 600px;
+      font-size: 15px;
+      text-align: center;
+    }
+
+    .content {
+      margin: 60px auto 90px;
+      padding: 0 12px;
+      max-width: 1200px;
+    }
+
+    .selected-title {
+      margin: 0 0 36px;
+      font-size: 21px;
+      font-weight: bold;
+      font-style: italic;
+      text-align: center;
+    }
+  </style>
 </head>
 
 
 <body>
 
-    <div class="page-wrapper">
-        <header class="main-header">
-            <div class="main-header-bar">
-                <a href="/" class="main-header-item ">Home</a>
-                <a href="/wares/" class="main-header-item ">Wares</a>
-                <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
-                <a href="/art/" class="main-header-item select">Art</a>
-                <a href="/notes/" class="main-header-item ">Notes</a>
-                <div class="main-header-indicator"></div>
-            </div>
-        </header>
-        <div class="page-wrapper-content">
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item select">Art</a>
+        <a href="/notes/" class="main-header-item ">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
 
-            <div class="content-header">
-                <h1 class="content-header-title">Making things making art</h1>
+      <div class="content-header">
+        <h1 class="content-header-title">Making things making art</h1>
 
-            </div>
-            <p class="intro-paragraph">
-                I create artworks using algorithms, code, and math. Through creative
-                coding, I make <strong>generative art</strong>.
-            </p>
-            <p class="intro-paragraph">
-                My art programs are usually written in <strong>JavaScript</strong> using
-                <strong>p5.js</strong>. Have a look at some of the pieces below!
-            </p>
-            <div class="content">
-                <h2 class="selected-title">Selected works</h2>
-                <div class="art-grid">
+      </div>
+      <p class="intro-paragraph">
+        I create artworks using algorithms, code, and math. Through creative
+        coding, I make <strong>generative art</strong>.
+      </p>
+      <p class="intro-paragraph">
+        My art programs are usually written in <strong>JavaScript</strong> using
+        <strong>p5.js</strong>. Have a look at some of the pieces below!
+      </p>
+      <div class="content">
+        <h2 class="selected-title">Selected works</h2>
+        <div class="art-grid">
 
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/floridablanca/gallery/5336_350.generated.png 350w,/art/floridablanca/gallery/5336_700.generated.png 700w,/art/floridablanca/gallery/5336_1050.generated.png 1050w,/art/floridablanca/gallery/5336_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Floridablanca series piece" src="/art/floridablanca/gallery/5336.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Floridablanca series</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/dimensions/gallery/dm4_300.generated.jpg 300w,/art/dimensions/gallery/dm4_600.generated.jpg 600w" sizes="(max-width:600px) 300px, 600px" class="art-grid-img" alt="Dimensions project piece" src="/art/dimensions/gallery/dm4.jpg" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Dimensions project</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/floridablanca/gallery/6300_350.generated.png 350w,/art/floridablanca/gallery/6300_700.generated.png 700w,/art/floridablanca/gallery/6300_1050.generated.png 1050w,/art/floridablanca/gallery/6300_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Floridablanca series piece" src="/art/floridablanca/gallery/6300.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Floridablanca series</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/jacquard/gallery/jq13_350.generated.png 350w,/art/jacquard/gallery/jq13_700.generated.png 700w,/art/jacquard/gallery/jq13_1050.generated.png 1050w,/art/jacquard/gallery/jq13_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Jacquard series piece" src="/art/jacquard/gallery/jq13.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Jacquard series</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/line/gallery/ln2_350.generated.png 350w,/art/line/gallery/ln2_700.generated.png 700w,/art/line/gallery/ln2_1050.generated.png 1050w,/art/line/gallery/ln2_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Line series piece" src="/art/line/gallery/ln2.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Line series</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/dimensions/gallery/dm14_350.generated.png 350w,/art/dimensions/gallery/dm14_700.generated.png 700w,/art/dimensions/gallery/dm14_1050.generated.png 1050w,/art/dimensions/gallery/dm14_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Dimensions project piece" src="/art/dimensions/gallery/dm14.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Dimensions project</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/jacquard/gallery/jq5_350.generated.png 350w,/art/jacquard/gallery/jq5_700.generated.png 700w,/art/jacquard/gallery/jq5_1050.generated.png 1050w,/art/jacquard/gallery/jq5_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Jacquard series piece" src="/art/jacquard/gallery/jq5.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Jacquard series</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/line/gallery/ln6_350.generated.png 350w,/art/line/gallery/ln6_700.generated.png 700w,/art/line/gallery/ln6_1050.generated.png 1050w,/art/line/gallery/ln6_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Line series piece" src="/art/line/gallery/ln6.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Line series</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/watercolour/gallery/p6304_360.generated.png 360w,/art/watercolour/gallery/p6304_720.generated.png 720w,/art/watercolour/gallery/p6304_1080.generated.png 1080w" sizes="(max-width:720px) 360px,(max-width:1440px) 720px, 1080px" class="art-grid-img" alt="Watercolour experiments piece" src="/art/watercolour/gallery/p6304.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Watercolour experiments</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/jacquard/gallery-fb/fbjq6_350.generated.png 350w,/art/jacquard/gallery-fb/fbjq6_700.generated.png 700w,/art/jacquard/gallery-fb/fbjq6_1050.generated.png 1050w,/art/jacquard/gallery-fb/fbjq6_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Jacquard series piece" src="/art/jacquard/gallery-fb/fbjq6.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Jacquard series</span>
-                    </a>
-                    <a target="_self" class="art-grid-item">
-                        <img srcset="/art/watercolour/gallery/e2818_338.generated.png 338w,/art/watercolour/gallery/e2818_675.generated.png 675w,/art/watercolour/gallery/e2818_1013.generated.png 1013w,/art/watercolour/gallery/e2818_1350.generated.png 1350w" sizes="(max-width:675px) 338px,(max-width:1350px) 675px,(max-width:2025px) 1013px, 1350px" class="art-grid-img" alt="Watercolour experiments piece" src="/art/watercolour/gallery/e2818.png" spec="50%" loading="lazy">
-                        <span class="art-grid-caption">Watercolour experiments</span>
-                    </a>
-
-                </div>
-            </div>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/floridablanca/gallery/5336_350.generated.png 350w,/art/floridablanca/gallery/5336_700.generated.png 700w,/art/floridablanca/gallery/5336_1050.generated.png 1050w,/art/floridablanca/gallery/5336_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Floridablanca series piece" src="/art/floridablanca/gallery/5336.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Floridablanca series</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/dimensions/gallery/dm4_300.generated.jpg 300w,/art/dimensions/gallery/dm4_600.generated.jpg 600w" sizes="(max-width:600px) 300px, 600px" class="art-grid-img" alt="Dimensions project piece" src="/art/dimensions/gallery/dm4.jpg" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Dimensions project</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/floridablanca/gallery/6300_350.generated.png 350w,/art/floridablanca/gallery/6300_700.generated.png 700w,/art/floridablanca/gallery/6300_1050.generated.png 1050w,/art/floridablanca/gallery/6300_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Floridablanca series piece" src="/art/floridablanca/gallery/6300.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Floridablanca series</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/jacquard/gallery/jq13_350.generated.png 350w,/art/jacquard/gallery/jq13_700.generated.png 700w,/art/jacquard/gallery/jq13_1050.generated.png 1050w,/art/jacquard/gallery/jq13_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Jacquard series piece" src="/art/jacquard/gallery/jq13.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Jacquard series</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/line/gallery/ln2_350.generated.png 350w,/art/line/gallery/ln2_700.generated.png 700w,/art/line/gallery/ln2_1050.generated.png 1050w,/art/line/gallery/ln2_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Line series piece" src="/art/line/gallery/ln2.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Line series</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/dimensions/gallery/dm14_350.generated.png 350w,/art/dimensions/gallery/dm14_700.generated.png 700w,/art/dimensions/gallery/dm14_1050.generated.png 1050w,/art/dimensions/gallery/dm14_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Dimensions project piece" src="/art/dimensions/gallery/dm14.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Dimensions project</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/jacquard/gallery/jq5_350.generated.png 350w,/art/jacquard/gallery/jq5_700.generated.png 700w,/art/jacquard/gallery/jq5_1050.generated.png 1050w,/art/jacquard/gallery/jq5_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Jacquard series piece" src="/art/jacquard/gallery/jq5.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Jacquard series</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/line/gallery/ln6_350.generated.png 350w,/art/line/gallery/ln6_700.generated.png 700w,/art/line/gallery/ln6_1050.generated.png 1050w,/art/line/gallery/ln6_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Line series piece" src="/art/line/gallery/ln6.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Line series</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/watercolour/gallery/p6304_360.generated.png 360w,/art/watercolour/gallery/p6304_720.generated.png 720w,/art/watercolour/gallery/p6304_1080.generated.png 1080w" sizes="(max-width:720px) 360px,(max-width:1440px) 720px, 1080px" class="art-grid-img" alt="Watercolour experiments piece" src="/art/watercolour/gallery/p6304.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Watercolour experiments</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/jacquard/gallery-fb/fbjq6_350.generated.png 350w,/art/jacquard/gallery-fb/fbjq6_700.generated.png 700w,/art/jacquard/gallery-fb/fbjq6_1050.generated.png 1050w,/art/jacquard/gallery-fb/fbjq6_1400.generated.png 1400w" sizes="(max-width:700px) 350px,(max-width:1400px) 700px,(max-width:2100px) 1050px, 1400px" class="art-grid-img" alt="Jacquard series piece" src="/art/jacquard/gallery-fb/fbjq6.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Jacquard series</span>
+          </a>
+          <a target="_self" class="art-grid-item">
+            <img srcset="/art/watercolour/gallery/e2818_338.generated.png 338w,/art/watercolour/gallery/e2818_675.generated.png 675w,/art/watercolour/gallery/e2818_1013.generated.png 1013w,/art/watercolour/gallery/e2818_1350.generated.png 1350w" sizes="(max-width:675px) 338px,(max-width:1350px) 675px,(max-width:2025px) 1013px, 1350px" class="art-grid-img" alt="Watercolour experiments piece" src="/art/watercolour/gallery/e2818.png" spec="50%" loading="lazy">
+            <span class="art-grid-caption">Watercolour experiments</span>
+          </a>
 
         </div>
-        <footer class="main-footer">
-            <div class="main-footer-content-part">
-                <p class="main-footer-line">
-                    <a target="_self" class="main-footer-nav" href="/">Home</a> ·
-                    <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
-                    <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
-                    <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
-                    <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
-                </p>
-                <p class="main-footer-line">(C) 2023 Lean Rada</p>
-            </div>
-            <div class="main-footer-content-part">
-                <h2 class="main-footer-links-heading">On the web</h2>
-                <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
-                    <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
-                    <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
-                    <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
-                    <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
-                </a>
-            </div>
+      </div>
 
-
-            <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
-                <canvas style="filter: contrast(1.5)">
-                </canvas></nebula-client>
-            <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
-        </footer>
     </div>
-    <script defer="" src="/scripts/nebula-main-footer-main-header.js"></script>
-    <script defer="">
-        (() => {
-            const mainHeader = document.querySelector(".main-header");
-            const indicator = document.querySelector(".main-header-indicator");
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+          <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">(C) 2023 Lean Rada</p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)">
+        </canvas></nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
 
-            let currentY = 0;
-            let currentYTarget = 0;
 
-            let mouseHovering = false;
 
-            let isTouch = false;
-            let lastScrollY = window.scrollY;
-            let lastCursorY = 0;
-            window.addEventListener("scroll", debounce(onScroll));
-            window.addEventListener("mousemove", debounce(onMouseMove, 100));
-            window.addEventListener("touchstart", onWindowTouchStart);
-            window.addEventListener("touchmove", onWindowTouchMove);
-            mainHeader.addEventListener("touchstart", onTouchStart);
 
-            function onScroll(event) {
-                const dy = window.scrollY - lastScrollY;
 
-                // move with the page
-                currentY -= dy;
-                if (currentY > 0) {
-                    currentY = 0;
-                } else if (currentY < -mainHeader.offsetHeight) {
-                    currentY = -mainHeader.offsetHeight;
-                }
 
-                currentYTarget = currentY;
-                updateDOM();
 
-                lastScrollY = window.scrollY;
-            }
 
-            function onMouseMove(event) {
-                if (isTouch) return;
 
-                const dy = event.clientY - lastCursorY;
-
-                // show when mouse goes near the top
-                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
-                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
-                    currentYTarget = 0;
-                    mouseHovering = true;
-                } else if (
-                    mouseHovering &&
-                    dy > 0 &&
-                    event.clientY > mainHeader.offsetHeight * 4
-                ) {
-                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
-                    mouseHovering = false;
-                }
-
-                updateDOM();
-                lastCursorY = event.clientY;
-            }
-
-            function onWindowTouchStart(event) {
-                isTouch = true;
-                lastCursorY = event.touches[0].clientY;
-            }
-
-            function onWindowTouchMove(event) {
-                const dy = event.touches[0].clientY - lastCursorY;
-
-                // move with touch but only if at edge
-                if (window.scrollY <= 0 && dy > 0) {
-                    currentY += dy;
-                    if (currentY >= 0) {
-                        currentY = 0;
-                        document.body.style.overscrollBehaviorY = null;
-                    } else if (currentY < 0) {
-                        document.body.style.overscrollBehaviorY = "none";
-                    }
-
-                    currentYTarget = currentY;
-                    updateDOM();
-                }
-
-                lastCursorY = event.touches[0].clientY;
-            }
-
-            function onTouchStart(event) {
-                currentYTarget = 0;
-                updateDOM();
-                console.log("onTouchStart");
-            }
-
-            const updateDOM = debounce(() => {
-                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
-
-                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
-                mainHeader.classList.toggle("hidden", isHidden);
-
-                if (Math.abs(currentY - currentYTarget) > 1) {
-                    currentY += (currentYTarget - currentY) * 0.2;
-                    requestAnimationFrame(updateDOM);
-                } else {
-                    currentY = currentYTarget;
-                }
-            });
-
-            if (mainHeader.classList.contains("prehide")) {
-                document.body.style.overscrollBehaviorY = "none";
-                currentY = currentYTarget = -mainHeader.offsetHeight;
-                updateDOM();
-            }
-
-            function debounce(fn, ms = 0) {
-                let recentlyFired = false;
-                return (...args) => {
-                    if (recentlyFired) return;
-                    recentlyFired = true;
-                    if (ms === 0) {
-                        requestAnimationFrame(() => (recentlyFired = false));
-                    } else {
-                        setTimeout(() => (recentlyFired = false), ms);
-                    }
-                    return fn(...args);
-                };
-            }
-        })();
-    </script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
 </body>
 </html>

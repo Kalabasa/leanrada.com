@@ -1,469 +1,692 @@
 <html lang="en">
 <head>
-    <title>Simple image recognition with vanilla JavaScript · leanrada.com</title>
-    <script async="" src="https://unpkg.com/perlin-noise-3d@0.5.4/dist/perlin-noise-3d.min.js"></script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
-    <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
-    <style>
-        @font-face {
-            font-family: "Space Mono";
-            src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+  <title>Simple image recognition with vanilla JavaScript · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
         }
 
-        @font-face {
-            font-family: "Space Mono";
-            font-style: italic;
-            src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
         }
 
-        @font-face {
-            font-family: "Miriam Libre";
-            src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
         }
 
-        @font-face {
-            font-family: "Miriam Libre";
-            font-weight: bold;
-            src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
+
+          this.draw(canvas, this.context);
+
+          requestAnimationFrame(() => this.loop());
         }
 
-        :root {
-            --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
-            --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
-
-            --bg-clr: #111;
-            --card-clr: #222;
-            --clr0-light: #54f8c1;
-            --clr0: #0ad591;
-            --clr0-dark: #018b5d;
-            --clr1: #df2063;
-
-            --text-clr: #fff;
-            --text2-clr: #999;
-
-            --ease: cubic-bezier(0.8, 0, 1, 1);
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            font-display: swap;
-            background-color: var(--bg-clr, #111);
-            color: var(--text-clr, #fff);
-            overflow-x: hidden;
-        }
-
-        .page-wrapper {
-            display: flex;
-            flex-direction: column;
-            min-height: 100%;
-        }
-
-        .page-wrapper-content {
-            flex: 1 1 auto;
-        }
-    </style>
-    <style>
-        nebula-client>canvas {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-    <style>
-        .main-footer-link {
-            text-decoration: none;
-        }
-
-        .main-footer-link-icon {
-            width: 32px;
-            height: 32px;
-            image-rendering: pixelated;
-        }
-
-        .main-footer-link-icon:hover {
-            filter: invert(1);
-        }
-    </style>
-    <style>
-        .main-footer {
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            gap: 60px;
-            padding: 60px calc(max(60px, 50vw - 600px)) 60px;
-            font-size: 15px;
-            font-weight: bold;
-            background: var(--clr0);
-            color: #000;
-            overflow: hidden;
-            content-visibility: auto;
-            contain-intrinsic-height: 220x;
-        }
-
-        .main-footer-links-heading {
-            margin: 0 0 18px;
-            font-size: inherit;
-        }
-
-        .main-footer-line {
-            margin: 0 0 18px;
-        }
-
-        .main-footer-nav {
-            color: #000;
-        }
-
-        .main-footer-nav:hover {
-            color: #fff;
-        }
-
-        .main-footer-content-part {
-            z-index: 1;
-        }
-
-        .main-footer-nebula {
-            position: absolute;
-            left: -30%;
-            top: -30%;
-            width: 160%;
-            height: 160%;
-            z-index: 0;
-        }
-
-        .main-footer-top-btn {
-            display: block;
-            z-index: 2;
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 72px;
-            height: 36px;
-            padding-right: 9px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: none;
-            border-bottom-left-radius: 18px;
-            background: var(--bg-clr);
-            text-decoration: none;
-            color: var(--clr0-light);
-            font: inherit;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .main-footer-top-btn:hover {
-            color: var(--clr1);
-        }
-
-        .main-footer-top-btn::before {
-            content: "";
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 36px;
-            height: 18px;
-            border-top-right-radius: 18px;
-            transform: translateX(-72px);
-            box-shadow: 18px 0 0 var(--bg-clr);
-        }
-
-        @media (max-width: 700px) {
-            .main-footer {
-                flex-direction: column-reverse;
-            }
-        }
-    </style>
-    <style>
-        .main-header {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            height: 60px;
-            padding: 0 calc(25% - 150px);
-            z-index: 100;
-            box-sizing: border-box;
-            pointer-events: none;
-        }
-
-        .main-header.float {
-            position: fixed;
-        }
-
-        .main-header-bar {
-            position: relative;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: flex-end;
-            height: 100%;
-        }
-
-        .main-header-item {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 6ch;
-            height: 36px;
-            padding: 0 18px;
-            border-radius: 18px;
-            font-size: 15px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            text-decoration: none;
-            text-transform: uppercase;
-            color: #fff;
-            backdrop-filter: blur(8px);
-            background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
-            background-repeat: no-repeat;
-            background-size: 220% 100%;
-            background-position: 115%;
-            pointer-events: all;
-            transition: background-position 0.2s var(--ease);
-        }
-
-        .main-header-item:hover {
-            background-image: linear-gradient(60deg,
-                    #fff2 50%,
-                    #fff 50%,
-                    #fff 60%,
-                    transparent 60%);
-            background-position: 0%;
-        }
-
-        .main-header-item.select {
-            background: #fff2;
-        }
-
-        .main-header-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            image-rendering: pixelated;
-            object-fit: cover;
-            object-position: 0 0;
-            filter: invert(1);
-            backdrop-filter: blur(8px) invert(1);
-            pointer-events: all;
-        }
-
-        .main-header-icon:hover {
-            object-position: 100% 0;
-        }
-
-        @media (max-width: 450px) {
-            .main-header-icon {
-                display: none;
-            }
-        }
-
-        .main-header-indicator {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            left: 50%;
-            top: calc(100% + 12px);
-            transform: translate(-50%, -50%);
-            /* border acts as extended touch area */
-            border: solid 6mm transparent;
-            border-left-width: 45vw;
-            border-right-width: 45vw;
-            border-radius: 50%;
-            background: #fff;
-            background-clip: padding-box;
-            opacity: 0;
-            transition: opacity 50ms;
-        }
-
-        .main-header.hidden .main-header-indicator {
-            opacity: 0.8;
-            pointer-events: all;
-        }
-    </style>
-    <style>
-        .blog-page {
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .content {
-            padding: 60px 18px;
-            width: 100%;
-            max-width: 700px;
-            font-family: var(--reading-font, sans-serif);
-            font-size: 16px;
-            line-height: 2.2;
-            letter-spacing: 0.02em;
-            color: #ddd;
-            box-sizing: border-box;
-        }
-
-        .markdown>h1,
-        .markdown>h2,
-        .markdown>h3,
-        .markdown>h4,
-        .markdown>h5,
-        .markdown>h6 {
-            font-family: var(--default-font, monospace);
-            font-weight: lighter;
-            font-style: italic;
-            line-height: 1.6;
-            letter-spacing: 0.04em;
-            margin: 48px 0 36px;
-        }
-
-        .markdown>h1 {
-            text-align: center;
-            font-size: 200%;
-        }
-
-        .markdown>h2 {
-            font-size: 150%;
-        }
-
-        .markdown>h3,
-        .markdown>h4,
-        .markdown>h5,
-        .markdown>h6 {
-            font-size: 120%;
-            font-weight: bold;
-        }
-
-        .markdown>p {
-            margin: 36px 0;
-        }
-
-        .markdown>hr {
-            width: 36px;
-            margin: 90px auto;
-            border: solid 1.5px #ccc;
-            background: #ccc;
-            border-radius: 3px;
-        }
-
-        .markdown code:not([class]):not([class]) {
-            display: inline-block;
-            padding: 0 6px;
-            border-radius: 6px;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            background: var(--card-clr);
-        }
-
-        .markdown>pre:not([class])>code:not([class]) {
-            display: block;
-            padding: 18px;
-            border-radius: 18px;
-            line-height: 1.6;
-            font-size: 15px;
-            overflow-x: auto;
-        }
-
-        .markdown>blockquote {
-            position: relative;
-            margin: 0;
-            padding: 18px 24px;
-            border-radius: 18px;
-            border: solid 1px var(--clr0);
-            font-size: 21px;
-        }
-
-        .markdown>blockquote::before {
-            content: "";
-            position: absolute;
-            right: 100%;
-            top: 0;
-            height: 24px;
-            width: 24px;
-            border-bottom: solid 1px var(--clr0);
-            box-sizing: border-box;
-        }
-
-        .markdown>blockquote::after {
-            content: "";
-            position: absolute;
-            right: 100%;
-            top: 24px;
-            bottom: 18px;
-            width: 24px;
-            border-top-right-radius: 24px;
-            border: solid var(--clr0);
-            border-width: 1px 1px 0 0;
-            box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
-            box-sizing: border-box;
-        }
-
-        .markdown>blockquote> :first-child {
-            margin-top: 0;
-        }
-
-        .markdown>blockquote> :last-child {
-            margin-bottom: 0;
-        }
-
-        .markdown>blockquote cite {
-            display: block;
-            margin-top: 12px;
-            font-size: 15px;
-            font-style: inherit;
-        }
-
-        .markdown>blockquote cite::before {
-            content: "—";
-        }
-
-        .markdown>iframe,
-        .markdown>p>iframe {
-            max-width: calc(100vw - 18px);
-            border: none;
-            border-radius: 18px;
-            background: #fff;
-        }
-
-        .markdown .center {
-            text-align: center;
-        }
-
-        .markdown .center-flex {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
-        .markdown .bleed {
-            position: relative;
-            left: 50%;
-            width: 100vh;
-            max-width: max(min(100vw, 800px), 80vw);
-            transform: translateX(-50%);
-        }
-
-        /* todo: convert to component <caption>, reuse across <blog-media> */
-        .markdown .caption {
-            display: block;
-            font-size: 15px;
-        }
-    </style>
-    <style>
-        .text-link {
-            color: var(--clr0-light, #fff);
-        }
-
-        .text-link:visited {
-            color: var(--clr0, #fff);
-        }
-    </style>
-    <style>
         /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
+
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
+
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
+
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
+            }
+          }
+
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
+
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
+
+              const paletteIndex = Math.floor(paletteLength * p);
+
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
+
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
+            }
+          }
+        }
+
+        getT() {
+          const t = (Date.now() * 30) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
+        }
+      }
+    );
+
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
+
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
+
+      --text-clr: #fff;
+      --text2-clr: #999;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <style>
+    .main-footer-link {
+      text-decoration: none;
+    }
+
+    .main-footer-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 220x;
+    }
+
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
+
+    .main-footer-nav {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    .main-footer-content-part {
+      z-index: 1;
+    }
+
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
+
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
+
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
+
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
+
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .content {
+      padding: 60px 18px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown>h1,
+    .markdown>h2,
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 48px 0 36px;
+    }
+
+    .markdown>h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown>h2 {
+      font-size: 150%;
+    }
+
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    .markdown>p {
+      margin: 36px 0;
+    }
+
+    .markdown>table {
+      border-collapse: collapse;
+      background-color: var(--card-clr);
+      border-radius: 12px;
+    }
+
+    .markdown>table th,
+    .markdown>table td {
+      text-align: start;
+      padding: 9px 12px;
+      padding-inline-end: 18px;
+      border-bottom: solid 1px #444;
+    }
+
+    .markdown>table>tbody>tr:last-child>td {
+      border-bottom: none;
+    }
+
+    .markdown>hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code:not([class]):not([class]) {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      background: var(--card-clr);
+    }
+
+    .markdown>pre:not([class])>code:not([class]) {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      font-size: 15px;
+      overflow-x: auto;
+    }
+
+    .markdown>blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown>blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown>blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown>blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown>blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown>iframe,
+    .markdown>p>iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+    .markdown .bleed {
+      position: relative;
+      left: 50%;
+      width: 100vh;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
+
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    /**
  * Modified by Kalabasa.
  * Based on:
  * a11y-dark theme for JavaScript, CSS, and HTML
@@ -471,343 +694,342 @@
  * @author ericwbailey
  */
 
-        .code-block .token.comment,
-        .code-block .token.prolog,
-        .code-block .token.doctype,
-        .code-block .token.cdata {
-            color: #628b9e;
-            font-style: italic;
-        }
+    .code-block .token.comment,
+    .code-block .token.prolog,
+    .code-block .token.doctype,
+    .code-block .token.cdata {
+      color: #628b9e;
+      font-style: italic;
+    }
 
-        .code-block .token.punctuation {
-            color: #fefefe;
-        }
+    .code-block .token.punctuation {
+      color: #fefefe;
+    }
 
-        .code-block .token.property,
-        .code-block .token.tag,
-        .code-block .token.constant,
-        .code-block .token.symbol,
-        .code-block .token.deleted {
-            color: #ffa07a;
-        }
+    .code-block .token.property,
+    .code-block .token.tag,
+    .code-block .token.constant,
+    .code-block .token.symbol,
+    .code-block .token.deleted {
+      color: #ffa07a;
+    }
 
-        .code-block .token.boolean,
-        .code-block .token.number {
-            color: #00e0e0;
-        }
+    .code-block .token.boolean,
+    .code-block .token.number {
+      color: #00e0e0;
+    }
 
-        .code-block .token.selector,
-        .code-block .token.attr-name,
-        .code-block .token.string,
-        .code-block .token.char,
-        .code-block .token.builtin,
-        .code-block .token.inserted {
-            color: #abe338;
-        }
+    .code-block .token.selector,
+    .code-block .token.attr-name,
+    .code-block .token.string,
+    .code-block .token.char,
+    .code-block .token.builtin,
+    .code-block .token.inserted {
+      color: #abe338;
+    }
 
-        .code-block .token.operator,
-        .code-block .token.entity,
-        .code-block .token.url,
-        .code-block .token.variable {
-            color: #00e0e0;
-        }
+    .code-block .token.operator,
+    .code-block .token.entity,
+    .code-block .token.url,
+    .code-block .token.variable {
+      color: #00e0e0;
+    }
 
-        .code-block .token.atrule,
-        .code-block .token.attr-value,
-        .code-block .token.function {
-            color: #ffd700;
-        }
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function {
+      color: #ffd700;
+    }
 
-        .code-block .token.keyword {
-            color: #00e0e0;
-        }
+    .code-block .token.keyword {
+      color: #00e0e0;
+    }
 
-        .code-block .token.regex,
-        .code-block .token.important {
-            color: #ffd700;
-        }
+    .code-block .token.regex,
+    .code-block .token.important {
+      color: #ffd700;
+    }
 
-        .code-block .token.important,
-        .code-block .token.bold {
-            font-weight: bold;
-        }
+    .code-block .token.important,
+    .code-block .token.bold {
+      font-weight: bold;
+    }
 
-        .code-block .token.italic {
-            font-style: italic;
-        }
+    .code-block .token.italic {
+      font-style: italic;
+    }
 
-        .code-block .token.entity {
-            cursor: help;
-        }
+    .code-block .token.entity {
+      cursor: help;
+    }
 
-        @media screen and (-ms-high-contrast: active) {
-            .code-block .token.important {
-                background: highlight;
-                color: window;
-                font-weight: normal;
-            }
+    @media screen and (-ms-high-contrast: active) {
+      .code-block .token.important {
+        background: highlight;
+        color: window;
+        font-weight: normal;
+      }
 
-            .code-block .token.atrule,
-            .code-block .token.attr-value,
-            .code-block .token.function,
-            .code-block .token.keyword,
-            .code-block .token.operator,
-            .code-block .token.selector {
-                font-weight: bold;
-            }
+      .code-block .token.atrule,
+      .code-block .token.attr-value,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.selector {
+        font-weight: bold;
+      }
 
-            .code-block .token.attr-value,
-            .code-block .token.comment,
-            .code-block .token.doctype,
-            .code-block .token.function,
-            .code-block .token.keyword,
-            .code-block .token.operator,
-            .code-block .token.property,
-            .code-block .token.string {
-                color: highlight;
-            }
+      .code-block .token.attr-value,
+      .code-block .token.comment,
+      .code-block .token.doctype,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.property,
+      .code-block .token.string {
+        color: highlight;
+      }
 
-            .code-block .token.attr-value,
-            .code-block .token.url {
-                font-weight: normal;
-            }
-        }
-    </style>
-    <style>
-        .code-block-code {
-            display: block;
-            padding: 18px;
-            border-radius: 18px;
-            font-family: var(--default-font, monospace);
-            font-size: 15px;
-            line-height: 1.6;
-            background: var(--card-clr);
-            white-space: pre;
-            overflow-x: auto;
-        }
-    </style>
-    <style>
-        .box-note {
-            display: block;
-            padding: 12px 18px;
-            border-radius: 12px;
-            border: solid 2px var(--clr0-dark);
-            box-sizing: border-box;
-        }
-    </style>
-    <style>
-        .blog-media {
-            position: relative;
-            text-align: center;
-            /* external margin because it’s expected to be in an article */
-            margin: 36px 0;
-        }
+      .code-block .token.attr-value,
+      .code-block .token.url {
+        font-weight: normal;
+      }
+    }
+  </style>
+  <style>
+    .code-block-code {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      line-height: 1.6;
+      background: var(--card-clr);
+      white-space: pre;
+      overflow-x: auto;
+    }
+  </style>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .blog-media {
+      position: relative;
+      text-align: center;
+      /* external margin because it’s expected to be in an article */
+      margin: 36px 0;
+    }
 
-        .blog-media-bleed {
-            margin: 90px 0;
-            max-height: 80vh;
-        }
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
 
-        .blog-media-element {
-            display: inline-block;
-            max-width: 100%;
-            max-height: 80vh;
-            border-radius: 18px;
-            box-sizing: border-box;
-        }
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+      box-sizing: border-box;
+    }
 
-        .blog-media-bleed .blog-media-element {
-            position: relative;
-            left: 50%;
-            max-width: max(min(100vw, 800px), 80vw);
-            transform: translateX(-50%);
-        }
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
 
-        .blog-media-windowed .blog-media-element {
-            border-radius: 0;
-        }
+    .blog-media-windowed .blog-media-element {
+      border-radius: 0;
+    }
 
-        .blog-media-caption {
-            display: block;
-            font-size: 15px;
-        }
-    </style>
-    <style>
-        .blog-post-info {
-            margin: 24px 0 0;
-            font-family: var(--default-font);
-            font-size: 12px;
-            font-weight: bold;
-            text-align: center;
-            color: var(--text2-clr);
-        }
-    </style>
-    <style>
-        .text-with-bg-span {
-            display: inline;
-            margin: 0;
-            padding: 0.7em;
-            padding: 0.35lh;
-            border-radius: 18px;
-            box-decoration-break: clone;
-            -webkit-box-decoration-break: clone;
-            font: inherit;
-            background: var(--text-with-bg-color);
-        }
-    </style>
-    <style>
-        .blog-header {
-            isolation: isolate;
-            margin-top: 60px;
-            position: relative;
-            left: 50%;
-            height: 600px;
-            width: max(800px, 60vw);
-            transform: translateX(-50%);
-            box-sizing: border-box;
-        }
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .blog-post-info {
+      margin: 24px 0 0;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+  </style>
+  <style>
+    .text-with-bg-span {
+      display: inline;
+      margin: 0;
+      padding: 0.7em;
+      padding: 0.35lh;
+      border-radius: 18px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      font: inherit;
+      background: var(--text-with-bg-color);
+    }
+  </style>
+  <style>
+    .blog-header {
+      isolation: isolate;
+      margin-top: 60px;
+      position: relative;
+      left: 50%;
+      height: 600px;
+      width: max(800px, 60vw);
+      transform: translateX(-50%);
+      box-sizing: border-box;
+    }
 
-        .blog-header-title {
-            position: relative;
-            max-width: 800px;
-            font-family: var(--default-font);
-            font-size: 36px;
-            font-weight: bold;
-            font-style: italic;
-            text-align: left;
-            z-index: 2;
-        }
+    .blog-header-title {
+      position: relative;
+      max-width: 800px;
+      font-family: var(--default-font);
+      font-size: 36px;
+      font-weight: bold;
+      font-style: italic;
+      text-align: left;
+      z-index: 2;
+    }
 
-        .blog-header-title-inner {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-        }
+    .blog-header-title-inner {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
 
-        /* Wrap lines in an angle */
-        .blog-header-title::before {
-            content: "";
-            width: 50%;
-            height: 600px;
-            float: right;
-            shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
-        }
+    /* Wrap lines in an angle */
+    .blog-header-title::before {
+      content: "";
+      width: 50%;
+      height: 600px;
+      float: right;
+      shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
 
-        .blog-header-hero {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 18px;
-            background: cyan;
-            z-index: -1;
-        }
+    .blog-header-hero {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      background: cyan;
+      z-index: -1;
+    }
 
-        .blog-header-decor {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            fill: var(--bg-clr);
-            z-index: 1;
-        }
+    .blog-header-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      fill: var(--bg-clr);
+      z-index: 1;
+    }
 
-        @media (max-width: 800px) {
-            .blog-header {
-                width: 100vw;
-                width: 100svw;
-                height: 400px;
-                padding-right: 36px;
-            }
+    @media (max-width: 800px) {
+      .blog-header {
+        width: 100vw;
+        width: 100svw;
+        height: 400px;
+        padding-right: 36px;
+      }
 
-            .blog-header-title {
-                font-size: clamp(24px, 20px + 2vw, 36px);
-            }
+      .blog-header-title {
+        font-size: clamp(24px, 20px + 2vw, 36px);
+      }
 
-            .blog-header-title::before {
-                content: none;
-            }
-        }
-    </style>
-    <script src="/scripts/common.js"></script>
+      .blog-header-title::before {
+        content: none;
+      }
+    }
+  </style>
 </head>
 
 
 <body>
 
-    <div class="page-wrapper">
-        <header class="main-header">
-            <div class="main-header-bar">
-                <a href="/" class="main-header-item ">Home</a>
-                <a href="/wares/" class="main-header-item ">Wares</a>
-                <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
-                <a href="/art/" class="main-header-item ">Art</a>
-                <a href="/notes/" class="main-header-item select">Notes</a>
-                <div class="main-header-indicator"></div>
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/notes/" class="main-header-item select">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  Simple image recognition with vanilla JavaScript
+                </h1>
+              </div>
+              <img srcset="/notes/simple-image-recognition-vanilla-js/hero_800.generated.png 800w,/notes/simple-image-recognition-vanilla-js/hero_1020.generated.png 1020w,/notes/simple-image-recognition-vanilla-js/hero_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/simple-image-recognition-vanilla-js/hero.png" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
             </div>
-        </header>
-        <div class="page-wrapper-content">
 
-            <div class="blog-page">
-                <div class="content">
+            <div class="blog-post-info">
+              25 Feb 2023 · 7 min read
+            </div>
 
-                    <!-- prettier-ignore -->
-                    <div class="markdown">
-                        <div class="blog-header">
-                            <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
-                                <h1 class="text-with-bg-span blog-header-title-inner">
-                                    Simple image recognition with vanilla JavaScript
-                                </h1>
-                            </div>
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/hero_800.generated.png 800w,/notes/simple-image-recognition-vanilla-js/hero_1020.generated.png 1020w,/notes/simple-image-recognition-vanilla-js/hero_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/simple-image-recognition-vanilla-js/hero.png" alt="" spec="100% [800) 80%">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
-                                <path></path>
-                            </svg>
-                        </div>
+            <p>Hi there! I want to share my experience with an <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>image recognition</strong></a> problem I faced in an art project (It was an <a target="_self" class="text-link " href="/wares/dimensions/">augmented reality art project</a>).</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/image-recognition_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Image recognition illustration" src="/notes/simple-image-recognition-vanilla-js/image-recognition.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #48c8d8"><span class="blog-media-caption">Image recognition problems come in different forms.</span>
+            </div>
 
-                        <div class="blog-post-info">
-                            25 Feb 2023 · 7 min read
-                        </div>
+            <p>As part of the project, I needed a mobile app to be able to recognize a particular art piece. Then it can overlay virtual effects onto the real-world image. The goal was to have a unique and engaging experience!</p>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Demo video">
+                <source src="/notes/simple-image-recognition-vanilla-js/demo.mp4">
+                <a href="/notes/simple-image-recognition-vanilla-js/demo.mp4">Demo video</a>
+              </video><span class="blog-media-caption">The app should recognize when the target art piece has been aligned.</span>
+            </div>
 
-                        <p>Hi there! I want to share my experience with an <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Computer_vision#Recognition"><strong>image recognition</strong></a> problem I faced in an art project (It was an <a target="_self" class="text-link " href="/wares/dimensions/">augmented reality art project</a>).</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/image-recognition_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Image recognition illustration" src="/notes/simple-image-recognition-vanilla-js/image-recognition.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #48c8d8"><span class="blog-media-caption">Image recognition problems come in different forms.</span>
-                        </div>
+            <p>There are various solutions available for tackling this problem, ranging from basic histogram matching to advanced convolutional neural networks. There are even libraries that can provide a solution right out of the box! But I decided to take on the challenge of developing my own solution instead of relying on existing tools. Not only did this allow me to learn something new, but it also let me have some fun approaching the problem!</p>
+            <p><span class="box-note "><strong>TL;DR</strong> - It converts the camera image into a feature vector and then compares that against a predefined target reference.</span></p>
+            <h2 id="color-and-illumination-theory">Color and illumination theory</h2>
+            <p>To begin solving the problem, we first need to understand the mechanics. It all starts by capturing an image from the camera.</p>
+            <p>Now, it’s important to keep in mind that the camera’s perception of color can be influenced by various factors. Factors include the lighting conditions in the room or the quality of the camera itself. We need to account for these variables in our solution.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/tc-vs-pc_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/tc-vs-pc.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8"><span class="blog-media-caption">True color (TC) vs perceived color (PC)</span>
+            </div>
 
-                        <p>As part of the project, I needed a mobile app to be able to recognize a particular art piece. Then it can overlay virtual effects onto the real-world image. The goal was to have a unique and engaging experience!</p>
-                        <div class="blog-media blog-media-default">
-                            <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Demo video">
-                                <source src="/notes/simple-image-recognition-vanilla-js/demo.mp4">
-                                <a href="/notes/simple-image-recognition-vanilla-js/demo.mp4">Demo video</a>
-                            </video><span class="blog-media-caption">The app should recognize when the target art piece has been aligned.</span>
-                        </div>
-
-                        <p>There are various solutions available for tackling this problem, ranging from basic histogram matching to advanced convolutional neural networks. There are even libraries that can provide a solution right out of the box! But I decided to take on the challenge of developing my own solution instead of relying on existing tools. Not only did this allow me to learn something new, but it also let me have some fun approaching the problem!</p>
-                        <p><span class="box-note "><strong>TL;DR</strong> - It converts the camera image into a feature vector and then compares that against a predefined target reference.</span></p>
-                        <h2 id="color-and-illumination-theory">Color and illumination theory</h2>
-                        <p>To begin solving the problem, we first need to understand the mechanics. It all starts by capturing an image from the camera.</p>
-                        <p>Now, it’s important to keep in mind that the camera’s perception of color can be influenced by various factors. Factors include the lighting conditions in the room or the quality of the camera itself. We need to account for these variables in our solution.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/tc-vs-pc_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/tc-vs-pc.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8"><span class="blog-media-caption">True color (TC) vs perceived color (PC)</span>
-                        </div>
-
-                        <p>Simply comparing raw pixel data against the target image would likely fail due to the unknown environmental factors. One way of addressing this is to massage the input to isolate the true color from the environmental factors.</p>
-                        <p>For this, I created a graphical model for the perceived color. It’s roughly based on CGI illumination models. This was the key to making the image recognition algorithm more robust.</p>
-                        <p>Here’s the equation:</p>
-                        <pre><code>PC = TC * a + b
+            <p>Simply comparing raw pixel data against the target image would likely fail due to the unknown environmental factors. One way of addressing this is to massage the input to isolate the true color from the environmental factors.</p>
+            <p>For this, I created a graphical model for the perceived color. It’s roughly based on CGI illumination models. This was the key to making the image recognition algorithm more robust.</p>
+            <p>Here’s the equation:</p>
+            <pre><code>PC = TC * a + b
 </code></pre>
-                        <ul>
-                            <li><code>PC</code> is the color perceived from the camera sensor.</li>
-                            <li><code>TC</code> (unknown variable) is the true color of the material.</li>
-                            <li><code>a</code> and <code>b</code> (unknown variables) are parameters that together describe the vague real-world lighting variables like white balance, environmental illumination, camera sensor quality, and other factors.</li>
-                        </ul>
-                        <p>The algorithm begins by calculating the average colors of three predetermined regions within the image. While these regions are specific to my art piece, you can adapt the algorithm to work with any configuration of (at least) three regions.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo2_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo2.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8"><span class="blog-media-caption">The regions were specifically chosen to capture key features.</span>
-                        </div>
+            <ul>
+              <li><code>PC</code> is the color perceived from the camera sensor.</li>
+              <li><code>TC</code> (unknown variable) is the true color of the material.</li>
+              <li><code>a</code> and <code>b</code> (unknown variables) are parameters that together describe the vague real-world lighting variables like white balance, environmental illumination, camera sensor quality, and other factors.</li>
+            </ul>
+            <p>The algorithm begins by calculating the average colors of three predetermined regions within the image. While these regions are specific to my art piece, you can adapt the algorithm to work with any configuration of (at least) three regions.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo2_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo2.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8"><span class="blog-media-caption">The regions were specifically chosen to capture key features.</span>
+            </div>
 
-                        <p>Let’s call the three colors <code>PC1</code>, <code>PC2</code>, and <code>PC3</code>.</p>
-                        <p>To get the average, you can either (1) read over the pixels in those regions and average them, or (2) downsample the image and directly use pixel colors (typically faster). For this case, I used the former, which is reading over the pixels within each region to calculate the average color.</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">// &lt;video&gt; element streams the camera, not shown here how</span>
+            <p>Let’s call the three colors <code>PC1</code>, <code>PC2</code>, and <code>PC3</code>.</p>
+            <p>To get the average, you can either (1) read over the pixels in those regions and average them, or (2) downsample the image and directly use pixel colors (typically faster). For this case, I used the former, which is reading over the pixels within each region to calculate the average color.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">// &lt;video&gt; element streams the camera, not shown here how</span>
 video <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">getElementById</span><span class="token punctuation">(</span><span class="token string">'video'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token comment">// &lt;canvas&gt; to hold a video frame for reading pixels</span>
 canvas <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">getElementById</span><span class="token punctuation">(</span><span class="token string">'canvas'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
@@ -844,14 +1066,14 @@ canvasContext<span class="token punctuation">.</span><span class="token function
   <span class="token punctuation">}</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>Refer to these MDN articles <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas">Manipulating_video_using_canvas</a> and <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/ImageData">ImageData</a> for details about the Web APIs.</p>
-                        <p>After getting the colors, we can start processing them. First, subtract the top <code>PC1</code> and middle <code>PC2</code> colors, as well as the middle <code>PC2</code> and bottom <code>PC3</code> - like a 1-dimensional convolution. The order of subtraction doesn’t really matter. This produces two difference colors.</p>
-                        <p>Let’s call the resulting colors <code>D1</code> and <code>D2</code>:</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo3_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo3.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
-                        </div>
+            <p>Refer to these MDN articles <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Manipulating_video_using_canvas">Manipulating_video_using_canvas</a> and <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/ImageData">ImageData</a> for details about the Web APIs.</p>
+            <p>After getting the colors, we can start processing them. First, subtract the top <code>PC1</code> and middle <code>PC2</code> colors, as well as the middle <code>PC2</code> and bottom <code>PC3</code> - like a 1-dimensional convolution. The order of subtraction doesn’t really matter. This produces two difference colors.</p>
+            <p>Let’s call the resulting colors <code>D1</code> and <code>D2</code>:</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo3_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo3.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
+            </div>
 
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">// To subtract two colors, we subtract each RGB component</span>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">// To subtract two colors, we subtract each RGB component</span>
 <span class="token keyword">const</span> d1 <span class="token operator">=</span> <span class="token punctuation">{</span>
   <span class="token literal-property property">r</span><span class="token operator">:</span> pc1<span class="token punctuation">.</span>r <span class="token operator">-</span> pc2<span class="token punctuation">.</span>r<span class="token punctuation">,</span>
   <span class="token literal-property property">g</span><span class="token operator">:</span> pc1<span class="token punctuation">.</span>g <span class="token operator">-</span> pc2<span class="token punctuation">.</span>g<span class="token punctuation">,</span>
@@ -863,27 +1085,27 @@ canvasContext<span class="token punctuation">.</span><span class="token function
   <span class="token literal-property property">b</span><span class="token operator">:</span> pc2<span class="token punctuation">.</span>b <span class="token operator">-</span> pc3<span class="token punctuation">.</span>b
 <span class="token punctuation">}</span><span class="token punctuation">;</span></code></pre>
 
-                        <p>Subtracting two perceived colors eliminates the unknown lighting variable <code>b</code>, as demonstrated in the following derivation:</p>
-                        <pre><code>D1 = PC2 - PC1
+            <p>Subtracting two perceived colors eliminates the unknown lighting variable <code>b</code>, as demonstrated in the following derivation:</p>
+            <pre><code>D1 = PC2 - PC1
   = (TC2 * a + b) - (TC1 * a + b)
   = TC2 * a - TC1 * a
   = (TC2 - TC1) * a
 </code></pre>
-                        <p>The resulting <code>D1</code> and <code>D2</code> are actually proportional to the true colors. But, they’re still both influenced by the lighting factor <code>a</code>:</p>
-                        <pre><code>D1 = (TC2 - TC1) * a
+            <p>The resulting <code>D1</code> and <code>D2</code> are actually proportional to the true colors. But, they’re still both influenced by the lighting factor <code>a</code>:</p>
+            <pre><code>D1 = (TC2 - TC1) * a
 D2 = (TC3 - TC2) * a
 </code></pre>
-                        <p>To remove the remaining lighting variable <code>a</code>, we can "normalize" the values. That is, divide each by the largest value among them.</p>
-                        <pre><code>N1 = D1 / max(|D1|, |D2|)
+            <p>To remove the remaining lighting variable <code>a</code>, we can "normalize" the values. That is, divide each by the largest value among them.</p>
+            <pre><code>N1 = D1 / max(|D1|, |D2|)
 N2 = D2 / max(|D1|, |D2|)
 </code></pre>
-                        <p>The resulting values <code>N1</code> and <code>N2</code> represent normalized <code>D1</code> and <code>D2</code> respectively.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo4_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo4.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
-                        </div>
+            <p>The resulting values <code>N1</code> and <code>N2</code> represent normalized <code>D1</code> and <code>D2</code> respectively.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo4_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo4.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
+            </div>
 
-                        <p>And here’s the code for that:</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">// Get 'max(|D1|, |D2|)'</span>
+            <p>And here’s the code for that:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">// Get 'max(|D1|, |D2|)'</span>
 <span class="token keyword">const</span> d1Magnitude <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>d1<span class="token punctuation">.</span>r<span class="token punctuation">,</span> d1<span class="token punctuation">.</span>g<span class="token punctuation">,</span> d1<span class="token punctuation">.</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token keyword">const</span> d2Magnitude <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>d2<span class="token punctuation">.</span>r<span class="token punctuation">,</span> d2<span class="token punctuation">.</span>g<span class="token punctuation">,</span> d2<span class="token punctuation">.</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
@@ -901,25 +1123,25 @@ N2 = D2 / max(|D1|, |D2|)
   <span class="token literal-property property">b</span><span class="token operator">:</span> d2<span class="token punctuation">.</span>b <span class="token operator">/</span> max<span class="token punctuation">,</span>
 <span class="token punctuation">}</span><span class="token punctuation">;</span></code></pre>
 
-                        <p>I’m not showing the full derivation here, but normalizing will get rid of the common factor <code>a</code>. The handwavy explanation is, if you divide two values having a common factor, that factor gets canceled out.</p>
-                        <p>Thus, if we expand all the terms:</p>
-                        <pre><code>N1 = (TC2 - TC1) / max(TC2 - TC1, TC3 - TC2)
+            <p>I’m not showing the full derivation here, but normalizing will get rid of the common factor <code>a</code>. The handwavy explanation is, if you divide two values having a common factor, that factor gets canceled out.</p>
+            <p>Thus, if we expand all the terms:</p>
+            <pre><code>N1 = (TC2 - TC1) / max(TC2 - TC1, TC3 - TC2)
 N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
 </code></pre>
-                        <p>The result is that the final values <code>N1</code> and <code>N2</code> are derived purely from true color and are not affected by lighting parameters. <small>According to the model anyway.</small></p>
-                        <p>This whole preprocessing ensures that the algorithm is robust across different lighting conditions and phone cameras, as it only uses true color data.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_tester_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/simple-image-recognition-vanilla-js/dimensions_tester.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #d8c8b8"><span class="blog-media-caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized by the algorithm.</span>
-                        </div>
+            <p>The result is that the final values <code>N1</code> and <code>N2</code> are derived purely from true color and are not affected by lighting parameters. <small>According to the model anyway.</small></p>
+            <p>This whole preprocessing ensures that the algorithm is robust across different lighting conditions and phone cameras, as it only uses true color data.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_tester_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/simple-image-recognition-vanilla-js/dimensions_tester.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #d8c8b8"><span class="blog-media-caption">Actual test piece used in development. Even this badly-printed image in poor lighting can be recognized by the algorithm.</span>
+            </div>
 
-                        <h2 id="feature-vectors">Feature vectors</h2>
-                        <p>At this point, we can start looking at individual RGB values instead of thinking about "colors". You see, colors are just numbers representing red, green, and blue values.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/rgb_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/simple-image-recognition-vanilla-js/rgb.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #282828"><span class="blog-media-caption">A color is composed of RGB values</span>
-                        </div>
+            <h2 id="feature-vectors">Feature vectors</h2>
+            <p>At this point, we can start looking at individual RGB values instead of thinking about "colors". You see, colors are just numbers representing red, green, and blue values.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/rgb_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/simple-image-recognition-vanilla-js/rgb.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #282828"><span class="blog-media-caption">A color is composed of RGB values</span>
+            </div>
 
-                        <p>From the normalized colors <code>N1</code> and <code>N2</code>, we can obtain six numerical values (three from each). These values can be rolled into one combined series of numbers, which we’ll call the <strong>feature vector</strong> of the image. The feature vector can be thought of as a numerical representation of certain characteristics of the image.</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> featureVector <span class="token operator">=</span> <span class="token punctuation">[</span>
+            <p>From the normalized colors <code>N1</code> and <code>N2</code>, we can obtain six numerical values (three from each). These values can be rolled into one combined series of numbers, which we’ll call the <strong>feature vector</strong> of the image. The feature vector can be thought of as a numerical representation of certain characteristics of the image.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> featureVector <span class="token operator">=</span> <span class="token punctuation">[</span>
   n1<span class="token punctuation">.</span>r<span class="token punctuation">,</span>
   n1<span class="token punctuation">.</span>g<span class="token punctuation">,</span>
   n1<span class="token punctuation">.</span>b<span class="token punctuation">,</span>
@@ -928,16 +1150,16 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
   n2<span class="token punctuation">.</span>b<span class="token punctuation">,</span>
 <span class="token punctuation">]</span><span class="token punctuation">;</span></code></pre>
 
-                        <p>In short, the feature vector <em>summarizes</em> the image.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo5_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo5.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
-                        </div>
+            <p>In short, the feature vector <em>summarizes</em> the image.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo5_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo5.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
+            </div>
 
-                        <p>By turning colors into plain numbers, we say goodbye to subjective perceptions of color and enter the objective and computable realm of mathematics.</p>
-                        <p>This reduces the problem of comparing image similarity into a simple numerical comparison. If the numbers match, then the images match!</p>
-                        <p>Now, we just need the feature vector of the <em>target image</em> to compare with. We can precompute the same normalization process on the target image and hardcode the resulting feature vector in the app.</p>
-                        <p>I also got a couple more samples from real photos of the print for good measure.</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token comment">// (original + real sample 1 + real sample 2) / 3</span>
+            <p>By turning colors into plain numbers, we say goodbye to subjective perceptions of color and enter the objective and computable realm of mathematics.</p>
+            <p>This reduces the problem of comparing image similarity into a simple numerical comparison. If the numbers match, then the images match!</p>
+            <p>Now, we just need the feature vector of the <em>target image</em> to compare with. We can precompute the same normalization process on the target image and hardcode the resulting feature vector in the app.</p>
+            <p>I also got a couple more samples from real photos of the print for good measure.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">// (original + real sample 1 + real sample 2) / 3</span>
 <span class="token keyword">const</span> targetFeatureVector <span class="token operator">=</span> <span class="token punctuation">[</span>
   <span class="token punctuation">(</span>
     <span class="token operator">-</span><span class="token number">0.3593924173784146</span> <span class="token operator">+</span>
@@ -971,13 +1193,13 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
   <span class="token punctuation">)</span> <span class="token operator">/</span> <span class="token number">3</span>
 <span class="token punctuation">]</span><span class="token punctuation">;</span></code></pre>
 
-                        <p>Now that we’ve got the feature vectors for both the camera image and target image, we can compare them apples to apples.</p>
-                        <div class="blog-media blog-media-default">
-                            <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo6_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo6.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
-                        </div>
+            <p>Now that we’ve got the feature vectors for both the camera image and target image, we can compare them apples to apples.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo6_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo6.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
+            </div>
 
-                        <p>We can use Euclidean distance as a measure of vector similarity. Remember, vector similarity is our proxy for image similarity!</p>
-                        <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> vectorDistance <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>
+            <p>We can use Euclidean distance as a measure of vector similarity. Remember, vector similarity is our proxy for image similarity!</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> vectorDistance <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>
   <span class="token operator">...</span>featureVector<span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span>
     <span class="token punctuation">(</span><span class="token parameter">value<span class="token punctuation">,</span> index</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>
         targetFeatureVector<span class="token punctuation">[</span>index<span class="token punctuation">]</span> <span class="token operator">-</span> value
@@ -988,189 +1210,104 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
   <span class="token comment">// Image recognized!</span>
 <span class="token punctuation">}</span></code></pre>
 
-                        <p>If the distance between the two vectors is below a certain threshold, then it’s a match!</p>
-                        <p>Voilà! That’s the algorithm. You take the input image, turn it into a feature vector, and compare it to a precomputed target vector. The whole image detection code totals less than 200 lines and requires no external library! This algorithm was integrated into the AR app that came along with the art exhibition.</p>
-                        <h2 id="conclusion">Conclusion</h2>
-                        <p>So, that’s the image detection algorithm I developed for my AR art app. It’s pretty straightforward and efficient, with just a few lines of code. It’s also fast enough to run in real-time on a phone camera feed, which is nice.</p>
-                        <p>Although it was designed for the specific images I had, you can customize it to suit your needs.</p>
-                        <p>Now, the algorithm does have a few limitations. It doesn’t take into account the positioning of the input image, so it has to be in the exact orientation as the target image. Also, extreme lighting conditions, irregular shadows, shiny surfaces, and the like might affect its accuracy.</p>
-                        <p>Overall, I’m pretty happy with how it turned out. While it’s not a general-purpose algorithm, it solved the problem for my art project perfectly. 😄</p>
-                        <h3 id="demo">Demo!</h3>
-                        <p>Want to try out the algorithm? Open this page on a desktop, and then use your phone to scan the QR code in the piece.</p>
-                        <div class="blog-media blog-media-bleed">
-                            <img srcset="/wares/dimensions/media/dimensions_finalset_800.generated.jpg 800w,/wares/dimensions/media/dimensions_finalset_1020.generated.jpg 1020w,/wares/dimensions/media/dimensions_finalset_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-media-element" alt="" src="/wares/dimensions/media/dimensions_finalset.jpg" spec="100% [800) 80% [1750) 1400" loading="lazy" width="400%" height="" style="aspect-ratio: 2.296875; background: #080808"><span class="blog-media-caption">Go to kalabasa.github.io/dimensions/ on your phone if QR doesn’t work.</span>
-                        </div>
-
-                        <p><span class="box-note ">Want to learn more about the art project that this image detection algorithm was a part of? Check out the <a target="_self" class="text-link " href="/wares/dimensions/">Dimensions project</a>!</span>
-                        </p>
-
-                    </div>
-
-                </div>
+            <p>If the distance between the two vectors is below a certain threshold, then it’s a match!</p>
+            <p>Voilà! That’s the algorithm. You take the input image, turn it into a feature vector, and compare it to a precomputed target vector. The whole image detection code totals less than 200 lines and requires no external library! This algorithm was integrated into the AR app that came along with the art exhibition.</p>
+            <h2 id="conclusion">Conclusion</h2>
+            <p>So, that’s the image detection algorithm I developed for my AR art app. It’s pretty straightforward and efficient, with just a few lines of code. It’s also fast enough to run in real-time on a phone camera feed, which is nice.</p>
+            <p>Although it was designed for the specific images I had, you can customize it to suit your needs.</p>
+            <p>Now, the algorithm does have a few limitations. It doesn’t take into account the positioning of the input image, so it has to be in the exact orientation as the target image. Also, extreme lighting conditions, irregular shadows, shiny surfaces, and the like might affect its accuracy.</p>
+            <p>Overall, I’m pretty happy with how it turned out. While it’s not a general-purpose algorithm, it solved the problem for my art project perfectly. 😄</p>
+            <h3 id="demo">Demo!</h3>
+            <p>Want to try out the algorithm? Open this page on a desktop, and then use your phone to scan the QR code in the piece.</p>
+            <div class="blog-media blog-media-bleed">
+              <img srcset="/wares/dimensions/media/dimensions_finalset_800.generated.jpg 800w,/wares/dimensions/media/dimensions_finalset_1020.generated.jpg 1020w,/wares/dimensions/media/dimensions_finalset_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-media-element" alt="" src="/wares/dimensions/media/dimensions_finalset.jpg" spec="100% [800) 80% [1750) 1400" loading="lazy" width="400%" height="" style="aspect-ratio: 2.296875; background: #080808"><span class="blog-media-caption">Go to kalabasa.github.io/dimensions/ on your phone if QR doesn’t work.</span>
             </div>
+
+            <p><span class="box-note ">Want to learn more about the art project that this image detection algorithm was a part of? Check out the <a target="_self" class="text-link " href="/wares/dimensions/">Dimensions project</a>!</span>
+            </p>
+
+          </div>
 
         </div>
-        <footer class="main-footer">
-            <div class="main-footer-content-part">
-                <p class="main-footer-line">
-                    <a target="_self" class="main-footer-nav" href="/">Home</a> ·
-                    <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
-                    <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
-                    <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
-                    <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
-                </p>
-                <p class="main-footer-line">(C) 2023 Lean Rada</p>
-            </div>
-            <div class="main-footer-content-part">
-                <h2 class="main-footer-links-heading">On the web</h2>
-                <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
-                    <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
-                    <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
-                    <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
-                </a>
-                <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
-                    <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
-                </a>
-            </div>
+      </div>
 
-
-            <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
-                <canvas style="filter: contrast(1.5)">
-                </canvas></nebula-client>
-            <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
-        </footer>
     </div>
-    <script defer="" src="/scripts/nebula-main-footer-main-header.js"></script>
-    <script defer="">
-        (() => {
-            const mainHeader = document.querySelector(".main-header");
-            const indicator = document.querySelector(".main-header-indicator");
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+          <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">(C) 2023 Lean Rada</p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)">
+        </canvas></nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
 
-            let currentY = 0;
-            let currentYTarget = 0;
 
-            let mouseHovering = false;
 
-            let isTouch = false;
-            let lastScrollY = window.scrollY;
-            let lastCursorY = 0;
-            window.addEventListener("scroll", debounce(onScroll));
-            window.addEventListener("mousemove", debounce(onMouseMove, 100));
-            window.addEventListener("touchstart", onWindowTouchStart);
-            window.addEventListener("touchmove", onWindowTouchMove);
-            mainHeader.addEventListener("touchstart", onTouchStart);
 
-            function onScroll(event) {
-                const dy = window.scrollY - lastScrollY;
 
-                // move with the page
-                currentY -= dy;
-                if (currentY > 0) {
-                    currentY = 0;
-                } else if (currentY < -mainHeader.offsetHeight) {
-                    currentY = -mainHeader.offsetHeight;
-                }
 
-                currentYTarget = currentY;
-                updateDOM();
 
-                lastScrollY = window.scrollY;
-            }
 
-            function onMouseMove(event) {
-                if (isTouch) return;
 
-                const dy = event.clientY - lastCursorY;
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+    (() => {
+      const blogMediaElementImages = document.querySelectorAll(
+        "img.blog-media-element"
+      );
 
-                // show when mouse goes near the top
-                const scaledDy = Math.sign(dy) * Math.log1p(Math.abs(dy)) * 20;
-                if (dy < 0 && event.clientY + scaledDy < mainHeader.offsetHeight) {
-                    currentYTarget = 0;
-                    mouseHovering = true;
-                } else if (
-                    mouseHovering &&
-                    dy > 0 &&
-                    event.clientY > mainHeader.offsetHeight * 4
-                ) {
-                    currentYTarget = Math.max(-window.scrollY, -mainHeader.offsetHeight);
-                    mouseHovering = false;
-                }
+      for (const img of blogMediaElementImages) {
+        if (watchImage(img)) {
+          const intervalID = setInterval(() => watchImage(img, intervalID), 200);
+        }
+        img.addEventListener("load", onLoadImage);
+      }
 
-                updateDOM();
-                lastCursorY = event.clientY;
-            }
+      function watchImage(img, intervalID) {
+        if (img.naturalWidth > 0 || img.naturalHeight) {
+          img.style.objectPosition = null;
+          img.removeAttribute("width");
+          img.removeAttribute("height");
 
-            function onWindowTouchStart(event) {
-                isTouch = true;
-                lastCursorY = event.touches[0].clientY;
-            }
+          if (intervalID != undefined) clearInterval(intervalID);
+          return false;
+        } else {
+          if (!img.style.objectPosition) {
+            img.style.objectPosition = "100vw";
+          }
+          return true;
+        }
+      }
 
-            function onWindowTouchMove(event) {
-                const dy = event.touches[0].clientY - lastCursorY;
-
-                // move with touch but only if at edge
-                if (window.scrollY <= 0 && dy > 0) {
-                    currentY += dy;
-                    if (currentY >= 0) {
-                        currentY = 0;
-                        document.body.style.overscrollBehaviorY = null;
-                    } else if (currentY < 0) {
-                        document.body.style.overscrollBehaviorY = "none";
-                    }
-
-                    currentYTarget = currentY;
-                    updateDOM();
-                }
-
-                lastCursorY = event.touches[0].clientY;
-            }
-
-            function onTouchStart(event) {
-                currentYTarget = 0;
-                updateDOM();
-                console.log("onTouchStart");
-            }
-
-            const updateDOM = debounce(() => {
-                mainHeader.style.transform = `translateY(${currentY.toFixed(2)}px)`;
-
-                const isHidden = currentY < -mainHeader.offsetHeight * 0.8;
-                mainHeader.classList.toggle("hidden", isHidden);
-
-                if (Math.abs(currentY - currentYTarget) > 1) {
-                    currentY += (currentYTarget - currentY) * 0.2;
-                    requestAnimationFrame(updateDOM);
-                } else {
-                    currentY = currentYTarget;
-                }
-            });
-
-            if (mainHeader.classList.contains("prehide")) {
-                document.body.style.overscrollBehaviorY = "none";
-                currentY = currentYTarget = -mainHeader.offsetHeight;
-                updateDOM();
-            }
-
-            function debounce(fn, ms = 0) {
-                let recentlyFired = false;
-                return (...args) => {
-                    if (recentlyFired) return;
-                    recentlyFired = true;
-                    if (ms === 0) {
-                        requestAnimationFrame(() => (recentlyFired = false));
-                    } else {
-                        setTimeout(() => (recentlyFired = false), ms);
-                    }
-                    return fn(...args);
-                };
-            }
-        })();
-    </script>
-    <script defer="" src="/scripts/blog-media.js"></script>
-    <script defer="" src="/scripts/blog-header.js"></script>
+      function onLoadImage(event) {
+        event.currentTarget.style.background = null;
+      }
+    })();
+  </script>
+  <script defer="" src="/scripts/blog-header.js"></script>
 </body>
 </html>
