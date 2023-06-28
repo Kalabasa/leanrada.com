@@ -22,7 +22,7 @@ fi
 
 # Build project
 npm install
-npm run clean
+npm run clean-lite
 npm run build-prod
 
 # Update prod in a worktree. master == prod
