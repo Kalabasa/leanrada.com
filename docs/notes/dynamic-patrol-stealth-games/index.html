@@ -1,0 +1,1528 @@
+<html lang="en">
+<head>
+  <title>Dynamic patrol behaviour in stealth games · leanrada.com</title>
+  <script type="module" client="" defer="">
+    import * as PIXI from "/lib/vendor/pixijs.min.mjs";
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+    // Warn: Module path is relative to the page, not the component
+    import {
+      DynamicPatrolDemo,
+      TILE_FLOOR,
+      TILE_WALL,
+      KNOW_NONE,
+      KNOW_TARGET,
+    } from "./demo/dynamic-patrol-demo.mjs";
+
+    const spriteKey = Symbol("sprite");
+
+    PIXI.BaseTexture.defaultOptions.scaleMode = PIXI.SCALE_MODES.NEAREST;
+    // Warn: File paths are relative to the page, not the component
+    const floorTexture = PIXI.Texture.from("./demo/floor.png");
+    const wallTexture = PIXI.Texture.from("./demo/wall.png");
+    const guardTexture = PIXI.Texture.from("./demo/guard.png");
+    const targetTexture = PIXI.Texture.from("./demo/target.png");
+    const destTexture = PIXI.Texture.from("./demo/dest.png");
+    const trailTexture = PIXI.Texture.from("./demo/trail.png");
+
+    customElements.define(
+      "dynamic-patrol-demo-client",
+      class DynamicPatrolDemoClient extends BaseElement {
+        constructor() {
+          super();
+          this.inputMap = null;
+
+          this.pixi = null;
+          this.tileSprites = null;
+          this.targetDestSprite = null;
+          this.targetTrailSprites = [];
+          this.tileSize = 1;
+
+          this.model = null;
+          this.modelTickId = null;
+
+          this.hasInit = false;
+          this.isVisible = false;
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              if (!this.hasInit) this.init();
+              this.pixi.start();
+              this.modelTickId = setInterval(this.update, 50);
+            },
+            hide: () => {
+              clearInterval(this.modelTickId);
+              this.pixi.stop();
+              this.isVisible = false;
+            },
+          });
+        }
+
+        disconnectedCallback() {
+          super.disconnectedCallback();
+
+          if (this.pixi) this.pixi.destroy();
+          this.replaceChildren();
+
+          this.pixi = null;
+          this.tileSprites = null;
+          this.targetDestSprite = null;
+          this.targetTrailSprites = [];
+          this.model = null;
+          this.hasInit = false;
+        }
+
+        init() {
+          this.hasInit = true;
+
+          if (!this.inputMap) {
+            this.inputMap = this.getAttribute("map")
+              .trim()
+              .split("\n")
+              .map((line) => line.trim().split(""));
+          }
+
+          const mapWidth = this.inputMap[0].length;
+          const mapHeight = this.inputMap.length;
+
+          this.pixi = new PIXI.Application({
+            resizeTo: this,
+            background: "#cdd",
+          });
+          this.pixi.ticker.maxFPS = 60;
+          this.pixi.ticker.add(this.render);
+          this.pixi.view.addEventListener("mousemove", this.onHover);
+          this.pixi.view.addEventListener("click", this.onClick);
+          this.appendChild(this.pixi.view);
+
+          // Compute optimal tileSize
+          const tileSizeMultiples = 2;
+          this.tileSize =
+            Math.floor(
+              (Math.min(this.pixi.screen.width, this.pixi.screen.height) - 24) /
+              Math.max(mapWidth, mapHeight) /
+              tileSizeMultiples
+            ) * tileSizeMultiples;
+
+          // Center map in screen
+          this.pixi.stage.x = Math.floor(
+            this.pixi.screen.width / 2 - (mapWidth / 2) * this.tileSize
+          );
+          this.pixi.stage.y = Math.floor(
+            this.pixi.screen.height / 2 - (mapHeight / 2) * this.tileSize
+          );
+
+          // Layers
+          const tileContainer = new PIXI.Container();
+          const entityContainer = new PIXI.Container();
+          this.pixi.stage.addChild(tileContainer);
+          this.pixi.stage.addChild(entityContainer);
+
+          // Process input map
+          const mapTiles = [];
+          this.tileSprites = [];
+          const guardPositions = [];
+          const targetPositions = [];
+          for (let x = 0; x < mapWidth; x++) {
+            this.tileSprites[x] = [];
+            mapTiles[x] = [];
+            for (let y = 0; y < mapHeight; y++) {
+              const inputTile = this.inputMap[y][x];
+
+              if (inputTile === "G") {
+                guardPositions.push({
+                  x,
+                  y
+                });
+              } else if (inputTile === "T") {
+                targetPositions.push({
+                  x,
+                  y
+                });
+              }
+
+              const tileType = inputTile === TILE_WALL ? TILE_WALL : TILE_FLOOR;
+              mapTiles[x][y] = tileType;
+
+              const tileSprite = new PIXI.Sprite(
+                tileType === TILE_FLOOR ? floorTexture : wallTexture
+              );
+              tileSprite.x = x * this.tileSize;
+              tileSprite.y = y * this.tileSize;
+              tileSprite.width = this.tileSize;
+              tileSprite.height = this.tileSize;
+              tileContainer.addChild(tileSprite);
+              this.tileSprites[x][y] = tileSprite;
+            }
+          }
+
+          this.model = new DynamicPatrolDemo(mapWidth, mapHeight, mapTiles);
+
+          for (const {
+              x,
+              y
+            }
+            of guardPositions) {
+            const guard = this.createGuard(x, y);
+            entityContainer.addChild(guard[spriteKey]);
+          }
+
+          for (const {
+              x,
+              y
+            }
+            of targetPositions) {
+            const target = this.createTarget(x, y);
+            entityContainer.addChild(target[spriteKey]);
+          }
+
+          if (targetPositions.length === 0) {
+            this.model.idleMode();
+            this.style.pointerEvents = "none";
+          }
+        }
+
+        createGuard(x, y) {
+          const guard = this.model.addGuard(x, y);
+          const sprite = (guard[spriteKey] = new PIXI.Sprite(guardTexture));
+          sprite.width = this.tileSize;
+          sprite.height = this.tileSize;
+          this.renderGuard(guard, false);
+          return guard;
+        }
+
+        createTarget(x, y) {
+          const target = this.model.addTarget(x, y);
+          const sprite = (target[spriteKey] = new PIXI.Sprite(targetTexture));
+          sprite.width = this.tileSize;
+          sprite.height = this.tileSize;
+          this.renderTarget(target, false);
+          return target;
+        }
+
+        onHover = (event) => {
+          const {
+            x: mouseX,
+            y: mouseY
+          } = getMousePos(this);
+          const {
+            x: tileX,
+            y: tileY
+          } = this.tilePosFromPixel(mouseX, mouseY);
+          if (
+            tileX < 0 ||
+            tileY < 0 ||
+            tileX >= this.model.mapWidth ||
+            tileY >= this.model.mapHeight
+          ) {
+            this.style.cursor = "default";
+            return;
+          }
+
+          const isWalkable = this.model.getTile(tileX, tileY) === TILE_FLOOR;
+          this.style.cursor = isWalkable ? "crosshair" : "default";
+        };
+
+        onClick = (event) => {
+          const {
+            x: mouseX,
+            y: mouseY
+          } = getMousePos(this);
+          const {
+            x: tileX,
+            y: tileY
+          } = this.tilePosFromPixel(mouseX, mouseY);
+          if (
+            tileX < 0 ||
+            tileY < 0 ||
+            tileX >= this.model.mapWidth ||
+            tileY >= this.model.mapHeight
+          ) {
+            return;
+          }
+
+          this.model.commandTargetTo(0, tileX, tileY);
+        };
+
+        tilePosFromPixel(pixelX, pixelY) {
+          const x = Math.floor((pixelX - this.pixi.stage.x) / this.tileSize);
+          const y = Math.floor((pixelY - this.pixi.stage.y) / this.tileSize);
+          return {
+            x,
+            y
+          };
+        }
+
+        render = () => {
+          for (const guard of this.model.guards) {
+            this.renderGuard(guard);
+          }
+
+          for (const target of this.model.targets) {
+            this.renderTarget(target);
+          }
+
+          for (let x = 0; x < this.model.mapWidth; x++) {
+            for (let y = 0; y < this.model.mapHeight; y++) {
+              if (this.model.getTile(x, y) !== TILE_FLOOR) continue;
+
+              const tileSprite = this.tileSprites[x][y];
+              const know = this.model.getKnowledge(x, y);
+              if (know === KNOW_NONE) {
+                const potential = this.model.getPotential(x, y, 0);
+
+                const tint =
+                  potential > 0 ? Math.min(1, 0.05 + 4 * potential ** 0.5) : 0;
+                const red = Math.max(0, 0xaa - Math.round(tint * 0x88));
+                const green = Math.max(0, 0xaa - Math.round(tint * 0x44));
+                const blue = Math.min(0xff, 0xaa + Math.round(tint * 0x55));
+
+                blendTint(tileSprite, (red << 16) | (green << 8) | blue, 0.6);
+              } else if (know === KNOW_TARGET) {
+                blendTint(tileSprite, 0xff00ff, 0.6);
+              } else {
+                blendTint(tileSprite, 0xffffff, 0.6);
+              }
+            }
+          }
+        };
+
+        renderGuard(guard, smooth = true) {
+          const smoothFactor = smooth ? 0.7 : 1;
+
+          const sprite = guard[spriteKey];
+          sprite.x += (guard.x * this.tileSize - sprite.x) * smoothFactor;
+          sprite.y += (guard.y * this.tileSize - sprite.y) * smoothFactor;
+        }
+
+        renderTarget(target, smooth = true) {
+          const smoothFactor = smooth ? 0.8 : 1;
+
+          const sprite = target[spriteKey];
+          if (!sprite) return;
+
+          sprite.x += (target.x * this.tileSize - sprite.x) * smoothFactor;
+          sprite.y += (target.y * this.tileSize - sprite.y) * smoothFactor;
+
+          const isHidden =
+            this.model.getKnowledge(target.x, target.y) === KNOW_NONE;
+          blendTint(sprite, isHidden ? 0xaaaaaa : 0xffffff, 0.6);
+
+          if (target.path.length) {
+            if (!this.targetDestSprite) {
+              this.targetDestSprite = new PIXI.Sprite(destTexture);
+              this.targetDestSprite.tint = 0x66cc44;
+              this.targetDestSprite.width = this.tileSize;
+              this.targetDestSprite.height = this.tileSize;
+              this.pixi.stage.addChild(this.targetDestSprite);
+            }
+
+            const [destX, destY] = target.path[target.path.length - 1];
+            this.targetDestSprite.x = destX * this.tileSize;
+            this.targetDestSprite.y = destY * this.tileSize;
+            this.targetDestSprite.visible = Math.floor(this.pixi.ticker.lastTime / 400) % 3 > 0;
+          } else {
+            if (this.targetDestSprite) this.targetDestSprite.visible = false;
+          }
+        }
+
+        update = () => {
+          this.model.update();
+        };
+      }
+    );
+
+    function blendTint(sprite, tint, factor) {
+      const r0 = (sprite.tint >> 16) & 0xff;
+      const g0 = (sprite.tint >> 8) & 0xff;
+      const b0 = sprite.tint & 0xff;
+
+      const r1 = (tint >> 16) & 0xff;
+      const g1 = (tint >> 8) & 0xff;
+      const b1 = tint & 0xff;
+
+      const r = Math.round(r0 + (r1 - r0) * factor);
+      const g = Math.round(g0 + (g1 - g0) * factor);
+      const b = Math.round(b0 + (b1 - b0) * factor);
+
+      sprite.tint = (r << 16) | (g << 8) | b;
+    }
+
+    function getMousePos(element) {
+      const {
+        x,
+        y
+      } = mousePosition;
+      const bounds = element.getBoundingClientRect();
+      return {
+        x: x - bounds.x,
+        y: y - bounds.y,
+      };
+    }
+  </script>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
+        }
+
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
+        }
+
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
+
+          this.draw(canvas, this.context);
+
+          requestAnimationFrame(() => this.loop());
+        }
+
+        /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
+
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
+
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
+
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
+            }
+          }
+
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
+
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
+
+              const paletteIndex = Math.floor(paletteLength * p);
+
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
+
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
+            }
+          }
+        }
+
+        getT() {
+          const t = (Date.now() * 30) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
+        }
+      }
+    );
+
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
+
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
+
+      --text-clr: #fff;
+      --text2-clr: #999;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <style>
+    .main-footer-link {
+      text-decoration: none;
+    }
+
+    .main-footer-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 220x;
+    }
+
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
+
+    .main-footer-nav {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    .main-footer-content-part {
+      z-index: 1;
+    }
+
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
+
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
+
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
+
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
+
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .blog-page {
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .content {
+      padding: 60px 18px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown>h1,
+    .markdown>h2,
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 48px 0 36px;
+    }
+
+    .markdown>h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown>h2 {
+      font-size: 150%;
+    }
+
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    .markdown>p {
+      margin: 36px 0;
+    }
+
+    .markdown>table {
+      border-collapse: collapse;
+      background-color: var(--card-clr);
+      border-radius: 12px;
+    }
+
+    .markdown>table th,
+    .markdown>table td {
+      text-align: start;
+      padding: 9px 12px;
+      padding-inline-end: 18px;
+      border-bottom: solid 1px #444;
+    }
+
+    .markdown>table>tbody>tr:last-child>td {
+      border-bottom: none;
+    }
+
+    .markdown>hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code:not([class]):not([class]) {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      background: var(--card-clr);
+    }
+
+    .markdown>pre:not([class])>code:not([class]) {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      font-size: 15px;
+      overflow-x: auto;
+    }
+
+    .markdown>blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown>blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown>blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown>blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown>blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown>iframe,
+    .markdown>p>iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+    .markdown .bleed {
+      position: relative;
+      left: 50%;
+      width: 100vh;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
+
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .blog-media {
+      position: relative;
+      text-align: center;
+      /* external margin because it’s expected to be in an article */
+      margin: 36px 0;
+    }
+
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+      box-sizing: border-box;
+    }
+
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    .blog-media-windowed .blog-media-element {
+      border-radius: 0;
+    }
+
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    dynamic-patrol-demo-client {
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-block;
+      height: 80vmin;
+      width: 80vmin;
+      border-radius: 12px;
+      background: #cdd;
+      overflow: hidden;
+    }
+  </style>
+  <style>
+    .blog-post-info {
+      margin: 24px 0 0;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+  </style>
+  <style>
+    .text-with-bg-span {
+      display: inline;
+      margin: 0;
+      padding: 0.7em;
+      padding: 0.35lh;
+      border-radius: 18px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      font: inherit;
+      background: var(--text-with-bg-color);
+    }
+  </style>
+  <style>
+    .blog-header {
+      isolation: isolate;
+      margin-top: 60px;
+      position: relative;
+      left: 50%;
+      height: 600px;
+      width: max(800px, 60vw);
+      transform: translateX(-50%);
+      box-sizing: border-box;
+    }
+
+    .blog-header-title {
+      position: relative;
+      max-width: 800px;
+      font-family: var(--default-font);
+      font-size: 36px;
+      font-weight: bold;
+      font-style: italic;
+      text-align: left;
+      z-index: 2;
+    }
+
+    .blog-header-title-inner {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    /* Wrap lines in an angle */
+    .blog-header-title::before {
+      content: "";
+      width: 50%;
+      height: 600px;
+      float: right;
+      shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+
+    .blog-header-hero {
+      position: absolute;
+      inset: 1px;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      background: gray;
+      z-index: -1;
+    }
+
+    .blog-header-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      fill: var(--bg-clr);
+      z-index: 1;
+    }
+
+    @media (max-width: 800px) {
+      .blog-header {
+        width: 100vw;
+        width: 100svw;
+        height: 400px;
+        padding-right: 36px;
+      }
+
+      .blog-header-title {
+        font-size: clamp(24px, 20px + 2vw, 36px);
+      }
+
+      .blog-header-title::before {
+        content: none;
+      }
+    }
+  </style>
+  <style>
+    .small-diagram-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .small-diagram-row-solo {
+      margin-left: 25%;
+      margin-right: 25%;
+    }
+
+    @media (max-width: 600px) {
+      .small-diagram-row {
+        margin: 0;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/notes/" class="main-header-item select">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  Dynamic patrol behaviour in stealth games with Markov chains
+                </h1>
+              </div>
+              <img srcset="/notes/dynamic-patrol-stealth-games/hero_800.generated.jpg 800w,/notes/dynamic-patrol-stealth-games/hero_1020.generated.jpg 1020w,/notes/dynamic-patrol-stealth-games/hero_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/dynamic-patrol-stealth-games/hero.jpg" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
+            </div>
+
+            <div class="blog-post-info">
+              1 Jul 2023 · 8 min read
+            </div>
+
+            <p>Hi, this post is about a game AI algorithm for stealth games.</p>
+            <p>But first, here’s a preview demo! Full demo at the end of this post. In between, I’ll explain the background, the process, and the results!</p>
+            <p><dynamic-patrol-demo-client map="
+        ###################
+        #....#....#.......#
+        #....#....#.......#
+        #....#....#.......#
+        ##.####.###.......#
+        #.................#
+        #.................#
+        ##.####.###.......#
+        #...#....#####..###
+        #...#....#####..###
+        #...#...G#####..###
+        ##########.......##
+        ##########.......##
+        ##########.......##
+        ##########.......##
+        ###################
+      "></dynamic-patrol-demo-client></p>
+            <h2 id="background">Background</h2>
+            <p>I enjoy stealth mechanics in video games. However, I feel like the genre has become formulaic. Nowadays, we have standardised light, shadow, and noise mechanics. We almost always get discrete levels of alertness where on one end NPCs have wallhacks while on the other, NPCs have amnesia.</p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/dynamic-patrol-stealth-games/sc_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Screenshot of Splinter Cell" src="/notes/dynamic-patrol-stealth-games/sc.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.6; background: #080808"><span class="blog-media-caption">Screenshot of Splinter Cell: Chaos Theory from mobygames.com. This game is good.</span>
+            </div>
+
+            <p>The most immersion-breaking moment for me was when you get spotted, the subsequent investigation consists solely of staring at the ground where you were last seen. Like when you get spotted at an entrance to a room, guards will just stare at the doorway. <em>Why not check inside the room?</em> Unless the room was specifically coded as part of a patrol route, guards will never investigate there even though they just saw you entering the room.</p>
+            <p><span class="box-note ">Yeah, yeah, smart game AI is not deemed “fun” be game designers. But a challenging game is fun! Whatever, I just wanted to write a relatable intro for this prototype that I made for fun.</span></p>
+            <p>What was lacking in stealth game AI is inference - the ability to infer that when a target enters a room, then they subsequently must be inside the room.</p>
+            <!--  textlint-disable  -->
+
+            <p>Or more generally, if a target is at position <em>X</em> at time <em>t</em>, then it will be in one of the adjacent positions <em>Y<sub>1</sub></em>, <em>Y<sub>2</sub></em>, <em>Y<sub>3</sub></em>, … <em>Y<sub>n</sub></em> at time <em>t+1</em>.</p>
+            <!--  textlint-enable  -->
+
+            <h2 id="a-room-and-a-hallway">A room and a hallway</h2>
+            <p>As an example, here are a room and a hallway with a doorway in between, modelled as a <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Graph">graph</a>:</p>
+            <div class="small-diagram-row small-diagram-row-solo">
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/room-graph_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph representing a room node, a doorway node, and hallway nodes" src="/notes/dynamic-patrol-stealth-games/room-graph.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9669117647058824; background: #986868">
+              </div>
+            </div>
+
+            <p>If we assign a number to each node representing the probability that the target (the player) is there, we can start making inferences of where the target could be at later times.</p>
+            <p>Let’s say the target was just seen in room <em>R</em>, so node <em>R</em> will be assigned a probability of <strong>1.0</strong>.</p>
+            <div class="small-diagram-row small-diagram-row-solo">
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/room-graph-r1_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph representing the room node with 1.0, the doorway node with 0.0, and hallway nodes with 0.0" src="/notes/dynamic-patrol-stealth-games/room-graph-r1.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9705882352941176; background: #e8e8e8">
+              </div>
+            </div>
+
+            <p>After this, the target will either stay in the room or exit the room. We don’t know the chance of either happening so we can just assume equal chances. The graph is recalculated to reflect this by equally distributing the <strong>1.0</strong> from <em>R</em> to itself (“stay”) and its adjacent node <em>D</em> (“exit”), giving them <strong>0.5</strong> each.</p>
+            <div class="small-diagram-row small-diagram-row-solo">
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/room-graph-r1d1_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph representing the room node with 0.5, the doorway node with 0.5, and hallway nodes with 0.0" src="/notes/dynamic-patrol-stealth-games/room-graph-r1d1.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9705882352941176; background: #e8e8e8">
+              </div>
+            </div>
+
+            <p>Now there is 50% probability that the target is in the room, and 50% in the doorway.</p>
+            <p>This next iteration is tricky, but it’s all calculated the same. We just need to calculate the distribution from each node <em>in parallel</em>, like so:</p>
+            <div class="small-diagram-row">
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/room-graph-r1d1t_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph representing the distribution from previous state" src="/notes/dynamic-patrol-stealth-games/room-graph-r1d1t.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9705882352941176; background: #e8e8e8"><span class="blog-media-caption">Split the probabilities per node to each possible path (including itself).</span>
+              </div>
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/room-graph-r5d5h2_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph representing the room node with 0.42, the doorway node with 0.42, and the hallway node H1 directly next to the doorway with 0.16" src="/notes/dynamic-patrol-stealth-games/room-graph-r5d5h2.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9705882352941176; background: #e8e8e8"><span class="blog-media-caption">Then sum up the values that arrived in each node.</span>
+              </div>
+            </div>
+
+            <p>After some time, we will get a picture of where the target is likely to be and a smarter game AI can utilise this to send guards on a more realistic investigation route.</p>
+            <div class="small-diagram-row small-diagram-row-solo">
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/room-graph-final_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph representing the room node with 0.35, the doorway node with 0.39, hallway nodes H0 and H2 with 0.04, and H1 with 0.18" src="/notes/dynamic-patrol-stealth-games/room-graph-final.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9688073394495413; background: #e8e8e8"><span class="blog-media-caption">The state after some time</span>
+              </div>
+            </div>
+
+            <p>What I’ve just described is some generalisation of a <strong><a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Markov_chain">Markov chain</a></strong>. Well, it’s not exactly accurate to call it that since the Markov chain is just one part of the algorithm. You’ll see why in the next section.</p>
+            <p><span class="box-note ">Disclaimer: I wasn’t thinking about Markov chains while developing this algorithm. The first version was based on crude counting and was more like a potential field of arbitrary scale. The Markov chain concept helped me make the calculations more accurate and the numbers behave more like probabilities.</span></p>
+            <h2 id="observer-effect">Observer effect</h2>
+            <p>Suppose a guard did come to investigate the nearest highest probability node (the doorway <em>D</em>). Coming from the south, the guard just saw the doorway and the immediate hallway in their field of vision - There are two possibilities: Either <strong>(1)</strong> they saw nothing, or <strong>(2)</strong> they saw <em>the target</em>.</p>
+            <p>In case <strong>(1)</strong> where the guard saw nothing, we need to update the seen nodes according to the guard’s a posteriori observation.</p>
+            <div class="small-diagram-row small-diagram-row-solo">
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/observe-none_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph with observed nodes having 0.0" src="/notes/dynamic-patrol-stealth-games/observe-none.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9705882352941176; background: #e8e8e8"><span class="blog-media-caption">After observation</span>
+              </div>
+            </div>
+
+            <p>The nodes that were seen having no target at their locations are forced to a probability of <strong>0.0</strong>, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to <strong>1.0</strong> (This is an invariant in any case).</p>
+            <p>After updating the probabilities, the state of the graph tells us that the target is 90% likely to be in the room <em>R</em> and 10% in the far hallway <em>H0</em>.</p>
+            <p>The game AI can simply send the guard to the highest node based on the updated probabilities (this case, the room <em>R</em>). It can do this again and again, which will result in a seemingly organic and responsive searching behaviour from the AI guard. No predefined patrol routes needed.</p>
+            <p>In case <strong>(2)</strong> where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned <strong>1.0</strong> while <em>the rest of the nodes in the whole graph</em> are cleared back to <strong>0.0</strong>. Simply because the target can’t be in two places at once.</p>
+            <div class="small-diagram-row small-diagram-row-solo">
+              <div class="blog-media blog-media-default">
+                <img srcset="/notes/dynamic-patrol-stealth-games/observe-target_300.generated.png 300w" sizes=" 300px" class="blog-media-element" alt="Node graph with observed target in node having 1.0" src="/notes/dynamic-patrol-stealth-games/observe-target.png" spec="300" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9705882352941176; background: #e8e8e8"><span class="blog-media-caption">After observation of target</span>
+              </div>
+            </div>
+
+            <span class="box-note ">
+              Similar to quantum mechanics, an act of observation collapses the superposition. There seems to be an underlying mathematical truth that spans across Markov chains, quantum mechanics, Bayesian networks, and video game mechanics. :P
+            </span>
+
+            <p>When the guard loses sight of the target, the <strong>1.0</strong> probability will just spread again like a wave and the cycle of chasing, investigation, and hiding continues.</p>
+            <p>It’s best to just see it in action. Play with the demo in the following section.</p>
+            <h2 id="demo">Demo</h2>
+            <p>I implemented this algorithm in JavaScript so you can play with it on this page live. In this implementation, the world is a 2D grid where each tile is a node in the Markov graph.</p>
+            <p>Click a tile to command the target (the green character <img src="demo/target.png" alt="">) to move. The blue fog indicates the probabilities of each tile.</p>
+            <p>Have fun playing hide and seek!</p>
+            <p><dynamic-patrol-demo-client map="
+        ....................
+        ....................
+        .T##########.#####..
+        ..#........#..#..#..
+        ..#........#..#..#..
+        ...........#..#..#..
+        ..#........#####.#..
+        ..#..............#..
+        ..################..
+        .G#........#........
+        ###........#.....#..
+        ..#######.########..
+        ..#....#.........#..
+        ..#....#.........#..
+        ..#.........###..#..
+        ..#....#.........#..
+        ..#....#.........#..
+        ..##.#############..
+        ....................
+        ....................
+      "></dynamic-patrol-demo-client></p>
+            <h3 id="conclusions">Conclusions</h3>
+            <ul>
+              <li>Notice that upon losing vision, the guard starts chasing in the direction where you ran away, without the guard actually seeing where you are. Happens especially in narrow passageways.</li>
+              <li>As the chase continues, the path begins branching, and the probability dilutes. The guard gradually transitions from chasing behaviour to a searching behaviour, eventually devolving into a plain patrol.</li>
+              <li>All of these behaviours emerged from the Markov-quantum system (idk what to call it). There’s no explicit code for chasing, searching, or patrolling.</li>
+              <li>The probability spreading process can be drastically sped-up by implementing Markov chain transitions using a transition matrix and matrix multiplication. Matrix multiplication is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Embarrassingly_parallel">embarrasingly parallel</a>.</li>
+              <li>The search route can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.<ul>
+                  <li>One improvement might involve incorporating the potential field as weights in the pathfinding algorithm itself to generate a more efficient and sweeping route.</li>
+                  <li>One could use the potential field itself as tile-by-tile directions for the agents. No time-intensive pathfinder needed. The agents might even behave like hound dogs tracking the target by scent.</li>
+                </ul>
+              </li>
+            </ul>
+            <p>Sadly, the name <a target="_blank" class="text-link " href="https://github.com/mxgmn/WaveFunctionCollapse">“Wave Function Collapse”</a> has already been claimed by a different video game algorithm, so I can’t give this one a cool quantum name anymore.</p>
+            <p><strong>Bonus demo, 2 guards</strong></p>
+            <p><dynamic-patrol-demo-client map="
+        .................#..
+        .T...............#..
+        ..#..####..#######..
+        ..#.....#...........
+        ..#.....#...........
+        ..#..#..#######..###
+        ...G.#..#........#..
+        .....#..#........#..
+        ######..####..####..
+        ..#........#........
+        ..#.G......#........
+        ..#..#######..####..
+        ..............#.....
+        ..............#.....
+        ######..#######..###
+        ..#.....#........#..
+        ..#.....#........#..
+        ..#..#..####..#..#..
+        .....#........#.....
+        .....#........#.....
+      "></dynamic-patrol-demo-client></p>
+            <p>Special thanks:</p>
+            <ul>
+              <li><img src="demo/target.png" alt=""> Ally Gator as “The Target”</li>
+              <li><img src="demo/guard.png" alt=""> Metal Head as “Guard 1”</li>
+              <li><img src="demo/guard.png" alt=""> Rust Bucket as “Guard 2”</li>
+              <li><a target="_blank" class="text-link " href="https://bitbucket.org/umbraprojekt/mrpas">bitbucket/umbraprojekt/mrpas</a> for guards’ vision <img src="demo/guard.png" alt="">🪧<img src="demo/guard.png" alt=""></li>
+              <li><a target="_blank" class="text-link " href="https://github.com/qiao/PathFinding.js">github/qiao/PathFinding.js</a> for giving directions 🧭</li>
+            </ul>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-nav" href="/">Home</a> ·
+          <a target="_self" class="main-footer-nav" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-nav" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-nav" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-nav" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">(C) 2023 Lean Rada</p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)">
+        </canvas></nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+
+
+
+
+
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+    (() => {
+      const blogMediaElementImages = document.querySelectorAll(
+        "img.blog-media-element"
+      );
+
+      for (const img of blogMediaElementImages) {
+        if (watchImage(img)) {
+          const intervalID = setInterval(() => watchImage(img, intervalID), 200);
+        }
+        img.addEventListener("load", onLoadImage);
+      }
+
+      function watchImage(img, intervalID) {
+        if (img.naturalWidth > 0 || img.naturalHeight) {
+          img.style.objectPosition = null;
+          img.removeAttribute("width");
+          img.removeAttribute("height");
+
+          if (intervalID != undefined) clearInterval(intervalID);
+          return false;
+        } else {
+          if (!img.style.objectPosition) {
+            img.style.objectPosition = "100vw";
+          }
+          return true;
+        }
+      }
+
+      function onLoadImage(event) {
+        event.currentTarget.style.background = null;
+      }
+    })();
+  </script>
+  <script defer="" src="/scripts/blog-header.js"></script>
+</body>
+</html>
