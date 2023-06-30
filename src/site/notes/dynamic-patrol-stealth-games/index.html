@@ -113,6 +113,8 @@
 
       What I’ve just described is some generalisation of a **[Markov chain](https://en.wikipedia.org/wiki/Markov_chain)**. Well, it’s not exactly accurate to call it that since the Markov chain is just one part of the algorithm. You’ll see why in the next section.
 
+      <box-note>Disclaimer: I wasn’t thinking about Markov chains while developing this algorithm. The first version was based on crude counting and was more like a potential field of arbitrary scale. The Markov chain concept helped me make the calculations more accurate and the numbers behave more like probabilities.</box-note>
+
       ## Observer effect
 
       Suppose a guard did come to investigate the nearest highest probability node (the doorway *D*). Coming from the south, the guard just saw the doorway and the immediate hallway in their field of vision - There are two possibilities: Either **(1)** they saw nothing, or **(2)** they saw *the target*.
@@ -187,7 +189,7 @@
       * Notice that upon losing vision, the guard starts chasing in the direction where you ran away, without the guard actually seeing where you are. Happens especially in narrow passageways.
       * As the chase continues, the path begins branching, and the probability dilutes. The guard gradually transitions from chasing behaviour to a searching behaviour, eventually devolving into a plain patrol.
       * All of these behaviours emerged from the Markov-quantum system (idk what to call it). There’s no explicit code for chasing, searching, or patrolling.
-      * The probability spreading process can be drastically sped-up by implementing Markov chain transitions using a transition matrix and matrix multiplication.
+      * The probability spreading process can be drastically sped-up by implementing Markov chain transitions using a transition matrix and matrix multiplication. Matrix multiplication is [embarrasingly parallel](https://en.wikipedia.org/wiki/Embarrassingly_parallel).
       * The search route can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.
         - One improvement might involve incorporating the potential field as weights in the pathfinding algorithm itself to generate a more efficient and sweeping route.
         - One could use the potential field itself as tile-by-tile directions for the agents. No time-intensive pathfinder needed. The agents might even behave like hound dogs tracking the target by scent.
