@@ -6,8 +6,9 @@
     left: 50%;
     transform: translateX(-50%);
     display: inline-block;
-    height: 80vmin;
-    width: 80vmin;
+    width: 400px;
+    width: min(100vw, 70vh);
+    aspect-ratio: 1;
     border-radius: 12px;
     background: #cdd;
     overflow: hidden;
@@ -111,14 +112,14 @@
         this.pixi.ticker.maxFPS = 60;
         this.pixi.ticker.add(this.render);
         this.pixi.view.addEventListener("mousemove", this.onHover);
-        this.pixi.view.addEventListener("click", this.onClick);
+        this.pixi.view.addEventListener("pointerup", this.onClick);
         this.appendChild(this.pixi.view);
 
         // Compute optimal tileSize
         const tileSizeMultiples = 2;
         this.tileSize =
           Math.floor(
-            (Math.min(this.pixi.screen.width, this.pixi.screen.height) - 24) /
+            (Math.min(this.pixi.screen.width, this.pixi.screen.height) - 12) /
               Math.max(mapWidth, mapHeight) /
               tileSizeMultiples
           ) * tileSizeMultiples;
@@ -225,6 +226,7 @@
       onClick = (event) => {
         const { x: mouseX, y: mouseY } = getMousePos(this);
         const { x: tileX, y: tileY } = this.tilePosFromPixel(mouseX, mouseY);
+        console.log(mouseX, mouseY, tileX, tileY);
         if (
           tileX < 0 ||
           tileY < 0 ||

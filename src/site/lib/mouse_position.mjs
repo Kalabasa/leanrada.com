@@ -4,6 +4,10 @@ export const mousePosition = (() => {
   document.addEventListener(
     "DOMContentLoaded",
     () => {
+      document.body.addEventListener("pointerdown", (event) => {
+        mousePosition.x = event.clientX;
+        mousePosition.y = event.clientY;
+      });
       document.body.addEventListener("mousemove", (event) => {
         mousePosition.x = event.clientX;
         mousePosition.y = event.clientY;
