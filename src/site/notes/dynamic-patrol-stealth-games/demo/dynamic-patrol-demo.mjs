@@ -127,6 +127,16 @@ class DynamicPatrolDemo {
       return;
     }
 
+    // Look at target if found
+    const targetPos = this.knownTargetPositions.find(p => p);
+    if (targetPos) {
+      const targetHeading = Math.atan2(targetPos.x - guard.x, guard.y - targetPos.y);
+      const deltaAngle = angleDelta(guard.heading, targetHeading);
+      guard.heading += deltaAngle * 0.2;
+      guard.path.length = 0;
+      return;
+    }
+
     while (guard.path.length && guard.path[0][0] === guard.x && guard.path[0][1] === guard.y) {
       guard.path.splice(0, 1);
     }
@@ -179,7 +189,7 @@ class DynamicPatrolDemo {
             const potential = this.getPotential(x, y, i);
             const dist = Math.hypot(x - guard.x, y - guard.y);
 
-            const score = ((200 * potential) / (10 + dist)) % (0.1 / guard.index);
+            const score = ((200 * potential) / (15 + dist)) % (0.1 / guard.index);
             if (score > highScore) {
               highScore = score;
               destX = x;
@@ -197,7 +207,7 @@ class DynamicPatrolDemo {
           const [nextX, nextY] = guard.path[Math.min(2, guard.path.length - 1)];
           const nextHeading = Math.atan2(nextX - guard.x, guard.y - nextY);
           const deltaAngle = angleDelta(guard.heading, nextHeading);
-          guard.pause = Math.min(15, Math.ceil((deltaAngle * 2 / Math.PI) / (1 + highScore)));
+          guard.pause = Math.min(15, Math.ceil((deltaAngle / Math.PI) / (1 + highScore)));
         }
       }
     }
@@ -222,7 +232,7 @@ class DynamicPatrolDemo {
         guard.y,
         /* radius */ 8,
         guard.heading,
-        Math.PI * 0.5,
+        Math.PI * 0.6,
         (x, y) => this.knowledgeMap[x][y] !== KNOW_NONE,
         (x, y) => {
           this.knowledgeMap[x][y] = KNOW_EMPTY;

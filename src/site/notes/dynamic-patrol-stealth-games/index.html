@@ -49,7 +49,7 @@
       
       <!-- textlint-disable -->
 
-      Or more generally, if a target is at position X at time t, then it will be in one of the adjacent positions Y<sub>1</sub>, Y<sub>2</sub>, Y<sub>3</sub>, &hellip; Y<sub>n</sub> at time t+1.
+      Or more generally, if a target is at position *X* at time *t*, then it will be in one of the adjacent positions *Y<sub>1</sub>*, *Y<sub>2</sub>*, *Y<sub>3</sub>*, &hellip; *Y<sub>n</sub>* at time *t+1*.
 
       <!-- textlint-enable -->
 
@@ -66,7 +66,7 @@
 
       If we assign a number to each node representing the probability that the target (the player) is there, we can start making inferences of where the target could be at later times.
 
-      Let’s say the target was just seen in room R, so node R will be assigned a probability of 1.0.
+      Let’s say the target was just seen in room *R*, so node *R* will be assigned a probability of **1.0**.
       
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -75,7 +75,7 @@
           spec="300" />
       </div>
 
-      After this, the target will either stay in the room or exit the room. We don’t know the chance of either happening so we assume equal chances. The graph is recalculated to reflect this by equally distributing the 1.0 from R to itself (“stay”) and its adjacent node D (“exit”), giving them 0.5 each.
+      After this, the target will either stay in the room or exit the room. We don’t know the chance of either happening so we can just assume equal chances. The graph is recalculated to reflect this by equally distributing the **1.0** from *R* to itself (“stay”) and its adjacent node *D* (“exit”), giving them **0.5** each.
 
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -86,7 +86,7 @@
 
       Now there is 50% probability that the target is in the room, and 50% in the doorway.
       
-      This next iteration is tricky, but it’s all calculated the same. We just need to calculate the distribution from each node in parallel, like so:
+      This next iteration is tricky, but it’s all calculated the same. We just need to calculate the distribution from each node *in parallel*, like so:
 
       <div class="small-diagram-row">
         <blog-media
@@ -101,7 +101,7 @@
           caption="Then sum up the values that arrived in each node." />
       </div>
 
-      After some time, we will get a picture of where the target is likely to be and a smarter game AI can use this to send guards on a more realistic investigation route.
+      After some time, we will get a picture of where the target is likely to be and a smarter game AI can utilise this to send guards on a more realistic investigation route.
 
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -111,13 +111,13 @@
           caption="The state after some time" />
       </div>
 
-      What I’ve just described is some generalisation of a [Markov chain](https://en.wikipedia.org/wiki/Markov_chain). Well, it’s not exactly accurate to call it that since the Markov chain is just one part of the algorithm. You’ll see why in the next section.
+      What I’ve just described is some generalisation of a **[Markov chain](https://en.wikipedia.org/wiki/Markov_chain)**. Well, it’s not exactly accurate to call it that since the Markov chain is just one part of the algorithm. You’ll see why in the next section.
 
       ## Observer effect
 
-      Suppose a guard did come to investigate the nearest highest probability node (the doorway D). Coming from the south, the guard just saw the doorway and the immediate hallway in their field of vision - There are two possibilities: Either (1) they saw nothing, or (2) they saw *the target*.
+      Suppose a guard did come to investigate the nearest highest probability node (the doorway *D*). Coming from the south, the guard just saw the doorway and the immediate hallway in their field of vision - There are two possibilities: Either **(1)** they saw nothing, or **(2)** they saw *the target*.
 
-      In case (1) where the guard saw nothing, we need to update the seen nodes according to the guard’s a posteriori observation.
+      In case **(1)** where the guard saw nothing, we need to update the seen nodes according to the guard’s a posteriori observation.
 
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -127,13 +127,13 @@
           caption="After observation" />
       </div>
 
-      The nodes that were seen having no target at their locations are forced to a probability of 0.0, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to 1.0.
+      The nodes that were seen having no target at their locations are forced to a probability of **0.0**, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to **1.0** (This is an invariant in any case).
 
-      With this particular update we infer that the target is 90% likely to be in the room and 10% in the far hallway.
+      After updating the probabilities, the state of the graph tells us that the target is 90% likely to be in the room *R* and 10% in the far hallway *H0*.
       
-      The game AI can simply send the guard to the highest node again based on the updated probabilities (this case, the room). It can do this again and again, which will result in a seemingly organic searching behaviour from the AI guard. No predefined patrol routes needed.
+      The game AI can simply send the guard to the highest node based on the updated probabilities (this case, the room *R*). It can do this again and again, which will result in a seemingly organic and responsive searching behaviour from the AI guard. No predefined patrol routes needed.
 
-      In case (2) where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned 1.0 while *the rest of the nodes in the whole graph* are cleared back to 0.0. Simply because the target can’t be in two places at once.
+      In case **(2)** where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned **1.0** while *the rest of the nodes in the whole graph* are cleared back to **0.0**. Simply because the target can’t be in two places at once.
 
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -144,37 +144,39 @@
       </div>
 
       <box-note>
-        Similar to quantum mechanics, an act of observation collapses the superposition. There seems to be an underlying mathematical truth that spans across Markov chains, quantum mechanics, and video game mechanics. :P
+        Similar to quantum mechanics, an act of observation collapses the superposition. There seems to be an underlying mathematical truth that spans across Markov chains, quantum mechanics, Bayesian networks, and video game mechanics. :P
       </box-note>
 
-      When the guard loses sight of the target, the 1.0 probability will just spread again like a wave and the cycle of chasing, investigation, and hiding continues.
+      When the guard loses sight of the target, the **1.0** probability will just spread again like a wave and the cycle of chasing, investigation, and hiding continues.
+
+      It’s best to just see it in action. Play with the demo in the following section.
 
       ## Demo
 
-      I implemented this algorithm in JS so you can play with it on this page live. In this implementation, each tile is a node in the graph.
+      I implemented this algorithm in JavaScript so you can play with it on this page live. In this implementation, the world is a 2D grid where each tile is a node in the Markov graph.
       
-      Click to order the target (the green character) to move. The blue fog indicates the probability field. **You need to appear in the guard’s vision first.**
+      Click a tile to command the target (the green character ![](demo/target.png)) to move. The blue fog indicates the probabilities of each tile.
 
       Have fun playing hide and seek!
 
       <dynamic-patrol-demo :map="`
         ....................
-        .T..................
-        ..###..###########..
+        ....................
+        .T##########.#####..
         ..#........#..#..#..
         ..#........#..#..#..
+        ...........#..#..#..
+        ..#........#####.#..
         ..#..............#..
-        ..#..G.....#..#..#..
-        ..#........#..#..#..
-        ..##.#############..
-        ..#........#........
-        ..#........#.....#..
         ..################..
-        ..#...##.....##..#..
-        ..#..###.........#..
-        ..#..##..........#..
-        ..#......##......#..
-        ..#.....###...#..#..
+        .G#........#........
+        ###........#.....#..
+        ..#######.########..
+        ..#....#.........#..
+        ..#....#.........#..
+        ..#.........###..#..
+        ..#....#.........#..
+        ..#....#.........#..
         ..##.#############..
         ....................
         ....................
