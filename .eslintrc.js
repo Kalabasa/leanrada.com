@@ -8,6 +8,7 @@ module.exports = {
     "out/site/wares/canva-photo-editor/index.html", // redirect
   ],
   rules: {
+    "@html-eslint/require-doctype": "error",
     "@html-eslint/require-lang": "error",
     "@html-eslint/require-img-alt": "error",
   },
