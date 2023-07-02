@@ -1,6 +1,9 @@
 <html lang="en">
   <page-title title="Dynamic patrol behaviour in stealth games" />
-  <link rel="syndication" href="https://www.reddit.com/r/IndieDev/comments/14nu6zf/i_made_a_potentialfield_based_algorithm_for/" />
+  <link
+    rel="syndication"
+    href="https://www.reddit.com/r/IndieDev/comments/14nu6zf/i_made_a_potentialfield_based_algorithm_for/"
+  />
   <blog-page header-select="/notes/">
     <!-- prettier-ignore -->
     <markdown>
@@ -130,11 +133,48 @@
           caption="After observation" />
       </div>
 
-      The nodes that were seen having no target at their locations are forced to a probability of **0.0**, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to **1.0** (This is an invariant in any case).
+      The nodes that were seen having no target at their locations are forced to a probability of **0.0**, because if you think about it, that makes sense. The remaining nodes are scaled so that they still add up to **1.0** (This is an invariant in any case).
 
-      After updating the probabilities, the state of the graph tells us that the target is 90% likely to be in the room *R* and 10% in the far hallway *H0*.
+      To illustrate, here’s the previous state: **H0=0.04** and **R=0.35** before observation. Then after the observation, we need these remaining nodes to have a total of **1.0** while keeping the proportions. One way to do that is to *divide each value by the sum of all values*. So **H0=0.04/0.39** and **R=0.35/0.39**, which evaluate to **H0=~0.103** and **R=~0.897** respectively.
+
+      Here's a table that details each step described above.
+
+      <div class="style-hax"></div>
+
+      | Node | Prior<br/>probabilities | Values after<br/>observation | Final values<br/>after rescaling |
+      |------|-------|-------------|----------|
+      | R    | 0.35  | 0.35        | **0.9**  |
+      | D    | 0.39  | **0**       | 0        |
+      | H0   | 0.04  | 0.04        | **0.1**  |
+      | H1   | 0.18  | **0**       | 0        |
+      | H2   | 0.04  | **0**       | 0        |
+
+      <style>
+        /* couldn't style the table without breaking markdown. quik hax */
+        .style-hax + table th:nth-child(n + 3):not(:has(strong))::before,
+        .style-hax + table td:nth-child(n + 3):not(:has(strong))::before,
+        .style-hax + table th:nth-child(n + 3) strong::before,
+        .style-hax + table td:nth-child(n + 3) strong::before {
+          content: "➡ ";
+          color: inherit;
+        }
+        .style-hax + table tr th:nth-child(3),
+        .style-hax + table tr td:nth-child(3) strong {
+          color: #f88;
+        }
+        .style-hax + table tr th:nth-child(4),
+        .style-hax + table tr td:nth-child(4) strong {
+          color: #8ff;
+        }
+      </style>
+
+      <box-note>Another way to go about this is to keep track of probabilities in the form of rational numbers - separately tracking the numerators and the denominators. Only store the numerator per node, and there is one global denominator which is the sum of all the numerators. This is what I did for my demo implementation.</box-note>
+
+      Thus, after updating the probabilities, the state of the graph tells us that the target is around 90% likely to be in the room *R* and 10% in the far hallway *H0*.
       
       The game AI can simply send the guard to the highest node based on the updated probabilities (this case, the room *R*). It can do this again and again, which will result in a seemingly organic and responsive searching behaviour from the AI guard. No predefined patrol routes needed.
+
+      ---
 
       In case **(2)** where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned **1.0** while *the rest of the nodes in the whole graph* are cleared back to **0.0**. Simply because the target can’t be in two places at once.
 
@@ -191,13 +231,15 @@
       * As the chase continues, the path begins branching, and the probability dilutes. The guard gradually transitions from chasing behaviour to a searching behaviour, eventually devolving into a plain patrol.
       * All of these behaviours emerged from the Markov-quantum system (idk what to call it). There’s no explicit code for chasing, searching, or patrolling.
       * The probability spreading process can be drastically sped-up by implementing Markov chain transitions using a transition matrix and matrix multiplication. Matrix multiplication is [embarrasingly parallel](https://en.wikipedia.org/wiki/Embarrassingly_parallel).
-      * The search route can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.
+      * The search route quality can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.
         - One improvement might involve incorporating the potential field as weights in the pathfinding algorithm itself to generate a more efficient and sweeping route.
         - One could use the potential field itself as tile-by-tile directions for the agents. No time-intensive pathfinder needed. The agents might even behave like hound dogs tracking the target by scent.
 
       Sadly, the name <text-link href="https://github.com/mxgmn/WaveFunctionCollapse">“Wave Function Collapse”</text-link> has already been claimed by a different video game algorithm, so I can’t give this one a cool quantum name anymore.
 
-      **Bonus demo, 2 guards**
+      ---
+
+      **Bonus demo! 2 guards.**
 
       <dynamic-patrol-demo :map="`
         .................#..
