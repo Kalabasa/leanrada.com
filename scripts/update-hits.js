@@ -34,7 +34,7 @@ async function getHits() {
   const res = await fetch("https://kalabasa.goatcounter.com/counter/TOTAL.json");
   const data = await res.json();
   console.log("Hits:", data.count);
-  return data.count;
+  return parseInt(data.count.replaceAll(/\D/g, ""));
 }
 
 async function updateHits(outFile) {
