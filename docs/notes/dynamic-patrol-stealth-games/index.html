@@ -920,6 +920,14 @@
     }
 
     .markdown>table {
+      display: inline-block;
+      /* scrollable table */
+      overflow-x: auto;
+      /* scrollable table */
+      white-space: nowrap;
+      /* scrollable table */
+      max-width: 100%;
+      /* scrollable table */
       border-collapse: collapse;
       background-color: var(--card-clr);
       border-radius: 12px;
@@ -1233,6 +1241,26 @@
       }
     }
   </style>
+  <style>
+    /* couldn't style the table without breaking markdown. quik hax */
+    .style-hax+table th:nth-child(n + 3):not(:has(strong))::before,
+    .style-hax+table td:nth-child(n + 3):not(:has(strong))::before,
+    .style-hax+table th:nth-child(n + 3) strong::before,
+    .style-hax+table td:nth-child(n + 3) strong::before {
+      content: "➡ ";
+      color: inherit;
+    }
+
+    .style-hax+table tr th:nth-child(3),
+    .style-hax+table tr td:nth-child(3) strong {
+      color: #f88;
+    }
+
+    .style-hax+table tr th:nth-child(4),
+    .style-hax+table tr td:nth-child(4) strong {
+      color: #8ff;
+    }
+  </style>
 </head>
 
 
@@ -1360,9 +1388,57 @@
               </div>
             </div>
 
-            <p>The nodes that were seen having no target at their locations are forced to a probability of <strong>0.0</strong>, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to <strong>1.0</strong> (This is an invariant in any case).</p>
-            <p>After updating the probabilities, the state of the graph tells us that the target is 90% likely to be in the room <em>R</em> and 10% in the far hallway <em>H0</em>.</p>
+            <p>The nodes that were seen having no target at their locations are forced to a probability of <strong>0.0</strong>, because if you think about it, that makes sense. The remaining nodes are scaled so that they still add up to <strong>1.0</strong> (This is an invariant in any case).</p>
+            <p>To illustrate, here’s the previous state: <strong>H0=0.04</strong> and <strong>R=0.35</strong> before observation. Then after the observation, we need these remaining nodes to have a total of <strong>1.0</strong> while keeping the proportions. One way to do that is to <em>divide each value by the sum of all values</em>. So <strong>H0=0.04/0.39</strong> and <strong>R=0.35/0.39</strong>, which evaluate to <strong>H0=~0.103</strong> and <strong>R=~0.897</strong> respectively.</p>
+            <p>Here's a table that details each step described above.</p>
+            <div class="style-hax"></div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Node</th>
+                  <th>Prior<br>probabilities</th>
+                  <th>Values after<br>observation</th>
+                  <th>Final values<br>after rescaling</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>R</td>
+                  <td>0.35</td>
+                  <td>0.35</td>
+                  <td><strong>0.9</strong></td>
+                </tr>
+                <tr>
+                  <td>D</td>
+                  <td>0.39</td>
+                  <td><strong>0</strong></td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>H0</td>
+                  <td>0.04</td>
+                  <td>0.04</td>
+                  <td><strong>0.1</strong></td>
+                </tr>
+                <tr>
+                  <td>H1</td>
+                  <td>0.18</td>
+                  <td><strong>0</strong></td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>H2</td>
+                  <td>0.04</td>
+                  <td><strong>0</strong></td>
+                  <td>0</td>
+                </tr>
+              </tbody>
+            </table>
+            <p><span class="box-note ">Another way to go about this is to keep track of probabilities in the form of rational numbers - separately tracking the numerators and the denominators. Only store the numerator per node, and there is one global denominator which is the sum of all the numerators. This is what I did for my demo implementation.</span></p>
+            <p>Thus, after updating the probabilities, the state of the graph tells us that the target is around 90% likely to be in the room <em>R</em> and 10% in the far hallway <em>H0</em>.</p>
             <p>The game AI can simply send the guard to the highest node based on the updated probabilities (this case, the room <em>R</em>). It can do this again and again, which will result in a seemingly organic and responsive searching behaviour from the AI guard. No predefined patrol routes needed.</p>
+            <hr>
             <p>In case <strong>(2)</strong> where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned <strong>1.0</strong> while <em>the rest of the nodes in the whole graph</em> are cleared back to <strong>0.0</strong>. Simply because the target can’t be in two places at once.</p>
             <div class="small-diagram-row small-diagram-row-solo">
               <div class="blog-media blog-media-default">
@@ -1408,14 +1484,15 @@
               <li>As the chase continues, the path begins branching, and the probability dilutes. The guard gradually transitions from chasing behaviour to a searching behaviour, eventually devolving into a plain patrol.</li>
               <li>All of these behaviours emerged from the Markov-quantum system (idk what to call it). There’s no explicit code for chasing, searching, or patrolling.</li>
               <li>The probability spreading process can be drastically sped-up by implementing Markov chain transitions using a transition matrix and matrix multiplication. Matrix multiplication is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Embarrassingly_parallel">embarrasingly parallel</a>.</li>
-              <li>The search route can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.<ul>
+              <li>The search route quality can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.<ul>
                   <li>One improvement might involve incorporating the potential field as weights in the pathfinding algorithm itself to generate a more efficient and sweeping route.</li>
                   <li>One could use the potential field itself as tile-by-tile directions for the agents. No time-intensive pathfinder needed. The agents might even behave like hound dogs tracking the target by scent.</li>
                 </ul>
               </li>
             </ul>
             <p>Sadly, the name <a target="_blank" class="text-link " href="https://github.com/mxgmn/WaveFunctionCollapse">“Wave Function Collapse”</a> has already been claimed by a different video game algorithm, so I can’t give this one a cool quantum name anymore.</p>
-            <p><strong>Bonus demo, 2 guards</strong></p>
+            <hr>
+            <p><strong>Bonus demo! 2 guards.</strong></p>
             <p><dynamic-patrol-demo-client map="
         .................#..
         .T...............#..
