@@ -3,11 +3,11 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const fetch = require("node-fetch");
 
-const apiKey = process.env.GOATCOUNTER_API_KEY;
+// const apiKey = process.env.GOATCOUNTER_API_KEY;
 
-if (!apiKey) {
-  throw new Error("Env var GOATCOUNTER_API_KEY missing!");
-}
+// if (!apiKey) {
+//   throw new Error("Env var GOATCOUNTER_API_KEY missing!");
+// }
 
 if (require.main === module) {
   process.chdir(path.resolve(__dirname, ".."));
@@ -21,17 +21,20 @@ if (require.main === module) {
 
 async function getHits() {
   console.log("Fetching hits...");
-  const res = await fetch(
-    "https://kalabasa.goatcounter.com/api/v0/stats/total?start=1970-01-01T00:00:00.000Z",
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`
-      }
-    }
-  );
+  // const res = await fetch(
+  //   "https://kalabasa.goatcounter.com/api/v0/stats/total?start=1970-01-01T00:00:00.000Z",
+  //   {
+  //     headers: {
+  //       Authorization: `Bearer ${apiKey}`
+  //     }
+  //   }
+  // );
+  // const data = await res.json();
+  // console.log("Hits:", data.total);
+  const res = await fetch("https://kalabasa.goatcounter.com/counter/TOTAL.json");
   const data = await res.json();
-  console.log("Hits:", data.total);
-  return data.total;
+  console.log("Hits:", data.count_unique);
+  return data.count_unique;
 }
 
 async function updateHits(outFile) {
