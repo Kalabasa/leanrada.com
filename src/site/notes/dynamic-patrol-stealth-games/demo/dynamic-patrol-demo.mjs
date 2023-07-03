@@ -28,9 +28,10 @@ class DynamicPatrolDemo {
     this.knowledgeMap = Array.from({ length: mapWidth }, () => Array.from({ length: mapHeight }, () => KNOW_NONE));
     // Immediate guard knowledge (per target)
     this.knownTargetPositions = [];
-    // Potential field predicting target position in unknown (KNOW_NONE) tiles (per target)
+    // Potential fields predicting target position (this is an array of 2D arrays, one 2D array map per target)
+    // potentialMaps[targetIndex] = 2D array
     this.potentialMaps = [];
-    // Potential field denominator (per target)
+    // Potential field denominator (per target, indexed by targetIndex like above)
     this.totalPotentials = [];
     // Used for updating potentials
     this.tempDeltaMap = Array.from({ length: this.mapWidth }, () => Array.from({ length: this.mapHeight }, () => 0));
@@ -189,7 +190,7 @@ class DynamicPatrolDemo {
             const potential = this.getPotential(x, y, i);
             const dist = Math.hypot(x - guard.x, y - guard.y);
 
-            const score = ((200 * potential) / (15 + dist)) % (0.1 / guard.index);
+            const score = (200 * potential) / (10 + 40 * guard.index + dist);
             if (score > highScore) {
               highScore = score;
               destX = x;
