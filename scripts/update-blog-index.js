@@ -23,16 +23,23 @@ async function main() {
     // Underscore-prefixed directories are unpublished.
     if (path.basename(dir).startsWith("_")) return null;
 
-    // Yep, scraping my own source code
+    // HTML is the source of truth
+    // todo: use microformat?
     const code = await fs.readFile(page);
     const ch = cheerio.load(code, { xmlMode: true });
 
     const header = ch("blog-header");
+    const pageTitle = ch("page-title");
+    const title = ch("title");
     const info = ch("blog-post-info");
 
-    const title = header.attr("title");
+    const titleText = header.attr("title") ?? pageTitle.attr("title") ?? title.text();
     const date = info.attr("date");
-    return { href: `/${href}/`, title, date };
+    if (!date) {
+      console.error("No date for page:", titleText);
+    }
+
+    return { href: `/${href}/`, title: titleText, date };
   }))).filter(it => it);
 
   console.log(index);
