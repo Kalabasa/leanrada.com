@@ -240,7 +240,7 @@ class DynamicPatrolDemo {
 
           for (let i = 0; i < this.targets.length; i++) {
             const target = this.targets[i];
-            if (!this.knownTargetPositions[i] && target.x === x && target.y === y) {
+            if (target.x === x && target.y === y) {
               this.knownTargetPositions[i] = { x, y };
               this.knowledgeMap[x][y] = KNOW_TARGET;
             }
