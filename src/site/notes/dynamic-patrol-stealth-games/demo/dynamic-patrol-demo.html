@@ -1,4 +1,4 @@
-<dynamic-patrol-demo-client {...attrs} />
+<dynamic-patrol-demo-client {...attrs} tabindex="0" />
 
 <style>
   dynamic-patrol-demo-client {
@@ -52,6 +52,7 @@
         this.targetDestSprite = null;
         this.targetTrailSprites = [];
         this.tileSize = 1;
+        this.showPotentials = true;
 
         this.model = null;
         this.modelTickId = null;
@@ -62,6 +63,12 @@
 
       connectedCallback() {
         super.connectedCallback();
+
+        this.aliveListener(this, "keypress", (event) => {
+          if (event.key === "p") {
+            this.showPotentials = !this.showPotentials;
+          }
+        });
 
         this.visibilityListener({
           show: () => {
@@ -226,7 +233,6 @@
       onClick = (event) => {
         const { x: mouseX, y: mouseY } = getMousePos(this);
         const { x: tileX, y: tileY } = this.tilePosFromPixel(mouseX, mouseY);
-        console.log(mouseX, mouseY, tileX, tileY);
         if (
           tileX < 0 ||
           tileY < 0 ||
@@ -261,7 +267,9 @@
             const tileSprite = this.tileSprites[x][y];
             const know = this.model.getKnowledge(x, y);
             if (know === KNOW_NONE) {
-              const potential = this.model.getPotential(x, y, 0);
+              const potential = this.showPotentials
+                ? this.model.getPotential(x, y, 0)
+                : 0;
 
               const tint =
                 potential > 0 ? Math.min(1, 0.05 + 4 * potential ** 0.5) : 0;
