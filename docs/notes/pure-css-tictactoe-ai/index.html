@@ -216,478 +216,6 @@
   <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
   <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
   <style>
-    @font-face {
-      font-family: "Space Mono";
-      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Space Mono";
-      font-style: italic;
-      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Miriam Libre";
-      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
-    }
-
-    @font-face {
-      font-family: "Miriam Libre";
-      font-weight: bold;
-      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
-    }
-
-    :root {
-      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
-      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
-
-      --bg-clr: #111;
-      --card-clr: #222;
-      --clr0-light: #54f8c1;
-      --clr0: #0ad591;
-      --clr0-dark: #018b5d;
-      --clr1: #df2063;
-
-      --text-clr: #fff;
-      --text2-clr: #999;
-
-      --ease: cubic-bezier(0.8, 0, 1, 1);
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: var(--default-font, monospace);
-      font-size: 15px;
-      font-display: swap;
-      background-color: var(--bg-clr, #111);
-      color: var(--text-clr, #fff);
-      overflow-x: hidden;
-    }
-
-    .page-wrapper {
-      display: flex;
-      flex-direction: column;
-      min-height: 100%;
-    }
-
-    .page-wrapper-content {
-      flex: 1 1 auto;
-    }
-  </style>
-  <style>
-    nebula-client>canvas {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-  <style>
-    .main-footer-link {
-      text-decoration: none;
-    }
-
-    .main-footer-link-icon {
-      width: 32px;
-      height: 32px;
-      image-rendering: pixelated;
-    }
-
-    .main-footer-link-icon:hover {
-      filter: invert(1);
-    }
-  </style>
-  <style>
-    .main-footer {
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      gap: 60px;
-      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
-      font-size: 15px;
-      font-weight: bold;
-      background: var(--clr0);
-      color: #000;
-      overflow: hidden;
-      content-visibility: auto;
-      contain-intrinsic-height: 220x;
-    }
-
-    .main-footer-links-heading {
-      margin: 0 0 18px;
-      font-size: inherit;
-    }
-
-    .main-footer-line {
-      margin: 0 0 18px;
-    }
-
-    .main-footer-nav {
-      color: #000;
-    }
-
-    .main-footer-nav:hover {
-      color: #fff;
-    }
-
-    .main-footer-content-part {
-      z-index: 1;
-    }
-
-    .main-footer-nebula {
-      position: absolute;
-      left: -30%;
-      top: -30%;
-      width: 160%;
-      height: 160%;
-      z-index: 0;
-    }
-
-    .main-footer-top-btn {
-      display: block;
-      z-index: 2;
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 72px;
-      height: 36px;
-      padding-right: 9px;
-      box-sizing: border-box;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: none;
-      border-bottom-left-radius: 18px;
-      background: var(--bg-clr);
-      text-decoration: none;
-      color: var(--clr0-light);
-      font: inherit;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .main-footer-top-btn:hover {
-      color: var(--clr1);
-    }
-
-    .main-footer-top-btn::before {
-      content: "";
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 36px;
-      height: 18px;
-      border-top-right-radius: 18px;
-      transform: translateX(-72px);
-      box-shadow: 18px 0 0 var(--bg-clr);
-    }
-
-    @media (max-width: 700px) {
-      .main-footer {
-        flex-direction: column-reverse;
-      }
-    }
-  </style>
-  <style>
-    .main-header {
-      position: sticky;
-      top: 0;
-      width: 100%;
-      height: 60px;
-      padding: 0 calc(25% - 150px);
-      z-index: 100;
-      box-sizing: border-box;
-      pointer-events: none;
-    }
-
-    .main-header.float {
-      position: fixed;
-    }
-
-    .main-header-bar {
-      position: relative;
-      display: flex;
-      justify-content: space-evenly;
-      align-items: flex-end;
-      height: 100%;
-    }
-
-    .main-header-item {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      width: 6ch;
-      height: 36px;
-      padding: 0 18px;
-      border-radius: 18px;
-      font-size: 15px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      text-decoration: none;
-      text-transform: uppercase;
-      color: #fff;
-      backdrop-filter: blur(8px);
-      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
-      background-repeat: no-repeat;
-      background-size: 220% 100%;
-      background-position: 115%;
-      pointer-events: all;
-      transition: background-position 0.2s var(--ease);
-    }
-
-    .main-header-item:hover {
-      background-image: linear-gradient(60deg,
-          #fff2 50%,
-          #fff 50%,
-          #fff 60%,
-          transparent 60%);
-      background-position: 0%;
-    }
-
-    .main-header-item.select {
-      background: #fff2;
-    }
-
-    .main-header-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      image-rendering: pixelated;
-      object-fit: cover;
-      object-position: 0 0;
-      filter: invert(1);
-      backdrop-filter: blur(8px) invert(1);
-      pointer-events: all;
-    }
-
-    .main-header-icon:hover {
-      object-position: 100% 0;
-    }
-
-    @media (max-width: 450px) {
-      .main-header-icon {
-        display: none;
-      }
-    }
-
-    .main-header-indicator {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      left: 50%;
-      top: calc(100% + 12px);
-      transform: translate(-50%, -50%);
-      /* border acts as extended touch area */
-      border: solid 6mm transparent;
-      border-left-width: 45vw;
-      border-right-width: 45vw;
-      border-radius: 50%;
-      background: #fff;
-      background-clip: padding-box;
-      opacity: 0;
-      transition: opacity 50ms;
-    }
-
-    .main-header.hidden .main-header-indicator {
-      opacity: 0.8;
-      pointer-events: all;
-    }
-  </style>
-  <style>
-    .blog-page {
-      display: flex;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .content {
-      padding: 60px 18px;
-      width: 100%;
-      max-width: 700px;
-      font-family: var(--reading-font, sans-serif);
-      font-size: 16px;
-      line-height: 2.2;
-      letter-spacing: 0.02em;
-      color: #ddd;
-      box-sizing: border-box;
-    }
-
-    .markdown>h1,
-    .markdown>h2,
-    .markdown>h3,
-    .markdown>h4,
-    .markdown>h5,
-    .markdown>h6 {
-      font-family: var(--default-font, monospace);
-      font-weight: lighter;
-      font-style: italic;
-      line-height: 1.6;
-      letter-spacing: 0.04em;
-      margin: 48px 0 36px;
-    }
-
-    .markdown>h1 {
-      text-align: center;
-      font-size: 200%;
-    }
-
-    .markdown>h2 {
-      font-size: 150%;
-    }
-
-    .markdown>h3,
-    .markdown>h4,
-    .markdown>h5,
-    .markdown>h6 {
-      font-size: 120%;
-      font-weight: bold;
-    }
-
-    .markdown>p {
-      margin: 36px 0;
-    }
-
-    .markdown>table {
-      display: inline-block;
-      /* scrollable table */
-      overflow-x: auto;
-      /* scrollable table */
-      white-space: nowrap;
-      /* scrollable table */
-      max-width: 100%;
-      /* scrollable table */
-      border-collapse: collapse;
-      background-color: var(--card-clr);
-      border-radius: 12px;
-    }
-
-    .markdown>table th,
-    .markdown>table td {
-      text-align: start;
-      padding: 9px 12px;
-      padding-inline-end: 18px;
-      border-bottom: solid 1px #444;
-    }
-
-    .markdown>table>tbody>tr:last-child>td {
-      border-bottom: none;
-    }
-
-    .markdown>hr {
-      width: 36px;
-      margin: 90px auto;
-      border: solid 1.5px #ccc;
-      background: #ccc;
-      border-radius: 3px;
-    }
-
-    .markdown code:not([class]):not([class]) {
-      display: inline-block;
-      padding: 0 6px;
-      border-radius: 6px;
-      font-family: var(--default-font, monospace);
-      font-size: 15px;
-      background: var(--card-clr);
-    }
-
-    .markdown>pre:not([class])>code:not([class]) {
-      display: block;
-      padding: 18px;
-      border-radius: 18px;
-      line-height: 1.6;
-      font-size: 15px;
-      overflow-x: auto;
-    }
-
-    .markdown>blockquote {
-      position: relative;
-      margin: 0;
-      padding: 18px 24px;
-      border-radius: 18px;
-      border: solid 1px var(--clr0);
-      font-size: 21px;
-    }
-
-    .markdown>blockquote::before {
-      content: "";
-      position: absolute;
-      right: 100%;
-      top: 0;
-      height: 24px;
-      width: 24px;
-      border-bottom: solid 1px var(--clr0);
-      box-sizing: border-box;
-    }
-
-    .markdown>blockquote::after {
-      content: "";
-      position: absolute;
-      right: 100%;
-      top: 24px;
-      bottom: 18px;
-      width: 24px;
-      border-top-right-radius: 24px;
-      border: solid var(--clr0);
-      border-width: 1px 1px 0 0;
-      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
-      box-sizing: border-box;
-    }
-
-    .markdown>blockquote> :first-child {
-      margin-top: 0;
-    }
-
-    .markdown>blockquote> :last-child {
-      margin-bottom: 0;
-    }
-
-    .markdown>blockquote cite {
-      display: block;
-      margin-top: 12px;
-      font-size: 15px;
-      font-style: inherit;
-    }
-
-    .markdown>blockquote cite::before {
-      content: "—";
-    }
-
-    .markdown>iframe,
-    .markdown>p>iframe {
-      max-width: calc(100vw - 18px);
-      border: none;
-      border-radius: 18px;
-      background: #fff;
-    }
-
-    .markdown .center {
-      text-align: center;
-    }
-
-    .markdown .center-flex {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
-    .markdown .bleed {
-      position: relative;
-      left: 50%;
-      width: 100vh;
-      max-width: max(min(100vw, 800px), 80vw);
-      transform: translateX(-50%);
-    }
-
-    /* todo: convert to component <caption>, reuse across <blog-media> */
-    .markdown .caption {
-      display: block;
-      font-size: 15px;
-    }
-  </style>
-  <style>
     .text-link {
       color: var(--clr0-light, #fff);
     }
@@ -1155,13 +683,38 @@
     }
   </style>
   <style>
+    .tag-component {
+      display: inline-block;
+      padding: 0 3px;
+      height: 16px;
+      line-height: 16px;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      background: #ccc;
+      color: #444;
+      border-radius: 3px;
+    }
+  </style>
+  <style>
+    .tag-row {
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+  <style>
     .blog-post-info {
-      margin: 24px 0 0;
+      margin: 24px 0;
       font-family: var(--default-font);
       font-size: 12px;
       font-weight: bold;
       text-align: center;
       color: var(--text2-clr);
+    }
+
+    .blog-post-info-hidden {
+      display: none;
     }
   </style>
   <style>
@@ -1180,7 +733,7 @@
   <style>
     .blog-header {
       isolation: isolate;
-      margin-top: 60px;
+      margin: 90px 0 24px;
       position: relative;
       left: 50%;
       height: 600px;
@@ -1248,6 +801,478 @@
       .blog-header-title::before {
         content: none;
       }
+    }
+  </style>
+  <style>
+    @font-face {
+      font-family: "Space Mono";
+      src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Space Mono";
+      font-style: italic;
+      src: url("/fonts/SpaceMono-Italic.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      src: url("/fonts/MiriamLibre-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Miriam Libre";
+      font-weight: bold;
+      src: url("/fonts/MiriamLibre-Bold.ttf") format("truetype");
+    }
+
+    :root {
+      --default-font: "Space Mono", monaco, Consolas, Lucida Console, monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111;
+      --card-clr: #222;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #018b5d;
+      --clr1: #df2063;
+
+      --text-clr: #fff;
+      --text2-clr: #999;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <style>
+    .main-footer-link {
+      text-decoration: none;
+    }
+
+    .main-footer-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 60px calc(max(60px, 50vw - 600px)) 60px;
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 220x;
+    }
+
+    .main-footer-links-heading {
+      margin: 0 0 18px;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 0 0 18px;
+    }
+
+    .main-footer-nav {
+      color: #000;
+    }
+
+    .main-footer-nav:hover {
+      color: #fff;
+    }
+
+    .main-footer-content-part {
+      z-index: 1;
+    }
+
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
+
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
+
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
+
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
+
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .blog-page {
+      margin: auto;
+      overflow: hidden;
+    }
+
+    .content {
+      margin: auto;
+      padding: 0 18px 60px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown>h1,
+    .markdown>h2,
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-family: var(--default-font, monospace);
+      font-weight: lighter;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      margin: 48px 0 36px;
+    }
+
+    .markdown>h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown>h2 {
+      font-size: 150%;
+    }
+
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    .markdown>p {
+      margin: 36px 0;
+    }
+
+    .markdown>table {
+      display: inline-block;
+      /* scrollable table */
+      overflow-x: auto;
+      /* scrollable table */
+      white-space: nowrap;
+      /* scrollable table */
+      max-width: 100%;
+      /* scrollable table */
+      border-collapse: collapse;
+      background-color: var(--card-clr);
+      border-radius: 12px;
+    }
+
+    .markdown>table th,
+    .markdown>table td {
+      text-align: start;
+      padding: 9px 12px;
+      padding-inline-end: 18px;
+      border-bottom: solid 1px #444;
+    }
+
+    .markdown>table>tbody>tr:last-child>td {
+      border-bottom: none;
+    }
+
+    .markdown>hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code:not([class]):not([class]) {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      background: var(--card-clr);
+    }
+
+    .markdown>pre:not([class])>code:not([class]) {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      font-size: 15px;
+      overflow-x: auto;
+    }
+
+    .markdown>blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown>blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown>blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown>blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown>blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown>iframe,
+    .markdown>p>iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+    .markdown .bleed {
+      position: relative;
+      left: 50%;
+      width: 100vh;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
     }
   </style>
   <style>
@@ -1323,10 +1348,12 @@
     <div class="page-wrapper-content">
 
       <div class="blog-page">
+
         <div class="content">
 
           <!-- prettier-ignore -->
           <div class="markdown">
+            <p>
             <div class="blog-header">
               <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
                 <h1 class="text-with-bg-span blog-header-title-inner">
@@ -1338,9 +1365,14 @@
                 <path></path>
               </svg>
             </div>
-
-            <div class="blog-post-info">
+            </p>
+            <p>
+            <div class="blog-post-info ">
               5 May 2023 · 11 min read
+            </div>
+            </p>
+            <div class="tag-row">tags:
+              <span class="tag-component" style="background: rgb(129,125,181); color: rgb(48,46,71)">css</span>
             </div>
 
             <p>As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only <strong>HTML</strong> and <strong>CSS</strong>. That is, no JavaScript! We already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.</p>
@@ -1366,17 +1398,19 @@
             </div>
 
             <p>To do this, we need an extra element for the checkbox visuals, like an empty span element.</p>
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>label</span><span class="token punctuation">&gt;</span></span>
   <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>checkbox<span class="token punctuation">"</span></span> <span class="token punctuation">/&gt;</span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">&gt;</span></span> Check this out
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>label</span><span class="token punctuation">&gt;</span></span></code></pre>
-
+            </p>
             <p>On the CSS side, the real checkbox input is hidden, while the span is styled as a checkbox in its stead.</p>
             <p>Now here’s the important part, we’ll use the <code>:checked</code> pseudo-class and the <strong>sibling combinator</strong> <code>~</code> to make it all work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the separate fake checkbox element.</p>
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ span</span> <span class="token punctuation">{</span>
   <span class="token property">background-color</span><span class="token punctuation">:</span> red<span class="token punctuation">;</span>
   <span class="token property">transform</span><span class="token punctuation">:</span> <span class="token function">rotate</span><span class="token punctuation">(</span>45deg<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-
+            </p>
             <p>Custom checkboxes! Easy.</p>
             <h3 id="action-at-a-distance">Action at a distance</h3>
             <p>The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”, for example:</p>
@@ -1391,18 +1425,20 @@
               </fieldset>
             </div>
 
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
     <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 <span class="token selector">input:checked ~ .advice .no-umbrella</span> <span class="token punctuation">{</span>
     <span class="token property">visibility</span><span class="token punctuation">:</span> hidden<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-
+            </p>
             <p>As you’ll see later, the sibling combinator <code>~</code> can be very useful for these types of interactions.</p>
             <h3 id="the-next-level">The next level</h3>
             <p>Let’s take this to the next level, shall we?</p>
             <p>Using the <code>&lt;label&gt;</code>’s <code>for</code> attribute, we can get even more action at a distance. We can make pretty much any kind of UI we want!</p>
             <p>Presenting… the weather-advice-o-matic! 🌈 Go ahead, press the button!</p>
+            <p>
             <div class="css-rain-machine-demo css-rain-machine-demo-1">
               <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--1" type="checkbox">
               <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--1" type="checkbox">
@@ -1420,16 +1456,18 @@
                 </div>
               </div>
             </div>
-
+            </p>
             <h3 id="or">OR</h3>
             <p>A single button is not very exciting, is it? Let’s add another input and implement an <strong>OR</strong> construct to determine the output. I mean this kind of thing: "if A or B then C".</p>
             <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (i.e., comma-separated selectors).</p>
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ .advice .take-umbrella,
 input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-
+            </p>
             <p>Now, weather-advice-o-matic can make decisions based on two parameters!</p>
+            <p>
             <div class="css-rain-machine-demo css-rain-machine-demo-2">
               <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--2" type="checkbox">
               <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--2" type="checkbox">
@@ -1447,15 +1485,17 @@ input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuati
                 </div>
               </div>
             </div>
-
+            </p>
             <p>(If RAINY or SUNNY then UMBRELLA)</p>
             <h3 id="and">AND</h3>
             <p>How about <strong>AND</strong>? We can implement an AND construct too! This involves chaining the inputs together in a single selector using sibling combinators.</p>
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-
+            </p>
             <p>What’s this? Weather-advice-o-matic can now make nuanced decisions! Wow! Careful, it might be sentient!!!</p>
+            <p>
             <div class="css-rain-machine-demo css-rain-machine-demo-3">
               <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--3" type="checkbox">
               <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--3" type="checkbox">
@@ -1473,23 +1513,24 @@ input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuati
                 </div>
               </div>
             </div>
-
+            </p>
             <p>(If RAINY and WINDY then RAINCOAT)</p>
             <p>Here’s a summary of what we have so far:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/* if A or B then C */</span>
-<span class="token selector">A ~ C,
-B ~ C</span> <span class="token punctuation">{</span>
-  C
-<span class="token punctuation">}</span>
-
-<span class="token comment">/* if A and B then C */</span>
-<span class="token selector">A ~ B ~ C</span> <span class="token punctuation">{</span>
-  C
-<span class="token punctuation">}</span></code></pre>
-
+            <p>&lt;code-block language="css" code="
+              /* if A or B then C */
+              A ~ C,
+              B ~ C {
+              C
+              }</p>
+            <p>/* if A and B then C */
+              A ~ B ~ C {
+              C
+              }
+              "&gt;</p>
             <p>Another basic computing operator aside from AND and OR is the <strong>NOT</strong> operator. We don’t really need that here, but for the record, there’s the <code>:not()</code> pseudo-class in CSS. You can figure that out.</p>
             <h2 id="prototype-three-in-a-row">Prototype: Three-in-a-row</h2>
             <p>As a proof of concept and precursor to tic-tac-toe, let’s look at this three-in-a-row game.</p>
+            <p>
             <div class="css-three-in-a-row">
               <input id="css-three-in-a-row-1" type="checkbox">
               <input id="css-three-in-a-row-2" type="checkbox">
@@ -1514,9 +1555,10 @@ B ~ C</span> <span class="token punctuation">{</span>
                 <div class="css-three-in-a-row-win">WINNER</div>
               </div>
             </div>
-
+            </p>
             <p>This is a 3x3 array of checkbox inputs. Internally, each box is numbered 1 to 9 starting from the top-left box going left-to-right row-wise.</p>
             <p>Here are the rules for implementing the win condition in CSS:</p>
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
 #4:checked ~ #5:checked ~ #6:checked ~ .win,
 #7:checked ~ #8:checked ~ #9:checked ~ .win,
@@ -1527,42 +1569,50 @@ B ~ C</span> <span class="token punctuation">{</span>
 #3:checked ~ #5:checked ~ #7:checked ~ .win</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-
+            </p>
             <p>Yes, it’s kinda hacky, but that is expected when you force logic into CSS. For comparison, the CSS for tic-tac-toe goes over 9000 lines! I never said it would be clean.</p>
             <p>Anyway, these 8 lines correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers <em>every possible winning combination</em>. The pseudocode in the comment helps illustrate this:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/*
- * if
- *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
- *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
- *   or ([#7 marked] and [#8 marked] and [#9 marked]) // bottom row
- *   .
- *   :
- *   or ([#3 marked] and [#5 marked] and [#7 marked]) // upward diagonal
- * then
- *   [win]
- */</span>
-<span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
-#4:checked ~ #5:checked ~ #6:checked ~ .win,
-#7:checked ~ #8:checked ~ #9:checked ~ .win,
-#1:checked ~ #4:checked ~ #7:checked ~ .win,
-#2:checked ~ #5:checked ~ #8:checked ~ .win,
-#3:checked ~ #6:checked ~ #9:checked ~ .win,
-#1:checked ~ #5:checked ~ #9:checked ~ .win,
-#3:checked ~ #5:checked ~ #7:checked ~ .win</span> <span class="token punctuation">{</span>
-  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-
+            <p>&lt;code-block language="css" code="
+              /*</p>
+            <ul>
+              <li>if</li>
+              <li>
+                <pre><code> ([#1 marked] and [#2 marked] and [#3 marked]) // top row
+</code></pre>
+              </li>
+              <li>or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row</li>
+              <li>or ([#7 marked] and [#8 marked] and [#9 marked]) // bottom row</li>
+              <li>.</li>
+              <li>:</li>
+              <li>or ([#3 marked] and [#5 marked] and [#7 marked]) // upward diagonal</li>
+              <li>then</li>
+              <li>[win]
+                */</li>
+            </ul>
+            <p>#1:checked ~ #2:checked ~ #3:checked ~ .win,
+              #4:checked ~ #5:checked ~ #6:checked ~ .win,
+              #7:checked ~ #8:checked ~ #9:checked ~ .win,
+              #1:checked ~ #4:checked ~ #7:checked ~ .win,
+              #2:checked ~ #5:checked ~ #8:checked ~ .win,
+              #3:checked ~ #6:checked ~ #9:checked ~ .win,
+              #1:checked ~ #5:checked ~ #9:checked ~ .win,
+              #3:checked ~ #5:checked ~ #7:checked ~ .win {
+              visibility: visible;
+              }
+              "&gt;</p>
             <h2 id="taking-turns">Taking turns</h2>
             <p>So far, the order of your inputs doesn’t matter. You can even undo your inputs by unchecking the boxes (Try it above). That won’t fly in a game of tic-tac-toe, where we take turns incrementally marking the board. No backsies!</p>
             <p>We need a way to <strong>“consume”</strong> inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.</p>
             <p>So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn. Stacked on top of each other, each set is only interactable on its turn.</p>
+            <p>
             <div class="blog-media blog-media-default">
               <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="input sets illustration">
                 <source src="/notes/pure-css-tictactoe-ai/input_sets.mp4">
                 <a href="/notes/pure-css-tictactoe-ai/input_sets.mp4">input sets illustration</a>
               </video>
             </div>
-
+            </p>
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token comment">/* Disable turn 1 inputs when turn 1 is played */</span>
 <span class="token selector">input[name="turn_1"]:checked ~ input[name="turn_1"]</span> <span class="token punctuation">{</span>
     <span class="token property">pointer-events</span><span class="token punctuation">:</span> none<span class="token punctuation">;</span>
@@ -1572,9 +1622,10 @@ B ~ C</span> <span class="token punctuation">{</span>
     <span class="token property">pointer-events</span><span class="token punctuation">:</span> all<span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 <span class="token comment">/* And so on... */</span></code></pre>
-
+            </p>
             <p>Here’s little a demo of sequential inputs:</p>
             <p><span class="box-note ">I was only able to implement up to three turns here. The exponential growth of rules has gotten really tedious to write!</span></p>
+            <p>
             <form class="css-three-in-a-row-seq">
               <input id="css-three-in-a-row-seq-1-1" type="radio" name="css-three-in-a-row-seq-1" value="1">
               <input id="css-three-in-a-row-seq-1-2" type="radio" name="css-three-in-a-row-seq-1" value="2">
@@ -1641,12 +1692,13 @@ B ~ C</span> <span class="token punctuation">{</span>
                 </div>
               </div>
             </form>
-
+            </p>
             <p>With the power of sequencing, we’re starting to recreate the power of state machines and procedural programming!</p>
+            <p>
             <div class="blog-media blog-media-default">
               <img srcset="/notes/pure-css-tictactoe-ai/meme_500.generated.jpg 500w,/notes/pure-css-tictactoe-ai/meme_664.generated.jpg 664w" sizes="not (min-width:664px) 500px, 664px" class="blog-media-element" alt="Look What They Need To Mimic A Fraction Of Our Power meme" src="/notes/pure-css-tictactoe-ai/meme.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.8960573476702509; background: #f8f8f8">
             </div>
-
+            </p>
             <h2 id="game-ai">Game AI</h2>
             <span class="box-note ">
               I’m referring to the more specific term “game AI” here, because the term “AI” has come to mean some learning machine nowadays. Game AI simply means NPCs or computer-controlled agents.
@@ -1661,24 +1713,27 @@ B ~ C</span> <span class="token punctuation">{</span>
             <p>In English, if an X was played at box #1 (top-left) and another X is at #2 (top-center), then block the top row by playing O at box #3 (top-right).</p>
             <p>(In these examples, X is the player and O is the AI.)</p>
             <p>In CSS, that translates to:</p>
+            <p>
             <pre class="code-block"><code class="code-block-code"><span class="token selector">input[value="1"]:checked
 ~ input[value="2"]:checked
 ~ .o3</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">,</span>
 <span class="token punctuation">}</span></code></pre>
-
+            </p>
+            <p>
             <div class="blog-media blog-media-default">
               <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="blocking rule animation">
                 <source src="/notes/pure-css-tictactoe-ai/blocking.mp4">
                 <a href="/notes/pure-css-tictactoe-ai/blocking.mp4">blocking rule animation</a>
               </video>
             </div>
-
+            </p>
             <h3 id="winning-moves">Winning moves</h3>
             <p>Another example: <em>If <strong>O(3)</strong> and <strong>O(7)</strong> then <strong>O(5)</strong>.</em></p>
             <p>If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).</p>
             <p>Now, this rule needs knowledge of the AI’s previous moves. But we can’t really check for that as they’re not inputs. There is no direct translation of <strong>O(3)</strong> and <strong>O(7)</strong> into CSS conditions.</p>
             <p>But since the AI is deterministic, we already know how those previous <em>O</em>s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute <strong>O(3)</strong> with the inputs that produced it, such as <strong>X(1)</strong> &amp; <strong>X(2)</strong>.</p>
+            <p>
             <pre class="code-block"><code class="code-block-code">input[value=<span class="token string">"1"</span>]<span class="token punctuation">:</span>checked
 ~ input[value=<span class="token string">"2"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* We know X(1) and X(2) produces O(3) */</span>
 ~ input[value=<span class="token string">"4"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* X(1) and X(4) produces O(7) */</span>
@@ -1687,7 +1742,7 @@ B ~ C</span> <span class="token punctuation">{</span>
 <span class="token punctuation">}</span>
 <span class="token comment">/* Therefore, X(1) &amp; X(2) &amp; X(4) is equivalent to O(3) &amp; O(7). */</span>
 <span class="token comment">/* If X(1) &amp; X(2) &amp; X(4) then O(5) is a winning move! */</span></code></pre>
-
+            </p>
             <span class="box-note ">
               ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
             </span>
@@ -1703,91 +1758,94 @@ B ~ C</span> <span class="token punctuation">{</span>
             <p>It’s not really feasible to write rules based on this by hand, unless you have more than 60,480 hours to spare.</p>
             <p>What I did was write some kind of <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Minimax">minimax algorithm</a> to generate all the rules. The algorithm semi-exhaustively searched the game state space, while recording the moves that lead to a win or a draw, and saved those moves as rules.</p>
             <p>I lost the original code (trashed it after finishing the project), but here’s an untested recreation of the algorithm:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
- * Evaluates a game state having these parameters: last plays of player X,
- * the player who has the current turn, and the current board state.
- *
- * Along the way, prints CSS rules for O's plays.
- *
- * Returns the endgame for O: WIN, LOSS, or a DRAW. Assuming optimal play.
- */</span>
-<span class="token keyword">function</span> <span class="token function">evaluate</span><span class="token punctuation">(</span>xPlays<span class="token operator">:</span> number<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token literal-property property">currentTurn</span><span class="token operator">:</span> <span class="token string">'X'</span> <span class="token operator">|</span> <span class="token string">'O'</span><span class="token punctuation">,</span> <span class="token literal-property property">board</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token string">'X'</span> <span class="token operator">|</span> <span class="token string">'O'</span> <span class="token operator">|</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <p>&lt;code-block language="javascript" code="
+              /**</p>
+            <ul>
+              <li>Evaluates a game state having these parameters: last plays of player X,</li>
+              <li>the player who has the current turn, and the current board state.</li>
+              <li></li>
+              <li>Along the way, prints CSS rules for O's plays.</li>
+              <li></li>
+              <li>Returns the endgame for O: WIN, LOSS, or a DRAW. Assuming optimal play.
+                */
+                function evaluate(xPlays: number[], currentTurn: 'X' | 'O', board: ('X' | 'O' | null)[]) {</li>
+            </ul>
+            <p> // checkWinner checks for a 3-in-a-row and returns the winner.
+              let winner = checkWinner(board)
+              if (winner == 'X') return LOSS
+              else if (winner == 'O') return WIN
+              else if (xPlays.length == 5) return DRAW // Board full (5 Xs implies 4 Os)</p>
+            <p> if (currentTurn == 'O') {
+              // Brute-force find the optimal play for O
+              let optimal = null
+              let winnable = false
+              for (i = 0; i &lt; 9; i++) {
+              if (board[i]) continue</p>
+            <pre><code>  board[i] = 'O'
+  const result = evaluate(xPlays, 'X', board)
+  board[i] = null
 
-  <span class="token comment">// checkWinner checks for a 3-in-a-row and returns the winner.</span>
-  <span class="token keyword">let</span> winner <span class="token operator">=</span> <span class="token function">checkWinner</span><span class="token punctuation">(</span>board<span class="token punctuation">)</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>winner <span class="token operator">==</span> <span class="token string">'X'</span><span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">LOSS</span>
-  <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>winner <span class="token operator">==</span> <span class="token string">'O'</span><span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">WIN</span>
-  <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>xPlays<span class="token punctuation">.</span>length <span class="token operator">==</span> <span class="token number">5</span><span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">DRAW</span> <span class="token comment">// Board full (5 Xs implies 4 Os)</span>
+  if (result == DRAW) {
+    // This play will lead to a draw. Save it for now.
+    optimal = i
+  } else if (result == WIN) {
+    // This play will lead to a win. This is it.
+    optimal = i
+    winnable = true
+    break
+  } // No else. Discard play that would lead to LOSS.
+}
 
+if (optimal == null) {
+  // No winning play nor draws found. All paths lead to loss.
+  return LOSS
+} else {
+  // Optimal play found. Print rule.
+  printCSS(xPlays, optimal)
+  return winnable ? WIN : DRAW
+}
+</code></pre>
+            <p> } else { // currentTurn == 'X'
+              // We don't know what the player would play
+              // So evaluate every possibe play
+              let loseable = false
+              for (i = 0; i &lt; 9; i++) {
+              if (board[i]) continue</p>
+            <pre><code>  board[i] = 'X'
+  const result = evaluate([...xPlays, i], 'O', board)
+  board[i] = null
 
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>currentTurn <span class="token operator">==</span> <span class="token string">'O'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token comment">// Brute-force find the optimal play for O</span>
-    <span class="token keyword">let</span> optimal <span class="token operator">=</span> <span class="token keyword">null</span>
-    <span class="token keyword">let</span> winnable <span class="token operator">=</span> <span class="token boolean">false</span>
-    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">9</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-      <span class="token keyword">if</span> <span class="token punctuation">(</span>board<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">continue</span>
+  if (result == LOSS) loseable = true
+}
 
-      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">'O'</span>
-      <span class="token keyword">const</span> result <span class="token operator">=</span> <span class="token function">evaluate</span><span class="token punctuation">(</span>xPlays<span class="token punctuation">,</span> <span class="token string">'X'</span><span class="token punctuation">,</span> board<span class="token punctuation">)</span>
-      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">null</span>
+// Assume player plays optimally. If they can win from current state,
+// then immediately presume LOSS. This will factor into O's turn evaluation
+// above, where any play that leads to LOSS is discarded.
+if (loseable) return LOSS
 
-      <span class="token keyword">if</span> <span class="token punctuation">(</span>result <span class="token operator">==</span> <span class="token constant">DRAW</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-        <span class="token comment">// This play will lead to a draw. Save it for now.</span>
-        optimal <span class="token operator">=</span> i
-      <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>result <span class="token operator">==</span> <span class="token constant">WIN</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-        <span class="token comment">// This play will lead to a win. This is it.</span>
-        optimal <span class="token operator">=</span> i
-        winnable <span class="token operator">=</span> <span class="token boolean">true</span>
-        <span class="token keyword">break</span>
-      <span class="token punctuation">}</span> <span class="token comment">// No else. Discard play that would lead to LOSS.</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">if</span> <span class="token punctuation">(</span>optimal <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-      <span class="token comment">// No winning play nor draws found. All paths lead to loss.</span>
-      <span class="token keyword">return</span> <span class="token constant">LOSS</span>
-    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
-      <span class="token comment">// Optimal play found. Print rule.</span>
-      <span class="token function">printCSS</span><span class="token punctuation">(</span>xPlays<span class="token punctuation">,</span> optimal<span class="token punctuation">)</span>
-      <span class="token keyword">return</span> winnable <span class="token operator">?</span> <span class="token constant">WIN</span> <span class="token operator">:</span> <span class="token constant">DRAW</span>
-    <span class="token punctuation">}</span>
-  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span> <span class="token comment">// currentTurn == 'X'</span>
-    <span class="token comment">// We don't know what the player would play</span>
-    <span class="token comment">// So evaluate every possibe play</span>
-    <span class="token keyword">let</span> loseable <span class="token operator">=</span> <span class="token boolean">false</span>
-    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">9</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-      <span class="token keyword">if</span> <span class="token punctuation">(</span>board<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">continue</span>
-
-      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">'X'</span>
-      <span class="token keyword">const</span> result <span class="token operator">=</span> <span class="token function">evaluate</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token operator">...</span>xPlays<span class="token punctuation">,</span> i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">'O'</span><span class="token punctuation">,</span> board<span class="token punctuation">)</span>
-      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">null</span>
-
-      <span class="token keyword">if</span> <span class="token punctuation">(</span>result <span class="token operator">==</span> <span class="token constant">LOSS</span><span class="token punctuation">)</span> loseable <span class="token operator">=</span> <span class="token boolean">true</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token comment">// Assume player plays optimally. If they can win from current state,</span>
-    <span class="token comment">// then immediately presume LOSS. This will factor into O's turn evaluation</span>
-    <span class="token comment">// above, where any play that leads to LOSS is discarded.</span>
-    <span class="token keyword">if</span> <span class="token punctuation">(</span>loseable<span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">LOSS</span>
-
-    <span class="token comment">// Not loseable, either winnable or drawable.</span>
-    <span class="token comment">// Returning DRAW allows both paths to be evaluated.</span>
-    <span class="token keyword">return</span> <span class="token constant">DRAW</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-
+// Not loseable, either winnable or drawable.
+// Returning DRAW allows both paths to be evaluated.
+return DRAW
+</code></pre>
+            <p> }
+              }"&gt;</p>
             <p>And here’s the function that outputs CSS:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
- * Print CSS rule for the given game state and O's next play.
- */</span>
-<span class="token keyword">function</span> <span class="token function">printCSS</span><span class="token punctuation">(</span><span class="token parameter"><span class="token literal-property property">xPlays</span><span class="token operator">:</span> number<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token literal-property property">oPlay</span><span class="token operator">:</span> number</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  css <span class="token operator">+=</span> xPlays
-    <span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">pos<span class="token punctuation">,</span> turn</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>
-        <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">input[name='turn_</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>turn<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">'][value='</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>pos<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">']:checked</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
-    <span class="token punctuation">.</span><span class="token function">join</span><span class="token punctuation">(</span><span class="token string">' ~ '</span><span class="token punctuation">)</span>
-    <span class="token operator">+</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string"> ~ .o</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>oPlay<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
-    <span class="token operator">+</span> <span class="token string">' { visibility: visible; }'</span>
-<span class="token punctuation">}</span></code></pre>
-
+            <p>&lt;code-block language="javascript" code="
+              /**</p>
+            <ul>
+              <li>Print CSS rule for the given game state and O's next play.
+                */
+                function printCSS(xPlays: number[], oPlay: number) {
+                css += xPlays
+                .map((pos, turn) =&gt;
+                <code>input[name='turn_${turn}'][value='${pos}']:checked</code>)
+                .join(' ~ ')<ul>
+                  <li><code> ~ .o${oPlay}</code></li>
+                  <li>' { visibility: visible; }'
+                    }"&gt;</li>
+                </ul>
+              </li>
+            </ul>
             <p>The CSS output is directly used in the game. Debugging this was a pain, but luckily I only got a couple of miscalculations (if I recall correctly).</p>
             <h2 id="conclusion">Conclusion</h2>
             <p>It was a very interesting project. I’m curious how far CSS machines like this could go. A JS to CSS transpiler, perhaps?</p>
@@ -1846,41 +1904,8 @@ B ~ C</span> <span class="token punctuation">{</span>
 
 
 
-  <script defer="" src="/scripts/main-footer-main-header.js"></script>
-  <script defer="">
-    (() => {
-      const blogMediaElementImages = document.querySelectorAll(
-        "img.blog-media-element"
-      );
-
-      for (const img of blogMediaElementImages) {
-        if (watchImage(img)) {
-          const intervalID = setInterval(() => watchImage(img, intervalID), 200);
-        }
-        img.addEventListener("load", onLoadImage);
-      }
-
-      function watchImage(img, intervalID) {
-        if (img.naturalWidth > 0 || img.naturalHeight) {
-          img.style.objectPosition = null;
-          img.removeAttribute("width");
-          img.removeAttribute("height");
-
-          if (intervalID != undefined) clearInterval(intervalID);
-          return false;
-        } else {
-          if (!img.style.objectPosition) {
-            img.style.objectPosition = "100vw";
-          }
-          return true;
-        }
-      }
-
-      function onLoadImage(event) {
-        event.currentTarget.style.background = null;
-      }
-    })();
-  </script>
+  <script defer="" src="/scripts/blog-media.js"></script>
   <script defer="" src="/scripts/blog-header.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
 </body>
 </html>

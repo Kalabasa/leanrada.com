@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Remaking Bouncing Babies in pure CSS · leanrada.com</title>
+  <title>Pure CSS volley ball game · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <script type="module" client="" defer="">
     import {
@@ -214,6 +214,110 @@
   <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
   <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
   <style>
+    .blog-media {
+      position: relative;
+      text-align: center;
+      /* external margin because it’s expected to be in an article */
+      margin: 36px 0;
+    }
+
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+      box-sizing: border-box;
+    }
+
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    .blog-media-windowed .blog-media-element {
+      border-radius: 0;
+    }
+
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
+
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .tag-component {
+      display: inline-block;
+      padding: 0 3px;
+      height: 16px;
+      line-height: 16px;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      background: #ccc;
+      color: #444;
+      border-radius: 3px;
+    }
+  </style>
+  <style>
+    .tag-row {
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+  <style>
+    .blog-post-info {
+      margin: 24px 0;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+
+    .blog-post-info-hidden {
+      display: none;
+    }
+  </style>
+  <style>
+    .content-header {
+      font-family: var(--default-font);
+      margin: 90px 0 60px;
+      padding: 0 18px;
+    }
+
+    .content-header-title {
+      margin: 0 0 6px;
+      font-size: 27px;
+      font-style: italic;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .content-header-subtitle {
+      margin: 6px 0 0;
+      font-size: 18px;
+      font-style: italic;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+  </style>
+  <style>
     @font-face {
       font-family: "Space Mono";
       src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
@@ -267,7 +371,7 @@
     .page-wrapper {
       display: flex;
       flex-direction: column;
-      min-height: 100%;
+      min-height: 100vh;
     }
 
     .page-wrapper-content {
@@ -494,13 +598,13 @@
   </style>
   <style>
     .blog-page {
-      display: flex;
-      justify-content: center;
+      margin: auto;
       overflow: hidden;
     }
 
     .content {
-      padding: 60px 18px;
+      margin: auto;
+      padding: 0 18px 60px;
       width: 100%;
       max-width: 700px;
       font-family: var(--reading-font, sans-serif);
@@ -685,102 +789,6 @@
       font-size: 15px;
     }
   </style>
-  <style>
-    .blog-post-info {
-      margin: 24px 0 0;
-      font-family: var(--default-font);
-      font-size: 12px;
-      font-weight: bold;
-      text-align: center;
-      color: var(--text2-clr);
-    }
-  </style>
-  <style>
-    .text-with-bg-span {
-      display: inline;
-      margin: 0;
-      padding: 0.7em;
-      padding: 0.35lh;
-      border-radius: 18px;
-      box-decoration-break: clone;
-      -webkit-box-decoration-break: clone;
-      font: inherit;
-      background: var(--text-with-bg-color);
-    }
-  </style>
-  <style>
-    .blog-header {
-      isolation: isolate;
-      margin-top: 60px;
-      position: relative;
-      left: 50%;
-      height: 600px;
-      width: max(800px, 60vw);
-      transform: translateX(-50%);
-      box-sizing: border-box;
-    }
-
-    .blog-header-title {
-      position: relative;
-      max-width: 800px;
-      font-family: var(--default-font);
-      font-size: 36px;
-      font-weight: bold;
-      font-style: italic;
-      text-align: left;
-      z-index: 2;
-    }
-
-    .blog-header-title-inner {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-
-    /* Wrap lines in an angle */
-    .blog-header-title::before {
-      content: "";
-      width: 50%;
-      height: 600px;
-      float: right;
-      shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
-    }
-
-    .blog-header-hero {
-      position: absolute;
-      inset: 1px;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 18px;
-      background: gray;
-      z-index: -1;
-    }
-
-    .blog-header-decor {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      fill: var(--bg-clr);
-      z-index: 1;
-    }
-
-    @media (max-width: 800px) {
-      .blog-header {
-        width: 100vw;
-        width: 100svw;
-        height: 400px;
-        padding-right: 36px;
-      }
-
-      .blog-header-title {
-        font-size: clamp(24px, 20px + 2vw, 36px);
-      }
-
-      .blog-header-title::before {
-        content: none;
-      }
-    }
-  </style>
 </head>
 
 
@@ -800,26 +808,36 @@
     <div class="page-wrapper-content">
 
       <div class="blog-page">
+        <div class="content-header">
+          <h1 class="content-header-title">Volley ball game in pure CSS</h1>
+
+        </div>
         <div class="content">
+
+
+
+          <div class="blog-post-info blog-post-info-hidden" hidden="">
+            3 Jul 2023 · min read
+          </div>
+
+          <div class="tag-row">tags:
+            <span class="tag-component" style="background: rgb(129,125,181); color: rgb(48,46,71)">css</span>
+            <span class="tag-component" title="micropost" style="background: rgb(204,204,204); color: rgb(68,68,68)">µpost</span>
+          </div>
 
           <!-- prettier-ignore -->
           <div class="markdown">
-            <div class="blog-header">
-              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
-                <h1 class="text-with-bg-span blog-header-title-inner">
-                  Remaking Bouncing Babies in pure CSS
-                </h1>
-              </div>
-              <img srcset="/notes/_pure-css-bouncing-babies/hero_800.generated.png 800w,/notes/_pure-css-bouncing-babies/hero_1020.generated.png 1020w,/notes/_pure-css-bouncing-babies/hero_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/_pure-css-bouncing-babies/hero.png" alt="" spec="100% [800) 80%">
-              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
-                <path></path>
-              </svg>
+            <p>I don’t know why I did this, but it was fun / funny.</p>
+            <p>This is a volley ball / tennis game implemented purely using HTML and CSS. Features real-time action gameplay and score counting.</p>
+            <p>👉 See the Pen <a target="_blank" class="text-link " href="https://codepen.io/kalabasa/pen/MWzmPXb">Pure CSS Volley Game</a> on CodePen!</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="video of CSS volley ball video game">
+                <source src="/notes/pure-css-volley-ball-game/video.mp4">
+                <a href="/notes/pure-css-volley-ball-game/video.mp4">video of CSS volley ball video game</a>
+              </video>
             </div>
-
-            <div class="blog-post-info">
-              1 Jan 1970 · 0 min read
-            </div>
-
+            </p>
 
           </div>
 
@@ -868,148 +886,7 @@
 
 
 
+  <script defer="" src="/scripts/blog-media.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
-  <script defer="">
-    (() => {
-      const header = document.querySelector(".blog-header");
-      const hero = document.querySelector(".blog-header-hero");
-      const title = header.querySelector(".blog-header-title");
-      const titleInner = title.querySelector(".blog-header-title-inner");
-      const decor = header.querySelector(".blog-header-decor");
-      const decorPath = decor.querySelector("path");
-
-      updateDecorations();
-      const observer = new ResizeObserver(() =>
-        // Wait for layout
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => updateDecorations())
-        )
-      );
-      observer.observe(header);
-
-      // Add inner corner radius decorations using SVG
-      function updateDecorations() {
-        const radius = 18;
-
-        const parent = header.getBoundingClientRect();
-        const heroRect = hero.getBoundingClientRect();
-
-        const range = document.createRange();
-        range.selectNode(titleInner);
-        const rects = [...range.getClientRects()];
-
-        const offsetLeft = -parent.left;
-        const offsetTop = -parent.top;
-        decor.setAttribute("width", Math.floor(heroRect.width));
-        decor.setAttribute("height", Math.floor(heroRect.height));
-
-        const pathCommands = [];
-        // Find intersections between title rects, find and decorate the corners
-        // O(n^2), but n is ~3, so total of ~9 iterations, is fine
-        for (let i = 0; i < rects.length; i++) {
-          const r1 = rects[i];
-          for (let j = i + 1; j < rects.length; j++) {
-            const r2 = rects[j];
-            if (!rectsIntersect(r1, r2)) continue;
-
-            // Technically there are four potential inner corners
-            // But for this specific design, top-left & bottom-left won't be possible
-
-            // Top right corner
-            if (r1.top < r2.top - radius && r1.right < r2.right - radius) {
-              pathCommands.push(
-                drawInnerCorner(
-                  offsetLeft + r1.right - 1,
-                  offsetTop + r2.top + 1,
-                  offsetLeft + Math.min(r1.right + radius, r2.right - radius),
-                  offsetTop + Math.max(r2.top - radius, r1.top + radius)
-                )
-              );
-            } else if (r1.top > r2.top + radius && r1.right > r2.right + radius) {
-              pathCommands.push(
-                drawInnerCorner(
-                  offsetLeft + r2.right - 1,
-                  offsetTop + r1.top + 1,
-                  offsetLeft + Math.min(r2.right + radius, r1.right - radius),
-                  offsetTop + Math.max(r1.top - radius, r2.top + radius)
-                )
-              );
-            }
-
-            // Bottom right corner
-            if (r1.bottom > r2.bottom + radius && r1.right < r2.right - radius) {
-              pathCommands.push(
-                drawInnerCorner(
-                  offsetLeft + r1.right - 1,
-                  offsetTop + r2.bottom - 1,
-                  offsetLeft + Math.min(r1.right + radius, r2.right - radius),
-                  offsetTop + Math.min(r2.bottom + radius, r1.bottom - radius)
-                )
-              );
-            } else if (
-              r1.bottom < r2.bottom - radius &&
-              r1.right > r2.right + radius
-            ) {
-              pathCommands.push(
-                drawInnerCorner(
-                  offsetLeft + r2.right - 1,
-                  offsetTop + r1.bottom - 1,
-                  offsetLeft + Math.min(r2.right + radius, r1.right - radius),
-                  offsetTop + Math.min(r1.bottom + radius, r2.bottom - radius)
-                )
-              );
-            }
-          }
-
-          // Special corners for the hero background
-          // Top edge
-          if (r1.top <= heroRect.top && r1.bottom > heroRect.top) {
-            pathCommands.push(
-              drawInnerCorner(
-                offsetLeft + r1.right - 1,
-                offsetTop + heroRect.top - 1,
-                offsetLeft + r1.right + radius,
-                offsetTop + heroRect.top + radius
-              )
-            );
-          }
-          // Left edge
-          if (r1.left <= heroRect.left && r1.right > heroRect.left) {
-            pathCommands.push(
-              drawInnerCorner(
-                offsetLeft + heroRect.left - 1,
-                offsetTop + r1.bottom - 1,
-                offsetLeft + heroRect.left + radius,
-                offsetTop + r1.bottom + radius
-              )
-            );
-          }
-        }
-
-        decorPath.setAttribute("d", pathCommands.join(" "));
-      }
-
-      function rectsIntersect(r1, r2) {
-        return (
-          r1.right > r2.left &&
-          r1.left < r2.right &&
-          r1.bottom > r2.top &&
-          r1.top < r2.bottom
-        );
-      }
-
-      function drawInnerCorner(x, y, pointX, pointY) {
-        const radiusX = Math.abs(x - pointX);
-        const radiusY = Math.abs(y - pointY);
-        const dir = (Math.sign((x - pointX) * (y - pointY)) + 1) / 2;
-        return (
-          `M ${x} ${y} ` +
-          `L ${x} ${pointY} ` +
-          `A ${radiusX},${radiusY} 0 0 ${dir} ${pointX} ${y} ` +
-          `L ${x} ${y}`
-        );
-      }
-    })();
-  </script>
 </body>
 </html>

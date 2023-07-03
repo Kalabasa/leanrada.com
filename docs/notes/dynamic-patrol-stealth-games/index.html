@@ -3,6 +3,217 @@
 <head>
   <link rel="syndication" href="https://www.reddit.com/r/IndieDev/comments/14nu6zf/i_made_a_potentialfield_based_algorithm_for/">
   <title>Dynamic patrol behaviour in stealth games · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
+        }
+
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
+        }
+
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
+
+          this.draw(canvas, this.context);
+
+          requestAnimationFrame(() => this.loop());
+        }
+
+        /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
+
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
+
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
+
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
+            }
+          }
+
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
+
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
+
+              const paletteIndex = Math.floor(paletteLength * p);
+
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
+
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
+            }
+          }
+        }
+
+        getT() {
+          const t = (Date.now() * 30) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
+        }
+      }
+    );
+
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
+
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
   <script type="module" client="" defer="">
     import * as PIXI from "/lib/vendor/pixijs.min.mjs";
     import {
@@ -375,217 +586,196 @@
       };
     }
   </script>
-  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
-  <script type="module" client="" defer="">
-    import {
-      waitFor
-    } from "/lib/wait_for.mjs";
-    import {
-      BaseElement
-    } from "/lib/base_element.mjs";
-    import {
-      mousePosition
-    } from "/lib/mouse_position.mjs";
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
 
-    customElements.define(
-      "nebula-client",
-      class Nebula extends BaseElement {
-        constructor() {
-          super();
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .blog-media {
+      position: relative;
+      text-align: center;
+      /* external margin because it’s expected to be in an article */
+      margin: 36px 0;
+    }
 
-          this.asyncCanvas = this.asyncQuerySelector("canvas");
-          this.context = null;
-          this.noise = null;
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
 
-          this.gridWidth = 30;
-          this.gridHeight = 30;
-          this.palette = ["#ffffff"];
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+      box-sizing: border-box;
+    }
 
-          this.cellWidth = 1; // placeholder
-          this.cellHeight = 1; // placeholder
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
 
-          this.useMouse = false;
-          this.mouseCell = null;
+    .blog-media-windowed .blog-media-element {
+      border-radius: 0;
+    }
 
-          this.lastT = 0;
-          this.startT = 0;
-          this.loopStartT = 0;
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    dynamic-patrol-demo-client {
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-block;
+      width: 400px;
+      width: min(100vw, 70vh);
+      aspect-ratio: 1;
+      border-radius: 12px;
+      background: #cdd;
+      overflow: hidden;
+    }
+  </style>
+  <style>
+    .tag-component {
+      display: inline-block;
+      padding: 0 3px;
+      height: 16px;
+      line-height: 16px;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      background: #ccc;
+      color: #444;
+      border-radius: 3px;
+    }
+  </style>
+  <style>
+    .tag-row {
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+  <style>
+    .blog-post-info {
+      margin: 24px 0;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text2-clr);
+    }
 
-          this.isVisible = false;
-          this.visibilityListener({
-            show: () => {
-              this.isVisible = true;
-              this.startLoop();
-            },
-            hide: () => (this.isVisible = false),
-          });
-        }
+    .blog-post-info-hidden {
+      display: none;
+    }
+  </style>
+  <style>
+    .text-with-bg-span {
+      display: inline;
+      margin: 0;
+      padding: 0.7em;
+      padding: 0.35lh;
+      border-radius: 18px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      font: inherit;
+      background: var(--text-with-bg-color);
+    }
+  </style>
+  <style>
+    .blog-header {
+      isolation: isolate;
+      margin: 90px 0 24px;
+      position: relative;
+      left: 50%;
+      height: 600px;
+      width: max(800px, 60vw);
+      transform: translateX(-50%);
+      box-sizing: border-box;
+    }
 
-        connectedCallback() {
-          super.connectedCallback();
+    .blog-header-title {
+      position: relative;
+      max-width: 800px;
+      font-family: var(--default-font);
+      font-size: 36px;
+      font-weight: bold;
+      font-style: italic;
+      text-align: left;
+      z-index: 2;
+    }
 
-          this.useMouse = this.getAttribute("mouse") != null;
+    .blog-header-title-inner {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
 
-          const gridWidth = this.getAttribute("width");
-          if (gridWidth) {
-            this.gridWidth = Number.parseInt(gridWidth);
-          }
+    /* Wrap lines in an angle */
+    .blog-header-title::before {
+      content: "";
+      width: 50%;
+      height: 600px;
+      float: right;
+      shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
 
-          const gridHeight = this.getAttribute("height");
-          if (gridHeight) {
-            this.gridHeight = Number.parseInt(gridHeight);
-          }
+    .blog-header-hero {
+      position: absolute;
+      inset: 1px;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      background: gray;
+      z-index: -1;
+    }
 
-          const paletteAttr = this.getAttribute("palette");
-          if (paletteAttr) {
-            this.palette = paletteAttr.split(" ");
-          }
-        }
+    .blog-header-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      fill: var(--bg-clr);
+      z-index: 1;
+    }
 
-        startLoop() {
-          this.loopStartT = this.lastT = this.getT();
-          this.loop();
-        }
-
-        async loop() {
-          if (!this.isVisible) {
-            return;
-          }
-
-          if (typeof perlinNoise3d === "undefined") {
-            await waitFor(() => typeof perlinNoise3d !== "undefined");
-          }
-
-          if (!this.noise) {
-            this.noise = initNoise();
-            this.startT = this.getT();
-          }
-
-          const canvas = await this.asyncCanvas.promise;
-
-          // initialize
-          if (!this.context) {
-            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
-            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
-            canvas.width = this.gridWidth;
-            canvas.height = this.gridHeight;
-            canvas.style.filter += ` blur(${
-            Math.min(this.cellWidth, this.cellHeight) * 1.25
-          }px)`;
-            this.context = canvas.getContext("2d");
-          }
-
-          this.draw(canvas, this.context);
-
-          requestAnimationFrame(() => this.loop());
-        }
-
-        /**
-         * @param canvas {HTMLCanvasElement}
-         * @param context {CanvasRenderingContext2D}
-         */
-        draw(canvas, context) {
-          const t = this.getT();
-          if (t <= this.lastT) return;
-
-          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
-          this.lastT = t;
-
-          const {
-            noise,
-            gridWidth,
-            gridHeight,
-            palette,
-            cellWidth,
-            cellHeight
-          } =
-          this;
-          const halfGridWidth = gridWidth / 2;
-          const halfGridHeight = gridHeight / 2;
-
-          this.mouseCell = null;
-          if (this.useMouse) {
-            const {
-              x,
-              y
-            } = mousePosition;
-            const bounds = canvas.getBoundingClientRect();
-            if (
-              bounds.left < x &&
-              x < bounds.right &&
-              bounds.top < y &&
-              y < bounds.bottom
-            ) {
-              this.mouseCell = {
-                x: (x - bounds.x) / cellWidth,
-                y: (y - bounds.y) / cellHeight,
-              };
-            }
-          }
-
-          const paletteLength = palette.length;
-          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
-          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
-
-          for (let i = 0; i < gridWidth; i++) {
-            for (let j = 0; j < gridHeight; j++) {
-              const mouseProximity =
-                this.mouseCell == null ?
-                0 :
-                1 -
-                sigmoid(
-                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
-                );
-
-              const xy = [
-                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
-                1000 +
-                (j - halfGridHeight) * yScale +
-                Math.cos(t * 0.007) * 2 +
-                -mouseProximity,
-              ];
-              const p1 = noise.get(...xy, t * 0.03);
-              const p2 = noise.get(...xy, t * 0.03 + 0.5);
-              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
-              const p = p1 + p2;
-
-              const paletteIndex = Math.floor(paletteLength * p);
-
-              const rgb = palette[paletteIndex];
-              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
-                .toString(16)
-                .padStart(2, "0");
-
-              context.fillStyle = `${rgb}${a}`;
-              context.fillRect(i, j, 1, 1);
-            }
-          }
-        }
-
-        getT() {
-          const t = (Date.now() * 30) / 1000;
-          // make it smoother while interacting
-          return this.mouseCell ? t : Math.floor(t);
-        }
+    @media (max-width: 800px) {
+      .blog-header {
+        width: 100vw;
+        width: 100svw;
+        height: 400px;
+        padding-right: 36px;
       }
-    );
 
-    function initNoise() {
-      const noise = new perlinNoise3d();
-      noise.perlin_octaves = 1; // ?? defaults
-      noise.perlin_amp_falloff = 1;
-      return noise;
-    }
+      .blog-header-title {
+        font-size: clamp(24px, 20px + 2vw, 36px);
+      }
 
-    function sigmoid(x) {
-      return 1 / (1 + Math.exp(-x));
+      .blog-header-title::before {
+        content: none;
+      }
     }
-  </script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
-  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  </style>
   <style>
     @font-face {
       font-family: "Space Mono";
@@ -640,7 +830,7 @@
     .page-wrapper {
       display: flex;
       flex-direction: column;
-      min-height: 100%;
+      min-height: 100vh;
     }
 
     .page-wrapper-content {
@@ -867,13 +1057,13 @@
   </style>
   <style>
     .blog-page {
-      display: flex;
-      justify-content: center;
+      margin: auto;
       overflow: hidden;
     }
 
     .content {
-      padding: 60px 18px;
+      margin: auto;
+      padding: 0 18px 60px;
       width: 100%;
       max-width: 700px;
       font-family: var(--reading-font, sans-serif);
@@ -1059,171 +1249,6 @@
     }
   </style>
   <style>
-    .text-link {
-      color: var(--clr0-light, #fff);
-    }
-
-    .text-link:visited {
-      color: var(--clr0, #fff);
-    }
-  </style>
-  <style>
-    .box-note {
-      display: block;
-      padding: 12px 18px;
-      border-radius: 12px;
-      border: solid 2px var(--clr0-dark);
-      box-sizing: border-box;
-    }
-  </style>
-  <style>
-    .blog-media {
-      position: relative;
-      text-align: center;
-      /* external margin because it’s expected to be in an article */
-      margin: 36px 0;
-    }
-
-    .blog-media-bleed {
-      margin: 90px 0;
-      max-height: 80vh;
-    }
-
-    .blog-media-element {
-      display: inline-block;
-      max-width: 100%;
-      max-height: 80vh;
-      border-radius: 18px;
-      box-sizing: border-box;
-    }
-
-    .blog-media-bleed .blog-media-element {
-      position: relative;
-      left: 50%;
-      max-width: max(min(100vw, 800px), 80vw);
-      transform: translateX(-50%);
-    }
-
-    .blog-media-windowed .blog-media-element {
-      border-radius: 0;
-    }
-
-    .blog-media-caption {
-      display: block;
-      font-size: 15px;
-    }
-  </style>
-  <style>
-    dynamic-patrol-demo-client {
-      position: relative;
-      left: 50%;
-      transform: translateX(-50%);
-      display: inline-block;
-      width: 400px;
-      width: min(100vw, 70vh);
-      aspect-ratio: 1;
-      border-radius: 12px;
-      background: #cdd;
-      overflow: hidden;
-    }
-  </style>
-  <style>
-    .blog-post-info {
-      margin: 24px 0 0;
-      font-family: var(--default-font);
-      font-size: 12px;
-      font-weight: bold;
-      text-align: center;
-      color: var(--text2-clr);
-    }
-  </style>
-  <style>
-    .text-with-bg-span {
-      display: inline;
-      margin: 0;
-      padding: 0.7em;
-      padding: 0.35lh;
-      border-radius: 18px;
-      box-decoration-break: clone;
-      -webkit-box-decoration-break: clone;
-      font: inherit;
-      background: var(--text-with-bg-color);
-    }
-  </style>
-  <style>
-    .blog-header {
-      isolation: isolate;
-      margin-top: 60px;
-      position: relative;
-      left: 50%;
-      height: 600px;
-      width: max(800px, 60vw);
-      transform: translateX(-50%);
-      box-sizing: border-box;
-    }
-
-    .blog-header-title {
-      position: relative;
-      max-width: 800px;
-      font-family: var(--default-font);
-      font-size: 36px;
-      font-weight: bold;
-      font-style: italic;
-      text-align: left;
-      z-index: 2;
-    }
-
-    .blog-header-title-inner {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-
-    /* Wrap lines in an angle */
-    .blog-header-title::before {
-      content: "";
-      width: 50%;
-      height: 600px;
-      float: right;
-      shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
-    }
-
-    .blog-header-hero {
-      position: absolute;
-      inset: 1px;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 18px;
-      background: gray;
-      z-index: -1;
-    }
-
-    .blog-header-decor {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      fill: var(--bg-clr);
-      z-index: 1;
-    }
-
-    @media (max-width: 800px) {
-      .blog-header {
-        width: 100vw;
-        width: 100svw;
-        height: 400px;
-        padding-right: 36px;
-      }
-
-      .blog-header-title {
-        font-size: clamp(24px, 20px + 2vw, 36px);
-      }
-
-      .blog-header-title::before {
-        content: none;
-      }
-    }
-  </style>
-  <style>
     .small-diagram-row {
       display: flex;
       gap: 12px;
@@ -1282,10 +1307,12 @@
     <div class="page-wrapper-content">
 
       <div class="blog-page">
+
         <div class="content">
 
           <!-- prettier-ignore -->
           <div class="markdown">
+            <p>
             <div class="blog-header">
               <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
                 <h1 class="text-with-bg-span blog-header-title-inner">
@@ -1297,9 +1324,15 @@
                 <path></path>
               </svg>
             </div>
-
-            <div class="blog-post-info">
+            </p>
+            <p>
+            <div class="blog-post-info ">
               1 Jul 2023 · 8 min read
+            </div>
+            </p>
+            <div class="tag-row">tags:
+              <span class="tag-component" title="algorithm" style="background: rgb(107,251,250); color: rgb(9,125,124)">algo</span>
+              <span class="tag-component" style="background: rgb(183,234,166); color: rgb(51,105,32)">games</span>
             </div>
 
             <p>Hi, this post is about a game AI algorithm for stealth games.</p>
@@ -1324,10 +1357,11 @@
       "></dynamic-patrol-demo-client></p>
             <h2 id="background">Background</h2>
             <p>I enjoy stealth mechanics in video games. However, I feel like the genre has become formulaic. Nowadays, we have standardised light, shadow, and noise mechanics. We almost always get discrete levels of alertness where on one end NPCs have wallhacks while on the other, NPCs have amnesia.</p>
+            <p>
             <div class="blog-media blog-media-default">
               <img srcset="/notes/dynamic-patrol-stealth-games/sc_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Screenshot of Splinter Cell" src="/notes/dynamic-patrol-stealth-games/sc.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.6; background: #080808"><span class="blog-media-caption">Screenshot of Splinter Cell: Chaos Theory from mobygames.com. This game is good.</span>
             </div>
-
+            </p>
             <p>The most immersion-breaking moment for me was when you get spotted, the subsequent investigation consists solely of staring at the ground where you were last seen. Like when you get spotted at an entrance to a room, guards will just stare at the doorway. <em>Why not check inside the room?</em> Unless the room was specifically coded as part of a patrol route, guards will never investigate there even though they just saw you entering the room.</p>
             <p><span class="box-note ">Yeah, I know, smart game AI is not deemed “fun” by game designers. But a challenging game is fun! Whatever, I just wanted to write a relatable intro for this prototype that I made for fun.</span></p>
             <p>What was lacking in stealth game AI is inference - the ability to infer that when a target enters a room, then they subsequently must be inside the room.</p>
@@ -1571,41 +1605,8 @@
 
 
 
-  <script defer="" src="/scripts/main-footer-main-header.js"></script>
-  <script defer="">
-    (() => {
-      const blogMediaElementImages = document.querySelectorAll(
-        "img.blog-media-element"
-      );
-
-      for (const img of blogMediaElementImages) {
-        if (watchImage(img)) {
-          const intervalID = setInterval(() => watchImage(img, intervalID), 200);
-        }
-        img.addEventListener("load", onLoadImage);
-      }
-
-      function watchImage(img, intervalID) {
-        if (img.naturalWidth > 0 || img.naturalHeight) {
-          img.style.objectPosition = null;
-          img.removeAttribute("width");
-          img.removeAttribute("height");
-
-          if (intervalID != undefined) clearInterval(intervalID);
-          return false;
-        } else {
-          if (!img.style.objectPosition) {
-            img.style.objectPosition = "100vw";
-          }
-          return true;
-        }
-      }
-
-      function onLoadImage(event) {
-        event.currentTarget.style.background = null;
-      }
-    })();
-  </script>
+  <script defer="" src="/scripts/blog-media.js"></script>
   <script defer="" src="/scripts/blog-header.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
 </body>
 </html>
