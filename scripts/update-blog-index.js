@@ -32,14 +32,19 @@ async function main() {
     const pageTitle = ch("page-title");
     const title = ch("title");
     const info = ch("blog-post-info");
+    const tag = ch("tag");
 
-    const titleText = header.attr("title") ?? pageTitle.attr("title") ?? title.text();
+    const titleText =
+      header.attr("title")
+      ?? pageTitle.attr("title")
+      ?? title.text();
+
     const date = info.attr("date");
-    if (!date) {
-      console.error("No date for page:", titleText);
-    }
+    if (!date) console.error("No date for page:", titleText);
 
-    return { href: `/${href}/`, title: titleText, date };
+    const tags = tag.map(function () { return ch(this).text() }).toArray();
+
+    return { href: `/${href}/`, title: titleText, date, tags };
   }))).filter(it => it);
 
   console.log(index);
