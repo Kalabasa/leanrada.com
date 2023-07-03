@@ -30,6 +30,7 @@
   } from "./demo/dynamic-patrol-demo.mjs";
 
   const spriteKey = Symbol("sprite");
+  const textKey = Symbol("text");
 
   PIXI.BaseTexture.defaultOptions.scaleMode = PIXI.SCALE_MODES.NEAREST;
   // Warn: File paths are relative to the page, not the component
@@ -53,6 +54,7 @@
         this.targetTrailSprites = [];
         this.tileSize = 1;
         this.showPotentials = true;
+        this.showNumbers = false;
 
         this.model = null;
         this.modelTickId = null;
@@ -67,6 +69,8 @@
         this.aliveListener(this, "keypress", (event) => {
           if (event.key === "p") {
             this.showPotentials = !this.showPotentials;
+          } else if (event.key === "n") {
+            this.showNumbers = !this.showNumbers;
           }
         });
 
@@ -174,6 +178,17 @@
             tileSprite.height = this.tileSize;
             tileContainer.addChild(tileSprite);
             this.tileSprites[x][y] = tileSprite;
+
+            const tileText = new PIXI.Text("", {
+              fontFamily: "Space Mono, monspace",
+              fontSize: 15,
+              fill: 0x000000,
+            });
+            tileText.x = (x + 1) * this.tileSize;
+            tileText.y = y * this.tileSize;
+            tileText.anchor.x = 1;
+            tileContainer.addChild(tileText);
+            tileSprite[textKey] = tileText;
           }
         }
 
@@ -265,14 +280,16 @@
             if (this.model.getTile(x, y) !== TILE_FLOOR) continue;
 
             const tileSprite = this.tileSprites[x][y];
+
+            let potential;
             const know = this.model.getKnowledge(x, y);
             if (know === KNOW_NONE) {
-              const potential = this.showPotentials
-                ? this.model.getPotential(x, y, 0)
-                : 0;
+              potential = this.model.getPotential(x, y, 0);
 
               const tint =
-                potential > 0 ? Math.min(1, 0.05 + 4 * potential ** 0.5) : 0;
+                this.showPotentials && potential > 0
+                  ? Math.min(1, 0.05 + 4 * potential ** 0.5)
+                  : 0;
               const red = Math.max(0, 0xaa - Math.round(tint * 0x88));
               const green = Math.max(0, 0xaa - Math.round(tint * 0x44));
               const blue = Math.min(0xff, 0xaa + Math.round(tint * 0x55));
@@ -282,6 +299,16 @@
               blendTint(tileSprite, 0xff00ff, 0.6);
             } else {
               blendTint(tileSprite, 0xffffff, 0.6);
+            }
+
+            const tileText = tileSprite[textKey];
+            tileText.visible = this.showNumbers;
+            if (this.showNumbers) {
+              if (potential === undefined) {
+                potential = this.model.getPotential(x, y, 0);
+              }
+              tileText.text = Math.ceil(potential * 100).toFixed(0);
+              tileText.updateText();
             }
           }
         }
@@ -320,7 +347,8 @@
           const [destX, destY] = target.path[target.path.length - 1];
           this.targetDestSprite.x = destX * this.tileSize;
           this.targetDestSprite.y = destY * this.tileSize;
-          this.targetDestSprite.visible = Math.floor(this.pixi.ticker.lastTime / 400) % 3 > 0;
+          this.targetDestSprite.visible =
+            Math.floor(this.pixi.ticker.lastTime / 400) % 3 > 0;
         } else {
           if (this.targetDestSprite) this.targetDestSprite.visible = false;
         }
