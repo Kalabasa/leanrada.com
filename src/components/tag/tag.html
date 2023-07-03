@@ -1,28 +1,39 @@
-<span class="tag-component" :style="getStyle()"><slot /></span>
+<span class="tag-component" :title="getTitle()" :style="getStyle()"><slot /></span>
 
 <script static>
   const chroma = require("chroma-js");
 
   // todo: can statically generate color map using attribute selectors?
-  const defaultColors = {
-    // content type
-    micropost: 0xcccccc,
-    internal: 0x54f8c1, // from css var(--clr0-light)
-    "↗": 0xffffff, // external
-    // topic
-    algo: 0x00ffff,
-    games: 0x00ff00,
+  const tagProperties = {
+    // content types
+    µpost: { color: 0xcccccc, desc: "micropost" },
+    internal: { color: 0x54f8c1 }, // from css var(--clr0-light)
+    "↗": { color: 0xffffff, desc: "external" },
+    // topics
+    algo: { color: 0x00ffff, desc: "algorithm" },
+    games: { color: 0x00ff00 },
     // brand colors
-    c: 0xe2bb9e, // from gcc logo
-    css: 0x264de4,
-    js: 0xf7df1e,
+    c: { color: 0xe2bb9e }, // from gcc logo
+    css: { color: 0x264de4 },
+    js: { color: 0xf7df1e },
   };
 
-  function getStyle() {
-    let label = children[0].textContent;
+  function getLabel() {
+    let label = children[0].textContent.trim();
     if (label.startsWith("/")) label = "internal";
+    return label;
+  }
 
-    let chr = chroma(defaultColors[label] ?? 0xcccccc);
+  function getTitle() {
+    const label = getLabel();
+    const desc = tagProperties[label]?.desc;
+    return desc;
+  }
+
+  function getStyle() {
+    const label = getLabel();
+
+    let chr = chroma(tagProperties[label]?.color ?? 0xffffff);
     chr = chr.set("lch.c", Math.min(chr.get("lch.c"), 40));
     chr = chr.set("hsl.l", Math.max(chr.get("hsl.l"), 0.6));
 
