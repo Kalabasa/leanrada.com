@@ -8,7 +8,23 @@
       const a = renderLink.call(renderer, href, title, text);
       return a.replace(/^<a/, "<text-link").replace(/a>$/, "text-link>");
     };
-    marked.use({ renderer });
+
+    const tokenizer = {
+      html(html, block) {
+        // ignore code-blocks
+        const match = html.match(/^[<]code-block(.|\n)+?[<][/]code-block[>]/);
+        if (match) {
+          return {
+            type: "html",
+            raw: match[0],
+            text: match[0],
+          };
+        }
+        return false;
+      },
+    };
+
+    marked.use({ renderer, tokenizer });
 
     let indent = null;
 
