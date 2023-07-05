@@ -54,7 +54,7 @@
         this.targetTrailSprites = [];
         this.tileSize = 1;
         this.showPotentials = true;
-        this.showNumbers = false;
+        this.showNumberType = null;
 
         this.model = null;
         this.modelTickId = null;
@@ -70,7 +70,7 @@
           if (event.key === "p") {
             this.showPotentials = !this.showPotentials;
           } else if (event.key === "n") {
-            this.showNumbers = !this.showNumbers;
+            this.showNumberType = (this.showNumberType + 1) % 3;
           }
         });
 
@@ -302,11 +302,17 @@
             }
 
             const tileText = tileSprite[textKey];
-            tileText.visible = this.showNumbers;
-            if (this.showNumbers) {
+            tileText.visible = this.showNumberType > 0;
+            if (this.showNumberType) {
               if (potential === undefined) {
                 potential = this.model.getPotential(x, y, 0);
               }
+
+              // log scale
+              if (this.showNumberType == 2) {
+                potential = Math.log2(1 + potential);
+              }
+
               tileText.text = Math.ceil(potential * 100).toFixed(0);
               tileText.updateText();
             }
