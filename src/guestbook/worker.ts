@@ -1,3 +1,8 @@
+// MVP version. See if anybody uses the guestbook at all before making a proper system.
+// todo: Top-level config for PAGE_WIDTH, PAGE_HEIGHT, MAX_PAGE for client code and worker code
+// todo: Better concurrent editing by multiple users
+// todo: Better UX
+
 export interface Env {
   data: KVNamespace;
 }
