@@ -24,7 +24,7 @@ async function handleRequest(
     checkSubmitRequest(submitRequest);
     console.log(submitRequest);
 
-    const sourceData = await fetch(sourceDataURL);
+    const sourceData = await fetch(sourceDataURL).then((r) => r.text());
     console.log(sourceData);
 
     return new Response(null);
