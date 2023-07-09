@@ -5,7 +5,7 @@
       process.env.GUESTBOOK_API ?? "https://guestbook.leanrada.com/";
 
     // prettier-ignore
-    return html`<head><${"script"}>window.GUESTBOOK_API="${GUESTBOOK_API}";window.GUESTBOOK_DATA=${JSON.stringify(GUESTBOOK_DATA)}</${"script"}></head>`;
+    return html`<head><${"script"}>window.GUESTBOOK_API="${GUESTBOOK_API}"</${"script"}></head>`;
   </script>
   <page>
     <content-header title="Guestbook" />
@@ -25,24 +25,23 @@
     </p>
     <p class="intro">
       I’d appreciate it if you leave a nice comment for others and sign your
-      name. Don’t forget to hit Submit!
+      name. Don’t forget to hit Save!
     </p>
     <p class="intro">-Lean</p>
 
     <div class="guestbook-row">
       <pre class="guestbook"><textarea
-          class="page-input"
-          :cols="PAGE_WIDTH"
-          :rows="PAGE_HEIGHT"
-          :style="`width:${PAGE_WIDTH}ch`"
-          disabled
-        >{getPageContent(0)}</textarea
-        ></pre>
+        class="page-input"
+        :cols="PAGE_WIDTH"
+        :rows="PAGE_HEIGHT"
+        :style="`width:${PAGE_WIDTH}ch`"
+        disabled
+      ></textarea></pre>
     </div>
 
     <div class="button-row">
       <btn id="prev">← Prev page</btn>
-      <btn id="submit">Submit</btn>
+      <btn id="submit">Save</btn>
       <btn id="next">Next page →</btn>
     </div>
   </page>
@@ -67,6 +66,15 @@
     align-items: center;
     border-radius: 12px;
     background: var(--card-clr);
+  }
+  .guestbook.loading {
+    pointer-events: none;
+  }
+  .guestbook.loading * {
+    opacity: 0.2;
+  }
+  .guestbook.error {
+    box-shadow: 0 0 0 2px var(--clr1);
   }
 
   .page-input {
@@ -93,23 +101,15 @@
     font-size: 15px;
     text-transform: uppercase;
   }
+  #submit.error {
+    box-shadow: 0 0 0 2px var(--clr1);
+  }
 </style>
 
 <script static>
-  const GUESTBOOK_DATA = require("./template.json");
-
   // Must be constant forever
   const PAGE_WIDTH = 40;
   const PAGE_HEIGHT = 30;
-
-  function getPageContent(index) {
-    const page = GUESTBOOK_DATA.slice(
-      index * PAGE_HEIGHT,
-      (index + 1) * PAGE_HEIGHT
-    );
-    page.length = PAGE_HEIGHT;
-    return page.map((l) => (l ?? "").padEnd(PAGE_WIDTH, " ")).join("\n");
-  }
 </script>
 
 <script client defer>
@@ -122,8 +122,8 @@
     const MAX_PAGE = 8;
     const LAST_VALUE_KEY = Symbol("LAST_VALUE");
 
+    const guestbook = document.querySelector(".guestbook");
     const pageInput = document.querySelector(".page-input");
-    pageInput.disabled = false;
     pageInput.addEventListener("beforeinput", (event) => {
       prepareTextBeforeInput(event.target);
     });
@@ -132,18 +132,32 @@
     });
 
     const submit = document.getElementById("submit");
-    submit.addEventListener("click", () => {
-      fetch(window.GUESTBOOK_API, {
-        method: "POST",
-        body: JSON.stringify({
-          page: currentPage,
-          content: pageInput.value,
-        }),
-      });
+    submit.addEventListener("click", async () => {
+      submit.classList.remove("error");
+
+      submit.textContent = "Saving";
+
+      try {
+        const res = await fetch(window.GUESTBOOK_API, {
+          method: "POST",
+          body: JSON.stringify({
+            page: currentPage,
+            content: pageInput.value,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Not OK");
+
+        submit.textContent = "Saved";
+      } catch (e) {
+        submit.classList.add("error");
+        submit.textContent = "Retry";
+      }
     });
 
     let currentPage =
       new URLSearchParams(window.location.search).get("page") ?? 0;
+    goToPage(currentPage);
 
     const prev = document.getElementById("prev");
     prev.addEventListener("click", () => {
@@ -157,16 +171,31 @@
 
     function goToPage(index) {
       currentPage = index;
-      pageInput.value = getPageContent(index);
+
+      guestbook.classList.remove("error");
+      guestbook.classList.add("loading");
+      pageInput.disabled = true;
+      submit.disabled = true;
+
+      getPageContent(index)
+        .then((content) => {
+          pageInput.value = content;
+          pageInput.disabled = false;
+          submit.disabled = false;
+        })
+        .catch(() => {
+          guestbook.classList.add("error");
+          pageInput.value = "Can't load this page right now :(";
+        })
+        .finally(() => {
+          guestbook.classList.remove("loading");
+        });
     }
 
-    function getPageContent(index) {
-      const page = window.GUESTBOOK_DATA.slice(
-        index * PAGE_HEIGHT,
-        (index + 1) * PAGE_HEIGHT
-      );
-      page.length = PAGE_HEIGHT;
-      return page.map((l) => (l ?? "").padEnd(PAGE_WIDTH, " ")).join("\n");
+    async function getPageContent(index) {
+      const res = await fetch(`${window.GUESTBOOK_API}?page=${index}`);
+      const data = await res.json();
+      return data.join("\n");
     }
 
     function prepareTextBeforeInput(pageInput) {

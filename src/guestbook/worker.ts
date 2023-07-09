@@ -10,6 +10,10 @@ const MAX_PAGE = 8;
 const TEMPLATE_URL =
   "https://raw.githubusercontent.com/Kalabasa/kalabasa.github.io/src/src/site/guestbook/template.json";
 
+type GetRequest = {
+  page: number;
+};
+
 type SubmitRequest = {
   page: number;
   content: string;
@@ -21,31 +25,11 @@ async function handleRequest(
   ctx: ExecutionContext
 ): Promise<Response> {
   try {
-    const submitRequest: Partial<SubmitRequest> = await request.json();
-    console.log("Handling request:", submitRequest);
-    checkSubmitRequest(submitRequest);
-
-    let data = await env.data.get("master", { type: "json" });
-    if (data) {
-      checkData(data, "-master");
-    } else {
-      data = await fetch(TEMPLATE_URL).then((r) => r.json());
-      checkData(data, "-template");
-    }
-
-    const newContent = submitRequest.content.split("\n");
-    const offset = submitRequest.page * PAGE_HEIGHT;
-    console.log("Splicing at", offset, ":");
-    console.log("----------------------------------------");
-    console.log(newContent.join("\n"));
-    console.log("----------------------------------------");
-    data.splice(offset, PAGE_HEIGHT, ...newContent);
-    checkData(data, "-spliced");
-
-    submitChange(data, env);
-
-    return new Response(null);
+    if (request.method == "GET") return await handleGet(request, env);
+    else if (request.method == "POST") return await handlePost(request, env);
+    else throw new Error("Wrong HTTP method");
   } catch (e) {
+    // don’t care about status codes for this worker
     console.error(
       "Returning 404 due to",
       e instanceof Error
@@ -56,14 +40,70 @@ async function handleRequest(
   }
 }
 
-function submitChange(data: string[], env: Env) {}
+async function handleGet(request: Request, env: Env) {
+  const url = new URL(request.url);
+  const getRequest = {
+    page: Number.parseInt(url.searchParams.get("page")!, 10),
+  };
+  console.log("Handling GET request:", getRequest);
+  checkGetRequest(getRequest);
+
+  let data = await env.data.get("master", { type: "json" });
+  if (data) {
+    checkData(data, "-master");
+  } else {
+    console.log("Get data from template");
+    data = await fetch(TEMPLATE_URL).then((r) => r.json());
+    checkData(data, "-template");
+  }
+
+  const slice = data.slice(
+    getRequest.page * PAGE_HEIGHT,
+    (getRequest.page + 1) * PAGE_HEIGHT
+  );
+
+  return new Response(JSON.stringify(slice));
+}
+
+async function handlePost(request: Request, env: Env) {
+  const submitRequest: Partial<SubmitRequest> = await request.json();
+  console.log("Handling POST request:", submitRequest);
+  checkSubmitRequest(submitRequest);
+
+  let data = await env.data.get("master", { type: "json" });
+  if (data) {
+    checkData(data, "-master");
+  } else {
+    console.log("New data from template");
+    data = await fetch(TEMPLATE_URL).then((r) => r.json());
+    checkData(data, "-template");
+  }
+
+  const newContent = submitRequest.content.split("\n");
+  const offset = submitRequest.page * PAGE_HEIGHT;
+  console.log("Splicing at", offset, ":");
+  console.log("----------------------------------------");
+  console.log(newContent.join("\n"));
+  console.log("----------------------------------------");
+  data.splice(offset, PAGE_HEIGHT, ...newContent);
+  checkData(data, "-spliced");
+
+  await env.data.put("master", JSON.stringify(data));
+
+  return new Response(null);
+}
+
+function checkGetRequest(getRequest: any): asserts getRequest is GetRequest {
+  if (!Number.isInteger(getRequest.page))
+    throw new TypeError("getRequest.page is not an integer");
+  if (getRequest.page < 0 || getRequest.page > MAX_PAGE)
+    throw new TypeError("getRequest.page is out of valid range");
+}
 
 function checkSubmitRequest(
-  submitRequest: Partial<SubmitRequest>
+  submitRequest: any
 ): asserts submitRequest is SubmitRequest {
-  if (typeof submitRequest.page !== "number")
-    throw new TypeError("submitRequest is missing page");
-  if (Math.floor(submitRequest.page) !== submitRequest.page)
+  if (!Number.isInteger(submitRequest.page))
     throw new TypeError("submitRequest.page is not an integer");
   if (submitRequest.page < 0 || submitRequest.page > MAX_PAGE)
     throw new TypeError("submitRequest.page is out of valid range");
