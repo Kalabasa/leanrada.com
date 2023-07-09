@@ -1,0 +1,283 @@
+<html lang="en">
+  <page-title title="Guestbook" />
+  <script render>
+    const GUESTBOOK_API =
+      process.env.GUESTBOOK_API ?? "https://guestbook.leanrada.com/";
+
+    // prettier-ignore
+    return html`<head><${"script"}>window.GUESTBOOK_API="${GUESTBOOK_API}";window.GUESTBOOK_DATA=${JSON.stringify(GUESTBOOK_DATA)}</${"script"}></head>`;
+  </script>
+  <page>
+    <content-header title="Guestbook" />
+    <h1>🚧 UNDER CONSTRUCTION 🚧</h1>
+    <h1>🚧 UNDER CONSTRUCTION 🚧</h1>
+    <h1>🚧 UNDER CONSTRUCTION 🚧</h1>
+
+    <noscript>
+      <p class="intro">
+        ⛔ Writing in the guestbook requires JavaScript. Unfortunately your
+        browser does not run it. :&lpar;
+      </p>
+    </noscript>
+
+    <p class="intro">
+      Hello, visitor! Thanks for visiting. Write anywhere in the box below!
+    </p>
+    <p class="intro">
+      I’d appreciate it if you leave a nice comment for others and sign your
+      name. Don’t forget to hit Submit!
+    </p>
+    <p class="intro">-Lean</p>
+
+    <div class="guestbook-row">
+      <pre class="guestbook"><textarea
+          class="page-input"
+          :cols="PAGE_WIDTH"
+          :rows="PAGE_HEIGHT"
+          :style="`width:${PAGE_WIDTH}ch`"
+          disabled
+        >{getPageContent(0)}</textarea
+        ></pre>
+    </div>
+
+    <div class="button-row">
+      <btn id="prev">← Prev page</btn>
+      <btn id="submit">Submit</btn>
+      <btn id="next">Next page →</btn>
+    </div>
+
+    <p class="intro">
+      As this website is a static site, there is no database where your messages
+      could be saved to. Thus, submitting a new version of a page triggers a
+      pull request on the website’s source code.
+    </p>
+  </page>
+</html>
+
+<style>
+  .intro {
+    margin: 18px auto;
+    max-width: 384px;
+  }
+
+  .guestbook-row {
+    margin: 24px auto;
+    text-align: center;
+  }
+
+  .guestbook {
+    margin: 0;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    background: var(--card-clr);
+  }
+
+  .page-input {
+    flex: 0 0 auto;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-clr);
+    font: inherit;
+    outline: none;
+    resize: none;
+    white-space: pre;
+  }
+
+  .button-row {
+    margin: 18px auto;
+    max-width: 384px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #submit {
+    font-size: 15px;
+    text-transform: uppercase;
+  }
+</style>
+
+<script static>
+  const GUESTBOOK_DATA = require("./data.json");
+
+  // Must be constant forever
+  const PAGE_WIDTH = 40;
+  const PAGE_HEIGHT = 30;
+
+  function getPageContent(index) {
+    const page = GUESTBOOK_DATA.slice(
+      index * PAGE_HEIGHT,
+      (index + 1) * PAGE_HEIGHT
+    );
+    page.length = PAGE_HEIGHT;
+    return page.map((l) => (l ?? "").padEnd(PAGE_WIDTH, " ")).join("\n");
+  }
+</script>
+
+<script client defer>
+  (() => {
+    // Must be constant forever
+    const PAGE_WIDTH = 40;
+    const PAGE_HEIGHT = 30;
+
+    const MAX_PAGE = 8;
+    const LAST_VALUE_KEY = Symbol("LAST_VALUE");
+
+    const pageInput = document.querySelector(".page-input");
+    pageInput.disabled = false;
+    pageInput.addEventListener("beforeinput", (event) => {
+      prepareTextBeforeInput(event.target);
+    });
+    pageInput.addEventListener("input", (event) => {
+      updateTextAfterInput(event.target);
+    });
+
+    const submit = document.getElementById("submit");
+    submit.addEventListener("click", () => {
+      fetch(window.GUESTBOOK_API, {
+        method: "POST",
+        body: JSON.stringify({
+          page: currentPage,
+          content: pageInput.value,
+        }),
+      });
+    });
+
+    let currentPage =
+      new URLSearchParams(window.location.search).get("page") ?? 0;
+
+    const prev = document.getElementById("prev");
+    prev.addEventListener("click", () => {
+      goToPage((currentPage + MAX_PAGE - 1) % MAX_PAGE);
+    });
+
+    const next = document.getElementById("next");
+    next.addEventListener("click", () => {
+      goToPage((currentPage + 1) % MAX_PAGE);
+    });
+
+    function goToPage(index) {
+      currentPage = index;
+      pageInput.value = getPageContent(index);
+    }
+
+    function getPageContent(index) {
+      const page = window.GUESTBOOK_DATA.slice(
+        index * PAGE_HEIGHT,
+        (index + 1) * PAGE_HEIGHT
+      );
+      page.length = PAGE_HEIGHT;
+      return page.map((l) => (l ?? "").padEnd(PAGE_WIDTH, " ")).join("\n");
+    }
+
+    function prepareTextBeforeInput(pageInput) {
+      pageInput[LAST_VALUE_KEY] = pageInput.value;
+    }
+
+    function updateTextAfterInput(pageInput) {
+      const [editStart, editEnd] = findEditRange(pageInput);
+
+      // Fill deleted text with spaces
+      let value = pageInput.value;
+      const newLen = value.length;
+      const fullLen = PAGE_WIDTH * PAGE_HEIGHT + (PAGE_HEIGHT - 1);
+      if (newLen < fullLen) {
+        pageInput.value = value =
+          value.slice(0, editEnd) +
+          "".padEnd(fullLen - newLen, " ") +
+          value.slice(editEnd);
+        pageInput.selectionStart = pageInput.selectionEnd = editEnd;
+      }
+
+      // Overwrite text
+      if (newLen > fullLen) {
+        let cursor;
+        [value, cursor] = overwrite(
+          pageInput[LAST_VALUE_KEY],
+          value.slice(editStart, editEnd),
+          editStart
+        );
+        pageInput.value = value;
+        pageInput.selectionStart = pageInput.selectionEnd = cursor;
+      }
+
+      // Preserve line width and newlines
+      const selection = pageInput.selectionStart;
+      let builder = [];
+      for (let i = 0; i < PAGE_HEIGHT; i++) {
+        const line = value
+          .slice(i * (PAGE_WIDTH + 1), (i + 1) * (PAGE_WIDTH + 1) - 1)
+          .replaceAll(/\s/gm, " ");
+        builder.push(line, i < PAGE_HEIGHT - 1 ? "\n" : "");
+      }
+      pageInput.value = pageInput[LAST_VALUE_KEY] = builder.join("");
+      pageInput.selectionStart = pageInput.selectionEnd = selection;
+    }
+
+    function overwrite(source, insert, offset) {
+      let cursor = offset;
+      let insertEnd = offset;
+
+      let builder = [source.slice(0, cursor)];
+      const insertLines = insert.split("\n").reverse();
+      while (insertLines.length) {
+        let insert = insertLines.pop();
+
+        // Wrap insert line
+        if (source.slice(cursor, cursor + insert.length).includes("\n")) {
+          const index = source.indexOf("\n", cursor) - cursor;
+          insertLines.push(insert.slice(index));
+          insert = insert.slice(0, index);
+        }
+
+        builder.push(insert);
+        cursor += insert.length;
+        insertEnd = cursor;
+
+        let lineEnd = source.indexOf("\n", cursor);
+        if (lineEnd === -1) lineEnd = Infinity;
+        lineEnd++; // Include "\n"
+
+        builder.push(source.slice(cursor, lineEnd));
+        cursor = lineEnd;
+      }
+
+      builder.push(source.slice(cursor));
+
+      return [builder.join(""), insertEnd];
+    }
+
+    function findEditRange(pageInput) {
+      const lastValue = pageInput[LAST_VALUE_KEY];
+
+      const maxStart = Math.min(
+        pageInput.selectionStart,
+        pageInput.value.length
+      );
+      const maxEndDist = Math.min(
+        pageInput.value.length - pageInput.selectionEnd,
+        pageInput.value.length
+      );
+
+      let start = 0;
+      while (start < maxStart && pageInput.value[start] === lastValue[start]) {
+        start++;
+      }
+
+      let endDist = 0;
+      while (
+        endDist < maxEndDist &&
+        pageInput.value[pageInput.value.length - endDist] ===
+          lastValue[lastValue.length - endDist]
+      ) {
+        endDist++;
+      }
+
+      return [start, pageInput.value.length - endDist];
+    }
+  })();
+</script>
