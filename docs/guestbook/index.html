@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Dimensions · leanrada.com</title>
+  <title>Guestbook · leanrada.com</title>
+  <script>
+    window.GUESTBOOK_API = "https://guestbook.leanrada.com/"
+  </script>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <script type="module" client="" defer="">
     import {
@@ -214,114 +217,49 @@
   <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
   <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
   <style>
-    .text-link {
-      color: var(--clr0-light, #fff);
-    }
-
-    .text-link:visited {
-      color: var(--clr0, #fff);
-    }
-  </style>
-  <style>
-    .project-info-card {
+    .btn,
+    .btn:visited {
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: none;
       font-family: var(--default-font);
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .project-info-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .project-info-card-title {
-      flex: 0 0 auto;
-      align-self: stretch;
-      position: relative;
-      margin-right: 12px;
-      padding: 12px 18px 6px 12px;
-      border-radius: 18px 18px 0 0;
-      font-style: italic;
-      text-decoration: underline;
-      background-color: var(--card-clr);
-    }
-
-    .project-info-card-title::after {
-      content: "";
-      position: absolute;
-      left: 100%;
-      bottom: 0;
-      width: 36px;
-      height: 18px;
-      border-bottom-left-radius: 18px;
-      box-shadow: -18px 0 0 var(--card-clr);
-    }
-
-    .project-info-card-fields {
-      display: grid;
-      grid-auto-flow: column;
-      grid-template-rows: 1fr 1fr;
-      padding: 12px;
-      border-radius: 0 18px 18px 18px;
-      background-color: var(--card-clr);
-    }
-
-    @media (max-width: 600px) {
-      .project-info-card-fields {
-        display: block;
-      }
-    }
-
-    .project-info-card-field {
-      display: flex;
-    }
-
-    .project-info-card-field-label {
-      padding: 6px;
-      font-style: italic;
-    }
-
-    .project-info-card-field-value {
-      padding: 6px;
+      font-size: 12px;
       font-weight: bold;
+      text-decoration: none;
+      background: var(--clr0-dark);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--clr0);
+    }
+
+    .btn:active {
+      background: var(--clr0-dark);
     }
   </style>
   <style>
-    .blog-media {
-      position: relative;
+    .content-header {
+      font-family: var(--default-font);
+      margin: 90px 0 60px;
+      padding: 0 18px;
+    }
+
+    .content-header-title {
+      margin: 0 0 6px;
+      font-size: 27px;
+      font-style: italic;
+      font-weight: bold;
       text-align: center;
-      /* external margin because it’s expected to be in an article */
-      margin: 36px 0;
     }
 
-    .blog-media-bleed {
-      margin: 90px 0;
-      max-height: 80vh;
-    }
-
-    .blog-media-element {
-      display: inline-block;
-      max-width: 100%;
-      max-height: 80vh;
-      border-radius: 18px;
-      box-sizing: border-box;
-    }
-
-    .blog-media-bleed .blog-media-element {
-      position: relative;
-      left: 50%;
-      max-width: max(min(100vw, 800px), 80vw);
-      transform: translateX(-50%);
-    }
-
-    .blog-media-windowed .blog-media-element {
-      border-radius: 0;
-    }
-
-    .blog-media-caption {
-      display: block;
-      font-size: 15px;
+    .content-header-subtitle {
+      margin: 6px 0 0;
+      font-size: 18px;
+      font-style: italic;
+      text-align: center;
+      color: var(--text2-clr);
     }
   </style>
   <style>
@@ -617,208 +555,79 @@
     }
   </style>
   <style>
-    .blog-page {
-      margin: auto;
-      overflow: hidden;
+    .intro {
+      margin: 18px auto;
+      max-width: 384px;
     }
 
-    .content {
-      margin: auto;
-      padding: 0 18px 60px;
-      width: 100%;
-      max-width: 700px;
-      font-family: var(--reading-font, sans-serif);
-      font-size: 16px;
-      line-height: 2.2;
-      letter-spacing: 0.02em;
-      color: #ddd;
-      box-sizing: border-box;
-    }
-
-    .markdown>h1,
-    .markdown>h2,
-    .markdown>h3,
-    .markdown>h4,
-    .markdown>h5,
-    .markdown>h6 {
-      font-family: var(--default-font, monospace);
-      font-weight: lighter;
-      font-style: italic;
-      line-height: 1.6;
-      letter-spacing: 0.04em;
-      margin: 48px 0 36px;
-    }
-
-    .markdown>h1 {
+    .guestbook-row {
+      margin: 24px auto;
       text-align: center;
-      font-size: 200%;
     }
 
-    .markdown>h2 {
-      font-size: 150%;
-    }
-
-    .markdown>h3,
-    .markdown>h4,
-    .markdown>h5,
-    .markdown>h6 {
-      font-size: 120%;
-      font-weight: bold;
-    }
-
-    .markdown>p {
-      margin: 36px 0;
-    }
-
-    .markdown>table {
-      display: inline-block;
-      /* scrollable table */
-      overflow-x: auto;
-      /* scrollable table */
-      white-space: nowrap;
-      /* scrollable table */
-      max-width: 100%;
-      /* scrollable table */
-      border-collapse: collapse;
-      background-color: var(--card-clr);
+    .guestbook {
+      margin: 0;
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
       border-radius: 12px;
-    }
-
-    .markdown>table th,
-    .markdown>table td {
-      text-align: start;
-      padding: 9px 12px;
-      padding-inline-end: 18px;
-      border-bottom: solid 1px #444;
-    }
-
-    .markdown>table>tbody>tr:last-child>td {
-      border-bottom: none;
-    }
-
-    .markdown>hr {
-      width: 36px;
-      margin: 90px auto;
-      border: solid 1.5px #ccc;
-      background: #ccc;
-      border-radius: 3px;
-    }
-
-    .markdown code:not([class]):not([class]) {
-      display: inline-block;
-      padding: 0 6px;
-      border-radius: 6px;
-      font-family: var(--default-font, monospace);
-      font-size: 15px;
       background: var(--card-clr);
     }
 
-    .markdown>pre:not([class])>code:not([class]) {
-      display: block;
-      padding: 18px;
-      border-radius: 18px;
-      line-height: 1.6;
-      font-size: 15px;
-      overflow-x: auto;
+    .guestbook.loading {
+      pointer-events: none;
     }
 
-    .markdown>blockquote {
-      position: relative;
-      margin: 0;
-      padding: 18px 24px;
-      border-radius: 18px;
-      border: solid 1px var(--clr0);
-      font-size: 21px;
+    .guestbook.loading * {
+      opacity: 0.2;
     }
 
-    .markdown>blockquote::before {
-      content: "";
-      position: absolute;
-      right: 100%;
-      top: 0;
-      height: 24px;
-      width: 24px;
-      border-bottom: solid 1px var(--clr0);
-      box-sizing: border-box;
+    .guestbook.error {
+      box-shadow: 0 0 0 2px var(--clr1);
     }
 
-    .markdown>blockquote::after {
-      content: "";
-      position: absolute;
-      right: 100%;
-      top: 24px;
-      bottom: 18px;
-      width: 24px;
-      border-top-right-radius: 24px;
-      border: solid var(--clr0);
-      border-width: 1px 1px 0 0;
-      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
-      box-sizing: border-box;
-    }
-
-    .markdown>blockquote> :first-child {
-      margin-top: 0;
-    }
-
-    .markdown>blockquote> :last-child {
-      margin-bottom: 0;
-    }
-
-    .markdown>blockquote cite {
-      display: block;
-      margin-top: 12px;
-      font-size: 15px;
-      font-style: inherit;
-    }
-
-    .markdown>blockquote cite::before {
-      content: "—";
-    }
-
-    .markdown>iframe,
-    .markdown>p>iframe {
-      max-width: calc(100vw - 18px);
+    .page-input {
+      flex: 0 0 auto;
+      padding: 12px;
       border: none;
-      border-radius: 18px;
-      background: #fff;
+      background: transparent;
+      color: var(--text-clr);
+      font: inherit;
+      outline: none;
+      resize: none;
+      white-space: pre;
     }
 
-    .markdown .center {
-      text-align: center;
-    }
-
-    .markdown .center-flex {
+    .button-row {
+      margin: 18px auto;
+      max-width: 384px;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
     }
 
-    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
-    .markdown .bleed {
-      position: relative;
-      left: 50%;
-      width: 100vh;
-      max-width: max(min(100vw, 800px), 80vw);
-      transform: translateX(-50%);
+    #submit {
+      font-size: 15px;
+      text-transform: uppercase;
     }
 
-    /* todo: convert to component <caption>, reuse across <blog-media> */
-    .markdown .caption {
-      display: block;
-      font-size: 15px;
+    #submit.error {
+      box-shadow: 0 0 0 2px var(--clr1);
     }
   </style>
 </head>
 
 
+
 <body>
+
 
   <div class="page-wrapper">
     <header class="main-header">
       <div class="main-header-bar">
         <a href="/" class="main-header-item ">Home</a>
-        <a href="/wares/" class="main-header-item select">Wares</a>
+        <a href="/wares/" class="main-header-item ">Wares</a>
         <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
         <a href="/art/" class="main-header-item ">Art</a>
         <a href="/notes/" class="main-header-item ">Notes</a>
@@ -827,72 +636,43 @@
     </header>
     <div class="page-wrapper-content">
 
-      <div class="blog-page">
+      <div class="content-header">
+        <h1 class="content-header-title">Guestbook</h1>
 
-        <div class="content">
+      </div>
 
-          <!-- prettier-ignore -->
-          <div class="markdown">
-            <h1 id="dimensions">Dimensions</h1>
-            <p>
-            <div class="blog-media blog-media-default">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Demo video">
-                <source src="/wares/dimensions/media/dimensions_3.mp4">
-                <a href="/wares/dimensions/media/dimensions_3.mp4">Demo video</a>
-              </video>
-            </div>
-            </p>
-            <h2 id="generative-art-and-augmented-reality">Generative art and augmented reality</h2>
-            <p>On August 2019, I made an augmented reality generative art experience for a small exhibit at the office where I worked.</p>
-            <p>
-            <aside class="project-info-card">
-              <div class="project-info-card-header">
-                <div class="project-info-card-title">Project details</div>
+      <!-- This guestbook service is really quickly hacked together. I should rewrite this someday. -->
 
-              </div>
-              <div class="project-info-card-fields">
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">released</div>
-                  <div class="project-info-card-field-value">2019</div>
-                </div>
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">role</div>
-                  <div class="project-info-card-field-value">creator</div>
-                </div>
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">platform</div>
-                  <div class="project-info-card-field-value">Web</div>
-                </div>
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">tech</div>
-                  <div class="project-info-card-field-value">three.js, Vue.js, image processing</div>
-                </div>
-              </div>
-            </aside>
-            </p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/wares/dimensions/media/dimensions_exhibit_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="photo of exhibit" src="/wares/dimensions/media/dimensions_exhibit.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #080808">
-            </div>
-            </p>
-            <p>I joined the art exhibit because it sounded like a fun opportunity to push myself and learn new things!</p>
-            <p>I knew right away that the medium had to be <strong>HTML</strong>, <strong>CSS</strong>, and <strong>JS</strong>, and I wanted it to somehow be an interactive experience.</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/wares/dimensions/media/dimensions_xlikha_320.generated.jpg 320w,/wares/dimensions/media/dimensions_xlikha_400.generated.jpg 400w" sizes="not (min-width:400px) 320px, 400px" class="blog-media-element" alt="" src="/wares/dimensions/media/dimensions_xlikha.jpg" spec="80% [400) 400" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #383848"><span class="blog-media-caption">Scrapped first attempt</span>
-            </div>
-            </p>
-            <p>After struggling for inspiration (and after one failed attempt), I’ve come up with a <strong>generative art</strong> and <strong>augmented reality</strong> concept.</p>
-            <p>The general plan was to make two components — one physical print and one <abbr title="augmented reality">AR</abbr> app.</p>
-            <p>I wrote about it in detail in the following posts:</p>
-            <ul>
-              <li><a target="_self" class="text-link " href="part-one-generative-art/">Part one: Generative art</a></li>
-              <li><a target="_self" class="text-link " href="part-two-augmented-reality/">Part two: Augmented reality</a></li>
-            </ul>
+      <noscript>
+        <p class="intro">
+          ⛔ Writing in the guestbook requires JavaScript. Unfortunately your
+          browser does not run it. :&lpar;
+        </p>
+      </noscript>
 
-          </div>
+      <p class="intro">
+        Hello, visitor! Thanks for visiting. Write anywhere in the box below!
+      </p>
+      <p class="intro">
+        I’d appreciate it if you leave a nice comment for others and sign your
+        name. Don’t forget to hit Save!
+      </p>
+      <p class="intro">-Lean</p>
 
-        </div>
+      <div class="guestbook-row">
+        <pre class="guestbook"><textarea class="page-input" cols="40" rows="30" style="width:40ch" disabled=""></textarea></pre>
+      </div>
+
+      <div class="button-row">
+        <button class="btn " id="prev">
+          ← Prev page
+        </button>
+        <button class="btn " id="submit">
+          Save
+        </button>
+        <button class="btn " id="next">
+          Next page →
+        </button>
       </div>
 
     </div>
@@ -964,7 +744,199 @@
 
 
 
-  <script defer="" src="/scripts/blog-media.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+    (() => {
+      // Must be constant forever
+      const PAGE_WIDTH = 40;
+      const PAGE_HEIGHT = 30;
+
+      // Must sync with client (or make a top-level config)
+      const MAX_PAGE = 8;
+      const LAST_VALUE_KEY = Symbol("LAST_VALUE");
+
+      const guestbook = document.querySelector(".guestbook");
+      const pageInput = document.querySelector(".page-input");
+      pageInput.addEventListener("beforeinput", (event) => {
+        prepareTextBeforeInput(event.target);
+      });
+      pageInput.addEventListener("input", (event) => {
+        updateTextAfterInput(event.target);
+      });
+
+      const submit = document.getElementById("submit");
+      submit.addEventListener("click", async () => {
+        submit.classList.remove("error");
+
+        submit.textContent = "Saving";
+
+        try {
+          const res = await fetch(window.GUESTBOOK_API, {
+            method: "POST",
+            body: JSON.stringify({
+              page: currentPage,
+              content: pageInput.value,
+            }),
+          });
+
+          if (!res.ok) throw new Error("Not OK");
+
+          submit.textContent = "Saved";
+        } catch (e) {
+          submit.classList.add("error");
+          submit.textContent = "Retry";
+        }
+      });
+
+      let currentPage =
+        new URLSearchParams(window.location.search).get("page") ?? 0;
+      goToPage(currentPage);
+
+      const prev = document.getElementById("prev");
+      prev.addEventListener("click", () => {
+        goToPage((currentPage + MAX_PAGE - 1) % MAX_PAGE);
+      });
+
+      const next = document.getElementById("next");
+      next.addEventListener("click", () => {
+        goToPage((currentPage + 1) % MAX_PAGE);
+      });
+
+      function goToPage(index) {
+        currentPage = index;
+
+        guestbook.classList.remove("error");
+        guestbook.classList.add("loading");
+        pageInput.disabled = true;
+        submit.disabled = true;
+
+        getPageContent(index)
+          .then((content) => {
+            pageInput.value = content;
+            pageInput.disabled = false;
+            submit.disabled = false;
+          })
+          .catch(() => {
+            guestbook.classList.add("error");
+            pageInput.value = "Can't load this page right now :(";
+          })
+          .finally(() => {
+            guestbook.classList.remove("loading");
+          });
+      }
+
+      async function getPageContent(index) {
+        const res = await fetch(`${window.GUESTBOOK_API}?page=${index}`);
+        const data = await res.json();
+        return data.join("\n");
+      }
+
+      function prepareTextBeforeInput(pageInput) {
+        pageInput[LAST_VALUE_KEY] = pageInput.value;
+      }
+
+      function updateTextAfterInput(pageInput) {
+        const [editStart, editEnd] = findEditRange(pageInput);
+
+        // Fill deleted text with spaces
+        let value = pageInput.value;
+        const newLen = value.length;
+        const fullLen = PAGE_WIDTH * PAGE_HEIGHT + (PAGE_HEIGHT - 1);
+        if (newLen < fullLen) {
+          pageInput.value = value =
+            value.slice(0, editEnd) +
+            "".padEnd(fullLen - newLen, " ") +
+            value.slice(editEnd);
+          pageInput.selectionStart = pageInput.selectionEnd = editEnd;
+        }
+
+        // Overwrite text
+        if (newLen > fullLen) {
+          let cursor;
+          [value, cursor] = overwrite(
+            pageInput[LAST_VALUE_KEY],
+            value.slice(editStart, editEnd),
+            editStart
+          );
+          pageInput.value = value;
+          pageInput.selectionStart = pageInput.selectionEnd = cursor;
+        }
+
+        // Preserve line width and newlines
+        const selection = pageInput.selectionStart;
+        let builder = [];
+        for (let i = 0; i < PAGE_HEIGHT; i++) {
+          const line = value
+            .slice(i * (PAGE_WIDTH + 1), (i + 1) * (PAGE_WIDTH + 1) - 1)
+            .replaceAll(/\s/gm, " ");
+          builder.push(line, i < PAGE_HEIGHT - 1 ? "\n" : "");
+        }
+        pageInput.value = pageInput[LAST_VALUE_KEY] = builder.join("");
+        pageInput.selectionStart = pageInput.selectionEnd = selection;
+      }
+
+      function overwrite(source, insert, offset) {
+        let cursor = offset;
+        let insertEnd = offset;
+
+        let builder = [source.slice(0, cursor)];
+        const insertLines = insert.split("\n").reverse();
+        while (insertLines.length) {
+          let insert = insertLines.pop();
+
+          // Wrap insert line
+          if (source.slice(cursor, cursor + insert.length).includes("\n")) {
+            const index = source.indexOf("\n", cursor) - cursor;
+            insertLines.push(insert.slice(index));
+            insert = insert.slice(0, index);
+          }
+
+          builder.push(insert);
+          cursor += insert.length;
+          insertEnd = cursor;
+
+          let lineEnd = source.indexOf("\n", cursor);
+          if (lineEnd === -1) lineEnd = Infinity;
+          lineEnd++; // Include "\n"
+
+          builder.push(source.slice(cursor, lineEnd));
+          cursor = lineEnd;
+        }
+
+        builder.push(source.slice(cursor));
+
+        return [builder.join(""), insertEnd];
+      }
+
+      function findEditRange(pageInput) {
+        const lastValue = pageInput[LAST_VALUE_KEY];
+
+        const maxStart = Math.min(
+          pageInput.selectionStart,
+          pageInput.value.length
+        );
+        const maxEndDist = Math.min(
+          pageInput.value.length - pageInput.selectionEnd,
+          pageInput.value.length
+        );
+
+        let start = 0;
+        while (start < maxStart && pageInput.value[start] === lastValue[start]) {
+          start++;
+        }
+
+        let endDist = 0;
+        while (
+          endDist < maxEndDist &&
+          pageInput.value[pageInput.value.length - endDist] ===
+          lastValue[lastValue.length - endDist]
+        ) {
+          endDist++;
+        }
+
+        return [start, pageInput.value.length - endDist];
+      }
+    })();
+  </script>
 </body>
 </html>
