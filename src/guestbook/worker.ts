@@ -31,9 +31,12 @@ async function handleRequest(
   ctx: ExecutionContext
 ): Promise<Response> {
   try {
-    if (request.method == "GET") return await handleGet(request, env);
-    else if (request.method == "POST") return await handlePost(request, env);
-    else throw new Error("Wrong HTTP method");
+    const response = handleRequestMethod(request, env);
+    (await response).headers.append(
+      "Access-Control-Allow-Origin",
+      "https://leanrada.com"
+    );
+    return response;
   } catch (e) {
     // don’t care about status codes for this worker
     console.error(
@@ -44,6 +47,12 @@ async function handleRequest(
     );
     return new Response(null, { status: 404 });
   }
+}
+
+async function handleRequestMethod(request: Request, env: Env) {
+  if (request.method == "GET") return await handleGet(request, env);
+  else if (request.method == "POST") return await handlePost(request, env);
+  else throw new Error("Wrong HTTP method");
 }
 
 async function handleGet(request: Request, env: Env) {
