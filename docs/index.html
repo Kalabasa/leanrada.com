@@ -192,7 +192,7 @@
         }
 
         getT() {
-          const t = (Date.now() * 30) / 1000;
+          const t = (Date.now() * 24) / 1000;
           // make it smoother while interacting
           return this.mouseCell ? t : Math.floor(t);
         }
@@ -1081,9 +1081,42 @@
     }
   </style>
   <style>
+    nebula-client {
+      position: relative;
+    }
+
     nebula-client>canvas {
       width: 100%;
       height: 100%;
+    }
+
+    .nebula-noise {
+      position: absolute;
+      inset: 0;
+      background: url("/noise.png");
+      /* todo: encapsulate noise.png */
+      opacity: 0.1;
+      animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+        nebula-noise-y 0.24s steps(3, jump-start) infinite;
+    }
+
+    @supports (mix-blend-mode: overlay) {
+      .nebula-noise {
+        mix-blend-mode: overlay;
+        opacity: 0.2;
+      }
+    }
+
+    @keyframes nebula-noise-x {
+      to {
+        background-position-x: 100px;
+      }
+    }
+
+    @keyframes nebula-noise-y {
+      to {
+        background-position-y: 100px;
+      }
     }
   </style>
   <style>
@@ -1107,7 +1140,7 @@
       display: flex;
       justify-content: space-between;
       gap: 60px;
-      padding: 42px calc(max(60px, 50vw - 600px));
+      padding: 42px calc(max(36px, 50vw - 600px));
       font-size: 15px;
       font-weight: bold;
       background: var(--clr0);
@@ -1528,8 +1561,9 @@
         <div class="header-content">
           <div class="header-circle">
             <nebula-client class="nebula" palette="#e79907 #bf1852 #4d4aff #0ad591" mouse="">
-              <canvas style="filter: contrast(1.5)">
-              </canvas></nebula-client>
+              <canvas style="filter: contrast(1.5)"></canvas>
+              <div class="nebula-noise"></div>
+            </nebula-client>
             <div class="home-circle-text header-circle-text-big">
               <span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-108.75deg); transform-origin: 0.5ch 18vh">W</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-101.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-93.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-86.25deg); transform-origin: 0.5ch 18vh">c</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-78.75deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-71.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-63.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-56.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-48.75deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-41.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-33.75deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-26.25deg); transform-origin: 0.5ch 18vh">m</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-18.75deg); transform-origin: 0.5ch 18vh">y</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-11.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(-3.75deg); transform-origin: 0.5ch 18vh">p</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(3.75deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(11.25deg); transform-origin: 0.5ch 18vh">r</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(18.75deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(26.25deg); transform-origin: 0.5ch 18vh">o</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(33.75deg); transform-origin: 0.5ch 18vh">n</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(41.25deg); transform-origin: 0.5ch 18vh">a</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(48.75deg); transform-origin: 0.5ch 18vh">l</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(56.25deg); transform-origin: 0.5ch 18vh"> </span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(63.75deg); transform-origin: 0.5ch 18vh">w</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(71.25deg); transform-origin: 0.5ch 18vh">e</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(78.75deg); transform-origin: 0.5ch 18vh">b</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(86.25deg); transform-origin: 0.5ch 18vh">s</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(93.75deg); transform-origin: 0.5ch 18vh">i</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(101.25deg); transform-origin: 0.5ch 18vh">t</span><span class="curved" style="transform: translateX(calc(18vh - 0.5ch)) rotate(108.75deg); transform-origin: 0.5ch 18vh">e</span>
             </div>
@@ -1796,7 +1830,8 @@
           <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
           <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
           <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
-          <a target="_self" class="main-footer-link" href="/misc/">Misc</a>
+          <a target="_self" class="main-footer-link" href="/misc/">Misc</a> ·
+          <a target="_self" class="main-footer-link" href="/guestbook/">Guestbook</a>
         </p>
         <p class="main-footer-line">
           <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
@@ -1843,8 +1878,9 @@
         </p>
       </div>
       <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
-        <canvas style="filter: contrast(1.5)">
-        </canvas></nebula-client>
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
       <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
     </footer>
   </div>

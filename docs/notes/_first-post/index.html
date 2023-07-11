@@ -190,7 +190,7 @@
         }
 
         getT() {
-          const t = (Date.now() * 30) / 1000;
+          const t = (Date.now() * 24) / 1000;
           // make it smoother while interacting
           return this.mouseCell ? t : Math.floor(t);
         }
@@ -271,10 +271,11 @@
     /* Wrap lines in an angle */
     .blog-header-title::before {
       content: "";
-      width: 50%;
+      width: 0;
+      width: calc(min(50%, 180vw - 600px));
       height: 600px;
       float: right;
-      shape-outside: polygon(80% 0%, 100% 0%, 100% 100%, 0% 100%);
+      shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
     }
 
     .blog-header-hero {
@@ -306,10 +307,6 @@
 
       .blog-header-title {
         font-size: clamp(24px, 20px + 2vw, 36px);
-      }
-
-      .blog-header-title::before {
-        content: none;
       }
     }
   </style>
@@ -376,9 +373,42 @@
     }
   </style>
   <style>
+    nebula-client {
+      position: relative;
+    }
+
     nebula-client>canvas {
       width: 100%;
       height: 100%;
+    }
+
+    .nebula-noise {
+      position: absolute;
+      inset: 0;
+      background: url("/noise.png");
+      /* todo: encapsulate noise.png */
+      opacity: 0.1;
+      animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+        nebula-noise-y 0.24s steps(3, jump-start) infinite;
+    }
+
+    @supports (mix-blend-mode: overlay) {
+      .nebula-noise {
+        mix-blend-mode: overlay;
+        opacity: 0.2;
+      }
+    }
+
+    @keyframes nebula-noise-x {
+      to {
+        background-position-x: 100px;
+      }
+    }
+
+    @keyframes nebula-noise-y {
+      to {
+        background-position-y: 100px;
+      }
     }
   </style>
   <style>
@@ -402,7 +432,7 @@
       display: flex;
       justify-content: space-between;
       gap: 60px;
-      padding: 42px calc(max(60px, 50vw - 600px));
+      padding: 42px calc(max(36px, 50vw - 600px));
       font-size: 15px;
       font-weight: bold;
       background: var(--clr0);
@@ -859,7 +889,8 @@
           <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
           <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
           <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
-          <a target="_self" class="main-footer-link" href="/misc/">Misc</a>
+          <a target="_self" class="main-footer-link" href="/misc/">Misc</a> ·
+          <a target="_self" class="main-footer-link" href="/guestbook/">Guestbook</a>
         </p>
         <p class="main-footer-line">
           <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
@@ -906,8 +937,9 @@
         </p>
       </div>
       <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
-        <canvas style="filter: contrast(1.5)">
-        </canvas></nebula-client>
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
       <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
     </footer>
   </div>
