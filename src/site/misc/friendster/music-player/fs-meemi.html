@@ -1,0 +1,191 @@
+<div class="fs-meemi">
+  <h2 class="fs-meemi-title">My Playlist</h2>
+  <div class="fs-meemi-now">
+    <marquee class="fs-meemi-now-playing">{songs[0].name}</marquee>
+    <div class="fs-meemi-links">
+      <div>♫ Ringtone</div>
+      <div>🡇 Download</div>
+    </div>
+    <div class="fs-meemi-art">
+      <img src="intentionally-broken-image" alt="" />
+    </div>
+  </div>
+  <audio :src="songs[0].url" autoplay controls></audio>
+  <div class="fs-meemi-midbar">meemi⚉</div>
+  <ul class="fs-meemi-list">
+    <script render>
+      let i = 0;
+      for (const song of songs)
+        yield html`<li><button class="fs-meemi-song ${i++ ? '' : 'playing'}" data-url="${song.url}">${song.name}</button></li>`;
+    </script>
+  </ul>
+</div>
+
+<style>
+  .fs-meemi {
+    border: solid 1px #ccc;
+    background: #fff;
+    width: 85%;
+    box-sizing: border-box;
+  }
+  .fs-meemi-title {
+    margin: 2px 4px;
+    padding: 3px;
+    width: calc(100% - 8px);
+    font-size: 10px;
+    font-weight: normal;
+    background: #0f7ecb;
+    color: #fff;
+    box-sizing: border-box;
+  }
+  .fs-meemi-now {
+    margin: 2px 4px;
+    display: grid;
+    /* prettier-ignore */
+    grid-template:
+      "p a" 60px
+      "l a" 20px / 1fr 80px;
+  }
+  .fs-meemi-now-playing {
+    grid-area: p;
+    padding: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 3px;
+    box-shadow: 0 0 6px #999 inset;
+    background: linear-gradient(to top, #fff 45%, #f8f8f8 50%, #fff);
+    color: #0f7ecb;
+  }
+  .fs-meemi-links {
+    grid-area: l;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .fs-meemi-links > * {
+    padding: 0 6px;
+    border: solid 1px #ccc;
+    background: linear-gradient(to top, #0f7ecb 50%, #2c96e2 50%, #0f7ecb);
+    color: #fff !important;
+    text-decoration: none !important;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 8px;
+    line-height: 20px;
+  }
+  .fs-meemi-art {
+    grid-area: a;
+    margin: 5px;
+    border: solid 1px #ccc;
+    background: #eee;
+  }
+  .fs-meemi-art > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .fs-meemi > audio {
+    padding: 6px 3px 5px;
+    border-top: solid 1px #ccc;
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+    accent-color: #0f7ecb;
+  }
+  .fs-meemi-midbar {
+    border: solid #ccc;
+    border-width: 1px 0;
+    padding: 2px;
+    width: 100%;
+    font-family: ui-rounded, "Hiragino Maru Gothic ProN", Quicksand, Comfortaa,
+      Manjari, "Arial Rounded MT", "Arial Rounded MT Bold", Calibri,
+      source-sans-pro, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: right;
+    background: linear-gradient(
+      to bottom,
+      #f8f8f8,
+      #f0f0f0 40%,
+      #ddd 60%,
+      #eee
+    );
+    color: #444;
+    text-shadow: 0 0 1px #444;
+    box-sizing: border-box;
+  }
+  .fs-meemi-list {
+    margin: 0;
+    padding: 0;
+    text-indent: 0;
+    min-height: 100px;
+    overflow-y: scroll;
+  }
+  .fs-meemi-list > li {
+    list-style-type: none;
+  }
+  .fs-meemi-list > li > button {
+    width: 100%;
+    border: solid #ccc;
+    border-width: 0 1px 1px 0;
+    font-size: 10px;
+    line-height: 15px;
+    text-align: start;
+    background: linear-gradient(to bottom, #fff, #f0f0f0);
+    color: #444;
+    cursor: pointer;
+  }
+  .fs-meemi-list > li > button.playing {
+    background: linear-gradient(to bottom, #2696e6, #0f7ecb);
+    color: #fff;
+  }
+</style>
+
+<script static>
+  const songs = [
+    {
+      name: "Jerry C - Whose Autumn (abridged)",
+      url: url("./songs/whose-autumn-abridged.mp3"),
+    },
+    { name: "Neil Zaza - I'm Alright", url: url("./songs/im-alright.mp3") },
+  ];
+</script>
+
+<script client defer>
+  (() => {
+    document.querySelectorAll(".fs-meemi").forEach(init);
+
+    function init(musicPlayer) {
+      const songs = musicPlayer.querySelectorAll(".fs-meemi-song");
+      const nowPlaying = musicPlayer.querySelector(".fs-meemi-now-playing");
+      const audio = musicPlayer.querySelector("audio");
+
+      let currentSong = songs[0];
+
+      audio.volume = 0.5;
+      audio.addEventListener("ended", nextSong);
+
+      for (let i = 0; i < songs.length; i++) {
+        songs[i].addEventListener("click", () => playSong(songs[i]));
+      }
+
+      function nextSong() {
+        const index = [...songs].indexOf(currentSong);
+        const nextIndex = (index + 1) % songs.length;
+        playSong(songs[nextIndex]);
+      }
+
+      function playSong(song) {
+        if (currentSong) {
+          currentSong.classList.remove("playing");
+        }
+        song.classList.add("playing");
+        currentSong = song;
+
+        audio.src = song.dataset.url;
+        audio.play();
+
+        nowPlaying.textContent = song.textContent;
+      }
+    }
+  })();
+</script>
