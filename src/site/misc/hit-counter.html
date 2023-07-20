@@ -1,0 +1,54 @@
+<script render>
+  for (const digit of String(hits).padStart(5, "0")) {
+    yield html`<span class="hit-digit">${digit}</span>`;
+  }
+</script>
+
+<script static>
+  const { hits } = require("./hits.json");
+</script>
+
+<script client defer>
+  (() => {
+    const hitsGet = getHits();
+    populate();
+
+    async function getHits() {
+      const res = await fetch(
+        "https://kalabasa.goatcounter.com/counter/TOTAL.json"
+      );
+      const data = await res.json();
+      return parseInt(data.count.replaceAll(/\D/g, ""));
+    }
+
+    async function populate() {
+      const digitEls = Array.from(document.querySelectorAll(".hit-digit"));
+      const strDigits = String(await hitsGet).padStart(digitEls.length, "0");
+      for (let i = 0; i < digitEls.length; i++) {
+        animateDigit(digitEls[i], Number(strDigits[i]), 200 + 100 * (i + 1));
+      }
+    }
+
+    async function animateDigit(el, n, durationMs) {
+      const current = parseInt(el.textContent);
+      for (let i = 0; i < durationMs / 37.5; i++) {
+        el.textContent = Math.floor(Math.random() * 10);
+        await delay(25 + Math.random() * 25);
+      }
+      el.textContent = n;
+    }
+
+    function delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+  })();
+</script>
+
+<style>
+  .hit-digit {
+    margin: 0 1.5px;
+    padding: 0 6px;
+    border: solid 1px var(--text2-clr);
+    border-radius: 6px;
+  }
+</style>
