@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Sweep and prune algorithm for collision detection · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
+        }
+
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
+        }
+
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
+
+          this.draw(canvas, this.context);
+
+          requestAnimationFrame(() => this.loop());
+        }
+
+        /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
+
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
+
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
+
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
+            }
+          }
+
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
+
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
+
+              const paletteIndex = Math.floor(paletteLength * p);
+
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
+
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
+            }
+          }
+        }
+
+        getT() {
+          const t = (Date.now() * 24) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
+        }
+      }
+    );
+
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
+
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta charset="utf-8">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
+
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    /**
+ * Modified by Kalabasa.
+ * Based on:
+ * a11y-dark theme for JavaScript, CSS, and HTML
+ * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/themes/prism-okaidia.css
+ * @author ericwbailey
+ */
+
+    .code-block .token.comment,
+    .code-block .token.prolog,
+    .code-block .token.doctype,
+    .code-block .token.cdata {
+      color: #628b9e;
+      font-style: italic;
+    }
+
+    .code-block .token.punctuation {
+      color: #fefefe;
+    }
+
+    .code-block .token.property,
+    .code-block .token.tag,
+    .code-block .token.constant,
+    .code-block .token.symbol,
+    .code-block .token.deleted {
+      color: #ffa07a;
+    }
+
+    .code-block .token.boolean,
+    .code-block .token.number {
+      color: #00e0e0;
+    }
+
+    .code-block .token.selector,
+    .code-block .token.attr-name,
+    .code-block .token.string,
+    .code-block .token.char,
+    .code-block .token.builtin,
+    .code-block .token.inserted {
+      color: #abe338;
+    }
+
+    .code-block .token.operator,
+    .code-block .token.entity,
+    .code-block .token.url,
+    .code-block .token.variable {
+      color: #00e0e0;
+    }
+
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function {
+      color: #ffd700;
+    }
+
+    .code-block .token.keyword {
+      color: #00e0e0;
+    }
+
+    .code-block .token.regex,
+    .code-block .token.important {
+      color: #ffd700;
+    }
+
+    .code-block .token.important,
+    .code-block .token.bold {
+      font-weight: bold;
+    }
+
+    .code-block .token.italic {
+      font-style: italic;
+    }
+
+    .code-block .token.entity {
+      cursor: help;
+    }
+
+    @media screen and (-ms-high-contrast: active) {
+      .code-block .token.important {
+        background: highlight;
+        color: window;
+        font-weight: normal;
+      }
+
+      .code-block .token.atrule,
+      .code-block .token.attr-value,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.selector {
+        font-weight: bold;
+      }
+
+      .code-block .token.attr-value,
+      .code-block .token.comment,
+      .code-block .token.doctype,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.property,
+      .code-block .token.string {
+        color: highlight;
+      }
+
+      .code-block .token.attr-value,
+      .code-block .token.url {
+        font-weight: normal;
+      }
+    }
+  </style>
+  <style>
+    .code-block-code {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      line-height: 1.6;
+      background: var(--card-clr);
+      white-space: pre;
+      overflow-x: auto;
+    }
+  </style>
+  <style>
+    .tag-component {
+      display: inline-block;
+      padding: 0 3px;
+      height: 16px;
+      line-height: 16px;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      background: #ccc;
+      color: #444;
+      border-radius: 3px;
+    }
+  </style>
+  <style>
+    .tag-row {
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+  <style>
+    .blog-post-info {
+      margin: 24px 0;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+
+    .blog-post-info-hidden {
+      display: none;
+    }
+  </style>
+  <style>
+    .text-with-bg-span {
+      display: inline;
+      margin: 0;
+      padding: 0.7em;
+      padding: 0.35lh;
+      border-radius: 18px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      font: inherit;
+      background: var(--text-with-bg-color);
+    }
+  </style>
+  <style>
+    .blog-header {
+      isolation: isolate;
+      margin: 90px 0 24px;
+      position: relative;
+      left: 50%;
+      height: 600px;
+      width: max(800px, 60vw);
+      transform: translateX(-50%);
+      box-sizing: border-box;
+    }
+
+    .blog-header-title {
+      position: relative;
+      max-width: 800px;
+      font-family: var(--display-font);
+      font-size: 36px;
+      font-weight: bold;
+      font-style: italic;
+      text-align: left;
+      z-index: 2;
+    }
+
+    .blog-header-title-inner {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    /* Wrap lines in an angle */
+    .blog-header-title::before {
+      content: "";
+      width: 0;
+      width: calc(min(50%, 120vw - 600px));
+      height: 600px;
+      float: right;
+      shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
+    }
+
+    .blog-header-hero {
+      position: absolute;
+      inset: 1px;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      background: gray;
+      z-index: -1;
+    }
+
+    .blog-header-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      fill: var(--bg-clr);
+      z-index: 1;
+    }
+
+    @media (max-width: 800px) {
+      .blog-header {
+        width: 100vw;
+        width: 100svw;
+        height: 400px;
+        padding-right: 36px;
+      }
+
+      .blog-header-title {
+        font-size: clamp(24px, 20px + 2vw, 36px);
+      }
+    }
+  </style>
+  <style>
+    @import "/fonts/iosevka.css";
+    @import "/fonts/top.css";
+
+    :root {
+      --default-font: "Iosevka Fixed SS15 Web", "Space Mono", monaco, Consolas, "Lucida Console", monospace;
+      --display-font: "Space Mono", "Iosevka Fixed SS15 Web", monaco, Consolas, "Lucida Console", monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111616;
+      --card-clr: #222c2c;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #05b97d;
+      --clr1: #df2063;
+
+      --text-clr: #fff;
+      --text2-clr: #999;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      font-variant-ligatures: none;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client {
+      position: relative;
+    }
+
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .nebula-noise {
+      position: absolute;
+      inset: 0;
+      background: url("/noise.png");
+      /* todo: encapsulate noise.png */
+      opacity: 0.1;
+      animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+        nebula-noise-y 0.48s steps(3, jump-start) infinite;
+    }
+
+    @supports (mix-blend-mode: overlay) {
+      .nebula-noise {
+        mix-blend-mode: overlay;
+        opacity: 0.2;
+      }
+    }
+
+    @keyframes nebula-noise-x {
+      to {
+        background-position-x: 100px;
+      }
+    }
+
+    @keyframes nebula-noise-y {
+      to {
+        background-position-y: 100px;
+      }
+    }
+  </style>
+  <style>
+    .main-footer-web-link {
+      text-decoration: none;
+    }
+
+    .main-footer-web-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-web-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 42px calc(max(36px, 50vw - 600px));
+      font-family: var(--display-font);
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 200px;
+    }
+
+    .main-footer-links-heading {
+      margin: 18px 0;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 18px 0;
+    }
+
+    .main-footer-link {
+      color: #000;
+    }
+
+    .main-footer-link:hover {
+      color: #000;
+    }
+
+    .main-footer-webring-icon {
+      width: 16px;
+      height: 16px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-signature {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      vertical-align: middle;
+    }
+
+    .main-footer-content-part {
+      z-index: 1;
+    }
+
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
+
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
+
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-family: var(--display-font);
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
+
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
+
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .blog-page {
+      margin: auto;
+      overflow: hidden;
+    }
+
+    .content {
+      margin: auto;
+      padding: 0 18px 60px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown>h1,
+    .markdown>h2,
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      margin: 48px 0 36px;
+      font-family: var(--display-font);
+      font-weight: normal;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      text-wrap: balance;
+    }
+
+    .markdown>h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown>h2 {
+      font-size: 150%;
+    }
+
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    .markdown>p {
+      margin: 36px 0;
+    }
+
+    .markdown>table {
+      display: inline-block;
+      /* scrollable table */
+      overflow-x: auto;
+      /* scrollable table */
+      white-space: nowrap;
+      /* scrollable table */
+      max-width: 100%;
+      /* scrollable table */
+      border-collapse: collapse;
+      background-color: var(--card-clr);
+      border-radius: 12px;
+    }
+
+    .markdown>table th,
+    .markdown>table td {
+      text-align: start;
+      padding: 9px 12px;
+      padding-inline-end: 18px;
+      border-bottom: solid 1px #444;
+    }
+
+    .markdown>table>tbody>tr:last-child>td {
+      border-bottom: none;
+    }
+
+    .markdown>hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code:not([class]):not([class]) {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      background: var(--card-clr);
+    }
+
+    .markdown>pre:not([class])>code:not([class]) {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      font-size: 15px;
+      overflow-x: auto;
+    }
+
+    .markdown>blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown>blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown>blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown>blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown>blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown>iframe,
+    .markdown>p>iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+    .markdown .bleed {
+      position: relative;
+      left: 50%;
+      width: 100vh;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/notes/" class="main-header-item select">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <p>
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  Sweep and prune algorithm for collision detection
+                </h1>
+              </div>
+              <img srcset="/notes/_sweep-and-prune/hero_800.generated.png 800w,/notes/_sweep-and-prune/hero_1020.generated.png 1020w,/notes/_sweep-and-prune/hero_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/_sweep-and-prune/hero.png" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
+            </div>
+            </p>
+            <p>
+            <div class="blog-post-info ">
+              1 Jan 1970 · 1 min read
+            </div>
+            </p>
+            <div class="tag-row">tags:
+              <span class="tag-component" title="algorithm" style="background: rgb(107,251,250); color: rgb(9,125,124)">algo</span>
+              <span class="tag-component" style="background: rgb(183,234,166); color: rgb(51,105,32)">games</span>
+            </div>
+
+            <p>In video game programming, detecting collisions between objects is a common requirement. Consider the following ball simulation as a basic example. In this sim, multiple physics objects interact with each other. This requires a multi-object collision detection algorithm.</p>
+            <p>(ball collisions)</p>
+            <p>Each ball can potentially interact with <em>any other ball</em>. How do we implement the detection of such n-to-n collisions?</p>
+            <h2 id="naive-solution">Naive solution</h2>
+            <p>The naive solution is to check every potential pair of objects for collision. Continuing with the ball example, this means checking every ball for intersection with each of the other balls. This is done every frame to ensure balls bounce when they collide.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">// for each ball</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> balls<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> ball1 <span class="token operator">=</span> balls<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
+  <span class="token comment">// check each of the other balls</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&lt;</span> balls<span class="token punctuation">.</span>length<span class="token punctuation">;</span> j<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> ball2 <span class="token operator">=</span> balls<span class="token punctuation">[</span>j<span class="token punctuation">]</span>
+    <span class="token comment">// check for collision</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">intersects</span><span class="token punctuation">(</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">bounce</span><span class="token punctuation">(</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>(animated algo)</p>
+            <h2 id="performance">Performance</h2>
+            <p>The naive algorithm runs in O(n<sup>2</sup>) time. That is, for an input of n balls, the algorithm's run time grows proportionally to the <em>square</em> of the input n. That's a lot!</p>
+            <p>This is because for n balls, there are around <code>(n * (n - 1))/2</code> pairs to check or 0.5n<sup>2</sup> - 0.5n. This translates to O(n<sup>2</sup>) in <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Big_O_notation">Big O notation</a>.</p>
+            <p>To illustrate the scaling of the algorithm's performance, check the following real-time graph which shows the number of <code>intersect</code> calls plotted against the input n. For each n, a simulation of n balls is run and the number of <code>intersect</code> calls is recorded.</p>
+            <p>(real-time graph)</p>
+            <p>Clearly, the naive solution does not scale well for large numbers of objects.</p>
+            <h2 id="improving-the-solution">Improving the solution</h2>
+            <p>One common thought process when optimising algorithms is to find <strong>redundant or unnecessary work</strong>.</p>
+            <span class="box-note ">
+              <p>There are many ways to optimise collision detection, like spatial hashing and space partitioning trees. But this post is about just one particular algorithm - the <strong>sweep and prune</strong> algorithm.</p>
+              <p><strong>Disclaimer:</strong> The following is merely my attempt at rationalising the thinking behind the sweep-and-prune algorithm. I do not know how the algorithm was originally conceived.</p>
+            </span>
+
+            <p>Let's start with our <a target="_blank" class="text-link " href="https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html">typical object intersection check</a>, the one performed at each iteration of the inner loop. It's essentially a bunch of inequality checks:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// compare objects' bounds to see if they overlap</span>
+  <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
+    <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">,</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left
+    <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom
+    <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">,</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>For now, let's focus on just one dimension, say x. Bear with me as I further scope down the check to just one direction:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Don't worry; this scoped-down definition is a surprise tool that can help us later in understanding the rationale behind the optimisation.</p>
+            <p>(mickey meme)</p>
+            <p>Okay, more seriously, one reason it works is because of the AND operator's (<code>&amp;&amp;</code>) short-circuit evaluation. If any one of the operands is false, then the whole expression becomes false. This can be reworded into the <a target="_blank" class="text-link " href="https://www.sevenson.com.au/programming/sat/">separating axis theorem</a>, which states that if there exists an axis where two objects' don't overlap, then they don't intersect at all. Thus even if we just did an optimisation in one dimension, it will still result less overall checks. So for now, let's just deal with the x axis.</p>
+            <p>Now, let's look at these checks in the context of multiple objects to find any kind of redundant work being done.</p>
+            <p>Consider three objects - A, B, and C - as illustrated below.</p>
+            <p>(illustration)</p>
+            <p>There are three potential pairs to be checked here: A-B, B-C, and A-C. Let's run them through the function:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span></code></pre>
+            <p>Where is the redundant work? Let's dig deeper and expand the <code>intersects</code> function:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token constant">A</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">B</span><span class="token punctuation">.</span>left <span class="token comment">// false</span>
+<span class="token constant">B</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">C</span><span class="token punctuation">.</span>left <span class="token comment">// false</span>
+<span class="token constant">A</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">C</span><span class="token punctuation">.</span>left <span class="token comment">// false</span></code></pre>
+            <p>See anything? Maybe simplify it a little more to an abstract level...</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">B</span> <span class="token comment">// false</span>
+<span class="token constant">B</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// false</span>
+<span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// false</span></code></pre>
+            <p>There it is. The meat of the idea is that: if we know that A &gt; B is false and B &gt; C is false, then we don't need to calculate A &gt; C to know that it too is false.</p>
+            <p>Backing up to the function level. We don't need to call <code>intersects(A, C)</code> anymore. We saved 1 function call.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
+<span class="token comment">// intersects(A, C) will return false</span></code></pre>
+            <p>You might be wondering how this contrived example could apply in general. Yes, this only works if A, B, and C are in a particular order. Try moving the balls below to see when the optimisation applies.</p>
+            <pre><code>// (live output of interactive controls below)
+intersects(A, B)
+intersects(B, C)
+intersects(A, C)
+</code></pre>
+            <p>(interactive reorderable 3 objects in 1D with scoped-down intersects)</p>
+            <p>However, these labels are arbitrary... What if we just called the leftmost ball A, the middle ball B, and the rightmost C, at any point in time? Hang on, labeling objects according to a defined order is essentially <strong>sorting</strong>! What if we sorted the list every time? Will it be worth the cost of sorting the list every frame?</p>
+            <h2 id="sorting">Sorting</h2>
+            <p>Sorting, inequalities, and optimisation go hand in hand in hand. Sorted things give us implied inequalities over vast ranges for free. Assuming the list is sorted, of course. But even if we had to sort the list of objects every frame, the quickest sorting algorithm in general runs in O(n log n) time which is certainly better than O(n<sup>2</sup>).</p>
+            <p>As hinted by the 3-object example above, sorting the list of objects merely by their x position can help remove ranges of potential pairs that need to be checked.</p>
+            <p>First, let's unwind the simplification we did earlier. Objects aren't zero-width points! Each object has a size - a certain width. We can account for the width all while keeping the benefits of unambiguous sort order by tracking the left and the right edges of each object as two separate points.</p>
+            <p>(interactive reorderable with left and right points - with toggle between zero-width and edge points)</p>
+            <p>You can probably guess where this is going. Remember the <code>intersects</code> function? This is it scoped down to the x axis:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
+    <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">,</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Since we have a sorted list of every object's left and right points. (todo)</p>
+            <p>(interactive reorderable with left and right points - highlight others that intersect with object1)</p>
+            <p>There must be a way to do this for all objects in a single linear pass through the list!</p>
+            <h2 id="sweeping">Sweeping</h2>
+            <p>Once we have a sorted list of edge points, we can simply look at the points between a given object's two endpoints to know that they intersect. We can do this by scanning from left to right and keeping track of which objects we're currently <em>inside of</em>.</p>
+            <p>(animated algo of inside tracking)</p>
+            <p>The code for scanning (<em>sweeping</em>) and tracking when we're inside which objects:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> inside <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    inside<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+    inside<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>At each left edge, we add the corresponding object to the <em>inside</em> list. At the same time, at a left edge, we're entering a new object - that is the definition of the left edge, an entry point. This means, if we're already inside other objects, and we enter a left edge, it follows that this edge's object intersects with the other objects.</p>
+            <p>Here's the updated code for detecting and reporting intersections:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> inside <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> other <span class="token keyword">of</span> inside<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">onIntersect</span><span class="token punctuation">(</span>other<span class="token punctuation">,</span> edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    inside<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+    inside<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>(animated algo of intersection detection)</p>
+            <h2 id="pruning">Pruning</h2>
+            <p>The above sweeping only works in a single dimension due to the previous simplification we did earlier reducing the checks down to one dimension, x. Balls aren't one-dimensional objects! How do we account for the other dimension, y?</p>
+            <p>The thing is, sorting works best in one dimension, so we'll compromise. We'll do a sweep check in one dimension, x, to get a shortlist of object pairs with overlapping x spans. On the shortlisted pairs, we check for intersection in the rest of their dimensions, y and possibly z if 3D.</p>
+            <span class="box-note ">
+              The "prune" in sweep-and-prune refers to the shortlisting of object pairs.
+            </span>
+
+            <p>The above code calls <code>onIntersect</code> on the object pairs that passed pruning. This is where we can check for the y dimension.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onIntersect</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">collide</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>The above formula works generally for game objects with an axis-aligned hitbox. Our ball example works better with the following circle intersection formula:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onIntersect</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> distance <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">sqrt</span><span class="token punctuation">(</span>Math<span class="token punctuation">.</span><span class="token function">pow</span><span class="token punctuation">(</span>object1<span class="token punctuation">.</span>x <span class="token operator">-</span> object2<span class="token punctuation">.</span>x<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">+</span> Math<span class="token punctuation">.</span><span class="token function">pow</span><span class="token punctuation">(</span>object1<span class="token punctuation">.</span>y <span class="token operator">-</span> object2<span class="token punctuation">.</span>y<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>distance <span class="token operator">&lt;</span> object1<span class="token punctuation">.</span>radius <span class="token operator">+</span> object2<span class="token punctuation">.</span>radius<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">bounce</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>(animated algo of broadphase and narrowphase)</p>
+            <h2 id="performance-of-sweep-and-prune">Performance of sweep-and-prune</h2>
+            <p>A run of sweep-and-prune consists of a sort and a sweep. The sweep is a linear pass on the input so it's just O(n). The sort - let's take the "fastest" sorting algorithm, mergesort or quicksort - would be O(n log n).</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sweepAndPrune</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// O(n log n)</span>
+  <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token keyword">const</span> inside <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token comment">// O(n)</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> other <span class="token keyword">of</span> inside<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">onIntersect</span><span class="token punctuation">(</span>other<span class="token punctuation">,</span> edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+      inside<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      inside<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <blockquote>
+              <p>The sweep-and-prune algorithm is also known sort-and-sweep.</p>
+            </blockquote>
+            <p>This means sweep-and-prune is O(n log n), a big improvement over the naive O(n<sup>2</sup>)!</p>
+            <p>(real-time graph)</p>
+            <p>(todo: check native sort (timsort) vs quicksort)</p>
+            <p><em>Can we do better?</em></p>
+            <h2 id="a-small-change-big-improvement-">A small change, big improvement (?)</h2>
+            <p>Again, let's ask the question: Where is redundant work being done here?</p>
+            <p>(show simulation with sort &amp; sweep steps - sort does nothing most of the time)</p>
+            <p>As you can see, sort does nothing most of the time! Most of the time, the list is already sorted due to the previous frame's sort. Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places from the previous frame.</p>
+            <p>Luckily, the subject of sorting algorithms is well-researched. For almost-sorted lists, insertion sort is a good choice.</p>
+            <p>Insertion sort has a run time of O(n) at best when the list is already sorted, and O(n<sup>2</sup> ) at worst. However, we can argue that the average case is O(n), since the list is almost always almost sorted.</p>
+            <p>(real-time graph)</p>
+            <p>With insertion sort, it's important to consider the primary axis of the sweep-and-prune algorithm. It should be the axis where objects are most evenly distributed to minimize swaps. In a side-scroller for example, that would be the horizontal axis.</p>
+            <p>(todo: check native sort (timsort) vs insertionsort)</p>
+            <h2 id="less-theoretical-more-practical">Less theoretical, more practical</h2>
+            <p>Forget about theory. (todo)</p>
+            <p>Using your standard library's sort function is usually the best as it's most likely optimised for the runtime.</p>
+            <p>(todo: check if native sort is still best)</p>
+            <h1 id="conclusion">Conclusion</h1>
+            <p>General algorithm design insights</p>
+            <ul>
+              <li>Pre-sorting a list can replace a bunch of inequality checks, and unlocks:<ul>
+                  <li>Single linear pass over the list</li>
+                  <li>(unrelated, but good to bring up) Binary search</li>
+                </ul>
+              </li>
+              <li>Different sorting algorithms have situational strengths</li>
+            </ul>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          ·
+          <a target="_self" class="main-footer-link" href="/guestbook/">Sign my guestbook</a>
+        </p>
+        <p class="main-footer-line">
+          (C) 2023 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source
+          </a>
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-web-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+  <script defer="" src="/scripts/blog-header.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+</body>
+</html>
