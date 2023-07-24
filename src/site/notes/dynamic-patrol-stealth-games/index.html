@@ -43,24 +43,18 @@
 
       ## Background
 
-      I enjoy stealth mechanics in video games. However, I feel like the genre has become formulaic. Nowadays, we have standardised light, shadow, and noise mechanics. We almost always get discrete levels of alertness where on one end NPCs have wallhacks while on the other, NPCs have amnesia.
+      I enjoy stealth games. However, I felt like the genre has become formulaic. Nowadays, we have standardised light, shadow, and noise mechanics. We almost always get discrete levels of alertness where on one end NPCs have wallhacks while on the other, NPCs have amnesia.
 
       <blog-media
         :src="url('sc.jpg')"
         alt="Screenshot of Splinter Cell"
         caption="Screenshot of Splinter Cell: Chaos Theory from mobygames.com. This game is good." />
 
-      The most immersion-breaking moment for me was when you get spotted, the subsequent investigation consists solely of staring at the ground where you were last seen. Like when you get spotted at an entrance to a room, guards will just stare at the doorway. *Why not check inside the room?* Unless the room was specifically coded as part of a patrol route, guards will never investigate there even though they just saw you entering the room.
+      The most immersion-breaking moment for me was when you get spotted, the subsequent investigation consists solely of staring at the ground where you were last seen. Like when you get spotted at an entrance to a room, guards will just stare at the doorway. *Why not check inside the room?*
 
-      <box-note>Yeah, I know, smart game AI is not deemed “fun” by game designers. But a challenging game is fun! Whatever, I just wanted to write a relatable intro for this prototype that I made for fun.</box-note>
+      <box-note>Yeah, I know, game designers don't deem smart game AI “fun”. But an easy predictable game is no fun! Whatever, I just wanted to share this prototype.</box-note>
 
       What was lacking in stealth game AI is inference - the ability to infer that when a target enters a room, then they subsequently must be inside the room.
-      
-      <!-- textlint-disable -->
-
-      Or more generally, if a target is at position *X* at time *t*, then it will be in one of the adjacent positions *Y<sub>1</sub>*, *Y<sub>2</sub>*, *Y<sub>3</sub>*, &hellip; *Y<sub>n</sub>* at time *t+1*.
-
-      <!-- textlint-enable -->
 
       ## A room and a hallway
 
@@ -75,7 +69,7 @@
 
       If we assign a number to each node representing the probability that the target (the player) is there, we can start making inferences of where the target could be at later times.
 
-      Let’s say the target was just seen in room *R*, so node *R* will be assigned a probability of **1.0**.
+      Let’s say the target was just seen in room *R*. At that exact moment, there is complete certainty that the target is there, so node *R* will be assigned a probability of **1.0**.
       
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -84,7 +78,9 @@
           spec="300" />
       </div>
 
-      After this, the target will either stay in the room or exit the room. We don’t know the chance of either happening so we can just assume equal chances. The graph is recalculated to reflect this by equally distributing the **1.0** from *R* to itself (“stay”) and its adjacent node *D* (“exit”), giving them **0.5** each.
+      After that moment however, the certainty fades. Because the target could have exited the room next, or maybe they stayed.
+      
+      The graph is recalculated to reflect this uncertainty by distributing the probability value of **1.0** from node *R* to each possible choice of node - *D* (exit) and *R* (stay). We don’t know the likeliness of either happening so we can just assume equal chances, giving them **0.5** each.
 
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -93,16 +89,16 @@
           spec="300" />
       </div>
 
-      Now there is 50% probability that the target is in the room, and 50% in the doorway.
+      Now there is 50% probability that the target is in the room, and 50% in the doorway. This process is repeated for each node over time to calculate the target’s potential location at any given moment.
       
-      This next iteration is tricky, but it’s all calculated the same. We just need to calculate the distribution from each node *in parallel*, like so:
+      Let’s do another iteration. The next one is a bit tricky, but it’s all calculated the same. We just need to calculate the distribution from each node *in parallel*, like so:
 
       <div class="small-diagram-row">
         <blog-media
           :src="url('room-graph-r1d1t.png')"
           alt="Node graph representing the distribution from previous state"
           spec="300"
-          caption="Split the probabilities per node to each possible path (including itself)." />
+          caption="Split the probabilities per node to each possible choice (including staying)." />
         <blog-media
           :src="url('room-graph-r5d5h2.png')"
           alt="Node graph representing the room node with 0.42, the doorway node with 0.42, and the hallway node H1 directly next to the doorway with 0.16"
@@ -110,7 +106,11 @@
           caption="Then sum up the values that arrived in each node." />
       </div>
 
+      **Explanation of above:** The **0.5** at *R* is split into two, giving **0.5 / 2 = 0.25** each to *R* and *D*. Meanwhile, the **0.5** at *D* is split into three, giving **0.5 / 3 ≈ 0.16** each to *R*, *D*, and *H1*. Then node values are added together in a separate step after the split.
+
       After some time, we will get a picture of where the target is likely to be and a smarter game AI can utilise this to send guards on a more realistic investigation route.
+      
+      Another iteration and we get this:
 
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -122,7 +122,7 @@
 
       What I’ve just described is some generalisation of a **[Markov chain](https://en.wikipedia.org/wiki/Markov_chain)**. Well, it’s not exactly accurate to call it that since the Markov chain is just one part of the algorithm. You’ll see why in the next section.
 
-      <box-note><strong>Disclaimer:</strong> I wasn’t thinking about Markov chains while developing this algorithm. The first version was based on crude counting and was more like a potential field of arbitrary scale. The Markov chain concept helped me make the calculations more accurate and the numbers behave more like probabilities.</box-note>
+      <box-note><strong>Disclaimer:</strong> I wasn’t thinking about Markov chains while developing this algorithm. The first version back in 2013 was based on crude counting and was more like a potential field. (Btw, it was in [Flash](https://en.wikipedia.org/wiki/Adobe_Flash).) The Markov chain concept that I learned (2023) helped me make the calculations more accurate and the numbers more realistic.</box-note>
 
       ## Observer effect
 
@@ -138,11 +138,9 @@
           caption="After observation" />
       </div>
 
-      The nodes that were seen having no target at their locations are forced to a probability of **0.0**, because if you think about it, that makes sense. The remaining nodes are scaled so that they still add up to **1.0** (This is an invariant in any case).
+      The nodes that were seen having no target at their locations are forced to a probability of **0.0**, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to a total of **1.0** (This is an invariant in any case).
 
-      To illustrate, here’s the previous state: **H0=0.04** and **R=0.35** before observation. Then after the observation, we need these remaining nodes to have a total of **1.0** while keeping the proportions. One way to do that is to *divide each value by the sum of all values*. So **H0=0.04/0.39** and **R=0.35/0.39**, which evaluate to **H0=~0.103** and **R=~0.897** respectively.
-
-      Here's a table that details each step described above.
+      To illustrate, here’s a table that details each intermediate step:
 
       <div class="style-hax"></div>
 
@@ -173,15 +171,15 @@
         }
       </style>
 
-      <box-note>Another way to go about this is to keep track of probabilities in the form of rational numbers - separately tracking the numerators and the denominators. Only store the numerator per node, and there is one global denominator which is the sum of all the numerators. This is what I did for my demo implementation.</box-note>
-
-      Thus, after updating the probabilities, the state of the graph tells us that the target is around 90% likely to be in the room *R* and 10% in the far hallway *H0*.
+      After updating the probabilities, the state of the graph tells us that the target is around 90% likely to be in the room *R* and 10% in the far hallway *H0*.
       
       The game AI can simply send the guard to the highest node based on the updated probabilities (this case, the room *R*). It can do this again and again, which will result in a seemingly organic and responsive searching behaviour from the AI guard. No predefined patrol routes needed.
 
+      <box-note>Another way to go about this is to keep track of probabilities in the form of rational numbers - separately tracking the numerators and the denominators. You only need to store the numerator per node, while there is one global denominator, which is the sum of all the numerators. This is what I did for my demo implementation.</box-note>
+
       ---
 
-      In case **(2)** where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned **1.0** while *the rest of the nodes in the whole graph* are cleared back to **0.0**. Simply because the target can’t be in two places at once.
+      In case **(2)** where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned **1.0** while *the rest of the nodes in the whole graph* are cleared back to **0.0**. The target can only be in one place at at a time!
 
       <div class="small-diagram-row small-diagram-row-solo">
         <blog-media
@@ -191,7 +189,7 @@
           caption="After observation of target" />
       </div>
 
-      When the guard loses sight of the target, the **1.0** probability will just spread again like a wave and the cycle of chasing, investigation, and hiding continues.
+      It stays that way as long as the guard can see the target. When the guard loses sight of the target again, we just continue the Markov inference and the probability values will spread again like a wave. The cycle of chasing, investigation, and hiding continues.
 
       <box-note>
         Similar to quantum mechanics, an act of observation collapses the superposition. There seems to be an underlying mathematical truth that spans across Markov chains, quantum mechanics, Bayesian networks, and video game mechanics. :P
@@ -201,9 +199,9 @@
 
       ## Demo
 
-      I implemented this algorithm in JavaScript so you can play with it on this page live. In this implementation, the world is a 2D grid where each tile is a node in the Markov graph.
+      I implemented this algorithm in JavaScript so you can play with it right here. In this implementation, the world is a 2D grid where each tile is a node in the Markov graph.
       
-      Click a tile to command the target (the green character ![](demo/target.png)) to move. The blue fog indicates the probabilities of each tile.
+      Click a tile to command the target (the green character ![](demo/target.png)) to move. A blue fog will indicate the probabilities of each tile.
 
       Have fun playing hide and seek!
 
@@ -234,13 +232,15 @@
 
       ## Conclusions
 
-      * Notice that upon losing vision, the guard starts chasing in the direction where you ran away, without the guard actually seeing where you are. Happens especially in narrow passageways.
-      * As the chase continues, the path begins branching, and the probability dilutes. The guard gradually transitions from chasing behaviour to a searching behaviour, eventually devolving into a plain patrol.
-      * All of these behaviours emerged from the Markov-quantum system (idk what to call it). There’s no explicit code for chasing, searching, or patrolling.
-      * The probability spreading process can be drastically sped-up by implementing Markov chain transitions using a transition matrix and matrix multiplication. Matrix multiplication is [embarrasingly parallel](https://en.wikipedia.org/wiki/Embarrassingly_parallel).
+      * Emergent behaviours can be described:
+        - Chasing: Upon losing vision, the guard starts chasing in the direction where you ran away (without the guard actually seeing where you are).
+        - Searching: As the chase continues, the path begins branching, and the probability dilutes. The guard gradually transitions from chasing behaviour to a searching behaviour.
+        - Patrolling: As the probability distribution approaches equilibrium, the guard devolves into a plain patrol.
+        - There is a spectrum from chasing to patrolling.
+      * The probability spreading process can be drastically sped-up by implementing Markov chain transitions using matrix multiplication with a transition matrix.
+        - Matrix multiplication is [embarrasingly parallel](https://en.wikipedia.org/wiki/Embarrassingly_parallel).
       * The search route quality can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.
         - One improvement might involve incorporating the potential field as weights in the pathfinding algorithm itself to generate a more efficient and sweeping route.
-        - One could use the potential field itself as tile-by-tile directions for the agents. No time-intensive pathfinder needed. The agents might even behave like hound dogs tracking the target by scent.
 
       Sadly, the name <text-link href="https://github.com/mxgmn/WaveFunctionCollapse">“Wave Function Collapse”</text-link> has already been claimed by a different video game algorithm, so I can’t give this one a cool quantum name anymore.
 
@@ -277,6 +277,13 @@
       * ![](demo/guard.png) Rust Bucket as “Guard 2”
       * [bitbucket/umbraprojekt/mrpas](https://bitbucket.org/umbraprojekt/mrpas) for guards’ vision ![](demo/guard.png)🪧![](demo/guard.png)
       * [github/qiao/PathFinding.js](https://github.com/qiao/PathFinding.js) for giving directions 🧭
+
+      **Update:** Related stuff I found:
+      * [Predicting Pac-Man ghosts with Markov chains [YouTube]](https://youtu.be/eFP0_rkjwlY?t=842)
+        - As mentioned above, I had a crude counting-based solution before, but the concept of Markov chains made it more accurate. This video is where I got the idea of applying Markov chains to a grid.
+      * [Dynamic Guard Patrol in Stealth Games [academic, pdf]](https://ojs.aaai.org/index.php/AIIDE/article/download/7425/7308/10903)
+        - Accompanying video: [YouTube](https://youtu.be/9FyaMM7l2EU)
+        - I found this after writing this post. The paper uses a similar potential field idea, but only tracks *staleness*. It behaves similarly to the Markov chain's equilibrium state, but it cannot produce chasing behaviours.
     </markdown>
   </blog-page>
 </html>
@@ -286,6 +293,9 @@
     margin: -36px 0;
     display: flex;
     gap: 12px;
+  }
+  .small-diagram-row * {
+    flex: 1 1 50%;
   }
   .small-diagram-row-solo {
     margin-left: 25%;
