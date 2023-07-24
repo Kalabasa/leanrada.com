@@ -1,0 +1,297 @@
+<html lang="en">
+  <page-title title="Sweep and prune algorithm for collision detection" />
+  <blog-page header-select="/notes/">
+    <!-- prettier-ignore -->
+    <markdown>
+      <blog-header
+        title="Sweep and prune algorithm for collision detection"
+        :heroimgsrc="url('hero.png')" />
+
+      <blog-post-info date="1 Jan 1970" read-mins="1" />
+
+      <tag-row>
+        <tag>algo</tag>
+        <tag>games</tag>
+      </tag-row>
+
+      In video game programming, detecting collisions between objects is a common requirement. Consider the following ball simulation as a basic example. In this sim, multiple physics objects interact with each other. This requires a multi-object collision detection algorithm.
+
+      (ball collisions)
+
+      Each ball can potentially interact with *any other ball*. How do we implement the detection of such n-to-n collisions?
+
+      ## Naive solution
+
+      The naive solution is to check every potential pair of objects for collision. Continuing with the ball example, this means checking every ball for intersection with each of the other balls. This is done every frame to ensure balls bounce when they collide.
+
+      <code-block :code="`\
+// for each ball
+for (let i = 0; i < balls.length; i++) {
+  const ball1 = balls[i];
+  // check each of the other balls
+  for (let j = i + 1; j < balls.length; j++) {
+    const ball2 = balls[j]
+    // check for collision
+    if (intersects(ball1, ball2)) {
+      bounce(ball1, ball2);
+    }
+  }
+}`" />
+
+      (animated algo)
+
+      ## Performance
+
+      The naive algorithm runs in O(n<sup>2</sup>) time. That is, for an input of n balls, the algorithm's run time grows proportionally to the *square* of the input n. That's a lot!
+
+      This is because for n balls, there are around `(n * (n - 1))/2` pairs to check or 0.5n<sup>2</sup> - 0.5n. This translates to O(n<sup>2</sup>) in [Big O notation](https://en.wikipedia.org/wiki/Big_O_notation).
+
+      To illustrate the scaling of the algorithm's performance, check the following real-time graph which shows the number of `intersect` calls plotted against the input n. For each n, a simulation of n balls is run and the number of `intersect`  calls is recorded.
+
+      (real-time graph)
+
+      Clearly, the naive solution does not scale well for large numbers of objects.
+
+      ## Improving the solution
+
+      One common thought process when optimising algorithms is to find **redundant or unnecessary work**.
+
+      <box-note>
+        <p>There are many ways to optimise collision detection, like spatial hashing and space partitioning trees. But this post is about just one particular algorithm - the <strong>sweep and prune</strong> algorithm.</p>
+        <p><strong>Disclaimer:</strong> The following is merely my attempt at rationalising the thinking behind the sweep-and-prune algorithm. I do not know how the algorithm was originally conceived.</p>
+      </box-note>
+
+      Let's start with our [typical object intersection check](https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html), the one performed at each iteration of the inner loop. It's essentially a bunch of inequality checks:
+
+      <code-block :code="`\
+function intersects(object1, object2) {
+  // compare objects' bounds to see if they overlap
+  return object1.left < object2.right
+    && object1,right > object2.left
+    && object1.top < object2.bottom
+    && object1,bottom > object2.top;
+}`" />
+
+      For now, let's focus on just one dimension, say x. Bear with me as I further scope down the check to just one direction:
+
+      <code-block :code="`\
+function intersects(object1, object2) {
+  return object1.right > object2.left;
+}`" />
+
+      Don't worry; this scoped-down definition is a surprise tool that can help us later in understanding the rationale behind the optimisation.
+
+      (mickey meme)
+
+      Okay, more seriously, one reason it works is because of the AND operator's (`&&`) short-circuit evaluation. If any one of the operands is false, then the whole expression becomes false. This can be reworded into the [separating axis theorem](https://www.sevenson.com.au/programming/sat/), which states that if there exists an axis where two objects' don't overlap, then they don't intersect at all. Thus even if we just did an optimisation in one dimension, it will still result less overall checks. So for now, let's just deal with the x axis.
+
+      Now, let's look at these checks in the context of multiple objects to find any kind of redundant work being done.
+
+      Consider three objects - A, B, and C - as illustrated below.
+
+      (illustration)
+
+      There are three potential pairs to be checked here: A-B, B-C, and A-C. Let's run them through the function:
+
+      <code-block :code="`\
+intersects(A, B) // returns false
+intersects(B, C) // returns false
+intersects(A, C) // returns false`" />
+
+      Where is the redundant work? Let's dig deeper and expand the `intersects` function:
+
+      <code-block :code="`\
+A.right > B.left // false
+B.right > C.left // false
+A.right > C.left // false`" />
+
+      See anything? Maybe simplify it a little more to an abstract level...
+
+      <code-block :code="`\
+A > B // false
+B > C // false
+A > C // false`" />
+
+      There it is. The meat of the idea is that: if we know that A > B is false and B > C is false, then we don't need to calculate A > C to know that it too is false.
+
+      Backing up to the function level. We don't need to call `intersects(A, C)` anymore. We saved 1 function call.
+
+      <code-block :code="`\
+intersects(A, B) // returns false
+intersects(B, C) // returns false
+// intersects(A, C) will return false`" />
+
+      You might be wondering how this contrived example could apply in general. Yes, this only works if A, B, and C are in a particular order. Try moving the balls below to see when the optimisation applies.
+
+      ```
+      // (live output of interactive controls below)
+      intersects(A, B)
+      intersects(B, C)
+      intersects(A, C)
+      ```
+      (interactive reorderable 3 objects in 1D with scoped-down intersects)
+
+      However, these labels are arbitrary... What if we just called the leftmost ball A, the middle ball B, and the rightmost C, at any point in time? Hang on, labeling objects according to a defined order is essentially **sorting**! What if we sorted the list every time? Will it be worth the cost of sorting the list every frame?
+
+      ## Sorting
+
+      Sorting, inequalities, and optimisation go hand in hand in hand. Sorted things give us implied inequalities over vast ranges for free. Assuming the list is sorted, of course. But even if we had to sort the list of objects every frame, the quickest sorting algorithm in general runs in O(n log n) time which is certainly better than O(n<sup>2</sup>).
+
+      As hinted by the 3-object example above, sorting the list of objects merely by their x position can help remove ranges of potential pairs that need to be checked.
+
+      First, let's unwind the simplification we did earlier. Objects aren't zero-width points! Each object has a size - a certain width. We can account for the width all while keeping the benefits of unambiguous sort order by tracking the left and the right edges of each object as two separate points.
+
+      (interactive reorderable with left and right points - with toggle between zero-width and edge points)
+
+      You can probably guess where this is going. Remember the `intersects` function? This is it scoped down to the x axis:
+
+      <code-block :code="`\
+function intersects(object1, object2) {
+  return object1.left < object2.right
+    && object1,right > object2.left;
+}`" />
+
+      Since we have a sorted list of every object's left and right points. (todo)
+
+      (interactive reorderable with left and right points - highlight others that intersect with object1)
+
+      There must be a way to do this for all objects in a single linear pass through the list!
+
+      ## Sweeping
+
+      Once we have a sorted list of edge points, we can simply look at the points between a given object's two endpoints to know that they intersect. We can do this by scanning from left to right and keeping track of which objects we're currently *inside of*.
+
+      (animated algo of inside tracking)
+
+      The code for scanning (*sweeping*) and tracking when we're inside which objects:
+
+      <code-block :code="`\
+const inside = new Set();
+for (const edge of edges) {
+  if (edge.isLeft) {
+    inside.add(edge.object);
+  } else {
+    inside.delete(edge.object);
+  }
+}`" />
+
+      At each left edge, we add the corresponding object to the *inside* list. At the same time, at a left edge, we're entering a new object - that is the definition of the left edge, an entry point. This means, if we're already inside other objects, and we enter a left edge, it follows that this edge's object intersects with the other objects.
+
+      Here's the updated code for detecting and reporting intersections:
+      
+      <code-block :code="`\
+const inside = new Set();
+for (const edge of edges) {
+  if (edge.isLeft) {
+    for (const other of inside) {
+      onIntersect(other, edge.object);
+    }
+    inside.add(edge.object);
+  } else {
+    inside.delete(edge.object);
+  }
+}`" />
+
+      (animated algo of intersection detection)
+
+      ## Pruning
+
+      The above sweeping only works in a single dimension due to the previous simplification we did earlier reducing the checks down to one dimension, x. Balls aren't one-dimensional objects! How do we account for the other dimension, y?
+
+      The thing is, sorting works best in one dimension, so we'll compromise. We'll do a sweep check in one dimension, x, to get a shortlist of object pairs with overlapping x spans. On the shortlisted pairs, we check for intersection in the rest of their dimensions, y and possibly z if 3D.
+
+      <box-note>
+        The "prune" in sweep-and-prune refers to the shortlisting of object pairs.
+      </box-note>
+
+      The above code calls `onIntersect` on the object pairs that passed pruning. This is where we can check for the y dimension.
+
+      <code-block :code="`\
+onIntersect = function(object1, object2) {
+  if (object1.top < object2.bottom && object1.bottom > object2.top) {
+    collide(object1, object2);
+  }
+}`" />
+
+      The above formula works generally for game objects with an axis-aligned hitbox. Our ball example works better with the following circle intersection formula:
+
+      <code-block :code="`\
+onIntersect = function(object1, object2) {
+  const distance = Math.sqrt(Math.pow(object1.x - object2.x, 2) + Math.pow(object1.y - object2.y, 2));
+  if (distance < object1.radius + object2.radius) {
+    bounce(object1, object2);
+  }
+}`" />
+
+      (animated algo of broadphase and narrowphase)
+
+      ## Performance of sweep-and-prune
+
+      A run of sweep-and-prune consists of a sort and a sweep. The sweep is a linear pass on the input so it's just O(n). The sort - let's take the "fastest" sorting algorithm, mergesort or quicksort - would be O(n log n).
+
+      <code-block :code="`\
+function sweepAndPrune(edges) {
+  // O(n log n)
+  sort(edges);
+
+  const inside = new Set();
+
+  // O(n)
+  for (const edge of edges) {
+    if (edge.isLeft) {
+      for (const other of inside) {
+        onIntersect(other, edge.object);
+      }
+      inside.add(edge.object);
+    } else {
+      inside.delete(edge.object);
+    }
+  }
+}`" />
+
+      > The sweep-and-prune algorithm is also known sort-and-sweep.
+
+      This means sweep-and-prune is O(n log n), a big improvement over the naive O(n<sup>2</sup>)!
+
+      (real-time graph)
+
+      (todo: check native sort (timsort) vs quicksort)
+
+      *Can we do better?*
+
+      ## A small change, big improvement (?)
+
+      Again, let's ask the question: Where is redundant work being done here?
+
+      (show simulation with sort & sweep steps - sort does nothing most of the time)
+
+      As you can see, sort does nothing most of the time! Most of the time, the list is already sorted due to the previous frame's sort. Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places from the previous frame.
+
+      Luckily, the subject of sorting algorithms is well-researched. For almost-sorted lists, insertion sort is a good choice.
+
+      Insertion sort has a run time of O(n) at best when the list is already sorted, and O(n<sup>2</sup> ) at worst. However, we can argue that the average case is O(n), since the list is almost always almost sorted.
+
+      (real-time graph)
+
+      With insertion sort, it's important to consider the primary axis of the sweep-and-prune algorithm. It should be the axis where objects are most evenly distributed to minimize swaps. In a side-scroller for example, that would be the horizontal axis.
+
+      (todo: check native sort (timsort) vs insertionsort)
+
+      ## Less theoretical, more practical
+
+      Forget about theory. (todo)
+
+      Using your standard library's sort function is usually the best as it's most likely optimised for the runtime.
+
+      (todo: check if native sort is still best)
+
+      # Conclusion
+
+      General algorithm design insights
+      * Pre-sorting a list can replace a bunch of inequality checks, and unlocks:
+        * Single linear pass over the list
+        * (unrelated, but good to bring up) Binary search
+      * Different sorting algorithms have situational strengths
+    </markdown>
+  </blog-page>
+</html>
