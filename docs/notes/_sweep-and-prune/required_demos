@@ -1,0 +1,68 @@
+components
+==========
+
+sap-balls-demo: {
+}
+
+sap-abc-demo: {}
+
+sap-graph: {}
+
+ball-sim:
+  parameters {
+    width
+    height
+    initBalls: ball[]
+  }
+  api {
+    balls: ball[]
+    step()
+  }
+
+ball: {
+  position, velocity, radius, color
+}
+
+collision-strategy:
+  parameters {
+    subclasses (noop, pairwise, sweep-and-prune)
+      sortFunc: sort(ball[])
+    processFunc: process(ball, ball)
+    sim: sim
+  }
+  api {
+    step()
+  }
+
+sap-demo: {
+  collision-strategy
+  ball-sim
+  start()
+  stop()
+}
+
+
+instances
+=========
+
+balls-demo
+----------
+* ball collisions
+* animated algo naive solution
+* animated algo of sweeping with inside tracking
+* animated algo of sweeping with intersection callbacking
+* animated algo of broadphase and narrowphase
+* show simulation with sort & sweep steps - sort does nothing most of the time
+
+abc-demo
+--------
+* interactive reorderable 3 objects in 1D with scoped-down intersects
+* interactive reorderable with left and right points - highlight others that intersect with
+* interactive reorderable with left and right points - with toggle between zero-width and
+
+graph
+-----
+* real-time graph naive solution
+* real-time graph sweep and prune insertion sort
+* real-time graph sweep and prune w/ quicksort
+
