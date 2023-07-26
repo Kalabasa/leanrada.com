@@ -1,0 +1,200 @@
+<sap-demo-client {...attrs} />
+
+<style>
+  sap-demo-client {
+    display: flex;
+  }
+  sap-demo-client > canvas {
+    border: solid 2px #ccc;
+    border-radius: 12px;
+  }
+</style>
+
+<script type="module" client defer>
+  import { BaseElement } from "/lib/base_element.mjs";
+  // Warn: Module paths are relative to the page, not the component
+  import { BallSim } from "./ball-sim/ball-sim.mjs";
+  import { Runner } from "./ball-sim/runner.mjs";
+  import { Renderer } from "./ball-sim/renderer.mjs";
+  import { NoopStrat } from "./ball-sim/noop-strat.mjs";
+  import { PairwiseStrat } from "./ball-sim/pairwise-strat.mjs";
+  import { SweepAndPruneStrat } from "./ball-sim/sap-strat.mjs";
+  import { SweepAndPruneStratHighlight } from "./ball-sim/sap-strat-highlight.mjs";
+  import { SkippingDelegateStrat } from "./ball-sim/skip-delegate-strat.mjs";
+  import { createProcessFunc as realCreateProcessFunc } from "./ball-sim/process-func.mjs";
+  import { setupDragging } from "./ball-sim/dragging.mjs";
+
+  customElements.define(
+    "sap-demo-client",
+    class SweepAndPruneDemoClient extends BaseElement {
+      constructor() {
+        super();
+
+        this.visibilityListener({
+          show: async () => {
+            if (!this.hasInit) this.init();
+            this.runner.start();
+          },
+          hide: async () => {
+            if (this.runner) this.runner.stop();
+          },
+        });
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        this.cleanup();
+      }
+
+      init() {
+        this.cleanup();
+
+        const ballsAttr = this.getAttribute("balls");
+        const labelsAttr = this.getAttribute("labels");
+        const rainbowAttr = this.hasAttribute("rainbow");
+        const staticAttr = this.hasAttribute("static");
+        const draggableAttr = this.hasAttribute("draggable");
+        const strategyAttr = this.getAttribute("strategy");
+        const highlightAttr = this.getAttribute("highlight");
+        const highlighColorAttr = this.getAttribute("highlight-color");
+        const skipIntervalAttr = this.getAttribute("skip-interval");
+
+        const ballSimCreator = BallSim.create(600, 400);
+        if (ballsAttr?.startsWith("[")) {
+          const ballsSpec = JSON.parse(ballsAttr);
+          for (const [x, y, radius] of ballsSpec) {
+            ballSimCreator.addBall(x, y, radius);
+          }
+        } else {
+          const ballCount = ballsAttr?.match(/\d+/)
+            ? Number.parseInt(ballsAttr)
+            : 5;
+          ballSimCreator.addRandomBalls(ballCount, 0.08 + 0.1 / ballCount);
+        }
+
+        this.ballSim = ballSimCreator.setStatic(staticAttr).build();
+
+        if (rainbowAttr) {
+          const { balls } = this.ballSim;
+          for (let i = 0; i < balls.length; i++) {
+            const ball = balls[i];
+            const h = i / balls.length;
+            ball.color = `hsl(${h}turn 90% 70%)`;
+          }
+        }
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = this.ballSim.width;
+        this.canvas.height = this.ballSim.height;
+        this.appendChild(this.canvas);
+
+        const labelsValue = labelsAttr?.split(",") ?? [];
+        this.renderer = new Renderer(this.ballSim, this.canvas, labelsValue);
+
+        const processFunc = createProcessFunc(
+          this.renderer,
+          (duration) => this.runner.pause(duration),
+          highlightAttr,
+          highlighColorAttr
+        );
+        const collStrat = createCollisionStrategy(
+          this.ballSim,
+          this.renderer,
+          processFunc,
+          highlightAttr,
+          strategyAttr,
+          skipIntervalAttr
+        );
+        this.runner = new Runner(collStrat, this.ballSim, this.renderer);
+
+        if (draggableAttr) {
+          setupDragging(this.ballSim, this.canvas, this.runner);
+        }
+
+        this.hasInit = true;
+      }
+
+      cleanup() {
+        this.replaceChildren();
+        if (this.runner) this.runner.stop();
+        this.canvas = undefined;
+        this.renderer = undefined;
+        this.ballSim = undefined;
+        this.runner = undefined;
+        this.hasInit = false;
+      }
+    }
+  );
+
+  function createCollisionStrategy(
+    ballSim,
+    renderer,
+    processFunc,
+    highlightAttr,
+    strategyAttr,
+    skipIntervalAttr
+  ) {
+    let collStrat;
+    switch (strategyAttr) {
+      case "noop":
+        collStrat = new NoopStrat();
+        break;
+      case "pairwise":
+        collStrat = new PairwiseStrat(ballSim, processFunc);
+        break;
+      case "sap-nativesort":
+        collStrat = new SweepAndPruneStrat(
+          ballSim,
+          (arr) => arr.sort((a, b) => a.x - b.x),
+          processFunc
+        );
+        break;
+      default:
+        throw new Error("Invalid strategy: " + strategyAttr);
+    }
+
+    if (highlightAttr === "sap-edges") {
+      if (!(collStrat instanceof SweepAndPruneStrat))
+        throw new Error("Only use highlight=sap-edges with strategy=sap-*");
+      collStrat = new SweepAndPruneStratHighlight(collStrat, renderer);
+    }
+
+    if (skipIntervalAttr) {
+      collStrat = new SkippingDelegateStrat(
+        Number.parseInt(skipIntervalAttr),
+        collStrat
+      );
+    }
+
+    return collStrat;
+  }
+
+  function createProcessFunc(
+    renderer,
+    pause,
+    highlightAttr,
+    highlighColorAttr
+  ) {
+    return realCreateProcessFunc(
+      highlightAttr === "checks"
+        ? async (a, b) => {
+            a.color = highlighColorAttr;
+            b.color = highlighColorAttr;
+            const line = renderer.addLine(
+              a.x,
+              a.y,
+              b.x,
+              b.y,
+              highlighColorAttr
+            );
+            await pause(200);
+            a.color = undefined;
+            b.color = undefined;
+            renderer.removeLine(line);
+          }
+        : () => {},
+      () => {},
+      true
+    );
+  }
+</script>
