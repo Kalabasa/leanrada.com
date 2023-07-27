@@ -211,9 +211,9 @@ for (const edge of edges) {
   if (edge.isLeft) {
     // entering an object
     
-    // if still inside other objects, they must intersect the new one
+    // if still inside other objects, they must overlap the new one
     for (const other of inside) {
-      onIntersect(other, edge.object);
+      onOverlap(other, edge.object);
     }
     
     inside.add(edge.object);
@@ -235,10 +235,10 @@ for (const edge of edges) {
         The "prune" in sweep-and-prune refers to the elimination of object pairs from the shortlist.
       </box-note>
 
-      The above code calls `onIntersect` on the object pairs that passed pruning. This is where we can check for the y dimension.
+      The above code calls `onOverlap` on the object pairs that passed pruning. This is where we can check for the y dimension.
 
       <code-block :code="`\
-onIntersect = function(object1, object2) {
+onOverlap = function(object1, object2) {
   if (object1.top < object2.bottom && object1.bottom > object2.top) {
     collide(object1, object2);
   }
@@ -247,7 +247,7 @@ onIntersect = function(object1, object2) {
       The above formula works generally for game objects with an axis-aligned hitbox. Our ball example works better with the following circle intersection formula:
 
       <code-block :code="`\
-onIntersect = function(object1, object2) {
+onOverlap = function(object1, object2) {
   const distance = Math.sqrt(Math.pow(object1.x - object2.x, 2) + Math.pow(object1.y - object2.y, 2));
   if (distance < object1.radius + object2.radius) {
     bounce(object1, object2);
@@ -271,7 +271,7 @@ function sweepAndPrune(edges) {
   for (const edge of edges) {
     if (edge.isLeft) {
       for (const other of inside) {
-        onIntersect(other, edge.object);
+        onOverlap(other, edge.object);
       }
       inside.add(edge.object);
     } else {
