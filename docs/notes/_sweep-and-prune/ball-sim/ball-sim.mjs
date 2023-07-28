@@ -1,5 +1,8 @@
+import { SweepAndPruneStrat } from "./sap-strat.mjs";
+import { createProcessPhysicsFunc } from "./process-physics.mjs";
+
 const GRAVITY = 0.4;
-const RESTITUTION = 0.98;
+const RESTITUTION = 0.96;
 
 export class BallSim {
   constructor(width, height, initBalls, isStatic) {
@@ -48,7 +51,7 @@ BallSim.create = function (width, height) {
       return this;
     },
     addBall(x, y, radius) {
-      const vx = 8 * (Math.random() * 2 - 1);
+      const vx = 6 * (Math.random() * 2 - 1);
       const vy = 2 * (Math.random() * 2 - 1);
       initBalls.push({ x, y, vx, vy, radius, color: undefined });
       return this;
@@ -64,7 +67,19 @@ BallSim.create = function (width, height) {
       return this;
     },
     build() {
-      return new BallSim(width, height, initBalls, isStatic);
+      const ballSim = new BallSim(width, height, initBalls, isStatic);
+
+      if (isStatic) {
+        // Initially settle collisions before becoming static as asked
+        const sapStrat = new SweepAndPruneStrat(
+          ballSim,
+          (arr) => arr.sort((a, b) => a.x - b.x),
+          createProcessPhysicsFunc()
+        );
+        sapStrat.step();
+      }
+
+      return ballSim;
     }
   };
 }

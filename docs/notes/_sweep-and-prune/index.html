@@ -225,26 +225,32 @@
       Renderer
     } from "./ball-sim/renderer.mjs";
     import {
-      NoopStrat
-    } from "./ball-sim/noop-strat.mjs";
-    import {
-      PairwiseStrat
-    } from "./ball-sim/pairwise-strat.mjs";
-    import {
-      SweepAndPruneStrat
-    } from "./ball-sim/sap-strat.mjs";
-    import {
-      SweepAndPruneStratHighlight
-    } from "./ball-sim/sap-strat-highlight.mjs";
-    import {
-      SkippingDelegateStrat
-    } from "./ball-sim/skip-delegate-strat.mjs";
-    import {
-      createProcessFunc as realCreateProcessFunc
-    } from "./ball-sim/process-func.mjs";
-    import {
       setupDragging
     } from "./ball-sim/dragging.mjs";
+    import {
+      createProcessPhysicsFunc
+    } from "./ball-sim/process-physics.mjs";
+    import {
+      createDecorations
+    } from "./ball-sim/decorations/decorations.mjs";
+    import {
+      NoopStrat
+    } from "./ball-sim/collision-strats/noop-strat.mjs";
+    import {
+      PairwiseStrat
+    } from "./ball-sim/collision-strats/pairwise-strat.mjs";
+    import {
+      SweepAndPruneStrat
+    } from "./ball-sim/collision-strats/sap-strat.mjs";
+    import {
+      SkippingDelegateStrat
+    } from "./ball-sim/collision-strats/skip-delegate-strat.mjs";
+    import {
+      createQuickSort
+    } from "./ball-sim/sorts/quick-sort.mjs";
+    import {
+      createInsertionSort
+    } from "./ball-sim/sorts/insertion-sort.mjs";
 
     customElements.define(
       "sap-demo-client",
@@ -272,13 +278,13 @@
           this.cleanup();
 
           const ballsAttr = this.getAttribute("balls");
-          const labelsAttr = this.getAttribute("labels");
-          const rainbowAttr = this.hasAttribute("rainbow");
-          const staticAttr = this.hasAttribute("static");
-          const draggableAttr = this.hasAttribute("draggable");
           const strategyAttr = this.getAttribute("strategy");
-          const highlightAttr = this.getAttribute("highlight");
-          const highlighColorAttr = this.getAttribute("highlight-color");
+          const isStatic = this.hasAttribute("static");
+          const noBounce = this.hasAttribute("no-bounce");
+          const isDraggable = this.hasAttribute("draggable");
+          const labelsAttr = this.getAttribute("labels");
+          const isRainbow = this.hasAttribute("rainbow");
+          const decorationsAttr = this.getAttribute("decorations");
           const skipIntervalAttr = this.getAttribute("skip-interval");
 
           const ballSimCreator = BallSim.create(600, 400);
@@ -291,12 +297,12 @@
             const ballCount = ballsAttr?.match(/\d+/) ?
               Number.parseInt(ballsAttr) :
               5;
-            ballSimCreator.addRandomBalls(ballCount, 0.08 + 0.1 / ballCount);
+            ballSimCreator.addRandomBalls(ballCount, 0.06 + 0.2 / ballCount);
           }
 
-          this.ballSim = ballSimCreator.setStatic(staticAttr).build();
+          this.ballSim = ballSimCreator.setStatic(isStatic).build();
 
-          if (rainbowAttr) {
+          if (isRainbow) {
             const {
               balls
             } = this.ballSim;
@@ -315,23 +321,34 @@
           const labelsValue = labelsAttr?.split(",") ?? [];
           this.renderer = new Renderer(this.ballSim, this.canvas, labelsValue);
 
-          const processFunc = createProcessFunc(
+          const pause = (duration) => this.runner.pause(duration);
+
+          const {
+            callbacks
+          } = createDecorations(
+            decorationsAttr,
+            this.ballSim,
             this.renderer,
-            (duration) => this.runner.pause(duration),
-            highlightAttr,
-            highlighColorAttr
+            pause
           );
+
+          const processFunc = createProcessPhysicsFunc(
+            !noBounce && !isStatic,
+            callbacks
+          );
+
           const collStrat = createCollisionStrategy(
             this.ballSim,
             this.renderer,
             processFunc,
-            highlightAttr,
+            callbacks,
             strategyAttr,
             skipIntervalAttr
           );
+
           this.runner = new Runner(collStrat, this.ballSim, this.renderer);
 
-          if (draggableAttr) {
+          if (isDraggable) {
             setupDragging(this.ballSim, this.canvas, this.runner);
           }
 
@@ -354,7 +371,7 @@
       ballSim,
       renderer,
       processFunc,
-      highlightAttr,
+      callbacks,
       strategyAttr,
       skipIntervalAttr
     ) {
@@ -364,23 +381,34 @@
           collStrat = new NoopStrat();
           break;
         case "pairwise":
-          collStrat = new PairwiseStrat(ballSim, processFunc);
+          collStrat = new PairwiseStrat(ballSim, renderer, processFunc);
           break;
         case "sap-nativesort":
           collStrat = new SweepAndPruneStrat(
             ballSim,
             (arr) => arr.sort((a, b) => a.x - b.x),
-            processFunc
+            processFunc,
+            callbacks
+          );
+          break;
+        case "sap-quicksort":
+          collStrat = new SweepAndPruneStrat(
+            ballSim,
+            createQuickSort(callbacks),
+            processFunc,
+            callbacks
+          );
+          break;
+        case "sap-insertionsort":
+          collStrat = new SweepAndPruneStrat(
+            ballSim,
+            createInsertionSort(callbacks),
+            processFunc,
+            callbacks
           );
           break;
         default:
           throw new Error("Invalid strategy: " + strategyAttr);
-      }
-
-      if (highlightAttr === "sap-edges") {
-        if (!(collStrat instanceof SweepAndPruneStrat))
-          throw new Error("Only use highlight=sap-edges with strategy=sap-*");
-        collStrat = new SweepAndPruneStratHighlight(collStrat, renderer);
       }
 
       if (skipIntervalAttr) {
@@ -391,34 +419,6 @@
       }
 
       return collStrat;
-    }
-
-    function createProcessFunc(
-      renderer,
-      pause,
-      highlightAttr,
-      highlighColorAttr
-    ) {
-      return realCreateProcessFunc(
-        highlightAttr === "checks" ?
-        async (a, b) => {
-            a.color = highlighColorAttr;
-            b.color = highlighColorAttr;
-            const line = renderer.addLine(
-              a.x,
-              a.y,
-              b.x,
-              b.y,
-              highlighColorAttr
-            );
-            await pause(200);
-            a.color = undefined;
-            b.color = undefined;
-            renderer.removeLine(line);
-          }: () => {},
-          () => {},
-          true
-      );
     }
   </script>
   <meta charset="utf-8">
@@ -1200,10 +1200,11 @@
   </style>
   <style>
     .demo-row {
+      margin: 18px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
     }
 
     .pair-legend {
@@ -1304,7 +1305,7 @@
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
             <div class="demo-row">
-              <sap-demo-client strategy="pairwise" highlight="checks" highlight-color="#4c8" skip-interval="5"></sap-demo-client>
+              <sap-demo-client strategy="pairwise" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
               <div class="demo-caption">
                 <span style="color:#4c8" class="pair-legend"></span> <code>intersects</code> calls are highlighted
               </div>
@@ -1314,16 +1315,15 @@
             <p>The naive algorithm runs in <strong>O(n<sup>2</sup>)</strong> time. That is, for an input of n balls, the algorithm's run time grows proportionally to the <em>square</em> of the input n. That's a lot!</p>
             <p>This is because for n balls, there are around <strong>(n&nbsp;*&nbsp;(n-1))/2</strong> pairs to check, or <strong>0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n</strong>. This translates to O(n<sup>2</sup>) in <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Big_O_notation">Big O notation</a>.</p>
             <div class="demo-row">
-              <sap-demo-client balls="10" strategy="pairwise" highlight="checks" highlight-color="#4c8" skip-interval="5"></sap-demo-client>
+              <sap-demo-client balls="10" strategy="pairwise" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
               <div class="demo-caption">
                 With just 12 balls, the checks have grown to an unacceptable number!
               </div>
             </div>
 
-            <p>To illustrate the scaling of the algorithm's performance, the following graph shows the number of <code>intersect</code> calls plotted against the input n.</p>
-            <!--  <sap-graph />  -->
-
             <p>Clearly, the naive solution does not scale well for large numbers of objects.</p>
+            <p>It’s important to note that the worst case for any collision detection algorithm is always O(n<sup>2</sup>), as the worst case is when all objects are intersecting simultaneously and you have to process each of the n<sup>2</sup> collisions. It’s better to compare using the average case and best cases where we can have better comparisons.</p>
+            <p>Having said that, the naive algorithm is guaranteed <strong>O(n<sup>2</sup>)</strong> for any case, no matter the number of actual collisions.</p>
             <h2 id="improving-the-solution">Improving the solution</h2>
             <p>One common thought process when optimising algorithms is to find <strong>redundant or unnecessary work</strong>.</p>
             <span class="box-note ">
@@ -1374,31 +1374,45 @@ type Object <span class="token operator">=</span> <span class="token punctuation
 <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
 <span class="token comment">// intersects(A, C) will return false</span></code></pre>
             <p>You might be wondering how this contrived example could apply to collision detection in general. Well, it’s true that this only works if A, B, and C are in a particular order. Try moving the balls below to see when the optimisation applies.</p>
-            <pre><code>// todo: live output of interactive controls below
-intersects(A, B)
-intersects(B, C)
-intersects(A, C)
-</code></pre>
-            <p><sap-demo-client balls="[[100,250,50],[250,150,40],[450,275,60]]" labels="A,B,C" rainbow="" static="" draggable="" strategy="sap-nativesort"></sap-demo-client></p>
+            <div class="demo-row">
+              <sap-demo-client balls="[[100,250,50],[250,150,40],[450,275,60]]" strategy="sap-nativesort" static="" draggable="" labels="A,B,C" rainbow=""></sap-demo-client>
+              ```
+              // todo: live output of interactive controls below
+              intersects(A, B)
+              intersects(B, C)
+              intersects(A, C)
+              ```
+            </div>
+
             <p>todo: draggable indicator</p>
             <p>However, these labels are arbitrary… What if we just called the leftmost ball A, the middle ball B, and the rightmost C, at any point in time? Then the optimisation would always be applicable! But hang on… labeling objects according to a defined order is essentially <strong>sorting</strong>! What if we just sorted the list every time? Would the skipped checks be worth it?</p>
             <h2 id="sorting">Sorting</h2>
             <p>Sorting, inequalities, and optimisation go hand in hand in hand. Sorted lists give us implied inequalities over vast ranges for free. Even if we had to sort the list of objects every frame, the quickest sorting algorithm in general runs in O(n log n) time which is certainly better than O(n<sup>2</sup>) of the naive solution.</p>
             <p>As hinted by the 3-object example above, sorting the list of objects merely by their x position can help remove ranges of potential pairs that need to be checked. How can we generalise this to n objects?</p>
             <p>First, let's unwind the simplification we did earlier. Objects aren't zero-width points! Each object has a size - a certain width. We can account for the width all while keeping the benefits of unambiguous sort order by tracking the left and the right edges of each object as two separate points.</p>
-            <p><sap-demo-client balls="6" rainbow="" static="" draggable="" highlight="sap-edges" strategy="sap-nativesort"></sap-demo-client></p>
-            <p>todo: linear row of deges (separate component)</p>
+            <div class="demo-row">
+              <sap-demo-client balls="6" strategy="sap-nativesort" static="" draggable="" rainbow="" decorations="edges"></sap-demo-client>
+              todo: linear row of deges (separate component)
+            </div>
+
+
             <p>You can probably guess where this is going. Remember the <code>intersects</code> function? This is it scoped down to the x axis:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
     <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
             <p>Since we have a sorted list of every object's left and right points, it’s faster to find overlaps by doing local index-based searches rather than global pairwise testing.</p>
-            <p>(todo) how to isolate one object without needing to pass through all items finding overlapping object2s</p>
-            <p><sap-demo-client balls="6" rainbow="" static="" draggable="" highlight="sap-edges" strategy="sap-nativesort"></sap-demo-client></p>
+            <p>For example, take one object, when you have the indices of its left and right points, you can simply run through all points between them in the array to get its overlapping objects. There’s a problem though... (todo) when other ball encloses current ball.</p>
+            <div class="demo-row">
+              <sap-demo-client balls="6" strategy="sap-nativesort" static="" draggable="" decorations="edges:focus:#4c8:#d88"></sap-demo-client>
+            </div>
+
             <h2 id="sweeping">Sweeping</h2>
             <p>(todo) Scanning from left to right and keeping track of which objects we're currently <em>inside of</em>.</p>
-            <p><sap-demo-client highlight="sap-inside" strategy="sap-nativesort"></sap-demo-client></p>
+            <div class="demo-row">
+              <sap-demo-client balls="8" no-bounce="" strategy="sap-nativesort" skip-interval="4" decorations="sweep:#f00:#d88,edges"></sap-demo-client>
+            </div>
+
             <p>Here’s the code for scanning (<em>sweeping</em>) to track when we're inside which objects:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> inside <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -1428,30 +1442,53 @@ intersects(A, C)
     inside<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p><sap-demo-client highlight="checks" strategy="sap-nativesort"></sap-demo-client></p>
+            <div class="demo-row">
+              <sap-demo-client balls="8" no-bounce="" strategy="sap-nativesort" skip-interval="4" decorations="sweep:#f00:#d88,edges,checks:#4c8:600"></sap-demo-client>
+            </div>
+
             <h2 id="pruning">Pruning</h2>
-            <p>The above sweeping only works in a single dimension due to the previous simplification we did earlier reducing the checks down to one dimension, x. Balls aren't one-dimensional objects! How do we account for the other dimension, y?</p>
-            <p>The thing is, sorting works best in one dimension, so we'll compromise. We'll do a sweep check in one dimension, x, to get a shortlist of object pairs with overlapping x spans. On the shortlisted pairs, we check for intersection in the rest of their dimensions, y and possibly z if 3D.</p>
+            <p>The sweeping mechanism only works in a single dimension. But balls aren't one-dimensional objects! How do we account for the other dimension, y?</p>
+            <p>One option is to perform a second sweep for the y-axis. That is, we need a separaet list of edges for the y-axis. Object pairs are then flagged for overlaps in each sweep in the x and y dimensions.</p>
             <span class="box-note ">
-              The "prune" in sweep-and-prune refers to the elimination of object pairs from the shortlist.
+              The "prune" in sweep-and-prune refers to the elimination of candidate pairs during the sweeps in each dimension.
             </span>
 
+            <p>However, there is a simpler solution that is easier to generalise. We can do the sweep check in the x-axis only to get a shortlist of object pairs with overlapping x spans. The for each shortlisted pair, we do a real check for intersection on the rest of their dimensions, like y and possibly z if 3D.</p>
             <p>The above code calls <code>onOverlap</code> on the object pairs that passed pruning. This is where we can check for the y dimension.</p>
             <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlap</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">if</span> <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token function">collide</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>The above formula works generally for game objects with an axis-aligned hitbox. Our ball example works better with the following circle intersection formula:</p>
+            <p>The above formula generally works for game objects with an upright hitbox. But usually a more precise and time-consuming check could be done at this level since most of the candidates have already been pruned. Our ball example works better with the following circle intersection check:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlap</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">const</span> distance <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">sqrt</span><span class="token punctuation">(</span>Math<span class="token punctuation">.</span><span class="token function">pow</span><span class="token punctuation">(</span>object1<span class="token punctuation">.</span>x <span class="token operator">-</span> object2<span class="token punctuation">.</span>x<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token operator">+</span> Math<span class="token punctuation">.</span><span class="token function">pow</span><span class="token punctuation">(</span>object1<span class="token punctuation">.</span>y <span class="token operator">-</span> object2<span class="token punctuation">.</span>y<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token keyword">if</span> <span class="token punctuation">(</span>distance <span class="token operator">&lt;</span> object1<span class="token punctuation">.</span>radius <span class="token operator">+</span> object2<span class="token punctuation">.</span>radius<span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token function">bounce</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p><sap-demo-client highlight="checks" strategy="sap-nativesort"></sap-demo-client></p>
+            <p>Here (todo)</p>
+            <div class="demo-row">
+              <sap-demo-client balls="6" strategy="sap-nativesort" skip-interval="2" decorations="checks:#4c8"></sap-demo-client>
+            </div>
+
             <h2 id="performance-of-sweep-and-prune">Performance of sweep-and-prune</h2>
-            <p>A run of sweep-and-prune consists of a sort and a sweep. The sweep is a linear pass on the input so it's just O(n). The sort - let's take the "fastest" sorting algorithm, mergesort or quicksort - would be O(n log n).</p>
+            <p>Compared to the naive algorithm, the sweep-and-prune algorithm results in much less checks performed per frame. If your intersection checks are expensive, e.g. complex 3D objects, it’s going to be a big time-saver.</p>
+            <p>Look at the following side-by-side comparison and notice the number of intersection checks required per frame:</p>
+            <div class="demo-row">
+              <sap-demo-client balls="6" strategy="pairwise" skip-interval="2" decorations="checks:#cbb:30"></sap-demo-client>
+              <div class="demo-caption">Naive pairwise</div>
+            </div>
+
+            <div class="demo-row">
+              <sap-demo-client balls="6" strategy="sap-nativesort" skip-interval="2" decorations="checks:#bcb:30"></sap-demo-client>
+              <div class="demo-caption">Sweep and prune</div>
+            </div>
+
+            <p>Let’s analyse the time complexity!</p>
+            <p>A run of sweep-and-prune consists of a sort and a sweep.</p>
+            <p>The sort - if we take the "fastest" sorting algorithm, mergesort or quicksort - would be O(n log n).</p>
+            <p>The sweep, which is a linear pass with an inner loop for overlaps, should be O(n) in the average case. That is if the average case is a sparse world with mostly evenly-distributed object groups and a few pairs actually intersecting, which I think is a reasonable assumption.</p>
             <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sweepAndPrune</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token comment">// O(n log n)</span>
   <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -1461,6 +1498,7 @@ intersects(A, C)
   <span class="token comment">// O(n)</span>
   <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// zero at best; some constant w.r.t. input size on average</span>
       <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> other <span class="token keyword">of</span> inside<span class="token punctuation">)</span> <span class="token punctuation">{</span>
         <span class="token function">onOverlap</span><span class="token punctuation">(</span>other<span class="token punctuation">,</span> edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
       <span class="token punctuation">}</span>
@@ -1470,20 +1508,25 @@ intersects(A, C)
     <span class="token punctuation">}</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p><b-x-note>The sweep-and-prune algorithm is also known sort-and-sweep.</b-x-note></p>
-            <p>This means sweep-and-prune is O(n log n), a big improvement over the naive O(n<sup>2</sup>)!</p>
+            <p>This means sweep-and-prune is O(n log n) at best, a big improvement over the naive O(n<sup>2</sup>)!</p>
+            <p><span class="box-note ">The sweep-and-prune algorithm is also known sort-and-sweep.</span></p>
             <p>(todo: graph vs)</p>
             <p>(todo: check native sort (timsort) vs quicksort)</p>
             <p><em>Can we do better?</em></p>
             <h2 id="a-small-change-big-improvement-">A small change, big improvement (?)</h2>
             <p>Again, let's ask the question: Where is redundant work being done here?</p>
-            <p><sap-demo-client highlight="sort" strategy="sap-nativesort"></sap-demo-client></p>
-            <p>As you can see, sort does nothing most of the time! Most of the time, the list is already sorted due to the previous frame's sort. Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places from the previous frame.</p>
-            <p>Luckily, the subject of sorting algorithms is well-researched. For almost-sorted lists, insertion sort is a good choice.</p>
-            <p>Insertion sort has a run time of O(n) at best when the list is already sorted, and O(n<sup>2</sup> ) at worst. However, we can argue that the average case is O(n), since the list is almost always almost sorted.</p>
-            <p><sap-demo-client highlight="sort" strategy="sap-nativesort"></sap-demo-client></p>
-            <p>With insertion sort, it's important to consider the primary axis of the sweep-and-prune algorithm. It should be the axis where objects are most evenly distributed to minimize swaps. In a side-scroller for example, that would be the horizontal axis.</p>
-            <p>(todo: check native sort (timsort) vs insertionsort)</p>
+            <div class="demo-row">
+              <sap-demo-client balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" no-bounce="" strategy="sap-quicksort" skip-interval="3" decorations="edges:array:#f00:#0cf"></sap-demo-client>
+            </div>
+
+            <p>As you can see, sort does nothing most of the time! Most of the time, the list is already sorted from the previous frame. Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places in one frame.</p>
+            <p>Luckily, the subject of sorting algorithms is well-researched. We’re dealing with a special state of lists which is the state of being almost sorted. Insertion sort is a great choice for almost-sorted lists!</p>
+            <p>Insertion sort has a run time of O(n) at best when the list is already sorted or almost sorted, and O(n<sup>2</sup>) at worst. However, we can argue that the average case is O(n), since the list is almost always sorted due to the previous frame’s sort.</p>
+            <div class="demo-row">
+              <sap-demo-client balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" no-bounce="" strategy="sap-insertionsort" skip-interval="3" decorations="edges:array:#f00:#0cf"></sap-demo-client>
+            </div>
+
+            <p>With the sweeping mechanism and insertion sort in mind, it’s important to consider the primary axis of the sweep-and-prune algorithm. It should be the axis where objects are most evenly distributed to minimize swaps and overlaps. In a side-scroller for example, the primary axis should be horizontal.</p>
             <h2 id="less-theoretical-more-practical">Less theoretical, more practical</h2>
             <p>Forget about theory. (todo)</p>
             <p>Using your standard library's sort function is usually the best as it's most likely optimised for the runtime.</p>

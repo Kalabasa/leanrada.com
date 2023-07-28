@@ -1,13 +1,13 @@
 const DIR_LEFT = -1;
 const DIR_RIGHT = 1;
 
-const tmpSet = new Set();
-
 export class SweepAndPruneStrat {
-  constructor(ballSim, sortFunc, processFunc) {
+  constructor(ballSim, sortFunc, processFunc, callbacks = {}) {
     this.ballSim = ballSim;
     this.sortFunc = sortFunc;
     this.processFunc = processFunc;
+    this.callbacks = callbacks;
+    this.tmpSet = new Set();
     this.init();
   }
 
@@ -21,25 +21,34 @@ export class SweepAndPruneStrat {
   }
 
   async step() {
+    const { onStartScan, onScanEdge, onEnterEdge, onExitEdge, onEndScan } = this.callbacks;
+
     for (const edge of this.edges) {
       syncEdge(edge);
     }
-    this.sortFunc(this.edges);
+    await this.sortFunc(this.edges);
 
-    const inside = tmpSet;
+    const inside = this.tmpSet;
     inside.clear();
 
+    await onStartScan?.(this.edges);
     for (const edge of this.edges) {
+      await onScanEdge?.(edge);
+
       const { ball } = edge;
+
       if (edge.dir < 0) {
+        await onEnterEdge?.(edge);
         for (const other of inside) {
           await this.processFunc(ball, other);
         }
         inside.add(ball);
       } else {
         inside.delete(ball);
+        await onExitEdge?.(edge);
       }
     }
+    await onEndScan?.();
   }
 }
 

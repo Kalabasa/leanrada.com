@@ -15,8 +15,7 @@ export class Renderer {
     return this.canvas.height;
   }
 
-  addLine(x1, y1, x2, y2, color) {
-    const line = [x1, y1, x2, y2, color];
+  addLine(line) {
     this.lines.add(line);
     return line;
   }
@@ -39,10 +38,15 @@ export class Renderer {
       const ball = balls[i];
 
       context.beginPath();
-      context.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
-      context.fillStyle = context.strokeStyle = ball.color ?? "#ccc";
+      context.arc(
+        ball.x,
+        ball.y,
+        ball.radius + context.lineWidth * 0.5,
+        0,
+        2 * Math.PI
+      );
+      context.fillStyle = getColor(ball);
       context.fill();
-      context.stroke();
 
       const label = this.labels[i];
       if (label) {
@@ -53,7 +57,7 @@ export class Renderer {
     }
 
     for (const line of this.lines) {
-      const [x1, y1, x2, y2, color] = line;
+      const { x1, y1, x2, y2, color } = line;
       context.beginPath();
       context.moveTo(x1, y1)
       context.lineTo(x2, y2);
@@ -61,4 +65,8 @@ export class Renderer {
       context.stroke();
     }
   }
+}
+
+export function getColor(ball) {
+  return ball?.color ?? "#ccc";
 }
