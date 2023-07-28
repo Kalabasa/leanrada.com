@@ -24,7 +24,7 @@
 
       ## Naive solution
 
-      The naive solution is to check every potential pair of objects for collision. Continuing with the ball example, this means checking every ball for intersection with each of the other balls. This is done every frame to ensure balls bounce when they collide.
+      The naive solution is to check every potential pair of objects for collision. Continuing with the ball example, this means checking every ball for intersection with each of the other balls.
 
       <code-block :code="`\
 // for each ball
@@ -40,6 +40,8 @@ for (let i = 0; i < balls.length; i++) {
   }
 }`" />
 
+      This is done every frame to ensure balls bounce when they collide.
+
       <div class="demo-row">
         <sap-demo
           strategy="pairwise"
@@ -52,9 +54,9 @@ for (let i = 0; i < balls.length; i++) {
 
       ## Performance
 
-      The naive algorithm runs in **O(n<sup>2</sup>)** time. That is, for an input of n balls, the algorithm's run time grows proportionally to the *square* of the input n. That's a lot!
+      The naive algorithm runs in **O(n<sup>2</sup>)** time in [Big O notation](https://en.wikipedia.org/wiki/Big_O_notation). That is, for an input of n balls, the algorithm's run time grows proportionally to the *square* of the input n. That's a lot!
 
-      This is because for n balls, there are around __(n&nbsp;*&nbsp;(n-1))/2__ pairs to check, or __0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n__. This translates to O(n<sup>2</sup>) in [Big O notation](https://en.wikipedia.org/wiki/Big_O_notation).
+      This is because for n balls, there are around __(n&nbsp;*&nbsp;(n-1))/2__ pairs to check, or __0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n__. This is simplified to O(n<sup>2</sup>).
 
       <div class="demo-row">
         <sap-demo
@@ -67,11 +69,11 @@ for (let i = 0; i < balls.length; i++) {
         </div>
       </div>
 
-      Clearly, the naive solution does not scale well for large numbers of objects.
+      Clearly, the naive solution does not scale well for large numbers of objects. How can we improve this?
+ 
+      Before anything else, note that the worst case for any collision detection algorithm is always O(n<sup>2</sup>). The worst case is when all objects are intersecting simultaneously and you have no choice but to process each of the n<sup>2</sup> collisions. For collision detection, it’s more practical to compare the average and best cases.
 
-      It’s important to note that the worst case for any collision detection algorithm is always O(n<sup>2</sup>), as the worst case is when all objects are intersecting simultaneously and you have to process each of the n<sup>2</sup> collisions. It’s better to compare using the average case and best cases where we can have better comparisons.
-
-      Having said that, the naive algorithm is guaranteed **O(n<sup>2</sup>)** for any case, no matter the number of actual collisions.
+      Having said that, the naive algorithm above is still **O(n<sup>2</sup>)** for any case, no matter the number of actual collisions.
 
       ## Improving the solution
 
@@ -79,10 +81,10 @@ for (let i = 0; i < balls.length; i++) {
 
       <box-note>
         <p>There are many ways to optimise collision detection, like spatial hashing and space partitioning trees. But this post is about just one particular algorithm - the <strong>sweep and prune</strong> algorithm.</p>
-        <p><strong>Disclaimer:</strong> The following is merely my attempt at rationalising the thinking behind the sweep-and-prune algorithm. I do not know how the algorithm was originally conceived.</p>
+        <p><strong>Disclaimer:</strong> The following is merely my attempt at rationalising the thinking behind the sweep-and-prune algorithm.</p>
       </box-note>
 
-      Let's start with our [typical object intersection check](https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html), the one performed at each iteration of the inner loop. It's essentially a bunch of inequality checks:
+      Let's start with our [typical object intersection check](https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html), the one performed for every candidate pair of objects. It's essentially a bunch of inequality checks:
 
       <code-block :code="`\
 function intersects(object1, object2) {
@@ -101,18 +103,18 @@ type Object = {
   bottom: number; // y-coordinate of bottom edge
 };`" />
 
-      For now, let's focus on just one dimension, say x. Bear with me as I further scope down the check to just one direction:
+      For now, let's focus on just one dimension, say *x*. Bear with me as I further scope down the check to just one *direction*:
 
       <code-block :code="`\
 function intersects(object1, object2) {
   return object1.right > object2.left;
 }`" />
 
-      Don't worry; this scoped-down definition is a surprise tool that can help us later in understanding the rationale behind the optimisation.
+      Don't worry; this scoped-down definition is a surprise tool that can help us later in understanding the rationale behind the algorithm.
 
       (mickey meme)
 
-      Okay, more seriously, one reason it works is because of the AND operator's (`&&`) short-circuit evaluation. If any one of the operands is false, then the whole expression becomes false. This can be reworded into the [separating axis theorem](https://www.sevenson.com.au/programming/sat/), which states that if there exists an axis where two objects' don't overlap, then they don't intersect at all. Thus even if we just did an optimisation in one dimension, it will still result less overall checks. So for now, let's just deal with the x axis.
+      Okay, more seriously, one reason it works is because of the AND operator's (`&&`) short-circuit evaluation. If any one of the operands is false, then the whole expression becomes false. This can be reworded into the [separating axis theorem](https://www.sevenson.com.au/programming/sat/), which states that if there exists an axis where two objects' don't overlap, then they don't intersect at all. Thus even if we just did an optimisation in one dimension, it will still significantly reduce the amount of checks. So for now, let's just deal with the x axis.
 
       Now, let's look at these checks in the context of multiple objects. Consider three objects - A, B, and C - as illustrated below.
 
@@ -125,7 +127,7 @@ intersects(A, B) // returns false
 intersects(B, C) // returns false
 intersects(A, C) // returns false`" />
 
-      Digging deeper and expanding the `intersects` function:
+      Inlining the scoped-down `intersects` function:
 
       <code-block :code="`\
 A.right > B.left // false
