@@ -39,7 +39,6 @@ export class Runner {
       this.ballSim.step();
       await this.collisionStrategy.step();
     }
-    this.renderer.render();
     this.updateCallbackID = setTimeout(this.updateLoop, 25);
   }
 

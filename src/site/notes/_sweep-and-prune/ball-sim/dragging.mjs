@@ -1,4 +1,3 @@
-
 import { mousePosition } from "/lib/mouse_position.mjs";
 
 export function setupDragging(ballSim, canvas, runner) {

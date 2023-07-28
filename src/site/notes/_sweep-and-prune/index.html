@@ -41,7 +41,10 @@ for (let i = 0; i < balls.length; i++) {
 }`" />
 
       <div class="demo-row">
-        <sap-demo strategy="pairwise" highlight="checks" highlight-color="#4c8" skip-interval="5" />
+        <sap-demo
+          strategy="pairwise"
+          skip-interval="4"
+          decorations="checks:#4c8" />
         <div class="demo-caption">
           <span style="color:#4c8" class="pair-legend"></span> <code>intersects</code> calls are highlighted
         </div>
@@ -54,17 +57,21 @@ for (let i = 0; i < balls.length; i++) {
       This is because for n balls, there are around __(n&nbsp;*&nbsp;(n-1))/2__ pairs to check, or __0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n__. This translates to O(n<sup>2</sup>) in [Big O notation](https://en.wikipedia.org/wiki/Big_O_notation).
 
       <div class="demo-row">
-        <sap-demo balls="10" strategy="pairwise" highlight="checks" highlight-color="#4c8" skip-interval="5" />
+        <sap-demo
+          balls="10"
+          strategy="pairwise"
+          skip-interval="4"
+          decorations="checks:#4c8" />
         <div class="demo-caption">
           With just 12 balls, the checks have grown to an unacceptable number!
         </div>
       </div>
 
-      To illustrate the scaling of the algorithm's performance, the following graph shows the number of `intersect` calls plotted against the input n.
-
-      <!-- <sap-graph /> -->
-
       Clearly, the naive solution does not scale well for large numbers of objects.
+
+      It’s important to note that the worst case for any collision detection algorithm is always O(n<sup>2</sup>), as the worst case is when all objects are intersecting simultaneously and you have to process each of the n<sup>2</sup> collisions. It’s better to compare using the average case and best cases where we can have better comparisons.
+
+      Having said that, the naive algorithm is guaranteed **O(n<sup>2</sup>)** for any case, no matter the number of actual collisions.
 
       ## Improving the solution
 
@@ -143,13 +150,19 @@ intersects(B, C) // returns false
 
       You might be wondering how this contrived example could apply to collision detection in general. Well, it’s true that this only works if A, B, and C are in a particular order. Try moving the balls below to see when the optimisation applies.
 
-      ```
-      // todo: live output of interactive controls below
-      intersects(A, B)
-      intersects(B, C)
-      intersects(A, C)
-      ```
-      <sap-demo balls="[[100,250,50],[250,150,40],[450,275,60]]" labels="A,B,C" rainbow static draggable strategy="sap-nativesort" />
+      <div class="demo-row">
+        <sap-demo
+          balls="[[100,250,50],[250,150,40],[450,275,60]]"
+          strategy="sap-nativesort"
+          static draggable
+          labels="A,B,C" rainbow />
+        ```
+        // todo: live output of interactive controls below
+        intersects(A, B)
+        intersects(B, C)
+        intersects(A, C)
+        ```
+      </div>
 
       todo: draggable indicator
 
@@ -163,9 +176,15 @@ intersects(B, C) // returns false
 
       First, let's unwind the simplification we did earlier. Objects aren't zero-width points! Each object has a size - a certain width. We can account for the width all while keeping the benefits of unambiguous sort order by tracking the left and the right edges of each object as two separate points.
 
-      <sap-demo balls="6" rainbow static draggable highlight="sap-edges" strategy="sap-nativesort" />
+      <div class="demo-row">
+        <sap-demo
+          balls="6"
+          strategy="sap-nativesort"
+          static draggable rainbow
+          decorations="edges"  />
+        todo: linear row of deges (separate component)
+      </div>
 
-      todo: linear row of deges (separate component)
 
       You can probably guess where this is going. Remember the `intersects` function? This is it scoped down to the x axis:
 
@@ -177,15 +196,28 @@ function intersects(object1, object2) {
 
       Since we have a sorted list of every object's left and right points, it’s faster to find overlaps by doing local index-based searches rather than global pairwise testing.
 
-      (todo) how to isolate one object without needing to pass through all items finding overlapping object2s
+      For example, take one object, when you have the indices of its left and right points, you can simply run through all points between them in the array to get its overlapping objects. There’s a problem though... (todo) when other ball encloses current ball.
 
-      <sap-demo balls="6" rainbow static draggable highlight="sap-edges" strategy="sap-nativesort" />
+      <div class="demo-row">
+        <sap-demo
+          balls="6"
+          strategy="sap-nativesort" 
+          static draggable
+          decorations="edges:focus:#4c8:#d88" />
+      </div>
 
       ## Sweeping
 
       (todo) Scanning from left to right and keeping track of which objects we're currently *inside of*.
 
-      <sap-demo highlight="sap-inside" strategy="sap-nativesort" />
+      <div class="demo-row">
+        <sap-demo
+          balls="8"
+          no-bounce
+          strategy="sap-nativesort"
+          skip-interval="4"
+          decorations="sweep:#f00:#d88,edges" />
+      </div>
 
       Here’s the code for scanning (*sweeping*) to track when we're inside which objects:
 
@@ -223,17 +255,26 @@ for (const edge of edges) {
   }
 }`" />
 
-      <sap-demo highlight="checks" strategy="sap-nativesort" />
+      <div class="demo-row">
+        <sap-demo
+          balls="8"
+          no-bounce
+          strategy="sap-nativesort"
+          skip-interval="4"
+          decorations="sweep:#f00:#d88,edges,checks:#4c8:600" />
+      </div>
 
       ## Pruning
 
-      The above sweeping only works in a single dimension due to the previous simplification we did earlier reducing the checks down to one dimension, x. Balls aren't one-dimensional objects! How do we account for the other dimension, y?
+      The sweeping mechanism only works in a single dimension. But balls aren't one-dimensional objects! How do we account for the other dimension, y?
 
-      The thing is, sorting works best in one dimension, so we'll compromise. We'll do a sweep check in one dimension, x, to get a shortlist of object pairs with overlapping x spans. On the shortlisted pairs, we check for intersection in the rest of their dimensions, y and possibly z if 3D.
+      One option is to perform a second sweep for the y-axis. That is, we need a separaet list of edges for the y-axis. Object pairs are then flagged for overlaps in each sweep in the x and y dimensions.
 
       <box-note>
-        The "prune" in sweep-and-prune refers to the elimination of object pairs from the shortlist.
+        The "prune" in sweep-and-prune refers to the elimination of candidate pairs during the sweeps in each dimension.
       </box-note>
+
+      However, there is a simpler solution that is easier to generalise. We can do the sweep check in the x-axis only to get a shortlist of object pairs with overlapping x spans. The for each shortlisted pair, we do a real check for intersection on the rest of their dimensions, like y and possibly z if 3D.
 
       The above code calls `onOverlap` on the object pairs that passed pruning. This is where we can check for the y dimension.
 
@@ -244,7 +285,7 @@ onOverlap = function(object1, object2) {
   }
 }`" />
 
-      The above formula works generally for game objects with an axis-aligned hitbox. Our ball example works better with the following circle intersection formula:
+      The above formula generally works for game objects with an upright hitbox. But usually a more precise and time-consuming check could be done at this level since most of the candidates have already been pruned. Our ball example works better with the following circle intersection check:
 
       <code-block :code="`\
 onOverlap = function(object1, object2) {
@@ -254,12 +295,48 @@ onOverlap = function(object1, object2) {
   }
 }`" />
 
-      <sap-demo highlight="checks" strategy="sap-nativesort" />
+      Here (todo)
+
+      <div class="demo-row">
+        <sap-demo
+          balls="6"
+          strategy="sap-nativesort"
+          skip-interval="2"
+          decorations="checks:#4c8" />
+      </div>
 
       ## Performance of sweep-and-prune
 
-      A run of sweep-and-prune consists of a sort and a sweep. The sweep is a linear pass on the input so it's just O(n). The sort - let's take the "fastest" sorting algorithm, mergesort or quicksort - would be O(n log n).
+      Compared to the naive algorithm, the sweep-and-prune algorithm results in much less checks performed per frame. If your intersection checks are expensive, e.g. complex 3D objects, it’s going to be a big time-saver.
+      
+      Look at the following side-by-side comparison and notice the number of intersection checks required per frame:
 
+      <div class="demo-row">
+        <sap-demo
+          balls="6"
+          strategy="pairwise"
+          skip-interval="2"
+          decorations="checks:#cbb:30" />
+        <div class="demo-caption">Naive pairwise</div>
+      </div>
+
+      <div class="demo-row">
+        <sap-demo
+          balls="6"
+          strategy="sap-nativesort"
+          skip-interval="2"
+          decorations="checks:#bcb:30" />
+          <div class="demo-caption">Sweep and prune</div>
+      </div>
+
+      Let’s analyse the time complexity!
+      
+      A run of sweep-and-prune consists of a sort and a sweep.
+      
+      The sort - if we take the "fastest" sorting algorithm, mergesort or quicksort - would be O(n log n).
+      
+      The sweep, which is a linear pass with an inner loop for overlaps, should be O(n) in the average case. That is if the average case is a sparse world with mostly evenly-distributed object groups and a few pairs actually intersecting, which I think is a reasonable assumption.
+ 
       <code-block :code="`\
 function sweepAndPrune(edges) {
   // O(n log n)
@@ -270,6 +347,7 @@ function sweepAndPrune(edges) {
   // O(n)
   for (const edge of edges) {
     if (edge.isLeft) {
+      // zero at best; some constant w.r.t. input size on average
       for (const other of inside) {
         onOverlap(other, edge.object);
       }
@@ -280,9 +358,9 @@ function sweepAndPrune(edges) {
   }
 }`" />
 
-      <b-x-note>The sweep-and-prune algorithm is also known sort-and-sweep.</b-x-note>
+      This means sweep-and-prune is O(n log n) at best, a big improvement over the naive O(n<sup>2</sup>)!
 
-      This means sweep-and-prune is O(n log n), a big improvement over the naive O(n<sup>2</sup>)!
+      <box-note>The sweep-and-prune algorithm is also known sort-and-sweep.</box-note>
 
       (todo: graph vs)
 
@@ -294,19 +372,31 @@ function sweepAndPrune(edges) {
 
       Again, let's ask the question: Where is redundant work being done here?
 
-      <sap-demo highlight="sort" strategy="sap-nativesort" />
+      <div class="demo-row">
+        <sap-demo
+          balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]"
+          no-bounce
+          strategy="sap-quicksort"
+          skip-interval="3"
+          decorations="edges:array:#f00:#0cf"/>
+      </div>
 
-      As you can see, sort does nothing most of the time! Most of the time, the list is already sorted due to the previous frame's sort. Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places from the previous frame.
+      As you can see, sort does nothing most of the time! Most of the time, the list is already sorted from the previous frame. Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places in one frame.
 
-      Luckily, the subject of sorting algorithms is well-researched. For almost-sorted lists, insertion sort is a good choice.
+      Luckily, the subject of sorting algorithms is well-researched. We’re dealing with a special state of lists which is the state of being almost sorted. Insertion sort is a great choice for almost-sorted lists!
 
-      Insertion sort has a run time of O(n) at best when the list is already sorted, and O(n<sup>2</sup> ) at worst. However, we can argue that the average case is O(n), since the list is almost always almost sorted.
+      Insertion sort has a run time of O(n) at best when the list is already sorted or almost sorted, and O(n<sup>2</sup>) at worst. However, we can argue that the average case is O(n), since the list is almost always sorted due to the previous frame’s sort.
 
-      <sap-demo highlight="sort" strategy="sap-nativesort" />
+      <div class="demo-row">
+        <sap-demo
+          balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]"
+          no-bounce
+          strategy="sap-insertionsort"
+          skip-interval="3"
+          decorations="edges:array:#f00:#0cf"/>
+      </div>
 
-      With insertion sort, it's important to consider the primary axis of the sweep-and-prune algorithm. It should be the axis where objects are most evenly distributed to minimize swaps. In a side-scroller for example, that would be the horizontal axis.
-
-      (todo: check native sort (timsort) vs insertionsort)
+      With the sweeping mechanism and insertion sort in mind, it’s important to consider the primary axis of the sweep-and-prune algorithm. It should be the axis where objects are most evenly distributed to minimize swaps and overlaps. In a side-scroller for example, the primary axis should be horizontal.
 
       ## Less theoretical, more practical
 
@@ -329,10 +419,11 @@ function sweepAndPrune(edges) {
 
 <style>
   .demo-row {
+    margin: 18px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
   }
 
   .pair-legend {

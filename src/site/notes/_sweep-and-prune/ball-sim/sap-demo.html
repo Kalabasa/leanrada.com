@@ -16,13 +16,15 @@
   import { BallSim } from "./ball-sim/ball-sim.mjs";
   import { Runner } from "./ball-sim/runner.mjs";
   import { Renderer } from "./ball-sim/renderer.mjs";
-  import { NoopStrat } from "./ball-sim/noop-strat.mjs";
-  import { PairwiseStrat } from "./ball-sim/pairwise-strat.mjs";
-  import { SweepAndPruneStrat } from "./ball-sim/sap-strat.mjs";
-  import { SweepAndPruneStratHighlight } from "./ball-sim/sap-strat-highlight.mjs";
-  import { SkippingDelegateStrat } from "./ball-sim/skip-delegate-strat.mjs";
-  import { createProcessFunc as realCreateProcessFunc } from "./ball-sim/process-func.mjs";
   import { setupDragging } from "./ball-sim/dragging.mjs";
+  import { createProcessPhysicsFunc } from "./ball-sim/process-physics.mjs";
+  import { createDecorations } from "./ball-sim/decorations/decorations.mjs";
+  import { NoopStrat } from "./ball-sim/collision-strats/noop-strat.mjs";
+  import { PairwiseStrat } from "./ball-sim/collision-strats/pairwise-strat.mjs";
+  import { SweepAndPruneStrat } from "./ball-sim/collision-strats/sap-strat.mjs";
+  import { SkippingDelegateStrat } from "./ball-sim/collision-strats/skip-delegate-strat.mjs";
+  import { createQuickSort } from "./ball-sim/sorts/quick-sort.mjs";
+  import { createInsertionSort } from "./ball-sim/sorts/insertion-sort.mjs";
 
   customElements.define(
     "sap-demo-client",
@@ -50,13 +52,13 @@
         this.cleanup();
 
         const ballsAttr = this.getAttribute("balls");
-        const labelsAttr = this.getAttribute("labels");
-        const rainbowAttr = this.hasAttribute("rainbow");
-        const staticAttr = this.hasAttribute("static");
-        const draggableAttr = this.hasAttribute("draggable");
         const strategyAttr = this.getAttribute("strategy");
-        const highlightAttr = this.getAttribute("highlight");
-        const highlighColorAttr = this.getAttribute("highlight-color");
+        const isStatic = this.hasAttribute("static");
+        const noBounce = this.hasAttribute("no-bounce");
+        const isDraggable = this.hasAttribute("draggable");
+        const labelsAttr = this.getAttribute("labels");
+        const isRainbow = this.hasAttribute("rainbow");
+        const decorationsAttr = this.getAttribute("decorations");
         const skipIntervalAttr = this.getAttribute("skip-interval");
 
         const ballSimCreator = BallSim.create(600, 400);
@@ -69,12 +71,12 @@
           const ballCount = ballsAttr?.match(/\d+/)
             ? Number.parseInt(ballsAttr)
             : 5;
-          ballSimCreator.addRandomBalls(ballCount, 0.08 + 0.1 / ballCount);
+          ballSimCreator.addRandomBalls(ballCount, 0.06 + 0.2 / ballCount);
         }
 
-        this.ballSim = ballSimCreator.setStatic(staticAttr).build();
+        this.ballSim = ballSimCreator.setStatic(isStatic).build();
 
-        if (rainbowAttr) {
+        if (isRainbow) {
           const { balls } = this.ballSim;
           for (let i = 0; i < balls.length; i++) {
             const ball = balls[i];
@@ -91,23 +93,32 @@
         const labelsValue = labelsAttr?.split(",") ?? [];
         this.renderer = new Renderer(this.ballSim, this.canvas, labelsValue);
 
-        const processFunc = createProcessFunc(
+        const pause = (duration) => this.runner.pause(duration);
+
+        const { callbacks } = createDecorations(
+          decorationsAttr,
+          this.ballSim,
           this.renderer,
-          (duration) => this.runner.pause(duration),
-          highlightAttr,
-          highlighColorAttr
+          pause
         );
+
+        const processFunc = createProcessPhysicsFunc(
+          !noBounce && !isStatic,
+          callbacks
+        );
+
         const collStrat = createCollisionStrategy(
           this.ballSim,
           this.renderer,
           processFunc,
-          highlightAttr,
+          callbacks,
           strategyAttr,
           skipIntervalAttr
         );
+
         this.runner = new Runner(collStrat, this.ballSim, this.renderer);
 
-        if (draggableAttr) {
+        if (isDraggable) {
           setupDragging(this.ballSim, this.canvas, this.runner);
         }
 
@@ -130,7 +141,7 @@
     ballSim,
     renderer,
     processFunc,
-    highlightAttr,
+    callbacks,
     strategyAttr,
     skipIntervalAttr
   ) {
@@ -140,23 +151,34 @@
         collStrat = new NoopStrat();
         break;
       case "pairwise":
-        collStrat = new PairwiseStrat(ballSim, processFunc);
+        collStrat = new PairwiseStrat(ballSim, renderer, processFunc);
         break;
       case "sap-nativesort":
         collStrat = new SweepAndPruneStrat(
           ballSim,
           (arr) => arr.sort((a, b) => a.x - b.x),
-          processFunc
+          processFunc,
+          callbacks
+        );
+        break;
+      case "sap-quicksort":
+        collStrat = new SweepAndPruneStrat(
+          ballSim,
+          createQuickSort(callbacks),
+          processFunc,
+          callbacks
+        );
+        break;
+      case "sap-insertionsort":
+        collStrat = new SweepAndPruneStrat(
+          ballSim,
+          createInsertionSort(callbacks),
+          processFunc,
+          callbacks
         );
         break;
       default:
         throw new Error("Invalid strategy: " + strategyAttr);
-    }
-
-    if (highlightAttr === "sap-edges") {
-      if (!(collStrat instanceof SweepAndPruneStrat))
-        throw new Error("Only use highlight=sap-edges with strategy=sap-*");
-      collStrat = new SweepAndPruneStratHighlight(collStrat, renderer);
     }
 
     if (skipIntervalAttr) {
@@ -167,34 +189,5 @@
     }
 
     return collStrat;
-  }
-
-  function createProcessFunc(
-    renderer,
-    pause,
-    highlightAttr,
-    highlighColorAttr
-  ) {
-    return realCreateProcessFunc(
-      highlightAttr === "checks"
-        ? async (a, b) => {
-            a.color = highlighColorAttr;
-            b.color = highlighColorAttr;
-            const line = renderer.addLine(
-              a.x,
-              a.y,
-              b.x,
-              b.y,
-              highlighColorAttr
-            );
-            await pause(200);
-            a.color = undefined;
-            b.color = undefined;
-            renderer.removeLine(line);
-          }
-        : () => {},
-      () => {},
-      true
-    );
   }
 </script>
