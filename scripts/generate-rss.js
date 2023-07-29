@@ -55,20 +55,66 @@ async function main() {
       continue;
     }
 
+    // Remove extra meta elements
     chContent.find(".content-header, .blog-header, .blog-post-info, .tag-row").remove();
-    chContent.find("[data-rss='interactive']").each((i, el) => {
+
+    // Replace interactives
+    const chInteractives = chContent.find("[data-rss='interactive']");
+    const hasInteractive = chInteractives.length > 0;
+    chInteractives.each((i, el) => {
       const chEl = ch(el);
       const label = chEl.attr("aria-label") ?? "";
-      chEl.replaceWith(`<pre>Interactive content: <a href="${url}">See it on ${domain}.</a>\nAlternative text: ${label}</pre>`);
+      chEl.replaceWith(`<pre>Interactive content: <a href="${url}">Visit the website to play with interactive content!</a>\nAlternative text: ${label}</pre>`);
     });
+
+    // Remove empty elements
     chContent.find("p:not(:has(*))")
       .filter((i, el) => ch(el).text().trim().length === 0)
       .remove();
 
+    // Flatten structures
+    let loopFlatten = true;
+    while (loopFlatten) {
+      loopFlatten = false;
+
+      chContent.contents().each((i, el) => {
+        if (["div", "section"].includes(el.name)) {
+          ch(el).replaceWith(el.children);
+          loopFlatten = true;
+        } else if (el.type === "comment") {
+          ch(el).remove();
+        }
+      });
+    }
+
+    // Format for plaintext
+    chContent.contents().each((i, el) => {
+      if (el.type === "text" && el.data.trim() === "") {
+        ch(el).remove();
+      }
+    });
     const newRoot = ch("<div></div>");
-    chContent.find("p, img, video, pre").appendTo(newRoot);
+    chContent.contents().each((i, el) => {
+      const isBlock = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "ol", "ul", "pre", "img", "video", "details"]
+        .includes(el.name);
+      if (isBlock) newRoot.append("\n");
+      newRoot.append(el);
+      if (isBlock) newRoot.append("\n");
+    });
     chContent = newRoot;
 
+    // Remove extra attributes
+    chContent.find("*").each((i, el) => {
+      ch(el)
+        .removeAttr("class")
+        .removeAttr("style");
+    });
+
+    if (hasInteractive) {
+      chContent.prepend(`<p><em>For RSS readers: This article contains interactive content available on the <a href="${url}">original post on ${domain}</a>.</em></p>\n`);
+    }
+
+    // Update URLs
     chContent.find("img,video,source").each((i, el) => {
       const chEl = ch(el);
       const src = chEl.attr("src");
@@ -82,10 +128,6 @@ async function main() {
       if (href) {
         chEl.attr("href", makeURL(domain, item.href, href));
       }
-    });
-
-    chContent.find("*").each((i, el) => {
-      ch(el).removeAttr("class").removeAttr("style");
     });
 
     const content = chContent.html();
