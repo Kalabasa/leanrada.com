@@ -98,7 +98,12 @@ async function main() {
     });
   }
 
-  const feedXML = feed.xml({ indent: true });
+  let feedXML = feed.xml({ indent: true });
+
+  const lastBuildDateStart = feedXML.indexOf("<lastBuildDate>");
+  const lastBuildDateEnd = feedXML.indexOf("</lastBuildDate>", lastBuildDateStart);
+  feedXML = feedXML.slice(0, lastBuildDateStart)
+    + feedXML.slice(lastBuildDateEnd + "</lastBuildDate>".length);
 
   if (!dryRun) {
     const outFile = path.resolve(staticRoot, "rss.xml");
