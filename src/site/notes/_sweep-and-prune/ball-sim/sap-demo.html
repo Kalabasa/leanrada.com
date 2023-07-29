@@ -9,8 +9,10 @@
     display: flex;
   }
   sap-demo-client > canvas {
+    width: 100%;
     border: solid 2px #ccc;
     border-radius: 12px;
+    touch-action: none;
   }
 </style>
 
@@ -78,7 +80,10 @@
           ballSimCreator.addRandomBalls(ballCount, 0.06 + 0.2 / ballCount);
         }
 
-        this.ballSim = ballSimCreator.setStatic(isStatic).build();
+        this.ballSim = ballSimCreator
+          .setStatic(isStatic)
+          .setEventTarget(this)
+          .build();
 
         if (isRainbow) {
           const { balls } = this.ballSim;
@@ -116,6 +121,7 @@
           this.renderer,
           processFunc,
           callbacks,
+          this,
           strategyAttr,
           skipIntervalAttr
         );
@@ -123,7 +129,7 @@
         this.runner = new Runner(collStrat, this.ballSim, this.renderer);
 
         if (isDraggable) {
-          setupDragging(this.ballSim, this.canvas, this.runner);
+          setupDragging(this.ballSim, this.canvas, this);
         }
 
         this.hasInit = true;
@@ -146,6 +152,7 @@
     renderer,
     processFunc,
     callbacks,
+    eventTarget,
     strategyAttr,
     skipIntervalAttr
   ) {
@@ -162,7 +169,8 @@
           ballSim,
           (arr) => arr.sort((a, b) => a.x - b.x),
           processFunc,
-          callbacks
+          callbacks,
+          eventTarget
         );
         break;
       case "sap-quicksort":

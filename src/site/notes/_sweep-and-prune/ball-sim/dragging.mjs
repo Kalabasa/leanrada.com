@@ -1,15 +1,26 @@
 import { mousePosition } from "/lib/mouse_position.mjs";
 
-export function setupDragging(ballSim, canvas, runner) {
+export function setupDragging(ballSim, canvas, eventTarget) {
   let draggingBall = null;
+  let offsetX = 0;
+  let offsetY = 0;
 
   canvas.addEventListener("pointerdown", event => {
     const { x, y } = mousePosition;
     const bounds = canvas.getBoundingClientRect();
-    draggingBall = findBall(ballSim, x - bounds.left, y - bounds.top);
+    const simX = x - bounds.left;
+    const simY = y - bounds.top;
+
+    draggingBall = findBall(ballSim, simX, simY);
+    if (draggingBall) {
+      offsetX = draggingBall.x - simX;
+      offsetY = draggingBall.y - simY;
+      canvas.style.cursor = "grabbing";
+    }
 
     document.addEventListener("pointerup", event => {
       draggingBall = null;
+      canvas.style.removeProperty("cursor");
     }, { once: true });
   });
 
@@ -21,8 +32,8 @@ export function setupDragging(ballSim, canvas, runner) {
     const simX = x - bounds.left;
     const simY = y - bounds.top;
 
-    draggingBall.x = simX;
-    draggingBall.y = simY;
+    draggingBall.x = simX + offsetX;
+    draggingBall.y = simY + offsetY;
     draggingBall.vx = draggingBall.vy = 0;
   });
 }

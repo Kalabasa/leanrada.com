@@ -2,11 +2,12 @@ const DIR_LEFT = -1;
 const DIR_RIGHT = 1;
 
 export class SweepAndPruneStrat {
-  constructor(ballSim, sortFunc, processFunc, callbacks = {}) {
+  constructor(ballSim, sortFunc, processFunc, callbacks = {}, eventTarget = undefined) {
     this.ballSim = ballSim;
     this.sortFunc = sortFunc;
     this.processFunc = processFunc;
     this.callbacks = callbacks;
+    this.eventTarget = eventTarget;
     this.tmpSet = new Set();
     this.init();
   }
@@ -27,6 +28,12 @@ export class SweepAndPruneStrat {
       syncEdge(edge);
     }
     await this.sortFunc(this.edges);
+
+    if (this.eventTarget) {
+      const event = new Event("sap-sort");
+      event.edges = this.edges;
+      this.eventTarget.dispatchEvent(event);
+    }
 
     const inside = this.tmpSet;
     inside.clear();
