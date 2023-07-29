@@ -58,8 +58,8 @@ async function main() {
     chContent.find(".content-header, .blog-header, .blog-post-info, .tag-row").remove();
     chContent.find("[data-rss='interactive']").each((i, el) => {
       const chEl = ch(el);
-      const altLine = chEl.attr("alt");
-      chEl.replaceWith(`<pre>Interactive content: <a href="${url}">See it on ${domain}.</a>${altLine}</pre>`);
+      const label = chEl.attr("aria-label") ?? "";
+      chEl.replaceWith(`<pre>Interactive content: <a href="${url}">See it on ${domain}.</a>\nAlternative text: ${label}</pre>`);
     });
     chContent.find("p:not(:has(*))")
       .filter((i, el) => ch(el).text().trim().length === 0)
