@@ -27,6 +27,7 @@ export function createEdgeDecorations(ballSim, renderer, pause, showEdgesArray, 
         get x2() { return ball.x - ball.radius },
         get y2() { return height },
         get color() { return getLineColor(ball.x - ball.radius, ball) },
+        dash: [2, 2],
       })
       renderer.addLine({
         get x1() { return ball.x + ball.radius },
@@ -34,6 +35,7 @@ export function createEdgeDecorations(ballSim, renderer, pause, showEdgesArray, 
         get x2() { return ball.x + ball.radius },
         get y2() { return height },
         get color() { return getLineColor(ball.x + ball.radius, ball) },
+        dash: [2, 2],
       });
     }
   }

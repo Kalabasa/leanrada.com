@@ -1,5 +1,6 @@
 <sap-demo-client
   {...attrs}
+  :class="attrs.class + (attrs.draggable != null ? ' sap-demo-draggable' : '')"
   data-rss="interactive"
   aria-label="interactive demo of the collision detection algorithm"
 />
@@ -12,6 +13,8 @@
     width: 100%;
     border: solid 2px #ccc;
     border-radius: 12px;
+  }
+  .sap-demo-draggable > canvas {
     touch-action: none;
   }
 </style>
@@ -28,6 +31,7 @@
   import { NoopStrat } from "./ball-sim/collision-strats/noop-strat.mjs";
   import { PairwiseStrat } from "./ball-sim/collision-strats/pairwise-strat.mjs";
   import { SweepAndPruneStrat } from "./ball-sim/collision-strats/sap-strat.mjs";
+  import { SimpleSweepAndPruneStrat } from "./ball-sim/collision-strats/simple-sap-strat.mjs";
   import { SkippingDelegateStrat } from "./ball-sim/collision-strats/skip-delegate-strat.mjs";
   import { createQuickSort } from "./ball-sim/sorts/quick-sort.mjs";
   import { createInsertionSort } from "./ball-sim/sorts/insertion-sort.mjs";
@@ -100,7 +104,12 @@
         this.appendChild(this.canvas);
 
         const labelsValue = labelsAttr?.split(",") ?? [];
-        this.renderer = new Renderer(this.ballSim, this.canvas, labelsValue);
+        this.renderer = new Renderer(
+          this.ballSim,
+          this.canvas,
+          labelsValue,
+          isDraggable
+        );
 
         const pause = (duration) => this.runner.pause(duration);
 
@@ -163,6 +172,15 @@
         break;
       case "pairwise":
         collStrat = new PairwiseStrat(ballSim, renderer, processFunc);
+        break;
+      case "simple-sap":
+        collStrat = new SimpleSweepAndPruneStrat(
+          ballSim,
+          (arr) => arr.sort((a, b) => a.x - b.x),
+          processFunc,
+          callbacks,
+          eventTarget
+        );
         break;
       case "sap-nativesort":
         collStrat = new SweepAndPruneStrat(

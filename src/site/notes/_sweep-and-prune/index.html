@@ -14,19 +14,27 @@
         <tag>games</tag>
       </tag-row>
 
-      Here’s a neat algorithm for detecting collisions among multiple objects. As you may know, the problem of collision detection is pretty common in video games as a prerequisite to the implementation of certain game mechanics or simulations. Mechanics such as preventing characters from passing through each other, [goombas](https://youtu.be/Ky69PjyHCqg) turning around when bumping into another, or any game physics in general. All need collision detection.
+      Here’s a neat algorithm for detecting collisions among multiple objects.
+      
+      As you may know, the problem of collision detection is pretty common in video game programming as it’s a prerequisite to the implementation of certain game mechanics or simulations.
+      
+      Some of those mechanics include: preventing characters from passing through each other, [goombas](https://youtu.be/Ky69PjyHCqg) turning around when bumping into another, or any game physics in general. All of these need collision detection.
 
-      The specific problem I’m going to cover is detecting intersections between multiple objects at discrete times. Take the following rigid-body ball simulation as a basic example:
+      The specific problem I’m going to cover here is detecting intersections between multiple objects over (discrete) time steps. I will go over multiple approaches starting with the simplest one and build up to the **sweep-and-prune** algorithm. 
+
+      Balls.
+      
+      I’ll use this rigid-body ball simulation as a recurring example throughout this post:
 
       <div class="demo-row">
         <sap-demo strategy="sap-nativesort" />
       </div>
 
-      In this sim, we have multiple balls, each of which can potentially collide with any other ball. This requires a *multi-object* collision detection algorithm.
+      In this sim there are multiple balls, each of which can potentially collide with any other ball. This interaction requires a *multi-object* collision detection algorithm.
 
       How do we implement the detection of such n-body collisions?
 
-      ##  Naive approach
+      ##  Naive approach 🐥
 
       The naive solution is to check every potential pair of objects for collision. Continuing with the ball example, this means *checking every ball against every other ball*.
 
@@ -36,7 +44,7 @@ for (let i = 0; i < balls.length; i++) {
   const ball1 = balls[i];
   // check each of the other balls
   for (let j = i + 1; j < balls.length; j++) {
-    const ball2 = balls[j]
+    const ball2 = balls[j];
     // check for collision
     if (intersects(ball1, ball2)) {
       bounce(ball1, ball2);
@@ -44,11 +52,11 @@ for (let i = 0; i < balls.length; i++) {
   }
 }`" />
 
-      Note in the code that the inner loop starts at `i + 1`. This is to prevent duplicate pairs (A-B vs B-A) from being counted. Other than that, it’s a pretty straightforward solution.
+      Just pointing out in the code that the inner loop starts at `i + 1`. This is to prevent duplicate pairs (A-B vs B-A) from being counted. Other than that, it’s a pretty straightforward solution.
 
       These checks are done on every frame or on every physics step to ensure that balls will bounce exactly when they collide.
 
-      The following visualisation shows all pairs being tested for intersection per time interval:
+      The following visualisation shows a slowed-down simulation highlighting all of the possible pairs being tested for intersection per time interval:
 
       <div class="demo-row">
         <sap-demo
@@ -60,26 +68,28 @@ for (let i = 0; i < balls.length; i++) {
         </div>
       </div>
 
+      It works. For a couple of objects. More than a handful and we will encounter performance issues.
+
       ## Performance, or lack thereof
 
       The naive algorithm runs in **O(n<sup>2</sup>)** time in [Big O terms](https://en.wikipedia.org/wiki/Big_O_notation). That is, for an input of n balls, the algorithm's run time grows proportionally to the *square* of the input n. That's a lot! 📈
 
-      This is because for n balls, there are around __(n&nbsp;*&nbsp;(n-1))/2__ pairs to check, or __0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n__. Like for n = 5, there are a total of 10 pairs. For n = 10, 45 pairs. And so on. This information about the algorithm’s scalability is simplified using Big O to just __“O(n<sup>2</sup>)”__.
+      This is because for n balls, there are around __(n&nbsp;*&nbsp;(n-1))/2__ pairs to check, or __0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n__. For example, if n = 5 there would be a total of 10 pairs. For n = 10, there would be 45 pairs. For n = 15, 105 pairs (!). And so on&hellip; All of this information about the algorithm’s scalability can be simplified using Big O notation to just __“O(n<sup>2</sup>)”__.
 
-      The following quickly demonstrates how the performance scales badly for bigger inputs, here n&nbsp;=&nbsp;12:
+      The following painfully demonstrates how the performance scales badly for bigger inputs, here n&nbsp;=&nbsp;20:
 
       <div class="demo-row">
         <sap-demo
-          balls="10"
+          balls="20"
           strategy="pairwise"
           skip-interval="4"
           decorations="checks:#4c8" />
         <div class="demo-caption">
-          12 balls = 66 pairs to check
+          20 balls = 190 pairs to check
         </div>
       </div>
 
-      Clearly, the naive solution does not scale well for large numbers of objects.
+      That’s a lot of checks per frame! Clearly, the naive solution does not scale well for large numbers of objects.
  
       <box-note>Before anything else, note that the worst case for *any* collision detection algorithm is always __O(n<sup>2</sup>)__. That happens when all objects are intersecting simultaneously and you have no choice but to process each of the n<sup>2</sup> collisions. Thus, it’s more practical to compare the average and best cases. You can also consider [expressing run time in terms of output](https://en.wikipedia.org/wiki/Output-sensitive_algorithm).</box-note>
 
@@ -88,12 +98,12 @@ for (let i = 0; i < balls.length; i++) {
       ## Prologue: Improving the solution
 
       <box-note>
-        There are many ways to optimise collision detection, like spatial hashing and space partitioning trees. But this post is about one algorithm in particular.
+        There are many ways to optimise collision detection, like spatial hashing and space partitioning trees. But this post in particular is about one algorithm and some of its variants.
       </box-note>
 
-      Usually when optimising algorithms, you wanna find **redundant or unnecessary work**. Surely there is something redundant in checking every object against every other object, right?
+      Usually when optimising algorithms, you wanna find **redundant or unnecessary work**. Surely there is something wasteful in checking every object against every other object!
 
-      Let’s dig into the `intersects()` check, the one performed for every candidate pair. If we take our [typical object intersection check](https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html), we get a bunch of simple inequality checks:
+      Let’s dig into the `intersects()` check, the one performed for every candidate pair. If we take the [typical object intersection check](https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html), we get a bunch of inequality checks:
 
       <code-block :code="`\
 function intersects(object1, object2) {
@@ -123,17 +133,21 @@ function intersects(object1, object2) {
 
       Don't worry; this scoped-down definition is a surprise tool that can help us later.
 
-      Ok, the reason this will work is because of the `&&` operator's short-circuit evaluation. That is, if any of the operands is false, then the whole expression becomes false. So if two objects do not overlap in the x-axis, then we can immediatel rule them out as a candidate pair. 
+      <blog-media
+        alt="Still of a cartoon mouse saying, 'that’s a surprise tool that can help us later'"
+        :src="url('surprise-tool.jpg')" />
 
-      Thus, even doing an optimisation in just the x dimension will still significantly reduce the amount of checks.
+      Ok, the reason this will work is because of the `&&` operator's [short-circuit evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation). That is, if any of the operands is false, then the whole expression becomes false. So if two objects do not overlap in the x-axis, then we can immediately rule them out as a candidate pair. 
 
-      Now, let's look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in the specific configuration as illustrated:
+      Thus, even doing an optimisation in just the x dimension will be a big help.
+
+      Now, let's look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in the specific configuration illustrated:
 
       <blog-media
         alt="Three objects, from left to right: A, B, and C"
         :src="url('abc.png')" />
 
-      There are three potential pairs to be checked here: A-B, B-C, and A-C. If we run them through the redefined `intersects()` function,
+      There are three potential pairs to be checked here: A-B, B-C, and A-C. If we run them through the redefined `intersects()` function, then
 
       <code-block :code="`\
 intersects(A, B) // returns false
@@ -163,7 +177,7 @@ intersects(A, B) // returns false
 intersects(B, C) // returns false
 // I know intersects(A, C) will return false`" />
 
-      You might be wondering how this contrived example could apply to general n-body collision detection. You might also have realised that this skip only works if A, B, and C are in a particular order. 🙈 Try **dragging** the balls below to see when the optimisation applies and when it does not:
+      You might be wondering how this contrived example could apply to general n-body collision detection. A smart reader such as you might also have realised that this skip only works if A, B, and C are in a particular order. Try <span class="drag-hint">dragging</span> the balls below to see when the optimisation applies and when it does not:
 
       <div class="demo-row">
         <sap-demo
@@ -172,7 +186,8 @@ intersects(B, C) // returns false
           strategy="sap-nativesort"
           static draggable
           labels="A,B,C" rainbow />
-        <pre class="code-block" style="width: 100%; max-width: 600px"><code class="code-block-code"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// A > B returns <span class="abc-demo-intersects-ab-return">false</span></span>
+        <pre class="code-block" style="width: 100%; max-width: 600px"><code class="code-block-code"><span class="token comment">// LIVE OUTPUT:</span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// A > B returns <span class="abc-demo-intersects-ab-return">false</span></span>
 <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// B > C returns <span class="abc-demo-intersects-bc-return">false</span></span>
 <span class="abc-demo-intersects-ac-run" style="display: none"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// A > C returns <span class="abc-demo-intersects-ac-return">false</span></span></span><span class="abc-demo-intersects-ac-skip token comment">//intersects(A, C), A > C will return <span class="abc-demo-intersects-ac-return">false</span></span></code></pre>
       </div>
@@ -210,7 +225,9 @@ intersects(B, C) // returns false
         })();
       </script>
 
-      While it’s true that this principle only works when A, B, and C are ordered left-to-right, remember that these labels are *arbitrary*. What if we just decide to always call the leftmost ball A, the middle ball B, and the rightmost C? Then the optimisation would always be applicable!
+      <box-note>Tip: Drag the balls such that they’re in one of these orders (left-to-right): C&#8209;B&#8209;A and A&#8209;B&#8209;C</box-note>
+
+      While it’s true that this principle only works when A, B, and C are ordered, remember that these labels are *arbitrary*. What if we just decide to always call the leftmost ball A, the middle ball B, and the rightmost C? Then the optimisation would always be applicable! 🧠
       
       Hang on&hellip; labeling objects according to a defined order is essentially ✨**sorting**✨! What if we sorted the list of objects every time? Would the number of skipped checks be worth the cost of sorting?
 
@@ -222,11 +239,105 @@ intersects(B, C) // returns false
 
       As hinted by the tri-object example above, sorting the list of objects merely by their x position can help remove ranges of potential pairs that need to be checked.
       
-      However, objects aren't zero-width points! They’re chunky, which means they have a size thus occupy an interval in the x-axis, also known as “width”. How can one sort by x position if objects span across intervals in the x-axis?
- 
-      We can account for the width of objects while keeping the benefits of unambiguous sort order by tracking the left and the right edges of each object as two separate points!
+      However, objects aren't zero-width points! They’re *widthy*, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one sort by x position if objects span across intervals in the x-axis?
 
-      See how it would work by playing with this **draggable** demo. The left and right edges of each ball are visualised. These edge points are stored in a sorted array shown below the box.
+      ## The naive solution but better
+
+      A quick way to improve the naive approach and a solution to sorting widthy objects is to sort them by their **minimum x** (their left edge’s x-coordinate).
+      
+      This will give us a chance to exit the inner loop early due to the sortedness of the list. I’ll explain later.
+
+      First, the code:
+
+      <code-block :code="`\
+// sort by min x
+balls.sort((a,b) => a.left - b.left);
+
+// for each ball
+for (let i = 0; i < balls.length; i++) {
+  const ball1 = balls[i];
+  // check each of the other balls
+  for (let j = i + 1; j < balls.length; j++) {
+    const ball2 = balls[j];
+
+    // stop if too far
+    if (ball2.left > ball1.right) break;
+
+    // check for collision
+    if (intersects(ball1, ball2)) {
+      bounce(ball1, ball2);
+    }
+  }
+}`" />
+
+      It’s mostly similar to the naive solution having two-level nested loops, except we’re sorting the list beforehand and there is now a break in the inner loop:
+
+<code-block :code="`\
+// stop if too far
+if (ball2.left > ball1.right) break;`" />
+
+      Let’s break that down.
+      
+      First, we know that the list is sorted, so
+      <code>balls[<span class="eq-i">j</span>].left <span class="eq-op">&lt;</span> balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left</code>
+      for any positive integer
+      <code class="eq-c">c</code>.
+      
+      Therefore, when
+      <code>ball2.left <span class="eq-op">&gt;</span> ball1.right</code>
+      or rather
+      <code>balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
+      is true, then
+      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
+      will also be true.
+      
+      In that case, the current `ball2`,
+      <code>balls[<span class="eq-i">j</span>]</code>,
+      and any further `ball2`s,
+      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code>,
+      are *not* intersecting `ball1`. Thus it allows us to skip the rest and move on to the next `ball1`.
+
+      Here’s a demo:
+
+      <div class="demo-row">
+        <sap-demo
+          strategy="simple-sap"
+          skip-interval="4"
+          decorations="checks:#4c8" />
+        <div class="demo-caption">
+          Pairs highlighted <span aria-label="a connecting green line" style="color:#4c8" class="pair-legend"></span> when tested by <code>intersects()</code>.
+        </div>
+      </div>
+
+      As you can see, only pairs which overlap in the x-axis are checked, resulting in much less processing per frame. The only cost would be the additional sorting which would be O(n log n), but it’s much better than O(n<sup>2</sup>) of the naive solution. The overall algorithm on average becomes **O(n log n + m)**, where _n&nbsp;log&nbsp;n_ is whatever the sort’s run time is, and _m_ is the number of collisions. Additionally, the choice of sorting algorithm could be improved; we’ll look at that later in this post.
+
+      Here’s a one-liner that summarises the inner loop’s pre-`intersects()` condition:
+
+      <center><code>balls[<span class="eq-i">i</span>].right <span class="eq-op">&lt;</span> balls[<span class="eq-i">j</span>].left <span class="eq-op">&lt;</span> balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left</code></center>
+      
+      <style>
+        .eq-op {
+          color: var(--clr0-light);
+        }
+        .eq-i {
+          color: #e79907;
+        }
+        .eq-c {
+          color: var(--clr1); 
+        }
+      </style>
+
+      If you got this far trying to find a good algorithm that is balanced between programming effort and runtime performance, then you can stop reading now and take the above code. If you want more data structures and algorithms or are curious how this develops, read on.
+
+      ## Proper sweep-and-prune
+
+      The above was a “shortcut” version of a one-dimensional sweep-and-prune algorithm. I believe the runtime would be the same as the real one, but let’s see how the original tackled the problem of sorting widthy objects.
+      
+      To account for the width of objects while keeping the benefits of unambiguous sort order, we can track the left and the right edges of each object as two separate points!
+
+      This is done by maintaining a separate array of edge points corresponding to the objects’ left & right edges.
+
+      See how it might work by playing with this <span class="drag-hint">draggable</span> demo. The left and right edges of each ball are visualised. These edge points are stored in a sorted array shown below the box.
 
       <div class="demo-row">
         <sap-demo
@@ -239,7 +350,7 @@ intersects(B, C) // returns false
         <div class="edges-array" data-target="#edges-demo"></div>
       </div>
 
-      This is the setup we need to minimise our `intersects()` calls. If you remember the `intersects()` function, here it is with only the x-axis checks:
+      This is the setup we can use to minimise our `intersects()` calls. If you remember the `intersects()` function, here it is with only the x-axis checks:
 
       <code-block :code="`\
 function intersects(object1, object2) {
@@ -247,11 +358,11 @@ function intersects(object1, object2) {
       && object1.right > object2.left;
 }`" />
 
-      We can replace these x-coordinate comparisons with an approach based on array indices. Since we have a sorted list of every object's left and right points, finding overlaps via index-based searches would be faster than global pairwise testing.
+      We can replace these x-coordinate comparisons with a different approach based on array indices. Since we have a sorted list of every object's left and right points, finding overlaps via index-based searches would be faster than global pairwise testing.
 
       Take one ball for example. When you have the indices of its left and right points, you can simply run through all points in-between those two edges in the array to get all overlapping objects. This is a very fast linear operation.
 
-      Try **dragging** the highlighted ball below and observe the enclosed edges:
+      Try <span class="drag-hint">dragging</span> the <span style="color:#4c8">highlighted ball</span> below and observe the enclosed edges:
 
       <div class="demo-row">
         <sap-demo
@@ -335,7 +446,7 @@ for (const edge of edges) {
           balls="8"
           no-bounce
           strategy="sap-nativesort"
-          skip-interval="4"
+          skip-interval="6"
           decorations="sweep:#f00:#d88,edges,checks:#4c8:600" />
         <div class="demo-caption">
           X-overlapping pairs are highlighted <span aria-label="a connecting green line" style="color:#4c8" class="pair-legend"></span> as the line sweeps.
@@ -394,7 +505,7 @@ onOverlap = function(object1, object2) {
 
       ## Performance of sweep-and-prune
 
-      Compared to the naive algorithm, the sweep-and-prune algorithm results in much less checks performed per frame. If your intersection checks are expensive, e.g. complex 3D objects, it’s going to be a big time-saver as a broad-phase technique.
+      Compared to the naive algorithm (global pairwise checking), the sweep-and-prune algorithm results in much less checks performed per frame, but it’s the same as the sorted pairwise checking.
       
       Look at the following side-by-side comparison and observe the amount of intersection checks required per frame:
 
@@ -405,6 +516,15 @@ onOverlap = function(object1, object2) {
           skip-interval="2"
           decorations="checks:#cbb:30" />
         <div class="demo-caption">Global pairwise</div>
+      </div>
+
+      <div class="demo-row">
+        <sap-demo
+          balls="6"
+          strategy="simple-sap"
+          skip-interval="2"
+          decorations="checks:#bcb:30" />
+          <div class="demo-caption">Sorted pairwise</div>
       </div>
 
       <div class="demo-row">
@@ -422,7 +542,7 @@ onOverlap = function(object1, object2) {
       
       The sort - if we take the "fastest" sorting algorithm, like mergesort or quicksort - would be **O(n log n)**.
       
-      The sweep, which is a linear pass with an inner loop for overlaps, should be **O(n)** in the average case. That is if the average case is mostly evenly-distributed object groups and only a few pairs actually intersecting at a time, which I think is a reasonable assumption.
+      The sweep, which is a linear pass with an inner loop for overlaps, should be **O(n)** in the average case.
  
       <code-block :code="`\
 function sweepAndPrune(edges) {
@@ -447,13 +567,13 @@ function sweepAndPrune(edges) {
 
       This means sweep-and-prune is **O(n log n)** on average, a big improvement over the naive approach’s O(n<sup>2</sup>)!
 
-      That’s great, but *can we do better?*
+      That’s great, but it’s the same as sorted pairwise with a lot more code. *Can we do better?*
 
       ## A small detail, big improvement
 
       Again, let's ask the question: Where is redundant work being done here?
 
-      We can start by looking at the sort step, the bottleneck of the algorithm as found in the time complexity analysis.
+      We can start by looking at the sort step, the bottleneck of the algorithm according to the analysis.
       
       The following is a visualisation of the sorting of the edges array, using an optimised [quicksort](https://en.wikipedia.org/wiki/Quicksort):
 
@@ -473,9 +593,7 @@ function sweepAndPrune(edges) {
       
       Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places in one frame.
 
-      It would take a majority of fast-moving balls to significantly disrupt the sort done in the previous frame.
-
-      Luckily, the subject of sorting algorithms is well-researched. We’re dealing with a special state, the state of being *almost sorted*. And one great choice for sorting almost-sorted lists is [**insertion sort**](https://en.wikipedia.org/wiki/Insertion_sort)!
+      Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with a special state, the state of being *almost sorted*. And one great choice for sorting almost-sorted lists is [**insertion sort**](https://en.wikipedia.org/wiki/Insertion_sort)!
 
       Insertion sort has a run time of O(n) at best when the list is already sorted or almost sorted, and O(n<sup>2</sup>) at worst. We can argue that the average case is **O(n)**, since the list is almost always sorted due to the previous frame’s sort.
 
@@ -505,6 +623,8 @@ function sweepAndPrune(edges) {
 
       ### case R ↔ L
 
+      (todo: animation closeup)
+
       When a right edge from the left swaps with a left edge from the right, we can infer that the left object is starting to intersect the right object.
 
       ### case L ↔ R
@@ -515,27 +635,25 @@ function sweepAndPrune(edges) {
 
       Edges of the same polarity can swap without affecting the state of intersection of their corresponding objects.
 
+      Thus we arrive at the one-dimensional sweep-and-prune’s final form:
+
+      (todo: code here)
+
       ## Run time comparison
 
       | Algorithm                   | Worst case       | Average case     | Best case        | 
       |-----------------------------|------------------|------------------|------------------|
-      | Pairwise                    | O(n<sup>2</sup>) | O(n<sup>2</sup>) | O(n<sup>2</sup>) |
-      | Sweep-and-prune (quicksort) | O(n<sup>2</sup>) | O(n log n)       | O(n log n)       |
-      | Sweep-and-prune (insertion) | O(n<sup>2</sup>) | O(n + m)         | O(n)             |
+      | Global pairwise             | O(n<sup>2</sup>) | O(n<sup>2</sup>) | O(n<sup>2</sup>) |
+      | Sorted pairwise (quicksort) | O(n<sup>2</sup>) | O(n log n + m)   | O(n log n)       |
+      | Sorted pairwise (insertion) | O(n<sup>2</sup>) | O(n + m)         | O(n)             |
+      | Sweep-and-prune (final)     | O(n<sup>2</sup>) | O(n + m)         | O(n)             |
 
       n = number of balls, m = number of collisions
 
-      ## Variants
+      ## Pros & cons
 
-      No extra storage, sort by min x, might be n^2
-
-      ## Be practical
-
-      Forget about theory. Forget about sorting algorithms. It was a fun exercise, but real world is different. Using your standard library's sort function is usually the best option as it's most likely optimised for the runtime environment. It’s also likely to implement [**Timsort**](https://en.wikipedia.org/wiki/Timsort) anyway, which is a sorting algorithm based on merge sort and *insertion sort*.
-
-      But if you really wanna be practical, use a physics engine or a game engine. 😉
-
-      As always, run benchmarks.
+      Sorted pairwise
+      No extra storage
 
       ## Appendix
 
@@ -569,6 +687,12 @@ function sweepAndPrune(edges) {
   }
   .demo-caption {
     max-width: 600px;
+  }
+
+  .drag-hint {
+    font-weight: bold;
+    border: dashed 2px #fff8;
+    border-radius: 6px;
   }
 
   .pair-legend {
