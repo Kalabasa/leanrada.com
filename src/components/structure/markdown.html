@@ -4,9 +4,19 @@
 
     const renderer = new marked.Renderer();
     const renderLink = renderer.link;
+    const renderTable = renderer.table;
+
     renderer.link = (href, title, text) => {
       const a = renderLink.call(renderer, href, title, text);
       return a.replace(/^<a/, "<text-link").replace(/a>$/, "text-link>");
+    };
+
+    renderer.table = (header, body) => {
+      return (
+        '<div class="markdown-table">' +
+        renderTable.call(renderer, header, body) +
+        "</div>"
+      );
     };
 
     const tokenizer = {

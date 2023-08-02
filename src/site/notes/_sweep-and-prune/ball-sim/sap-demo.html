@@ -30,8 +30,9 @@
   import { createDecorations } from "./ball-sim/decorations/decorations.mjs";
   import { NoopStrat } from "./ball-sim/collision-strats/noop-strat.mjs";
   import { PairwiseStrat } from "./ball-sim/collision-strats/pairwise-strat.mjs";
-  import { SweepAndPruneStrat } from "./ball-sim/collision-strats/sap-strat.mjs";
   import { SimpleSweepAndPruneStrat } from "./ball-sim/collision-strats/simple-sap-strat.mjs";
+  import { SweepAndPruneStrat } from "./ball-sim/collision-strats/sap-strat.mjs";
+  import { SweepAndPruneSwapStrat } from "./ball-sim/collision-strats/sap-swap-strat.mjs";
   import { SkippingDelegateStrat } from "./ball-sim/collision-strats/skip-delegate-strat.mjs";
   import { createQuickSort } from "./ball-sim/sorts/quick-sort.mjs";
   import { createInsertionSort } from "./ball-sim/sorts/insertion-sort.mjs";
@@ -203,6 +204,13 @@
         collStrat = new SweepAndPruneStrat(
           ballSim,
           createInsertionSort(callbacks),
+          processFunc,
+          callbacks
+        );
+        break;
+      case "sap-swap":
+        collStrat = new SweepAndPruneSwapStrat(
+          ballSim,
           processFunc,
           callbacks
         );

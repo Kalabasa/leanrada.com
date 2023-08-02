@@ -35,8 +35,8 @@ export class SweepAndPruneStrat {
       this.eventTarget.dispatchEvent(event);
     }
 
-    const inside = this.tmpSet;
-    inside.clear();
+    const contacts = this.tmpSet;
+    contacts.clear();
 
     await onStartScan?.(this.edges);
     for (const edge of this.edges) {
@@ -46,12 +46,12 @@ export class SweepAndPruneStrat {
 
       if (edge.dir < 0) {
         await onEnterEdge?.(edge);
-        for (const other of inside) {
+        for (const other of contacts) {
           await this.processFunc(ball, other);
         }
-        inside.add(ball);
+        contacts.add(ball);
       } else {
-        inside.delete(ball);
+        contacts.delete(ball);
         await onExitEdge?.(edge);
       }
     }
