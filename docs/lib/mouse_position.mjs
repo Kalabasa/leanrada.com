@@ -8,6 +8,10 @@ export const mousePosition = (() => {
         mousePosition.x = event.clientX;
         mousePosition.y = event.clientY;
       });
+      document.body.addEventListener("pointermove", (event) => {
+        mousePosition.x = event.clientX;
+        mousePosition.y = event.clientY;
+      });
       document.body.addEventListener("mousemove", (event) => {
         mousePosition.x = event.clientX;
         mousePosition.y = event.clientY;

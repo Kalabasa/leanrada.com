@@ -1,10 +1,11 @@
 export class Renderer {
-  constructor(ballSim, canvas, labels) {
+  constructor(ballSim, canvas, labels, draggable) {
     this.ballSim = ballSim;
     this.lines = new Set();
     this.canvas = canvas;
-    this.context = canvas.getContext("2d");
     this.labels = labels;
+    this.draggable = draggable;
+    this.context = canvas.getContext("2d");
   }
 
   get width() {
@@ -26,11 +27,12 @@ export class Renderer {
 
   render() {
     /** @type {{context:CanvasRenderingContext2D}} */
-    const { context } = this;
+    const { context, draggable } = this;
     const { width, height } = this.canvas;
     const { balls } = this.ballSim;
 
-    context.clearRect(0, 0, width, height);
+    context.fillStyle = "#000";
+    context.fillRect(0, 0, width, height);
 
     context.lineWidth = 2;
 
@@ -56,14 +58,33 @@ export class Renderer {
       }
     }
 
+    if (draggable) {
+      context.setLineDash([6, 9]);
+      for (const ball of balls) {
+        context.beginPath();
+        context.arc(
+          ball.x,
+          ball.y,
+          ball.radius - context.lineWidth * 1,
+          0,
+          2 * Math.PI
+        );
+        context.strokeStyle = "#000";
+        context.stroke();
+      }
+      context.setLineDash([]);
+    }
+
     for (const line of this.lines) {
-      const { x1, y1, x2, y2, color } = line;
+      const { x1, y1, x2, y2, color, dash = [] } = line;
+      context.setLineDash(dash);
       context.beginPath();
       context.moveTo(x1, y1)
       context.lineTo(x2, y2);
       context.strokeStyle = color;
       context.stroke();
     }
+    context.setLineDash([]);
   }
 }
 

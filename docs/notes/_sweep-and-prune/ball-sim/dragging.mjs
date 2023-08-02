@@ -1,30 +1,49 @@
-import { mousePosition } from "/lib/mouse_position.mjs";
-
-export function setupDragging(ballSim, canvas, runner) {
+export function setupDragging(ballSim, canvas, eventTarget) {
   let draggingBall = null;
+  let offsetX = 0;
+  let offsetY = 0;
 
   canvas.addEventListener("pointerdown", event => {
-    const { x, y } = mousePosition;
-    const bounds = canvas.getBoundingClientRect();
-    draggingBall = findBall(ballSim, x - bounds.left, y - bounds.top);
+    const { simX, simY } = getSimPosition(event, canvas);
+    console.log({ simX, simY });
+
+    draggingBall = findBall(ballSim, simX, simY);
+    if (draggingBall) {
+      offsetX = draggingBall.x - simX;
+      offsetY = draggingBall.y - simY;
+      canvas.style.cursor = "grabbing";
+    }
 
     document.addEventListener("pointerup", event => {
       draggingBall = null;
+      canvas.style.removeProperty("cursor");
     }, { once: true });
   });
 
   canvas.addEventListener("pointermove", event => {
-    if (!draggingBall) return;
+    const { simX, simY } = getSimPosition(event, canvas);
 
-    const { x, y } = mousePosition;
-    const bounds = canvas.getBoundingClientRect();
-    const simX = x - bounds.left;
-    const simY = y - bounds.top;
+    if (draggingBall) {
+      draggingBall.x = simX + offsetX;
+      draggingBall.y = simY + offsetY;
+      draggingBall.vx = draggingBall.vy = 0;
+    } else {
+      canvas.style.removeProperty("cursor");
 
-    draggingBall.x = simX;
-    draggingBall.y = simY;
-    draggingBall.vx = draggingBall.vy = 0;
+      const hoverBall = findBall(ballSim, simX, simY);
+      if (!hoverBall) return;
+
+      canvas.style.cursor = "grab";
+    }
   });
+}
+
+function getSimPosition(event, canvas) {
+  const { clientX, clientY } = event;
+  const bounds = canvas.getBoundingClientRect();
+  const simX = (clientX - bounds.left) * canvas.width / bounds.width;
+  const simY = (clientY - bounds.top) * canvas.height / bounds.height;
+  return { simX, simY };
 }
 
 function findBall(ballSim, x, y) {

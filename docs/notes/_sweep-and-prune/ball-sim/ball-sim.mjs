@@ -1,15 +1,16 @@
-import { SweepAndPruneStrat } from "./sap-strat.mjs";
+import { SweepAndPruneStrat } from "./collision-strats/sap-strat.mjs";
 import { createProcessPhysicsFunc } from "./process-physics.mjs";
 
 const GRAVITY = 0.4;
 const RESTITUTION = 0.96;
 
 export class BallSim {
-  constructor(width, height, initBalls, isStatic) {
+  constructor(width, height, initBalls, isStatic, eventTarget = undefined) {
     this.width = width;
     this.height = height;
     this.balls = initBalls;
     this.static = isStatic;
+    this.eventTarget = eventTarget;
   }
 
   step() {
@@ -38,16 +39,27 @@ export class BallSim {
         ball.vy *= -RESTITUTION;
       }
     }
+
+    if (this.eventTarget) {
+      const event = new Event("simulate");
+      event.balls = this.balls;
+      this.eventTarget.dispatchEvent(event);
+    }
   }
 }
 
 BallSim.create = function (width, height) {
   const initBalls = [];
   let isStatic = false;
+  let eventTarget = undefined;
 
   return {
     setStatic(value) {
       isStatic = value;
+      return this;
+    },
+    setEventTarget(value) {
+      eventTarget = value;
       return this;
     },
     addBall(x, y, radius) {
@@ -67,7 +79,7 @@ BallSim.create = function (width, height) {
       return this;
     },
     build() {
-      const ballSim = new BallSim(width, height, initBalls, isStatic);
+      const ballSim = new BallSim(width, height, initBalls, isStatic, eventTarget);
 
       if (isStatic) {
         // Initially settle collisions before becoming static as asked

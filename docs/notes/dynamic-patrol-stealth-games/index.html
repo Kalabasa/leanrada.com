@@ -1180,29 +1180,55 @@
       margin: 36px 0;
     }
 
-    .markdown>table {
-      display: inline-block;
-      /* scrollable table */
+    .markdown .box-note>p {
+      margin: 18px 0;
+    }
+
+    .markdown .box-note>p:first-child {
+      margin-top: 0;
+    }
+
+    .markdown .box-note>p:last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown-table {
+      margin: 0 -18px;
+      /* bleed content padding */
+      padding: 0 18px;
+      /* bleed content padding */
       overflow-x: auto;
-      /* scrollable table */
-      white-space: nowrap;
-      /* scrollable table */
-      max-width: 100%;
-      /* scrollable table */
+    }
+
+    .markdown-table>table {
+      min-width: 100%;
+      box-sizing: border-box;
       border-collapse: collapse;
       background-color: var(--card-clr);
       border-radius: 12px;
     }
 
-    .markdown>table th,
-    .markdown>table td {
+    .markdown-table>table th,
+    .markdown-table>table td {
+      min-width: min(25vw, 8ch);
+      box-sizing: border-box;
       text-align: start;
-      padding: 9px 12px;
+      padding: 9px 6px;
       padding-inline-end: 18px;
       border-bottom: solid 1px #444;
     }
 
-    .markdown>table>tbody>tr:last-child>td {
+    .markdown-table>table th:first-child,
+    .markdown-table>table td:first-child {
+      padding-left: 12px;
+    }
+
+    .markdown-table>table th:last-child,
+    .markdown-table>table td:last-child {
+      padding-right: 12px;
+    }
+
+    .markdown-table>table>tbody>tr:last-child>td {
       border-bottom: none;
     }
 
@@ -1345,21 +1371,21 @@
   </style>
   <style>
     /* couldn't style the table without breaking markdown. quik hax */
-    .style-hax+table th:nth-child(n + 3):not(:has(strong))::before,
-    .style-hax+table td:nth-child(n + 3):not(:has(strong))::before,
-    .style-hax+table th:nth-child(n + 3) strong::before,
-    .style-hax+table td:nth-child(n + 3) strong::before {
+    .probability-table th:nth-child(n + 3):not(:has(strong))::before,
+    .probability-table td:nth-child(n + 3):not(:has(strong))::before,
+    .probability-table th:nth-child(n + 3) strong::before,
+    .probability-table td:nth-child(n + 3) strong::before {
       content: "➡ ";
       color: inherit;
     }
 
-    .style-hax+table tr th:nth-child(3),
-    .style-hax+table tr td:nth-child(3) strong {
+    .probability-table tr th:nth-child(3),
+    .probability-table tr td:nth-child(3) strong {
       color: #f88;
     }
 
-    .style-hax+table tr th:nth-child(4),
-    .style-hax+table tr td:nth-child(4) strong {
+    .probability-table tr th:nth-child(4),
+    .probability-table tr td:nth-child(4) strong {
       color: #8ff;
     }
   </style>
@@ -1404,7 +1430,7 @@
             </p>
             <p>
             <div class="blog-post-info ">
-              1 Jul 2023 · 8 min read
+              1 Jul 2023 · 9 min read
             </div>
             </p>
             <div class="tag-row">tags:
@@ -1499,50 +1525,56 @@
 
             <p>The nodes that were seen having no target at their locations are forced to a probability of <strong>0.0</strong>, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to a total of <strong>1.0</strong> (This is an invariant in any case).</p>
             <p>To illustrate, here’s a table that details each intermediate step:</p>
-            <div class="style-hax"></div>
+            <div class="probability-table">
 
-            <table>
-              <thead>
-                <tr>
-                  <th>Node</th>
-                  <th>Prior<br>probabilities</th>
-                  <th>Values after<br>observation</th>
-                  <th>Final values<br>after rescaling</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>R</td>
-                  <td>0.35</td>
-                  <td>0.35</td>
-                  <td><strong>0.9</strong></td>
-                </tr>
-                <tr>
-                  <td>D</td>
-                  <td>0.39</td>
-                  <td><strong>0</strong></td>
-                  <td>0</td>
-                </tr>
-                <tr>
-                  <td>H0</td>
-                  <td>0.04</td>
-                  <td>0.04</td>
-                  <td><strong>0.1</strong></td>
-                </tr>
-                <tr>
-                  <td>H1</td>
-                  <td>0.18</td>
-                  <td><strong>0</strong></td>
-                  <td>0</td>
-                </tr>
-                <tr>
-                  <td>H2</td>
-                  <td>0.04</td>
-                  <td><strong>0</strong></td>
-                  <td>0</td>
-                </tr>
-              </tbody>
-            </table>
+              <div class="markdown-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Node</th>
+                      <th>Prior<br>probabilities</th>
+                      <th>Values after<br>observation</th>
+                      <th>Final values<br>after rescaling</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>R</td>
+                      <td>0.35</td>
+                      <td>0.35</td>
+                      <td><strong>0.9</strong></td>
+                    </tr>
+                    <tr>
+                      <td>D</td>
+                      <td>0.39</td>
+                      <td><strong>0</strong></td>
+                      <td>0</td>
+                    </tr>
+                    <tr>
+                      <td>H0</td>
+                      <td>0.04</td>
+                      <td>0.04</td>
+                      <td><strong>0.1</strong></td>
+                    </tr>
+                    <tr>
+                      <td>H1</td>
+                      <td>0.18</td>
+                      <td><strong>0</strong></td>
+                      <td>0</td>
+                    </tr>
+                    <tr>
+                      <td>H2</td>
+                      <td>0.04</td>
+                      <td><strong>0</strong></td>
+                      <td>0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+
             <p>After updating the probabilities, the state of the graph tells us that the target is around 90% likely to be in the room <em>R</em> and 10% in the far hallway <em>H0</em>.</p>
             <p>The game AI can simply send the guard to the highest node based on the updated probabilities (this case, the room <em>R</em>). It can do this again and again, which will result in a seemingly organic and responsive searching behaviour from the AI guard. No predefined patrol routes needed.</p>
             <p><span class="box-note ">Another way to go about this is to keep track of probabilities in the form of rational numbers - separately tracking the numerators and the denominators. You only need to store the numerator per node, while there is one global denominator, which is the sum of all the numerators. This is what I did for my demo implementation.</span></p>
