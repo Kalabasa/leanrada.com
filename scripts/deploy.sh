@@ -10,6 +10,11 @@ if [[ `git status --porcelain` ]]; then
   exit 1
 fi
 
+# Build project
+npm install
+npm run clean-lite
+npm run build-prod
+
 # Do generated files
 node scripts/clean-redirects.js
 node scripts/generate-redirects.js
@@ -20,11 +25,6 @@ if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean generated files"
   exit 1
 fi
-
-# Build project
-npm install
-npm run clean-lite
-npm run build-prod
 
 # Update prod in a worktree. master == prod
 git fetch
