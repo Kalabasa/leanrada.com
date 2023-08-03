@@ -29,7 +29,7 @@ export class SweepAndPruneSwapStrat {
     const { onStartScan, onScanEdge, onEndScan, onCompare, onSwap } = this.callbacks;
 
     await onStartScan?.(this.edges);
-    for (let i = 0; i < edges.length; i++) {
+    for (let i = 1; i < edges.length; i++) {
       syncEdge(edges[i]);
       await onScanEdge?.(edge);
       for (let j = i - 1; j >= 0; j--) {
