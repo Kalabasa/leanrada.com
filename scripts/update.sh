@@ -7,6 +7,7 @@ pwd
 if [[ `git status --porcelain` ]]; then
   git status
   echo >&2 "Unclean work dir"
+  git diff --stat
   exit 1
 fi
 

@@ -7,6 +7,7 @@ pwd
 if [[ `git status --porcelain` ]]; then
   git status
   echo >&2 "Unclean work dir"
+  git diff --stat
   exit 1
 fi
 
@@ -23,6 +24,7 @@ node scripts/generate-rss.js
 
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean generated files"
+  git diff --stat
   exit 1
 fi
 
