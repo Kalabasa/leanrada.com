@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-const glob = require("glob");
 const path = require("node:path");
 const fs = require("node:fs/promises");
-const execSync = require("node:child_process").execSync;
 const cheerio = require("cheerio");
 const RSS = require("rss");
 
@@ -13,7 +11,6 @@ const domain = "leanrada.com";
 
 const siteSrc = path.resolve(__dirname, "..", "src", "site");
 const outRoot = path.resolve(__dirname, "..", "out", "site");
-const staticRoot = path.resolve(__dirname, "..", "prod-static", "docs");
 const blogSrcDir = path.resolve(siteSrc, "notes");
 const dryRun = process.argv.includes("--dry-run");
 
@@ -39,8 +36,8 @@ async function main() {
     const pageFile = path.resolve(outRoot, "./" + item.href, "index.html");
 
     if (!(await fs.stat(pageFile).catch(e => null))) {
-      console.log("Missing ", pageFile);
-      execSync(`npm run build-prod -- -p ${item.href}`, { stdio: "inherit" });
+      console.error("Error: Missing ", pageFile);
+      continue;
     }
 
     const url = makeURL(domain, item.href, ".");
@@ -148,8 +145,8 @@ async function main() {
     + feedXML.slice(lastBuildDateEnd + "</lastBuildDate>".length);
 
   if (!dryRun) {
-    const outFile = path.resolve(staticRoot, "rss.xml");
-    await fs.mkdir(staticRoot, { recursive: true });
+    const outFile = path.resolve(outRoot, "rss.xml");
+    await fs.mkdir(outRoot, { recursive: true });
     await fs.writeFile(outFile, feedXML);
     console.log("Written", outFile);
   }

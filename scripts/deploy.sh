@@ -16,11 +16,10 @@ npm install
 npm run clean-lite
 npm run build-prod
 
-# Do generated files
+# Generate source-controlled generated files
 node scripts/clean-redirects.js
 node scripts/generate-redirects.js
 node scripts/generate-blog-index.js
-node scripts/generate-rss.js
 
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean generated files"
@@ -31,6 +30,9 @@ fi
 # Update prod in a worktree. master == prod
 git fetch
 git worktree add -f prod origin/master
+
+# Generate untracked generated files
+node scripts/generate-rss.js
 
 # Copy build files to prod
 rsync -Pr --del out/site/ prod/docs/
