@@ -4,10 +4,11 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const cheerio = require('cheerio');
 
-process.chdir(path.resolve(__dirname, ".."));
-console.log(process.cwd());
+process.chdir(path.resolve(__dirname, "..", ".."));
+const projectRoot = process.cwd();
+console.log(projectRoot);
 
-const siteSrc = path.resolve(__dirname, "..", "src", "site");
+const siteSrc = path.resolve(projectRoot, "src", "site");
 const blogDir = path.resolve(siteSrc, "notes");
 const dryRun = process.argv.includes("--dry-run");
 

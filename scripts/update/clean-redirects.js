@@ -5,15 +5,16 @@ const path = require("node:path");
 const fs = require("node:fs");
 const { argv } = require("node:process");
 
-process.chdir(path.resolve(__dirname, ".."));
-console.log(process.cwd());
+process.chdir(path.resolve(__dirname, "..", ".."));
+const projectRoot = process.cwd();
+console.log(projectRoot);
 
 const generatedDirContents = [
   ".generated",
   "index.html",
 ];
 
-const siteSrc = path.resolve(__dirname, "..", "src", "site");
+const siteSrc = path.resolve(projectRoot, "src", "site");
 const dryRun = argv.includes("--dry-run");
 
 main();

@@ -3,15 +3,14 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const fetch = require("node-fetch");
 
-if (require.main === module) {
-  process.chdir(path.resolve(__dirname, ".."));
-  console.log(process.cwd());
+process.chdir(path.resolve(__dirname, "..", ".."));
+const projectRoot = process.cwd();
+console.log(projectRoot);
 
-  const siteSrc = path.resolve(__dirname, "..", "src", "site");
-  const reputationFile = path.resolve(siteSrc, "misc", "reputation.json");
+const siteSrc = path.resolve(projectRoot, "src", "site");
+const reputationFile = path.resolve(siteSrc, "misc", "reputation.json");
 
-  updateReputation(reputationFile);
-}
+updateReputation(reputationFile);
 
 async function getReputation() {
   console.log("Fetching reputation...");
@@ -33,7 +32,3 @@ async function updateReputation(outFile) {
     console.log("Error updating reputation:", e);
   }
 }
-
-module.exports = {
-  updateReputation,
-};

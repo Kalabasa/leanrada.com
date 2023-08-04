@@ -4,13 +4,14 @@ const fs = require("node:fs/promises");
 const cheerio = require("cheerio");
 const RSS = require("rss");
 
-process.chdir(path.resolve(__dirname, ".."));
-console.log(process.cwd());
+process.chdir(path.resolve(__dirname, "..", ".."));
+const projectRoot = process.cwd();
+console.log(projectRoot);
 
 const domain = "leanrada.com";
 
-const siteSrc = path.resolve(__dirname, "..", "src", "site");
-const outRoot = path.resolve(__dirname, "..", "out", "site");
+const siteSrc = path.resolve(projectRoot, "src", "site");
+const outRoot = path.resolve(projectRoot, "out", "site");
 const blogSrcDir = path.resolve(siteSrc, "notes");
 const dryRun = process.argv.includes("--dry-run");
 
