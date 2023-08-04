@@ -6,7 +6,7 @@ export function createInsertionSort(callbacks) {
     return a.x - b.x;
   }
 
-  return async function insertionSort(arr, start = 0, end = arr.length) {
+  return async function insertionSort(arr, start = 1, end = arr.length) {
     for (let i = start; i < end; i++) {
       for (let j = i - 1; j >= start; j--) {
         if (await compare(arr[j], arr[j + 1]) < 0) break;
