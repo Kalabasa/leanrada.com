@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Sort, sweep, and prune: a collision detection algorithm · leanrada.com</title>
+  <title>Sort, sweep, and prune: collision detection algorithms · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <script type="module" client="" defer="">
     import {
@@ -215,48 +215,52 @@
       BaseElement
     } from "/lib/base_element.mjs";
     // Warn: Module paths are relative to the page, not the component
+    // Since this is used by two separate posts, we move up once to converge the paths
     import {
       BallSim
-    } from "./ball-sim/ball-sim.mjs";
+    } from "../sweep-and-prune/ball-sim/ball-sim.mjs";
     import {
       Runner
-    } from "./ball-sim/runner.mjs";
+    } from "../sweep-and-prune/ball-sim/runner.mjs";
     import {
       Renderer
-    } from "./ball-sim/renderer.mjs";
+    } from "../sweep-and-prune/ball-sim/renderer.mjs";
     import {
       setupDragging
-    } from "./ball-sim/dragging.mjs";
+    } from "../sweep-and-prune/ball-sim/dragging.mjs";
     import {
       createProcessPhysicsFunc
-    } from "./ball-sim/process-physics.mjs";
+    } from "../sweep-and-prune/ball-sim/process-physics.mjs";
     import {
       createDecorations
-    } from "./ball-sim/decorations/decorations.mjs";
+    } from "../sweep-and-prune/ball-sim/decorations/decorations.mjs";
     import {
       NoopStrat
-    } from "./ball-sim/collision-strats/noop-strat.mjs";
+    } from "../sweep-and-prune/ball-sim/collision-strats/noop-strat.mjs";
     import {
       PairwiseStrat
-    } from "./ball-sim/collision-strats/pairwise-strat.mjs";
+    } from "../sweep-and-prune/ball-sim/collision-strats/pairwise-strat.mjs";
     import {
       SimpleSweepAndPruneStrat
-    } from "./ball-sim/collision-strats/simple-sap-strat.mjs";
+    } from "../sweep-and-prune/ball-sim/collision-strats/simple-sap-strat.mjs";
     import {
       SweepAndPruneStrat
-    } from "./ball-sim/collision-strats/sap-strat.mjs";
+    } from "../sweep-and-prune/ball-sim/collision-strats/sap-strat.mjs";
     import {
       SweepAndPruneSwapStrat
-    } from "./ball-sim/collision-strats/sap-swap-strat.mjs";
+    } from "../sweep-and-prune/ball-sim/collision-strats/sap-swap-strat.mjs";
+    import {
+      SweepAndPruneSwap2DStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/sap-swap-2d-strat.mjs";
     import {
       SkippingDelegateStrat
-    } from "./ball-sim/collision-strats/skip-delegate-strat.mjs";
+    } from "../sweep-and-prune/ball-sim/collision-strats/skip-delegate-strat.mjs";
     import {
       createQuickSort
-    } from "./ball-sim/sorts/quick-sort.mjs";
+    } from "../sweep-and-prune/ball-sim/sorts/quick-sort.mjs";
     import {
       createInsertionSort
-    } from "./ball-sim/sorts/insertion-sort.mjs";
+    } from "../sweep-and-prune/ball-sim/sorts/insertion-sort.mjs";
 
     customElements.define(
       "sap-demo-client",
@@ -434,7 +438,10 @@
           );
           break;
         case "sap-swap":
-          collStrat = new SweepAndPruneSwapStrat(
+          collStrat = new SweepAndPruneSwapStrat(ballSim, processFunc, callbacks);
+          break;
+        case "sap-swap-2d":
+          collStrat = new SweepAndPruneSwap2DStrat(
             ballSim,
             processFunc,
             callbacks
@@ -468,12 +475,17 @@
   </style>
   <style>
     /**
- * Modified by Kalabasa.
- * Based on:
- * a11y-dark theme for JavaScript, CSS, and HTML
- * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/themes/prism-okaidia.css
- * @author ericwbailey
- */
+   * Modified by Kalabasa.
+   * Based on:
+   * a11y-dark theme for JavaScript, CSS, and HTML
+   * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+   * @author ericwbailey
+   */
+
+    .code-block .token.inserted:not(.prefix) {
+      background: #00b6a71c;
+      display: block;
+    }
 
     .code-block .token.comment,
     .code-block .token.prolog,
@@ -1328,6 +1340,17 @@
       border-radius: 2rem;
     }
 
+    .abc-demo-intersects-ac-run,
+    .abc-demo-intersects-ac-skip {
+      animation: highlight-change 2s 0.5s both;
+    }
+
+    @keyframes highlight-change {
+      from {
+        background: #55440088;
+      }
+    }
+
     .pair-legend {
       display: inline-block;
       position: relative;
@@ -1356,33 +1379,6 @@
 
     .pair-legend::after {
       right: -2px;
-    }
-
-    .edges-array {
-      position: relative;
-      width: 100%;
-      height: 20px;
-    }
-
-    .edge {
-      position: absolute;
-      width: 10px;
-      height: 20px;
-      border: solid 3px #fff;
-      box-sizing: border-box;
-      transition: transform 0.2s;
-    }
-
-    .edge-left {
-      border-right: 0;
-      border-top-left-radius: 10px;
-      border-bottom-left-radius: 10px;
-    }
-
-    .edge-right {
-      border-left: 0;
-      border-top-right-radius: 10px;
-      border-bottom-right-radius: 10px;
     }
   </style>
   <style>
@@ -1426,7 +1422,7 @@
             <div class="blog-header">
               <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
                 <h1 class="text-with-bg-span blog-header-title-inner">
-                  Sort, sweep, and prune: a&nbsp;collision detection algorithm
+                  Sort, sweep, and prune: collision detection algorithms
                 </h1>
               </div>
               <img srcset="/notes/sweep-and-prune/hero_800.generated.jpg 800w,/notes/sweep-and-prune/hero_1200.generated.jpg 1200w" sizes="not (min-width:800px) 800px, 1200px" class="blog-header-hero" src="/notes/sweep-and-prune/hero.jpg" alt="" spec="100% [800) 80%">
@@ -1437,7 +1433,7 @@
             </p>
             <p>
             <div class="blog-post-info ">
-              5 Aug 2023 · 27 min read
+              5 Aug 2023 · 13 min read
             </div>
             </p>
             <div class="tag-row">tags:
@@ -1445,30 +1441,26 @@
               <span class="tag-component" style="background: rgb(183,234,166); color: rgb(51,105,32)">games</span>
             </div>
 
-            <p>This post is about a neat family of algorithms for detecting collisions among multiple objects.</p>
+            <p>This post is about a neat family of algorithms for detecting collisions among multiple objects. I attempted to explain and demonstrate first principles, so it’s quite long and is split into two parts. I hope you take the time to read and learn from it! 😄</p>
+            <hr>
+            <h2 id="collision-detection">Collision detection</h2>
             <p>As you may know, the problem of collision detection is pretty common in video game programming. It’s a prerequisite to the implementation of certain game mechanics or simulations.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="video of mario with goombas bumping into each other">
-                <source src="/notes/sweep-and-prune/mario.mp4">
-                <a href="/notes/sweep-and-prune/mario.mp4">video of mario with goombas bumping into each other</a>
-              </video><span class="blog-media-caption">Goombas colliding</span>
+              <img class="blog-media-element" alt="video of mario with goombas bumping into each other" src="/notes/sweep-and-prune/mario.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #6888f8"><span class="blog-media-caption">Goombas colliding</span>
             </div>
             </p>
             <p>Some of these mechanics include: preventing characters from passing through each other, <a target="_blank" class="text-link " href="https://youtu.be/Ky69PjyHCqg">goombas</a> turning around when bumping into another, big cells eating smaller cells in <a target="_blank" class="text-link " href="https://agar.io/">agar.io</a>, or just about any game physics. All of these need collision detection.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="video of agar.io with cells eating smaller cells">
-                <source src="/notes/sweep-and-prune/agario.mp4">
-                <a href="/notes/sweep-and-prune/agario.mp4">video of agar.io with cells eating smaller cells</a>
-              </video><span class="blog-media-caption">Cells consuming smaller cells on contact</span>
+              <img class="blog-media-element" alt="video of agar.io with cells eating smaller cells" src="/notes/sweep-and-prune/agario.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #f8f8f8"><span class="blog-media-caption">Cells consuming smaller cells on contact</span>
             </div>
             </p>
             <p>Here I’ll cover several related approaches, starting with the simplest and building up to the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Sweep_and_prune"><strong>sweep-and-prune</strong></a> algorithm.</p>
             <p>Balls.</p>
             <p>I’ll use this <strong>rigid-body ball simulation</strong> as a recurring example to demonstrate the algorithms throughout the post:</p>
             <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" strategy="sap-nativesort"></sap-demo-client>
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-nativesort' strategy" strategy="sap-nativesort"></sap-demo-client>
             </div>
 
             <p>Alright, let’s dive in! How do we detect these collisions?</p>
@@ -1486,11 +1478,11 @@
     <span class="token punctuation">}</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>Note in the above code that the inner loop starts at <code>i + 1</code>. This is to prevent duplicate pairs from being counted (A-B vs B-A). Other than that, it’s a pretty simple solution.</p>
+            <p>Note in the above code that the inner loop starts at <code>i + 1</code> to prevent duplicate pairs from being counted (A-B vs B-A). Other than that, it’s a pretty simple solution.</p>
             <p>These checks are done on every time step, ensuring that balls will bounce exactly when they collide.</p>
-            <p>Here’s a slowed-down, highlighted simulation. This shows pairs being tested for intersection per time step:</p>
+            <p>Here’s a slowed-down, highlighted simulation, showing pairs being tested for intersection per time step:</p>
             <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" strategy="pairwise" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'pairwise' strategy" strategy="pairwise" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
               <div class="demo-caption">
                 Pairs are highlighted <span aria-label="a connecting green line" style="color:#4c8" class="pair-legend"></span> when being tested via <code>intersects()</code>.
               </div>
@@ -1498,20 +1490,20 @@
 
             <p>And it works. But if we had more than just a handful of balls we would start seeing performance issues.</p>
             <h2 id="performance-or-lack-thereof">Performance, or lack thereof</h2>
-            <p>This naive algorithm runs in <em><strong>O(n<sup>2</sup>)</strong></em> time in <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Big_O_notation">Big O terms</a>. That is, for an input of <em>n</em> balls, the algorithm's run time grows proportionally to the <em>square</em> of the input <em>n</em>. That's a lot! 📈</p>
-            <p>This is because for <em>n</em> balls, there are around <em>(n&nbsp;*&nbsp;(n-1))/2</em> pairs to test, or <em>0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n</em>. For example, if n = 5 there would be a total of 10 pairs. For n = 10, there would be 45 pairs. For n = 15, 105 pairs (!). And so on… Using Big O notation, we can simplify this information into about the algorithm’s scalability into one expression “_O(n<sup>2</sup>)_”</p>
+            <p>This naive algorithm runs in <em><strong>O(n<sup>2</sup>)</strong></em> time in <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Big_O_notation">Big O terms</a>. That is, for an input of <em>n</em> balls, the algorithm’s running time grows proportionally to the <em>square</em> of the input <em>n</em>. That’s a lot! 📈</p>
+            <p>This is because for <em>n</em> balls, there are around <em>(n&nbsp;*&nbsp;(n-1))/2</em> pairs to test, or <em>0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n</em>. For example, if n = 5 there would be a total of 10 pairs. For n = 10, there would be 45 pairs. For n = 15, 105 pairs (!). And so on… Using Big O notation, we can simplify this information into a compact expression <em>“O(n<sup>2</sup>)”</em></p>
             <p>To (painfully) demonstrate how the performance scales badly for bigger inputs, here’s a simulation with n&nbsp;=&nbsp;20:</p>
             <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="20" strategy="pairwise" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'pairwise' strategy" balls="20" strategy="pairwise" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
               <div class="demo-caption">
                 20 balls = 190 pairs to test
               </div>
             </div>
 
             <p>That’s a lot of checks per frame! Clearly, the naive solution does not scale well for large numbers of objects.</p>
-            <p>How can we improve the solution?</p>
+            <p>How can we improve this solution?</p>
             <span class="box-note ">
-              <p>The worst case run time for <em>any</em> collision detection algorithm is always <em>O(n<sup>2</sup>)</em>. That’s when all objects intersect simultaneously and you have no choice but to process each of the n<sup>2</sup> collisions.</p>
+              <p>The worst case running time for <em>any</em> collision detection algorithm is always <em>O(n<sup>2</sup>)</em>. That’s when all objects intersect simultaneously and you have no choice but to process each of the n<sup>2</sup> collisions.</p>
               <p>Thus, it’s more practical to compare the average and best cases.</p>
               <p>Having said that, the naive algorithm is still <em>Θ(n<sup>2</sup>)</em> for <em>any</em> case, no matter the number of actual collisions. A lot of room for improvement!</p>
             </span>
@@ -1525,29 +1517,22 @@
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
-
-<span class="token comment">// Define the structure just so we’re on the same page</span>
-type Object <span class="token operator">=</span> <span class="token punctuation">{</span>
-  <span class="token literal-property property">left</span><span class="token operator">:</span> number<span class="token punctuation">;</span>   <span class="token comment">// x-coordinate of left edge</span>
-  <span class="token literal-property property">right</span><span class="token operator">:</span> number<span class="token punctuation">;</span>  <span class="token comment">// x-coordinate of right edge</span>
-  <span class="token literal-property property">top</span><span class="token operator">:</span> number<span class="token punctuation">;</span>    <span class="token comment">// y-coordinate of top edge</span>
-  <span class="token literal-property property">bottom</span><span class="token operator">:</span> number<span class="token punctuation">;</span> <span class="token comment">// y-coordinate of bottom edge</span>
-<span class="token punctuation">}</span><span class="token punctuation">;</span></code></pre>
+<span class="token punctuation">}</span></code></pre>
             <p>In the above code, the <code>intersects()</code> function checks if two objects intersect by comparing opposing bounds from the two objects, for each dimension. (Refer to <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb">this MDN article</a> for a better explanation.)</p>
-            <p>For now, let's focus on just one dimension, say <em>x</em>. Bear with me as I further scope it down to just one <em>direction</em>:</p>
+            <p>For now, let’s focus on just one dimension, say <em>x</em>. Bear with me as I further scope it down to just one <em>direction</em>:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">return</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>Don't worry; this scoped-down definition is a surprise tool that can help us later. ;)</p>
+            <p>Don’t worry; this scoped-down definition is a surprise tool that can help us later. ;)</p>
             <p>
             <div class="blog-media blog-media-default">
               <img srcset="/notes/sweep-and-prune/surprise-tool_200.generated.jpg 200w" sizes=" 200px" class="blog-media-element" alt="Still of a cartoon mouse saying, 'that’s a surprise tool that can help us later'" src="/notes/sweep-and-prune/surprise-tool.jpg" spec="200" loading="lazy" width="100%" height="" style="aspect-ratio: 1.2127659574468086; background: #080808">
             </div>
             </p>
-            <p>Ok, the reason this will work is because of the <code>&amp;&amp;</code> operator's <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation</a>. That is, <em>if any operand is false, then the whole expression becomes false</em>. So if two objects do not overlap in the x-axis, then we can immediately rule them out as a candidate pair.</p>
-            <p>So even an optimisation in just the x dimension will be a big help. And that’s what we’re gonna do.</p>
-            <p>Now, let's look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:</p>
+            <p>OK, the reason this will work is because of the <code>&amp;&amp;</code> operator’s <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation</a>. That is, <em>if any operand is false, then the whole expression becomes false</em>. So if two objects do not overlap in the x-axis, then we can immediately rule them out as a candidate pair.</p>
+            <p><span class="box-note ">It’s the same idea as the <a target="_blank" class="text-link " href="https://personal.math.vt.edu/mrlugo/sat.html">separating axis theorem</a>, which implies that two objects can’t collide if there is an axis where their shadows don’t overlap.</span></p>
+            <p>Therefore, an optimisation in just the x dimension can still be a big help.</p>
+            <p>Now, let’s look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:</p>
             <p>
             <div class="blog-media blog-media-default">
               <img srcset="/notes/sweep-and-prune/abc_527.generated.png 527w,/notes/sweep-and-prune/abc_664.generated.png 664w" sizes="not (min-width:664px) 527px, 664px" class="blog-media-element" alt="Three objects, from left to right: A, B, and C" src="/notes/sweep-and-prune/abc.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.034749034749035; background: #f8f8f8">
@@ -1565,18 +1550,18 @@ type Object <span class="token operator">=</span> <span class="token punctuation
             <pre class="code-block"><code class="code-block-code"><span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">B</span> <span class="token comment">// returns false</span>
 <span class="token constant">B</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span>
 <span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span></code></pre>
-            <p>Voilà. Due to the <strong>transitive property of inequality</strong>, we realise that we don’t need to run the third test! <em>If we know A&nbsp;&gt;&nbsp;B and B&nbsp;&gt;&nbsp;C are false, then we don't need to compute A&nbsp;&gt;&nbsp;C.</em></p>
-            <p>So in this example, we don't really need to run <code>intersects(A, C)</code>. We’ve skipped one check!</p>
+            <p>Voilà. Due to the <a target="_blank" class="text-link " href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong></a>, realise that we don’t need to run the third test! <em>If we know A&nbsp;&gt;&nbsp;B and B&nbsp;&gt;&nbsp;C are false, then we don’t need to compute A&nbsp;&gt;&nbsp;C.</em></p>
+            <p>So in this example, we don’t really need to run <code>intersects(A, C)</code>. We’ve skipped one check!</p>
             <pre class="code-block"><code class="code-block-code"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
 <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
 <span class="token comment">// I know intersects(A, C) will return false</span></code></pre>
             <p>You might be wondering how this contrived example could apply to general n-body collision detection. A smart reader such as you might also have realised that this skip only works if A, B, and C are in a particular order. Try <span class="drag-hint">dragging</span> the balls below to see when the optimisation applies and when it does not:</p>
             <div class="demo-row">
-              <sap-demo-client class="undefined sap-demo-draggable" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" id="abc-demo" balls="[[200,250,50],[300,150,55],[450,275,60]]" strategy="sap-nativesort" static="" draggable="" labels="A,B,C" rainbow=""></sap-demo-client>
+              <sap-demo-client class=" sap-demo-draggable" data-rss="interactive" aria-label="interactive diagram showing a specific mechanism" id="abc-demo" balls="[[200,250,50],[300,150,55],[450,275,60]]" strategy="sap-nativesort" static="" draggable="" labels="A,B,C" rainbow=""></sap-demo-client>
               <pre class="code-block" style="width: 100%; max-width: 600px"><code class="code-block-code"><span class="token comment">// LIVE OUTPUT:</span>
-<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// A &gt; B returns <span class="abc-demo-intersects-ab-return">false</span></span>
-<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// B &gt; C returns <span class="abc-demo-intersects-bc-return">false</span></span>
-<span class="abc-demo-intersects-ac-run" style="display: none"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// A &gt; C returns <span class="abc-demo-intersects-ac-return">false</span></span></span><span class="abc-demo-intersects-ac-skip token comment">//intersects(A, C), A &gt; C will return <span class="abc-demo-intersects-ac-return">false</span></span></code></pre>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-ab-return">false</span></span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-bc-return">false</span></span>
+<span class="abc-demo-intersects-ac-run" style="display: none"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-ac-return">false</span></span></span><span class="abc-demo-intersects-ac-skip token comment">//intersects(A, C) will return <span class="abc-demo-intersects-ac-return">false</span></span></code></pre>
             </div>
 
 
@@ -1585,35 +1570,36 @@ type Object <span class="token operator">=</span> <span class="token punctuation
             <p>While it’s true that this skip only works when A, B, and C are ordered, remember that these labels are <em>arbitrary</em>! What if we just decided to always call the leftmost ball A, the middle ball B, and the rightmost C? Then the optimisation would always be applicable! 🌌🧠</p>
             <p>But wait… labeling objects according to a defined order is essentially ✨<strong>sorting</strong>✨! What if we sorted the list of objects every time? Would the number of skipped checks be worth the cost of sorting?</p>
             <h2 id="chapter-1-sorting">Chapter 1. Sorting</h2>
-            <p>Sorting, inequalities, and optimisation go hand in hand in hand. Sorted lists give us implied inequalities over vast ranges for free.</p>
-            <p>Even if we had to sort the list of objects every frame, the quickest sorting algorithm in general runs in <em>O(n log n)</em> time which is certainly lower than <em>O(n<sup>2</sup>)</em>. <code>n * log(n) &lt; n * n</code></p>
+            <p>Sorting, inequalities, and optimisation go hand in hand in hand. <em>A sorted list allows us to exploit the transitive property of inequality en masse.</em></p>
+            <p>Even if we had to sort the list of objects every frame, the quickest sorting algorithm in general runs in <em>O(n log n)</em> time which is certainly lower than <em>O(n<sup>2</sup>)</em>.</p>
             <p>As hinted by the tri-object example above, sorting the list of objects merely by their x position removes ranges of potential pairs that need to be tested.</p>
-            <p>However, objects aren't zero-width points. They’re <em>widthy</em>, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one definitively sort by x position if objects span intervals in the x-axis?</p>
-            <h2 id="the-naive-solution-but-sorted">The naive solution, but sorted</h2>
-            <p>A quick way to improve the naive approach and a solution to sorting widthy objects is to sort them by their <strong>minimum x</strong> (their left edge’s x-coordinate).</p>
-            <p>This will afford us a chance to exit the inner loop early due to the sortedness of the list. I’ll explain later.</p>
-            <p>First, the code:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// sort by min x</span>
-<span class="token function">sortByLeft</span><span class="token punctuation">(</span>balls<span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-<span class="token comment">// for each ball</span>
-<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> balls<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">const</span> ball1 <span class="token operator">=</span> balls<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
-  <span class="token comment">// check each of the other balls</span>
-  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&lt;</span> balls<span class="token punctuation">.</span>length<span class="token punctuation">;</span> j<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token keyword">const</span> ball2 <span class="token operator">=</span> balls<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">;</span>
-
-    <span class="token comment">// stop when too far away</span>
-    <span class="token keyword">if</span> <span class="token punctuation">(</span>ball2<span class="token punctuation">.</span>left <span class="token operator">&gt;</span> ball1<span class="token punctuation">.</span>right<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span>
-
-    <span class="token comment">// check for collision</span>
-    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">intersects</span><span class="token punctuation">(</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-      <span class="token function">bounce</span><span class="token punctuation">(</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
+            <p>However, objects aren’t zero-width points. They’re <em>widthy</em>, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one definitively sort by x position if objects span intervals in the x-axis?</p>
+            <h2 id="sort-by-min-x">Sort by min x</h2>
+            <p>A solution to sorting widthy objects is to sort them by their <strong>minimum x</strong> (their left edge’s x-coordinate). This technique can be applied to improve the naive approach.</p>
+            <p>It involves minimal modifications to the O(n<sup>2</sup>) solution. But it will result in a good chunk of checks skipped. I’ll explain later.</p>
+            <p>First, the modified code:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span> <span class="token comment">// sort by min x</span>
+<span class="token prefix inserted">+</span> <span class="token function">sortByLeft</span><span class="token punctuation">(</span>balls<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span> 
+</span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token comment">// for each ball</span>
+<span class="token prefix unchanged"> </span> <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> balls<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>   <span class="token keyword">const</span> ball1 <span class="token operator">=</span> balls<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>   <span class="token comment">// check each of the other balls</span>
+<span class="token prefix unchanged"> </span>   <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&lt;</span> balls<span class="token punctuation">.</span>length<span class="token punctuation">;</span> j<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>     <span class="token keyword">const</span> ball2 <span class="token operator">=</span> balls<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">;</span>
+</span><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span> 
+<span class="token prefix inserted">+</span>     <span class="token comment">// stop when too far away</span>
+<span class="token prefix inserted">+</span>     <span class="token keyword">if</span> <span class="token punctuation">(</span>ball2<span class="token punctuation">.</span>left <span class="token operator">&gt;</span> ball1<span class="token punctuation">.</span>right<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span> 
+</span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span>     <span class="token comment">// check for collision</span>
+<span class="token prefix unchanged"> </span>     <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">intersects</span><span class="token punctuation">(</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>       <span class="token function">bounce</span><span class="token punctuation">(</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>     <span class="token punctuation">}</span>
+<span class="token prefix unchanged"> </span>   <span class="token punctuation">}</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">}</span></span></code></pre>
             <p>It’s mostly the same as the naive solution, differing only in two extra lines of code. (These two juicy lines of code yield a maximum return of investment and is unlikely to be topped by anything else in this post.)</p>
-            <p>The first line, at the very top before anything else, simply sorts the list.</p>
+            <p>The first line, <code>sortByLeft(edges)</code>, simply sorts the list. The ranking is based on the balls’ left edge x-coords:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">sortByLeft</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">balls</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> balls<span class="token punctuation">.</span><span class="token function">sort</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> a<span class="token punctuation">.</span>left <span class="token operator">-</span> b<span class="token punctuation">.</span>left<span class="token punctuation">)</span></code></pre>
             <p>And in the inner loop, there is now this break:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token keyword">if</span> <span class="token punctuation">(</span>ball2<span class="token punctuation">.</span>left <span class="token operator">&gt;</span> ball1<span class="token punctuation">.</span>right<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span></code></pre>
             <p>Let’s break that down.</p>
@@ -1623,8 +1609,6 @@ type Object <span class="token operator">=</span> <span class="token punctuation
               <code class="eq-c">c</code>.
             </p>
             <p>Therefore, when
-              <code>ball2.left <span class="eq-op">&gt;</span> ball1.right</code>
-              or rather
               <code>balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
               is true, then
               <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
@@ -1633,26 +1617,27 @@ type Object <span class="token operator">=</span> <span class="token punctuation
             <p>Because
               <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>.
             </p>
-            <p>In that case, the current ball2,
+            <p>When that condition is true, the current ball2
               <code>balls[<span class="eq-i">j</span>]</code>,
-              and any further ball2s,
+              and any further ball2s
               <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code>,
-              do <em>not</em> intersect ball1. So we can skip the rest of ball2s in this loop and move on to the next ball1.
+              do <em>not</em> intersect ball1. So we can skip the rest of ball2s in the inner loop and move on to the next ball1.
             </p>
             <p>Here’s a demo:</p>
             <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" strategy="simple-sap" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'simple-sap' strategy" strategy="simple-sap" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
               <div class="demo-caption">
                 Pairs highlighted <span aria-label="a connecting green line" style="color:#4c8" class="pair-legend"></span> when tested by <code>intersects()</code>.
               </div>
             </div>
 
-            <p>As you can see, only pairs that overlap in the x-axis are tested, resulting in much less processing per frame! 📉</p>
-            <p>Let’s analyse the time complexity! 👓</p>
+            <p><strong>Observations:</strong> Since the list is sorted, the checks are performed from left to right. More importantly, it visibly does fewer checks than the naive approach. 📉</p>
+            <p>This is due the above optimisation which limits pairs to only those that overlap in the x-axis!</p>
+            <p>Let’s analyse the time complexity. 👓</p>
             <p>The sort - if we take the "fastest" sorting algorithm, like mergesort or quicksort - would add an <em>O(n log n)</em> term.</p>
-            <p>The loops, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as I said it’s more useful to look at the average and best cases. At best, the loops would be <em>O(n)</em>, wasting no excess processing if there are no collisions at all. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
-            <p><span class="box-note ">The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller. (In any case, this post is open for more detailed analyses!)</span></p>
-            <p>Here’s the code with run time annotations:</p>
+            <p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned it’s more useful to look at the average and best cases. At best, the loops would be <em>O(n)</em>, wasting no excess processing if there are no collisions at all. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
+            <p><span class="box-note ">The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller.</span></p>
+            <p>Here’s the code with running time annotations:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token comment">// O(n log n)</span>
 <span class="token function">sortByLeft</span><span class="token punctuation">(</span>balls<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
@@ -1668,396 +1653,34 @@ type Object <span class="token operator">=</span> <span class="token punctuation
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
             <p>Adding those together, <em>n&nbsp;log&nbsp;n&nbsp;+&nbsp;n&nbsp;+&nbsp;m</em> we get <em><strong>O(n log n + m)</strong></em>. A big improvement over the naive approach’s <em>O(n<sup>2</sup>)</em>.</p>
-            <p>Furthermore, the choice of sorting algorithm could be improved. Yes, there’s something better than an <em>n&nbsp;log&nbsp;n</em> sort in this case; we’ll look into that later in this post!</p>
+            <p>Furthermore, the choice of sorting algorithm could be improved. Yes, there’s something better than an <em>n&nbsp;log&nbsp;n</em> sort in this case; we’ll look into that in the next part!</p>
             <span class="box-note ">
-              If you got this far trying to find a decent collision detection algorithm, then you can now stop reading and take the above code. It is the perfect balance between programming effort and runtime performance. If you want more data structures and algorithms or are curious how this develops or just want complicated things, read on.
+              If you got this far trying to find a decent collision detection algorithm, then you can stop reading and take the above design! It’s the perfect balance between programming effort and running time performance. If you are curious how this develops or just want to see more interactive demos, read the next part.
             </span>
 
-            <h2 id="proper-sweep-and-prune">Proper sweep-and-prune</h2>
-            <p>The above was a simplified version of a one-dimensional sweep-and-prune algorithm. I believe the simplified versions’s time complexity would be about the same as the original’s but with a much smaller constant factor. In any case, let’s see how the original tackled the problem.</p>
-            <p>First, sorting widthy objects.</p>
-            <p>To account for the width of objects while keeping the benefits of unambiguous sort order, we track the left and the right edges of each object as two separate points!</p>
-            <p>This is done by maintaining a separate <strong>array of edge points</strong> corresponding to the objects’ left &amp; right edges.</p>
-            <p>See how it works by playing with this <span class="drag-hint">draggable</span> demo. The left and right edges of each ball are visualised. These edge points are stored in a sorted array shown below the box.</p>
+            <h2 id="visual-comparison">Visual comparison</h2>
+            <p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
             <div class="demo-row">
-              <sap-demo-client class="undefined sap-demo-draggable" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" id="edges-demo" balls="6" strategy="sap-nativesort" static="" draggable="" rainbow="" decorations="edges"></sap-demo-client>
-              Sorted array of edges:
-              <div class="edges-array" data-target="#edges-demo"></div>
-            </div>
-
-            <p>With that, we now have the minimal setup needed to optimise away unnecessary pairwise tests.</p>
-            <p>Remember the <code>intersects()</code> function? Here it is with only the x-axis checks:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
-      <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>We can replace these x-coordinate comparisons with a new approach, one based on array indices. Since we have a sorted array of every object's left and right points, finding overlaps can be done via index-based searches rather than global pairwise testing.</p>
-            <p>Take one ball for example. When you have the indices of its left and right points, you can simply run through all points in between those two edges in the array to get all x-overlapping objects. This is a very fast linear operation.</p>
-            <p>Try <span class="drag-hint">dragging</span> the <span style="color:#4c8">highlighted ball</span> below and observe the enclosed edges in the array:</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined sap-demo-draggable" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" id="edges-demo-one" balls="6" strategy="sap-nativesort" static="" draggable="" decorations="edges:focus:#4c8:#d88"></sap-demo-client>
-              Sorted array of edges:
-              <div class="edges-array" data-target="#edges-demo-one"></div>
-            </div>
-
-            <p><span class="box-note ">One minor issue with the above 1-to-n approach is that an overlap can be missed if another ball is larger than the current ball. The larger ball can overlap the smaller ball without having any edge points inside of the smaller ball’s enclosure.</span></p>
-            <p>The above is a simple 1-to-n overlap detection. For n-to-n overlap detection, it turns out there is a way to find them across all objects in a single pass!</p>
-            <h2 id="chapter-2-sweeping">Chapter 2. Sweeping</h2>
-            <p>To generalise the above to an n-interval overlap scan, imagine a vertical line sweeping across the whole space from left to right. The sweep will scan each edge point in-order, keeping track of the objects it touches.</p>
-            <p>Let’s see what that looks like without collision:</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="8" no-bounce="" strategy="sap-nativesort" skip-interval="4" decorations="sweep:#f00:#d88,edges"></sap-demo-client>
-              <div class="demo-caption">
-                Objects touching the line are lit up in <span style="color:#d88">pink</span>.
-              </div>
-            </div>
-
-            <p>Whenever it runs into an object (a left edge), the object is added to a <span style="color:#d88"><code>touching</code></span> set to indicate being in contact with it.</p>
-            <p>Likewise, whenever it exits an object (right edge), that object is removed from the set.</p>
-            <p>As for the implementation, the line is merely a metaphor. It’s just a visualisation of the process of iterating through the sorted list of edges. Here’s the code for the actual sweeping:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token comment">// entering an object</span>
-    touching<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
-    <span class="token comment">// exiting an object</span>
-    touching<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>The <code>touching</code> set is the set of objects currently touching the sweeping line.</p>
-            <p>Once we have the sweep and the <code>touching</code> set working, detecting overlaps is easy. Whenever line sweep line enters a new object (a left edge), we can mark it as overlapping with each of the current objects <code>touching</code> the line.</p>
-            <p>Watch closely whenever the line enters a ball with a non-empty <code>touching</code>. Detected overlaps are highlighted:</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="8" no-bounce="" strategy="sap-nativesort" skip-interval="6" decorations="sweep:#f00:#d88,edges,checks:#4bf:600"></sap-demo-client>
-              <div class="demo-caption">
-                X-overlapping pairs are highlighted <span aria-label="a connecting green line" style="color:#4bf" class="pair-legend"></span> as the line sweeps.
-              </div>
-            </div>
-
-            <p>Here’s the updated code for detecting and reporting overlaps:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token comment">// entering an object</span>
-    
-    <span class="token comment">// the new object is overlapping with the existing ones</span>
-    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> other <span class="token keyword">of</span> touching<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-      <span class="token function">onOverlapX</span><span class="token punctuation">(</span>other<span class="token punctuation">,</span> edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-    
-    touching<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
-    <span class="token comment">// exiting an object</span>
-    touching<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <h2 id="chapter-3-pruning">Chapter 3. Pruning</h2>
-            <p>So far we have an <code>onOverlapX()</code> that is called whenever two balls are overlapping in the x dimension. What about the other dimension, <em>y</em>? What if we’re working with 3D, how about <em>z</em>?</p>
-            <p>Don’t worry; the sweep is just the broad-phase test, a way to <em>prune</em> candidate pairs in bulk. There will be a narrow-phase test, a more exact intersection test for each of the remaining pairs.</p>
-            <p>What <code>onOverlapX()</code> is for is to hook up an exact intersection test like the full <code>intersects()</code> function earlier. Or, since we already know that the argument pair overlaps in x, we can just check y.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom
-   <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token function">collide</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>While the above formula works for most games, a more precise and time-consuming check could be done at this level since most candidates have already been pruned. Our ball example would work better with the following circle intersection test using the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance formula</a>:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">const</span> distance <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">sqrt</span><span class="token punctuation">(</span>
-      Math<span class="token punctuation">.</span><span class="token function">pow</span><span class="token punctuation">(</span>object1<span class="token punctuation">.</span>x <span class="token operator">-</span> object2<span class="token punctuation">.</span>x<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>
-    <span class="token operator">+</span> Math<span class="token punctuation">.</span><span class="token function">pow</span><span class="token punctuation">(</span>object1<span class="token punctuation">.</span>y <span class="token operator">-</span> object2<span class="token punctuation">.</span>y<span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>
-  <span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>distance <span class="token operator">&lt;</span> object1<span class="token punctuation">.</span>radius <span class="token operator">+</span> object2<span class="token punctuation">.</span>radius<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token function">bounce</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>Finally, implement <code>bounce()</code> using physically-based physics, and we get a pretty fast ball simulation:</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="6" strategy="sap-nativesort" skip-interval="2" decorations="checks:#4c8"></sap-demo-client>
-              <div class="demo-caption">
-                Ball sim using sweep-and-prune. <code>onOverlapX()</code> calls highlighted <span aria-label="a connecting green line" style="color:#4c8" class="pair-legend"></span>.
-              </div>
-            </div>
-
-            <p>A nice and elegant algorithm, it is.</p>
-            <p><span class="box-note ">The sweep-and-prune algorithm is also known as sort-and-sweep.</span></p>
-            <h3 id="note-for-3d">Note for 3D</h3>
-            <p>There is a variant which performs the sweep for each axis, not just the x. It maintains <em>separate</em> sorted lists of edges, <strong>one for each axis</strong>. Indeed, this is how the full sweep-and-prune implementation works as described in the <a target="_blank" class="text-link " href="https://ecommons.cornell.edu/handle/1813/7115">original paper by D. Baraff</a>. Object pairs are then flagged for overlaps in each dimension separately. Then, pairs flagged thrice would be considered intersecting in 3D. In the case of 2D, pairs flagged twice are intersecting.</p>
-            <p>You can even mix it up with respect to the broad-phase and narrow-phase split. Say you have a 3D world, you can do sweeps in the x- and z-axes, then perform exact tests in y.
-              l
-              This is how the full sweep-and-prune version gets an advantage over the simplified “sorted pairwise” version. It can prune in multiple dimensions!</p>
-            <h2 id="performance-of-sweep-and-prune">Performance of sweep-and-prune</h2>
-            <p>Here’s side-by-side comparison of every strategy we’ve covered so far! Observe the amount of intersection checks required per frame.</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="6" strategy="pairwise" skip-interval="2" decorations="checks:#cbb:30"></sap-demo-client>
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'pairwise' strategy" balls="6" strategy="pairwise" skip-interval="1" decorations="checks:#cbb:30"></sap-demo-client>
               <div class="demo-caption">Global pairwise</div>
             </div>
 
             <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="6" strategy="simple-sap" skip-interval="2" decorations="checks:#bcb:30"></sap-demo-client>
-              <div class="demo-caption">Simplified sweep and prune, “sorted pairwise”</div>
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-nativesort' strategy" balls="6" strategy="sap-nativesort" skip-interval="1" decorations="checks:#bcb:30"></sap-demo-client>
+              <div class="demo-caption">Sorted pairwise</div>
             </div>
 
+            <p>(Not shown: the cost of sorting. Let’s assume the intersection test is sufficiently expensive that it overshadows everything else.)</p>
+            <p>Aaand that concludes the first part. Those two lines of code definitely made big impact. Could there be anything better than that?</p>
+            <p><a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Continued in part 2.</a></p>
+            <hr>
+            <p>Bonus demo, 15 balls! What a mess!</p>
             <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="6" strategy="sap-nativesort" skip-interval="2" decorations="checks:#bcb:30"></sap-demo-client>
-              <div class="demo-caption">1D sweep and prune</div>
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-swap-2d' strategy" balls="15" labels="🍎,🚗,🌸,🍕,🎈,🌊,🎮,🚀,📚,🎵,🏆,🌻,🍔,⏰,⭐" rainbow="" strategy="sap-swap-2d"></sap-demo-client>
             </div>
 
-            <p>Let’s analyse the time complexity! 👓</p>
-            <p>The sort step, again, is <em>O(n log n)</em>.</p>
-            <p>The sweep, which is a linear pass with an inner loop for overlaps, should be <em>O(n&nbsp;+&nbsp;m)</em> in the average case. Again, <em>m</em> is the number of overlaps.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sweepAndPrune</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token comment">// O(n log n)</span>
-  <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-  <span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-  <span class="token comment">// O(n)</span>
-  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-      <span class="token comment">// zero at best; some constant on average; O(n) at worst</span>
-      <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> other <span class="token keyword">of</span> touching<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-        <span class="token function">onOverlapX</span><span class="token punctuation">(</span>other<span class="token punctuation">,</span> edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-      <span class="token punctuation">}</span>
-      touching<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
-      touching<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>This means sweep-and-prune is <em>O(n log n + m)</em> on average.</p>
-            <p>That’s great, but it’s the same as simplified “sorted pairwise” sweep-and-prune but with more code and state to keep tabs on. <em>Can we improve this?</em></p>
-            <h2 id="small-detail-big-improvement">Small detail, big improvement</h2>
-            <p>Again, let's ask the question: Where is redundant work being done here?</p>
-            <p>Let’s look at the sort step, which is the bottleneck of the algorithm according to the analysis.</p>
-            <p>The following is a visualisation of the sorting of the edges array, using an optimised <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Quicksort">quicksort</a> (n&nbsp;log&nbsp;n):</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" no-bounce="" strategy="sap-quicksort" skip-interval="3" decorations="edges:array:#f00:#0cf"></sap-demo-client>
-              <div class="demo-caption">
-                Sort <span style="color:#0cf">comparisons</span> and <span style="color:#f00">swaps</span> are highlighted. The fixed lines at the top are edge array positions, connected to actual ball edge x positions below. Line crossings signal incorrect order.
-              </div>
-            </div>
-
-            <p>You can see that most of the time, the sort does nothing at all! The list is almost always <strong>already sorted from the previous frame</strong>.</p>
-            <p>Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places in one step.</p>
-            <p>Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with a special state here, the state of being <em>nearly-sorted</em>. And one great choice for sorting nearly-sorted lists is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Insertion_sort"><strong>insertion sort</strong></a>!</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">insertionSort</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> edges<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">;</span> j<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-      <span class="token keyword">if</span> <span class="token punctuation">(</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">.</span>x <span class="token operator">&lt;</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>x<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span>
-      <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">]</span>
-    <span class="token punctuation">}</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>Insertion sort has a run time of <em>O(n)</em> at best when the list is already sorted or nearly-sorted, and <em>O(n<sup>2</sup>)</em> at worst when the list is in reverse. We can argue that the average case is <strong>O(n)</strong> and that we almost never reach the worst case, since the list is almost always sorted due to the previous frame’s sort.</p>
-            <p>Here’s insertion sort in action:</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" no-bounce="" strategy="sap-insertionsort" skip-interval="3" decorations="edges:array:#f00:#0cf"></sap-demo-client>
-              <div class="demo-caption">
-                Sort <span style="color:#0cf">comparisons</span> and <span style="color:#f00">swaps</span> are highlighted.
-              </div>
-            </div>
-
-            <p>By switching to insertion sort, we’ve reduced the overall average run time of sweep-and-prune to <em>O(n + m)</em>. This also applies to the simplified version.</p>
-            <span class="box-note ">
-              Due to the sweeping mechanism and the insertion sort, it’s important to consider the primary axis of sweep-and-prune. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
-            </span>
-
-            <h2 id="sweeps-and-swaps">Sweeps and swaps</h2>
-            <p>Well, there is yet another way to optimise this algorithm!</p>
-            <p>Look at the insertion sort example above. You can observe that <span style="color:#f00">swaps</span> happen when and only when an edge point passes through another.</p>
-            <p>An edge point passing through another can mean one of four things:</p>
-            <div class="markdown-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Case</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><code>R)↔(L</code></td>
-                    <td>R edge from the left swaps with a L edge from the right.</td>
-                  </tr>
-                  <tr>
-                    <td><code>(L↔R)</code></td>
-                    <td>L edge from the left swaps with a R edge from the right.</td>
-                  </tr>
-                  <tr>
-                    <td><code>(L↔(L</code></td>
-                    <td>Edges of the same side L swap.</td>
-                  </tr>
-                  <tr>
-                    <td><code>R)↔R)</code></td>
-                    <td>Edges of the same side R swap.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p>Each swap scenario can mean something significant. Let’s look into each one more closely. </p>
-            <h3 id="case-r↔l">case R)↔(L</h3>
-            <p>
-            <div class="blog-media blog-media-default">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation of a R edge swapping with a L edge">
-                <source src="/notes/sweep-and-prune/swap-rl.mp4">
-                <a href="/notes/sweep-and-prune/swap-rl.mp4">Animation of a R edge swapping with a L edge</a>
-              </video>
-            </div>
+            <p><a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Continued in part 2.</a>
             </p>
-            <p>When a right edge from the left swaps with a left edge from the right, we can infer that the corresponding balls are <strong>initiating an overlap</strong>.</p>
-            <h3 id="case-l↔r">case (L↔R)</h3>
-            <p>
-            <div class="blog-media blog-media-default">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation of a L edge swapping with a R edge">
-                <source src="/notes/sweep-and-prune/swap-lr.mp4">
-                <a href="/notes/sweep-and-prune/swap-lr.mp4">Animation of a L edge swapping with a R edge</a>
-              </video>
-            </div>
-            </p>
-            <p>Conversely, when a left edge from the left swaps with a right edge from the right, the corresponding balls <strong>cease to overlap</strong>.</p>
-            <h3 id="cases-l↔l-and-r↔r">cases (L↔(L and R)↔R)</h3>
-            <p>
-            <div class="blog-media blog-media-default">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation of a L edge swapping with a L edge">
-                <source src="/notes/sweep-and-prune/swap-ll.mp4">
-                <a href="/notes/sweep-and-prune/swap-ll.mp4">Animation of a L edge swapping with a L edge</a>
-              </video>
-            </div>
-            </p>
-            <p>Edges of the same polarity can swap without affecting the overlappedness of their corresponding balls. We can ignore these ones.</p>
-            <p>Based on these swap events we can reframe the mechanics of sweep-and-prune, like the <strong>sweep line</strong> and the <strong><code>touching</code></strong> set, in a new perspective. We can start thinking about them in a bottom-up way centred around the swaps.</p>
-            <p>A fun way to think about it is to pretend that a right edge is equivalent to a <em>local</em> version of the sweep line. In that sense, the right edge <em>is</em> the line sweeping over these other left edges.</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation a line sweep vs animation of an edge swap">
-                <source src="/notes/sweep-and-prune/swap-as-sweep.mp4">
-                <a href="/notes/sweep-and-prune/swap-as-sweep.mp4">Animation a line sweep vs animation of an edge swap</a>
-              </video><span class="blog-media-caption">An edge can be thought of as a local sweep line.</span>
-            </div>
-            </p>
-            <p>Just as in a global sweep, where any left edge encountered will mark the ball as <code>touching</code>; in right-edge-as-a-local-sweep version, any left edge <em>swapped</em> will mark its ball overlapping with the right edge’s ball.</p>
-            <p>In the global sweep, there is a global <code>touching</code> set keeping track of which balls are in contact with the sweep line. In local swaps, we keep track of overlaps <em>per ball</em>. (More precisely, per pair.)</p>
-            <p>Lastly, in the global sweep, a right edge means the end of contact with a ball that then promptly gets removed from the <code>touching</code> set. In a local swap, a left edge passing over a right edge means the same thing and the corresponding balls are unmarked from being overlapping.</p>
-            <p>Essentially, instead of a global sweep line, we do small local “sweeps” around each ball. Swaps become mini-sweeps.</p>
-            <p>Thus we arrive at the one-dimensional sweep-and-prune’s final form:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// Insertion sort</span>
-<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> edges<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">;</span> j<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token keyword">if</span> <span class="token punctuation">(</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">.</span>x <span class="token operator">&lt;</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>x<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span>
-
-    <span class="token comment">// Swap</span>
-    <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">]</span>
-
-    <span class="token comment">// --- Code up until this point is plain insertion sort ---</span>
-
-    <span class="token comment">// These two edges have just swapped places, process it...</span>
-    <span class="token keyword">const</span> edge1 <span class="token operator">=</span> edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">;</span>
-    <span class="token keyword">const</span> edge2 <span class="token operator">=</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
-
-    <span class="token keyword">if</span> <span class="token punctuation">(</span>edge1<span class="token punctuation">.</span>isLeft <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>edge2<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// case R-L → L-R</span>
-      <span class="token comment">// Mark as overlapping</span>
-      overlapping<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token function">key</span><span class="token punctuation">(</span>edge1<span class="token punctuation">,</span> edge2<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>edge1<span class="token punctuation">.</span>ball<span class="token punctuation">,</span> edge2<span class="token punctuation">.</span>ball<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>edge1<span class="token punctuation">.</span>isLeft <span class="token operator">&amp;&amp;</span> edge2<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// case L-R → R-L</span>
-      <span class="token comment">// Unmark as overlapping</span>
-      overlapping<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span><span class="token function">key</span><span class="token punctuation">(</span>edge1<span class="token punctuation">,</span> edge2<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span>
-
-<span class="token comment">// Report overlaps</span>
-<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token punctuation">[</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">]</span> <span class="token keyword">of</span> overlapping<span class="token punctuation">.</span><span class="token function">values</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token function">onOverlapX</span><span class="token punctuation">(</span>ball1<span class="token punctuation">,</span> ball2<span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>It’s essentially insertion sort with certain logic hooked up.</p>
-            <p>Let’s see it in action (though what you will see here is nothing new):</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" strategy="sap-swap" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
-            </div>
-
-            <p>While it behaves the same and has the same time complexity as the preceding variants, I think practically it’s much more efficient in terms of processing speed. In video games where every frame has a processing budget, the raw speed matters, not just the scalability. The constant factor that gets omitted by Big O notation still matters.</p>
-            <h2 id="quick-comparisons">Quick comparisons</h2>
-            <div class="markdown-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Algorithm</th>
-                    <th>Average</th>
-                    <th>Best</th>
-                    <th>Space</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Global pairwise</td>
-                    <td>O(n<sup>2</sup>)</td>
-                    <td>O(n<sup>2</sup>)</td>
-                    <td>O(1)</td>
-                  </tr>
-                  <tr>
-                    <td>Sorted pairwise (quicksort)</td>
-                    <td>O(n log n + m)</td>
-                    <td>O(n log n)</td>
-                    <td>O(1)</td>
-                  </tr>
-                  <tr>
-                    <td>Sorted pairwise (insertion)</td>
-                    <td>O(n + m)</td>
-                    <td>O(n)</td>
-                    <td>O(1)</td>
-                  </tr>
-                  <tr>
-                    <td>Sweep-and-prune (quicksort)</td>
-                    <td>O(n log n + m)</td>
-                    <td>O(n)</td>
-                    <td>O(n)</td>
-                  </tr>
-                  <tr>
-                    <td>Sweep-and-prune (insertion)</td>
-                    <td>O(n + m)</td>
-                    <td>O(n)</td>
-                    <td>O(n)</td>
-                  </tr>
-                  <tr>
-                    <td>Sweep-and-prune (final)</td>
-                    <td>O(n + m)</td>
-                    <td>O(n)</td>
-                    <td>O(n&nbsp;+&nbsp;m)</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p>n = number of balls, m = number of collisions</p>
-            <p>As always, the real measure of run time lies in real measurements on real hardware!</p>
-            <p>(todo: Add benchmark here. I’m a little lazy right now. 😺)</p>
-            <p><img src="https://preview.redd.it/hqs9fcbor3z61.jpg?width=640&amp;crop=smart&amp;auto=webp&amp;s=8aad431aefed7b4d80bc3667ac2472764b7322ac" alt="Stop doing algorithm analysis">
-              <a target="_blank" class="text-link " href="https://www.reddit.com/r/ProgrammerHumor/comments/ncb11u/stop_doing_algorithm_analysis">from r/ProgrammerHumor</a>
-            </p>
-            <h2 id="appendix">Appendix</h2>
-            <p>Things I’ve noted or realised while writing this post:</p>
-            <ul>
-              <li>General algorithm design insights<ul>
-                  <li>Pre-sorting a list can replace a bunch of inequality checks, and unlocks:<ul>
-                      <li>Some power when linearly scanning over the list</li>
-                      <li>Faster range / adjacency checks</li>
-                      <li>(unrelated, but good to bring up) Binary search</li>
-                    </ul>
-                  </li>
-                  <li>Different sorting algorithms have situational strengths.</li>
-                </ul>
-              </li>
-              <li>Big O, while useful, can only go so far.</li>
-              <li>I might need a frontend framework for my blog now, at least for the interactive demos.<ul>
-                  <li>Vanilla JS is starting to get scary with bigger demos like these.</li>
-                  <li><code>.mjs</code> is pretty good though.</li>
-                </ul>
-              </li>
-            </ul>
-            <p>Bonus demo, 25 balls! It’s a ball party ⚽⚾🏀🏐</p>
-            <div class="demo-row">
-              <sap-demo-client class="undefined" data-rss="interactive" aria-label="interactive demo of the collision detection algorithm" balls="25" rainbow="" strategy="sap-swap"></sap-demo-client>
-            </div>
 
           </div>
 
@@ -2132,57 +1755,6 @@ type Object <span class="token operator">=</span> <span class="token punctuation
   <script defer="" src="/scripts/blog-header.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
   <script defer="">
-    const edgesArrays = document.querySelectorAll(".edges-array");
-
-    for (const edgesArray of edgesArrays) {
-      const target = document.querySelector(edgesArray.dataset.target);
-
-      const edgeToElement = new Map();
-
-      target.addEventListener(
-        "sap-sort",
-        throttle((event) => {
-          const {
-            edges
-          } = event;
-          const n = edges.length;
-
-          if (edgeToElement.size === 0) {
-            for (const edge of edges) {
-              const edgeElement = document.createElement("div");
-              edgeElement.classList.add("edge");
-              edgeElement.classList.add(
-                edge.dir < 0 ? "edge-left" : "edge-right"
-              );
-              edgeElement.style.display = "none";
-              edgesArray.appendChild(edgeElement);
-              edgeToElement.set(edge, edgeElement);
-            }
-          }
-
-          const width = edgesArray.getBoundingClientRect().width;
-
-          for (const [edge, edgeElement] of edgeToElement.entries()) {
-            const index = edges.indexOf(edge);
-            const x = width / 2 + 20 * (index - (n - 1) / 2);
-            edgeElement.style.display = "block";
-            edgeElement.style.borderColor = edge.ball.color;
-            edgeElement.style.transform = `translateX(calc(${x}px - 50%))`;
-          }
-        })
-      );
-    }
-
-    function throttle(func, ms = 100) {
-      let lastTime = Date.now();
-      return (...args) => {
-        if (Date.now() - lastTime < ms) return;
-        lastTime = Date.now();
-        func(...args);
-      };
-    }
-  </script>
-  <script defer="">
     (() => {
       const abcDemo = document.querySelector("#abc-demo");
       const intersectsAbReturn = document.querySelectorAll(".abc-demo-intersects-ab-return");
@@ -2211,6 +1783,15 @@ type Object <span class="token operator">=</span> <span class="token punctuation
         for (const element of elements)
           if ((element.offsetParent != null) !== show)
             element.style.display = show ? "block" : "none";
+      }
+
+      function throttle(func, ms = 100) {
+        let lastTime = Date.now();
+        return (...args) => {
+          if (Date.now() - lastTime < ms) return;
+          lastTime = Date.now();
+          func(...args);
+        };
       }
     })();
   </script>

@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Sort, sweep, and prune: part 2 · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <script type="module" client="" defer="">
+    import {
+      waitFor
+    } from "/lib/wait_for.mjs";
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    import {
+      mousePosition
+    } from "/lib/mouse_position.mjs";
+
+    customElements.define(
+      "nebula-client",
+      class Nebula extends BaseElement {
+        constructor() {
+          super();
+
+          this.asyncCanvas = this.asyncQuerySelector("canvas");
+          this.context = null;
+          this.noise = null;
+
+          this.gridWidth = 30;
+          this.gridHeight = 30;
+          this.palette = ["#ffffff"];
+
+          this.cellWidth = 1; // placeholder
+          this.cellHeight = 1; // placeholder
+
+          this.useMouse = false;
+          this.mouseCell = null;
+
+          this.lastT = 0;
+          this.startT = 0;
+          this.loopStartT = 0;
+
+          this.isVisible = false;
+          this.visibilityListener({
+            show: () => {
+              this.isVisible = true;
+              this.startLoop();
+            },
+            hide: () => (this.isVisible = false),
+          });
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.useMouse = this.getAttribute("mouse") != null;
+
+          const gridWidth = this.getAttribute("width");
+          if (gridWidth) {
+            this.gridWidth = Number.parseInt(gridWidth);
+          }
+
+          const gridHeight = this.getAttribute("height");
+          if (gridHeight) {
+            this.gridHeight = Number.parseInt(gridHeight);
+          }
+
+          const paletteAttr = this.getAttribute("palette");
+          if (paletteAttr) {
+            this.palette = paletteAttr.split(" ");
+          }
+        }
+
+        startLoop() {
+          this.loopStartT = this.lastT = this.getT();
+          this.loop();
+        }
+
+        async loop() {
+          if (!this.isVisible) {
+            return;
+          }
+
+          if (typeof perlinNoise3d === "undefined") {
+            await waitFor(() => typeof perlinNoise3d !== "undefined");
+          }
+
+          if (!this.noise) {
+            this.noise = initNoise();
+            this.startT = this.getT();
+          }
+
+          const canvas = await this.asyncCanvas.promise;
+
+          // initialize
+          if (!this.context) {
+            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+            canvas.width = this.gridWidth;
+            canvas.height = this.gridHeight;
+            canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+            this.context = canvas.getContext("2d");
+          }
+
+          this.draw(canvas, this.context);
+
+          requestAnimationFrame(() => this.loop());
+        }
+
+        /**
+         * @param canvas {HTMLCanvasElement}
+         * @param context {CanvasRenderingContext2D}
+         */
+        draw(canvas, context) {
+          const t = this.getT();
+          if (t <= this.lastT) return;
+
+          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+          this.lastT = t;
+
+          const {
+            noise,
+            gridWidth,
+            gridHeight,
+            palette,
+            cellWidth,
+            cellHeight
+          } =
+          this;
+          const halfGridWidth = gridWidth / 2;
+          const halfGridHeight = gridHeight / 2;
+
+          this.mouseCell = null;
+          if (this.useMouse) {
+            const {
+              x,
+              y
+            } = mousePosition;
+            const bounds = canvas.getBoundingClientRect();
+            if (
+              bounds.left < x &&
+              x < bounds.right &&
+              bounds.top < y &&
+              y < bounds.bottom
+            ) {
+              this.mouseCell = {
+                x: (x - bounds.x) / cellWidth,
+                y: (y - bounds.y) / cellHeight,
+              };
+            }
+          }
+
+          const paletteLength = palette.length;
+          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+          for (let i = 0; i < gridWidth; i++) {
+            for (let j = 0; j < gridHeight; j++) {
+              const mouseProximity =
+                this.mouseCell == null ?
+                0 :
+                1 -
+                sigmoid(
+                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                );
+
+              const xy = [
+                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+                1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+              ];
+              const p1 = noise.get(...xy, t * 0.03);
+              const p2 = noise.get(...xy, t * 0.03 + 0.5);
+              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+              const p = p1 + p2;
+
+              const paletteIndex = Math.floor(paletteLength * p);
+
+              const rgb = palette[paletteIndex];
+              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+                .toString(16)
+                .padStart(2, "0");
+
+              context.fillStyle = `${rgb}${a}`;
+              context.fillRect(i, j, 1, 1);
+            }
+          }
+        }
+
+        getT() {
+          const t = (Date.now() * 24) / 1000;
+          // make it smoother while interacting
+          return this.mouseCell ? t : Math.floor(t);
+        }
+      }
+    );
+
+    function initNoise() {
+      const noise = new perlinNoise3d();
+      noise.perlin_octaves = 1; // ?? defaults
+      noise.perlin_amp_falloff = 1;
+      return noise;
+    }
+
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <script type="module" client="" defer="">
+    import {
+      BaseElement
+    } from "/lib/base_element.mjs";
+    // Warn: Module paths are relative to the page, not the component
+    // Since this is used by two separate posts, we move up once to converge the paths
+    import {
+      BallSim
+    } from "../sweep-and-prune/ball-sim/ball-sim.mjs";
+    import {
+      Runner
+    } from "../sweep-and-prune/ball-sim/runner.mjs";
+    import {
+      Renderer
+    } from "../sweep-and-prune/ball-sim/renderer.mjs";
+    import {
+      setupDragging
+    } from "../sweep-and-prune/ball-sim/dragging.mjs";
+    import {
+      createProcessPhysicsFunc
+    } from "../sweep-and-prune/ball-sim/process-physics.mjs";
+    import {
+      createDecorations
+    } from "../sweep-and-prune/ball-sim/decorations/decorations.mjs";
+    import {
+      NoopStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/noop-strat.mjs";
+    import {
+      PairwiseStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/pairwise-strat.mjs";
+    import {
+      SimpleSweepAndPruneStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/simple-sap-strat.mjs";
+    import {
+      SweepAndPruneStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/sap-strat.mjs";
+    import {
+      SweepAndPruneSwapStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/sap-swap-strat.mjs";
+    import {
+      SweepAndPruneSwap2DStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/sap-swap-2d-strat.mjs";
+    import {
+      SkippingDelegateStrat
+    } from "../sweep-and-prune/ball-sim/collision-strats/skip-delegate-strat.mjs";
+    import {
+      createQuickSort
+    } from "../sweep-and-prune/ball-sim/sorts/quick-sort.mjs";
+    import {
+      createInsertionSort
+    } from "../sweep-and-prune/ball-sim/sorts/insertion-sort.mjs";
+
+    customElements.define(
+      "sap-demo-client",
+      class SweepAndPruneDemoClient extends BaseElement {
+        constructor() {
+          super();
+
+          this.visibilityListener({
+            show: async () => {
+              if (!this.hasInit) this.init();
+              this.runner.start();
+            },
+            hide: async () => {
+              if (this.runner) this.runner.stop();
+            },
+          });
+        }
+
+        disconnectedCallback() {
+          super.disconnectedCallback();
+          this.cleanup();
+        }
+
+        init() {
+          this.cleanup();
+
+          const ballsAttr = this.getAttribute("balls");
+          const strategyAttr = this.getAttribute("strategy");
+          const isStatic = this.hasAttribute("static");
+          const noBounce = this.hasAttribute("no-bounce");
+          const isDraggable = this.hasAttribute("draggable");
+          const labelsAttr = this.getAttribute("labels");
+          const isRainbow = this.hasAttribute("rainbow");
+          const decorationsAttr = this.getAttribute("decorations");
+          const skipIntervalAttr = this.getAttribute("skip-interval");
+
+          const ballSimCreator = BallSim.create(600, 400);
+          if (ballsAttr?.startsWith("[")) {
+            const ballsSpec = JSON.parse(ballsAttr);
+            for (const [x, y, radius] of ballsSpec) {
+              ballSimCreator.addBall(x, y, radius);
+            }
+          } else {
+            const ballCount = ballsAttr?.match(/\d+/) ?
+              Number.parseInt(ballsAttr) :
+              5;
+            ballSimCreator.addRandomBalls(ballCount, 0.06 + 0.2 / ballCount);
+          }
+
+          this.ballSim = ballSimCreator
+            .setStatic(isStatic)
+            .setEventTarget(this)
+            .build();
+
+          if (isRainbow) {
+            const {
+              balls
+            } = this.ballSim;
+            for (let i = 0; i < balls.length; i++) {
+              const ball = balls[i];
+              const h = i / balls.length;
+              ball.color = `hsl(${h}turn 90% 70%)`;
+            }
+          }
+
+          this.canvas = document.createElement("canvas");
+          this.canvas.width = this.ballSim.width;
+          this.canvas.height = this.ballSim.height;
+          this.appendChild(this.canvas);
+
+          const labelsValue = labelsAttr?.split(",") ?? [];
+          this.renderer = new Renderer(
+            this.ballSim,
+            this.canvas,
+            labelsValue,
+            isDraggable
+          );
+
+          const pause = (duration) => this.runner.pause(duration);
+
+          const {
+            callbacks
+          } = createDecorations(
+            decorationsAttr,
+            this.ballSim,
+            this.renderer,
+            pause
+          );
+
+          const processFunc = createProcessPhysicsFunc(
+            !noBounce && !isStatic,
+            callbacks
+          );
+
+          const collStrat = createCollisionStrategy(
+            this.ballSim,
+            this.renderer,
+            processFunc,
+            callbacks,
+            this,
+            strategyAttr,
+            skipIntervalAttr
+          );
+
+          this.runner = new Runner(collStrat, this.ballSim, this.renderer);
+
+          if (isDraggable) {
+            setupDragging(this.ballSim, this.canvas, this);
+          }
+
+          this.hasInit = true;
+        }
+
+        cleanup() {
+          this.replaceChildren();
+          if (this.runner) this.runner.stop();
+          this.canvas = undefined;
+          this.renderer = undefined;
+          this.ballSim = undefined;
+          this.runner = undefined;
+          this.hasInit = false;
+        }
+      }
+    );
+
+    function createCollisionStrategy(
+      ballSim,
+      renderer,
+      processFunc,
+      callbacks,
+      eventTarget,
+      strategyAttr,
+      skipIntervalAttr
+    ) {
+      let collStrat;
+      switch (strategyAttr) {
+        case "noop":
+          collStrat = new NoopStrat();
+          break;
+        case "pairwise":
+          collStrat = new PairwiseStrat(ballSim, renderer, processFunc);
+          break;
+        case "simple-sap":
+          collStrat = new SimpleSweepAndPruneStrat(
+            ballSim,
+            (arr) => arr.sort((a, b) => a.x - b.x),
+            processFunc,
+            callbacks,
+            eventTarget
+          );
+          break;
+        case "sap-nativesort":
+          collStrat = new SweepAndPruneStrat(
+            ballSim,
+            (arr) => arr.sort((a, b) => a.x - b.x),
+            processFunc,
+            callbacks,
+            eventTarget
+          );
+          break;
+        case "sap-quicksort":
+          collStrat = new SweepAndPruneStrat(
+            ballSim,
+            createQuickSort(callbacks),
+            processFunc,
+            callbacks
+          );
+          break;
+        case "sap-insertionsort":
+          collStrat = new SweepAndPruneStrat(
+            ballSim,
+            createInsertionSort(callbacks),
+            processFunc,
+            callbacks
+          );
+          break;
+        case "sap-swap":
+          collStrat = new SweepAndPruneSwapStrat(ballSim, processFunc, callbacks);
+          break;
+        case "sap-swap-2d":
+          collStrat = new SweepAndPruneSwap2DStrat(
+            ballSim,
+            processFunc,
+            callbacks
+          );
+          break;
+        default:
+          throw new Error("Invalid strategy: " + strategyAttr);
+      }
+
+      if (skipIntervalAttr) {
+        collStrat = new SkippingDelegateStrat(
+          Number.parseInt(skipIntervalAttr),
+          collStrat
+        );
+      }
+
+      return collStrat;
+    }
+  </script>
+  <meta charset="utf-8">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <script async="" src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"></script>
+  <style>
+    .blog-media {
+      position: relative;
+      text-align: center;
+      /* external margin because it’s expected to be in an article */
+      margin: 36px 0;
+    }
+
+    .blog-media-bleed {
+      margin: 90px 0;
+      max-height: 80vh;
+    }
+
+    .blog-media-element {
+      display: inline-block;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 18px;
+      box-sizing: border-box;
+    }
+
+    .blog-media-bleed .blog-media-element {
+      position: relative;
+      left: 50%;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    .blog-media-windowed .blog-media-element {
+      border-radius: 0;
+    }
+
+    .blog-media-caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .box-note {
+      display: block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: solid 2px var(--clr0-dark);
+      box-sizing: border-box;
+    }
+  </style>
+  <style>
+    /**
+   * Modified by Kalabasa.
+   * Based on:
+   * a11y-dark theme for JavaScript, CSS, and HTML
+   * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+   * @author ericwbailey
+   */
+
+    .code-block .token.inserted:not(.prefix) {
+      background: #00b6a71c;
+      display: block;
+    }
+
+    .code-block .token.comment,
+    .code-block .token.prolog,
+    .code-block .token.doctype,
+    .code-block .token.cdata {
+      color: #628b9e;
+      font-style: italic;
+    }
+
+    .code-block .token.punctuation {
+      color: #fefefe;
+    }
+
+    .code-block .token.property,
+    .code-block .token.tag,
+    .code-block .token.constant,
+    .code-block .token.symbol,
+    .code-block .token.deleted {
+      color: #ffa07a;
+    }
+
+    .code-block .token.boolean,
+    .code-block .token.number {
+      color: #00e0e0;
+    }
+
+    .code-block .token.selector,
+    .code-block .token.attr-name,
+    .code-block .token.string,
+    .code-block .token.char,
+    .code-block .token.builtin,
+    .code-block .token.inserted {
+      color: #abe338;
+    }
+
+    .code-block .token.operator,
+    .code-block .token.entity,
+    .code-block .token.url,
+    .code-block .token.variable {
+      color: #00e0e0;
+    }
+
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function {
+      color: #ffd700;
+    }
+
+    .code-block .token.keyword {
+      color: #00e0e0;
+    }
+
+    .code-block .token.regex,
+    .code-block .token.important {
+      color: #ffd700;
+    }
+
+    .code-block .token.important,
+    .code-block .token.bold {
+      font-weight: bold;
+    }
+
+    .code-block .token.italic {
+      font-style: italic;
+    }
+
+    .code-block .token.entity {
+      cursor: help;
+    }
+
+    @media screen and (-ms-high-contrast: active) {
+      .code-block .token.important {
+        background: highlight;
+        color: window;
+        font-weight: normal;
+      }
+
+      .code-block .token.atrule,
+      .code-block .token.attr-value,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.selector {
+        font-weight: bold;
+      }
+
+      .code-block .token.attr-value,
+      .code-block .token.comment,
+      .code-block .token.doctype,
+      .code-block .token.function,
+      .code-block .token.keyword,
+      .code-block .token.operator,
+      .code-block .token.property,
+      .code-block .token.string {
+        color: highlight;
+      }
+
+      .code-block .token.attr-value,
+      .code-block .token.url {
+        font-weight: normal;
+      }
+    }
+  </style>
+  <style>
+    .code-block {
+      margin: 0 -18px;
+      /* bleed content padding */
+      padding: 0 18px;
+      /* bleed content padding */
+      overflow-x: auto;
+    }
+
+    .code-block-code {
+      display: inline-block;
+      padding: 18px;
+      min-width: 100%;
+      box-sizing: border-box;
+      border-radius: 18px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      line-height: 1.6;
+      background: var(--card-clr);
+      white-space: pre;
+    }
+  </style>
+  <style>
+    sap-demo-client {
+      display: flex;
+    }
+
+    sap-demo-client>canvas {
+      width: 100%;
+      border: solid 2px #ccc;
+      border-radius: 12px;
+    }
+
+    .sap-demo-draggable>canvas {
+      touch-action: none;
+    }
+  </style>
+  <style>
+    .text-link {
+      color: var(--clr0-light, #fff);
+    }
+
+    .text-link:visited {
+      color: var(--clr0, #fff);
+    }
+  </style>
+  <style>
+    .tag-component {
+      display: inline-block;
+      padding: 0 3px;
+      height: 16px;
+      line-height: 16px;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      background: #ccc;
+      color: #444;
+      border-radius: 3px;
+    }
+  </style>
+  <style>
+    .tag-row {
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+  <style>
+    .blog-post-info {
+      margin: 24px 0;
+      font-family: var(--default-font);
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--text2-clr);
+    }
+
+    .blog-post-info-hidden {
+      display: none;
+    }
+  </style>
+  <style>
+    .text-with-bg-span {
+      display: inline;
+      margin: 0;
+      padding: 0.7em;
+      padding: 0.35lh;
+      border-radius: 18px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      font: inherit;
+      background: var(--text-with-bg-color);
+    }
+  </style>
+  <style>
+    .blog-header {
+      isolation: isolate;
+      margin: 90px 0 24px;
+      position: relative;
+      left: 50%;
+      height: 600px;
+      width: max(800px, 60vw);
+      transform: translateX(-50%);
+      box-sizing: border-box;
+    }
+
+    .blog-header-title {
+      position: relative;
+      max-width: 800px;
+      font-family: var(--display-font);
+      font-size: 36px;
+      font-weight: bold;
+      font-style: italic;
+      text-align: left;
+      z-index: 2;
+    }
+
+    .blog-header-title-inner {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    /* Wrap lines in an angle */
+    .blog-header-title::before {
+      content: "";
+      width: 0;
+      width: calc(min(50%, 120vw - 600px));
+      height: 600px;
+      float: right;
+      shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
+    }
+
+    .blog-header-hero {
+      position: absolute;
+      inset: 1px;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      background: gray;
+      z-index: -1;
+    }
+
+    .blog-header-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      fill: var(--bg-clr);
+      z-index: 1;
+    }
+
+    @media (max-width: 800px) {
+      .blog-header {
+        width: 100vw;
+        width: 100svw;
+        height: 400px;
+        padding-right: 36px;
+      }
+
+      .blog-header-title {
+        font-size: clamp(24px, 20px + 2vw, 36px);
+      }
+    }
+  </style>
+  <style>
+    @import "/fonts/iosevka.css";
+    @import "/fonts/top.css";
+
+    :root {
+      --default-font: "Iosevka Fixed SS15 Web", "Space Mono", monaco, Consolas, "Lucida Console", monospace;
+      --display-font: "Space Mono", "Iosevka Fixed SS15 Web", monaco, Consolas, "Lucida Console", monospace;
+      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+      --bg-clr: #111616;
+      --card-clr: #222c2c;
+      --clr0-light: #54f8c1;
+      --clr0: #0ad591;
+      --clr0-dark: #05b97d;
+      --clr1: #df2063;
+
+      --text-clr: #fff;
+      --text2-clr: #999;
+
+      --ease: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      font-display: swap;
+      font-variant-ligatures: none;
+      background-color: var(--bg-clr, #111);
+      color: var(--text-clr, #fff);
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .page-wrapper-content {
+      flex: 1 1 auto;
+    }
+  </style>
+  <style>
+    nebula-client {
+      position: relative;
+    }
+
+    nebula-client>canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .nebula-noise {
+      position: absolute;
+      inset: 0;
+      background: url("/noise.png");
+      /* todo: encapsulate noise.png */
+      opacity: 0.1;
+      animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+        nebula-noise-y 0.48s steps(3, jump-start) infinite;
+    }
+
+    @supports (mix-blend-mode: overlay) {
+      .nebula-noise {
+        mix-blend-mode: overlay;
+        opacity: 0.2;
+      }
+    }
+
+    @keyframes nebula-noise-x {
+      to {
+        background-position-x: 100px;
+      }
+    }
+
+    @keyframes nebula-noise-y {
+      to {
+        background-position-y: 100px;
+      }
+    }
+  </style>
+  <style>
+    .main-footer-web-link {
+      text-decoration: none;
+    }
+
+    .main-footer-web-link-icon {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-web-link-icon:hover {
+      filter: invert(1);
+    }
+  </style>
+  <style>
+    .main-footer {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 60px;
+      padding: 42px calc(max(36px, 50vw - 600px));
+      font-family: var(--display-font);
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--clr0);
+      color: #000;
+      overflow: hidden;
+      content-visibility: auto;
+      contain-intrinsic-height: 200px;
+    }
+
+    .main-footer-links-heading {
+      margin: 18px 0;
+      font-size: inherit;
+    }
+
+    .main-footer-line {
+      margin: 18px 0;
+    }
+
+    .main-footer-link {
+      color: #000;
+    }
+
+    .main-footer-link:hover {
+      color: #000;
+    }
+
+    .main-footer-webring-icon {
+      width: 16px;
+      height: 16px;
+      image-rendering: pixelated;
+    }
+
+    .main-footer-signature {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      vertical-align: middle;
+    }
+
+    .main-footer-content-part {
+      z-index: 1;
+    }
+
+    .main-footer-nebula {
+      position: absolute;
+      left: -30%;
+      top: -30%;
+      width: 160%;
+      height: 160%;
+      z-index: 0;
+    }
+
+    .main-footer-top-btn {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+      height: 36px;
+      padding-right: 9px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-bottom-left-radius: 18px;
+      background: var(--bg-clr);
+      text-decoration: none;
+      color: var(--clr0-light);
+      font: inherit;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .main-footer-top-btn:hover {
+      color: var(--clr1);
+    }
+
+    .main-footer-top-btn::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 36px;
+      height: 18px;
+      border-top-right-radius: 18px;
+      transform: translateX(-72px);
+      box-shadow: 18px 0 0 var(--bg-clr);
+    }
+
+    @media (max-width: 700px) {
+      .main-footer {
+        flex-direction: column-reverse;
+      }
+    }
+  </style>
+  <style>
+    .main-header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 60px;
+      padding: 0 calc(25% - 150px);
+      z-index: 100;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+
+    .main-header.float {
+      position: fixed;
+    }
+
+    .main-header-bar {
+      position: relative;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-end;
+      height: 100%;
+    }
+
+    .main-header-item {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 6ch;
+      height: 36px;
+      padding: 0 18px;
+      border-radius: 18px;
+      font-family: var(--display-font);
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-decoration: none;
+      text-transform: uppercase;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+      background-repeat: no-repeat;
+      background-size: 220% 100%;
+      background-position: 115%;
+      pointer-events: all;
+      transition: background-position 0.2s var(--ease);
+    }
+
+    .main-header-item:hover {
+      background-image: linear-gradient(60deg,
+          #fff2 50%,
+          #fff 50%,
+          #fff 60%,
+          transparent 60%);
+      background-position: 0%;
+    }
+
+    .main-header-item.select {
+      background: #fff2;
+    }
+
+    .main-header-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      image-rendering: pixelated;
+      object-fit: cover;
+      object-position: 0 0;
+      filter: invert(1);
+      backdrop-filter: blur(8px) invert(1);
+      pointer-events: all;
+    }
+
+    .main-header-icon:hover {
+      object-position: 100% 0;
+    }
+
+    @media (max-width: 450px) {
+      .main-header-icon {
+        display: none;
+      }
+    }
+
+    .main-header-indicator {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      left: 50%;
+      top: calc(100% + 12px);
+      transform: translate(-50%, -50%);
+      /* border acts as extended touch area */
+      border: solid 6mm transparent;
+      border-left-width: 45vw;
+      border-right-width: 45vw;
+      border-radius: 50%;
+      background: #fff;
+      background-clip: padding-box;
+      opacity: 0;
+      transition: opacity 50ms;
+    }
+
+    .main-header.hidden .main-header-indicator {
+      opacity: 0.8;
+      pointer-events: all;
+    }
+  </style>
+  <style>
+    .blog-page {
+      margin: auto;
+      overflow: hidden;
+    }
+
+    .content {
+      margin: auto;
+      padding: 0 18px 60px;
+      width: 100%;
+      max-width: 700px;
+      font-family: var(--reading-font, sans-serif);
+      font-size: 16px;
+      line-height: 2.2;
+      letter-spacing: 0.02em;
+      color: #ddd;
+      box-sizing: border-box;
+    }
+
+    .markdown>h1,
+    .markdown>h2,
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      margin: 48px 0 36px;
+      font-family: var(--display-font);
+      font-weight: normal;
+      font-style: italic;
+      line-height: 1.6;
+      letter-spacing: 0.04em;
+      text-wrap: balance;
+    }
+
+    .markdown>h1 {
+      text-align: center;
+      font-size: 200%;
+    }
+
+    .markdown>h2 {
+      font-size: 150%;
+    }
+
+    .markdown>h3,
+    .markdown>h4,
+    .markdown>h5,
+    .markdown>h6 {
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    .markdown>p {
+      margin: 36px 0;
+    }
+
+    .markdown .box-note>p {
+      margin: 18px 0;
+    }
+
+    .markdown .box-note>p:first-child {
+      margin-top: 0;
+    }
+
+    .markdown .box-note>p:last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown-table {
+      margin: 0 -18px;
+      /* bleed content padding */
+      padding: 0 18px;
+      /* bleed content padding */
+      overflow-x: auto;
+    }
+
+    .markdown-table>table {
+      min-width: 100%;
+      box-sizing: border-box;
+      border-collapse: collapse;
+      background-color: var(--card-clr);
+      border-radius: 12px;
+    }
+
+    .markdown-table>table th,
+    .markdown-table>table td {
+      min-width: min(25vw, 8ch);
+      box-sizing: border-box;
+      text-align: start;
+      padding: 9px 6px;
+      padding-inline-end: 18px;
+      border-bottom: solid 1px #444;
+    }
+
+    .markdown-table>table th:first-child,
+    .markdown-table>table td:first-child {
+      padding-left: 12px;
+    }
+
+    .markdown-table>table th:last-child,
+    .markdown-table>table td:last-child {
+      padding-right: 12px;
+    }
+
+    .markdown-table>table>tbody>tr:last-child>td {
+      border-bottom: none;
+    }
+
+    .markdown>hr {
+      width: 36px;
+      margin: 90px auto;
+      border: solid 1.5px #ccc;
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .markdown code:not([class]):not([class]) {
+      display: inline-block;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: var(--default-font, monospace);
+      font-size: 15px;
+      background: var(--card-clr);
+    }
+
+    .markdown>pre:not([class])>code:not([class]) {
+      display: block;
+      padding: 18px;
+      border-radius: 18px;
+      line-height: 1.6;
+      font-size: 15px;
+      overflow-x: auto;
+    }
+
+    .markdown>blockquote {
+      position: relative;
+      margin: 0;
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: solid 1px var(--clr0);
+      font-size: 21px;
+    }
+
+    .markdown>blockquote::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 0;
+      height: 24px;
+      width: 24px;
+      border-bottom: solid 1px var(--clr0);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote::after {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 24px;
+      bottom: 18px;
+      width: 24px;
+      border-top-right-radius: 24px;
+      border: solid var(--clr0);
+      border-width: 1px 1px 0 0;
+      box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+      box-sizing: border-box;
+    }
+
+    .markdown>blockquote> :first-child {
+      margin-top: 0;
+    }
+
+    .markdown>blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown>blockquote cite {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-style: inherit;
+    }
+
+    .markdown>blockquote cite::before {
+      content: "—";
+    }
+
+    .markdown>iframe,
+    .markdown>p>iframe {
+      max-width: calc(100vw - 18px);
+      border: none;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .markdown .center {
+      text-align: center;
+    }
+
+    .markdown .center-flex {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+    .markdown .bleed {
+      position: relative;
+      left: 50%;
+      width: 100vh;
+      max-width: max(min(100vw, 800px), 80vw);
+      transform: translateX(-50%);
+    }
+
+    /* todo: convert to component <caption>, reuse across <blog-media> */
+    .markdown .caption {
+      display: block;
+      font-size: 15px;
+    }
+  </style>
+  <style>
+    .demo-row {
+      margin: 18px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .demo-caption {
+      max-width: 600px;
+    }
+
+    .drag-hint {
+      padding: 0 0.3rem;
+      font-weight: bold;
+      border: dashed 2px #fff7;
+      border-radius: 2rem;
+    }
+
+    .pair-legend {
+      display: inline-block;
+      position: relative;
+      top: -4px;
+      margin: 0 4px;
+      width: 22px;
+      height: 2px;
+      background: currentColor;
+    }
+
+    .pair-legend::before,
+    .pair-legend::after {
+      content: "";
+      position: absolute;
+      top: -4px;
+      display: block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .pair-legend::before {
+      left: -2px;
+    }
+
+    .pair-legend::after {
+      right: -2px;
+    }
+
+    .edges-array {
+      position: relative;
+      width: 100%;
+      height: 20px;
+    }
+
+    .edge {
+      position: absolute;
+      width: 10px;
+      height: 20px;
+      border: solid 3px #fff;
+      box-sizing: border-box;
+      transition: transform 0.2s;
+    }
+
+    .edge-left {
+      border-right: 0;
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+    }
+
+    .edge-right {
+      border-left: 0;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/notes/" class="main-header-item select">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <p>
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  Sort, sweep, and prune: part&nbsp;2
+                </h1>
+              </div>
+              <img srcset="/notes/sweep-and-prune-2/hero_800.generated.jpg 800w,/notes/sweep-and-prune-2/hero_1200.generated.jpg 1200w" sizes="not (min-width:800px) 800px, 1200px" class="blog-header-hero" src="/notes/sweep-and-prune-2/hero.jpg" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
+            </div>
+            </p>
+            <p>
+            <div class="blog-post-info ">
+              6 Aug 2023 · 13 min read
+            </div>
+            </p>
+            <div class="tag-row">tags:
+              <span class="tag-component" title="algorithm" style="background: rgb(107,251,250); color: rgb(9,125,124)">algo</span>
+              <span class="tag-component" style="background: rgb(183,234,166); color: rgb(51,105,32)">games</span>
+            </div>
+
+            <p>In the <a target="_self" class="text-link " href="/notes/sweep-and-prune/">first part</a>, we figured that sorting lets us exploit the transitive property of inequality to optimise the number of pairwise tests.</p>
+            <p>We ended up with - let’s call it a <strong>“simplified version”</strong>, of the full sweep-and-prune algorithm. This part explores the more sophisticated versions of sweep-and-prune.</p>
+            <h2 id="proper-sweep-and-prune">Proper sweep-and-prune</h2>
+            <p>While the simplified versions’s time complexity would be about the same as the full version’s, I believe the full version would run with a much smaller <em>constant factor</em>. In any case, let’s see how the original tackled the problem.</p>
+            <p>First, sorting widthy objects.</p>
+            <p>To account for the width of objects while keeping the benefits of unambiguous sort order, we track the left and the right edges of each object as two separate points!</p>
+            <p>This is done by maintaining a separate <strong>array of edge points</strong> corresponding to the objects’ left &amp; right edges.</p>
+            <p>See how it works by playing with this <span class="drag-hint">draggable</span> demo. The left and right edges of each ball are visualised. These edge points are stored in a sorted array shown below the box.</p>
+            <div class="demo-row">
+              <sap-demo-client class=" sap-demo-draggable" data-rss="interactive" aria-label="interactive diagram showing a specific mechanism" id="edges-demo" balls="4" strategy="sap-nativesort" static="" draggable="" rainbow="" decorations="edges"></sap-demo-client>
+              Sorted array of edges:
+              <div class="edges-array" data-target="#edges-demo"></div>
+            </div>
+
+            <p>The sorted array of edges is the minimal setup needed to optimise away unnecessary pairwise tests.</p>
+            <p>Remember the <code>intersects()</code> function? Here it is with only the x-axis checks:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
+      <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>We can replace these x-coordinate comparisons with a new approach based on array indices. Since we have a sorted array of every object’s left and right points, finding overlaps can be done via index-based searches rather than global pairwise testing.</p>
+            <p>Take one ball for example. Get the indices of its left and right points, and simply run through all points in between those two points in the array to get all x-overlapping objects. This is a very fast linear operation.</p>
+            <p>Try <span class="drag-hint">dragging</span> the <span style="color:#4c8">highlighted ball</span> below and observe the edges enclosed visually and in the sorted array:</p>
+            <div class="demo-row">
+              <sap-demo-client class=" sap-demo-draggable" data-rss="interactive" aria-label="interactive diagram showing a specific mechanism" id="edges-demo-one" balls="5" strategy="sap-nativesort" static="" draggable="" decorations="edges:focus:#4c8:#d88"></sap-demo-client>
+              Sorted array of edges:
+              <div class="edges-array" data-target="#edges-demo-one"></div>
+            </div>
+
+            <p>The above is a simple 1-to-n overlap detection (which is flawed, btw). For n-to-n overlap detection, it turns out there is a way to find all overlapping pairs in a single pass!</p>
+            <h2 id="chapter-2-sweeping">Chapter 2. Sweeping</h2>
+            <p>To generalise the above to an n-interval overlap scan, imagine a vertical line sweeping across the whole space from left to right. The sweep will scan each edge point in-order, keeping track of the objects it touches.</p>
+            <p>Let’s see what that looks like without collision:</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-nativesort' strategy" balls="5" no-bounce="" strategy="sap-nativesort" skip-interval="6" decorations="sweep:#f00:#d88,edges"></sap-demo-client>
+              <div class="demo-caption">
+                Objects touching the line are lit up in <span style="color:#d88">pink</span>.
+              </div>
+            </div>
+
+            <p>Whenever it runs into an object (a left edge), the object is added to a <span style="color:#d88"><code>touching</code></span> set to indicate being in contact with it.</p>
+            <p>Likewise, whenever it exits an object (right edge), that object is removed from the set.</p>
+            <p>As for the implementation, the line is merely a metaphor. It’s just a visualisation of the process of iterating through the sorted list of edges. Here’s the code for the actual sweeping:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// entering an object</span>
+    touching<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+    <span class="token comment">// exiting an object</span>
+    touching<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>The <code>touching</code> set is the set of objects currently touching the sweeping line.</p>
+            <p>Once we have the sweep working, detecting overlaps is easy. Whenever the sweep line enters a new object (a left edge), in addition to inserting it to <code>touching</code>, we can mark it as overlapping with the rest of the objects in <code>touching</code>.</p>
+            <p>Watch closely whenever the line enters a ball while <code>touching</code> other balls. Detected overlaps are highlighted:</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-nativesort' strategy" balls="7" no-bounce="" strategy="sap-nativesort" skip-interval="9" decorations="sweep:#f00:#d88,edges,checks:#4bf:600"></sap-demo-client>
+              <div class="demo-caption">
+                X-overlapping pairs are highlighted <span aria-label="a connecting green line" style="color:#4bf" class="pair-legend"></span> as the line sweeps.
+              </div>
+            </div>
+
+            <p>Here’s the updated code for detecting and reporting overlaps:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span> 
+<span class="token prefix unchanged"> </span> <span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span> <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>   <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>     <span class="token comment">// entering an object</span>
+</span><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span>     
+<span class="token prefix inserted">+</span>     <span class="token comment">// the new object is overlapping with the existing ones</span>
+<span class="token prefix inserted">+</span>     <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> other <span class="token keyword">of</span> touching<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix inserted">+</span>       <span class="token function">onOverlapX</span><span class="token punctuation">(</span>other<span class="token punctuation">,</span> edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>     <span class="token punctuation">}</span>
+<span class="token prefix inserted">+</span>     
+</span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span>     touching<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>   <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>     <span class="token comment">// exiting an object</span>
+<span class="token prefix unchanged"> </span>     touching<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>   <span class="token punctuation">}</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">}</span></span></code></pre>
+            <h2 id="chapter-3-pruning">Chapter 3. Pruning</h2>
+            <p><code>onOverlapX()</code> is called whenever two balls are overlapping in the x dimension. What about the other dimension, <em>y</em>? What if we’re working with 3D, how about <em>z</em>?</p>
+            <p>Don’t worry; the sweep is just a broad-phase test, a way to <em>prune</em> candidate pairs in bulk. There will be a narrow-phase test, a more exact intersection test for each of the remaining pairs.</p>
+            <p>What <code>onOverlapX()</code> is for is to hook up an exact intersection test like the full <code>intersects()</code> function earlier. Or, since we already know that the argument pair overlaps in <em>x</em>, we can just check for <em>y</em>.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// just check for y</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom
+   <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">collide</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>While the above formula works for most games, a more precise and time-consuming check could be done at this level since most candidates have already been pruned. Our ball example would work better with the following circle intersection test using the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance formula</a>:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// compute circle to circle intersection</span>
+  <span class="token keyword">const</span> distance <span class="token operator">=</span> <span class="token function">sqrt</span><span class="token punctuation">(</span>
+      <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>x <span class="token operator">-</span> object2<span class="token punctuation">.</span>x<span class="token punctuation">)</span> <span class="token operator">**</span> <span class="token number">2</span>
+    <span class="token operator">+</span> <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>y <span class="token operator">-</span> object2<span class="token punctuation">.</span>y<span class="token punctuation">)</span> <span class="token operator">**</span> <span class="token number">2</span>
+  <span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>distance <span class="token operator">&lt;</span> object1<span class="token punctuation">.</span>radius <span class="token operator">+</span> object2<span class="token punctuation">.</span>radius<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">bounce</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Finally, the demo:</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-nativesort' strategy" balls="6" strategy="sap-nativesort" skip-interval="2" decorations="checks:#4c8"></sap-demo-client>
+              <div class="demo-caption">
+                Ball sim using sweep-and-prune. <code>onOverlapX()</code> calls highlighted <span aria-label="a connecting green line" style="color:#4c8" class="pair-legend"></span>.
+              </div>
+            </div>
+
+            <p><span class="box-note ">The sweep-and-prune algorithm is also known as sort-and-sweep.</span></p>
+            <h3 id="note-for-3d">Note for 3D</h3>
+            <p>There is a variant which performs the sweep for each axis, not just <em>x</em>. It maintains <em>separate</em> sorted lists of edges, <strong>one for each axis</strong>. Indeed, this is how the full sweep-and-prune implementation works as described in the <a target="_blank" class="text-link " href="https://ecommons.cornell.edu/handle/1813/7115">original paper by D. Baraff</a>. Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.</p>
+            <p>This is the advantage the full sweep-and-prune has over the simplified “sorted pairwise” version. It can prune in multiple dimensions!</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-swap-2d' strategy" balls="6" strategy="sap-swap-2d" skip-interval="2" decorations="checks:#4c8"></sap-demo-client>
+              <div class="demo-caption">
+                2D sweep-and-prune. Only pairs with overlapping <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Bounding_volume#:~:text=axis%2Daligned%20bounding%20box">AABBs</a> are tested <span aria-label="a connecting green line" style="color:#4c8" class="pair-legend"></span>.
+              </div>
+            </div>
+
+            <h2 id="performance-of-sweep-and-prune">Performance of sweep-and-prune</h2>
+            <p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'pairwise' strategy" balls="6" strategy="pairwise" skip-interval="1" decorations="checks:#cbb:30"></sap-demo-client>
+              <div class="demo-caption">Global pairwise</div>
+            </div>
+
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-nativesort' strategy" balls="6" strategy="sap-nativesort" skip-interval="1" decorations="checks:#bcb:30"></sap-demo-client>
+              <div class="demo-caption">1D sweep and prune</div>
+            </div>
+
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-swap-2d' strategy" balls="6" strategy="sap-swap-2d" skip-interval="1" decorations="checks:#acb:30"></sap-demo-client>
+              <div class="demo-caption">2D sweep and prune</div>
+            </div>
+
+            <p>Let’s analyse the time complexity of 1D sweep-and-prune. 👓</p>
+            <p>The sort step, again, is <em>O(n log n)</em>.</p>
+            <p>The sweep, which is a linear pass with an inner loop for overlaps, should be <em>O(n&nbsp;+&nbsp;m)</em> in the average case. Again, <em>m</em> is the number of overlaps.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sweepAndPrune</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// O(n log n)</span>
+  <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token comment">// O(n)</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>edge<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// zero at best; some constant on average; O(n) at worst</span>
+      <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> other <span class="token keyword">of</span> touching<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">onOverlapX</span><span class="token punctuation">(</span>other<span class="token punctuation">,</span> edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+      touching<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      touching<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span>edge<span class="token punctuation">.</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>This means sweep-and-prune is <em>O(n log n + m)</em> on average.</p>
+            <p>That’s great, but it’s the same as the simplified “sorted pairwise” sweep-and-prune but with more code and state to keep tabs on. <em>Can we improve this?</em></p>
+            <h2 id="small-detail-big-improvement">Small detail, big improvement</h2>
+            <p>Again, let’s ask the question: Where is redundant work being done here?</p>
+            <p>Let’s look at the sort step, which is the bottleneck of the algorithm according to the analysis.</p>
+            <p>The following is a visualisation of the sorting of the edges array, using an optimised <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Quicksort">quicksort</a> (n&nbsp;log&nbsp;n):</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-quicksort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" no-bounce="" strategy="sap-quicksort" skip-interval="3" decorations="edges:array:#f00:#0cf"></sap-demo-client>
+              <div class="demo-caption">
+                Sort <span style="color:#0cf">comparisons</span> and <span style="color:#f00">swaps</span> are highlighted. The fixed lines at the top are edge array positions, connected to actual ball edge x positions below. Line crossings signal incorrect order.
+              </div>
+            </div>
+
+            <p>You can see that most of the time, the sort does nothing at all! The list is almost always <strong>already sorted from the previous frame</strong>.</p>
+            <p>Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places in one step.</p>
+            <p>Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with the special quality of being <em>nearly-sorted</em>. And one great choice for sorting nearly-sorted lists is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Insertion_sort"><strong>insertion sort</strong></a>!</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">insertionSort</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> edges<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">;</span> j<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">.</span>x <span class="token operator">&lt;</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>x<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span>
+      <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Insertion sort has a running time of <em>O(n)</em> at best when the list is already sorted or nearly-sorted, and <em>O(n<sup>2</sup>)</em> at worst when the list is in reverse. We can argue that the average case is <strong>O(n)</strong> and that we almost never reach the worst case, since the list is almost always sorted due to the previous frame’s sort.</p>
+            <p>Here’s insertion sort in action:</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-insertionsort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" no-bounce="" strategy="sap-insertionsort" skip-interval="3" decorations="edges:array:#f00:#0cf"></sap-demo-client>
+              <div class="demo-caption">
+                Sort <span style="color:#0cf">comparisons</span> and <span style="color:#f00">swaps</span> are highlighted.
+              </div>
+            </div>
+
+            <p>By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to <em>O(n + m)</em>!</p>
+            <span class="box-note ">
+              It’s important to consider the primary axis of sweep-and-prune due to the sweeps plus the nature of insertion sort. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
+            </span>
+
+            <p>The same could be applied to the simplified “sorted pairwise” sweep-and-prune since it has a sorting step as well. <em>How can we ever top that?</em></p>
+            <h2 id="sweeps-and-swaps">Sweeps and swaps</h2>
+            <p>Well, there is yet another way to optimise this algorithm! Be prepared, the subject is about to get quite dense.</p>
+            <p>Look at the insertion sort example above. You can observe that <span style="color:#f00">swaps</span> happen when and only <strong>when an edge point passes through another</strong>.</p>
+            <p>An edge point passing through another can mean one of four things:</p>
+            <div class="markdown-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Case</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>R)↔(L</code></td>
+                    <td>R edge from the left swaps with L edge from the right.</td>
+                  </tr>
+                  <tr>
+                    <td><code>(L↔R)</code></td>
+                    <td>L edge from the left swaps with R edge from the right.</td>
+                  </tr>
+                  <tr>
+                    <td><code>(L↔(L</code></td>
+                    <td>Edges of the same side L swap.</td>
+                  </tr>
+                  <tr>
+                    <td><code>R)↔R)</code></td>
+                    <td>Edges of the same side R swap.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Each swap scenario can mean something significant. Let’s look more closely into each case. </p>
+            <h3 id="case-r↔l">case R)↔(L</h3>
+            <p>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation of a R edge swapping with a L edge">
+                <source src="/notes/sweep-and-prune-2/swap-rl.mp4">
+                <a href="/notes/sweep-and-prune-2/swap-rl.mp4">Animation of a R edge swapping with a L edge</a>
+              </video>
+            </div>
+            </p>
+            <p>When a right edge from the left swaps with a left edge from the right, we can infer that the corresponding balls are <strong>initiating an overlap</strong>.</p>
+            <h3 id="case-l↔r">case (L↔R)</h3>
+            <p>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation of a L edge swapping with a R edge">
+                <source src="/notes/sweep-and-prune-2/swap-lr.mp4">
+                <a href="/notes/sweep-and-prune-2/swap-lr.mp4">Animation of a L edge swapping with a R edge</a>
+              </video>
+            </div>
+            </p>
+            <p>Conversely, when a left edge from the left swaps with a right edge from the right, the corresponding balls <strong>cease to overlap</strong>.</p>
+            <h3 id="cases-l↔l-and-r↔r">cases (L↔(L and R)↔R)</h3>
+            <p>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation of a L edge swapping with a L edge">
+                <source src="/notes/sweep-and-prune-2/swap-ll.mp4">
+                <a href="/notes/sweep-and-prune-2/swap-ll.mp4">Animation of a L edge swapping with a L edge</a>
+              </video>
+            </div>
+            </p>
+            <p>Edges of the same polarity can swap without affecting the overlappedness of their corresponding balls. We can ignore these ones.</p>
+            <p>Based on these swap events we can reframe the mechanics of sweep-and-prune in a new perspective, a bottom-up way centred around the swaps.</p>
+            <p>A fun way to think about it is to pretend that a right edge is equivalent to a <em>localised</em> sweep line. In that sense, the right edge <em>is</em> the line sweeping over these other left edges.</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="Animation a line sweep vs animation of an edge swap">
+                <source src="/notes/sweep-and-prune-2/swap-as-sweep.mp4">
+                <a href="/notes/sweep-and-prune-2/swap-as-sweep.mp4">Animation a line sweep vs animation of an edge swap</a>
+              </video><span class="blog-media-caption">An edge can be thought of as a local sweep line.</span>
+            </div>
+            </p>
+            <p>Just as in a global sweep, passing over left edges will mark the corresponding balls as “touching”; in right-edge-as-a-local-sweep version, <em>swapping</em> left edges will mark its ball as overlapping with the right edge’s ball.</p>
+            <p>In the global sweep, there is a global <code>touching</code> set keeping track of which balls are in contact with the sweep line. In local swaps, we keep track of overlaps <em>per ball</em>. (More precisely, per pair.)</p>
+            <p>Lastly, in the global sweep, a right edge means the end of contact with a ball. In a local swap, a left edge passing over a right edge means the same thing. The corresponding balls are unmarked as overlapping.</p>
+            <p>Essentially, instead of a global sweep line, small local “sweeps” happen around each ball. Swaps become mini-sweeps.</p>
+            <p>Thus we arrive at the one-dimensional sweep-and-prune’s final form:</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  overlapping <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Map</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">function</span> <span class="token function">sweepAndPrune</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// Insertion sort</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> edges<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">;</span> j<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">.</span>x <span class="token operator">&lt;</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>x<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span>
+
+      <span class="token comment">// Swap</span>
+      <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">[</span>edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+      <span class="token comment">// --- Code up until this point is plain insertion sort ---</span>
+
+      <span class="token comment">// These two edges have just swapped places, process it...</span>
+      <span class="token keyword">const</span> edge1 <span class="token operator">=</span> edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">;</span>
+      <span class="token keyword">const</span> edge2 <span class="token operator">=</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>edge1<span class="token punctuation">.</span>isLeft <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>edge2<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// case R-L → L-R</span>
+        <span class="token comment">// Mark as overlapping</span>
+        overlapping<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>
+          <span class="token function">key</span><span class="token punctuation">(</span>edge1<span class="token punctuation">,</span> edge2<span class="token punctuation">)</span><span class="token punctuation">,</span>
+          <span class="token punctuation">[</span>edge1<span class="token punctuation">.</span>ball<span class="token punctuation">,</span> edge2<span class="token punctuation">.</span>ball<span class="token punctuation">]</span>
+        <span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>edge1<span class="token punctuation">.</span>isLeft <span class="token operator">&amp;&amp;</span> edge2<span class="token punctuation">.</span>isLeft<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// case L-R → R-L</span>
+        <span class="token comment">// Unmark as overlapping</span>
+        overlapping<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span><span class="token function">key</span><span class="token punctuation">(</span>edge1<span class="token punctuation">,</span> edge2<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">return</span> overlapping<span class="token punctuation">.</span><span class="token function">values</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>It’s essentially insertion sort hooked up to track overlaps.</p>
+            <p>Let’s see it in action (though what you will see here is nothing new):</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-swap' strategy" strategy="sap-swap" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
+            </div>
+
+            <p>While it behaves the same and has the same time complexity as the preceding variants, I think practically it’s much more efficient in terms of processing speed. In video games where every frame has a processing budget, the raw speed matters, not just the scalability. The constant factor that gets omitted by Big O notation still matters.</p>
+            <h2 id="quick-comparisons">Quick comparisons</h2>
+            <div class="markdown-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Algorithm</th>
+                    <th>Average time</th>
+                    <th>Best time</th>
+                    <th>Space</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Global pairwise</td>
+                    <td>O(n<sup>2</sup>)</td>
+                    <td>O(n<sup>2</sup>)</td>
+                    <td>O(1)</td>
+                  </tr>
+                  <tr>
+                    <td>Sorted pairwise (quicksort)</td>
+                    <td>O(n log n + m)</td>
+                    <td>O(n log n)</td>
+                    <td>O(1)</td>
+                  </tr>
+                  <tr>
+                    <td>Sorted pairwise (insertion)</td>
+                    <td>O(n + m)</td>
+                    <td>O(n)</td>
+                    <td>O(1)</td>
+                  </tr>
+                  <tr>
+                    <td>Sweep-and-prune (quicksort)</td>
+                    <td>O(n log n + m)</td>
+                    <td>O(n)</td>
+                    <td>O(n)</td>
+                  </tr>
+                  <tr>
+                    <td>Sweep-and-prune (insertion)</td>
+                    <td>O(n + m)</td>
+                    <td>O(n)</td>
+                    <td>O(n)</td>
+                  </tr>
+                  <tr>
+                    <td>Sweep-and-prune (final)</td>
+                    <td>O(n + m)</td>
+                    <td>O(n)</td>
+                    <td>O(n&nbsp;+&nbsp;m)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>n = number of balls, m = number of collisions</p>
+            <p>(todo: Add benchmark here. I’m a little lazy right now. 😺)</p>
+            <p>As always, the real measure of speed lies in real measurements on real hardware!</p>
+            <p><img src="https://preview.redd.it/hqs9fcbor3z61.jpg?width=640&amp;crop=smart&amp;auto=webp&amp;s=8aad431aefed7b4d80bc3667ac2472764b7322ac" alt="Stop doing algorithm analysis">
+              <a target="_blank" class="text-link " href="https://www.reddit.com/r/ProgrammerHumor/comments/ncb11u/stop_doing_algorithm_analysis">from r/ProgrammerHumor</a>
+            </p>
+            <h2 id="appendix">Appendix</h2>
+            <p>Things I’ve noted or realised while writing this post:</p>
+            <ul>
+              <li>General algorithm design insights<ul>
+                  <li>Pre-sorting a list can replace a bunch of inequality checks, and unlocks:<ul>
+                      <li>Some power when linearly scanning over the list</li>
+                      <li>Faster range / adjacency checks</li>
+                      <li>(unrelated, but good to bring up) Binary search</li>
+                    </ul>
+                  </li>
+                  <li>Different sorting algorithms have situational strengths.</li>
+                </ul>
+              </li>
+              <li>Big O, while useful, can only go so far when analysing performance.</li>
+              <li>I might need a frontend framework for my blog now, at least for the interactive demos.<ul>
+                  <li>Vanilla JS is starting to get scary with bigger demos like these.</li>
+                  <li><code>.mjs</code> is pretty good though.</li>
+                </ul>
+              </li>
+            </ul>
+            <p>Bonus demo, 25 balls! It’s a ball party ⚽⚾🏀🏐</p>
+            <div class="demo-row">
+              <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-swap-2d' strategy" balls="25" labels="😃,😄,😁,😆,😅,😂,🤣,😊,😇,😉,😌,😍,🥰,😘,😋,😜,🤪,😎,🥳,🤩,🤗,😏,😒,😔,😢" rainbow="" strategy="sap-swap-2d"></sap-demo-client>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          ·
+          <a target="_self" class="main-footer-link" href="/guestbook/">Sign my guestbook</a>
+        </p>
+        <p class="main-footer-line">
+          (C) 2023 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source
+          </a>
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-web-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+  <script defer="" src="/scripts/blog-media.js"></script>
+  <script defer="" src="/scripts/blog-header.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+    const edgesArrays = document.querySelectorAll(".edges-array");
+
+    for (const edgesArray of edgesArrays) {
+      const target = document.querySelector(edgesArray.dataset.target);
+
+      const edgeToElement = new Map();
+
+      target.addEventListener(
+        "sap-sort",
+        throttle((event) => {
+          const {
+            edges
+          } = event;
+          const n = edges.length;
+
+          if (edgeToElement.size === 0) {
+            for (const edge of edges) {
+              const edgeElement = document.createElement("div");
+              edgeElement.classList.add("edge");
+              edgeElement.classList.add(
+                edge.dir < 0 ? "edge-left" : "edge-right"
+              );
+              edgeElement.style.display = "none";
+              edgesArray.appendChild(edgeElement);
+              edgeToElement.set(edge, edgeElement);
+            }
+          }
+
+          const width = edgesArray.getBoundingClientRect().width;
+
+          for (const [edge, edgeElement] of edgeToElement.entries()) {
+            const index = edges.indexOf(edge);
+            const x = width / 2 + 20 * (index - (n - 1) / 2);
+            edgeElement.style.display = "block";
+            edgeElement.style.borderColor = edge.ball.color;
+            edgeElement.style.transform = `translateX(calc(${x}px - 50%))`;
+          }
+        })
+      );
+    }
+
+    function throttle(func, ms = 100) {
+      let lastTime = Date.now();
+      return (...args) => {
+        if (Date.now() - lastTime < ms) return;
+        lastTime = Date.now();
+        func(...args);
+      };
+    }
+  </script>
+</body>
+</html>
