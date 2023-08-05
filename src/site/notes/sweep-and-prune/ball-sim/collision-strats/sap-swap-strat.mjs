@@ -28,6 +28,8 @@ export class SweepAndPruneSwapStrat {
     const { edges } = this;
     const { onStartScan, onScanEdge, onEndScan, onCompare, onSwap } = this.callbacks;
 
+    syncEdge(edges[0]);
+
     await onStartScan?.(this.edges);
     for (let i = 1; i < edges.length; i++) {
       syncEdge(edges[i]);
@@ -42,11 +44,10 @@ export class SweepAndPruneSwapStrat {
         const left = edges[j];
         const right = edges[j + 1];
 
-        const key = overlapKey(left, right);
         if (left.dir < 0 && right.dir > 0) { // enter
-          this.overlaps.set(key, [left.ball, right.ball]);
+          this.overlaps.set(overlapKey(left, right), [left.ball, right.ball]);
         } else if (left.dir > 0 && right.dir < 0) { // exit
-          this.overlaps.delete(key);
+          this.overlaps.delete(overlapKey(left, right));
         }
       }
     }

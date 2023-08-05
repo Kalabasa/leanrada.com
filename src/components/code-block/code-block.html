@@ -3,7 +3,9 @@
 ><code class="code-block-code">{renderCode()}</code></pre>
 
 <script static>
-  const Prism = require("prismjs");
+  const Prism = (globalThis.Prism = require("prismjs"));
+  require("prismjs/components/prism-diff.js");
+  require("prismjs/plugins/diff-highlight/prism-diff-highlight.js");
 
   function renderCode() {
     const language = attrs.language ?? "javascript";
@@ -11,7 +13,7 @@
       Prism.highlight(
         attrs.code.replace(/^\n|\n$/g, ""),
         Prism.languages[language],
-        language
+        attrs.languageCode ?? language
       ),
     ]);
   }
@@ -39,12 +41,17 @@
 
 <style>
   /**
- * Modified by Kalabasa.
- * Based on:
- * a11y-dark theme for JavaScript, CSS, and HTML
- * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/themes/prism-okaidia.css
- * @author ericwbailey
- */
+   * Modified by Kalabasa.
+   * Based on:
+   * a11y-dark theme for JavaScript, CSS, and HTML
+   * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+   * @author ericwbailey
+   */
+
+  .code-block .token.inserted:not(.prefix) {
+    background: #00b6a71c;
+    display: block;
+  }
 
   .code-block .token.comment,
   .code-block .token.prolog,

@@ -1,8 +1,10 @@
 <sap-demo-client
   {...attrs}
-  :class="attrs.class + (attrs.draggable != null ? ' sap-demo-draggable' : '')"
+  :class="(attrs.class ?? '') + (attrs.draggable != null ? ' sap-demo-draggable' : '')"
   data-rss="interactive"
-  aria-label="interactive demo of the collision detection algorithm"
+  :aria-label="attrs.static != null
+  ? `${attrs.draggable != null ? 'interactive diagram' : 'animation'} showing a specific mechanism`
+  : `demo of the collision detection algorithm using '${attrs.strategy}' strategy`"
 />
 
 <style>
@@ -33,6 +35,7 @@
   import { SimpleSweepAndPruneStrat } from "./ball-sim/collision-strats/simple-sap-strat.mjs";
   import { SweepAndPruneStrat } from "./ball-sim/collision-strats/sap-strat.mjs";
   import { SweepAndPruneSwapStrat } from "./ball-sim/collision-strats/sap-swap-strat.mjs";
+  import { SweepAndPruneSwap2DStrat } from "./ball-sim/collision-strats/sap-swap-2d-strat.mjs";
   import { SkippingDelegateStrat } from "./ball-sim/collision-strats/skip-delegate-strat.mjs";
   import { createQuickSort } from "./ball-sim/sorts/quick-sort.mjs";
   import { createInsertionSort } from "./ball-sim/sorts/insertion-sort.mjs";
@@ -209,7 +212,10 @@
         );
         break;
       case "sap-swap":
-        collStrat = new SweepAndPruneSwapStrat(
+        collStrat = new SweepAndPruneSwapStrat(ballSim, processFunc, callbacks);
+        break;
+      case "sap-swap-2d":
+        collStrat = new SweepAndPruneSwap2DStrat(
           ballSim,
           processFunc,
           callbacks

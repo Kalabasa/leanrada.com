@@ -54,7 +54,7 @@ export class Renderer {
       if (label) {
         context.font = "30px bold Space Mono, sans-serif";
         context.fillStyle = "#000";
-        context.fillText(label, ball.x - 10, ball.y + 10);
+        context.fillText(label, ball.x - 10 * label.length, ball.y + 10);
       }
     }
 
