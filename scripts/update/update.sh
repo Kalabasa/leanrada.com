@@ -17,8 +17,8 @@ git worktree add -f update origin/src
 cd update
 
 # Update
-node scripts/update-reputation.js
-node scripts/update-hits.js
+node scripts/update/update-reputation.js
+node scripts/update/update-hits.js
 
 # Commit updates
 git add .
