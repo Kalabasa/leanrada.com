@@ -80,7 +80,7 @@ for (let i = 0; i < balls.length; i++) {
 
       ## Performance, or lack thereof
 
-      This naive algorithm runs in ***O(n<sup>2</sup>)*** time in [Big O terms](https://en.wikipedia.org/wiki/Big_O_notation). That is, for an input of *n* balls, the algorithm's run time grows proportionally to the *square* of the input *n*. That's a lot! 📈
+      This naive algorithm runs in ***O(n<sup>2</sup>)*** time in [Big O terms](https://en.wikipedia.org/wiki/Big_O_notation). That is, for an input of *n* balls, the algorithm’s running time grows proportionally to the *square* of the input *n*. That’s a lot! 📈
 
       This is because for *n* balls, there are around _(n&nbsp;*&nbsp;(n-1))/2_ pairs to test, or _0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n_. For example, if n = 5 there would be a total of 10 pairs. For n = 10, there would be 45 pairs. For n = 15, 105 pairs (!). And so on&hellip; Using Big O notation, we can simplify this information into about the algorithm’s scalability into one expression “_O(n<sup>2</sup>)_”
 
@@ -102,7 +102,7 @@ for (let i = 0; i < balls.length; i++) {
       How can we improve the solution?
  
       <box-note>
-        <p>The worst case run time for <em>any</em> collision detection algorithm is always <em>O(n<sup>2</sup>)</em>. That’s when all objects intersect simultaneously and you have no choice but to process each of the n<sup>2</sup> collisions.</p>
+        <p>The worst case running time for <em>any</em> collision detection algorithm is always <em>O(n<sup>2</sup>)</em>. That’s when all objects intersect simultaneously and you have no choice but to process each of the n<sup>2</sup> collisions.</p>
         <p>Thus, it’s more practical to compare the average and best cases.</p>
         <p>Having said that, the naive algorithm is still <em>Θ(n<sup>2</sup>)</em> for <em>any</em> case, no matter the number of actual collisions. A lot of room for improvement!</p>
       </box-note>
@@ -132,25 +132,25 @@ type Object = {
 
       In the above code, the `intersects()` function checks if two objects intersect by comparing opposing bounds from the two objects, for each dimension. (Refer to [this MDN article](https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb) for a better explanation.)
 
-      For now, let's focus on just one dimension, say *x*. Bear with me as I further scope it down to just one *direction*:
+      For now, let’s focus on just one dimension, say *x*. Bear with me as I further scope it down to just one *direction*:
 
       <code-block :code="`\
 function intersects(object1, object2) {
   return object1.right > object2.left;
 }`" />
 
-      Don't worry; this scoped-down definition is a surprise tool that can help us later. ;)
+      Don’t worry; this scoped-down definition is a surprise tool that can help us later. ;)
 
       <blog-media
         alt="Still of a cartoon mouse saying, 'that’s a surprise tool that can help us later'"
         :src="url('surprise-tool.jpg')"
         spec="200" />
 
-      Ok, the reason this will work is because of the `&&` operator's [short-circuit evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation). That is, *if any operand is false, then the whole expression becomes false*. So if two objects do not overlap in the x-axis, then we can immediately rule them out as a candidate pair.
+      OK, the reason this will work is because of the `&&` operator’s [short-circuit evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation). That is, *if any operand is false, then the whole expression becomes false*. So if two objects do not overlap in the x-axis, then we can immediately rule them out as a candidate pair.
 
       So even an optimisation in just the x dimension will be a big help. And that’s what we’re gonna do.
 
-      Now, let's look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:
+      Now, let’s look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:
 
       <blog-media
         alt="Three objects, from left to right: A, B, and C"
@@ -177,9 +177,9 @@ A > B // returns false
 B > C // returns false
 A > C // returns false`" />
 
-      Voilà. Due to the __transitive property of inequality__, we realise that we don’t need to run the third test! *If we know A&nbsp;>&nbsp;B and B&nbsp;>&nbsp;C are false, then we don't need to compute A&nbsp;>&nbsp;C.*
+      Voilà. Due to the __transitive property of inequality__, we realise that we don’t need to run the third test! *If we know A&nbsp;>&nbsp;B and B&nbsp;>&nbsp;C are false, then we don’t need to compute A&nbsp;>&nbsp;C.*
 
-      So in this example, we don't really need to run `intersects(A, C)`. We’ve skipped one check!
+      So in this example, we don’t really need to run `intersects(A, C)`. We’ve skipped one check!
 
       <code-block :code="`\
 intersects(A, B) // returns false
@@ -248,7 +248,7 @@ intersects(B, C) // returns false
 
       As hinted by the tri-object example above, sorting the list of objects merely by their x position removes ranges of potential pairs that need to be tested.
       
-      However, objects aren't zero-width points. They’re *widthy*, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one definitively sort by x position if objects span intervals in the x-axis?
+      However, objects aren’t zero-width points. They’re *widthy*, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one definitively sort by x position if objects span intervals in the x-axis?
 
       ## The naive solution, but sorted
 
@@ -306,9 +306,9 @@ if (ball2.left > ball1.right) break;`" />
       Because
       <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>.
 
-      In that case, the current ball2,
+      In that case, the current ball2
       <code>balls[<span class="eq-i">j</span>]</code>,
-      and any further ball2s,
+      and any further ball2s
       <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code>,
       do *not* intersect ball1. So we can skip the rest of ball2s in this loop and move on to the next ball1.
 
@@ -346,7 +346,7 @@ if (ball2.left > ball1.right) break;`" />
 
       <box-note>The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller. (In any case, this post is open for more detailed analyses!)</box-note>
 
-      Here’s the code with run time annotations:
+      Here’s the code with running time annotations:
 
       <code-block :code="`\
 // O(n log n)
@@ -405,7 +405,7 @@ function intersects(object1, object2) {
       && object1.right > object2.left;
 }`" />
 
-      We can replace these x-coordinate comparisons with a new approach, one based on array indices. Since we have a sorted array of every object's left and right points, finding overlaps can be done via index-based searches rather than global pairwise testing.
+      We can replace these x-coordinate comparisons with a new approach, one based on array indices. Since we have a sorted array of every object’s left and right points, finding overlaps can be done via index-based searches rather than global pairwise testing.
 
       Take one ball for example. When you have the indices of its left and right points, you can simply run through all points in between those two edges in the array to get all x-overlapping objects. This is a very fast linear operation.
 
@@ -618,7 +618,7 @@ function sweepAndPrune(edges) {
 
       ## Small detail, big improvement
 
-      Again, let's ask the question: Where is redundant work being done here?
+      Again, let’s ask the question: Where is redundant work being done here?
 
       Let’s look at the sort step, which is the bottleneck of the algorithm according to the analysis.
       
@@ -652,7 +652,7 @@ function insertionSort(edges) {
   }
 }`" />
 
-      Insertion sort has a run time of _O(n)_ at best when the list is already sorted or nearly-sorted, and _O(n<sup>2</sup>)_ at worst when the list is in reverse. We can argue that the average case is **O(n)** and that we almost never reach the worst case, since the list is almost always sorted due to the previous frame’s sort.
+      Insertion sort has a running time of _O(n)_ at best when the list is already sorted or nearly-sorted, and _O(n<sup>2</sup>)_ at worst when the list is in reverse. We can argue that the average case is **O(n)** and that we almost never reach the worst case, since the list is almost always sorted due to the previous frame’s sort.
 
       Here’s insertion sort in action:
 
@@ -668,7 +668,7 @@ function insertionSort(edges) {
         </div>
       </div>
 
-      By switching to insertion sort, we’ve reduced the overall average run time of sweep-and-prune to _O(n + m)_. This also applies to the simplified version.
+      By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to _O(n + m)_. This also applies to the simplified version.
 
       <box-note>
         Due to the sweeping mechanism and the insertion sort, it’s important to consider the primary axis of sweep-and-prune. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
@@ -790,7 +790,7 @@ for (const [ball1, ball2] of overlapping.values()) {
 
       n = number of balls, m = number of collisions
 
-      As always, the real measure of run time lies in real measurements on real hardware!
+      As always, the real measure of running time lies in real measurements on real hardware!
 
       (todo: Add benchmark here. I’m a little lazy right now. 😺)
 
