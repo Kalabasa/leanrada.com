@@ -85,14 +85,14 @@ export function createEdgeDecorations(ballSim, renderer, pause, showEdgesArray, 
   } else if (showEdgesArray) {
     let edgesCache;
 
+    const inactiveColor = "#999";
+
     function getEdgeX(edge) {
       const index = edgesCache.indexOf(edge);
       return width / 2 + ARRAY_ITEM_GAP * (index - (edgesCache.length - 1) / 2);
     }
 
     function setEdgeColor(edge, color) {
-      if (!color) color = getColor(edge.ball);
-
       const lines = edgeArrayLines.get(edge);
       if (!lines) return;
 
@@ -115,21 +115,21 @@ export function createEdgeDecorations(ballSim, renderer, pause, showEdgesArray, 
                   get y1() { return ARRAY_ITEM_GAP },
                   get x2() { return getEdgeX(edge) },
                   get y2() { return ARRAY_ITEM_GAP * 2 },
-                  color: getColor(ball),
+                  color: inactiveColor,
                 }),
                 renderer.addLine({
                   get x1() { return getEdgeX(edge) },
                   get y1() { return ARRAY_ITEM_GAP * 2 },
                   get x2() { return ball.x + ball.radius * edge.dir },
                   get y2() { return ARRAY_ITEM_GAP * 4 },
-                  color: getColor(ball),
+                  color: inactiveColor,
                 }),
                 renderer.addLine({
                   get x1() { return ball.x + ball.radius * edge.dir },
                   get y1() { return ARRAY_ITEM_GAP * 4 },
                   get x2() { return ball.x + ball.radius * edge.dir },
                   get y2() { return ball.y },
-                  color: getColor(ball),
+                  color: inactiveColor,
                 }),
               ],
             );
@@ -140,16 +140,16 @@ export function createEdgeDecorations(ballSim, renderer, pause, showEdgesArray, 
         if (!edgesCache) return;
         setEdgeColor(a, secondaryColor);
         setEdgeColor(b, secondaryColor);
-        await pause(25);
-        setEdgeColor(a, null);
-        setEdgeColor(b, null);
+        await pause(20);
+        setEdgeColor(a, inactiveColor);
+        setEdgeColor(b, inactiveColor);
       },
       async onSwap(a, b) {
         setEdgeColor(a, primaryColor);
         setEdgeColor(b, primaryColor);
         await pause(80);
-        setEdgeColor(a, null);
-        setEdgeColor(b, null);
+        setEdgeColor(a, inactiveColor);
+        setEdgeColor(b, inactiveColor);
       },
     };
   }
