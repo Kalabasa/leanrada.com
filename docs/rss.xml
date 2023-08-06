@@ -12,11 +12,13 @@
 
 <p>In the <a target="_self" href="https://leanrada.com/notes/sweep-and-prune">first part</a>, we figured that sorting lets us exploit the transitive property of inequality to optimise the number of pairwise tests.</p>
 
-<p>We ended up with - let’s call it a <strong>“simplified version”</strong>, of the full sweep-and-prune algorithm. This part explores the more sophisticated versions of sweep-and-prune.</p>
+<p>We ended up with - let’s call it a <strong>“simplified version”</strong>, of the full sweep-and-prune algorithm.</p>
+
+<p>This part explores the more sophisticated versions of sweep-and-prune.</p>
 
 <h2 id="proper-sweep-and-prune">Proper sweep-and-prune</h2>
 
-<p>While the simplified versions’s time complexity would be about the same as the full version’s, I believe the full version would run with a much smaller <em>constant factor</em>. In any case, let’s see how the original tackled the problem.</p>
+<p>While the simplified versions’s time complexity would be about the same as the original version’s, I believe the original would run with a much smaller <em>constant factor</em>. In any case, let’s see how the original tackled the problem.</p>
 
 <p>First, sorting widthy objects.</p>
 
@@ -31,27 +33,39 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 
               Sorted array of edges:
               
-<p>The sorted array of edges is the minimal setup needed to optimise away unnecessary pairwise tests.</p>
+<p>Of course, we need to first extract the edges then continually keep them in sync with the objects. I’ll leave that out as an implementation detail.</p>
 
-<p>Remember the <code>intersects()</code> function? Here it is with only the x-axis checks:</p>
+<pre><code><span>// todo: extract 2 edges from each object into the array</span>
+<span>let</span> <span>edges</span><span>:</span> Array<span>&lt;</span><span>{</span>
+  <span>object</span><span>:</span> Object<span>;</span>  <span>// parent object</span>
+  <span>x</span><span>:</span> number<span>;</span>       <span>// x-coordinate</span>
+  <span>isLeft</span><span>:</span> boolean<span>;</span> <span>// true if left edge. false if right</span>
+<span>}</span><span>&gt;</span><span>;</span></code></pre>
+
+<p>This sorted array of edges is all we need to facilitate the reduction of unnecessary pairwise tests.</p>
+
+<h3 id="index-as-position-position-as-index">Index as position, position as index</h3>
+
+<p>Remember the <code>intersects()</code> function? Let’s focus only on the x-axis checks:</p>
 
 <pre><code><span>function</span> <span>intersects</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
   <span>return</span> object1<span>.</span>left <span>&lt;</span> object2<span>.</span>right
-      <span>&amp;&amp;</span> object1<span>.</span>right <span>&gt;</span> object2<span>.</span>left<span>;</span>
+      <span>&amp;&amp;</span> object1<span>.</span>right <span>&gt;</span> object2<span>.</span>left
+      <span>/* ... */</span><span>;</span>
 <span>}</span></code></pre>
 
 <p>We can replace these x-coordinate comparisons with a new approach based on array indices. Since we have a sorted array of every object’s left and right points, finding overlaps can be done via index-based searches rather than global pairwise testing.</p>
 
-<p>Take one ball for example. Get the indices of its left and right points, and simply run through all points in between those two points in the array to get all x-overlapping objects. This is a very fast linear operation.</p>
+<p>Take one ball for example. Get the indices of its left and right points, and you can simply run in between those two points in the array to find all x-overlapping objects! This is a very fast linear operation.</p>
 
-<p>Try <span>dragging</span> the <span>highlighted ball</span> below and observe the edges enclosed visually and in the sorted array:</p>
+<p>Here’s a viz. Try <span>dragging</span> the <span>highlighted ball</span> below and observe the edges enclosed visually and in the sorted array:</p>
 
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune-2">Visit the website to play with interactive content!</a>
 Alternative text: interactive diagram showing a specific mechanism</pre>
 
               Sorted array of edges:
               
-<p>The above is a simple 1-to-n overlap detection (which is flawed, btw). For n-to-n overlap detection, it turns out there is a way to find all overlapping pairs in a single pass!</p>
+<p>The above is a simple 1-to-n overlap detection (which is flawed, btw). For n-to-n overlap detection, turns out there is a way to find all overlapping pairs in a single pass!</p>
 
 <h2 id="chapter-2-sweeping">Chapter 2. Sweeping</h2>
 
@@ -64,11 +78,11 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 
                 Objects touching the line are lit up in <span>pink</span>.
               
-<p>Whenever it runs into an object (a left edge), the object is added to a <span><code>touching</code></span> set to indicate being in contact with it.</p>
+<p>Whenever it runs into an object (a left edge), the object is added to a set that we’ll call <span><code>touching</code></span> to indicate that it’s touching the line.</p>
 
 <p>Likewise, whenever it exits an object (right edge), that object is removed from the set.</p>
 
-<p>As for the implementation, the line is merely a metaphor. It’s just a visualisation of the process of iterating through the sorted list of edges. Here’s the code for the actual sweeping:</p>
+<p>As for the implementation, the line is merely a metaphor. It’s just a visualisation of an iteration through the sorted list of edges. Here’s the code for the actual sweeping:</p>
 
 <pre><code><span>sort</span><span>(</span>edges<span>)</span><span>;</span>
 
@@ -83,11 +97,11 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
   <span>}</span>
 <span>}</span></code></pre>
 
-<p>The <code>touching</code> set is the set of objects currently touching the sweeping line.</p>
+<p>Once we have the sweep working, detecting overlaps is easy…</p>
 
-<p>Once we have the sweep working, detecting overlaps is easy. Whenever the sweep line enters a new object (a left edge), in addition to inserting it to <code>touching</code>, we can mark it as overlapping with the rest of the objects in <code>touching</code>.</p>
+<p>👉 Whenever the sweep line enters a new object (a left edge), in addition to inserting it to <code>touching</code>, we can mark it as overlapping with the rest of the objects in <code>touching</code>.</p>
 
-<p>Watch closely whenever the line enters a ball while <code>touching</code> other balls. Detected overlaps are highlighted:</p>
+<p>Watch closely whenever the line enters a ball while the line is <code>touching</code> other balls. Detected overlaps are highlighted:</p>
 
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune-2">Visit the website to play with interactive content!</a>
 Alternative text: demo of the collision detection algorithm using 'sap-nativesort' strategy</pre>
@@ -119,9 +133,9 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 
 <p><code>onOverlapX()</code> is called whenever two balls are overlapping in the x dimension. What about the other dimension, <em>y</em>? What if we’re working with 3D, how about <em>z</em>?</p>
 
-<p>Don’t worry; the sweep is just a broad-phase test, a way to <em>prune</em> candidate pairs in bulk. There will be a narrow-phase test, a more exact intersection test for each of the remaining pairs.</p>
+<p>Don’t worry; the sweep is just a broad-phase test, a way to <em>prune</em> candidate pairs in bulk. There will be a narrow-phase test to exactly determine the intersections in each of the remaining pairs.</p>
 
-<p>What <code>onOverlapX()</code> is for is to hook up an exact intersection test like the full <code>intersects()</code> function earlier. Or, since we already know that the argument pair overlaps in <em>x</em>, we can just check for <em>y</em>.</p>
+<p><code>onOverlapX()</code> can be hooked up to an exact intersection test like the full <code>intersects()</code> function earlier. Or, since we already know that the argument pair overlaps in <em>x</em>, we can just check for <em>y</em>.</p>
 
 <pre><code><span>onOverlapX</span> <span>=</span> <span>function</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
   <span>// just check for y</span>
@@ -134,7 +148,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 <p>While the above formula works for most games, a more precise and time-consuming check could be done at this level since most candidates have already been pruned. Our ball example would work better with the following circle intersection test using the <a target="_blank" href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance formula</a>:</p>
 
 <pre><code><span>onOverlapX</span> <span>=</span> <span>function</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
-  <span>// compute circle to circle intersection</span>
+  <span>// compute circle-to-circle intersection</span>
   <span>const</span> distance <span>=</span> <span>sqrt</span><span>(</span>
       <span>(</span>object1<span>.</span>x <span>-</span> object2<span>.</span>x<span>)</span> <span>**</span> <span>2</span>
     <span>+</span> <span>(</span>object1<span>.</span>y <span>-</span> object2<span>.</span>y<span>)</span> <span>**</span> <span>2</span>
@@ -155,7 +169,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 
 <h3 id="note-for-3d">Note for 3D</h3>
 
-<p>There is a variant which performs the sweep for each axis, not just <em>x</em>. It maintains <em>separate</em> sorted lists of edges, <strong>one for each axis</strong>. Indeed, this is how the full sweep-and-prune implementation works as described in the <a target="_blank" href="https://ecommons.cornell.edu/handle/1813/7115">original paper by D. Baraff</a>. Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.</p>
+<p>There is a variant which performs the <strong>sweep for each axis</strong>, not just <em>x</em>. It maintains <em>separate</em> sorted lists of edges for x, y, and z. Indeed, this is how the full sweep-and-prune implementation works as described in the <a target="_blank" href="https://ecommons.cornell.edu/handle/1813/7115">original paper by D. Baraff</a>. Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.</p>
 
 <p>This is the advantage the full sweep-and-prune has over the simplified “sorted pairwise” version. It can prune in multiple dimensions!</p>
 
@@ -192,20 +206,20 @@ Alternative text: demo of the collision detection algorithm using 'sap-swap-2d' 
   <span>// O(n)</span>
   <span>for</span> <span>(</span><span>const</span> edge <span>of</span> edges<span>)</span> <span>{</span>
     <span>if</span> <span>(</span>edge<span>.</span>isLeft<span>)</span> <span>{</span>
-      <span>// zero at best; some constant on average; O(n) at worst</span>
+      <span>// O(1) at best; O(m/n) on average; O(n) at worst</span>
       <span>for</span> <span>(</span><span>const</span> other <span>of</span> touching<span>)</span> <span>{</span>
         <span>onOverlapX</span><span>(</span>other<span>,</span> edge<span>.</span>object<span>)</span><span>;</span>
       <span>}</span>
-      touching<span>.</span><span>add</span><span>(</span>edge<span>.</span>object<span>)</span><span>;</span>
+      touching<span>.</span><span>add</span><span>(</span>edge<span>.</span>object<span>)</span><span>;</span> 
     <span>}</span> <span>else</span> <span>{</span>
       touching<span>.</span><span>delete</span><span>(</span>edge<span>.</span>object<span>)</span><span>;</span>
     <span>}</span>
   <span>}</span>
 <span>}</span></code></pre>
 
-<p>This means sweep-and-prune is <em>O(n log n + m)</em> on average.</p>
+<p>So this sweep-and-prune is <em><strong>O(n log n + m)</strong></em>.</p>
 
-<p>That’s great, but it’s the same as the simplified “sorted pairwise” sweep-and-prune but with more code and state to keep tabs on. <em>Can we improve this?</em></p>
+<p>That’s great, but it’s the same as the simplified “sorted pairwise” sweep-and-prune but with more code and state to keep tabs on. <em>Can we improve it further?</em></p>
 
 <h2 id="small-detail-big-improvement">Small detail, big improvement</h2>
 
@@ -222,7 +236,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-quicksort
               
 <p>You can see that most of the time, the sort does nothing at all! The list is almost always <strong>already sorted from the previous frame</strong>.</p>
 
-<p>Even when the list becomes unsorted, it usually takes just a couple of swaps to become sorted again as only a few object boundaries would have changed places in one step.</p>
+<p>Even when it becomes unsorted, it usually just takes a couple of swaps to be sorted again. There won’t be more than a few object boundaries changing places in one time step.</p>
 
 <p>Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with the special quality of being <em>nearly-sorted</em>. And one great choice for sorting nearly-sorted lists is <a target="_blank" href="https://en.wikipedia.org/wiki/Insertion_sort"><strong>insertion sort</strong></a>!</p>
 
@@ -244,19 +258,19 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
 
                 Sort <span>comparisons</span> and <span>swaps</span> are highlighted.
               
-<p>By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to <em>O(n + m)</em>!</p>
+<p>By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to <em><strong>O(n&nbsp;+&nbsp;m)</strong></em>!</p>
 <span>
               It’s important to consider the primary axis of sweep-and-prune due to the sweeps plus the nature of insertion sort. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
             </span>
-<p>The same could be applied to the simplified “sorted pairwise” sweep-and-prune since it has a sorting step as well. <em>How can we ever top that?</em></p>
+<p>Meanwhile, the same insertion sort could be applied to the simplified “sorted pairwise” sweep-and-prune since it has a sorting step as well. So it’s <em>O(n&nbsp;+&nbsp;m)</em> as well. <em>Can we ever top that?</em></p>
 
 <h2 id="sweeps-and-swaps">Sweeps and swaps</h2>
 
-<p>Well, there is yet another way to optimise this algorithm! Be prepared, the subject is about to get quite dense.</p>
+<p>Well, there is yet another way to optimise this algorithm! Be prepared, the subject is about to get quite dense. 🪨</p>
 
-<p>Look at the insertion sort example above. You can observe that <span>swaps</span> happen when and only <strong>when an edge point passes through another</strong>.</p>
+<p>Look at the insertion sort example above. You can observe that <span>swaps</span> happen when and only <strong>when an edge point passes through another edge point</strong>.</p>
 
-<p>An edge point passing through another can mean one of four things:</p>
+<p>The event where an edge point passes another can be classified into four cases:</p>
 <table>
                 <thead>
                   <tr>
@@ -266,26 +280,26 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
                 </thead>
                 <tbody>
                   <tr>
-                    <td><code>R)↔(L</code></td>
+                    <td><code>)↔(</code></td>
                     <td>R edge from the left swaps with L edge from the right.</td>
                   </tr>
                   <tr>
-                    <td><code>(L↔R)</code></td>
+                    <td><code>(↔)</code></td>
                     <td>L edge from the left swaps with R edge from the right.</td>
                   </tr>
                   <tr>
-                    <td><code>(L↔(L</code></td>
-                    <td>Edges of the same side L swap.</td>
+                    <td><code>(↔(</code></td>
+                    <td>L edges swap.</td>
                   </tr>
                   <tr>
-                    <td><code>R)↔R)</code></td>
-                    <td>Edges of the same side R swap.</td>
+                    <td><code>)↔)</code></td>
+                    <td>R edges swap.</td>
                   </tr>
                 </tbody>
               </table>
 <p>Each swap scenario can mean something significant. Let’s look more closely into each case. </p>
 
-<h3 id="case-r↔l">case R)↔(L</h3>
+<h3 id="case-↔-entering">case )↔(. “Entering”</h3>
 
 <video muted="" autoplay="" loop="" aria-label="Animation of a R edge swapping with a L edge">
                 <source src="https://leanrada.com/notes/sweep-and-prune-2/swap-rl.mp4">
@@ -294,7 +308,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
 
 <p>When a right edge from the left swaps with a left edge from the right, we can infer that the corresponding balls are <strong>initiating an overlap</strong>.</p>
 
-<h3 id="case-l↔r">case (L↔R)</h3>
+<h3 id="case-↔-exiting">case (↔). “Exiting”</h3>
 
 <video muted="" autoplay="" loop="" aria-label="Animation of a L edge swapping with a R edge">
                 <source src="https://leanrada.com/notes/sweep-and-prune-2/swap-lr.mp4">
@@ -303,7 +317,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
 
 <p>Conversely, when a left edge from the left swaps with a right edge from the right, the corresponding balls <strong>cease to overlap</strong>.</p>
 
-<h3 id="cases-l↔l-and-r↔r">cases (L↔(L and R)↔R)</h3>
+<h3 id="cases-↔-and-↔">cases (↔( and )↔)</h3>
 
 <video muted="" autoplay="" loop="" aria-label="Animation of a L edge swapping with a L edge">
                 <source src="https://leanrada.com/notes/sweep-and-prune-2/swap-ll.mp4">
@@ -311,6 +325,8 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
               </video>
 
 <p>Edges of the same polarity can swap without affecting the overlappedness of their corresponding balls. We can ignore these ones.</p>
+
+<h2 id="swaps-and-sweeps">Swaps and sweeps</h2>
 
 <p>Based on these swap events we can reframe the mechanics of sweep-and-prune in a new perspective, a bottom-up way centred around the swaps.</p>
 
@@ -368,7 +384,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
 
 <p>It’s essentially insertion sort hooked up to track overlaps.</p>
 
-<p>Let’s see it in action (though what you will see here is nothing new):</p>
+<p>Let’s see it in action:</p>
 
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune-2">Visit the website to play with interactive content!</a>
 Alternative text: demo of the collision detection algorithm using 'sap-swap' strategy</pre>
@@ -558,35 +574,32 @@ Alternative text: demo of the collision detection algorithm using 'pairwise' str
       <span>&amp;&amp;</span> object1<span>.</span>bottom <span>&gt;</span> object2<span>.</span>top<span>;</span>
 <span>}</span></code></pre>
 
-<p>In the above code, the <code>intersects()</code> function checks if two objects intersect by comparing opposing bounds from the two objects, for each dimension. (Refer to <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb">this MDN article</a> for a better explanation.)</p>
+<p>In the above code, the <code>intersects()</code> function checks if two objects intersect by comparing their opposing bounds for each direction. (Refer to <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb">this MDN article</a> for a better explanation.)</p>
 
-<p>For now, let’s focus on just one dimension, say <em>x</em>. Bear with me as I further scope it down to just one <em>direction</em>:</p>
+<p>We can break the check down into its constituent operands:</p>
 
-<pre><code><span>function</span> <span>intersects</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
-  <span>return</span> object1<span>.</span>right <span>&gt;</span> object2<span>.</span>left<span>;</span>
-<span>}</span></code></pre>
+<ul>
+              <li><code>object1.left &lt; object2.right</code></li>
+              <li><code>object1.right &gt; object2.left</code></li>
+              <li><code>object1.top &lt; object2.bottom</code></li>
+              <li><code>object1.bottom &gt; object2.top</code></li>
+            </ul>
 
-<p>Don’t worry; this scoped-down definition is a surprise tool that can help us later. ;)</p>
+<p>Due to the <code>&amp;&amp;</code> operator’s <a target="_blank" href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation</a>, if any one of these turns out to be false, then the whole expression will immediately be false.</p>
+
+<p>Our goal then is to find as many cases as possible where one of these inequalities evaluates to false. Let’s say we focus on just the second operand - <code>object1.right &gt; object2.left</code>.</p>
+
+<p>Don’t worry; even an optimisation in just one axis in just one direction can help us later. ;)</p>
 
 <img srcset="/notes/sweep-and-prune/surprise-tool_200.generated.jpg 200w" sizes=" 200px" alt="Still of a cartoon mouse saying, 'that’s a surprise tool that can help us later'" src="https://leanrada.com/notes/sweep-and-prune/surprise-tool.jpg" spec="200" loading="lazy" width="100%" height="">
 
-<p>OK, the reason this will work is because of the <code>&amp;&amp;</code> operator’s <a target="_blank" href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation</a>. That is, <em>if any operand is false, then the whole expression becomes false</em>. So if two objects do not overlap in the x-axis, then we can immediately rule them out as a candidate pair.</p>
+<p><span>It’s the same idea as the <a target="_blank" href="https://personal.math.vt.edu/mrlugo/sat.html">separating axis theorem</a>, which implies that two objects can’t collide if there’s at least one axis where their shadows don’t overlap.</span></p>
 
-<p><span>It’s the same idea as the <a target="_blank" href="https://personal.math.vt.edu/mrlugo/sat.html">separating axis theorem</a>, which implies that two objects can’t collide if there is an axis where their shadows don’t overlap.</span></p>
-
-<p>Therefore, an optimisation in just the x dimension can still be a big help.</p>
-
-<p>Now, let’s look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:</p>
+<p>Now, let’s look the <code>object1.right &gt; object2.left</code> check in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:</p>
 
 <img srcset="/notes/sweep-and-prune/abc_527.generated.png 527w,/notes/sweep-and-prune/abc_664.generated.png 664w" sizes="not (min-width:664px) 527px, 664px" alt="Three objects, from left to right: A, B, and C" src="https://leanrada.com/notes/sweep-and-prune/abc.png" spec="100% [664) 664" loading="lazy" width="100%" height="">
 
-<p>There are three potential pairs to be checked here: A-B, B-C, and A-C. Pretend we’re running them through the redefined <code>intersects()</code> function, like so:</p>
-
-<pre><code><span>intersects</span><span>(</span><span>A</span><span>,</span> <span>B</span><span>)</span> <span>// returns false</span>
-<span>intersects</span><span>(</span><span>B</span><span>,</span> <span>C</span><span>)</span> <span>// returns false</span>
-<span>intersects</span><span>(</span><span>A</span><span>,</span> <span>C</span><span>)</span> <span>// returns false</span></code></pre>
-
-<p>Remember, we’re trying to find redundant work. Looking closer, if we inline the <code>intersects()</code> function (scoped to one x direction) we get:</p>
+<p>There are three potential pairs to be checked here: A-B, B-C, and A-C. Remember, we’re trying to find redundant work. Pretend we’re running them through the check, like so:</p>
 
 <pre><code><span>A</span><span>.</span>right <span>&gt;</span> <span>B</span><span>.</span>left <span>// returns false</span>
 <span>B</span><span>.</span>right <span>&gt;</span> <span>C</span><span>.</span>left <span>// returns false</span>
@@ -598,14 +611,24 @@ Alternative text: demo of the collision detection algorithm using 'pairwise' str
 <span>B</span> <span>&gt;</span> <span>C</span> <span>// returns false</span>
 <span>A</span> <span>&gt;</span> <span>C</span> <span>// returns false</span></code></pre>
 
-<p>Voilà. Due to the <a target="_blank" href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong></a>, realise that we don’t need to run the third test! <em>If we know A&nbsp;&gt;&nbsp;B and B&nbsp;&gt;&nbsp;C are false, then we don’t need to compute A&nbsp;&gt;&nbsp;C.</em></p>
+<p>Voilà. Due to the <a target="_blank" href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong></a>, realise that we don’t need to run the <strong>third test</strong>! <em>If we know A&nbsp;&gt;&nbsp;B and B&nbsp;&gt;&nbsp;C are false, then we don’t need to compute A&nbsp;&gt;&nbsp;C.</em></p>
 
-<p>So in this example, we don’t really need to run <code>intersects(A, C)</code>. We’ve skipped one check!</p>
+<p>So in this example, we don’t really need to run <code>intersects(A, C)</code>.</p>
 
-<pre><code><span>intersects</span><span>(</span><span>A</span><span>,</span> <span>B</span><span>)</span> <span>// returns false</span>
-<span>intersects</span><span>(</span><span>B</span><span>,</span> <span>C</span><span>)</span> <span>// returns false</span>
-<span>// I know intersects(A, C) will return false</span></code></pre>
+<pre><code><span>// 1. Test A-B</span>
+<span>intersects</span><span>(</span><span>A</span><span>,</span> <span>B</span><span>)</span> <span>// A.right &gt; B.left evals to false</span>
 
+<span>// 2. Test B-C</span>
+<span>intersects</span><span>(</span><span>B</span><span>,</span> <span>C</span><span>)</span> <span>// B.right &gt; C.left evals to false</span>
+
+<span>// 3. Infer that A.right &gt; C.left is false</span>
+<span>// Then I don’t need to test intersects(A, C)</span>
+<span>// to know that it will be false</span></code></pre>
+
+<p>We’ve skipped one <code>intersects()</code> call!</p>
+<span>
+              I’m handwaving the fact that <code>X.left &lt; X.right</code> is implied for any X. Nevertheless, it means just more application of transitivity.
+            </span>
 <p>You might be wondering how this contrived example could apply to general n-body collision detection. A smart reader such as you might also have realised that this skip only works if A, B, and C are in a particular order. Try <span>dragging</span> the balls below to see when the optimisation applies and when it does not:</p>
 
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune">Visit the website to play with interactive content!</a>
@@ -614,7 +637,7 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 <pre><code><span>// LIVE OUTPUT:</span>
 <span>intersects</span><span>(</span><span>A</span><span>,</span> <span>B</span><span>)</span> <span>// returns <span>false</span></span>
 <span>intersects</span><span>(</span><span>B</span><span>,</span> <span>C</span><span>)</span> <span>// returns <span>false</span></span>
-<span><span>intersects</span><span>(</span><span>A</span><span>,</span> <span>C</span><span>)</span> <span>// returns <span>false</span></span></span><span>//intersects(A, C) will return <span>false</span></span></code></pre>
+<span><span>intersects</span><span>(</span><span>A</span><span>,</span> <span>C</span><span>)</span> <span>// returns <span>false</span></span></span><span>// skip intersects(A, C), will be <span>false</span></span></code></pre>
 
 <p><span><strong>Tip:</strong> Drag the balls so that they’re in one of these orders: C‑B‑A and A‑B‑C</span></p>
 
@@ -626,11 +649,11 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 
 <p>Sorting, inequalities, and optimisation go hand in hand in hand. <em>A sorted list allows us to exploit the transitive property of inequality en masse.</em></p>
 
-<p>Even if we had to sort the list of objects every frame, the quickest sorting algorithm in general runs in <em>O(n log n)</em> time which is certainly lower than <em>O(n<sup>2</sup>)</em>.</p>
+<p>Even if we had to sort the list of objects every frame, the quickest general sorting algorithm runs in <em>O(n log n)</em> time which is certainly lower than <em>O(n<sup>2</sup>)</em>.</p>
 
-<p>As hinted by the tri-object example above, sorting the list of objects merely by their x position removes ranges of potential pairs that need to be tested.</p>
+<p>As hinted by the tri-object example above, to acheive this power we need to sort the list of objects merely by their x position.</p>
 
-<p>However, objects aren’t zero-width points. They’re <em>widthy</em>, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one definitively sort by x position if objects span intervals in the x-axis?</p>
+<p>However, objects aren’t zero-width points. They’re <em>widthy</em>, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one unambiguously sort by x position if objects span intervals in the x-axis?</p>
 
 <h2 id="sort-by-min-x">Sort by min x</h2>
 
@@ -660,11 +683,13 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 <span> </span>   <span>}</span>
 <span> </span> <span>}</span></span></code></pre>
 
-<p>It’s mostly the same as the naive solution, differing only in two extra lines of code. (These two juicy lines of code yield a maximum return of investment and is unlikely to be topped by anything else in this post.)</p>
+<p>It’s mostly the same as the naive solution, differing only in two extra lines of code.</p>
 
-<p>The first line, <code>sortByLeft(edges)</code>, simply sorts the list. The ranking is based on the balls’ left edge x-coords:</p>
+<p>The first line <code>sortByLeft(balls)</code> simply sorts the list, with ranking based on the balls’ left edge x-coords.</p>
 
-<pre><code><span>sortByLeft</span> <span>=</span> <span>(</span><span>balls</span><span>)</span> <span>=&gt;</span> balls<span>.</span><span>sort</span><span>(</span><span>(</span><span>a<span>,</span>b</span><span>)</span> <span>=&gt;</span> a<span>.</span>left <span>-</span> b<span>.</span>left<span>)</span></code></pre>
+<pre><code><span>function</span> <span>sortByLeft</span><span>(</span><span>balls</span><span>)</span> <span>{</span>
+  balls<span>.</span><span>sort</span><span>(</span><span>(</span><span>a<span>,</span>b</span><span>)</span> <span>=&gt;</span> a<span>.</span>left <span>-</span> b<span>.</span>left<span>)</span><span>;</span>
+<span>}</span></code></pre>
 
 <p>And in the inner loop, there is now this break:</p>
 
@@ -672,8 +697,8 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 
 <p>Let’s break that down.</p>
 
-<p>First, we know that the list is sorted, so the condition
-              <code>balls[<span>j</span>].left <span>&lt;</span> balls[<span>j</span> + <span>c</span>].left</code>
+<p>First, we know that the list is sorted, so this statement
+              <code>balls[<span>j</span> + <span>c</span>].left <span>&gt;</span> balls[<span>j</span>].left</code>
               holds true for any positive integer
               <code>c</code>.
             </p>
@@ -686,14 +711,13 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
             </p>
 
 <p>Because
-              <code>balls[<span>j</span> + <span>c</span>].left <span>&gt;</span> balls[<span>j</span>].left <span>&gt;</span> ball1.right</code>.
+              <code>balls[<span>j</span> + <span>c</span>].left <span>&gt;</span> balls[<span>j</span>].left <span>&gt;</span> ball1.right</code> (transitive property!), for all <code>c</code>.
             </p>
 
-<p>When that condition is true, the current ball2
-              <code>balls[<span>j</span>]</code>,
-              and any further ball2s
-              <code>balls[<span>j</span> + <span>c</span>]</code>,
-              do <em>not</em> intersect ball1. So we can skip the rest of ball2s in the inner loop and move on to the next ball1.
+<p>In other words, when the current ball2
+              <code>balls[<span>j</span>]</code>
+              stops overlapping with the current ball1, then any further ball2s
+              <code>balls[<span>j</span> + <span>c</span>]</code> are guaranteed to not overlap ball1. We stop the inner loop when it gets too far away, skipping the rest of the ball2s to the right.
             </p>
 
 <p>Here’s a demo:</p>
@@ -703,15 +727,18 @@ Alternative text: demo of the collision detection algorithm using 'simple-sap' s
 
                 Pairs highlighted <span aria-label="a connecting green line"></span> when tested by <code>intersects()</code>.
               
-<p><strong>Observations:</strong> Since the list is sorted, the checks are performed from left to right. More importantly, it visibly does fewer checks than the naive approach. 📉</p>
+<p><strong>Observations:</strong></p>
 
-<p>This is due the above optimisation which limits pairs to only those that overlap in the x-axis!</p>
+<ul>
+              <li>Since the list is sorted, the checks are performed from left to right.</li>
+              <li>More importantly, it visibly does fewer checks than the naive approach. 📉 This is due the above optimisation which effectively limits pairs to only those that overlap in the x-axis!</li>
+            </ul>
 
 <p>Let’s analyse the time complexity. 👓</p>
 
 <p>The sort - if we take the "fastest" sorting algorithm, like mergesort or quicksort - would add an <em>O(n log n)</em> term.</p>
 
-<p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned it’s more useful to look at the average and best cases. At best, the loops would be <em>O(n)</em>, wasting no excess processing if there are no collisions at all. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
+<p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be <em>O(n)</em>, wasting no excess processing if there are no overlaps at all. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
 
 <p><span>The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller.</span></p>
 
@@ -732,15 +759,19 @@ Alternative text: demo of the collision detection algorithm using 'simple-sap' s
   <span>}</span>
 <span>}</span></code></pre>
 
-<p>Adding those together, <em>n&nbsp;log&nbsp;n&nbsp;+&nbsp;n&nbsp;+&nbsp;m</em> we get <em><strong>O(n log n + m)</strong></em>. A big improvement over the naive approach’s <em>O(n<sup>2</sup>)</em>.</p>
+<p>Adding those together, <em>n&nbsp;log&nbsp;n&nbsp;+&nbsp;n&nbsp;+&nbsp;m</em> we get <em><strong>O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)</strong></em>.</p>
 
-<p>Furthermore, the choice of sorting algorithm could be improved. Yes, there’s something better than an <em>n&nbsp;log&nbsp;n</em> sort in this case; we’ll look into that in the next part!</p>
+<p>This is big improvement over the naive approach’s <em>O(n<sup>2</sup>)</em> because <strong>(1)</strong> <em>n&nbsp;log&nbsp;n</em> is <a target="_blank" href="https://bigocheatsheet.com/">much smaller</a> than <em>n<sup>2</sup></em> and <strong>(2)</strong> it is partially output-based - depending on the number of overlaps, it does not process more than necessary.</p>
+
+<img alt="" src="https://www.bigocheatsheet.com/img/big-o-complexity-chart.png" loading="lazy">
+<span>Big O complexity chart from bigocheatsheet.com</span>
+<p>Furthermore, the choice of sorting algorithm could be improved. We’ll look into that in the next part (something better than <em>n&nbsp;log&nbsp;n</em> sort!).</p>
 <span>
               If you got this far trying to find a decent collision detection algorithm, then you can stop reading and take the above design! It’s the perfect balance between programming effort and running time performance. If you are curious how this develops or just want to see more interactive demos, read the next part.
             </span>
 <h2 id="visual-comparison">Visual comparison</h2>
 
-<p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
+<p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍 n = 10</p>
 
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune">Visit the website to play with interactive content!</a>
 Alternative text: demo of the collision detection algorithm using 'pairwise' strategy</pre>
@@ -750,7 +781,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 Sorted pairwise
 <p>(Not shown: the cost of sorting. Let’s assume the intersection test is sufficiently expensive.)</p>
 
-<p>Aaand that concludes the first part. Those two lines of code definitely made big impact. Could there be anything better than that?</p>
+<p>Aaand that concludes the first part. Those two lines of code definitely made big impact. What could be better than that?</p>
 
 <p><a target="_self" href="https://leanrada.com/notes/sweep-and-prune-2">Continued in part 2.</a></p>
 <hr>

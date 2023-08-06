@@ -1518,31 +1518,30 @@
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>In the above code, the <code>intersects()</code> function checks if two objects intersect by comparing opposing bounds from the two objects, for each dimension. (Refer to <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb">this MDN article</a> for a better explanation.)</p>
-            <p>For now, let’s focus on just one dimension, say <em>x</em>. Bear with me as I further scope it down to just one <em>direction</em>:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  <span class="token keyword">return</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left<span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>Don’t worry; this scoped-down definition is a surprise tool that can help us later. ;)</p>
+            <p>In the above code, the <code>intersects()</code> function checks if two objects intersect by comparing their opposing bounds for each direction. (Refer to <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb">this MDN article</a> for a better explanation.)</p>
+            <p>We can break the check down into its constituent operands:</p>
+            <ul>
+              <li><code>object1.left &lt; object2.right</code></li>
+              <li><code>object1.right &gt; object2.left</code></li>
+              <li><code>object1.top &lt; object2.bottom</code></li>
+              <li><code>object1.bottom &gt; object2.top</code></li>
+            </ul>
+            <p>Due to the <code>&amp;&amp;</code> operator’s <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation</a>, if any one of these turns out to be false, then the whole expression will immediately be false.</p>
+            <p>Our goal then is to find as many cases as possible where one of these inequalities evaluates to false. Let’s say we focus on just the second operand - <code>object1.right &gt; object2.left</code>.</p>
+            <p>Don’t worry; even an optimisation in just one axis in just one direction can help us later. ;)</p>
             <p>
             <div class="blog-media blog-media-default">
               <img srcset="/notes/sweep-and-prune/surprise-tool_200.generated.jpg 200w" sizes=" 200px" class="blog-media-element" alt="Still of a cartoon mouse saying, 'that’s a surprise tool that can help us later'" src="/notes/sweep-and-prune/surprise-tool.jpg" spec="200" loading="lazy" width="100%" height="" style="aspect-ratio: 1.2127659574468086; background: #080808">
             </div>
             </p>
-            <p>OK, the reason this will work is because of the <code>&amp;&amp;</code> operator’s <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation</a>. That is, <em>if any operand is false, then the whole expression becomes false</em>. So if two objects do not overlap in the x-axis, then we can immediately rule them out as a candidate pair.</p>
-            <p><span class="box-note ">It’s the same idea as the <a target="_blank" class="text-link " href="https://personal.math.vt.edu/mrlugo/sat.html">separating axis theorem</a>, which implies that two objects can’t collide if there is an axis where their shadows don’t overlap.</span></p>
-            <p>Therefore, an optimisation in just the x dimension can still be a big help.</p>
-            <p>Now, let’s look at these checks in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:</p>
+            <p><span class="box-note ">It’s the same idea as the <a target="_blank" class="text-link " href="https://personal.math.vt.edu/mrlugo/sat.html">separating axis theorem</a>, which implies that two objects can’t collide if there’s at least one axis where their shadows don’t overlap.</span></p>
+            <p>Now, let’s look the <code>object1.right &gt; object2.left</code> check in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:</p>
             <p>
             <div class="blog-media blog-media-default">
               <img srcset="/notes/sweep-and-prune/abc_527.generated.png 527w,/notes/sweep-and-prune/abc_664.generated.png 664w" sizes="not (min-width:664px) 527px, 664px" class="blog-media-element" alt="Three objects, from left to right: A, B, and C" src="/notes/sweep-and-prune/abc.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.034749034749035; background: #f8f8f8">
             </div>
             </p>
-            <p>There are three potential pairs to be checked here: A-B, B-C, and A-C. Pretend we’re running them through the redefined <code>intersects()</code> function, like so:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
-<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
-<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span></code></pre>
-            <p>Remember, we’re trying to find redundant work. Looking closer, if we inline the <code>intersects()</code> function (scoped to one x direction) we get:</p>
+            <p>There are three potential pairs to be checked here: A-B, B-C, and A-C. Remember, we’re trying to find redundant work. Pretend we’re running them through the check, like so:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token constant">A</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">B</span><span class="token punctuation">.</span>left <span class="token comment">// returns false</span>
 <span class="token constant">B</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">C</span><span class="token punctuation">.</span>left <span class="token comment">// returns false</span>
 <span class="token constant">A</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">C</span><span class="token punctuation">.</span>left <span class="token comment">// returns false</span></code></pre>
@@ -1550,18 +1549,29 @@
             <pre class="code-block"><code class="code-block-code"><span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">B</span> <span class="token comment">// returns false</span>
 <span class="token constant">B</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span>
 <span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span></code></pre>
-            <p>Voilà. Due to the <a target="_blank" class="text-link " href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong></a>, realise that we don’t need to run the third test! <em>If we know A&nbsp;&gt;&nbsp;B and B&nbsp;&gt;&nbsp;C are false, then we don’t need to compute A&nbsp;&gt;&nbsp;C.</em></p>
-            <p>So in this example, we don’t really need to run <code>intersects(A, C)</code>. We’ve skipped one check!</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
-<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns false</span>
-<span class="token comment">// I know intersects(A, C) will return false</span></code></pre>
+            <p>Voilà. Due to the <a target="_blank" class="text-link " href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong></a>, realise that we don’t need to run the <strong>third test</strong>! <em>If we know A&nbsp;&gt;&nbsp;B and B&nbsp;&gt;&nbsp;C are false, then we don’t need to compute A&nbsp;&gt;&nbsp;C.</em></p>
+            <p>So in this example, we don’t really need to run <code>intersects(A, C)</code>.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token comment">// 1. Test A-B</span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// A.right &gt; B.left evals to false</span>
+
+<span class="token comment">// 2. Test B-C</span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// B.right &gt; C.left evals to false</span>
+
+<span class="token comment">// 3. Infer that A.right &gt; C.left is false</span>
+<span class="token comment">// Then I don’t need to test intersects(A, C)</span>
+<span class="token comment">// to know that it will be false</span></code></pre>
+            <p>We’ve skipped one <code>intersects()</code> call!</p>
+            <span class="box-note ">
+              I’m handwaving the fact that <code>X.left &lt; X.right</code> is implied for any X. Nevertheless, it means just more application of transitivity.
+            </span>
+
             <p>You might be wondering how this contrived example could apply to general n-body collision detection. A smart reader such as you might also have realised that this skip only works if A, B, and C are in a particular order. Try <span class="drag-hint">dragging</span> the balls below to see when the optimisation applies and when it does not:</p>
             <div class="demo-row">
               <sap-demo-client class=" sap-demo-draggable" data-rss="interactive" aria-label="interactive diagram showing a specific mechanism" id="abc-demo" balls="[[200,250,50],[300,150,55],[450,275,60]]" strategy="sap-nativesort" static="" draggable="" labels="A,B,C" rainbow=""></sap-demo-client>
               <pre class="code-block" style="width: 100%; max-width: 600px"><code class="code-block-code"><span class="token comment">// LIVE OUTPUT:</span>
 <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-ab-return">false</span></span>
 <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-bc-return">false</span></span>
-<span class="abc-demo-intersects-ac-run" style="display: none"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-ac-return">false</span></span></span><span class="abc-demo-intersects-ac-skip token comment">//intersects(A, C) will return <span class="abc-demo-intersects-ac-return">false</span></span></code></pre>
+<span class="abc-demo-intersects-ac-run" style="display: none"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-ac-return">false</span></span></span><span class="abc-demo-intersects-ac-skip token comment">// skip intersects(A, C), will be <span class="abc-demo-intersects-ac-return">false</span></span></code></pre>
             </div>
 
 
@@ -1571,9 +1581,9 @@
             <p>But wait… labeling objects according to a defined order is essentially ✨<strong>sorting</strong>✨! What if we sorted the list of objects every time? Would the number of skipped checks be worth the cost of sorting?</p>
             <h2 id="chapter-1-sorting">Chapter 1. Sorting</h2>
             <p>Sorting, inequalities, and optimisation go hand in hand in hand. <em>A sorted list allows us to exploit the transitive property of inequality en masse.</em></p>
-            <p>Even if we had to sort the list of objects every frame, the quickest sorting algorithm in general runs in <em>O(n log n)</em> time which is certainly lower than <em>O(n<sup>2</sup>)</em>.</p>
-            <p>As hinted by the tri-object example above, sorting the list of objects merely by their x position removes ranges of potential pairs that need to be tested.</p>
-            <p>However, objects aren’t zero-width points. They’re <em>widthy</em>, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one definitively sort by x position if objects span intervals in the x-axis?</p>
+            <p>Even if we had to sort the list of objects every frame, the quickest general sorting algorithm runs in <em>O(n log n)</em> time which is certainly lower than <em>O(n<sup>2</sup>)</em>.</p>
+            <p>As hinted by the tri-object example above, to acheive this power we need to sort the list of objects merely by their x position.</p>
+            <p>However, objects aren’t zero-width points. They’re <em>widthy</em>, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one unambiguously sort by x position if objects span intervals in the x-axis?</p>
             <h2 id="sort-by-min-x">Sort by min x</h2>
             <p>A solution to sorting widthy objects is to sort them by their <strong>minimum x</strong> (their left edge’s x-coordinate). This technique can be applied to improve the naive approach.</p>
             <p>It involves minimal modifications to the O(n<sup>2</sup>) solution. But it will result in a good chunk of checks skipped. I’ll explain later.</p>
@@ -1597,14 +1607,16 @@
 <span class="token prefix unchanged"> </span>     <span class="token punctuation">}</span>
 <span class="token prefix unchanged"> </span>   <span class="token punctuation">}</span>
 <span class="token prefix unchanged"> </span> <span class="token punctuation">}</span></span></code></pre>
-            <p>It’s mostly the same as the naive solution, differing only in two extra lines of code. (These two juicy lines of code yield a maximum return of investment and is unlikely to be topped by anything else in this post.)</p>
-            <p>The first line, <code>sortByLeft(edges)</code>, simply sorts the list. The ranking is based on the balls’ left edge x-coords:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">sortByLeft</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">balls</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> balls<span class="token punctuation">.</span><span class="token function">sort</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> a<span class="token punctuation">.</span>left <span class="token operator">-</span> b<span class="token punctuation">.</span>left<span class="token punctuation">)</span></code></pre>
+            <p>It’s mostly the same as the naive solution, differing only in two extra lines of code.</p>
+            <p>The first line <code>sortByLeft(balls)</code> simply sorts the list, with ranking based on the balls’ left edge x-coords.</p>
+            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sortByLeft</span><span class="token punctuation">(</span><span class="token parameter">balls</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  balls<span class="token punctuation">.</span><span class="token function">sort</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> a<span class="token punctuation">.</span>left <span class="token operator">-</span> b<span class="token punctuation">.</span>left<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
             <p>And in the inner loop, there is now this break:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token keyword">if</span> <span class="token punctuation">(</span>ball2<span class="token punctuation">.</span>left <span class="token operator">&gt;</span> ball1<span class="token punctuation">.</span>right<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span></code></pre>
             <p>Let’s break that down.</p>
-            <p>First, we know that the list is sorted, so the condition
-              <code>balls[<span class="eq-i">j</span>].left <span class="eq-op">&lt;</span> balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left</code>
+            <p>First, we know that the list is sorted, so this statement
+              <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> balls[<span class="eq-i">j</span>].left</code>
               holds true for any positive integer
               <code class="eq-c">c</code>.
             </p>
@@ -1615,13 +1627,12 @@
               will also be true.
             </p>
             <p>Because
-              <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>.
+              <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code> (transitive property!), for all <code class="eq-c">c</code>.
             </p>
-            <p>When that condition is true, the current ball2
-              <code>balls[<span class="eq-i">j</span>]</code>,
-              and any further ball2s
-              <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code>,
-              do <em>not</em> intersect ball1. So we can skip the rest of ball2s in the inner loop and move on to the next ball1.
+            <p>In other words, when the current ball2
+              <code>balls[<span class="eq-i">j</span>]</code>
+              stops overlapping with the current ball1, then any further ball2s
+              <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code> are guaranteed to not overlap ball1. We stop the inner loop when it gets too far away, skipping the rest of the ball2s to the right.
             </p>
             <p>Here’s a demo:</p>
             <div class="demo-row">
@@ -1631,11 +1642,14 @@
               </div>
             </div>
 
-            <p><strong>Observations:</strong> Since the list is sorted, the checks are performed from left to right. More importantly, it visibly does fewer checks than the naive approach. 📉</p>
-            <p>This is due the above optimisation which limits pairs to only those that overlap in the x-axis!</p>
+            <p><strong>Observations:</strong></p>
+            <ul>
+              <li>Since the list is sorted, the checks are performed from left to right.</li>
+              <li>More importantly, it visibly does fewer checks than the naive approach. 📉 This is due the above optimisation which effectively limits pairs to only those that overlap in the x-axis!</li>
+            </ul>
             <p>Let’s analyse the time complexity. 👓</p>
             <p>The sort - if we take the "fastest" sorting algorithm, like mergesort or quicksort - would add an <em>O(n log n)</em> term.</p>
-            <p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned it’s more useful to look at the average and best cases. At best, the loops would be <em>O(n)</em>, wasting no excess processing if there are no collisions at all. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
+            <p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be <em>O(n)</em>, wasting no excess processing if there are no overlaps at all. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
             <p><span class="box-note ">The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller.</span></p>
             <p>Here’s the code with running time annotations:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token comment">// O(n log n)</span>
@@ -1652,14 +1666,20 @@
     <span class="token punctuation">}</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>Adding those together, <em>n&nbsp;log&nbsp;n&nbsp;+&nbsp;n&nbsp;+&nbsp;m</em> we get <em><strong>O(n log n + m)</strong></em>. A big improvement over the naive approach’s <em>O(n<sup>2</sup>)</em>.</p>
-            <p>Furthermore, the choice of sorting algorithm could be improved. Yes, there’s something better than an <em>n&nbsp;log&nbsp;n</em> sort in this case; we’ll look into that in the next part!</p>
+            <p>Adding those together, <em>n&nbsp;log&nbsp;n&nbsp;+&nbsp;n&nbsp;+&nbsp;m</em> we get <em><strong>O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)</strong></em>.</p>
+            <p>This is big improvement over the naive approach’s <em>O(n<sup>2</sup>)</em> because <strong>(1)</strong> <em>n&nbsp;log&nbsp;n</em> is <a target="_blank" class="text-link " href="https://bigocheatsheet.com/">much smaller</a> than <em>n<sup>2</sup></em> and <strong>(2)</strong> it is partially output-based - depending on the number of overlaps, it does not process more than necessary.</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <img class="blog-media-element" alt="" src="https://www.bigocheatsheet.com/img/big-o-complexity-chart.png" loading="lazy"><span class="blog-media-caption">Big O complexity chart from bigocheatsheet.com</span>
+            </div>
+            </p>
+            <p>Furthermore, the choice of sorting algorithm could be improved. We’ll look into that in the next part (something better than <em>n&nbsp;log&nbsp;n</em> sort!).</p>
             <span class="box-note ">
               If you got this far trying to find a decent collision detection algorithm, then you can stop reading and take the above design! It’s the perfect balance between programming effort and running time performance. If you are curious how this develops or just want to see more interactive demos, read the next part.
             </span>
 
             <h2 id="visual-comparison">Visual comparison</h2>
-            <p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
+            <p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍 n = 10</p>
             <div class="demo-row">
               <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'pairwise' strategy" balls="10" strategy="pairwise" skip-interval="1" decorations="checks:#cbb:30"></sap-demo-client>
               <div class="demo-caption">Global pairwise</div>
@@ -1671,7 +1691,7 @@
             </div>
 
             <p>(Not shown: the cost of sorting. Let’s assume the intersection test is sufficiently expensive.)</p>
-            <p>Aaand that concludes the first part. Those two lines of code definitely made big impact. Could there be anything better than that?</p>
+            <p>Aaand that concludes the first part. Those two lines of code definitely made big impact. What could be better than that?</p>
             <p><a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Continued in part 2.</a></p>
             <hr>
             <p>Bonus demo, 15 balls! What a mess!</p>
