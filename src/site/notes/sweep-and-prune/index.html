@@ -101,7 +101,7 @@ for (let i = 0; i < balls.length; i++) {
         </div>
       </div>
 
-      That’s a lot of checks per frame! Clearly, the naive solution does not scale well for large numbers of objects.
+      That’s a lot of tests per frame! Clearly, the naive solution does not scale well for large numbers of objects.
 
       How can we improve this solution?
  
@@ -128,32 +128,34 @@ function intersects(object1, object2) {
 
       In the above code, the `intersects()` function checks if two objects intersect by comparing their opposing bounds for each direction. (Refer to [this MDN article](https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb) for a better explanation.)
 
-      We can break the check down into its constituent operands:
-      * `object1.left < object2.right`
-      * `object1.right > object2.left`
-      * `object1.top < object2.bottom`
-      * `object1.bottom > object2.top`
+      We can break the test down to its constituent checks:
+      1. `object1.left < object2.right`
+      1. `object1.right > object2.left`
+      1. `object1.top < object2.bottom`
+      1. `object1.bottom > object2.top`
 
-      Due to the `&&` operator’s [short-circuit evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation), if any one of these turns out to be false, then the whole expression will immediately be false.
+      Each check is solely concerned with one particular axis in a specific direction.
 
-      Our goal then is to find as many cases as possible where one of these inequalities evaluates to false. Let’s say we focus on just the second operand - `object1.right > object2.left`.
+      Here’s the key thing: Due to the `&&` operator’s [short-circuit evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation), if any one of these checks turns out to be false, then the overall test will immediately evaluate to false.
 
-      Don’t worry; even an optimisation in just one axis in just one direction can help us later. ;)
+      Our goal then is to generalise the case where at least *one* of these checks is false across many tests as possible.
+ 
+      <box-note>It’s the same idea as the [separating axis theorem](https://personal.math.vt.edu/mrlugo/sat.html), which implies that two objects can’t be colliding if there’s at least one axis where their shadows don’t overlap.</box-note>
+
+      Let’s say we focus only on the second check - `object1.right > object2.left`. Don’t worry about the rest of the checks. As hinted above, optimising in just one axis can still make a big difference later, so we'll focus on this single check for now.
 
       <blog-media
         alt="Still of a cartoon mouse saying, 'that’s a surprise tool that can help us later'"
         :src="url('surprise-tool.jpg')"
         spec="200" />
 
-      <box-note>It’s the same idea as the [separating axis theorem](https://personal.math.vt.edu/mrlugo/sat.html), which implies that two objects can’t collide if there’s at least one axis where their shadows don’t overlap.</box-note>
-
-      Now, let’s look the `object1.right > object2.left` check in the context of multiple objects. Consider three objects - A, B, and C - in this configuration:
+      Let’s look at it in the context of multiple objects. Consider three objects - A, B, and C - in this horizontal configuration:
 
       <blog-media
         alt="Three objects, from left to right: A, B, and C"
         :src="url('abc.png')" />
 
-      There are three potential pairs to be checked here: A-B, B-C, and A-C. Remember, we’re trying to find redundant work. Pretend we’re running them through the check, like so:
+      There are three potential pairs to be checked here: A-B, B-C, and A-C. Remember, we’re trying to find redundant work. Pretend we’re running all the pairs through the check, like so:
 
       <code-block :code="`\
 A.right > B.left // returns false
@@ -167,40 +169,45 @@ A > B // returns false
 B > C // returns false
 A > C // returns false`" />
 
-      Voilà. Due to the [__transitive property of inequality__](https://www.mathwords.com/t/transitive_property_inequalities.htm), realise that we don’t need to run the **third test**! *If we know A&nbsp;>&nbsp;B and B&nbsp;>&nbsp;C are false, then we don’t need to compute A&nbsp;>&nbsp;C.*
+      Voilà. Due to the [__transitive property of inequality__](https://www.mathwords.com/t/transitive_property_inequalities.htm), realise that we don’t need to run the **third test**! *If we know that `A&nbsp;>&nbsp;B` and `B&nbsp;>&nbsp;C` are both `false`, then we would know that `A&nbsp;>&nbsp;C` is `false` as well.*
+
+      > “If <i>a ≤ b</i> and <i>b ≤ c</i>, then <i>a ≤ c</i>.”
+      > <cite>the transitive property of inequality</cite>
 
       So in this example, we don’t really need to run `intersects(A, C)`.
 
       <code-block :code="`\
 // 1. Test A-B
-intersects(A, B) // A.right > B.left evals to false
+intersects(A, B) // A.right > B.left evals to false.
 
 // 2. Test B-C
-intersects(B, C) // B.right > C.left evals to false
+intersects(B, C) // B.right > C.left evals to false.
 
-// 3. Infer that A.right > C.left is false
-// Then I don’t need to test intersects(A, C)
-// to know that it will be false`" />
+// 3. Infer that A.right > C.left is false.
+// ∴ Therefore I don’t need to call intersects(A, C)
+// to know that it will return false.`" />
 
-      We’ve skipped one `intersects()` call!
+      We’ve skipped one `intersects()` call for free!
 
       <box-note>
-        I’m handwaving the fact that <code>X.left < X.right</code> is implied for any X. Nevertheless, it means just more application of transitivity.
+        I’m handwaving the fact that <code>O.left ≤ O.right</code> is implied for any object O. Nevertheless, working those details out would just mean more transitivity.
       </box-note>
 
-      You might be wondering how this contrived example could apply to general n-body collision detection. A smart reader such as you might also have realised that this skip only works if A, B, and C are in a particular order. Try <span class="drag-hint">dragging</span> the balls below to see when the optimisation applies and when it does not:
+      You might be wondering how this contrived example could apply to general n-body collision detection. A smart reader such as you might also have realised that this skip only works if A, B, and C are in a **particular order**.
+      
+      What particular order? Try <span class="drag-hint">dragging</span> the balls below to see when the optimisation applies and when it does not:
 
       <div class="demo-row">
         <sap-demo
           id="abc-demo"
-          balls="[[200,250,50],[300,150,55],[450,275,60]]"
+          balls="[[150,250,50],[300,150,55],[450,275,60]]"
           strategy="sap-nativesort"
           static draggable
           labels="A,B,C" rainbow />
         <pre class="code-block" style="width: 100%; max-width: 600px"><code class="code-block-code"><span class="token comment">// LIVE OUTPUT:</span>
-<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-ab-return">false</span></span>
-<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-bc-return">false</span></span>
-<span class="abc-demo-intersects-ac-run" style="display: none"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// returns <span class="abc-demo-intersects-ac-return">false</span></span></span><span class="abc-demo-intersects-ac-skip token comment">// skip intersects(A, C), will be <span class="abc-demo-intersects-ac-return">false</span></span></code></pre>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// A.right > B.left evals to <span class="abc-demo-intersects-ab-return">false</span></span>
+<span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">B</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// B.right > C.left evals to <span class="abc-demo-intersects-bc-return">false</span></span>
+<span class="abc-demo-intersects-ac-run" style="display: none"><span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">C</span><span class="token punctuation">)</span> <span class="token comment">// Can’t skip, returns <span class="abc-demo-intersects-ac-return">false</span></span></span><span class="abc-demo-intersects-ac-skip token comment">// Deduce that intersects(A, C) will be <span class="abc-demo-intersects-ac-return">false</span></span></code></pre>
       </div>
 
       <script client defer>
@@ -214,10 +221,13 @@ intersects(B, C) // B.right > C.left evals to false
           
           abcDemo.addEventListener("simulate", throttle((event) => {
             const [A, B, C] = event.balls;
-            setText(intersectsAbReturn, String(A.x > B.x));
-            setText(intersectsBcReturn, String(B.x > C.x));
-            setText(intersectsAcReturn, String(A.x > C.x));
-            const acRuns = (A.x > B.x) !== (B.x > C.x);
+            setText(intersectsAbReturn, String(A.x + A.radius > B.x - B.radius));
+            setText(intersectsBcReturn, String(B.x + B.radius > C.x - C.radius));
+            setText(
+              intersectsAcReturn,
+              String(Math.hypot(A.x - C.x, A.y - C.y) < A.radius + C.radius)
+            );
+            const acRuns = (A.x + A.radius > B.x - B.radius) || (B.x + B.radius > C.x - C.radius);
             setShow(intersectsAcRun, acRuns);
             setShow(intersectsAcSkip, !acRuns);
           }));
@@ -245,27 +255,32 @@ intersects(B, C) // B.right > C.left evals to false
         })();
       </script>
 
-      <box-note>**Tip:** Drag the balls so that they’re in one of these orders: C&#8209;B&#8209;A and A&#8209;B&#8209;C</box-note>
+      <box-note>**Tip:** Drag the balls so that they’re horizontally spaced out in this order: A&#8209;B&#8209;C</box-note>
 
-      While it’s true that this skip only works when A, B, and C are ordered, remember that these labels are *arbitrary*! What if we just decided to always call the leftmost ball A, the middle ball B, and the rightmost C? Then the optimisation would always be applicable! 🌌🧠
+      While it’s true that this skip only works when A, B, and C are ordered, remember that these labels are *arbitrary*! What if we simply decided to always call the leftmost ball A, the middle ball B, and the rightmost C? Then the optimisation would always be applicable! 🌌🧠
       
-      But wait&hellip; labeling objects according to a defined order is essentially ✨**sorting**✨! What if we sorted the list of objects every time? Would the number of skipped checks be worth the cost of sorting?
+      But wait&hellip; labeling objects according to some logical ordering is essentially ✨**sorting**✨! What if we sorted the list of objects every time? Would the number of skipped tests be worth the cost of sorting?
 
       ## Chapter 1. Sorting
 
       Sorting, inequalities, and optimisation go hand in hand in hand.  *A sorted list allows us to exploit the transitive property of inequality en masse.*
 
-      Even if we had to sort the list of objects every frame, the quickest general sorting algorithm runs in _O(n log n)_ time which is certainly lower than _O(n<sup>2</sup>)_.
+      <blog-media
+        alt="a[0] ≤ a[1] ≤ a[2] ≤ ... ≤ a[n-1]"
+        :src="url('sorted.png')"
+        caption="The inequality relationships of elements in a sorted list." />
 
-      As hinted by the tri-object example above, to acheive this power we need to sort the list of objects merely by their x position.
-      
-      However, objects aren’t zero-width points. They’re *widthy*, by which I mean having a size and occupying an interval in the x-axis, also known as “width”. How can one unambiguously sort by x position if objects span intervals in the x-axis?
+      <box-note>Even if we had to sort the list of objects every frame, the quickest general sorting algorithm runs in _O(n log n)_ time which is certainly lower than _O(n<sup>2</sup>)_.</box-note>
+
+      As shown by the tri-object example above, to achieve the power to skip tests we need to sort the list of objects by x position.
+
+      However, objects aren’t zero-width points. They’re *widthy*, by which I mean having a size thus occupying an interval in the x-axis, also known as “width”. How can one unambiguously sort by x position if objects span intervals in the x-axis?
 
       ## Sort by min x
 
       A solution to sorting widthy objects is to sort them by their **minimum x** (their left edge’s x-coordinate). This technique can be applied to improve the naive approach.
       
-      It involves minimal modifications to the O(n<sup>2</sup>) solution. But it will result in a good chunk of checks skipped. I’ll explain later.
+      It involves minimal modifications to the O(n<sup>2</sup>) solution. But it will result in a good chunk of tests skipped. I’ll explain later.
 
       First, the modified code:
 
@@ -306,24 +321,42 @@ if (ball2.left > ball1.right) break;`" />
 
       Let’s break that down.
       
-      First, we know that the list is sorted, so this statement
-      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> balls[<span class="eq-i">j</span>].left</code>
+      First, we know that the list is sorted, so the following statement
       holds true for any positive integer
-      <code class="eq-c">c</code>.
+      <code class="eq-c">c</code>:
+
+      <p class="center">
+        <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;=</span> balls[<span class="eq-i">j</span>].left</code>
+      </p>
       
-      Therefore, when
-      <code>balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
-      is true, then
-      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
-      will also be true.
+      The break condition, which is derived from the first operand of the intersection test, if true indicates early that the current pair being tested for intersection would fail:
 
-      Because
-      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code> (transitive property!), for all <code class="eq-c">c</code>.
+      <p class="center">
+        <code>balls2.left <span class="eq-op">&gt;</span> ball1.right</code><br/>
+        or <code>balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
+      </p>
 
-      In other words, when the current ball2
+      But there are more implications. If it was true, then by combining the above two inequations&hellip;
+
+      <p class="center">
+        <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;=</span> balls[<span class="eq-i">j</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
+      </p>
+
+      And by transitive property, the following statement would also be true!
+
+      <p class="center">
+        <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>].left <span class="eq-op">&gt;</span> ball1.right</code>
+      </p>
+      
+      Which means the intersection tests of balls at
+      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code> 
+      would also fail. We know this without needing to test those balls individually. A range of balls have been eliminated from testing!
+
+      In conclusion, when the current *ball2*
       <code>balls[<span class="eq-i">j</span>]</code>
-      stops overlapping with the current ball1, then any further ball2s
-      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code> are guaranteed to not overlap ball1. We stop the inner loop when it gets too far away, skipping the rest of the ball2s to the right.
+      stops overlapping with the current *ball1*, then any further *ball2*s in the iteration
+      <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code>
+      would be guaranteed to not overlap *ball1* as well. In other words, we stop the inner loop when it gets too far away.
 
       <style>
         .eq-op {
@@ -349,9 +382,9 @@ if (ball2.left > ball1.right) break;`" />
         </div>
       </div>
 
-      **Observations:**
-      * Since the list is sorted, the checks are performed from left to right.
-      * More importantly, it visibly does fewer checks than the naive approach. 📉 This is due the above optimisation which effectively limits pairs to only those that overlap in the x-axis!
+      Observations:
+      * Since the list is sorted, the tests are performed from left to right.
+      * More importantly, it visibly does fewer tests than the naive approach. 📉 This is due the above optimisation which effectively limits pairs to those that overlap in the x-axis!
 
       Let’s analyse the time complexity. 👓
       
@@ -381,11 +414,13 @@ for (let i = 0; i < balls.length; i++) {
 
       Adding those together, _n&nbsp;log&nbsp;n&nbsp;+&nbsp;n&nbsp;+&nbsp;m_ we get ___O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)___.
       
-      This is big improvement over the naive approach’s _O(n<sup>2</sup>)_ because **(1)** _n&nbsp;log&nbsp;n_ is [much smaller](https://bigocheatsheet.com/) than _n<sup>2</sup>_ and **(2)** it is partially output-based - depending on the number of overlaps, it does not process more than necessary.
+      This is a big improvement over the naive approach’s _O(n<sup>2</sup>)_ because **(1)** _n&nbsp;log&nbsp;n_ is [much smaller](https://bigocheatsheet.com/) than _n<sup>2</sup>_ and **(2)** it is partially output-based - depending on the number of overlaps, it does not process more than necessary.
 
-      <blog-media
-        src="https://www.bigocheatsheet.com/img/big-o-complexity-chart.png"
-        caption="Big O complexity chart from bigocheatsheet.com" />
+      <text-link href="https://www.bigocheatsheet.com">
+        <blog-media
+          src="https://www.bigocheatsheet.com/img/big-o-complexity-chart.png"
+          caption="bigocheatsheet.com" />
+      </text-link>
 
       Furthermore, the choice of sorting algorithm could be improved. We’ll look into that in the next part (something better than _n&nbsp;log&nbsp;n_ sort!).
 
@@ -395,7 +430,7 @@ for (let i = 0; i < balls.length; i++) {
 
       ## Visual comparison
 
-      Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍 n = 10
+      Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection tests required per frame. 🔍 n = 10
 
       <div class="demo-row">
         <sap-demo
