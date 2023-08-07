@@ -20,7 +20,13 @@
       
       This part explores the more sophisticated versions of sweep-and-prune.
       
-      ## Proper sweep-and-prune
+      <blog-media
+        alt="Classy rageface"
+        :src="url('sophisticated.png')"
+        caption="Sophisticated sip and prune."
+        spec="250" />
+
+      ## Proper sweep-and-prune 🧐
 
       While the simplified versions’s time complexity would be about the same as the original version’s, I believe the original would run with a much smaller *constant factor*. In any case, let’s see how the original tackled the problem.
 
@@ -66,7 +72,7 @@ function intersects(object1, object2) {
       /* ... */;
 }`" />
 
-      We can replace these x-coordinate comparisons with a new approach based on array indices. Since we have a sorted array of every object’s left and right points, finding overlaps can be done via index-based searches rather than global pairwise testing.
+      We can replace these x-coordinate comparisons with a new approach based on array indices. Since we have a sorted array of every object’s left and right points, finding x-overlaps can be done via index-based searches rather than global pairwise testing.
 
       Take one ball for example. Get the indices of its left and right points, and you can simply run in between those two points in the array to find all x-overlapping objects! This is a very fast linear operation.
 
@@ -87,7 +93,7 @@ function intersects(object1, object2) {
 
       ## Chapter 2. Sweeping
 
-      To generalise the above to an n-interval overlap scan, imagine a vertical line sweeping across the whole space from left to right. The sweep will scan each edge point in-order, keeping track of the objects it touches.
+      To generalise the above to an n-interval overlap scan, imagine a vertical line sweeping across the whole space from left to right. The sweep line keeps track of the objects it is currently touching.
 
       Let’s see what that looks like without collision:
 
@@ -103,11 +109,11 @@ function intersects(object1, object2) {
         </div>
       </div>
 
-      Whenever it runs into an object (a left edge), the object is added to a set that we’ll call <span style="color:#d88">`touching`</span> to indicate that it’s touching the line.
+      As for the implementation, the line is merely a metaphor. It’s just a visualisation of an iteration through the sorted list of edges.
 
-      Likewise, whenever it exits an object (right edge), that object is removed from the set.
-
-      As for the implementation, the line is merely a metaphor. It’s just a visualisation of an iteration through the sorted list of edges. Here’s the code for the actual sweeping:
+      To keep track of objects touching the line, we maintain a set called <span style="color:#d88">`touching`</span> in code.
+      
+      Whenever the line runs into an object (a left edge), the object is added to the set. Likewise, whenever it exits an object (right edge), the object is removed from the set.
 
       <code-block :code="`\
 sort(edges);
@@ -167,7 +173,7 @@ for (const edge of edges) {
 
       `onOverlapX()` is called whenever two balls are overlapping in the x dimension. What about the other dimension, *y*? What if we’re working with 3D, how about *z*?
 
-      Don’t worry; the sweep is just a broad-phase test, a way to _prune_ candidate pairs in bulk. There will be a narrow-phase test to exactly determine the intersections in each of the remaining pairs.
+      Don’t worry; the sweep is just a broad-phase test, a way to _prune_ candidate pairs in bulk. There will be a narrow-phase test to determine exactly the intersections in each of the remaining pairs.
 
       `onOverlapX()` can be hooked up to an exact intersection test like the full `intersects()` function earlier. Or, since we already know that the argument pair overlaps in *x*, we can just check for *y*.
 
@@ -207,11 +213,13 @@ onOverlapX = function(object1, object2) {
         </div>
       </div>
 
+      Notice that it behaves similarly to the simplified version. It limits tests to x-overlapping pairs.
+
       <box-note>The sweep-and-prune algorithm is also known as sort-and-sweep.</box-note>
 
-      ### Note for 3D
+      ### Note for higher dimensions
 
-      There is a variant which performs the **sweep for each axis**, not just *x*. It maintains _separate_ sorted lists of edges for x, y, and z. Indeed, this is how the full sweep-and-prune implementation works as described in the [original paper by D. Baraff](https://ecommons.cornell.edu/handle/1813/7115). Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.
+      There is a variant which performs the **sweep for each axis**, not just *x*. For example in 3D, it maintains three _separate_ sorted lists of edges for x, y, and z. Indeed, this is how the full sweep-and-prune implementation works as described in the [original paper by D. Baraff](https://ecommons.cornell.edu/handle/1813/7115). Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.
 
       This is the advantage the full sweep-and-prune has over the simplified “sorted pairwise” version. It can prune in multiple dimensions!
 
@@ -270,7 +278,7 @@ function sweepAndPrune(edges) {
 
   const touching = new Set();
 
-  // O(n)
+  // O(n + m)
   for (const edge of edges) {
     if (edge.isLeft) {
       // O(1) at best; O(m/n) on average; O(n) at worst

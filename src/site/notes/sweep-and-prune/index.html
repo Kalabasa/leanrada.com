@@ -390,7 +390,7 @@ if (ball2.left > ball1.right) break;`" />
       
       The sort - if we take the "fastest" sorting algorithm, like mergesort or quicksort - would add an _O(n log n)_ term.
 
-      The two-level loop, now with an early break, would average out to _O(n&nbsp;+&nbsp;m)_ where _m_ is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be _O(n)_, wasting no excess processing if there are no overlaps at all. On average it’s _O(n&nbsp;+&nbsp;m)_.
+      The two-level loop, now with an early break, would average out to _O(n&nbsp;+&nbsp;m)_ where _m_ is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be _O(n)_, wasting no excess processing if there are no overlaps. On average it’s _O(n&nbsp;+&nbsp;m)_.
 
       <box-note>The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller.</box-note>
 
@@ -403,6 +403,7 @@ sortByLeft(balls);
 // O(n + m)
 for (let i = 0; i < balls.length; i++) {
   const ball1 = balls[i];
+  // O(1) at best; O(m/n) on average; O(n) at worst
   for (let j = i + 1; j < balls.length; j++) {
     const ball2 = balls[j];
     if (ball2.left > ball1.right) break;
@@ -412,9 +413,9 @@ for (let i = 0; i < balls.length; i++) {
   }
 }`" />
 
-      Adding those together, _n&nbsp;log&nbsp;n&nbsp;+&nbsp;n&nbsp;+&nbsp;m_ we get ___O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)___.
+      Adding those together we get ___O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)___.
       
-      This is a big improvement over the naive approach’s _O(n<sup>2</sup>)_ because **(1)** _n&nbsp;log&nbsp;n_ is [much smaller](https://bigocheatsheet.com/) than _n<sup>2</sup>_ and **(2)** it is partially output-based - depending on the number of overlaps, it does not process more than necessary.
+      This is a big improvement over the naive approach’s _O(n<sup>2</sup>)_ because **[1]** _n&nbsp;log&nbsp;n_ is [much smaller](https://bigocheatsheet.com/) than _n<sup>2</sup>_ and **[2]** it is partially output-based - depending on the number of overlaps, it does not process more than necessary.
 
       <text-link href="https://www.bigocheatsheet.com">
         <blog-media
