@@ -28,11 +28,11 @@
 
       ## Proper sweep-and-prune 🧐
 
-      While the simplified versions’s time complexity would be about the same as the original version’s, I believe the original would run with a much smaller *constant factor*. In any case, let’s see how the original tackled the problem.
+      Let’s see how the original version tackled the problem (Not sure which one’s original, tbh).
 
       First, sorting widthy objects.
 
-      To account for the width of objects while keeping the benefits of unambiguous sort order, we track the left and the right edges of each object as two separate points!
+      To account for the width of objects while keeping the benefits of unambiguous sort order, we track the left and the right edges of each object as two separate points.
 
       This is done by maintaining a separate __array of edge points__ corresponding to the objects’ left & right edges.
 
@@ -49,7 +49,7 @@
         <div class="edges-array" data-target="#edges-demo"></div>
       </div>
 
-      Of course, we need to first extract the edges then continually keep them in sync with the objects. I’ll leave that out as an implementation detail.
+      Of course, we need to initialise the edge data and continually keep them in sync with the objects. I’ll leave that out as an implementation detail.
 
       <code-block :code="`\
 // todo: extract 2 edges from each object into the array
@@ -89,7 +89,7 @@ function intersects(object1, object2) {
         <div class="edges-array" data-target="#edges-demo-one"></div>
       </div>
 
-      The above is a simple 1-to-n overlap detection (which is flawed, btw). For n-to-n overlap detection, turns out there is a way to find all overlapping pairs in a single pass!
+      The above is a simple 1-to-n overlap detection (which is flawed, btw). For n-to-n overlap detection, turns out there is a neat way to find all overlapping pairs in a single pass!
 
       ## Chapter 2. Sweeping
 
@@ -213,7 +213,7 @@ onOverlapX = function(object1, object2) {
         </div>
       </div>
 
-      Notice that it behaves similarly to the simplified version. It limits tests to x-overlapping pairs.
+      Notice that it behaves very similarly to the simplified version. It limits tests to x-overlapping pairs.
 
       <box-note>The sweep-and-prune algorithm is also known as sort-and-sweep.</box-note>
 
@@ -294,7 +294,7 @@ function sweepAndPrune(edges) {
 
       So this sweep-and-prune is ___O(n log n + m)___.
 
-      That’s great, but it’s the same as the simplified “sorted pairwise” sweep-and-prune but with more code and state to keep tabs on. *Can we improve it further?*
+      That’s great, but it’s the same as simplified sweep-and-prune but with more code and more state to keep tabs on. *Can we improve it further?*
 
       ## Small detail, big improvement
 
@@ -330,7 +330,7 @@ function insertionSort(edges) {
   }
 }`" />
 
-      Insertion sort has a running time of _O(n)_ at best when the list is already sorted or nearly-sorted, and _O(n<sup>2</sup>)_ at worst when the list is in reverse. We can argue that the average case is **O(n)** and that we almost never reach the worst case, since the list is almost always sorted due to the previous frame’s sort.
+      Insertion sort has a running time of _O(n)_ at best when the list is already sorted or nearly-sorted, and _O(n<sup>2</sup>)_ at worst when the list is in reverse. We can argue that the average case is ***O(n)***, since the list is almost always sorted due to the previous frame’s sort.
 
       Here’s insertion sort in action:
 
@@ -344,26 +344,28 @@ function insertionSort(edges) {
         </div>
       </div>
 
-      By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to ___O(n&nbsp;+&nbsp;m)___!
+      Look at it go!
+
+      By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to ___O(n&nbsp;+&nbsp;m)___! Awesome!
 
       <box-note>
-        It’s important to consider the primary axis of sweep-and-prune due to the sweeps plus the nature of insertion sort. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
+        <b>Caveat:</b> It’s important to consider the primary axis of sweep-and-prune due to the sweeps plus the nature of insertion sort. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
       </box-note>
 
-      Meanwhile, the same insertion sort could be applied to the simplified “sorted pairwise” sweep-and-prune since it has a sorting step as well. So it’s _O(n&nbsp;+&nbsp;m)_ as well. *Can we ever top that?*
+      Of course, don’t forget about our simplified sweep-and-prune from the first part. Since it has a sort step as well, we can make it insertion sort too. So it can also be _O(n&nbsp;+&nbsp;m)_! Can we ever top that?
 
       ## Sweeps and swaps
 
-      Well, there is yet another way to optimise this algorithm! Be prepared, the subject is about to get quite dense. 🪨
-      
+      Well, there is yet another way to optimise this algorithm! Hold on to your balloons, it’s about to get quite dense. 🪨
+
       Look at the insertion sort example above. You can observe that <span style="color:#f00">swaps</span> happen when and only **when an edge point passes through another edge point**.
 
       The event where an edge point passes another can be classified into four cases:
 
       | Case | Description |
       |------|-------------|
-      | `)↔(` | R edge from the left swaps with L edge from the right. |
-      | `(↔)` | L edge from the left swaps with R edge from the right. |
+      | `)↔(` | R edge from the west swaps with L edge from the east. |
+      | `(↔)` | L edge from the west swaps with R edge from the east. |
       | `(↔(` | L edges swap. |
       | `)↔)` | R edges swap. |
 
@@ -375,7 +377,7 @@ function insertionSort(edges) {
         alt="Animation of a R edge swapping with a L edge"
         :src="url('swap-rl.mp4')" />
         
-      When a right edge from the left swaps with a left edge from the right, we can infer that the corresponding balls are __initiating an overlap__.
+      When a right edge from the west swaps with a left edge from the east, we can infer that the corresponding balls are __initiating an overlap__.
 
       ### case (↔). “Exiting”
       
@@ -383,7 +385,7 @@ function insertionSort(edges) {
         alt="Animation of a L edge swapping with a R edge"
         :src="url('swap-lr.mp4')" />
         
-      Conversely, when a left edge from the left swaps with a right edge from the right, the corresponding balls __cease to overlap__.
+      Conversely, when a left edge from the west swaps with a right edge from the east, the corresponding balls __cease to overlap__.
 
       ### cases (↔( and )↔)
       
@@ -461,8 +463,8 @@ function sweepAndPrune(edges) {
           decorations="checks:#4c8"/>
       </div>
 
-      While it behaves the same and has the same time complexity as the preceding variants, I am guessing that practically it’s much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed. (Disclaimer: I haven’t done benchmarks!)
-
+      While it behaves the same and has the same time complexity as the preceding variants, I’m guessing it’s practically much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed. (Disclaimer: I haven’t done any benchmarks!)
+s
       ## Quick comparisons
 
       | Algorithm                   | Average time     | Best time        | Space |

@@ -14,7 +14,7 @@
         <tag>games</tag>
       </tag-row>
 
-      Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. This post is about that algorithm and its variations. In this post, I attempt to explain and demonstrate what I think are first principles, so it’s quite long and is split into two parts. And, as usual for this blog, there are interactive demos as well! 😄
+      Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. This post is about that algorithm and its variations. I think it’s an awesome and elegant algorithm, so I wrote this post. In this post, I attempt to explain and demonstrate what I think are first principles, so it’s quite long and is split into two parts. And, as usual for this blog, there are interactive demos as well! 😄
 
       ---
 
@@ -187,7 +187,7 @@ intersects(B, C) // B.right > C.left evals to false.
 // ∴ Therefore I don’t need to call intersects(A, C)
 // to know that it will return false.`" />
 
-      We’ve skipped one `intersects()` call for free!
+      We’ve skipped one `intersects()` call for free! ✨
 
       <box-note>
         I’m handwaving the fact that <code>O.left ≤ O.right</code> is implied for any object O. Nevertheless, working those details out would just mean more transitivity.
@@ -370,7 +370,7 @@ if (ball2.left > ball1.right) break;`" />
         }
       </style>
 
-      Here’s a demo:
+      Finally, here’s a demo:
 
       <div class="demo-row">
         <sap-demo
@@ -382,7 +382,9 @@ if (ball2.left > ball1.right) break;`" />
         </div>
       </div>
 
-      Observations:
+      Pretty cool, right! It’s much faster now.
+
+      Some observations:
       * Since the list is sorted, the tests are performed from left to right.
       * More importantly, it visibly does fewer tests than the naive approach. 📉 This is due the above optimisation which effectively limits pairs to those that overlap in the x-axis!
 
@@ -390,7 +392,7 @@ if (ball2.left > ball1.right) break;`" />
       
       The sort - if we take the "fastest" sorting algorithm, like mergesort or quicksort - would add an _O(n log n)_ term.
 
-      The two-level loop, now with an early break, would average out to _O(n&nbsp;+&nbsp;m)_ where _m_ is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be _O(n)_, wasting no excess processing if there are no overlaps. On average it’s _O(n&nbsp;+&nbsp;m)_.
+      The two-level loop, now with an early break, would average out to _O(n&nbsp;+&nbsp;m)_ where _m_ is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be _O(n)_, wasting no excess processing when there are no overlaps. On average it’s _O(n&nbsp;+&nbsp;m)_.
 
       <box-note>The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller.</box-note>
 
@@ -414,8 +416,8 @@ for (let i = 0; i < balls.length; i++) {
 }`" />
 
       Adding those together we get ___O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)___.
-      
-      This is a big improvement over the naive approach’s _O(n<sup>2</sup>)_ because **[1]** _n&nbsp;log&nbsp;n_ is [much smaller](https://bigocheatsheet.com/) than _n<sup>2</sup>_ and **[2]** it is partially output-based - depending on the number of overlaps, it does not process more than necessary.
+
+      This is a super good improvement over the naive approach’s _O(n<sup>2</sup>)_, because **[1]** _n&nbsp;log&nbsp;n_ is [much smaller](https://bigocheatsheet.com/) than _n<sup>2</sup>_ and **[2]** it is partially output-based - depending on the number of overlaps, it does not process more than necessary.
 
       <text-link href="https://www.bigocheatsheet.com">
         <blog-media
@@ -423,10 +425,10 @@ for (let i = 0; i < balls.length; i++) {
           caption="bigocheatsheet.com" />
       </text-link>
 
-      Furthermore, the choice of sorting algorithm could be improved. We’ll look into that in the next part (something better than _n&nbsp;log&nbsp;n_ sort!).
+      Furthermore, the choice of sorting algorithm could be improved. We’ll look into that in the next part (somehow better than _n&nbsp;log&nbsp;n_!).
 
       <box-note>
-        If you got this far trying to find a decent collision detection algorithm, then you can stop reading and take the above design! It’s the perfect balance between programming effort and running time performance. If you are curious how this develops or just want to see more interactive demos, read the next part.
+        If you got this far trying to find a decent collision detection algorithm, then you can stop reading and take the above design! It’s the perfect balance between programming effort and running time performance. If you are curious how this develops or just want to see more interactive demos, read on to the next part.
       </box-note>
 
       ## Visual comparison
@@ -451,9 +453,11 @@ for (let i = 0; i < balls.length; i++) {
           <div class="demo-caption">Sorted pairwise</div>
       </div>
 
-      (Not shown: the cost of sorting. Let’s assume the intersection test is sufficiently expensive.)
+      (Not shown: the cost of sorting. Let’s just say the intersection test is sufficiently expensive.)
 
-      Aaand that concludes the first part. Those two lines of code definitely made big impact. What could be better than that?
+      Aaand that concludes the first part. Those two lines of code definitely were the MVPs.
+      
+      How will it compare to the more advanced versions?
 
       [Continued in part 2.](/notes/sweep-and-prune-2/)
 
