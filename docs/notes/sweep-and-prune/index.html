@@ -1441,7 +1441,7 @@
               <span class="tag-component" style="background: rgb(183,234,166); color: rgb(51,105,32)">games</span>
             </div>
 
-            <p>This post is about a neat family of algorithms for detecting collisions among multiple objects. I attempted to explain and demonstrate first principles, so it’s quite long and is split into two parts. I hope you take the time to read and learn from it! 😄</p>
+            <p>Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. This post is about that algorithm and its variations. I think it’s an awesome and elegant algorithm, so I wrote this post. In this post, I attempt to explain and demonstrate what I think are first principles, so it’s quite long and is split into two parts. And, as usual for this blog, there are interactive demos as well! 😄</p>
             <hr>
             <h2 id="collision-detection">Collision detection</h2>
             <p>As you may know, the problem of collision detection is pretty common in video game programming. It’s a prerequisite to the implementation of certain game mechanics or simulations.</p>
@@ -1450,13 +1450,13 @@
               <img class="blog-media-element" alt="video of mario with goombas bumping into each other" src="/notes/sweep-and-prune/mario.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #6888f8"><span class="blog-media-caption">Goombas colliding</span>
             </div>
             </p>
-            <p>Some of these mechanics include: preventing characters from passing through each other, <a target="_blank" class="text-link " href="https://youtu.be/Ky69PjyHCqg">goombas</a> turning around when bumping into another, big cells eating smaller cells in <a target="_blank" class="text-link " href="https://agar.io/">agar.io</a>, or just about any game physics. All of these need collision detection.</p>
+            <p>Some of these mechanics include: preventing characters from passing through each other, <a target="_blank" class="text-link " href="https://youtu.be/Ky69PjyHCqg">goombas</a> turning around when bumping into another, big cells eating smaller cells in <a target="_blank" class="text-link " href="https://agar.io/">agar.io</a>, or just about any game physics. All of these need some kind of collision detection.</p>
             <p>
             <div class="blog-media blog-media-default">
               <img class="blog-media-element" alt="video of agar.io with cells eating smaller cells" src="/notes/sweep-and-prune/agario.gif" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #f8f8f8"><span class="blog-media-caption">Cells consuming smaller cells on contact</span>
             </div>
             </p>
-            <p>Here I’ll cover several related approaches, starting with the simplest and building up to the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Sweep_and_prune"><strong>sweep-and-prune</strong></a> algorithm.</p>
+            <p>Here I’ll cover several related approaches, starting with the simplest and building up to the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Sweep_and_prune"><strong>sweep-and-prune</strong></a> algorithm. I won’t cover other approaches, such as space partitioning or spatial tree subdivision.</p>
             <p>Balls.</p>
             <p>I’ll use this <strong>rigid-body ball simulation</strong> as a recurring example to demonstrate the algorithms throughout the post:</p>
             <div class="demo-row">
@@ -1566,7 +1566,7 @@
 <span class="token comment">// 3. Infer that A.right &gt; C.left is false.</span>
 <span class="token comment">// ∴ Therefore I don’t need to call intersects(A, C)</span>
 <span class="token comment">// to know that it will return false.</span></code></pre>
-            <p>We’ve skipped one <code>intersects()</code> call for free!</p>
+            <p>We’ve skipped one <code>intersects()</code> call for free! ✨</p>
             <span class="box-note ">
               I’m handwaving the fact that <code>O.left ≤ O.right</code> is implied for any object O. Nevertheless, working those details out would just mean more transitivity.
             </span>
@@ -1661,7 +1661,7 @@
               <code>balls[<span class="eq-i">j</span> + <span class="eq-c">c</span>]</code>
               would be guaranteed to not overlap <em>ball1</em> as well. In other words, we stop the inner loop when it gets too far away.
             </p>
-            <p>Here’s a demo:</p>
+            <p>Finally, here’s a demo:</p>
             <div class="demo-row">
               <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'simple-sap' strategy" strategy="simple-sap" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
               <div class="demo-caption">
@@ -1669,14 +1669,15 @@
               </div>
             </div>
 
-            <p>Observations:</p>
+            <p>Pretty cool, right! It’s much faster now.</p>
+            <p>Some observations:</p>
             <ul>
               <li>Since the list is sorted, the tests are performed from left to right.</li>
               <li>More importantly, it visibly does fewer tests than the naive approach. 📉 This is due the above optimisation which effectively limits pairs to those that overlap in the x-axis!</li>
             </ul>
             <p>Let’s analyse the time complexity. 👓</p>
             <p>The sort - if we take the "fastest" sorting algorithm, like mergesort or quicksort - would add an <em>O(n log n)</em> term.</p>
-            <p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be <em>O(n)</em>, wasting no excess processing if there are no overlaps. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
+            <p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be <em>O(n)</em>, wasting no excess processing when there are no overlaps. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
             <p><span class="box-note ">The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller.</span></p>
             <p>Here’s the code with running time annotations:</p>
             <pre class="code-block"><code class="code-block-code"><span class="token comment">// O(n log n)</span>
@@ -1695,16 +1696,16 @@
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
             <p>Adding those together we get <em><strong>O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)</strong></em>.</p>
-            <p>This is a big improvement over the naive approach’s <em>O(n<sup>2</sup>)</em> because <strong>[1]</strong> <em>n&nbsp;log&nbsp;n</em> is <a target="_blank" class="text-link " href="https://bigocheatsheet.com/">much smaller</a> than <em>n<sup>2</sup></em> and <strong>[2]</strong> it is partially output-based - depending on the number of overlaps, it does not process more than necessary.</p>
+            <p>This is a super good improvement over the naive approach’s <em>O(n<sup>2</sup>)</em>, because <strong>[1]</strong> <em>n&nbsp;log&nbsp;n</em> is <a target="_blank" class="text-link " href="https://bigocheatsheet.com/">much smaller</a> than <em>n<sup>2</sup></em> and <strong>[2]</strong> it is partially output-based - depending on the number of overlaps, it does not process more than necessary.</p>
             <a target="_blank" class="text-link " href="https://www.bigocheatsheet.com">
               <div class="blog-media blog-media-default">
                 <img class="blog-media-element" alt="" src="https://www.bigocheatsheet.com/img/big-o-complexity-chart.png" loading="lazy"><span class="blog-media-caption">bigocheatsheet.com</span>
               </div>
             </a>
 
-            <p>Furthermore, the choice of sorting algorithm could be improved. We’ll look into that in the next part (something better than <em>n&nbsp;log&nbsp;n</em> sort!).</p>
+            <p>Furthermore, the choice of sorting algorithm could be improved. We’ll look into that in the next part (somehow better than <em>n&nbsp;log&nbsp;n</em>!).</p>
             <span class="box-note ">
-              If you got this far trying to find a decent collision detection algorithm, then you can stop reading and take the above design! It’s the perfect balance between programming effort and running time performance. If you are curious how this develops or just want to see more interactive demos, read the next part.
+              If you got this far trying to find a decent collision detection algorithm, then you can stop reading and take the above design! It’s the perfect balance between programming effort and running time performance. If you are curious how this develops or just want to see more interactive demos, read on to the next part.
             </span>
 
             <h2 id="visual-comparison">Visual comparison</h2>
@@ -1719,8 +1720,9 @@
               <div class="demo-caption">Sorted pairwise</div>
             </div>
 
-            <p>(Not shown: the cost of sorting. Let’s assume the intersection test is sufficiently expensive.)</p>
-            <p>Aaand that concludes the first part. Those two lines of code definitely made big impact. What could be better than that?</p>
+            <p>(Not shown: the cost of sorting. Let’s just say the intersection test is sufficiently expensive.)</p>
+            <p>Aaand that concludes the first part. Those two lines of code definitely were the MVPs.</p>
+            <p>How will it compare to the more advanced versions?</p>
             <p><a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Continued in part 2.</a></p>
             <hr>
             <p>Bonus demo, 15 balls! What a mess!</p>

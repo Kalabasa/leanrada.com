@@ -1453,9 +1453,9 @@
             </div>
             </p>
             <h2 id="proper-sweep-and-prune-🧐">Proper sweep-and-prune 🧐</h2>
-            <p>While the simplified versions’s time complexity would be about the same as the original version’s, I believe the original would run with a much smaller <em>constant factor</em>. In any case, let’s see how the original tackled the problem.</p>
+            <p>Let’s see how the original version tackled the problem (Not sure which one’s original, tbh).</p>
             <p>First, sorting widthy objects.</p>
-            <p>To account for the width of objects while keeping the benefits of unambiguous sort order, we track the left and the right edges of each object as two separate points!</p>
+            <p>To account for the width of objects while keeping the benefits of unambiguous sort order, we track the left and the right edges of each object as two separate points.</p>
             <p>This is done by maintaining a separate <strong>array of edge points</strong> corresponding to the objects’ left &amp; right edges.</p>
             <p>See how it works by playing with this <span class="drag-hint">draggable</span> demo. The left and right edges of each ball are visualised. These edge points are stored in a sorted array shown below the box.</p>
             <div class="demo-row">
@@ -1464,7 +1464,7 @@
               <div class="edges-array" data-target="#edges-demo"></div>
             </div>
 
-            <p>Of course, we need to first extract the edges then continually keep them in sync with the objects. I’ll leave that out as an implementation detail.</p>
+            <p>Of course, we need to initialise the edge data and continually keep them in sync with the objects. I’ll leave that out as an implementation detail.</p>
             <pre class="code-block"><code class="code-block-code"><span class="token comment">// todo: extract 2 edges from each object into the array</span>
 <span class="token keyword">let</span> <span class="token literal-property property">edges</span><span class="token operator">:</span> Array<span class="token operator">&lt;</span><span class="token punctuation">{</span>
   <span class="token literal-property property">object</span><span class="token operator">:</span> Object<span class="token punctuation">;</span>  <span class="token comment">// parent object</span>
@@ -1488,7 +1488,7 @@
               <div class="edges-array" data-target="#edges-demo-one"></div>
             </div>
 
-            <p>The above is a simple 1-to-n overlap detection (which is flawed, btw). For n-to-n overlap detection, turns out there is a way to find all overlapping pairs in a single pass!</p>
+            <p>The above is a simple 1-to-n overlap detection (which is flawed, btw). For n-to-n overlap detection, turns out there is a neat way to find all overlapping pairs in a single pass!</p>
             <h2 id="chapter-2-sweeping">Chapter 2. Sweeping</h2>
             <p>To generalise the above to an n-interval overlap scan, imagine a vertical line sweeping across the whole space from left to right. The sweep line keeps track of the objects it is currently touching.</p>
             <p>Let’s see what that looks like without collision:</p>
@@ -1573,7 +1573,7 @@
               </div>
             </div>
 
-            <p>Notice that it behaves similarly to the simplified version. It limits tests to x-overlapping pairs.</p>
+            <p>Notice that it behaves very similarly to the simplified version. It limits tests to x-overlapping pairs.</p>
             <p><span class="box-note ">The sweep-and-prune algorithm is also known as sort-and-sweep.</span></p>
             <h3 id="note-for-higher-dimensions">Note for higher dimensions</h3>
             <p>There is a variant which performs the <strong>sweep for each axis</strong>, not just <em>x</em>. For example in 3D, it maintains three <em>separate</em> sorted lists of edges for x, y, and z. Indeed, this is how the full sweep-and-prune implementation works as described in the <a target="_blank" class="text-link " href="https://ecommons.cornell.edu/handle/1813/7115">original paper by D. Baraff</a>. Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.</p>
@@ -1625,7 +1625,7 @@
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
             <p>So this sweep-and-prune is <em><strong>O(n log n + m)</strong></em>.</p>
-            <p>That’s great, but it’s the same as the simplified “sorted pairwise” sweep-and-prune but with more code and state to keep tabs on. <em>Can we improve it further?</em></p>
+            <p>That’s great, but it’s the same as simplified sweep-and-prune but with more code and more state to keep tabs on. <em>Can we improve it further?</em></p>
             <h2 id="small-detail-big-improvement">Small detail, big improvement</h2>
             <p>Again, let’s ask the question: Where is redundant work being done here?</p>
             <p>Let’s look at the sort step, which is the bottleneck of the algorithm according to the analysis.</p>
@@ -1648,7 +1648,7 @@
     <span class="token punctuation">}</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>Insertion sort has a running time of <em>O(n)</em> at best when the list is already sorted or nearly-sorted, and <em>O(n<sup>2</sup>)</em> at worst when the list is in reverse. We can argue that the average case is <strong>O(n)</strong> and that we almost never reach the worst case, since the list is almost always sorted due to the previous frame’s sort.</p>
+            <p>Insertion sort has a running time of <em>O(n)</em> at best when the list is already sorted or nearly-sorted, and <em>O(n<sup>2</sup>)</em> at worst when the list is in reverse. We can argue that the average case is <em><strong>O(n)</strong></em>, since the list is almost always sorted due to the previous frame’s sort.</p>
             <p>Here’s insertion sort in action:</p>
             <div class="demo-row">
               <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-insertionsort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" strategy="sap-insertionsort" decorations="edges:array:#f00:#0ff"></sap-demo-client>
@@ -1657,14 +1657,15 @@
               </div>
             </div>
 
-            <p>By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to <em><strong>O(n&nbsp;+&nbsp;m)</strong></em>!</p>
+            <p>Look at it go!</p>
+            <p>By switching to insertion sort, we’ve reduced the overall average running time of sweep-and-prune to <em><strong>O(n&nbsp;+&nbsp;m)</strong></em>! Awesome!</p>
             <span class="box-note ">
-              It’s important to consider the primary axis of sweep-and-prune due to the sweeps plus the nature of insertion sort. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
+              <b>Caveat:</b> It’s important to consider the primary axis of sweep-and-prune due to the sweeps plus the nature of insertion sort. It should be the axis where objects are most widely distributed to minimize swaps and overlaps.
             </span>
 
-            <p>Meanwhile, the same insertion sort could be applied to the simplified “sorted pairwise” sweep-and-prune since it has a sorting step as well. So it’s <em>O(n&nbsp;+&nbsp;m)</em> as well. <em>Can we ever top that?</em></p>
+            <p>Of course, don’t forget about our simplified sweep-and-prune from the first part. Since it has a sort step as well, we can make it insertion sort too. So it can also be <em>O(n&nbsp;+&nbsp;m)</em>! Can we ever top that?</p>
             <h2 id="sweeps-and-swaps">Sweeps and swaps</h2>
-            <p>Well, there is yet another way to optimise this algorithm! Be prepared, the subject is about to get quite dense. 🪨</p>
+            <p>Well, there is yet another way to optimise this algorithm! Hold on to your balloons, it’s about to get quite dense. 🪨</p>
             <p>Look at the insertion sort example above. You can observe that <span style="color:#f00">swaps</span> happen when and only <strong>when an edge point passes through another edge point</strong>.</p>
             <p>The event where an edge point passes another can be classified into four cases:</p>
             <div class="markdown-table">
@@ -1678,11 +1679,11 @@
                 <tbody>
                   <tr>
                     <td><code>)↔(</code></td>
-                    <td>R edge from the left swaps with L edge from the right.</td>
+                    <td>R edge from the west swaps with L edge from the east.</td>
                   </tr>
                   <tr>
                     <td><code>(↔)</code></td>
-                    <td>L edge from the left swaps with R edge from the right.</td>
+                    <td>L edge from the west swaps with R edge from the east.</td>
                   </tr>
                   <tr>
                     <td><code>(↔(</code></td>
@@ -1705,7 +1706,7 @@
               </video>
             </div>
             </p>
-            <p>When a right edge from the left swaps with a left edge from the right, we can infer that the corresponding balls are <strong>initiating an overlap</strong>.</p>
+            <p>When a right edge from the west swaps with a left edge from the east, we can infer that the corresponding balls are <strong>initiating an overlap</strong>.</p>
             <h3 id="case-↔-exiting">case (↔). “Exiting”</h3>
             <p>
             <div class="blog-media blog-media-default">
@@ -1715,7 +1716,7 @@
               </video>
             </div>
             </p>
-            <p>Conversely, when a left edge from the left swaps with a right edge from the right, the corresponding balls <strong>cease to overlap</strong>.</p>
+            <p>Conversely, when a left edge from the west swaps with a right edge from the east, the corresponding balls <strong>cease to overlap</strong>.</p>
             <h3 id="cases-↔-and-↔">cases (↔( and )↔)</h3>
             <p>
             <div class="blog-media blog-media-default">
@@ -1782,7 +1783,8 @@
               <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-swap' strategy" strategy="sap-swap" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
             </div>
 
-            <p>While it behaves the same and has the same time complexity as the preceding variants, I think practically it’s much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed.</p>
+            <p>While it behaves the same and has the same time complexity as the preceding variants, I’m guessing it’s practically much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed. (Disclaimer: I haven’t done any benchmarks!)
+              s</p>
             <h2 id="quick-comparisons">Quick comparisons</h2>
             <div class="markdown-table">
               <table>
