@@ -36,8 +36,8 @@ async function main() {
     const tag = ch("tag");
 
     const titleText =
-      header.attr("title")
-      ?? pageTitle.attr("title")
+      pageTitle.attr("title")
+      ?? header.attr("title")
       ?? title.text();
 
     const date = info.attr("date");
