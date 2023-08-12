@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Sort, sweep, and prune: collision detection algorithms · leanrada.com</title>
+  <title>Sort, sweep, and prune: Collision detection algorithms · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <script type="module" client="" defer="">
     import {
@@ -1422,7 +1422,7 @@
             <div class="blog-header">
               <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
                 <h1 class="text-with-bg-span blog-header-title-inner">
-                  Sort, sweep, and prune: collision detection algorithms
+                  Sort, sweep, and prune: Collision detection algorithms
                 </h1>
               </div>
               <img srcset="/notes/sweep-and-prune/hero_800.generated.jpg 800w,/notes/sweep-and-prune/hero_1200.generated.jpg 1200w" sizes="not (min-width:800px) 800px, 1200px" class="blog-header-hero" src="/notes/sweep-and-prune/hero.jpg" alt="" spec="100% [800) 80%">
@@ -1441,7 +1441,23 @@
               <span class="tag-component" style="background: rgb(183,234,166); color: rgb(51,105,32)">games</span>
             </div>
 
-            <p>Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. I think it’s an awesome and elegant algorithm, so I wrote this post about it. In this post, I attempt to explain and demonstrate what I think are first principles, so it’s quite long and is split into two parts (<a target="_self" class="text-link " href="/notes/sweep-and-prune/">1</a>, <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">2</a>). And, as usual for this blog, there are interactive demos as well! 😄</p>
+            <p>Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. I think it’s an awesome and elegant algorithm, so I wrote a post about it.</p>
+            <p>This post is lengthy with many examples and explanations, thus split into two parts. You can jump to specific bits using this special springboard:</p>
+            <ul>
+              <li><strong>Part 1:</strong> <a target="_self" class="text-link " href="/notes/sweep-and-prune/">Simplified version</a>
+                <ul>
+                  <li>🔍 <a target="_self" class="text-link " href="/notes/sweep-and-prune/#comparisons">Visual comparison</a></li>
+                  <li>📝 <a target="_self" class="text-link " href="/notes/sweep-and-prune/#code1">Code</a></li>
+                </ul>
+              </li>
+              <li><strong>Part 2:</strong> <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Sophisticated versions</a>
+                <ul>
+                  <li>🔍 <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/#comparisons">Visual comparison</a></li>
+                  <li>📝 <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/#final-code">Final code</a></li>
+                </ul>
+              </li>
+            </ul>
+            <p>As for the rest of the post, I try to paint a picture of what I think are first principles and show it with <strong>interactive demos</strong>! Let’s go!</p>
             <hr>
             <h2 id="collision-detection">Collision detection</h2>
             <p>As you may know, the problem of collision detection is pretty common in video game programming. It’s a prerequisite to the implementation of certain game mechanics or simulations.</p>
@@ -1466,7 +1482,18 @@
             <p>Alright, let’s dive in! How do we detect these collisions?</p>
             <h2 id="naive-approach-🐥">Naive approach 🐥</h2>
             <p>The straightforward solution is to test every potential pair of objects for collision. That is, <em>check every ball against every other ball</em>.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// for each ball</span>
+            <pre class="code-block" code="// for each ball
+for (let i = 0; i < balls.length; i++) {
+  const ball1 = balls[i];
+  // check each of the other balls
+  for (let j = i + 1; j < balls.length; j++) {
+    const ball2 = balls[j];
+    // check for collision
+    if (intersects(ball1, ball2)) {
+      bounce(ball1, ball2);
+    }
+  }
+}"><code class="code-block-code"><span class="token comment">// for each ball</span>
 <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> balls<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">const</span> ball1 <span class="token operator">=</span> balls<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
   <span class="token comment">// check each of the other balls</span>
@@ -1511,7 +1538,13 @@
             <h2 id="prologue-improving-the-solution">Prologue: Improving the solution</h2>
             <p>Usually when optimising algorithms, you wanna find <strong>redundant or unnecessary work</strong>. Then find a way to consolidate that redundancy. (That sounded corporate-ish.)</p>
             <p>A good place to start would be the <code>intersects()</code> function since it is called for every candidate pair. If we take the <a target="_blank" class="text-link " href="https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html">typical object intersection test</a> to be its implementation, we get a bunch of these <strong>inequality checks</strong>:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" code="function intersects(object1, object2) {
+  // compare objects' bounds to see if they overlap
+  return object1.left < object2.right
+      &amp;&amp; object1.right > object2.left
+      &amp;&amp; object1.top < object2.bottom
+      &amp;&amp; object1.bottom > object2.top;
+}"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token comment">// compare objects' bounds to see if they overlap</span>
   <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left
@@ -1543,11 +1576,15 @@
             </div>
             </p>
             <p>There are three potential pairs to be checked here: A-B, B-C, and A-C. Remember, we’re trying to find redundant work. Pretend we’re running all the pairs through the check, like so:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token constant">A</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">B</span><span class="token punctuation">.</span>left <span class="token comment">// returns false</span>
+            <pre class="code-block" code="A.right > B.left // returns false
+B.right > C.left // returns false
+A.right > C.left // returns false"><code class="code-block-code"><span class="token constant">A</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">B</span><span class="token punctuation">.</span>left <span class="token comment">// returns false</span>
 <span class="token constant">B</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">C</span><span class="token punctuation">.</span>left <span class="token comment">// returns false</span>
 <span class="token constant">A</span><span class="token punctuation">.</span>right <span class="token operator">&gt;</span> <span class="token constant">C</span><span class="token punctuation">.</span>left <span class="token comment">// returns false</span></code></pre>
             <p>See any redundant work? Maybe abstractify it a little…</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">B</span> <span class="token comment">// returns false</span>
+            <pre class="code-block" code="A > B // returns false
+B > C // returns false
+A > C // returns false"><code class="code-block-code"><span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">B</span> <span class="token comment">// returns false</span>
 <span class="token constant">B</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span>
 <span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span></code></pre>
             <p>Voilà. Due to the <a target="_blank" class="text-link " href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong></a>, realise that we don’t need to run the <strong>third test</strong>! <em>If we know that <code>A&nbsp;&gt;&nbsp;B</code> and <code>B&nbsp;&gt;&nbsp;C</code> are both <code>false</code>, then we would know that <code>A&nbsp;&gt;&nbsp;C</code> is <code>false</code> as well.</em></p>
@@ -1557,7 +1594,15 @@
               </p>
             </blockquote>
             <p>So in this example, we don’t really need to run <code>intersects(A, C)</code>.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// 1. Test A-B</span>
+            <pre class="code-block" code="// 1. Test A-B
+intersects(A, B) // A.right > B.left evals to false.
+
+// 2. Test B-C
+intersects(B, C) // B.right > C.left evals to false.
+
+// 3. Infer that A.right > C.left is false.
+// ∴ Therefore I don’t need to call intersects(A, C)
+// to know that it will return false."><code class="code-block-code"><span class="token comment">// 1. Test A-B</span>
 <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token constant">A</span><span class="token punctuation">,</span> <span class="token constant">B</span><span class="token punctuation">)</span> <span class="token comment">// A.right &gt; B.left evals to false.</span>
 
 <span class="token comment">// 2. Test B-C</span>
@@ -1600,7 +1645,25 @@
             <p>A solution to sorting widthy objects is to sort them by their <strong>minimum x</strong> (their left edge’s x-coordinate). This technique can be applied to improve the naive approach.</p>
             <p>It involves minimal modifications to the O(n<sup>2</sup>) solution. But it will result in a good chunk of tests skipped. I’ll explain later.</p>
             <p>First, the modified code:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span> <span class="token comment">// sort by min x</span>
+            <pre class="code-block" language="diff" language-code="diff-javascript" code="+ // sort by min x
++ sortByLeft(balls);
++ 
+  // for each ball
+  for (let i = 0; i < balls.length; i++) {
+    const ball1 = balls[i];
+    // check each of the other balls
+    for (let j = i + 1; j < balls.length; j++) {
+      const ball2 = balls[j];
++ 
++     // stop when too far away
++     if (ball2.left > ball1.right) break;
++ 
+      // check for collision
+      if (intersects(ball1, ball2)) {
+        bounce(ball1, ball2);
+      }
+    }
+  }"><code class="code-block-code"><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span> <span class="token comment">// sort by min x</span>
 <span class="token prefix inserted">+</span> <span class="token function">sortByLeft</span><span class="token punctuation">(</span>balls<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token prefix inserted">+</span> 
 </span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token comment">// for each ball</span>
@@ -1621,11 +1684,13 @@
 <span class="token prefix unchanged"> </span> <span class="token punctuation">}</span></span></code></pre>
             <p>It’s mostly the same as the naive solution, differing only in two extra lines of code.</p>
             <p>The first line <code>sortByLeft(balls)</code> simply sorts the list, with ranking based on the balls’ left edge x-coords.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sortByLeft</span><span class="token punctuation">(</span><span class="token parameter">balls</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" code="function sortByLeft(balls) {
+  balls.sort((a,b) => a.left - b.left);
+}"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sortByLeft</span><span class="token punctuation">(</span><span class="token parameter">balls</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   balls<span class="token punctuation">.</span><span class="token function">sort</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> a<span class="token punctuation">.</span>left <span class="token operator">-</span> b<span class="token punctuation">.</span>left<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
             <p>And in the inner loop, there is now this break:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">if</span> <span class="token punctuation">(</span>ball2<span class="token punctuation">.</span>left <span class="token operator">&gt;</span> ball1<span class="token punctuation">.</span>right<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span></code></pre>
+            <pre class="code-block" code="if (ball2.left > ball1.right) break;"><code class="code-block-code"><span class="token keyword">if</span> <span class="token punctuation">(</span>ball2<span class="token punctuation">.</span>left <span class="token operator">&gt;</span> ball1<span class="token punctuation">.</span>right<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span></code></pre>
             <p>Let’s break that down.</p>
             <p>First, we know that the list is sorted, so the following statement
               holds true for any positive integer
@@ -1680,7 +1745,21 @@
             <p>The two-level loop, now with an early break, would average out to <em>O(n&nbsp;+&nbsp;m)</em> where <em>m</em> is the total number of x-overlaps. This could degenerate into n<sup>2</sup> but as mentioned above, it’s more useful to look at the average and best cases. At best, the loop would be <em>O(n)</em>, wasting no excess processing when there are no overlaps. On average it’s <em>O(n&nbsp;+&nbsp;m)</em>.</p>
             <p><span class="box-note ">The average case refers to a world where objects are mostly evenly distributed and only a couple intersections per object is happening. I think this is a reasonable assumption for a relatively simple video game like a platformer or side-scroller.</span></p>
             <p>Here’s the code with running time annotations:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// O(n log n)</span>
+            <pre class="code-block" id="code1" code="// O(n log n)
+sortByLeft(balls);
+
+// O(n + m)
+for (let i = 0; i < balls.length; i++) {
+  const ball1 = balls[i];
+  // O(1) at best; O(m/n) on average; O(n) at worst
+  for (let j = i + 1; j < balls.length; j++) {
+    const ball2 = balls[j];
+    if (ball2.left > ball1.right) break;
+    if (intersects(ball1, ball2)) {
+      bounce(ball1, ball2);
+    }
+  }
+}"><code class="code-block-code"><span class="token comment">// O(n log n)</span>
 <span class="token function">sortByLeft</span><span class="token punctuation">(</span>balls<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
 <span class="token comment">// O(n + m)</span>
@@ -1709,7 +1788,7 @@
             </span>
 
             <h2 id="visual-comparison">Visual comparison</h2>
-            <p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection tests required per frame. 🔍 n = 10</p>
+            <p><a id="comparisons"></a>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection tests required per frame. 🔍 n = 10</p>
             <div class="demo-row">
               <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'pairwise' strategy" balls="10" strategy="pairwise" skip-interval="1" decorations="checks:#cbb:30"></sap-demo-client>
               <div class="demo-caption">Global pairwise</div>

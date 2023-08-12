@@ -1471,12 +1471,21 @@
             </div>
 
             <p>To do this, we need an extra element for the checkbox visuals, like an empty span element.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>label</span><span class="token punctuation">&gt;</span></span>
+            <pre class="code-block" language="html" code="
+<label>
+  <input type=&quot;checkbox&quot; /> <span></span> Check this out
+</label>
+"><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>label</span><span class="token punctuation">&gt;</span></span>
   <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>checkbox<span class="token punctuation">"</span></span> <span class="token punctuation">/&gt;</span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">&gt;</span></span> Check this out
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>label</span><span class="token punctuation">&gt;</span></span></code></pre>
             <p>On the CSS side, the real checkbox input is hidden, while the span is styled as a checkbox in its stead.</p>
             <p>Now here’s the important part, we’ll use the <code>:checked</code> pseudo-class and the <strong>sibling combinator</strong> <code>~</code> to make it all work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the separate fake checkbox element.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ span</span> <span class="token punctuation">{</span>
+            <pre class="code-block" language="css" code="
+input:checked ~ span {
+  background-color: red;
+  transform: rotate(45deg);
+}
+"><code class="code-block-code"><span class="token selector">input:checked ~ span</span> <span class="token punctuation">{</span>
   <span class="token property">background-color</span><span class="token punctuation">:</span> red<span class="token punctuation">;</span>
   <span class="token property">transform</span><span class="token punctuation">:</span> <span class="token function">rotate</span><span class="token punctuation">(</span>45deg<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
@@ -1494,7 +1503,14 @@
               </fieldset>
             </div>
 
-            <pre class="code-block"><code class="code-block-code"><span class="token selector">input:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
+            <pre class="code-block" language="css" code="
+input:checked ~ .advice .take-umbrella {
+    visibility: visible;
+}
+input:checked ~ .advice .no-umbrella {
+    visibility: hidden;
+}
+"><code class="code-block-code"><span class="token selector">input:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
     <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 <span class="token selector">input:checked ~ .advice .no-umbrella</span> <span class="token punctuation">{</span>
@@ -1527,7 +1543,12 @@
             <h3 id="or">OR</h3>
             <p>A single button is not very exciting, is it? Let’s add another input and implement an <strong>OR</strong> construct to determine the output. I mean this kind of thing: "if A or B then C".</p>
             <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (i.e., comma-separated selectors).</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ .advice .take-umbrella,
+            <pre class="code-block" language="css" code="
+input#raining:checked ~ .advice .take-umbrella,
+input#sunny:checked ~ .advice .take-umbrella {
+  visibility: visible;
+}
+"><code class="code-block-code"><span class="token selector">input#raining:checked ~ .advice .take-umbrella,
 input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
@@ -1554,7 +1575,11 @@ input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuati
             <p>(If RAINY or SUNNY then UMBRELLA)</p>
             <h3 id="and">AND</h3>
             <p>How about <strong>AND</strong>? We can implement an AND construct too! This involves chaining the inputs together in a single selector using sibling combinators.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token selector">input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span class="token punctuation">{</span>
+            <pre class="code-block" language="css" code="
+input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
+  visibility: visible;
+}
+"><code class="code-block-code"><span class="token selector">input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
             <p>What’s this? Weather-advice-o-matic can now make nuanced decisions! Wow! Careful, it might be sentient!!!</p>
@@ -1579,7 +1604,18 @@ input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuati
             </p>
             <p>(If RAINY and WINDY then RAINCOAT)</p>
             <p>Here’s a summary of what we have so far:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/* if A or B then C */</span>
+            <pre class="code-block" language="css" code="
+/* if A or B then C */
+A ~ C,
+B ~ C {
+  C
+}
+
+/* if A and B then C */
+A ~ B ~ C {
+  C
+}
+"><code class="code-block-code"><span class="token comment">/* if A or B then C */</span>
 <span class="token selector">A ~ C,
 B ~ C</span> <span class="token punctuation">{</span>
   C
@@ -1620,7 +1656,18 @@ B ~ C</span> <span class="token punctuation">{</span>
             </p>
             <p>This is a 3x3 array of checkbox inputs. Internally, each box is numbered 1 to 9 starting from the top-left box going left-to-right row-wise.</p>
             <p>Here are the rules for implementing the win condition in CSS:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
+            <pre class="code-block" language="css" code="
+#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win {
+  visibility: visible;
+}
+"><code class="code-block-code"><span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
 #4:checked ~ #5:checked ~ #6:checked ~ .win,
 #7:checked ~ #8:checked ~ #9:checked ~ .win,
 #1:checked ~ #4:checked ~ #7:checked ~ .win,
@@ -1632,7 +1679,29 @@ B ~ C</span> <span class="token punctuation">{</span>
 <span class="token punctuation">}</span></code></pre>
             <p>Yes, it’s kinda hacky, but that is expected when you force logic into CSS. For comparison, the CSS for tic-tac-toe goes over 9000 lines! I never said it would be clean.</p>
             <p>Anyway, these 8 lines correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers <em>every possible winning combination</em>. The pseudocode in the comment helps illustrate this:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/*
+            <pre class="code-block" language="css" code="
+/*
+ * if
+ *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
+ *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
+ *   or ([#7 marked] and [#8 marked] and [#9 marked]) // bottom row
+ *   .
+ *   :
+ *   or ([#3 marked] and [#5 marked] and [#7 marked]) // upward diagonal
+ * then
+ *   [win]
+ */
+#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win {
+  visibility: visible;
+}
+"><code class="code-block-code"><span class="token comment">/*
  * if
  *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
  *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
@@ -1665,7 +1734,17 @@ B ~ C</span> <span class="token punctuation">{</span>
               </video>
             </div>
             </p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/* Disable turn 1 inputs when turn 1 is played */</span>
+            <pre class="code-block" language="css" code="
+/* Disable turn 1 inputs when turn 1 is played */
+input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_1&quot;] {
+    pointer-events: none;
+}
+/* Enable next turn's inputs */
+input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
+    pointer-events: all;
+}
+/* And so on... */
+"><code class="code-block-code"><span class="token comment">/* Disable turn 1 inputs when turn 1 is played */</span>
 <span class="token selector">input[name="turn_1"]:checked ~ input[name="turn_1"]</span> <span class="token punctuation">{</span>
     <span class="token property">pointer-events</span><span class="token punctuation">:</span> none<span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
@@ -1764,7 +1843,13 @@ B ~ C</span> <span class="token punctuation">{</span>
             <p>In English, if an X was played at box #1 (top-left) and another X is at #2 (top-center), then block the top row by playing O at box #3 (top-right).</p>
             <p>(In these examples, X is the player and O is the AI.)</p>
             <p>In CSS, that translates to:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token selector">input[value="1"]:checked
+            <pre class="code-block" language="css" code="
+input[value=&quot;1&quot;]:checked
+~ input[value=&quot;2&quot;]:checked
+~ .o3 {
+  visibility: visible,
+}
+"><code class="code-block-code"><span class="token selector">input[value="1"]:checked
 ~ input[value="2"]:checked
 ~ .o3</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">,</span>
@@ -1782,7 +1867,16 @@ B ~ C</span> <span class="token punctuation">{</span>
             <p>If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).</p>
             <p>Now, this rule needs knowledge of the AI’s previous moves. But we can’t really check for that as they’re not inputs. There is no direct translation of <strong>O(3)</strong> and <strong>O(7)</strong> into CSS conditions.</p>
             <p>But since the AI is deterministic, we already know how those previous <em>O</em>s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute <strong>O(3)</strong> with the inputs that produced it, such as <strong>X(1)</strong> &amp; <strong>X(2)</strong>.</p>
-            <pre class="code-block"><code class="code-block-code">input[value=<span class="token string">"1"</span>]<span class="token punctuation">:</span>checked
+            <pre class="code-block" language="css" code="
+input[value=&quot;1&quot;]:checked
+~ input[value=&quot;2&quot;]:checked /* We know X(1) and X(2) produces O(3) */
+~ input[value=&quot;4&quot;]:checked /* X(1) and X(4) produces O(7) */
+.o5 {
+  visibility: visible,
+}
+/* Therefore, X(1) &amp; X(2) &amp; X(4) is equivalent to O(3) &amp; O(7). */
+/* If X(1) &amp; X(2) &amp; X(4) then O(5) is a winning move! */
+"><code class="code-block-code">input[value=<span class="token string">"1"</span>]<span class="token punctuation">:</span>checked
 ~ input[value=<span class="token string">"2"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* We know X(1) and X(2) produces O(3) */</span>
 ~ input[value=<span class="token string">"4"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* X(1) and X(4) produces O(7) */</span>
 <span class="token selector">.o5</span> <span class="token punctuation">{</span>
@@ -1804,7 +1898,78 @@ B ~ C</span> <span class="token punctuation">{</span>
             <p>It’s not really feasible to write rules based on this by hand, unless you have more than 60,480 hours to spare.</p>
             <p>What I did was write some kind of <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Minimax">minimax algorithm</a> to generate all the rules. The algorithm semi-exhaustively searched the game state space, while recording the moves that lead to a win or a draw, and saved those moves as rules.</p>
             <p>I lost the original code (trashed it after finishing the project), but here’s an untested recreation of the algorithm:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
+            <pre class="code-block" language="javascript" code="
+/**
+ * Evaluates a game state having these parameters: last plays of player X,
+ * the player who has the current turn, and the current board state.
+ *
+ * Along the way, prints CSS rules for O's plays.
+ *
+ * Returns the endgame for O: WIN, LOSS, or a DRAW. Assuming optimal play.
+ */
+function evaluate(xPlays: number[], currentTurn: 'X' | 'O', board: ('X' | 'O' | null)[]) {
+
+  // checkWinner checks for a 3-in-a-row and returns the winner.
+  let winner = checkWinner(board)
+  if (winner == 'X') return LOSS
+  else if (winner == 'O') return WIN
+  else if (xPlays.length == 5) return DRAW // Board full (5 Xs implies 4 Os)
+
+
+  if (currentTurn == 'O') {
+    // Brute-force find the optimal play for O
+    let optimal = null
+    let winnable = false
+    for (i = 0; i < 9; i++) {
+      if (board[i]) continue
+
+      board[i] = 'O'
+      const result = evaluate(xPlays, 'X', board)
+      board[i] = null
+
+      if (result == DRAW) {
+        // This play will lead to a draw. Save it for now.
+        optimal = i
+      } else if (result == WIN) {
+        // This play will lead to a win. This is it.
+        optimal = i
+        winnable = true
+        break
+      } // No else. Discard play that would lead to LOSS.
+    }
+
+    if (optimal == null) {
+      // No winning play nor draws found. All paths lead to loss.
+      return LOSS
+    } else {
+      // Optimal play found. Print rule.
+      printCSS(xPlays, optimal)
+      return winnable ? WIN : DRAW
+    }
+  } else { // currentTurn == 'X'
+    // We don't know what the player would play
+    // So evaluate every possibe play
+    let loseable = false
+    for (i = 0; i < 9; i++) {
+      if (board[i]) continue
+
+      board[i] = 'X'
+      const result = evaluate([...xPlays, i], 'O', board)
+      board[i] = null
+
+      if (result == LOSS) loseable = true
+    }
+
+    // Assume player plays optimally. If they can win from current state,
+    // then immediately presume LOSS. This will factor into O's turn evaluation
+    // above, where any play that leads to LOSS is discarded.
+    if (loseable) return LOSS
+
+    // Not loseable, either winnable or drawable.
+    // Returning DRAW allows both paths to be evaluated.
+    return DRAW
+  }
+}"><code class="code-block-code"><span class="token comment">/**
  * Evaluates a game state having these parameters: last plays of player X,
  * the player who has the current turn, and the current board state.
  *
@@ -1876,7 +2041,18 @@ B ~ C</span> <span class="token punctuation">{</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
             <p>And here’s the function that outputs CSS:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">/**
+            <pre class="code-block" language="javascript" code="
+/**
+ * Print CSS rule for the given game state and O's next play.
+ */
+function printCSS(xPlays: number[], oPlay: number) {
+  css += xPlays
+    .map((pos, turn) =>
+        `input[name='turn_${turn}'][value='${pos}']:checked`)
+    .join(' ~ ')
+    + ` ~ .o${oPlay}`
+    + ' { visibility: visible; }'
+}"><code class="code-block-code"><span class="token comment">/**
  * Print CSS rule for the given game state and O's next play.
  */</span>
 <span class="token keyword">function</span> <span class="token function">printCSS</span><span class="token punctuation">(</span><span class="token parameter"><span class="token literal-property property">xPlays</span><span class="token operator">:</span> number<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token literal-property property">oPlay</span><span class="token operator">:</span> number</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>

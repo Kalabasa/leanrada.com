@@ -1143,7 +1143,42 @@
             </p>
             <p>Let’s call the three colors <code>PC1</code>, <code>PC2</code>, and <code>PC3</code>.</p>
             <p>To get the average, you can either (1) read over the pixels in those regions and average them, or (2) downsample the image and directly use pixel colors (typically faster). For this case, I used the former, which is reading over the pixels within each region to calculate the average color.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// &lt;video&gt; element streams the camera, not shown here how</span>
+            <pre class="code-block" code="// <video> element streams the camera, not shown here how
+video = document.getElementById('video');
+// <canvas> to hold a video frame for reading pixels
+canvas = document.getElementById('canvas'); 
+
+// Capture a video frame into the canvas
+const canvasContext = canvas.getContext('2d');
+canvasContext.drawImage(video, 0, 0, width, height);
+const imageData = canvasContext
+    .getImageData(0, 0, width, height)
+    .data;
+
+// Get the colors
+const pc1 = getRegionAverageColor(imageData, regionRect1);
+const pc2 = getRegionAverageColor(imageData, regionRect2);
+const pc3 = getRegionAverageColor(imageData, regionRect3);
+
+function getRegionAverageColor(imageData, rect) {
+  const lineStride = 4 * width;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  for (let j = rect.y; j < rect.y + rect.height; j++) {
+    for (let i = rect.x; i < rect.x + rect.width; i++) {
+      r += imageData[j * lineStride + i * 4] / 0xff;
+      g += imageData[j * lineStride + i * 4 + 1] / 0xff;
+      b += imageData[j * lineStride + i * 4 + 2] / 0xff;
+    }
+  }
+  const count = rect.width * rect.height;
+  return {
+    r: r / count,
+    g: g / count,
+    b: b / count
+  };
+}"><code class="code-block-code"><span class="token comment">// &lt;video&gt; element streams the camera, not shown here how</span>
 video <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">getElementById</span><span class="token punctuation">(</span><span class="token string">'video'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token comment">// &lt;canvas&gt; to hold a video frame for reading pixels</span>
 canvas <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">getElementById</span><span class="token punctuation">(</span><span class="token string">'canvas'</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
@@ -1187,7 +1222,17 @@ canvasContext<span class="token punctuation">.</span><span class="token function
               <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo3_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="diagram" src="/notes/simple-image-recognition-vanilla-js/dimensions_illo3.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
             </div>
             </p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// To subtract two colors, we subtract each RGB component</span>
+            <pre class="code-block" code="// To subtract two colors, we subtract each RGB component
+const d1 = {
+  r: pc1.r - pc2.r,
+  g: pc1.g - pc2.g,
+  b: pc1.b - pc2.b
+};
+const d2 = {
+  r: pc2.r - pc3.r,
+  g: pc2.g - pc3.g,
+  b: pc2.b - pc3.b
+};"><code class="code-block-code"><span class="token comment">// To subtract two colors, we subtract each RGB component</span>
 <span class="token keyword">const</span> d1 <span class="token operator">=</span> <span class="token punctuation">{</span>
   <span class="token literal-property property">r</span><span class="token operator">:</span> pc1<span class="token punctuation">.</span>r <span class="token operator">-</span> pc2<span class="token punctuation">.</span>r<span class="token punctuation">,</span>
   <span class="token literal-property property">g</span><span class="token operator">:</span> pc1<span class="token punctuation">.</span>g <span class="token operator">-</span> pc2<span class="token punctuation">.</span>g<span class="token punctuation">,</span>
@@ -1219,7 +1264,23 @@ N2 = D2 / max(|D1|, |D2|)
             </div>
             </p>
             <p>And here’s the code for that:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// Get 'max(|D1|, |D2|)'</span>
+            <pre class="code-block" code="// Get 'max(|D1|, |D2|)'
+const d1Magnitude = Math.hypot(d1.r, d1.g, d1.b);
+const d2Magnitude = Math.hypot(d2.r, d2.g, d2.b);
+
+// Add 0.001 to avoid division by zero
+const max = Math.max(d1Magnitude, d2Magnitude) + 0.001;
+
+const n1 = {
+  r: d1.r / max,
+  g: d1.g / max,
+  b: d1.b / max,
+};
+const n2 = {
+  r: d2.r / max,
+  g: d2.g / max,
+  b: d2.b / max,
+};"><code class="code-block-code"><span class="token comment">// Get 'max(|D1|, |D2|)'</span>
 <span class="token keyword">const</span> d1Magnitude <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>d1<span class="token punctuation">.</span>r<span class="token punctuation">,</span> d1<span class="token punctuation">.</span>g<span class="token punctuation">,</span> d1<span class="token punctuation">.</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token keyword">const</span> d2Magnitude <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>d2<span class="token punctuation">.</span>r<span class="token punctuation">,</span> d2<span class="token punctuation">.</span>g<span class="token punctuation">,</span> d2<span class="token punctuation">.</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
@@ -1256,7 +1317,14 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
             </div>
             </p>
             <p>From the normalized colors <code>N1</code> and <code>N2</code>, we can obtain six numerical values (three from each). These values can be rolled into one combined series of numbers, which we’ll call the <strong>feature vector</strong> of the image. The feature vector can be thought of as a numerical representation of certain characteristics of the image.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> featureVector <span class="token operator">=</span> <span class="token punctuation">[</span>
+            <pre class="code-block" code="const featureVector = [
+  n1.r,
+  n1.g,
+  n1.b,
+  n2.r,
+  n2.g,
+  n2.b,
+];"><code class="code-block-code"><span class="token keyword">const</span> featureVector <span class="token operator">=</span> <span class="token punctuation">[</span>
   n1<span class="token punctuation">.</span>r<span class="token punctuation">,</span>
   n1<span class="token punctuation">.</span>g<span class="token punctuation">,</span>
   n1<span class="token punctuation">.</span>b<span class="token punctuation">,</span>
@@ -1274,7 +1342,39 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
             <p>This reduces the problem of comparing image similarity into a simple numerical comparison. If the numbers match, then the images match!</p>
             <p>Now, we just need the feature vector of the <em>target image</em> to compare with. We can precompute the same normalization process on the target image and hardcode the resulting feature vector in the app.</p>
             <p>I also got a couple more samples from real photos of the print for good measure.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// (original + real sample 1 + real sample 2) / 3</span>
+            <pre class="code-block" code="// (original + real sample 1 + real sample 2) / 3
+const targetFeatureVector = [
+  (
+    -0.3593924173784146 +
+    -0.3030924568415693 +
+    -0.27620639981601575
+  ) / 3,
+  (
+    -0.611915816235142 +
+    -0.590167832630535 +
+    -0.5946857824325745
+  ) / 3,
+  (
+    -0.498629075974555 +
+    -0.4975375806689763 +
+    -0.49879828486061084
+  ) / 3,
+  (
+    0.35716016633879705 +
+    0.4556467533062926 +
+    0.47164734468790415
+  ) / 3,
+  (
+    0.17718492626963767 +
+    0.1053991137797178 +
+    0.13449453064454686
+  ) / 3,
+  (
+    0.2980055137889341 +
+    0.30589264583678 +
+    0.2811110391693084
+  ) / 3
+];"><code class="code-block-code"><span class="token comment">// (original + real sample 1 + real sample 2) / 3</span>
 <span class="token keyword">const</span> targetFeatureVector <span class="token operator">=</span> <span class="token punctuation">[</span>
   <span class="token punctuation">(</span>
     <span class="token operator">-</span><span class="token number">0.3593924173784146</span> <span class="token operator">+</span>
@@ -1314,7 +1414,16 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
             </div>
             </p>
             <p>We can use Euclidean distance as a measure of vector similarity. Remember, vector similarity is our proxy for image similarity!</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">const</span> vectorDistance <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>
+            <pre class="code-block" code="const vectorDistance = Math.hypot(
+  ...featureVector.map(
+    (value, index) =>
+        targetFeatureVector[index] - value
+  )
+);
+
+if (vectorDistance < THRESHOLD) {
+  // Image recognized!
+}"><code class="code-block-code"><span class="token keyword">const</span> vectorDistance <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">hypot</span><span class="token punctuation">(</span>
   <span class="token operator">...</span>featureVector<span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span>
     <span class="token punctuation">(</span><span class="token parameter">value<span class="token punctuation">,</span> index</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>
         targetFeatureVector<span class="token punctuation">[</span>index<span class="token punctuation">]</span> <span class="token operator">-</span> value

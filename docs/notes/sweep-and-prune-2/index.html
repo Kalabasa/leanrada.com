@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Sort, sweep, and prune: part 2 · leanrada.com</title>
+  <title>Sort, sweep, and prune: Part 2 · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <script type="module" client="" defer="">
     import {
@@ -1425,7 +1425,7 @@
             <div class="blog-header">
               <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
                 <h1 class="text-with-bg-span blog-header-title-inner">
-                  Sort, sweep, and prune: part&nbsp;2
+                  Sort, sweep, and prune: Part&nbsp;2
                 </h1>
               </div>
               <img srcset="/notes/sweep-and-prune-2/hero_800.generated.jpg 800w,/notes/sweep-and-prune-2/hero_1200.generated.jpg 1200w" sizes="not (min-width:800px) 800px, 1200px" class="blog-header-hero" src="/notes/sweep-and-prune-2/hero.jpg" alt="" spec="100% [800) 80%">
@@ -1465,7 +1465,12 @@
             </div>
 
             <p>Of course, we need to initialise the edge data and continually keep them in sync with the objects. I’ll leave that out as an implementation detail.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token comment">// todo: extract 2 edges from each object into the array</span>
+            <pre class="code-block" code="// todo: extract 2 edges from each object into the array
+let edges: Array<{
+  object: Object;  // parent object
+  x: number;       // x-coordinate
+  isLeft: boolean; // true if left edge. false if right
+}>;"><code class="code-block-code"><span class="token comment">// todo: extract 2 edges from each object into the array</span>
 <span class="token keyword">let</span> <span class="token literal-property property">edges</span><span class="token operator">:</span> Array<span class="token operator">&lt;</span><span class="token punctuation">{</span>
   <span class="token literal-property property">object</span><span class="token operator">:</span> Object<span class="token punctuation">;</span>  <span class="token comment">// parent object</span>
   <span class="token literal-property property">x</span><span class="token operator">:</span> number<span class="token punctuation">;</span>       <span class="token comment">// x-coordinate</span>
@@ -1474,7 +1479,11 @@
             <p>This sorted array of edges is all we need to facilitate the reduction of unnecessary pairwise tests.</p>
             <h3 id="index-as-position-position-as-index">Index as position, position as index</h3>
             <p>Remember the <code>intersects()</code> function? Let’s focus only on the x-axis checks:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" code="function intersects(object1, object2) {
+  return object1.left < object2.right
+      &amp;&amp; object1.right > object2.left
+      /* ... */;
+}"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>right <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>left
       <span class="token comment">/* ... */</span><span class="token punctuation">;</span>
@@ -1502,7 +1511,18 @@
             <p>As for the implementation, the line is merely a metaphor. It’s just a visualisation of an iteration through the sorted list of edges.</p>
             <p>To keep track of objects touching the line, we maintain a set called <span style="color:#d88"><code>touching</code></span> in code.</p>
             <p>Whenever the line runs into an object (a left edge), the object is added to the set. Likewise, whenever it exits an object (right edge), the object is removed from the set.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <pre class="code-block" code="sort(edges);
+
+const touching = new Set();
+for (const edge of edges) {
+  if (edge.isLeft) {
+    // entering an object
+    touching.add(edge.object);
+  } else {
+    // exiting an object
+    touching.delete(edge.object);
+  }
+}"><code class="code-block-code"><span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
 <span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -1525,7 +1545,24 @@
             </div>
 
             <p>Here’s the updated code for detecting and reporting overlaps:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <pre class="code-block" language="diff" language-code="diff-javascript" code="  sort(edges);
+  
+  const touching = new Set();
+  for (const edge of edges) {
+    if (edge.isLeft) {
+      // entering an object
++     
++     // the new object is overlapping with the existing ones
++     for (const other of touching) {
++       onOverlapX(other, edge.object);
++     }
++     
+      touching.add(edge.object);
+    } else {
+      // exiting an object
+      touching.delete(edge.object);
+    }
+  }"><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token prefix unchanged"> </span> 
 <span class="token prefix unchanged"> </span> <span class="token keyword">const</span> touching <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token prefix unchanged"> </span> <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> edge <span class="token keyword">of</span> edges<span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -1547,7 +1584,13 @@
             <p><code>onOverlapX()</code> is called whenever two balls are overlapping in the x dimension. What about the other dimension, <em>y</em>? What if we’re working with 3D, how about <em>z</em>?</p>
             <p>Don’t worry; the sweep is just a broad-phase test, a way to <em>prune</em> candidate pairs in bulk. There will be a narrow-phase test to determine exactly the intersections in each of the remaining pairs.</p>
             <p><code>onOverlapX()</code> can be hooked up to an exact intersection test like the full <code>intersects()</code> function earlier. Or, since we already know that the argument pair overlaps in <em>x</em>, we can just check for <em>y</em>.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" code="onOverlapX = function(object1, object2) {
+  // just check for y
+  if (object1.top < object2.bottom
+   &amp;&amp; object1.bottom > object2.top) {
+    collide(object1, object2);
+  }
+}"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token comment">// just check for y</span>
   <span class="token keyword">if</span> <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom
    <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -1555,7 +1598,16 @@
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
             <p>While the above formula works for most games, a more precise and time-consuming check could be done at this level since most candidates have already been pruned. Our ball example would work better with the following circle intersection test using the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance formula</a>:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" code="onOverlapX = function(object1, object2) {
+  // compute circle-to-circle intersection
+  const distance = sqrt(
+      (object1.x - object2.x) ** 2
+    + (object1.y - object2.y) ** 2
+  );
+  if (distance < object1.radius + object2.radius) {
+    bounce(object1, object2);
+  }
+}"><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token comment">// compute circle-to-circle intersection</span>
   <span class="token keyword">const</span> distance <span class="token operator">=</span> <span class="token function">sqrt</span><span class="token punctuation">(</span>
       <span class="token punctuation">(</span>object1<span class="token punctuation">.</span>x <span class="token operator">-</span> object2<span class="token punctuation">.</span>x<span class="token punctuation">)</span> <span class="token operator">**</span> <span class="token number">2</span>
@@ -1586,7 +1638,7 @@
             </div>
 
             <h2 id="performance-of-sweep-and-prune">Performance of sweep-and-prune</h2>
-            <p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
+            <p><a id="comparisons"></a>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
             <div class="demo-row">
               <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'pairwise' strategy" balls="6" strategy="pairwise" skip-interval="1" decorations="checks:#cbb:30"></sap-demo-client>
               <div class="demo-caption">Global pairwise</div>
@@ -1605,7 +1657,25 @@
             <p>Let’s analyse the time complexity of 1D sweep-and-prune. 👓</p>
             <p>The sort step, again, is <em>O(n log n)</em>.</p>
             <p>The sweep, which is a linear pass with an inner loop for overlaps, should be <em>O(n&nbsp;+&nbsp;m)</em> in the average case. Again, <em>m</em> is the number of overlaps.</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sweepAndPrune</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" code="function sweepAndPrune(edges) {
+  // O(n log n)
+  sort(edges);
+
+  const touching = new Set();
+
+  // O(n + m)
+  for (const edge of edges) {
+    if (edge.isLeft) {
+      // O(1) at best; O(m/n) on average; O(n) at worst
+      for (const other of touching) {
+        onOverlapX(other, edge.object);
+      }
+      touching.add(edge.object); 
+    } else {
+      touching.delete(edge.object);
+    }
+  }
+}"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">sweepAndPrune</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token comment">// O(n log n)</span>
   <span class="token function">sort</span><span class="token punctuation">(</span>edges<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
@@ -1640,7 +1710,14 @@
             <p>You can see that most of the time, the sort does nothing at all! The list is almost always <strong>already sorted from the previous frame</strong>.</p>
             <p>Even when it becomes unsorted, it usually just takes a couple of swaps to be sorted again. There won’t be more than a few object boundaries changing places in one time step.</p>
             <p>Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with the special quality of being <em>nearly-sorted</em>. And one great choice for sorting nearly-sorted lists is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Insertion_sort"><strong>insertion sort</strong></a>!</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">insertionSort</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" code="function insertionSort(edges) {
+  for (let i = 1; i < edges.length; i++) {
+    for (let j = i - 1; j >= 0; j--) {
+      if (edges[j].x < edges[j + 1].x) break;
+      [edges[j], edges[j + 1]] = [edges[j + 1], edges[j]];
+    }
+  }
+}"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">insertionSort</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> edges<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">;</span> j<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
       <span class="token keyword">if</span> <span class="token punctuation">(</span>edges<span class="token punctuation">[</span>j<span class="token punctuation">]</span><span class="token punctuation">.</span>x <span class="token operator">&lt;</span> edges<span class="token punctuation">[</span>j <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>x<span class="token punctuation">)</span> <span class="token keyword">break</span><span class="token punctuation">;</span>
@@ -1743,7 +1820,40 @@
             <p>Lastly, in the global sweep, a right edge means the end of contact with a ball. In a local swap, a left edge passing over a right edge means the same thing. The corresponding balls are unmarked as overlapping.</p>
             <p>Essentially, instead of a global sweep line, small local “sweeps” happen around each ball. Swaps become mini-sweeps.</p>
             <p>Thus we arrive at the one-dimensional sweep-and-prune’s final form:</p>
-            <pre class="code-block"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <pre class="code-block" id="final-code" code="function init() {
+  overlapping = new Map()
+}
+
+function sweepAndPrune(edges) {
+  // Insertion sort
+  for (let i = 1; i < edges.length; i++) {
+    for (let j = i - 1; j >= 0; j--) {
+      if (edges[j].x < edges[j + 1].x) break;
+
+      // Swap
+      [edges[j], edges[j + 1]] = [edges[j + 1], edges[j]];
+
+      // --- Code up until this point is plain insertion sort ---
+
+      // These two edges have just swapped places, process it...
+      const edge1 = edges[j];
+      const edge2 = edges[j + 1];
+
+      if (edge1.isLeft &amp;&amp; !edge2.isLeft) { // case R-L → L-R
+        // Mark as overlapping
+        overlapping.set(
+          key(edge1, edge2),
+          [edge1.ball, edge2.ball]
+        );
+      } else if (!edge1.isLeft &amp;&amp; edge2.isLeft) { // case L-R → R-L
+        // Unmark as overlapping
+        overlapping.delete(key(edge1, edge2));
+      }
+    }
+  }
+
+  return overlapping.values();
+}"><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">init</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   overlapping <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Map</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span class="token punctuation">}</span>
 
@@ -1783,8 +1893,7 @@
               <sap-demo-client class="" data-rss="interactive" aria-label="demo of the collision detection algorithm using 'sap-swap' strategy" strategy="sap-swap" skip-interval="4" decorations="checks:#4c8"></sap-demo-client>
             </div>
 
-            <p>While it behaves the same and has the same time complexity as the preceding variants, I’m guessing it’s practically much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed. (Disclaimer: I haven’t done any benchmarks!)
-              s</p>
+            <p>While it behaves the same and has the same time complexity as the preceding variants, I’m guessing it’s practically much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed. (Disclaimer: I haven’t done any benchmarks!)</p>
             <h2 id="quick-comparisons">Quick comparisons</h2>
             <div class="markdown-table">
               <table>

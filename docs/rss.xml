@@ -7,7 +7,7 @@
         
         <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
         <item>
-            <title><![CDATA[Sort, sweep, and prune: part&nbsp;2]]></title>
+            <title><![CDATA[Sort, sweep, and prune: Part 2]]></title>
             <description><![CDATA[<p><em>For RSS readers: This article contains interactive content available on the <a href="https://leanrada.com/notes/sweep-and-prune-2">original post on leanrada.com</a>.</em></p>
 
 <p>In the <a target="_self" href="https://leanrada.com/notes/sweep-and-prune">first part</a>, we figured that sorting lets us exploit the transitive property of inequality to optimise the number of pairwise tests.</p>
@@ -37,7 +37,12 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
               
 <p>Of course, we need to initialise the edge data and continually keep them in sync with the objects. I’ll leave that out as an implementation detail.</p>
 
-<pre><code><span>// todo: extract 2 edges from each object into the array</span>
+<pre code="// todo: extract 2 edges from each object into the array
+let edges: Array<{
+  object: Object;  // parent object
+  x: number;       // x-coordinate
+  isLeft: boolean; // true if left edge. false if right
+}>;"><code><span>// todo: extract 2 edges from each object into the array</span>
 <span>let</span> <span>edges</span><span>:</span> Array<span>&lt;</span><span>{</span>
   <span>object</span><span>:</span> Object<span>;</span>  <span>// parent object</span>
   <span>x</span><span>:</span> number<span>;</span>       <span>// x-coordinate</span>
@@ -50,7 +55,11 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 
 <p>Remember the <code>intersects()</code> function? Let’s focus only on the x-axis checks:</p>
 
-<pre><code><span>function</span> <span>intersects</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
+<pre code="function intersects(object1, object2) {
+  return object1.left < object2.right
+      &amp;&amp; object1.right > object2.left
+      /* ... */;
+}"><code><span>function</span> <span>intersects</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
   <span>return</span> object1<span>.</span>left <span>&lt;</span> object2<span>.</span>right
       <span>&amp;&amp;</span> object1<span>.</span>right <span>&gt;</span> object2<span>.</span>left
       <span>/* ... */</span><span>;</span>
@@ -86,7 +95,18 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 
 <p>Whenever the line runs into an object (a left edge), the object is added to the set. Likewise, whenever it exits an object (right edge), the object is removed from the set.</p>
 
-<pre><code><span>sort</span><span>(</span>edges<span>)</span><span>;</span>
+<pre code="sort(edges);
+
+const touching = new Set();
+for (const edge of edges) {
+  if (edge.isLeft) {
+    // entering an object
+    touching.add(edge.object);
+  } else {
+    // exiting an object
+    touching.delete(edge.object);
+  }
+}"><code><span>sort</span><span>(</span>edges<span>)</span><span>;</span>
 
 <span>const</span> touching <span>=</span> <span>new</span> <span>Set</span><span>(</span><span>)</span><span>;</span>
 <span>for</span> <span>(</span><span>const</span> edge <span>of</span> edges<span>)</span> <span>{</span>
@@ -112,7 +132,24 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
               
 <p>Here’s the updated code for detecting and reporting overlaps:</p>
 
-<pre><code><span><span> </span> <span>sort</span><span>(</span>edges<span>)</span><span>;</span>
+<pre language="diff" language-code="diff-javascript" code="  sort(edges);
+  
+  const touching = new Set();
+  for (const edge of edges) {
+    if (edge.isLeft) {
+      // entering an object
++     
++     // the new object is overlapping with the existing ones
++     for (const other of touching) {
++       onOverlapX(other, edge.object);
++     }
++     
+      touching.add(edge.object);
+    } else {
+      // exiting an object
+      touching.delete(edge.object);
+    }
+  }"><code><span><span> </span> <span>sort</span><span>(</span>edges<span>)</span><span>;</span>
 <span> </span> 
 <span> </span> <span>const</span> touching <span>=</span> <span>new</span> <span>Set</span><span>(</span><span>)</span><span>;</span>
 <span> </span> <span>for</span> <span>(</span><span>const</span> edge <span>of</span> edges<span>)</span> <span>{</span>
@@ -139,7 +176,13 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 
 <p><code>onOverlapX()</code> can be hooked up to an exact intersection test like the full <code>intersects()</code> function earlier. Or, since we already know that the argument pair overlaps in <em>x</em>, we can just check for <em>y</em>.</p>
 
-<pre><code><span>onOverlapX</span> <span>=</span> <span>function</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
+<pre code="onOverlapX = function(object1, object2) {
+  // just check for y
+  if (object1.top < object2.bottom
+   &amp;&amp; object1.bottom > object2.top) {
+    collide(object1, object2);
+  }
+}"><code><span>onOverlapX</span> <span>=</span> <span>function</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
   <span>// just check for y</span>
   <span>if</span> <span>(</span>object1<span>.</span>top <span>&lt;</span> object2<span>.</span>bottom
    <span>&amp;&amp;</span> object1<span>.</span>bottom <span>&gt;</span> object2<span>.</span>top<span>)</span> <span>{</span>
@@ -149,7 +192,16 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 
 <p>While the above formula works for most games, a more precise and time-consuming check could be done at this level since most candidates have already been pruned. Our ball example would work better with the following circle intersection test using the <a target="_blank" href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance formula</a>:</p>
 
-<pre><code><span>onOverlapX</span> <span>=</span> <span>function</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
+<pre code="onOverlapX = function(object1, object2) {
+  // compute circle-to-circle intersection
+  const distance = sqrt(
+      (object1.x - object2.x) ** 2
+    + (object1.y - object2.y) ** 2
+  );
+  if (distance < object1.radius + object2.radius) {
+    bounce(object1, object2);
+  }
+}"><code><span>onOverlapX</span> <span>=</span> <span>function</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
   <span>// compute circle-to-circle intersection</span>
   <span>const</span> distance <span>=</span> <span>sqrt</span><span>(</span>
       <span>(</span>object1<span>.</span>x <span>-</span> object2<span>.</span>x<span>)</span> <span>**</span> <span>2</span>
@@ -184,7 +236,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-swap-2d' 
               
 <h2 id="performance-of-sweep-and-prune">Performance of sweep-and-prune</h2>
 
-<p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
+<p><a id="comparisons"></a>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection checks required per frame. 🔍</p>
 
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune-2">Visit the website to play with interactive content!</a>
 Alternative text: demo of the collision detection algorithm using 'pairwise' strategy</pre>
@@ -201,7 +253,25 @@ Alternative text: demo of the collision detection algorithm using 'sap-swap-2d' 
 
 <p>The sweep, which is a linear pass with an inner loop for overlaps, should be <em>O(n&nbsp;+&nbsp;m)</em> in the average case. Again, <em>m</em> is the number of overlaps.</p>
 
-<pre><code><span>function</span> <span>sweepAndPrune</span><span>(</span><span>edges</span><span>)</span> <span>{</span>
+<pre code="function sweepAndPrune(edges) {
+  // O(n log n)
+  sort(edges);
+
+  const touching = new Set();
+
+  // O(n + m)
+  for (const edge of edges) {
+    if (edge.isLeft) {
+      // O(1) at best; O(m/n) on average; O(n) at worst
+      for (const other of touching) {
+        onOverlapX(other, edge.object);
+      }
+      touching.add(edge.object); 
+    } else {
+      touching.delete(edge.object);
+    }
+  }
+}"><code><span>function</span> <span>sweepAndPrune</span><span>(</span><span>edges</span><span>)</span> <span>{</span>
   <span>// O(n log n)</span>
   <span>sort</span><span>(</span>edges<span>)</span><span>;</span>
 
@@ -244,7 +314,14 @@ Alternative text: demo of the collision detection algorithm using 'sap-quicksort
 
 <p>Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with the special quality of being <em>nearly-sorted</em>. And one great choice for sorting nearly-sorted lists is <a target="_blank" href="https://en.wikipedia.org/wiki/Insertion_sort"><strong>insertion sort</strong></a>!</p>
 
-<pre><code><span>function</span> <span>insertionSort</span><span>(</span><span>edges</span><span>)</span> <span>{</span>
+<pre code="function insertionSort(edges) {
+  for (let i = 1; i < edges.length; i++) {
+    for (let j = i - 1; j >= 0; j--) {
+      if (edges[j].x < edges[j + 1].x) break;
+      [edges[j], edges[j + 1]] = [edges[j + 1], edges[j]];
+    }
+  }
+}"><code><span>function</span> <span>insertionSort</span><span>(</span><span>edges</span><span>)</span> <span>{</span>
   <span>for</span> <span>(</span><span>let</span> i <span>=</span> <span>1</span><span>;</span> i <span>&lt;</span> edges<span>.</span>length<span>;</span> i<span>++</span><span>)</span> <span>{</span>
     <span>for</span> <span>(</span><span>let</span> j <span>=</span> i <span>-</span> <span>1</span><span>;</span> j <span>&gt;=</span> <span>0</span><span>;</span> j<span>--</span><span>)</span> <span>{</span>
       <span>if</span> <span>(</span>edges<span>[</span>j<span>]</span><span>.</span>x <span>&lt;</span> edges<span>[</span>j <span>+</span> <span>1</span><span>]</span><span>.</span>x<span>)</span> <span>break</span><span>;</span>
@@ -353,7 +430,40 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
 
 <p>Thus we arrive at the one-dimensional sweep-and-prune’s final form:</p>
 
-<pre><code><span>function</span> <span>init</span><span>(</span><span>)</span> <span>{</span>
+<pre id="final-code" code="function init() {
+  overlapping = new Map()
+}
+
+function sweepAndPrune(edges) {
+  // Insertion sort
+  for (let i = 1; i < edges.length; i++) {
+    for (let j = i - 1; j >= 0; j--) {
+      if (edges[j].x < edges[j + 1].x) break;
+
+      // Swap
+      [edges[j], edges[j + 1]] = [edges[j + 1], edges[j]];
+
+      // --- Code up until this point is plain insertion sort ---
+
+      // These two edges have just swapped places, process it...
+      const edge1 = edges[j];
+      const edge2 = edges[j + 1];
+
+      if (edge1.isLeft &amp;&amp; !edge2.isLeft) { // case R-L → L-R
+        // Mark as overlapping
+        overlapping.set(
+          key(edge1, edge2),
+          [edge1.ball, edge2.ball]
+        );
+      } else if (!edge1.isLeft &amp;&amp; edge2.isLeft) { // case L-R → R-L
+        // Unmark as overlapping
+        overlapping.delete(key(edge1, edge2));
+      }
+    }
+  }
+
+  return overlapping.values();
+}"><code><span>function</span> <span>init</span><span>(</span><span>)</span> <span>{</span>
   overlapping <span>=</span> <span>new</span> <span>Map</span><span>(</span><span>)</span>
 <span>}</span>
 
@@ -395,8 +505,7 @@ Alternative text: demo of the collision detection algorithm using 'sap-insertion
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune-2">Visit the website to play with interactive content!</a>
 Alternative text: demo of the collision detection algorithm using 'sap-swap' strategy</pre>
 
-<p>While it behaves the same and has the same time complexity as the preceding variants, I’m guessing it’s practically much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed. (Disclaimer: I haven’t done any benchmarks!)
-              s</p>
+<p>While it behaves the same and has the same time complexity as the preceding variants, I’m guessing it’s practically much more efficient in terms of processing speed. In video games where every frame has a processing budget, the actual speed matters, not just the scalability. As always, benchmarking will determine the real practical measurement of speed. (Disclaimer: I haven’t done any benchmarks!)</p>
 
 <h2 id="quick-comparisons">Quick comparisons</h2>
 <table>
@@ -490,10 +599,29 @@ Alternative text: demo of the collision detection algorithm using 'sap-swap-2d' 
             <pubDate>Sun, 06 Aug 2023 00:00:00 GMT</pubDate>
         </item>
         <item>
-            <title><![CDATA[Sort, sweep, and prune: collision detection algorithms]]></title>
+            <title><![CDATA[Sort, sweep, and prune: Collision detection algorithms]]></title>
             <description><![CDATA[<p><em>For RSS readers: This article contains interactive content available on the <a href="https://leanrada.com/notes/sweep-and-prune">original post on leanrada.com</a>.</em></p>
 
-<p>Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. I think it’s an awesome and elegant algorithm, so I wrote this post about it. In this post, I attempt to explain and demonstrate what I think are first principles, so it’s quite long and is split into two parts (<a target="_self" href="https://leanrada.com/notes/sweep-and-prune">1</a>, <a target="_self" href="https://leanrada.com/notes/sweep-and-prune-2">2</a>). And, as usual for this blog, there are interactive demos as well! 😄</p>
+<p>Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. I think it’s an awesome and elegant algorithm, so I wrote a post about it.</p>
+
+<p>This post is lengthy with many examples and explanations, thus split into two parts. You can jump to specific bits using this special springboard:</p>
+
+<ul>
+              <li><strong>Part 1:</strong> <a target="_self" href="https://leanrada.com/notes/sweep-and-prune">Simplified version</a>
+                <ul>
+                  <li>🔍 <a target="_self" href="https://leanrada.com/notes/sweep-and-prune/#comparisons">Visual comparison</a></li>
+                  <li>📝 <a target="_self" href="https://leanrada.com/notes/sweep-and-prune/#code1">Code</a></li>
+                </ul>
+              </li>
+              <li><strong>Part 2:</strong> <a target="_self" href="https://leanrada.com/notes/sweep-and-prune-2">Sophisticated versions</a>
+                <ul>
+                  <li>🔍 <a target="_self" href="https://leanrada.com/notes/sweep-and-prune-2/#comparisons">Visual comparison</a></li>
+                  <li>📝 <a target="_self" href="https://leanrada.com/notes/sweep-and-prune-2/#final-code">Final code</a></li>
+                </ul>
+              </li>
+            </ul>
+
+<p>As for the rest of the post, I try to paint a picture of what I think are first principles and show it with <strong>interactive demos</strong>! Let’s go!</p>
 <hr>
 <h2 id="collision-detection">Collision detection</h2>
 
@@ -520,7 +648,18 @@ Alternative text: demo of the collision detection algorithm using 'sap-nativesor
 
 <p>The straightforward solution is to test every potential pair of objects for collision. That is, <em>check every ball against every other ball</em>.</p>
 
-<pre><code><span>// for each ball</span>
+<pre code="// for each ball
+for (let i = 0; i < balls.length; i++) {
+  const ball1 = balls[i];
+  // check each of the other balls
+  for (let j = i + 1; j < balls.length; j++) {
+    const ball2 = balls[j];
+    // check for collision
+    if (intersects(ball1, ball2)) {
+      bounce(ball1, ball2);
+    }
+  }
+}"><code><span>// for each ball</span>
 <span>for</span> <span>(</span><span>let</span> i <span>=</span> <span>0</span><span>;</span> i <span>&lt;</span> balls<span>.</span>length<span>;</span> i<span>++</span><span>)</span> <span>{</span>
   <span>const</span> ball1 <span>=</span> balls<span>[</span>i<span>]</span><span>;</span>
   <span>// check each of the other balls</span>
@@ -573,7 +712,13 @@ Alternative text: demo of the collision detection algorithm using 'pairwise' str
 
 <p>A good place to start would be the <code>intersects()</code> function since it is called for every candidate pair. If we take the <a target="_blank" href="https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html">typical object intersection test</a> to be its implementation, we get a bunch of these <strong>inequality checks</strong>:</p>
 
-<pre><code><span>function</span> <span>intersects</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
+<pre code="function intersects(object1, object2) {
+  // compare objects' bounds to see if they overlap
+  return object1.left < object2.right
+      &amp;&amp; object1.right > object2.left
+      &amp;&amp; object1.top < object2.bottom
+      &amp;&amp; object1.bottom > object2.top;
+}"><code><span>function</span> <span>intersects</span><span>(</span><span>object1<span>,</span> object2</span><span>)</span> <span>{</span>
   <span>// compare objects' bounds to see if they overlap</span>
   <span>return</span> object1<span>.</span>left <span>&lt;</span> object2<span>.</span>right
       <span>&amp;&amp;</span> object1<span>.</span>right <span>&gt;</span> object2<span>.</span>left
@@ -610,13 +755,17 @@ Alternative text: demo of the collision detection algorithm using 'pairwise' str
 
 <p>There are three potential pairs to be checked here: A-B, B-C, and A-C. Remember, we’re trying to find redundant work. Pretend we’re running all the pairs through the check, like so:</p>
 
-<pre><code><span>A</span><span>.</span>right <span>&gt;</span> <span>B</span><span>.</span>left <span>// returns false</span>
+<pre code="A.right > B.left // returns false
+B.right > C.left // returns false
+A.right > C.left // returns false"><code><span>A</span><span>.</span>right <span>&gt;</span> <span>B</span><span>.</span>left <span>// returns false</span>
 <span>B</span><span>.</span>right <span>&gt;</span> <span>C</span><span>.</span>left <span>// returns false</span>
 <span>A</span><span>.</span>right <span>&gt;</span> <span>C</span><span>.</span>left <span>// returns false</span></code></pre>
 
 <p>See any redundant work? Maybe abstractify it a little…</p>
 
-<pre><code><span>A</span> <span>&gt;</span> <span>B</span> <span>// returns false</span>
+<pre code="A > B // returns false
+B > C // returns false
+A > C // returns false"><code><span>A</span> <span>&gt;</span> <span>B</span> <span>// returns false</span>
 <span>B</span> <span>&gt;</span> <span>C</span> <span>// returns false</span>
 <span>A</span> <span>&gt;</span> <span>C</span> <span>// returns false</span></code></pre>
 
@@ -628,7 +777,15 @@ Alternative text: demo of the collision detection algorithm using 'pairwise' str
             </blockquote>
 <p>So in this example, we don’t really need to run <code>intersects(A, C)</code>.</p>
 
-<pre><code><span>// 1. Test A-B</span>
+<pre code="// 1. Test A-B
+intersects(A, B) // A.right > B.left evals to false.
+
+// 2. Test B-C
+intersects(B, C) // B.right > C.left evals to false.
+
+// 3. Infer that A.right > C.left is false.
+// ∴ Therefore I don’t need to call intersects(A, C)
+// to know that it will return false."><code><span>// 1. Test A-B</span>
 <span>intersects</span><span>(</span><span>A</span><span>,</span> <span>B</span><span>)</span> <span>// A.right &gt; B.left evals to false.</span>
 
 <span>// 2. Test B-C</span>
@@ -680,7 +837,25 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 
 <p>First, the modified code:</p>
 
-<pre><code><span><span>+</span> <span>// sort by min x</span>
+<pre language="diff" language-code="diff-javascript" code="+ // sort by min x
++ sortByLeft(balls);
++ 
+  // for each ball
+  for (let i = 0; i < balls.length; i++) {
+    const ball1 = balls[i];
+    // check each of the other balls
+    for (let j = i + 1; j < balls.length; j++) {
+      const ball2 = balls[j];
++ 
++     // stop when too far away
++     if (ball2.left > ball1.right) break;
++ 
+      // check for collision
+      if (intersects(ball1, ball2)) {
+        bounce(ball1, ball2);
+      }
+    }
+  }"><code><span><span>+</span> <span>// sort by min x</span>
 <span>+</span> <span>sortByLeft</span><span>(</span>balls<span>)</span><span>;</span>
 <span>+</span> 
 </span><span><span> </span> <span>// for each ball</span>
@@ -704,13 +879,15 @@ Alternative text: interactive diagram showing a specific mechanism</pre>
 
 <p>The first line <code>sortByLeft(balls)</code> simply sorts the list, with ranking based on the balls’ left edge x-coords.</p>
 
-<pre><code><span>function</span> <span>sortByLeft</span><span>(</span><span>balls</span><span>)</span> <span>{</span>
+<pre code="function sortByLeft(balls) {
+  balls.sort((a,b) => a.left - b.left);
+}"><code><span>function</span> <span>sortByLeft</span><span>(</span><span>balls</span><span>)</span> <span>{</span>
   balls<span>.</span><span>sort</span><span>(</span><span>(</span><span>a<span>,</span>b</span><span>)</span> <span>=&gt;</span> a<span>.</span>left <span>-</span> b<span>.</span>left<span>)</span><span>;</span>
 <span>}</span></code></pre>
 
 <p>And in the inner loop, there is now this break:</p>
 
-<pre><code><span>if</span> <span>(</span>ball2<span>.</span>left <span>&gt;</span> ball1<span>.</span>right<span>)</span> <span>break</span><span>;</span></code></pre>
+<pre code="if (ball2.left > ball1.right) break;"><code><span>if</span> <span>(</span>ball2<span>.</span>left <span>&gt;</span> ball1<span>.</span>right<span>)</span> <span>break</span><span>;</span></code></pre>
 
 <p>Let’s break that down.</p>
 
@@ -780,7 +957,21 @@ Alternative text: demo of the collision detection algorithm using 'simple-sap' s
 
 <p>Here’s the code with running time annotations:</p>
 
-<pre><code><span>// O(n log n)</span>
+<pre id="code1" code="// O(n log n)
+sortByLeft(balls);
+
+// O(n + m)
+for (let i = 0; i < balls.length; i++) {
+  const ball1 = balls[i];
+  // O(1) at best; O(m/n) on average; O(n) at worst
+  for (let j = i + 1; j < balls.length; j++) {
+    const ball2 = balls[j];
+    if (ball2.left > ball1.right) break;
+    if (intersects(ball1, ball2)) {
+      bounce(ball1, ball2);
+    }
+  }
+}"><code><span>// O(n log n)</span>
 <span>sortByLeft</span><span>(</span>balls<span>)</span><span>;</span>
 
 <span>// O(n + m)</span>
@@ -810,7 +1001,7 @@ Alternative text: demo of the collision detection algorithm using 'simple-sap' s
             </span>
 <h2 id="visual-comparison">Visual comparison</h2>
 
-<p>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection tests required per frame. 🔍 n = 10</p>
+<p><a id="comparisons"></a>Here’s a side-by-side comparison of the strategies we’ve covered so far! Observe the amount of intersection tests required per frame. 🔍 n = 10</p>
 
 <pre>Interactive content: <a href="https://leanrada.com/notes/sweep-and-prune">Visit the website to play with interactive content!</a>
 Alternative text: demo of the collision detection algorithm using 'pairwise' strategy</pre>
@@ -1384,7 +1575,11 @@ Alternative text: interactive demo of the dynamic patrol algorithm</pre></p>
 <label><input type="checkbox"><span></span> Check this out</label><small>(these demos are interactive!)</small>
 <p>To do this, we need an extra element for the checkbox visuals, like an empty span element.</p>
 
-<pre><code><span><span><span>&lt;</span>label</span><span>&gt;</span></span>
+<pre language="html" code="
+<label>
+  <input type=&quot;checkbox&quot; /> <span></span> Check this out
+</label>
+"><code><span><span><span>&lt;</span>label</span><span>&gt;</span></span>
   <span><span><span>&lt;</span>input</span> <span>type</span><span><span>=</span><span>"</span>checkbox<span>"</span></span> <span>/&gt;</span></span> <span><span><span>&lt;</span>span</span><span>&gt;</span></span><span><span><span>&lt;/</span>span</span><span>&gt;</span></span> Check this out
 <span><span><span>&lt;/</span>label</span><span>&gt;</span></span></code></pre>
 
@@ -1392,7 +1587,12 @@ Alternative text: interactive demo of the dynamic patrol algorithm</pre></p>
 
 <p>Now here’s the important part, we’ll use the <code>:checked</code> pseudo-class and the <strong>sibling combinator</strong> <code>~</code> to make it all work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the separate fake checkbox element.</p>
 
-<pre><code><span>input:checked ~ span</span> <span>{</span>
+<pre language="css" code="
+input:checked ~ span {
+  background-color: red;
+  transform: rotate(45deg);
+}
+"><code><span>input:checked ~ span</span> <span>{</span>
   <span>background-color</span><span>:</span> red<span>;</span>
   <span>transform</span><span>:</span> <span>rotate</span><span>(</span>45deg<span>)</span><span>;</span>
 <span>}</span></code></pre>
@@ -1409,7 +1609,14 @@ Alternative text: interactive demo of the dynamic patrol algorithm</pre></p>
                 <span>Take an umbrella today!</span>
                 <span>No need for an umbrella!</span>
               </fieldset>
-<pre><code><span>input:checked ~ .advice .take-umbrella</span> <span>{</span>
+<pre language="css" code="
+input:checked ~ .advice .take-umbrella {
+    visibility: visible;
+}
+input:checked ~ .advice .no-umbrella {
+    visibility: hidden;
+}
+"><code><span>input:checked ~ .advice .take-umbrella</span> <span>{</span>
     <span>visibility</span><span>:</span> visible<span>;</span>
 <span>}</span>
 <span>input:checked ~ .advice .no-umbrella</span> <span>{</span>
@@ -1435,7 +1642,12 @@ Alternative text: demo of CSS-only machine</pre>
 
 <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (i.e., comma-separated selectors).</p>
 
-<pre><code><span>input#raining:checked ~ .advice .take-umbrella,
+<pre language="css" code="
+input#raining:checked ~ .advice .take-umbrella,
+input#sunny:checked ~ .advice .take-umbrella {
+  visibility: visible;
+}
+"><code><span>input#raining:checked ~ .advice .take-umbrella,
 input#sunny:checked ~ .advice .take-umbrella</span> <span>{</span>
   <span>visibility</span><span>:</span> visible<span>;</span>
 <span>}</span></code></pre>
@@ -1451,7 +1663,11 @@ Alternative text: demo of CSS-only machine</pre>
 
 <p>How about <strong>AND</strong>? We can implement an AND construct too! This involves chaining the inputs together in a single selector using sibling combinators.</p>
 
-<pre><code><span>input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span>{</span>
+<pre language="css" code="
+input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
+  visibility: visible;
+}
+"><code><span>input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span>{</span>
   <span>visibility</span><span>:</span> visible<span>;</span>
 <span>}</span></code></pre>
 
@@ -1464,7 +1680,18 @@ Alternative text: demo of CSS-only machine</pre>
 
 <p>Here’s a summary of what we have so far:</p>
 
-<pre><code><span>/* if A or B then C */</span>
+<pre language="css" code="
+/* if A or B then C */
+A ~ C,
+B ~ C {
+  C
+}
+
+/* if A and B then C */
+A ~ B ~ C {
+  C
+}
+"><code><span>/* if A or B then C */</span>
 <span>A ~ C,
 B ~ C</span> <span>{</span>
   C
@@ -1488,7 +1715,18 @@ Alternative text: interactive demo of three-in-a-row</pre>
 
 <p>Here are the rules for implementing the win condition in CSS:</p>
 
-<pre><code><span>#1:checked ~ #2:checked ~ #3:checked ~ .win,
+<pre language="css" code="
+#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win {
+  visibility: visible;
+}
+"><code><span>#1:checked ~ #2:checked ~ #3:checked ~ .win,
 #4:checked ~ #5:checked ~ #6:checked ~ .win,
 #7:checked ~ #8:checked ~ #9:checked ~ .win,
 #1:checked ~ #4:checked ~ #7:checked ~ .win,
@@ -1503,7 +1741,29 @@ Alternative text: interactive demo of three-in-a-row</pre>
 
 <p>Anyway, these 8 lines correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers <em>every possible winning combination</em>. The pseudocode in the comment helps illustrate this:</p>
 
-<pre><code><span>/*
+<pre language="css" code="
+/*
+ * if
+ *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
+ *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
+ *   or ([#7 marked] and [#8 marked] and [#9 marked]) // bottom row
+ *   .
+ *   :
+ *   or ([#3 marked] and [#5 marked] and [#7 marked]) // upward diagonal
+ * then
+ *   [win]
+ */
+#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win {
+  visibility: visible;
+}
+"><code><span>/*
  * if
  *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
  *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
@@ -1538,7 +1798,17 @@ Alternative text: interactive demo of three-in-a-row</pre>
                 <a href="https://leanrada.com/notes/pure-css-tictactoe-ai/input_sets.mp4">input sets illustration</a>
               </video>
 
-<pre><code><span>/* Disable turn 1 inputs when turn 1 is played */</span>
+<pre language="css" code="
+/* Disable turn 1 inputs when turn 1 is played */
+input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_1&quot;] {
+    pointer-events: none;
+}
+/* Enable next turn's inputs */
+input[name=&quot;turn_1&quot;]:checked ~ input[name=&quot;turn_2&quot;] {
+    pointer-events: all;
+}
+/* And so on... */
+"><code><span>/* Disable turn 1 inputs when turn 1 is played */</span>
 <span>input[name="turn_1"]:checked ~ input[name="turn_1"]</span> <span>{</span>
     <span>pointer-events</span><span>:</span> none<span>;</span>
 <span>}</span>
@@ -1581,7 +1851,13 @@ Alternative text: interactive demo of three-in-a-row</pre>
 
 <p>In CSS, that translates to:</p>
 
-<pre><code><span>input[value="1"]:checked
+<pre language="css" code="
+input[value=&quot;1&quot;]:checked
+~ input[value=&quot;2&quot;]:checked
+~ .o3 {
+  visibility: visible,
+}
+"><code><span>input[value="1"]:checked
 ~ input[value="2"]:checked
 ~ .o3</span> <span>{</span>
   <span>visibility</span><span>:</span> visible<span>,</span>
@@ -1602,7 +1878,16 @@ Alternative text: interactive demo of three-in-a-row</pre>
 
 <p>But since the AI is deterministic, we already know how those previous <em>O</em>s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute <strong>O(3)</strong> with the inputs that produced it, such as <strong>X(1)</strong> &amp; <strong>X(2)</strong>.</p>
 
-<pre><code>input[value=<span>"1"</span>]<span>:</span>checked
+<pre language="css" code="
+input[value=&quot;1&quot;]:checked
+~ input[value=&quot;2&quot;]:checked /* We know X(1) and X(2) produces O(3) */
+~ input[value=&quot;4&quot;]:checked /* X(1) and X(4) produces O(7) */
+.o5 {
+  visibility: visible,
+}
+/* Therefore, X(1) &amp; X(2) &amp; X(4) is equivalent to O(3) &amp; O(7). */
+/* If X(1) &amp; X(2) &amp; X(4) then O(5) is a winning move! */
+"><code>input[value=<span>"1"</span>]<span>:</span>checked
 ~ input[value=<span>"2"</span>]<span>:</span>checked <span>/* We know X(1) and X(2) produces O(3) */</span>
 ~ input[value=<span>"4"</span>]<span>:</span>checked <span>/* X(1) and X(4) produces O(7) */</span>
 <span>.o5</span> <span>{</span>
@@ -1627,7 +1912,78 @@ Alternative text: interactive demo of three-in-a-row</pre>
 
 <p>I lost the original code (trashed it after finishing the project), but here’s an untested recreation of the algorithm:</p>
 
-<pre><code><span>/**
+<pre language="javascript" code="
+/**
+ * Evaluates a game state having these parameters: last plays of player X,
+ * the player who has the current turn, and the current board state.
+ *
+ * Along the way, prints CSS rules for O's plays.
+ *
+ * Returns the endgame for O: WIN, LOSS, or a DRAW. Assuming optimal play.
+ */
+function evaluate(xPlays: number[], currentTurn: 'X' | 'O', board: ('X' | 'O' | null)[]) {
+
+  // checkWinner checks for a 3-in-a-row and returns the winner.
+  let winner = checkWinner(board)
+  if (winner == 'X') return LOSS
+  else if (winner == 'O') return WIN
+  else if (xPlays.length == 5) return DRAW // Board full (5 Xs implies 4 Os)
+
+
+  if (currentTurn == 'O') {
+    // Brute-force find the optimal play for O
+    let optimal = null
+    let winnable = false
+    for (i = 0; i < 9; i++) {
+      if (board[i]) continue
+
+      board[i] = 'O'
+      const result = evaluate(xPlays, 'X', board)
+      board[i] = null
+
+      if (result == DRAW) {
+        // This play will lead to a draw. Save it for now.
+        optimal = i
+      } else if (result == WIN) {
+        // This play will lead to a win. This is it.
+        optimal = i
+        winnable = true
+        break
+      } // No else. Discard play that would lead to LOSS.
+    }
+
+    if (optimal == null) {
+      // No winning play nor draws found. All paths lead to loss.
+      return LOSS
+    } else {
+      // Optimal play found. Print rule.
+      printCSS(xPlays, optimal)
+      return winnable ? WIN : DRAW
+    }
+  } else { // currentTurn == 'X'
+    // We don't know what the player would play
+    // So evaluate every possibe play
+    let loseable = false
+    for (i = 0; i < 9; i++) {
+      if (board[i]) continue
+
+      board[i] = 'X'
+      const result = evaluate([...xPlays, i], 'O', board)
+      board[i] = null
+
+      if (result == LOSS) loseable = true
+    }
+
+    // Assume player plays optimally. If they can win from current state,
+    // then immediately presume LOSS. This will factor into O's turn evaluation
+    // above, where any play that leads to LOSS is discarded.
+    if (loseable) return LOSS
+
+    // Not loseable, either winnable or drawable.
+    // Returning DRAW allows both paths to be evaluated.
+    return DRAW
+  }
+}"><code><span>/**
  * Evaluates a game state having these parameters: last plays of player X,
  * the player who has the current turn, and the current board state.
  *
@@ -1701,7 +2057,18 @@ Alternative text: interactive demo of three-in-a-row</pre>
 
 <p>And here’s the function that outputs CSS:</p>
 
-<pre><code><span>/**
+<pre language="javascript" code="
+/**
+ * Print CSS rule for the given game state and O's next play.
+ */
+function printCSS(xPlays: number[], oPlay: number) {
+  css += xPlays
+    .map((pos, turn) =>
+        `input[name='turn_${turn}'][value='${pos}']:checked`)
+    .join(' ~ ')
+    + ` ~ .o${oPlay}`
+    + ' { visibility: visible; }'
+}"><code><span>/**
  * Print CSS rule for the given game state and O's next play.
  */</span>
 <span>function</span> <span>printCSS</span><span>(</span><span><span>xPlays</span><span>:</span> number<span>[</span><span>]</span><span>,</span> <span>oPlay</span><span>:</span> number</span><span>)</span> <span>{</span>
@@ -1777,7 +2144,15 @@ Interactive diagram! Click the buttons to toggle the corresponding bits.
 
 <p>Let’s call the variable <code>accumulator</code>.</p>
 
-<pre><code>static uint8_t accumulator <span>=</span> <span>0</span><span>;</span>
+<pre language="clike" code="static uint8_t accumulator = 0;
+
+void on_press(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  accumulator |= (1 << index);
+}
+"><code>static uint8_t accumulator <span>=</span> <span>0</span><span>;</span>
 
 void <span>on_press</span><span>(</span>uint16_t keycode<span>)</span> <span>{</span>
   int index <span>=</span> <span>get_bit_index</span><span>(</span>keycode<span>)</span><span>;</span>
@@ -1788,7 +2163,28 @@ void <span>on_press</span><span>(</span>uint16_t keycode<span>)</span> <span>{</
 
 <p>Now, the accumulated bits will only be evaluated when all of the buttons have been released. A quick way of knowing when that happens is to watch for the last button to be released. To do this, another integer variable tracks how many buttons are currently being pressed.</p>
 
-<pre><code><span>// Keep count of keys being pressed</span>
+<pre language="clike" code="// Keep count of keys being pressed
+static int8_t pressed_keys = 0;
+static uint8_t accumulator = 0;
+
+void on_press(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  // Count key being pressed
+  pressed_keys++;
+
+  accumulator |= (1 << index);
+}
+
+void on_release(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  // Count key being released
+  pressed_keys--;
+}
+"><code><span>// Keep count of keys being pressed</span>
 static int8_t pressed_keys <span>=</span> <span>0</span><span>;</span>
 static uint8_t accumulator <span>=</span> <span>0</span><span>;</span>
 
@@ -1812,7 +2208,23 @@ void <span>on_release</span><span>(</span>uint16_t keycode<span>)</span> <span>{
 
 <p>Once the last button is released, it is time to flush the input. The resulting decimal number is mapped to a function key that will finally be sent to the computer.</p>
 
-<pre><code>void <span>on_release</span><span>(</span>uint16_t keycode<span>)</span> <span>{</span>
+<pre language="clike" code="void on_release(uint16_t keycode) {
+  int index = get_bit_index(keycode);
+  if (index == -1) return;
+
+  pressed_keys--;
+
+  // When all keys have been released, flush the input
+  if (pressed_keys <= 0) {
+    // Map accumulated value to the corresponding F-key code
+    send_to_computer(FUNCTION_KEYS[accumulator]);
+
+    // Reset state for next round
+    pressed_keys = 0;
+    accumulator = 0;
+  }
+}
+"><code>void <span>on_release</span><span>(</span>uint16_t keycode<span>)</span> <span>{</span>
   int index <span>=</span> <span>get_bit_index</span><span>(</span>keycode<span>)</span><span>;</span>
   <span>if</span> <span>(</span>index <span>==</span> <span>-</span><span>1</span><span>)</span> <span>return</span><span>;</span>
 
@@ -1850,7 +2262,10 @@ Demo! You need to use a keyboard for this. Put your input focus on this box and 
 
 <p>For example, if you wanted to repurpose F1, F2, F3, and F4 to represent the four bits, write the following in your <code>keymap.c</code>:</p>
 
-<pre><code>const uint16_t bitwise_f_keys<span>[</span><span>]</span> <span>=</span> <span>{</span> KC_F1<span>,</span> KC_F2<span>,</span> KC_F3<span>,</span> KC_F4 <span>}</span><span>;</span>
+<pre language="clike" code="const uint16_t bitwise_f_keys[] = { KC_F1, KC_F2, KC_F3, KC_F4 };
+uint8_t NUM_BITWISE_F_KEYS =
+    sizeof(bitwise_f_keys) / sizeof(uint16_t);
+"><code>const uint16_t bitwise_f_keys<span>[</span><span>]</span> <span>=</span> <span>{</span> KC_F1<span>,</span> KC_F2<span>,</span> KC_F3<span>,</span> KC_F4 <span>}</span><span>;</span>
 uint8_t NUM_BITWISE_F_KEYS <span>=</span>
     <span>sizeof</span><span>(</span>bitwise_f_keys<span>)</span> <span>/</span> <span>sizeof</span><span>(</span>uint16_t<span>)</span><span>;</span></code></pre>
 
@@ -1860,7 +2275,14 @@ uint8_t NUM_BITWISE_F_KEYS <span>=</span>
 
 <p>Hook it up by calling <code>process_bitwise_f()</code> at the top of your <code>process_record_user()</code>.</p>
 
-<pre><code>bool <span>process_record_user</span><span>(</span>uint16_t keycode<span>,</span> keyrecord_t <span>*</span>record<span>)</span> <span>{</span>
+<pre language="clike" code="bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  if (!process_bitwise_f(keycode, record)) return false;
+
+  /* ... */
+
+  return true;
+}
+"><code>bool <span>process_record_user</span><span>(</span>uint16_t keycode<span>,</span> keyrecord_t <span>*</span>record<span>)</span> <span>{</span>
   <span>if</span> <span>(</span><span>!</span><span>process_bitwise_f</span><span>(</span>keycode<span>,</span> record<span>)</span><span>)</span> <span>return</span> <span>false</span><span>;</span>
 
   <span>/* ... */</span>
@@ -1930,7 +2352,42 @@ uint8_t NUM_BITWISE_F_KEYS <span>=</span>
 
 <p>To get the average, you can either (1) read over the pixels in those regions and average them, or (2) downsample the image and directly use pixel colors (typically faster). For this case, I used the former, which is reading over the pixels within each region to calculate the average color.</p>
 
-<pre><code><span>// &lt;video&gt; element streams the camera, not shown here how</span>
+<pre code="// <video> element streams the camera, not shown here how
+video = document.getElementById('video');
+// <canvas> to hold a video frame for reading pixels
+canvas = document.getElementById('canvas'); 
+
+// Capture a video frame into the canvas
+const canvasContext = canvas.getContext('2d');
+canvasContext.drawImage(video, 0, 0, width, height);
+const imageData = canvasContext
+    .getImageData(0, 0, width, height)
+    .data;
+
+// Get the colors
+const pc1 = getRegionAverageColor(imageData, regionRect1);
+const pc2 = getRegionAverageColor(imageData, regionRect2);
+const pc3 = getRegionAverageColor(imageData, regionRect3);
+
+function getRegionAverageColor(imageData, rect) {
+  const lineStride = 4 * width;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  for (let j = rect.y; j < rect.y + rect.height; j++) {
+    for (let i = rect.x; i < rect.x + rect.width; i++) {
+      r += imageData[j * lineStride + i * 4] / 0xff;
+      g += imageData[j * lineStride + i * 4 + 1] / 0xff;
+      b += imageData[j * lineStride + i * 4 + 2] / 0xff;
+    }
+  }
+  const count = rect.width * rect.height;
+  return {
+    r: r / count,
+    g: g / count,
+    b: b / count
+  };
+}"><code><span>// &lt;video&gt; element streams the camera, not shown here how</span>
 video <span>=</span> document<span>.</span><span>getElementById</span><span>(</span><span>'video'</span><span>)</span><span>;</span>
 <span>// &lt;canvas&gt; to hold a video frame for reading pixels</span>
 canvas <span>=</span> document<span>.</span><span>getElementById</span><span>(</span><span>'canvas'</span><span>)</span><span>;</span> 
@@ -1975,7 +2432,17 @@ canvasContext<span>.</span><span>drawImage</span><span>(</span>video<span>,</spa
 
 <img srcset="/notes/simple-image-recognition-vanilla-js/dimensions_illo3_664.generated.jpg 664w" sizes=" 664px" alt="diagram" src="https://leanrada.com/notes/simple-image-recognition-vanilla-js/dimensions_illo3.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="">
 
-<pre><code><span>// To subtract two colors, we subtract each RGB component</span>
+<pre code="// To subtract two colors, we subtract each RGB component
+const d1 = {
+  r: pc1.r - pc2.r,
+  g: pc1.g - pc2.g,
+  b: pc1.b - pc2.b
+};
+const d2 = {
+  r: pc2.r - pc3.r,
+  g: pc2.g - pc3.g,
+  b: pc2.b - pc3.b
+};"><code><span>// To subtract two colors, we subtract each RGB component</span>
 <span>const</span> d1 <span>=</span> <span>{</span>
   <span>r</span><span>:</span> pc1<span>.</span>r <span>-</span> pc2<span>.</span>r<span>,</span>
   <span>g</span><span>:</span> pc1<span>.</span>g <span>-</span> pc2<span>.</span>g<span>,</span>
@@ -2013,7 +2480,23 @@ N2 = D2 / max(|D1|, |D2|)
 
 <p>And here’s the code for that:</p>
 
-<pre><code><span>// Get 'max(|D1|, |D2|)'</span>
+<pre code="// Get 'max(|D1|, |D2|)'
+const d1Magnitude = Math.hypot(d1.r, d1.g, d1.b);
+const d2Magnitude = Math.hypot(d2.r, d2.g, d2.b);
+
+// Add 0.001 to avoid division by zero
+const max = Math.max(d1Magnitude, d2Magnitude) + 0.001;
+
+const n1 = {
+  r: d1.r / max,
+  g: d1.g / max,
+  b: d1.b / max,
+};
+const n2 = {
+  r: d2.r / max,
+  g: d2.g / max,
+  b: d2.b / max,
+};"><code><span>// Get 'max(|D1|, |D2|)'</span>
 <span>const</span> d1Magnitude <span>=</span> Math<span>.</span><span>hypot</span><span>(</span>d1<span>.</span>r<span>,</span> d1<span>.</span>g<span>,</span> d1<span>.</span>b<span>)</span><span>;</span>
 <span>const</span> d2Magnitude <span>=</span> Math<span>.</span><span>hypot</span><span>(</span>d2<span>.</span>r<span>,</span> d2<span>.</span>g<span>,</span> d2<span>.</span>b<span>)</span><span>;</span>
 
@@ -2053,7 +2536,14 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
 <span>A color is composed of RGB values</span>
 <p>From the normalized colors <code>N1</code> and <code>N2</code>, we can obtain six numerical values (three from each). These values can be rolled into one combined series of numbers, which we’ll call the <strong>feature vector</strong> of the image. The feature vector can be thought of as a numerical representation of certain characteristics of the image.</p>
 
-<pre><code><span>const</span> featureVector <span>=</span> <span>[</span>
+<pre code="const featureVector = [
+  n1.r,
+  n1.g,
+  n1.b,
+  n2.r,
+  n2.g,
+  n2.b,
+];"><code><span>const</span> featureVector <span>=</span> <span>[</span>
   n1<span>.</span>r<span>,</span>
   n1<span>.</span>g<span>,</span>
   n1<span>.</span>b<span>,</span>
@@ -2074,7 +2564,39 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
 
 <p>I also got a couple more samples from real photos of the print for good measure.</p>
 
-<pre><code><span>// (original + real sample 1 + real sample 2) / 3</span>
+<pre code="// (original + real sample 1 + real sample 2) / 3
+const targetFeatureVector = [
+  (
+    -0.3593924173784146 +
+    -0.3030924568415693 +
+    -0.27620639981601575
+  ) / 3,
+  (
+    -0.611915816235142 +
+    -0.590167832630535 +
+    -0.5946857824325745
+  ) / 3,
+  (
+    -0.498629075974555 +
+    -0.4975375806689763 +
+    -0.49879828486061084
+  ) / 3,
+  (
+    0.35716016633879705 +
+    0.4556467533062926 +
+    0.47164734468790415
+  ) / 3,
+  (
+    0.17718492626963767 +
+    0.1053991137797178 +
+    0.13449453064454686
+  ) / 3,
+  (
+    0.2980055137889341 +
+    0.30589264583678 +
+    0.2811110391693084
+  ) / 3
+];"><code><span>// (original + real sample 1 + real sample 2) / 3</span>
 <span>const</span> targetFeatureVector <span>=</span> <span>[</span>
   <span>(</span>
     <span>-</span><span>0.3593924173784146</span> <span>+</span>
@@ -2114,7 +2636,16 @@ N2 = (TC3 - TC2) / max(TC2 - TC1, TC3 - TC2)
 
 <p>We can use Euclidean distance as a measure of vector similarity. Remember, vector similarity is our proxy for image similarity!</p>
 
-<pre><code><span>const</span> vectorDistance <span>=</span> Math<span>.</span><span>hypot</span><span>(</span>
+<pre code="const vectorDistance = Math.hypot(
+  ...featureVector.map(
+    (value, index) =>
+        targetFeatureVector[index] - value
+  )
+);
+
+if (vectorDistance < THRESHOLD) {
+  // Image recognized!
+}"><code><span>const</span> vectorDistance <span>=</span> Math<span>.</span><span>hypot</span><span>(</span>
   <span>...</span>featureVector<span>.</span><span>map</span><span>(</span>
     <span>(</span><span>value<span>,</span> index</span><span>)</span> <span>=&gt;</span>
         targetFeatureVector<span>[</span>index<span>]</span> <span>-</span> value
