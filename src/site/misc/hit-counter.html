@@ -1,47 +1,83 @@
-<script render>
-  for (const digit of String(hits).padStart(5, "0")) {
-    yield html`<span class="hit-digit">${digit}</span>`;
-  }
-</script>
+<hit-counter-client>
+  <script render>
+    for (const digit of String(hits).padStart(5, "0")) {
+      yield html`<span class="hit-digit">${digit}</span>`;
+    }
+  </script>
+</hit-counter-client>
 
 <script static>
   const { hits } = require("./hits.json");
 </script>
 
-<script client defer>
-  (() => {
-    const hitsGet = getHits();
-    populate();
+<script type="module" client defer>
+  import { BaseElement } from "/lib/base_element.mjs";
 
-    async function getHits() {
-      const res = await fetch(
-        "https://kalabasa.goatcounter.com/counter/TOTAL.json"
-      );
-      const data = await res.json();
-      return parseInt(data.count.replaceAll(/\D/g, ""));
-    }
+  customElements.define(
+    "hit-counter-client",
+    class HitCounter extends BaseElement {
+      constructor() {
+        super();
 
-    async function populate() {
-      const digitEls = Array.from(document.querySelectorAll(".hit-digit"));
-      const strDigits = String(await hitsGet).padStart(digitEls.length, "0");
-      for (let i = 0; i < digitEls.length; i++) {
-        animateDigit(digitEls[i], Number(strDigits[i]), 200 + 100 * (i + 1));
+        this.visibilityListener({
+          show: () => {
+            if (this.shown) return;
+            this.shown = true;
+            this.onShow();
+          },
+        });
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+      }
+
+      onShow() {
+        this.populate();
+      }
+
+      async populate() {
+        const digitEls = Array.from(this.querySelectorAll(".hit-digit"));
+        const strDigits = String(await getHits()).padStart(
+          digitEls.length,
+          "0"
+        );
+        for (let i = 0; i < digitEls.length; i++) {
+          this.animateDigit(
+            digitEls[i],
+            Number(strDigits[i]),
+            200 + 100 * (i + 1)
+          );
+        }
+      }
+
+      async animateDigit(el, n, durationMs) {
+        const current = parseInt(el.textContent);
+        for (let i = 0; i < durationMs / 37.5; i++) {
+          el.textContent = Math.floor(Math.random() * 10);
+          await delay(25 + Math.random() * 25);
+        }
+        el.textContent = n;
       }
     }
+  );
 
-    async function animateDigit(el, n, durationMs) {
-      const current = parseInt(el.textContent);
-      for (let i = 0; i < durationMs / 37.5; i++) {
-        el.textContent = Math.floor(Math.random() * 10);
-        await delay(25 + Math.random() * 25);
-      }
-      el.textContent = n;
+  async function getHits() {
+    if (!getHits.result) {
+      getHits.result = (async () => {
+        const res = await fetch(
+          "https://kalabasa.goatcounter.com/counter/TOTAL.json"
+        );
+        const data = await res.json();
+        return parseInt(data.count.replaceAll(/\D/g, ""));
+      })();
     }
+    return getHits.result;
+  }
 
-    function delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-  })();
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 </script>
 
 <style>
@@ -50,5 +86,7 @@
     padding: 0 6px;
     border: solid 1px var(--text2-clr);
     border-radius: 6px;
+    font-family: var(--display-font);
+    font-weight: bold;
   }
 </style>
