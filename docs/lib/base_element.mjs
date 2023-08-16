@@ -95,7 +95,7 @@ export const createBaseElement = (() => {
        * @param callbacks.show {Function}
        * @param callbacks.hide {Function}
        */
-      visibilityListener({ show, hide }) {
+      visibilityListener({ show = () => { }, hide = () => { } }) {
         let isShowing = false;
 
         const observer = new IntersectionObserver((entries) => {
