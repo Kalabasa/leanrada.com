@@ -64,7 +64,7 @@ async function updateContribs(outFile) {
   try {
     console.log("Updating GitHub contributions");
     const contribs = await getContribs();
-    await fs.writeFile(outFile, JSON.stringify(contribs, undefined));
+    await fs.writeFile(outFile, JSON.stringify(contribs, undefined, " "));
     console.log("GitHub contributions written to file:", outFile);
   } catch (e) {
     console.log("Error updating contribs:", e);
