@@ -6,6 +6,7 @@
 
 export interface Env {
   data: KVNamespace;
+  notify: SendEmail;
 }
 
 // Must be constant forever
@@ -15,6 +16,10 @@ const PAGE_HEIGHT = 30;
 const MAX_PAGE = 8;
 const TEMPLATE_URL =
   "https://raw.githubusercontent.com/Kalabasa/kalabasa.github.io/src/src/site/guestbook/template.json";
+
+const LOG_PAGE_DIVIDER = Array.from({ length: PAGE_WIDTH })
+  .map(() => "-")
+  .join("");
 
 type GetRequest = {
   page: number;
@@ -97,15 +102,57 @@ async function handlePost(request: Request, env: Env) {
   const newContent = submitRequest.content.split("\n");
   const offset = submitRequest.page * PAGE_HEIGHT;
   console.log("Splicing at", offset, ":");
-  console.log("----------------------------------------");
+  console.log(LOG_PAGE_DIVIDER);
   console.log(newContent.join("\n"));
-  console.log("----------------------------------------");
+  console.log(LOG_PAGE_DIVIDER);
   data.splice(offset, PAGE_HEIGHT, ...newContent);
   checkData(data, "-spliced");
 
   await env.data.put("master", JSON.stringify(data));
 
+  sendNotificationEmail(submitRequest.page, newContent, env);
+
   return new Response(null);
+}
+
+async function sendNotificationEmail(
+  page: number,
+  content: string[],
+  env: Env
+) {
+  const message = `\
+From: notifier@guestbook.leanrada.com
+To: notify@leanrada.com
+Subject: Guestbook updated
+Content-Type: text/html
+
+<pre>${LOG_PAGE_DIVIDER}
+${content.join("\n")}
+${LOG_PAGE_DIVIDER}</pre>
+<i>page ${page}</i>
+`;
+
+  let EmailMessage;
+  try {
+    ({ EmailMessage } = await import("cloudflare:email"));
+  } catch (e) {
+    // detect local dev env
+    if (e instanceof Error && e.message.includes("cloudflare-internal:email")) {
+      console.log("Fake sending notification email:");
+      console.log(message);
+      return;
+    }
+    throw e;
+  }
+
+  console.log("Sending notification email");
+  await env.notify.send(
+    new EmailMessage(
+      "notifier@guestbook.leanrada.com", // from
+      null as unknown as string, // to: auto-detect
+      message
+    )
+  );
 }
 
 function checkGetRequest(getRequest: any): asserts getRequest is GetRequest {
