@@ -1,6 +1,5 @@
-import { SweepAndPruneStrat } from '../collision-strats/sap-strat.mjs';
-import { createSweepDecorations } from './sweep-decoration.mjs';
 import { createEdgeDecorations } from './edge-decoration.mjs';
+import { createSweepDecorations } from './sweep-decoration.mjs';
 
 export function createDecorations(decorationsAttr, ballSim, renderer, pause) {
   const decorations = parseDecorations(decorationsAttr);

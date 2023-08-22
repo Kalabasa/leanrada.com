@@ -5,7 +5,6 @@ export function setupDragging(ballSim, canvas, eventTarget) {
 
   canvas.addEventListener("pointerdown", event => {
     const { simX, simY } = getSimPosition(event, canvas);
-    console.log({ simX, simY });
 
     draggingBall = findBall(ballSim, simX, simY);
     if (draggingBall) {

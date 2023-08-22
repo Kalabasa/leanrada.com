@@ -1,24 +1,36 @@
-export const mousePosition = (() => {
-  const mousePosition = { x: 0, y: 0 };
+let x = 0;
+let y = 0;
 
+if (document.readyState == 'loading') {
   document.addEventListener(
     "DOMContentLoaded",
-    () => {
-      document.body.addEventListener("pointerdown", (event) => {
-        mousePosition.x = event.clientX;
-        mousePosition.y = event.clientY;
-      });
-      document.body.addEventListener("pointermove", (event) => {
-        mousePosition.x = event.clientX;
-        mousePosition.y = event.clientY;
-      });
-      document.body.addEventListener("mousemove", (event) => {
-        mousePosition.x = event.clientX;
-        mousePosition.y = event.clientY;
-      });
-    },
+    init,
     { once: true }
   );
+} else {
+  init();
+}
 
-  return mousePosition;
-})();
+function init() {
+  document.body.addEventListener("pointerdown", (event) => {
+    x = event.clientX;
+    y = event.clientY;
+  });
+  document.body.addEventListener("pointermove", (event) => {
+    x = event.clientX;
+    y = event.clientY;
+  });
+  document.body.addEventListener("mousemove", (event) => {
+    x = event.clientX;
+    y = event.clientY;
+  });
+}
+
+export const mousePosition = {
+  get x() {
+    return x;
+  },
+  get y() {
+    return y;
+  }
+};
