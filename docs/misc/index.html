@@ -3,282 +3,6 @@
 <head>
   <title>Misc stuff · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
-  <script type="module" client="" defer="">
-    import {
-      waitFor
-    } from "/lib/wait_for.mjs";
-    import {
-      BaseElement
-    } from "/lib/base_element.mjs";
-    import {
-      mousePosition
-    } from "/lib/mouse_position.mjs";
-
-    customElements.define(
-      "nebula-client",
-      class Nebula extends BaseElement {
-        constructor() {
-          super();
-
-          this.asyncCanvas = this.asyncQuerySelector("canvas");
-          this.context = null;
-          this.noise = null;
-
-          this.gridWidth = 30;
-          this.gridHeight = 30;
-          this.palette = ["#ffffff"];
-
-          this.cellWidth = 1; // placeholder
-          this.cellHeight = 1; // placeholder
-
-          this.useMouse = false;
-          this.mouseCell = null;
-
-          this.lastT = 0;
-          this.startT = 0;
-          this.loopStartT = 0;
-
-          this.isVisible = false;
-          this.visibilityListener({
-            show: () => {
-              this.isVisible = true;
-              this.startLoop();
-            },
-            hide: () => (this.isVisible = false),
-          });
-        }
-
-        connectedCallback() {
-          super.connectedCallback();
-
-          this.useMouse = this.getAttribute("mouse") != null;
-
-          const gridWidth = this.getAttribute("width");
-          if (gridWidth) {
-            this.gridWidth = Number.parseInt(gridWidth);
-          }
-
-          const gridHeight = this.getAttribute("height");
-          if (gridHeight) {
-            this.gridHeight = Number.parseInt(gridHeight);
-          }
-
-          const paletteAttr = this.getAttribute("palette");
-          if (paletteAttr) {
-            this.palette = paletteAttr.split(" ");
-          }
-        }
-
-        startLoop() {
-          this.loopStartT = this.lastT = this.getT();
-          this.loop();
-        }
-
-        async loop() {
-          if (!this.isVisible) {
-            return;
-          }
-
-          if (typeof perlinNoise3d === "undefined") {
-            await waitFor(() => typeof perlinNoise3d !== "undefined");
-          }
-
-          if (!this.noise) {
-            this.noise = initNoise();
-            this.startT = this.getT();
-          }
-
-          const canvas = await this.asyncCanvas.promise;
-
-          // initialize
-          if (!this.context) {
-            this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
-            this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
-            canvas.width = this.gridWidth;
-            canvas.height = this.gridHeight;
-            canvas.style.filter += ` blur(${
-            Math.min(this.cellWidth, this.cellHeight) * 1.25
-          }px)`;
-            this.context = canvas.getContext("2d");
-          }
-
-          this.draw(canvas, this.context);
-
-          requestAnimationFrame(() => this.loop());
-        }
-
-        /**
-         * @param canvas {HTMLCanvasElement}
-         * @param context {CanvasRenderingContext2D}
-         */
-        draw(canvas, context) {
-          const t = this.getT();
-          if (t <= this.lastT) return;
-
-          const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
-          this.lastT = t;
-
-          const {
-            noise,
-            gridWidth,
-            gridHeight,
-            palette,
-            cellWidth,
-            cellHeight
-          } =
-          this;
-          const halfGridWidth = gridWidth / 2;
-          const halfGridHeight = gridHeight / 2;
-
-          this.mouseCell = null;
-          if (this.useMouse) {
-            const {
-              x,
-              y
-            } = mousePosition;
-            const bounds = canvas.getBoundingClientRect();
-            if (
-              bounds.left < x &&
-              x < bounds.right &&
-              bounds.top < y &&
-              y < bounds.bottom
-            ) {
-              this.mouseCell = {
-                x: (x - bounds.x) / cellWidth,
-                y: (y - bounds.y) / cellHeight,
-              };
-            }
-          }
-
-          const paletteLength = palette.length;
-          const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
-          const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
-
-          for (let i = 0; i < gridWidth; i++) {
-            for (let j = 0; j < gridHeight; j++) {
-              const mouseProximity =
-                this.mouseCell == null ?
-                0 :
-                1 -
-                sigmoid(
-                  Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
-                );
-
-              const xy = [
-                1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
-                1000 +
-                (j - halfGridHeight) * yScale +
-                Math.cos(t * 0.007) * 2 +
-                -mouseProximity,
-              ];
-              const p1 = noise.get(...xy, t * 0.03);
-              const p2 = noise.get(...xy, t * 0.03 + 0.5);
-              // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
-              const p = p1 + p2;
-
-              const paletteIndex = Math.floor(paletteLength * p);
-
-              const rgb = palette[paletteIndex];
-              const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
-                .toString(16)
-                .padStart(2, "0");
-
-              context.fillStyle = `${rgb}${a}`;
-              context.fillRect(i, j, 1, 1);
-            }
-          }
-        }
-
-        getT() {
-          const t = (Date.now() * 24) / 1000;
-          // make it smoother while interacting
-          return this.mouseCell ? t : Math.floor(t);
-        }
-      }
-    );
-
-    function initNoise() {
-      const noise = new perlinNoise3d();
-      noise.perlin_octaves = 1; // ?? defaults
-      noise.perlin_amp_falloff = 1;
-      return noise;
-    }
-
-    function sigmoid(x) {
-      return 1 / (1 + Math.exp(-x));
-    }
-  </script>
-  <script type="module" client="" defer="">
-    import {
-      BaseElement
-    } from "/lib/base_element.mjs";
-
-    customElements.define(
-      "hit-counter-client",
-      class HitCounter extends BaseElement {
-        constructor() {
-          super();
-
-          this.visibilityListener({
-            show: () => {
-              if (this.shown) return;
-              this.shown = true;
-              this.onShow();
-            },
-          });
-        }
-
-        connectedCallback() {
-          super.connectedCallback();
-        }
-
-        onShow() {
-          this.populate();
-        }
-
-        async populate() {
-          const digitEls = Array.from(this.querySelectorAll(".hit-digit"));
-          const strDigits = String(await getHits()).padStart(
-            digitEls.length,
-            "0"
-          );
-          for (let i = 0; i < digitEls.length; i++) {
-            this.animateDigit(
-              digitEls[i],
-              Number(strDigits[i]),
-              200 + 100 * (i + 1)
-            );
-          }
-        }
-
-        async animateDigit(el, n, durationMs) {
-          const current = parseInt(el.textContent);
-          for (let i = 0; i < durationMs / 37.5; i++) {
-            el.textContent = Math.floor(Math.random() * 10);
-            await delay(25 + Math.random() * 25);
-          }
-          el.textContent = n;
-        }
-      }
-    );
-
-    async function getHits() {
-      if (!getHits.result) {
-        getHits.result = (async () => {
-          const res = await fetch(
-            "https://kalabasa.goatcounter.com/counter/TOTAL.json"
-          );
-          const data = await res.json();
-          return parseInt(data.count.replaceAll(/\D/g, ""));
-        })();
-      }
-      return getHits.result;
-    }
-
-    function delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-  </script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
@@ -287,551 +11,533 @@
   <meta charset="utf-8">
   <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
   <style>
-    .current-os-logo {
-      width: 48px;
-      height: 48px;
-    }
-  </style>
+  .current-os-logo {
+    width: 48px;
+    height: 48px;
+  }
+</style>
   <style>
-    .gh-contribs {
-      display: inline-flex;
-      gap: 18px;
-    }
+  .gh-contribs {
+    display: inline-flex;
+    gap: 18px;
+  }
 
-    .gh-contribs-icon {
-      width: 48px;
-      height: 48px;
-      image-rendering: pixelated;
-      filter: invert(1);
-    }
+  .gh-contribs-icon {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    filter: invert(1);
+  }
 
-    .gh-contribs-grid {
-      display: grid;
-      grid-auto-flow: column;
-      grid-template-rows: repeat(7, auto);
-      gap: 6px;
-    }
-
-    .gh-contribs-cell {
-      width: 12px;
-      height: 12px;
-      box-sizing: border-box;
-      background: #54f8c1;
-      color: transparent;
-      overflow: hidden;
-      user-select: none;
-    }
-
-    .gh-contribs-cell[data-level="0"] {
-      background-color: #222c2c;
-    }
-
-    .gh-contribs-cell[data-level="1"] {
-      background-color: #3b9277;
-    }
-
-    .gh-contribs-cell[data-level="2"] {
-      background-color: #48c59c;
-    }
-
-    .gh-contribs-cell[data-level="3"] {
-      background-color: #54f8c1;
-    }
-  </style>
+  .gh-contribs-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, auto);
+    gap: 6px;
+  }
+  .gh-contribs-cell {
+    width: 12px;
+    height: 12px;
+    box-sizing: border-box;
+    background: #54f8c1;
+    color: transparent;
+    overflow: hidden;
+    user-select: none;
+  }
+  .gh-contribs-cell[data-level="0"] {
+    background-color: #222c2c;
+  }
+  .gh-contribs-cell[data-level="1"] {
+    background-color: #3b9277;
+  }
+  .gh-contribs-cell[data-level="2"] {
+    background-color: #48c59c;
+  }
+  .gh-contribs-cell[data-level="3"] {
+    background-color: #54f8c1;
+  }
+</style>
   <style>
-    .text-link {
-      color: var(--clr0-light, #fff);
-    }
-
-    .text-link:visited {
-      color: var(--clr0, #fff);
-    }
-  </style>
+  .right-now-emoji {
+    font-size: 60px;
+  }
+  .right-now-status,
+  .right-now-time,
+  .right-now-disclaim {
+    margin-top: 12px;
+  }
+  .right-now-disclaim {
+    font-size: 6px;
+    opacity: 0.1;
+  }
+</style>
   <style>
-    .hit-digit {
-      margin: 0 1.5px;
-      padding: 0 6px;
-      border: solid 1px var(--text2-clr);
-      border-radius: 6px;
-      font-family: var(--display-font);
-      font-weight: bold;
-    }
-  </style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
   <style>
-    .content-header {
-      font-family: var(--default-font);
-      margin: 90px 0 60px;
-      padding: 0 18px;
-    }
-
-    .content-header-title {
-      margin: 0 0 6px;
-      font-family: var(--display-font);
-      font-size: 27px;
-      font-style: italic;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .content-header-subtitle {
-      margin: 6px 0 0;
-      font-size: 18px;
-      font-style: italic;
-      text-align: center;
-      color: var(--text2-clr);
-    }
-  </style>
+  .hit-digit {
+    margin: 0 1.5px;
+    padding: 0 6px;
+    border: solid 1px var(--text2-clr);
+    border-radius: 6px;
+    font-family: var(--display-font);
+    font-weight: bold;
+  }
+</style>
   <style>
-    @font-face {
-      font-family: "Space Mono";
-      font-display: swap;
-      font-weight: normal;
-      font-style: normal;
-      src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
-    }
+  .content-header {
+    font-family: var(--default-font);
+    margin: 90px 0 60px;
+    padding: 0 18px;
+  }
 
-    @font-face {
-      font-family: "Space Mono";
-      font-display: swap;
-      font-weight: normal;
-      font-style: italic;
-      src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
-    }
+  .content-header-title {
+    margin: 0 0 6px;
+    font-family: var(--display-font);
+    font-size: 27px;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+  }
 
-    @font-face {
-      font-family: "Iosevka";
-      font-display: swap;
-      font-weight: normal;
-      font-style: normal;
-      src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
-    }
-
-    @font-face {
-      font-family: "Iosevka";
-      font-display: swap;
-      font-weight: normal;
-      font-style: italic;
-      src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
-    }
-
-    @font-face {
-      font-family: "Miriam Libre";
-      font-display: swap;
-      font-weight: normal;
-      font-style: normal;
-      src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
-    }
-
-    :root {
-      --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
-        monospace;
-      --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
-        monospace;
-      --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
-
-      --bg-clr: #111616;
-      --card-clr: #222c2c;
-      --clr0-light: #54f8c1;
-      --clr0: #0ad591;
-      --clr0-dark: #05b97d;
-      --clr1: #df2063;
-
-      --text-clr: #fff;
-      --text2-clr: #999;
-
-      --ease: cubic-bezier(0.8, 0, 1, 1);
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: var(--default-font, monospace);
-      font-size: 15px;
-      font-display: swap;
-      font-variant-ligatures: none;
-      background-color: var(--bg-clr, #111);
-      color: var(--text-clr, #fff);
-      overflow-x: hidden;
-    }
-
-    .page-wrapper {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    .page-wrapper-content {
-      flex: 1 1 auto;
-    }
-  </style>
+  .content-header-subtitle {
+    margin: 6px 0 0;
+    font-size: 18px;
+    font-style: italic;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+</style>
   <style>
-    nebula-client {
-      position: relative;
-    }
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
 
-    nebula-client>canvas {
-      width: 100%;
-      height: 100%;
-    }
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
 
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
     .nebula-noise {
-      position: absolute;
-      inset: 0;
-      background: url("/noise.png");
-      /* todo: encapsulate noise.png */
-      opacity: 0.1;
-      animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
-        nebula-noise-y 0.48s steps(3, jump-start) infinite;
+      mix-blend-mode: overlay;
+      opacity: 0.2;
     }
-
-    @supports (mix-blend-mode: overlay) {
-      .nebula-noise {
-        mix-blend-mode: overlay;
-        opacity: 0.2;
-      }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
     }
-
-    @keyframes nebula-noise-x {
-      to {
-        background-position-x: 100px;
-      }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
     }
-
-    @keyframes nebula-noise-y {
-      to {
-        background-position-y: 100px;
-      }
-    }
-  </style>
+  }
+</style>
   <style>
-    .main-footer-web-link {
-      text-decoration: none;
-    }
+  .main-footer-web-link {
+    text-decoration: none;
+  }
 
-    .main-footer-web-link-icon {
-      width: 32px;
-      height: 32px;
-      image-rendering: pixelated;
-    }
-
-    .main-footer-web-link-icon:hover {
-      filter: invert(1);
-    }
-  </style>
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
   <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 18px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: middle;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
     .main-footer {
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      gap: 60px;
-      padding: 42px calc(max(36px, 50vw - 600px));
-      font-family: var(--display-font);
-      font-size: 15px;
-      font-weight: bold;
-      background: var(--clr0);
-      color: #000;
-      overflow: hidden;
-      content-visibility: auto;
-      contain-intrinsic-height: 200px;
+      flex-direction: column-reverse;
     }
-
-    .main-footer-links-heading {
-      margin: 18px 0;
-      font-size: inherit;
-    }
-
-    .main-footer-line {
-      margin: 18px 0;
-    }
-
-    .main-footer-link {
-      color: #000;
-    }
-
-    .main-footer-link:hover {
-      color: #000;
-    }
-
-    .main-footer-webring-icon {
-      width: 16px;
-      height: 16px;
-      image-rendering: pixelated;
-    }
-
-    .main-footer-signature {
-      width: 64px;
-      height: 64px;
-      image-rendering: pixelated;
-      vertical-align: middle;
-    }
-
-    .main-footer-content-part {
-      z-index: 1;
-    }
-
-    .main-footer-nebula {
-      position: absolute;
-      left: -30%;
-      top: -30%;
-      width: 160%;
-      height: 160%;
-      z-index: 0;
-    }
-
-    .main-footer-top-btn {
-      display: block;
-      z-index: 2;
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 72px;
-      height: 36px;
-      padding-right: 9px;
-      box-sizing: border-box;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: none;
-      border-bottom-left-radius: 18px;
-      background: var(--bg-clr);
-      text-decoration: none;
-      color: var(--clr0-light);
-      font: inherit;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .main-footer-top-btn:hover {
-      color: var(--clr1);
-    }
-
-    .main-footer-top-btn::before {
-      content: "";
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 36px;
-      height: 18px;
-      border-top-right-radius: 18px;
-      transform: translateX(-72px);
-      box-shadow: 18px 0 0 var(--bg-clr);
-    }
-
-    @media (max-width: 700px) {
-      .main-footer {
-        flex-direction: column-reverse;
-      }
-    }
-  </style>
+  }
+</style>
   <style>
-    .main-header {
-      position: sticky;
-      top: 0;
-      width: 100%;
-      height: 60px;
-      padding: 0 calc(25% - 150px);
-      z-index: 100;
-      box-sizing: border-box;
-      pointer-events: none;
-    }
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
 
-    .main-header.float {
-      position: fixed;
-    }
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
 
-    .main-header-bar {
-      position: relative;
-      display: flex;
-      justify-content: space-evenly;
-      align-items: flex-end;
-      height: 100%;
-    }
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #fff2 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #fff2;
+  }
 
-    .main-header-item {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      width: 6ch;
-      height: 36px;
-      padding: 0 18px;
-      border-radius: 18px;
-      font-family: var(--display-font);
-      font-size: 15px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      text-decoration: none;
-      text-transform: uppercase;
-      color: #fff;
-      backdrop-filter: blur(8px);
-      background-image: linear-gradient(60deg, #fff2 60%, transparent 60%);
-      background-repeat: no-repeat;
-      background-size: 220% 100%;
-      background-position: 115%;
-      pointer-events: all;
-      transition: background-position 0.2s var(--ease);
-    }
-
-    .main-header-item:hover {
-      background-image: linear-gradient(60deg,
-          #fff2 50%,
-          #fff 50%,
-          #fff 60%,
-          transparent 60%);
-      background-position: 0%;
-    }
-
-    .main-header-item.select {
-      background: #fff2;
-    }
-
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  @media (max-width: 450px) {
     .main-header-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 25%;
-      image-rendering: pixelated;
-      object-fit: cover;
-      filter: invert(1);
-      backdrop-filter: blur(8px) invert(1);
-      pointer-events: all;
+      display: none;
     }
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
 
-    @media (max-width: 450px) {
-      .main-header-icon {
-        display: none;
-      }
-    }
-
-    .main-header-icon-yay {
-      border-radius: 50%;
-      object-position: 0 0;
-    }
-
-    .main-header-icon-yay:hover {
-      object-position: 100% 0;
-    }
-
-    .main-header-indicator {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      left: 50%;
-      top: calc(100% + 12px);
-      transform: translate(-50%, -50%);
-      /* border acts as extended touch area */
-      border: solid 6mm transparent;
-      border-left-width: 45vw;
-      border-right-width: 45vw;
-      border-radius: 50%;
-      background: #fff;
-      background-clip: padding-box;
-      opacity: 0;
-      transition: opacity 50ms;
-    }
-
-    .main-header.hidden .main-header-indicator {
-      opacity: 0.8;
-      pointer-events: all;
-    }
-  </style>
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.8;
+    pointer-events: all;
+  }
+</style>
   <style>
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(27em, 100%), 1fr));
-      margin: 0 -1px -1px 0;
-    }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(27em, 100%), 1fr));
+    margin: 0 -1px -1px 0;
+  }
 
-    .section {
-      margin: -1px 0 0 -1px;
-      padding: 18px;
-      border: solid 1px var(--card-clr);
-      font-family: var(--reading-font);
-      font-size: 15px;
-    }
+  .section {
+    margin: -1px 0 0 -1px;
+    padding: 18px;
+    border: solid 1px var(--card-clr);
+    font-family: var(--reading-font);
+    font-size: 15px;
+  }
+  .section-title {
+    margin: 0 0 18px;
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-weight: bold;
+    font-style: italic;
+  }
+  .section p {
+    margin: 12px 0;
+  }
+  .section p:first-child {
+    margin-top: 0;
+  }
+  .single-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
 
-    .section-title {
-      margin: 0 0 18px;
-      font-family: var(--display-font);
-      font-size: 18px;
-      font-weight: bold;
-      font-style: italic;
-    }
+  .details {
+    padding: 12px;
+  }
+  .summary {
+    margin-left: -12px;
+    font-family: var(--display-font);
+    font-weight: bold;
+    color: var(--text2-clr);
+    cursor: pointer;
+  }
+  .summary-highlighted {
+    color: var(--clr0-light);
+  }
+  .summary:hover {
+    color: var(--text-clr);
+  }
 
-    .section p {
-      margin: 12px 0;
-    }
+  .img {
+    width: 100%;
+    border-radius: 12px;
+  }
+  .img-small {
+    max-width: 200px;
+  }
 
-    .section p:first-child {
-      margin-top: 0;
-    }
+  .big-number {
+    margin: 36px;
+    font-size: 48px;
+    font-family: var(--display-font);
+    font-weight: bold;
+  }
 
-    .single-section {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
+  .game-icon-row {
+    display: flex;
+    justify-content: center;
+    gap: 8%;
+    width: 100%;
+  }
+  .game-icon {
+    width: 15%;
+    image-rendering: pixelated;
+  }
 
-    .details {
-      padding: 12px;
-    }
+  .fave-color {
+    padding: 0 0.25em;
+    border-radius: 6px;
+  }
 
-    .summary {
-      margin-left: -12px;
-      font-family: var(--display-font);
-      font-weight: bold;
-      color: var(--text2-clr);
-      cursor: pointer;
-    }
-
-    .summary-highlighted {
-      color: var(--clr0-light);
-    }
-
-    .summary:hover {
-      color: var(--text-clr);
-    }
-
-    .img {
-      width: 100%;
-      border-radius: 12px;
-    }
-
-    .img-small {
-      max-width: 200px;
-    }
-
-    .big-number {
-      margin: 36px;
-      font-size: 48px;
-      font-family: var(--display-font);
-      font-weight: bold;
-    }
-
-    .game-icon-row {
-      display: flex;
-      justify-content: center;
-      gap: 8%;
-      width: 100%;
-    }
-
-    .game-icon {
-      width: 15%;
-      image-rendering: pixelated;
-    }
-
-    .fave-color {
-      padding: 0 0.25em;
-      border-radius: 6px;
-    }
-
-    .stackoverflow-icon {
-      width: 1ch;
-      image-rendering: pixelated;
-      filter: invert(1);
-    }
-  </style>
+  .stackoverflow-icon {
+    width: 1ch;
+    image-rendering: pixelated;
+    filter: invert(1);
+  }
+</style>
 </head>
 
 
@@ -860,7 +566,7 @@
           <p>👤 You are visitor number</p>
           <p class="big-number">
             <hit-counter-client>
-              <span class="hit-digit">0</span><span class="hit-digit">1</span><span class="hit-digit">6</span><span class="hit-digit">9</span><span class="hit-digit">2</span>
+              <span class="hit-digit">0</span><span class="hit-digit">1</span><span class="hit-digit">7</span><span class="hit-digit">3</span><span class="hit-digit">4</span>
             </hit-counter-client>
           </p>
           <p>Thank you for visiting my website!</p>
@@ -980,47 +686,12 @@
         </section>
 
         <section class="section single-section">
-          <h2 class="section-title">GitHub activity</h2>
-          <div class="gh-contribs">
-            <img class="gh-contribs-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
-            <div class="gh-contribs-grid">
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="3">3</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="3">3</div>
-              <div class="gh-contribs-cell" data-level="0">0</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="0">0</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="2">2</div>
-              <div class="gh-contribs-cell" data-level="4">4</div>
-              <div class="gh-contribs-cell" data-level="2">2</div>
-              <div class="gh-contribs-cell" data-level="3">3</div>
-              <div class="gh-contribs-cell" data-level="3">3</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="2">2</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="4">4</div>
-              <div class="gh-contribs-cell" data-level="3">3</div>
-              <div class="gh-contribs-cell" data-level="4">4</div>
-              <div class="gh-contribs-cell" data-level="2">2</div>
-              <div class="gh-contribs-cell" data-level="3">3</div>
-              <div class="gh-contribs-cell" data-level="2">2</div>
-              <div class="gh-contribs-cell" data-level="2">2</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="0">0</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="3">3</div>
-              <div class="gh-contribs-cell" data-level="2">2</div>
-              <div class="gh-contribs-cell" data-level="4">4</div>
-              <div class="gh-contribs-cell" data-level="1">1</div>
-              <div class="gh-contribs-cell" data-level="0">0</div>
-            </div>
-          </div>
+          <right-now-client>
+            <div class="right-now-emoji"></div>
+            <div class="right-now-status"></div>
+            <div class="right-now-time"></div>
+            <div class="right-now-disclaim">- Lean Emulator</div>
+          </right-now-client>
         </section>
 
         <section class="section single-section">
@@ -1035,6 +706,46 @@
             My favourite dessert is
             <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Halo-halo">halo-halo</a>. 😋
           </p>
+        </section>
+
+        <section class="section single-section">
+          <h2 class="section-title">GitHub activity</h2>
+          <div class="gh-contribs">
+            <img class="gh-contribs-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+            <div class="gh-contribs-grid">
+              <div class="gh-contribs-cell" data-level="0">0</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="4">4</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="3">3</div>
+              <div class="gh-contribs-cell" data-level="3">3</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="4">4</div>
+              <div class="gh-contribs-cell" data-level="3">3</div>
+              <div class="gh-contribs-cell" data-level="4">4</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="3">3</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="0">0</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="3">3</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="4">4</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="1">1</div>
+              <div class="gh-contribs-cell" data-level="2">2</div>
+              <div class="gh-contribs-cell" data-level="4">4</div>
+              <div class="gh-contribs-cell" data-level="4">4</div>
+            </div>
+          </div>
         </section>
 
         <section class="section single-section">
@@ -1305,6 +1016,9 @@
   </div>
 
 
+  <script type="module" async="" defer="" src="/scripts/right-now.js"></script>
+  <script type="module" async="" defer="" src="/scripts/hit-counter.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
 </body>
 </html>

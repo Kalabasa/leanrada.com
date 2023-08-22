@@ -1,0 +1,164 @@
+
+  import { BaseElement } from "/lib/base_element.mjs";
+  import { mousePosition } from "/lib/mouse_position.mjs";
+
+  customElements.define(
+    "magnetic-field-client",
+    class MagneticField extends BaseElement {
+      constructor() {
+        super();
+
+        this.asyncCanvas = this.asyncQuerySelector("canvas");
+        this.context = null;
+
+        this.lastT = 0;
+
+        this.ripples = [];
+
+        // todo: move isVisible to BaseElement, like isConnected
+        this.isVisible = true;
+        this.visibilityListener({
+          show: () => {
+            this.isVisible = true;
+            this.startLoop();
+          },
+          hide: () => (this.isVisible = false),
+        });
+
+        document.addEventListener("click", (event) => {
+          if (event.target.tagName === "A") return;
+          this.ripple(getMousePos(this));
+        });
+      }
+
+      ripple(center) {
+        this.ripples.push({
+          center,
+          radius: 0,
+        });
+      }
+
+      startLoop() {
+        this.loop();
+      }
+
+      async loop() {
+        if (!this.isVisible) {
+          return;
+        }
+
+        const canvas = await this.asyncCanvas.promise;
+
+        // initialize
+        if (!this.context) {
+          canvas.width = canvas.offsetWidth;
+          canvas.height = canvas.offsetHeight;
+          this.context = canvas.getContext("2d");
+        }
+
+        this.draw(canvas, this.context);
+
+        requestAnimationFrame(() => this.loop());
+      }
+
+      /**
+       * @param canvas {HTMLCanvasElement}
+       * @param context {CanvasRenderingContext2D}
+       */
+      draw(canvas, context) {
+        const t = getT();
+        if (t <= this.lastT) return;
+
+        const stepSize = 40;
+        const halfStep = stepSize / 2;
+
+        let mousePos = getMousePos(this);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.lineWidth = 6;
+        context.lineCap = "round";
+
+        const width = Math.floor(canvas.width / stepSize) * stepSize;
+        const height = Math.floor(canvas.height / stepSize) * stepSize;
+        const offsetX = (canvas.width - width) / 2;
+        const offsetY = (canvas.height - height) / 2;
+
+        for (let x = offsetX; x <= offsetX + width; x += stepSize) {
+          for (let y = offsetY; y <= offsetY + height; y += stepSize) {
+            const mouseDist = Math.hypot(mousePos.x - x, mousePos.y - y);
+            const halfLength = halfStep * 0.4;
+            let angle = mousePos
+              ? Math.atan2(mousePos.x - x, mousePos.y - y) +
+                (Math.PI * sigmoid(mouseDist / 60 - 6)) / 2
+              : (x + y) / 300;
+
+            angle += t * 0.02;
+
+            let color = [0x22, 0x2c, 0x2c];
+            const highlightColor = [0x54, 0xf8, 0xc1];
+
+            for (const ripple of this.ripples) {
+              const rippleDist = Math.hypot(
+                ripple.center.x - x,
+                ripple.center.y - y
+              );
+              const waveDist = Math.abs(rippleDist - ripple.radius);
+
+              angle -= ((1 - sigmoid(waveDist / 60 - 3)) * Math.PI) / 2;
+
+              // interpolate color to highlightColor based on waveDist
+              color.forEach(
+                (v, i) =>
+                  (color[i] = lerp(
+                    highlightColor[i],
+                    v,
+                    sigmoid(waveDist / 20 - 3)
+                  ))
+              );
+            }
+            context.strokeStyle = `rgb(${color[0]} ${color[1]} ${color[2]})`;
+
+            const lx = Math.sin(angle) * halfLength;
+            const ly = Math.cos(angle) * halfLength;
+
+            context.beginPath();
+            context.moveTo(x - lx, y - ly);
+            context.lineTo(x + lx, y + ly);
+            context.stroke();
+          }
+        }
+
+        for (let i = this.ripples.length - 1; i >= 0; i--) {
+          const ripple = this.ripples[i];
+          ripple.radius += (t - this.lastT) * 50;
+          if (ripple.radius > canvas.width && ripple.radius > canvas.width) {
+            this.ripples.splice(i, 1);
+          }
+        }
+
+        this.lastT = t;
+      }
+    }
+  );
+
+  function getMousePos(element) {
+    const { x, y } = mousePosition;
+    const bounds = element.getBoundingClientRect();
+    return {
+      x: x - bounds.x,
+      y: y - bounds.y,
+    };
+  }
+
+  function getT() {
+    const t = (Date.now() * 30) / 1000;
+    return Math.floor(t);
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function sigmoid(x) {
+    return 1 / (1 + Math.exp(-x));
+  }
