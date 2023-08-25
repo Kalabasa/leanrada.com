@@ -34,11 +34,13 @@
     let isTouch = false;
     let lastScrollY = window.scrollY;
     let lastCursorY = 0;
-    window.addEventListener("scroll", debounce(onScroll));
-    window.addEventListener("mousemove", debounce(onMouseMove, 100));
-    window.addEventListener("touchstart", onWindowTouchStart);
-    window.addEventListener("touchmove", onWindowTouchMove);
-    mainHeader.addEventListener("touchstart", onTouchStart);
+
+    const passive = { passive: true };
+    window.addEventListener("scroll", debounce(onScroll), passive);
+    window.addEventListener("mousemove", debounce(onMouseMove, 100), passive);
+    window.addEventListener("touchstart", onWindowTouchStart, passive);
+    window.addEventListener("touchmove", onWindowTouchMove, passive);
+    mainHeader.addEventListener("touchstart", onTouchStart, passive);
 
     function onScroll(event) {
       const dy = window.scrollY - lastScrollY;
