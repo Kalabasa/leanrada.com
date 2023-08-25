@@ -12,18 +12,19 @@ if (document.readyState == 'loading') {
 }
 
 function init() {
+  const passive = { passive: true };
   document.body.addEventListener("pointerdown", (event) => {
     x = event.clientX;
     y = event.clientY;
-  });
+  }, passive);
   document.body.addEventListener("pointermove", (event) => {
     x = event.clientX;
     y = event.clientY;
-  });
+  }, passive);
   document.body.addEventListener("mousemove", (event) => {
     x = event.clientX;
     y = event.clientY;
-  });
+  }, passive);
 }
 
 export const mousePosition = {
