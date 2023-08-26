@@ -109,7 +109,6 @@
     function onTouchStart(event) {
       currentYTarget = 0;
       updateDOM();
-      console.log("onTouchStart");
     }
 
     const updateDOM = debounce(() => {
