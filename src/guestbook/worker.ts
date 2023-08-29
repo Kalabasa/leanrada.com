@@ -90,7 +90,8 @@ async function handlePost(request: Request, env: Env) {
   console.log("Handling POST request:", submitRequest);
   checkSubmitRequest(submitRequest);
 
-  let data = await env.data.get("master", { type: "json" });
+  let data: string[] | null = await env.data.get("master", { type: "json" });
+  const snapshot = data?.slice();
   if (data) {
     checkData(data, "-master");
   } else {
@@ -108,7 +109,26 @@ async function handlePost(request: Request, env: Env) {
   data.splice(offset, PAGE_HEIGHT, ...newContent);
   checkData(data, "-spliced");
 
-  await env.data.put("master", JSON.stringify(data));
+  if (same(data, snapshot)) {
+    return new Response(null);
+  }
+
+  const now = new Date();
+  const snapshotName =
+    "snapshot-" +
+    now.getFullYear() +
+    "-" +
+    String(now.getUTCMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(now.getUTCDate()).padStart(2, "0");
+
+  await Promise.all([
+    env.data.get(snapshotName).then((existing) => {
+      if (!existing)
+        return env.data.put(snapshotName, JSON.stringify(snapshot));
+    }),
+    env.data.put("master", JSON.stringify(data)),
+  ]);
 
   sendNotificationEmail(submitRequest.page, newContent, env);
 
@@ -122,7 +142,7 @@ async function sendNotificationEmail(
 ) {
   const message = `\
 From: notifier@guestbook.leanrada.com
-To: notify@leanrada.com
+To: notify-xfscgrxn@leanrada.com
 Subject: Guestbook updated
 Content-Type: text/html
 
@@ -149,7 +169,7 @@ ${LOG_PAGE_DIVIDER}</pre>
   await env.notify.send(
     new EmailMessage(
       "notifier@guestbook.leanrada.com", // from
-      null as unknown as string, // to: auto-detect
+      "notify-xfscgrxn@leanrada.com", // to: auto-detect
       message
     )
   );
@@ -193,6 +213,11 @@ function checkData(data: any, suffix?: string): asserts data is string[] {
     throw new TypeError(
       `${name} is not an array of PAGE_WIDTH length strings!`
     );
+}
+
+function same(data1: string[], data2: string[] | undefined) {
+  if (!data2) return false;
+  return data1.length === data2.length && data1.every((v, i) => v === data2[i]);
 }
 
 export default { fetch: handleRequest };
