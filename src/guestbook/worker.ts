@@ -123,56 +123,11 @@ async function handlePost(request: Request, env: Env) {
     String(now.getUTCDate()).padStart(2, "0");
 
   await Promise.all([
-    env.data.get(snapshotName).then((existing) => {
-      if (!existing)
-        return env.data.put(snapshotName, JSON.stringify(snapshot));
-    }),
+    env.data.put(snapshotName, JSON.stringify(snapshot)),
     env.data.put("master", JSON.stringify(data)),
   ]);
 
-  sendNotificationEmail(submitRequest.page, newContent, env);
-
   return new Response(null);
-}
-
-async function sendNotificationEmail(
-  page: number,
-  content: string[],
-  env: Env
-) {
-  const message = `\
-From: notifier@guestbook.leanrada.com
-To: notify-xfscgrxn@leanrada.com
-Subject: Guestbook updated
-Content-Type: text/html
-
-<pre>${LOG_PAGE_DIVIDER}
-${content.join("\n")}
-${LOG_PAGE_DIVIDER}</pre>
-<i>page ${page}</i>
-`;
-
-  let EmailMessage;
-  try {
-    ({ EmailMessage } = await import("cloudflare:email"));
-  } catch (e) {
-    // detect local dev env
-    if (e instanceof Error && e.message.includes("cloudflare-internal:email")) {
-      console.log("Fake sending notification email:");
-      console.log(message);
-      return;
-    }
-    throw e;
-  }
-
-  console.log("Sending notification email");
-  await env.notify.send(
-    new EmailMessage(
-      "notifier@guestbook.leanrada.com", // from
-      "notify-xfscgrxn@leanrada.com", // to: auto-detect
-      message
-    )
-  );
 }
 
 function checkGetRequest(getRequest: any): asserts getRequest is GetRequest {
