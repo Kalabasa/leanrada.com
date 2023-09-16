@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>todo · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  watercolor-demo-client {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-block;
+    width: 400px;
+    width: min(100vw, 40vh);
+    aspect-ratio: 1;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+  }
+</style>
+  <style>
+  .blog-post-info {
+    margin: 24px 0;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+  .blog-post-info-hidden {
+    display: none;
+  }
+</style>
+  <style>
+  .text-with-bg-span {
+    display: inline;
+    margin: 0;
+    padding: 0.7em;
+    padding: 0.35lh;
+    border-radius: 18px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    font: inherit;
+    background: var(--text-with-bg-color);
+  }
+</style>
+  <style>
+  .blog-header {
+    isolation: isolate;
+    margin: 90px 0 24px;
+    position: relative;
+    left: 50%;
+    height: 400px; /* .blog-header-title::before must match */
+    width: max(800px, 60vw);
+    transform: translateX(-50%);
+    box-sizing: border-box;
+  }
+
+  .blog-header-title {
+    position: relative;
+    max-width: 800px;
+    font-family: var(--display-font);
+    font-size: 36px;
+    font-weight: bold;
+    font-style: italic;
+    text-align: left;
+    z-index: 2;
+  }
+  .blog-header-title-inner {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  /* Wrap lines in an angle */
+  .blog-header-title::before {
+    content: "";
+    width: 0;
+    width: calc(min(50%, 120vw - 600px));
+    height: 400px;
+    float: right;
+    shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
+  }
+
+  .blog-header-hero {
+    position: absolute;
+    inset: 1px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    background: gray;
+    z-index: -1;
+  }
+
+  .blog-header-decor {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    fill: var(--bg-clr);
+    z-index: 1;
+  }
+
+  @media (max-width: 800px) {
+    .blog-header {
+      width: 100vw;
+      width: 100svw;
+      height: 400px;
+      padding-right: 36px;
+    }
+    .blog-header-title {
+      font-size: clamp(24px, 20px + 2vw, 36px);
+    }
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 18px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: middle;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  @media (max-width: 450px) {
+    .main-header-icon {
+      display: none;
+    }
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.6;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .blog-page {
+    margin: auto;
+    overflow: hidden;
+  }
+
+  .content {
+    margin: auto;
+    padding: 0 18px 60px;
+    width: 100%;
+    max-width: 700px;
+    font-family: var(--reading-font, sans-serif);
+    font-size: 16px;
+    line-height: 2.2;
+    letter-spacing: 0.02em;
+    color: #ddd;
+    box-sizing: border-box;
+  }
+
+  .markdown > h1,
+  .markdown > h2,
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    margin: 48px 0 36px;
+    font-family: var(--display-font);
+    font-weight: normal;
+    font-style: italic;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .markdown > h1 {
+    text-align: center;
+    font-size: 200%;
+  }
+  .markdown > h2 {
+    font-size: 150%;
+  }
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    font-size: 120%;
+    font-weight: bold;
+  }
+
+  .markdown > p {
+    margin: 36px 0;
+  }
+  .markdown .box-note > p {
+    margin: 18px 0;
+  }
+  .markdown .box-note > p:first-child {
+    margin-top: 0;
+  }
+  .markdown .box-note > p:last-child {
+    margin-bottom: 0;
+  }
+
+  .markdown-table {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .markdown-table > table {
+    min-width: 100%;
+    box-sizing: border-box;
+    border-collapse: collapse;
+    background-color: var(--card-clr);
+    border-radius: 12px;
+  }
+  .markdown-table > table th,
+  .markdown-table > table td {
+    min-width: min(25vw, 8ch);
+    box-sizing: border-box;
+    text-align: start;
+    padding: 9px 6px;
+    padding-inline-end: 18px;
+    border-bottom: solid 1px #444;
+  }
+  .markdown-table > table th:first-child,
+  .markdown-table > table td:first-child {
+    padding-left: 12px;
+  }
+  .markdown-table > table th:last-child,
+  .markdown-table > table td:last-child {
+    padding-right: 12px;
+  }
+  .markdown-table > table > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+
+  .markdown > hr {
+    width: 36px;
+    margin: 90px auto;
+    border: solid 1.5px #ccc;
+    background: #ccc;
+    border-radius: 3px;
+  }
+
+  .markdown code:not([class]):not([class]) {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 6px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    background: var(--card-clr);
+  }
+  .markdown > pre:not([class]) > code:not([class]) {
+    display: block;
+    padding: 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 15px;
+    overflow-x: auto;
+  }
+
+  .markdown > blockquote {
+    position: relative;
+    margin: 0;
+    padding: 18px 24px;
+    border-radius: 18px;
+    border: solid 1px var(--clr0);
+    font-size: 21px;
+  }
+  .markdown > blockquote::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 0;
+    height: 24px;
+    width: 24px;
+    border-bottom: solid 1px var(--clr0);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote::after {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 24px;
+    bottom: 18px;
+    width: 24px;
+    border-top-right-radius: 24px;
+    border: solid var(--clr0);
+    border-width: 1px 1px 0 0;
+    box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote > :first-child {
+    margin-top: 0;
+  }
+  .markdown > blockquote > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown > blockquote cite {
+    display: block;
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: inherit;
+  }
+  .markdown > blockquote cite::before {
+    content: "—";
+  }
+
+  .markdown > iframe,
+  .markdown > p > iframe {
+    max-width: calc(100vw - 18px);
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .markdown .center {
+    text-align: center;
+  }
+  .markdown .center-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+  .markdown .bleed {
+    position: relative;
+    left: 50%;
+    width: 100vh;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+
+  /* todo: convert to component <caption>, reuse across <blog-media> */
+  .markdown .caption {
+    display: block;
+    font-size: 15px;
+  }
+</style>
+</head>
+
+
+<body>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a> <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon main-header-icon-yay" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a> <a href="/notes/" class="main-header-item select">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <p>
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  todo
+                </h1>
+              </div>
+              <img srcset="/notes/_watercolour-simulation-with-webgl/hero_800.generated.png 800w,/notes/_watercolour-simulation-with-webgl/hero_1020.generated.png 1020w,/notes/_watercolour-simulation-with-webgl/hero_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/_watercolour-simulation-with-webgl/hero.png" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
+            </div>
+            </p>
+            <p>
+            <div class="blog-post-info ">
+              17 Sept 2023 · 1 min read
+            </div>
+            </p>
+            <p>The following video is of a watercolour simulation made using WebGL and JavaScript.</p>
+            <p><video todo="recording of watercolour sim"></video></p>
+            <p>In this post, I explain how the simulation works with live demos along the way.</p>
+            <h2 id="theory">Theory</h2>
+            <p>Before we dive deep into code, let us think about watercolour as a phenomenon to be modeled. After watching a bunch of videos of watercolour painting, I have come up with the following six (6) rules of watercolour.</p>
+            <h2 id="watercolour-rules">Watercolour rules</h2>
+            <ol>
+              <li>Parts of the canvas can be in varying degrees of wetness.</li>
+              <li>Parts of the canvas can have paint in varying amounts and colour.</li>
+              <li>Water transports paint.</li>
+              <li>Water spreads to less wet areas.</li>
+              <li>Water evaporates over time.</li>
+              <li>Paint settles over time.</li>
+            </ol>
+            <p>Let us interpret and implement each rule.</p>
+            <h2 id="rule-1-parts-of-the-canvas-can-be-in-varying-degrees-of-wetness">Rule 1. Parts of the canvas can be in varying degrees of wetness.</h2>
+            <p>This can be implemented by creating a 2D greyscale image as a map of wetness, with black (0.0) representing total dryness and white (1.0) as maximum wateriness.</p>
+            <p><watercolor-demo-client data-rss="interactive" aria-label="interactive watercolour demo" rules="water" action="water"></watercolor-demo-client></p>
+            <p>You can put water by <span class="interaction-type">touching</span> the canvas, but the water does not do anything yet, so let us continue implementing the rest of the rules.</p>
+            <h2 id="rule-2-parts-of-the-canvas-can-have-paint-in-varying-amounts-and-colour">Rule 2. Parts of the canvas can have paint in varying amounts and colour.</h2>
+            <p>Like water, there is a 2D variable for paint too. This determines the visible colour on the canvas. We can model paint using a 2D colour image with transparency (i.e. RGBA), with each pixel representing the colour and the amount of paint at each location.</p>
+            <p>Now we have two 2D maps, one for water and one for paint.</p>
+            <p><watercolor-demo-client data-rss="interactive" aria-label="interactive watercolour demo" rules="water,paint" action="water,paint"></watercolor-demo-client></p>
+            <p>They do not interact with each other yet. There are multiple interactions but we can start with the simplest one, which is the next rule.</p>
+            <h2 id="rule-3-water-transports-paint">Rule 3. Water transports paint.</h2>
+            <img todo="diagram of water transporting paint in multiple steps">
+
+            <p>Whenever water moves, it carries a relative amount of paint with it. But our water does not move yet! Before we can see the results, we first need to make the water move as a simple fluid. This brings us to the next rule.</p>
+            <h2 id="rule-4-water-spreads-to-less-wet-areas">Rule 4. Water spreads to less wet areas</h2>
+            <p>Since watercolour is mostly water, this rule is the most important.</p>
+            <p>Naively, this could be implemented by applying a blur filter on the wetness map repeatedly.</p>
+            <p><watercolor-demo-client data-rss="interactive" aria-label="interactive watercolour demo" rules="water,paint,blur-water" action="water,paint"></watercolor-demo-client></p>
+            <p>However, it does not look right. This is because a simple blur filter cannot capture a very important property of water, <strong>surface tension</strong>.</p>
+            <h3 id="surface-tension">Surface tension</h3>
+            <p>...</p>
+            <p><watercolor-1d-demo rules="equalize" action="water,paint"></watercolor-1d-demo></p>
+            <p><watercolor-demo-client data-rss="interactive" aria-label="interactive watercolour demo" rules="water,paint,equalize" action="water,paint"></watercolor-demo-client></p>
+            <h3 id="capillary-action">Capillary action</h3>
+            <p>...</p>
+            <p><watercolor-1d-demo rules="equalize,seep" action="water,paint"></watercolor-1d-demo></p>
+            <p><watercolor-demo-client data-rss="interactive" aria-label="interactive watercolour demo" rules="water,paint,equalize,seep" action="water,paint"></watercolor-demo-client></p>
+            <h2 id="rule-5-water-evaporates-over-time">Rule 5. Water evaporates over time.</h2>
+            <p>Subtract a small amount of water from all water surfaces over time.</p>
+            <p><watercolor-1d-demo rules="evaporate,equalize,seep" action="water,paint"></watercolor-1d-demo></p>
+            <p><watercolor-demo-client data-rss="interactive" aria-label="interactive watercolour demo" rules="water,paint,evaporate,equalize,seep" action="water,paint"></watercolor-demo-client></p>
+            <p>coffee stain effect</p>
+            <h2 id="rule-6-paint-settles-over-time">Rule 6. Paint settles over time.</h2>
+            <p>three 2D maps</p>
+            <p><watercolor-demo-client data-rss="interactive" aria-label="interactive watercolour demo" rules="water,paint,stain,evaporate,equalize,seep,deposit" action="water,paint"></watercolor-demo-client></p>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          ·
+          <a target="_self" class="main-footer-link" href="/guestbook/">Sign my guestbook</a>
+        </p>
+        <p class="main-footer-line">
+          (C) 2023 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source
+          </a>
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-web-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+  <script type="module" async="" defer="" src="/scripts/watercolor-demo.js"></script>
+  <script defer="" src="/scripts/blog-header.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+</body>
+</html>
