@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Compressing a website into a URL · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  .box-note {
+    display: block;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: solid 2px var(--clr0-dark);
+    box-sizing: border-box;
+  }
+</style>
+  <style>
+  /**
+   * Modified by Kalabasa.
+   * Based on:
+   * a11y-dark theme for JavaScript, CSS, and HTML
+   * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+   * @author ericwbailey
+   */
+
+  .code-block .token.inserted:not(.prefix) {
+    background: #00b6a71c;
+    display: block;
+  }
+
+  .code-block .token.comment,
+  .code-block .token.prolog,
+  .code-block .token.doctype,
+  .code-block .token.cdata {
+    color: #628b9e;
+    font-style: italic;
+  }
+
+  .code-block .token.punctuation {
+    color: #fefefe;
+  }
+
+  .code-block .token.property,
+  .code-block .token.tag,
+  .code-block .token.constant,
+  .code-block .token.symbol,
+  .code-block .token.deleted {
+    color: #ffa07a;
+  }
+
+  .code-block .token.boolean,
+  .code-block .token.number {
+    color: #00e0e0;
+  }
+
+  .code-block .token.selector,
+  .code-block .token.attr-name,
+  .code-block .token.string,
+  .code-block .token.char,
+  .code-block .token.builtin,
+  .code-block .token.inserted {
+    color: #abe338;
+  }
+
+  .code-block .token.operator,
+  .code-block .token.entity,
+  .code-block .token.url,
+  .code-block .token.variable {
+    color: #00e0e0;
+  }
+
+  .code-block .token.atrule,
+  .code-block .token.attr-value,
+  .code-block .token.function {
+    color: #ffd700;
+  }
+
+  .code-block .token.keyword {
+    color: #00e0e0;
+  }
+
+  .code-block .token.regex,
+  .code-block .token.important {
+    color: #ffd700;
+  }
+
+  .code-block .token.important,
+  .code-block .token.bold {
+    font-weight: bold;
+  }
+
+  .code-block .token.italic {
+    font-style: italic;
+  }
+
+  .code-block .token.entity {
+    cursor: help;
+  }
+
+  @media screen and (-ms-high-contrast: active) {
+    .code-block .token.important {
+      background: highlight;
+      color: window;
+      font-weight: normal;
+    }
+
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.selector {
+      font-weight: bold;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.comment,
+    .code-block .token.doctype,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.property,
+    .code-block .token.string {
+      color: highlight;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.url {
+      font-weight: normal;
+    }
+  }
+</style>
+  <style>
+  .code-block {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .code-block-code {
+    display: inline-block;
+    padding: 18px;
+    min-width: 100%;
+    box-sizing: border-box;
+    border-radius: 18px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    line-height: 1.6;
+    background: var(--card-clr);
+    white-space: pre;
+  }
+</style>
+  <style>
+  .window-decor {
+    position: relative;
+    border-radius: 12px;
+    border: solid var(--card-clr);
+    border-width: 24px 0 12px;
+    box-shadow: 0 0 0 1px #333, 0 0 0 2px #111;
+    background: var(--card-clr);
+  }
+  .window-decor::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 12px;
+    top: -18px;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: #443c3f;
+    box-shadow: 18px 0 0 #4d4a45, 36px 0 0 #3f4745;
+  }
+
+  .window-decor-title {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translate(-50%);
+    line-height: 24px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text2-clr);
+  }
+</style>
+  <style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
+  <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
+  }
+</style>
+  <style>
+  .tag-row {
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+  }
+</style>
+  <style>
+  .blog-post-info {
+    margin: 24px 0;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+  .blog-post-info-hidden {
+    display: none;
+  }
+</style>
+  <style>
+  .text-with-bg-span {
+    display: inline;
+    margin: 0;
+    padding: 0.7em;
+    padding: 0.35lh;
+    border-radius: 18px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    font: inherit;
+    background: var(--text-with-bg-color);
+  }
+</style>
+  <style>
+  .blog-header {
+    isolation: isolate;
+    margin: 90px 0 24px;
+    position: relative;
+    left: 50%;
+    height: 400px; /* .blog-header-title::before must match */
+    width: max(800px, 60vw);
+    transform: translateX(-50%);
+    box-sizing: border-box;
+  }
+
+  .blog-header-title {
+    position: relative;
+    max-width: 800px;
+    font-family: var(--display-font);
+    font-size: 36px;
+    font-weight: bold;
+    font-style: italic;
+    text-align: left;
+    z-index: 2;
+  }
+  .blog-header-title-inner {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  /* Wrap lines in an angle */
+  .blog-header-title::before {
+    content: "";
+    width: 0;
+    width: calc(min(50%, 120vw - 600px));
+    height: 400px;
+    float: right;
+    shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
+  }
+
+  .blog-header-hero {
+    position: absolute;
+    inset: 1px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    background: gray;
+    z-index: -1;
+  }
+
+  .blog-header-decor {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    fill: var(--bg-clr);
+    z-index: 1;
+  }
+
+  @media (max-width: 800px) {
+    .blog-header {
+      width: 100vw;
+      width: 100svw;
+      height: 400px;
+      padding-right: 36px;
+    }
+    .blog-header-title {
+      font-size: clamp(24px, 20px + 2vw, 36px);
+    }
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 18px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: middle;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  @media (max-width: 450px) {
+    .main-header-icon {
+      display: none;
+    }
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.6;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .blog-page {
+    margin: auto;
+    overflow: hidden;
+  }
+
+  .content {
+    margin: auto;
+    padding: 0 18px 60px;
+    width: 100%;
+    max-width: 700px;
+    font-family: var(--reading-font, sans-serif);
+    font-size: 16px;
+    line-height: 2.2;
+    letter-spacing: 0.02em;
+    color: #ddd;
+    box-sizing: border-box;
+  }
+
+  .markdown > h1,
+  .markdown > h2,
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    margin: 48px 0 36px;
+    font-family: var(--display-font);
+    font-weight: normal;
+    font-style: italic;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .markdown > h1 {
+    text-align: center;
+    font-size: 200%;
+  }
+  .markdown > h2 {
+    font-size: 150%;
+  }
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    font-size: 120%;
+    font-weight: bold;
+  }
+
+  .markdown > p {
+    margin: 36px 0;
+  }
+  .markdown .box-note > p {
+    margin: 18px 0;
+  }
+  .markdown .box-note > p:first-child {
+    margin-top: 0;
+  }
+  .markdown .box-note > p:last-child {
+    margin-bottom: 0;
+  }
+
+  .markdown-table {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .markdown-table > table {
+    min-width: 100%;
+    box-sizing: border-box;
+    border-collapse: collapse;
+    background-color: var(--card-clr);
+    border-radius: 12px;
+  }
+  .markdown-table > table th,
+  .markdown-table > table td {
+    min-width: min(25vw, 8ch);
+    box-sizing: border-box;
+    text-align: start;
+    padding: 9px 6px;
+    padding-inline-end: 18px;
+    border-bottom: solid 1px #444;
+  }
+  .markdown-table > table th:first-child,
+  .markdown-table > table td:first-child {
+    padding-left: 12px;
+  }
+  .markdown-table > table th:last-child,
+  .markdown-table > table td:last-child {
+    padding-right: 12px;
+  }
+  .markdown-table > table > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+
+  .markdown > hr {
+    width: 36px;
+    margin: 90px auto;
+    border: solid 1.5px #ccc;
+    background: #ccc;
+    border-radius: 3px;
+  }
+
+  .markdown code:not([class]):not([class]) {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 6px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    background: var(--card-clr);
+  }
+  .markdown > pre:not([class]) > code:not([class]) {
+    display: block;
+    padding: 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 15px;
+    overflow-x: auto;
+  }
+
+  .markdown > blockquote {
+    position: relative;
+    margin: 0;
+    padding: 18px 24px;
+    border-radius: 18px;
+    border: solid 1px var(--clr0);
+    font-size: 21px;
+  }
+  .markdown > blockquote::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 0;
+    height: 24px;
+    width: 24px;
+    border-bottom: solid 1px var(--clr0);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote::after {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 24px;
+    bottom: 18px;
+    width: 24px;
+    border-top-right-radius: 24px;
+    border: solid var(--clr0);
+    border-width: 1px 1px 0 0;
+    box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote > :first-child {
+    margin-top: 0;
+  }
+  .markdown > blockquote > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown > blockquote cite {
+    display: block;
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: inherit;
+  }
+  .markdown > blockquote cite::before {
+    content: "—";
+  }
+
+  .markdown > iframe,
+  .markdown > p > iframe {
+    max-width: calc(100vw - 18px);
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .markdown .center {
+    text-align: center;
+  }
+  .markdown .center-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+  .markdown .bleed {
+    position: relative;
+    left: 50%;
+    width: 100vh;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+
+  /* todo: convert to component <caption>, reuse across <blog-media> */
+  .markdown .caption {
+    display: block;
+    font-size: 15px;
+  }
+</style>
+  <style>
+  .data-url,
+  .data-url code {
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+</style>
+  <style>
+        .demo-area {
+          display: block;
+          resize: vertical;
+          width: 100%;
+          box-sizing: border-box;
+        }
+      </style>
+  <style>
+        .browser {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .browser-bar {
+          display: flex;
+          gap: 6px;
+          padding: 0 6px;
+        }
+
+        .browser-bar-button {
+          border: none;
+          border-radius: 3px;
+          font-size: 10px;
+          width: 30px;
+          background: none;
+          color: transparent;
+          text-shadow: 0 0 #fff;
+          cursor: pointer;
+        }
+        .browser-bar-button:focus-visible,
+        .browser-bar-button:hover {
+          background: #fff2;
+        }
+
+        .browser-address {
+          flex: 1 1 auto;
+          border: none;
+          border-radius: 3px;
+          padding: 6px;
+          background: #0004;
+          color: #fff;
+          font-family: system-ui;
+        }
+        
+        .browser-viewport {
+          border: none;
+          background: white;
+        }
+      </style>
+</head>
+
+
+<body>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a> <a href="/wares/" class="main-header-item ">Wares</a>
+        <img class="main-header-icon main-header-icon-yay" src="/icons/yay_sheet.png" alt="">
+        <a href="/art/" class="main-header-item ">Art</a> <a href="/notes/" class="main-header-item select">Notes</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page">
+
+        <div class="content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <p>
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  Compressing a website into a URL
+                </h1>
+              </div>
+              <img srcset="/notes/compressing-websites-into-urls/hero_800.generated.jpg 800w,/notes/compressing-websites-into-urls/hero_1020.generated.jpg 1020w,/notes/compressing-websites-into-urls/hero_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero" src="/notes/compressing-websites-into-urls/hero.jpg" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
+            </div>
+            </p>
+            <p>
+            <div class="blog-post-info ">
+              10 Oct 2023 · 8 min read
+            </div>
+            </p>
+            <!--  textlint-disable  -->
+
+            <div class="tag-row">tags:
+              <span class="tag-component" style="background: rgb(240,222,145); color: rgb(114,95,21)">js</span>
+            </div>
+
+            <!--  textlint-enable  -->
+
+            <p>This post explains how <a target="_blank" class="text-link " href="https://portabl.ink"><strong>portabl.ink</strong></a> works. Portablink is a tool that creates self-contained compressed webpages in a single link. Check <a target="_self" class="text-link " href="/wares/portabl.ink/">portablink project page</a> for more info.</p>
+            <p>tl;dr: It uses <strong>data URLs</strong> containing <strong>compressed data</strong> which is bundled with its own <strong>decompression instructions</strong>.</p>
+            <h2 id="data-urls">Data URLs</h2>
+            <p>In case you aren’t familiar with <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Data_URI_scheme"><strong>data URLs</strong></a>, they are URLs whose contents are in the URL itself. They all start with <code>data:</code>. Here, let me show you with this interactive mock browser:</p>
+            <div class="window-decor">
+
+              <div class="browser">
+                <div class="browser-bar">
+                  <button id="browserHomeButton" class="browser-bar-button">🛖</button>
+                  <input id="dataURLInput" class="browser-address" type="text" value="data:text/html,<i>Hello</i><b>World!</b>">
+                  <button id="browserCopyButton" class="browser-bar-button">📋</button>
+                </div>
+                <iframe id="dataURLFrame" class="browser-viewport"></iframe>
+              </div>
+
+
+            </div>
+
+            <p><em>(Hint: edit the URL in the address bar!)</em></p>
+            <p>When you load a data URL, the browser shows the content embedded in the URL directly.</p>
+            <blockquote>
+              <p>So, that’s it? Website in a URL? — Data URL! Easy!</p>
+            </blockquote>
+            <p>Wait, there’s more! The portablink tool does some more things than just putting your HTML in a data URL. The tool also <strong>compresses</strong> your content so you don’t end up with humongous URLs.</p>
+            <h2 id="compression">Compression</h2>
+            <p>Within a data URL, the tool bundles both the compressed data <em>and</em> the instructions needed to decompress and bootstrap that data. This produces a self-contained, compressed document in a single portable link that can be decompressed and rendered by any modern browser.</p>
+            <p>Here’s an example URL generated by the tool:</p>
+            <pre class="code-block data-url"><code class="code-block-code">data:text/html,<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript">fetch<span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68OyX8pDpSibDJhwqbGZbdrQpP/7DI7WpluDZPv8fb7Pd8dBXJqKJ3HJaJ7EBgxnyRJEi5aQhYbaIVk8dvhgEGvTdgZCqczbvV0RykHXnLazgrPdvEe2jTZQtGEmhWHCzDI7MeU4ymEjQjCs0id4Yc+GBa2At7MGQiUbkbMce9eg6AaERAuqGvRJmhIy9E3JLx7+3kB2q6nI8ZWsCqkMpXhBxZYqwN4HBZSjH04GLZbevxD6KHnu4SsbUmpdtGxUxkIrqMNaSdwbmikouggf7RhtFOSnSXeIS6CzQpuWhQ2zqfOmEnqmWM2o8S/xpFCBO3gPuSln76O7CoRDSgab0jyDusvSxhgp9k/F0fDAZtN3T24cBAuPvpGDUqlypmZacshRhFJOs9tTwZkwZZiVwHP/UgT4/3g4CfbP9ELOChMe4653rwqK4dtTPyPrl27x+NhC1nI913VSEudwhzJOtSZeV0mv67HY3YAgJ14UeUk8dsBLbnKGm57hoskZzTPc9AwXTc9onuGmJ1w8tvXoagTVBmmVEc9DUjClpCLegDODAG/xLa6wIqsIT/B0jUty8buRZg7CHrxeLj67LTZKkAg/kFxmTWW/uFFX8FW5HuB7UpNEM7OEisnG+L9IsqecKePXQ+dsm1XoN84O5i8VyMMjnkRRMMCU+DaggCT2ja/ccTcPYbi1N2XEah+Jm2NcbvnqlvWoorVvw/HVSMuK+S1J1IjdMdX6O5JQf4fboLuS1MHhcMK0ePcKszvDTMO/XBBc0Kqe99O9b/cD1UcDXQidsbVhpSRJR1Jk3P5zumRS63w4+N1yrPvNMZWVLfhPMlnjzLfSPu0rY59B/4L7Zh/3/9w/</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">a</span><span class="token operator">=&gt;</span><span class="token keyword">new</span> <span class="token class-name">Response</span><span class="token punctuation">(</span>a<span class="token punctuation">.</span>body<span class="token punctuation">.</span><span class="token function">pipeThrough</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DecompressionStream</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">deflate-raw</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">text</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">a</span><span class="token operator">=&gt;</span>document<span class="token punctuation">.</span>documentElement<span class="token punctuation">.</span>innerHTML<span class="token operator">=</span>a<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span></code></pre>
+            <p>The URL above is 1,078 bytes. It was compressed from a source doc of size 1.37 KB, which is a 23% compression!</p>
+            <p>Btw, the above URL loads a simple tic-tac-toe web game. See for yourself by copying it into your browser’s address bar.</p>
+            <h2 id="so-how-does-it-work">So, how does it work?</h2>
+            <p>The embedded document contains a singular <code>&lt;body&gt;</code> tag with an <code>onload</code> callback. The callback itself contains the main script that will decompress and render the desired content.</p>
+            <p>A small point: Why <code>onload</code>? Well, it’s shorter than using a <code>&lt;script&gt;</code> tag.</p>
+            <pre class="code-block "><code class="code-block-code">A: <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token comment">/* code */</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span>
+B: <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>script</span><span class="token punctuation">&gt;</span></span><span class="token script"><span class="token language-javascript"><span class="token comment">/* code */</span></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>script</span><span class="token punctuation">&gt;</span></span></code></pre>
+            <p>The closing tag is optional for <code>body</code> but not for <code>script</code>. In the end, the <code>body</code> tag wins by 1 character! Every character - in a URL - is precious.</p>
+            <span class="box-note ">
+              <code>&lt;img onerror="..."&gt;</code> would’ve worked as well, having equal length as the <code>body</code> option.
+            </span>
+
+            <p>Now, with that out of the way, let’s break the main script down. I’ll plop the prettified code here first, then explain the interesting bits.</p>
+            <pre class="code-block data-url"><code class="code-block-code"><span class="token function">fetch</span><span class="token punctuation">(</span>
+  <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68OyX8pDpSibDJhwqbGZbdrQpP/7DI7WpluDZPv8fb7Pd8dBXJqKJ3HJaJ7EBgxnyRJEi5aQhYbaIVk8dvhgEGvTdgZCqczbvV0RykHXnLazgrPdvEe2jTZQtGEmhWHCzDI7MeU4ymEjQjCs0id4Yc+GBa2At7MGQiUbkbMce9eg6AaERAuqGvRJmhIy9E3JLx7+3kB2q6nI8ZWsCqkMpXhBxZYqwN4HBZSjH04GLZbevxD6KHnu4SsbUmpdtGxUxkIrqMNaSdwbmikouggf7RhtFOSnSXeIS6CzQpuWhQ2zqfOmEnqmWM2o8S/xpFCBO3gPuSln76O7CoRDSgab0jyDusvSxhgp9k/F0fDAZtN3T24cBAuPvpGDUqlypmZacshRhFJOs9tTwZkwZZiVwHP/UgT4/3g4CfbP9ELOChMe4653rwqK4dtTPyPrl27x+NhC1nI913VSEudwhzJOtSZeV0mv67HY3YAgJ14UeUk8dsBLbnKGm57hoskZzTPc9AwXTc9onuGmJ1w8tvXoagTVBmmVEc9DUjClpCLegDODAG/xLa6wIqsIT/B0jUty8buRZg7CHrxeLj67LTZKkAg/kFxmTWW/uFFX8FW5HuB7UpNEM7OEisnG+L9IsqecKePXQ+dsm1XoN84O5i8VyMMjnkRRMMCU+DaggCT2ja/ccTcPYbi1N2XEah+Jm2NcbvnqlvWoorVvw/HVSMuK+S1J1IjdMdX6O5JQf4fboLuS1MHhcMK0ePcKszvDTMO/XBBc0Kqe99O9b/cD1UcDXQidsbVhpSRJR1Jk3P5zumRS63w4+N1yrPvNMZWVLfhPMlnjzLfSPu0rY59B/4L7Zh/3/9w/</span><span class="token template-punctuation string">`</span></span>
+<span class="token punctuation">)</span>
+<span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">compressedHtml</span> <span class="token operator">=&gt;</span>
+  <span class="token keyword">new</span> <span class="token class-name">Response</span><span class="token punctuation">(</span>
+    compressedHtml<span class="token punctuation">.</span>body
+      <span class="token punctuation">.</span><span class="token function">pipeThrough</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DecompressionStream</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">deflate-raw</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span>
+  <span class="token punctuation">.</span><span class="token function">text</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+  <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">html</span> <span class="token operator">=&gt;</span>
+    document<span class="token punctuation">.</span>documentElement<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> html
+  <span class="token punctuation">)</span>
+<span class="token punctuation">)</span></code></pre>
+            <h3 id="1-fetchdatabase64fvtfb5sweh">1. fetch(`data:;base64,fVTfb5swEH...`)</h3>
+            <p>The first thing you’ll notice is the huge chunk of base64-encoded data wrapped in a <code>fetch()</code> call.</p>
+            <p>The encoded data is the compressed HTML which has been prepared by a complementary compression script. Since compressed data is binary, it has been encoded in a text-friendly format for it to be a valid URL. Base64, an encoding that’s native to the web, was used for this purpose.</p>
+            <p>To decode the base64 data, instead of using the standard <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/atob"><code>atob()</code></a> function, <code>fetch()</code> was used. <code>fetch</code> sees the <code>;base64</code> flag in that data URL and decodes it natively. </p>
+            <p>While it accomplishes the same thing as <code>atob</code>, <code>fetch</code> is slightly better, because:</p>
+            <ol>
+              <li><code>fetch()</code> outputs a stream, the format needed for decompression later.</li>
+              <li>Code size. We’re optimising for the total URL length. The <code>atob</code> method requires <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem">extra massaging for Unicode</a>.</li>
+            </ol>
+            <p>Here’s a quick length comparison. A is fetch. B is atob. Below is a character ruler with markings.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token constant">A</span><span class="token operator">:</span> fetch<span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,dVo=</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">a</span><span class="token operator">=&gt;</span>a<span class="token punctuation">.</span>body<span class="token punctuation">)</span>
+<span class="token constant">B</span><span class="token operator">:</span> <span class="token keyword">new</span> <span class="token class-name">Blob</span><span class="token punctuation">(</span><span class="token punctuation">[</span>Uint8Array<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>atob<span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">dVo=</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span><span class="token parameter">a</span><span class="token operator">=&gt;</span>a<span class="token punctuation">.</span><span class="token function">codePointAt</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">stream</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                                          <span class="token operator">^</span>                           <span class="token operator">^</span>
+                                          <span class="token constant">A</span>                           <span class="token constant">B</span>
+   <span class="token number">0</span>        <span class="token number">10</span>        <span class="token number">20</span>        <span class="token number">30</span>        <span class="token number">40</span>        <span class="token number">50</span>        <span class="token number">60</span>       
+   <span class="token number">12345678901234567890123456789012345678901234567890123456789012345678</span></code></pre>
+            <p>The <code>atob()</code> method requires additional 28 characters!</p>
+            <span class="box-note ">
+              <strong><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates">Tagged templates</a></strong> can be abused here to save a couple of characters. Instead of <code>fetch("abc")</code>, we can use <code>fetch`abc`</code>!
+            </span>
+
+            <p>Here is the code described so far:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token comment">/* wrap the compressed data in base64 */</span>
+<span class="token prefix unchanged"> </span> <span class="token function">fetch</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68Oy...</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">compressedHtml</span> <span class="token operator">=&gt;</span>
+<span class="token prefix unchanged"> </span>   <span class="token comment">/* a binary stream of the compressed data is given by body */</span>
+<span class="token prefix unchanged"> </span>   compressedHtml<span class="token punctuation">.</span>body
+<span class="token prefix unchanged"> </span> <span class="token punctuation">)</span></span></code></pre>
+            <h3 id="2-bodypipethroughnew-decompressionstream">2. body.pipeThrough(new DecompressionStream(...))</h3>
+            <p>Next thing to note is the <code>DecompressionStream</code> class. This is from the new <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Compression_Streams_API"><strong>Compression Streams API</strong></a> which allows browser native compression and decompression. This saves a lot of decompression code from being bundled with the URL.</p>
+            <p>As of writing, this API can only consume streams. That’s why the code required streams.</p>
+            <p>Continuing. The <code>body</code> stream containing the compressed data is piped through the decompressor, which results in the uncompressed, original HTML string - in a <em>stream</em>.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">fetch</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68Oy...</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">compressedHtml</span> <span class="token operator">=&gt;</span>
+</span><span class="token deleted-sign deleted language-javascript"><span class="token prefix deleted">-</span>   compressedHtml<span class="token punctuation">.</span>body
+</span><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span>   <span class="token comment">/* this results in a stream of the original HTML */</span>
+<span class="token prefix inserted">+</span>   compressedHtml<span class="token punctuation">.</span>body
+<span class="token prefix inserted">+</span>     <span class="token punctuation">.</span><span class="token function">pipeThrough</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DecompressionStream</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">deflate-raw</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token punctuation">)</span></span></code></pre>
+            <p><code>deflate-raw</code> is the compression algorithm. The same algorithm must be specified for both compression and decompression.</p>
+            <p>To convert the decompressed stream to a usable <em>string</em>, we can use...</p>
+            <h3 id="3-new-responsestreamtext">3. new Response(stream).text()</h3>
+            <p>We can abuse the native <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Response="><strong>Response</strong></a> class’s <code>text()</code> function to convert the stream into a string.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">fetch</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68Oy...</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">compressedHtml</span> <span class="token operator">=&gt;</span>
+</span><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span>   <span class="token comment">/* a Response wrapper will be used to decode into text */</span>
+<span class="token prefix inserted">+</span>   <span class="token keyword">new</span> <span class="token class-name">Response</span><span class="token punctuation">(</span>
+</span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span>     compressedHtml<span class="token punctuation">.</span>body
+<span class="token prefix unchanged"> </span>       <span class="token punctuation">.</span><span class="token function">pipeThrough</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DecompressionStream</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">deflate-raw</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</span><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span>   <span class="token punctuation">)</span>
+<span class="token prefix inserted">+</span>   <span class="token comment">/* decode stream into text */</span>
+<span class="token prefix inserted">+</span>   <span class="token punctuation">.</span><span class="token function">text</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token punctuation">)</span></span></code></pre>
+            <h3 id="4-documentdocumentelementinnerhtml--html">4. document.documentElement.innerHTML = html</h3>
+            <p>Finally, the uncompressed HTML in string form is assigned to the whole document. <code>document.write(html)</code> could have been used here, but some browsers don’t like this function. <code>innerHTML</code> works equivalently well.</p>
+            <p>This brings us to the final form:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">fetch</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68Oy...</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">compressedHtml</span> <span class="token operator">=&gt;</span>
+<span class="token prefix unchanged"> </span>   <span class="token keyword">new</span> <span class="token class-name">Response</span><span class="token punctuation">(</span>
+<span class="token prefix unchanged"> </span>     compressedHtml<span class="token punctuation">.</span>body
+<span class="token prefix unchanged"> </span>       <span class="token punctuation">.</span><span class="token function">pipeThrough</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">DecompressionStream</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">deflate-raw</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token prefix unchanged"> </span>   <span class="token punctuation">)</span>
+<span class="token prefix unchanged"> </span>   <span class="token punctuation">.</span><span class="token function">text</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span>   <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">html</span> <span class="token operator">=&gt;</span>
+<span class="token prefix inserted">+</span>     <span class="token comment">/* replace page with decoded html */</span>
+<span class="token prefix inserted">+</span>     document<span class="token punctuation">.</span>documentElement<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> html
+<span class="token prefix inserted">+</span>   <span class="token punctuation">)</span>
+</span><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token punctuation">)</span></span></code></pre>
+            <p>I’m pretty sure the above code could be minified further, but this is the smallest I could make it.</p>
+            <h2 id="preparing-the-compressed-code">Preparing the compressed code</h2>
+            <p>The above describes the process of <em>decompressing</em> the base64-encoded compressed HTML. Where does that compressed HTML string come from?</p>
+            <p>The following function creates the base64-encoded compressed string from an input HTML:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">formatPayload</span><span class="token punctuation">(</span><span class="token parameter">html</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> compressed <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token keyword">new</span> <span class="token class-name">Response</span><span class="token punctuation">(</span>
+    <span class="token keyword">new</span> <span class="token class-name">Blob</span><span class="token punctuation">(</span><span class="token punctuation">[</span>html<span class="token punctuation">]</span><span class="token punctuation">)</span>
+      <span class="token punctuation">.</span><span class="token function">stream</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+      <span class="token punctuation">.</span><span class="token function">pipeThrough</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">CompressionStream</span><span class="token punctuation">(</span><span class="token string">'deflate-raw'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">arrayBuffer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> <span class="token function">btoa</span><span class="token punctuation">(</span>String<span class="token punctuation">.</span><span class="token function">fromCharCode</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token keyword">new</span> <span class="token class-name">Uint8Array</span><span class="token punctuation">(</span>compressed<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>This function is called at authoring time.</p>
+            <p><span class="box-note ">It’s important to compress the data first before encoding it in base64. Doing it in the wrong order results in a larger size! This is because base64 messes with the byte (octet) alignment but the compression algorithm works in terms of bytes. In addition, base64 encoding in itself inflates the data by 33%.</span></p>
+            <h2 id="demo">Demo</h2>
+            <p>This demo was made using the portablink’s core library <code>https://portabl.ink/pack.js</code>.</p>
+            <p>Edit the HTML below!</p>
+            <div>
+              <div><textarea id="demoHTML" class="demo-area" rows="8"></textarea></div>
+              <div style="text-align: center">⬇</div>
+              <div><textarea id="demoURL" class="demo-area" rows="8" readonly=""></textarea></div>
+            </div>
+
+            <script type="module" async="" defer="" src="/scripts/notes_compressing_websites_into_urls_index_html.js"></script>
+
+
+
+            <p><span class="box-note ">Note: If your input is not compressible enough, the overhead of bundling the decompression code might not be worth it. The tool may decide to use plain text, whichever is smaller.</span></p>
+            <p>Check out the full-fledged tool at <a target="_blank" class="text-link " href="https://portabl.ink"><strong>portabl.ink</strong></a>! It’s got a WYSIWYG editor, pretty pages, and more!</p>
+            <h2 id="conclusion">Conclusion</h2>
+            <p>Portablink was a fun weekend project (actually about a week). I learned about new Web APIs and some <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Code_golf">code golfing</a> techniques. I launched a “product”!</p>
+            <p>Potential improvement(s):</p>
+            <ul>
+              <li>Use <a target="_blank" class="text-link " href="https://github.com/kevinAlbs/Base122">Base122</a> for more compression. We’re not restricted to ASCII anymore. We can use a larger range of characters than base64. This adds a significant amount of decoder code though.</li>
+              <li>Better authoring experience.</li>
+            </ul>
+            <p>Limitation(s):</p>
+            <ul>
+              <li>Data URLs, while portable, are a poor way to share links. Browsers restrict navigation to data URLs. Apps don’t accept them. These URLs are presumed to be malicious nowadays.</li>
+            </ul>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/misc/">Misc</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          ·
+          <a target="_self" class="main-footer-link" href="/guestbook/">Sign my guestbook</a>
+        </p>
+        <p class="main-footer-line">
+          (C) 2023 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source
+          </a>
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://stackoverflow.com/users/3144156/kalabasa">
+          <img class="main-footer-web-link-icon" alt="Stack Overflow" src="/icons/stackoverflow.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+  <script defer="" src="/scripts/blog-header.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script async="" defer="">
+        (()=>{
+          const input = document.getElementById("dataURLInput");
+          const frame = document.getElementById("dataURLFrame");
+          const home = document.getElementById("browserHomeButton");
+          const copy = document.getElementById("browserCopyButton");
+          
+          input.addEventListener("focus", () => setTimeout(() => {
+            const rect = frame.getBoundingClientRect();
+            if (rect.bottom > window.innerHeight) {
+              frame.parentElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+          }));
+          input.addEventListener("input", refresh);
+          input.addEventListener("change", refresh);
+          home.addEventListener("click", () => {
+            input.value = input.getAttribute("value");
+            refresh();
+          });
+          copy.addEventListener("click", async () => {
+            await navigator.clipboard?.writeText(input.value);
+            alert("URL copied!");
+          });
+          refresh();
+          
+          function refresh() {
+            const isDataURL = input.value.startsWith("data:");
+
+            if (!isDataURL) {
+              alert("No cheating! Enter a data URL only");
+              input.value = "data:text/html,";
+            }
+
+            frame.src = input.value;
+          }
+        })();
+      </script>
+</body>
+</html>
