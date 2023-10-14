@@ -58,10 +58,9 @@
     await waitFor(() => window.goatcounter?.count != null);
     await Promise.all(
       reactionTypes.map(async (type) => {
-        await delay(Math.random() * reactionTypes.length * 200);
         const eventURL = window.goatcounter.url(eventVars(type));
         const pagePath = new URL(eventURL).searchParams.get("p");
-        const hits = await getHits(eventName(pagePath, type));
+        const hits = await getHits(pagePath);
         reactionData[type] = hits;
 
         if (hits > 0) {
@@ -74,9 +73,10 @@
     );
   }
 
-  async function getHits(eventName) {
+  async function getHits(pagePath) {
     const res = await fetch(
-      `https://kalabasa.goatcounter.com/counter/${eventName}.json`
+      `https://kalabasa.goatcounter.com/counter/${pagePath}.json`,
+      { mode: "cors" }
     );
     const data = await res.json();
     return parseInt(data.count_unique.replaceAll(/\D/g, ""));

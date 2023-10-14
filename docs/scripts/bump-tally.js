@@ -2,7 +2,7 @@
   import { BaseElement } from "/lib/base_element.mjs";
 
   customElements.define(
-    "hit-counter-client",
+    "bump-tally-client",
     class HitCounter extends BaseElement {
       constructor() {
         super();
@@ -50,7 +50,8 @@
     if (!getHits.result) {
       getHits.result = (async () => {
         const res = await fetch(
-          "https://kalabasa.goatcounter.com/counter/TOTAL.json"
+          "https://kalabasa.goatcounter.com/counter/TOTAL.json",
+          { mode: "cors" }
         );
         const data = await res.json();
         return parseInt(data.count.replaceAll(/\D/g, ""));
