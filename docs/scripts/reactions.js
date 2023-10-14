@@ -3,7 +3,7 @@
 
   const reactionTypes = ["bubble", "heart", "sun", "cloud", "fire"];
   const reactionData = {};
-  const loadingData = await loadData();
+  const loadingData = loadData();
 
   for (const type of reactionTypes) {
     const buttonClass = `reaction-${type}-btn`;
@@ -74,12 +74,16 @@
   }
 
   async function getHits(pagePath) {
-    const res = await fetch(
-      `https://kalabasa.goatcounter.com/counter/${pagePath}.json`,
-      { mode: "cors" }
-    );
-    const data = await res.json();
-    return parseInt(data.count_unique.replaceAll(/\D/g, ""));
+    try {
+      const res = await fetch(
+        `https://kalabasa.goatcounter.com/counter/${pagePath}.json`,
+        { mode: "cors" }
+      );
+      const data = await res.json();
+      return parseInt(data.count_unique.replaceAll(/\D/g, ""));
+    } catch (err) {
+      return 0;
+    }
   }
 
   function eventName(pagePath, reactionType) {
