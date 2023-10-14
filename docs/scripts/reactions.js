@@ -80,7 +80,7 @@
         { mode: "cors" }
       );
       const data = await res.json();
-      return parseInt(data.count_unique.replaceAll(/\D/g, ""));
+      return parseInt(data.count.replaceAll(/\D/g, ""));
     } catch (err) {
       return 0;
     }
