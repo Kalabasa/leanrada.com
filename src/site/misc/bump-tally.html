@@ -1,10 +1,10 @@
-<hit-counter-client>
+<bump-tally-client>
   <script render>
     for (const digit of String(hits).padStart(5, "0")) {
       yield html`<span class="hit-digit">${digit}</span>`;
     }
   </script>
-</hit-counter-client>
+</bump-tally-client>
 
 <script static>
   const { hits } = require("./hits.json");
@@ -14,7 +14,7 @@
   import { BaseElement } from "/lib/base_element.mjs";
 
   customElements.define(
-    "hit-counter-client",
+    "bump-tally-client",
     class HitCounter extends BaseElement {
       constructor() {
         super();
@@ -62,7 +62,8 @@
     if (!getHits.result) {
       getHits.result = (async () => {
         const res = await fetch(
-          "https://kalabasa.goatcounter.com/counter/TOTAL.json"
+          "https://kalabasa.goatcounter.com/counter/TOTAL.json",
+          { mode: "cors" }
         );
         const data = await res.json();
         return parseInt(data.count.replaceAll(/\D/g, ""));
