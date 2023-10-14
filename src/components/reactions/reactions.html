@@ -1,0 +1,259 @@
+<aside class="reactions">
+  <h2 class="reaction-title">React to this post</h2>
+  <button class="reaction-btn reaction-heart-btn">
+    <span class="reaction-icon" aria-label="Heart"></span>
+  </button>
+  <div class="reaction-count reaction-heart-count"></div>
+  <button class="reaction-btn reaction-fire-btn">
+    <span class="reaction-icon" aria-label="Fire"></span>
+  </button>
+  <div class="reaction-count reaction-fire-count"></div>
+  <button class="reaction-btn reaction-bubble-btn">
+    <span class="reaction-icon" aria-label="Bubble"></span>
+  </button>
+  <div class="reaction-count reaction-bubble-count"></div>
+  <button class="reaction-btn reaction-sun-btn">
+    <span class="reaction-icon" aria-label="Sun"></span>
+  </button>
+  <div class="reaction-count reaction-sun-count"></div>
+  <button class="reaction-btn reaction-cloud-btn">
+    <span class="reaction-icon" aria-label="Cloud"></span>
+  </button>
+  <div class="reaction-count reaction-cloud-count"></div>
+</aside>
+
+<style>
+  .reactions {
+    display: grid;
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+    justify-content: center;
+    justify-items: center;
+    gap: 6px;
+    border: solid 1px var(--card-clr);
+    border-radius: 6px;
+    padding: 18px;
+    font-family: var(--default-font);
+  }
+
+  .reaction-title {
+    grid-column: span 5;
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+
+  .reaction-heart-btn,
+  .reaction-heart-count {
+    --reaction-color: #bf1852;
+  }
+  .reaction-fire-btn,
+  .reaction-fire-count {
+    --reaction-color: #c68306;
+  }
+  .reaction-bubble-btn,
+  .reaction-bubble-count {
+    --reaction-color: #07bd80;
+  }
+  .reaction-sun-btn,
+  .reaction-sun-count {
+    --reaction-color: #a09b00;
+  }
+  .reaction-cloud-btn,
+  .reaction-cloud-count {
+    --reaction-color: #8063ff;
+  }
+
+  .reaction-count {
+    position: relative;
+    font-size: 18px;
+    width: 100%;
+    height: 18px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .reaction-count-prev,
+  .reaction-count-next {
+    position: relative;
+    height: 100%;
+    animation: reaction-tick 0.3s var(--ease) forwards;
+  }
+
+  @keyframes reaction-tick {
+    from {
+      top: 0;
+    }
+    to {
+      top: -100%;
+    }
+  }
+
+  .reaction-count.reaction-spark::after {
+    position: absolute;
+    content: "";
+    width: 36px;
+    height: 36px;
+    left: calc(50% - 18px);
+    top: calc(100% - 18px);
+    border-radius: 50%;
+    animation: reaction-spark 0.1s ease-out;
+  }
+
+  @keyframes reaction-spark {
+    from {
+      box-shadow: inset 0 0 0 18px var(--reaction-color);
+    }
+    to {
+      box-shadow: inset 0 0 0 0px var(--reaction-color);
+    }
+  }
+
+  .reaction-btn {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+    box-sizing: content-box;
+    cursor: pointer;
+  }
+  .reaction-btn:focus-visible,
+  .reaction-btn:hover {
+    background: var(--reaction-color);
+  }
+  .reaction-btn:focus-visible .reaction-icon,
+  .reaction-btn:hover .reaction-icon {
+    animation-duration: 0.5s;
+  }
+  .reaction-btn:active .reaction-icon {
+    position: relative;
+    top: 2px;
+  }
+
+  .reaction-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    background-image: url("/icons/reactions.png");
+    background-size: 500% 200%;
+    animation: reaction-icon 1.5s steps(2) infinite;
+  }
+  .reaction-heart-btn .reaction-icon {
+    --sheet-x: 25%;
+  }
+  .reaction-bubble-btn .reaction-icon {
+    --sheet-x: 0%;
+  }
+  .reaction-sun-btn .reaction-icon {
+    --sheet-x: 100%;
+  }
+  .reaction-cloud-btn .reaction-icon {
+    --sheet-x: 75%;
+  }
+  .reaction-fire-btn .reaction-icon {
+    --sheet-x: 50%;
+  }
+
+  @keyframes reaction-icon {
+    0% {
+      background-position: var(--sheet-x) 0%;
+    }
+    100% {
+      background-position: var(--sheet-x) 200%;
+    }
+  }
+</style>
+
+<script client type="module" async defer>
+  import { waitFor } from "/lib/wait_for.mjs";
+
+  const reactionTypes = ["bubble", "heart", "sun", "cloud", "fire"];
+  const reactionData = {};
+  const loadingData = await loadData();
+
+  for (const type of reactionTypes) {
+    const buttonClass = `reaction-${type}-btn`;
+    const countClass = `reaction-${type}-count`;
+
+    const increment = async () => {
+      await loadingData;
+      window.goatcounter.count(eventVars(type));
+      reactionData[type]++;
+
+      for (const count of document.querySelectorAll("." + countClass)) {
+        renderCount(count, reactionData[type]);
+      }
+    };
+
+    for (const button of document.querySelectorAll("." + buttonClass)) {
+      button.addEventListener("click", increment);
+    }
+  }
+
+  function renderCount(countElement, number) {
+    const prev =
+      countElement.querySelector(".reaction-count-next")?.textContent ??
+      countElement.textContent;
+    countElement.innerHTML =
+      `<div class="reaction-count-prev">${prev}</div>` +
+      `<div class="reaction-count-next">${number}</div>`;
+    countElement.addEventListener("animationend", async () => {
+      if (
+        !countElement
+          .getAnimations({ subtree: true })
+          .every((animation) => animation.finished)
+      )
+        return;
+
+      countElement.textContent = number;
+      countElement.classList.add("reaction-spark");
+      await delay(200);
+      countElement.classList.remove("reaction-spark");
+    });
+  }
+
+  // returns goatcounter vars object
+  function eventVars(reactionType) {
+    return {
+      path: (p) => eventName(p, reactionType),
+      event: true,
+    };
+  }
+
+  async function loadData() {
+    await waitFor(() => window.goatcounter?.count != null);
+    await Promise.all(
+      reactionTypes.map(async (type) => {
+        await delay(Math.random() * reactionTypes.length * 200);
+        const eventURL = window.goatcounter.url(eventVars(type));
+        const pagePath = new URL(eventURL).searchParams.get("p");
+        const hits = await getHits(eventName(pagePath, type));
+        reactionData[type] = hits;
+
+        if (hits > 0) {
+          const countClass = `reaction-${type}-count`;
+          for (const count of document.querySelectorAll("." + countClass)) {
+            renderCount(count, hits);
+          }
+        }
+      })
+    );
+  }
+
+  async function getHits(eventName) {
+    const res = await fetch(
+      `https://kalabasa.goatcounter.com/counter/${eventName}.json`
+    );
+    const data = await res.json();
+    return parseInt(data.count_unique.replaceAll(/\D/g, ""));
+  }
+
+  function eventName(pagePath, reactionType) {
+    return `reaction-${reactionType}-${pagePath}`;
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+</script>
