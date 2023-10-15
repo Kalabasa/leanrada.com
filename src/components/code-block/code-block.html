@@ -1,5 +1,5 @@
 <pre
-  :class="'code-block ' + (attrs.class ?? '')"
+  :class="'code-block ' + classForWrap(attrs.wrap) + (attrs.class ?? '')"
 ><code class="code-block-code">{renderCode()}</code></pre>
 
 <script static>
@@ -16,6 +16,16 @@
         attrs.languageCode ?? language
       ),
     ]);
+  }
+
+  function classForWrap(wrap) {
+    switch (wrap) {
+      case "char":
+        return " code-block-wrap-char ";
+      case "word":
+        return " code-block-wrap-word ";
+    }
+    return "";
   }
 </script>
 
@@ -36,6 +46,20 @@
     line-height: 1.6;
     background: var(--card-clr);
     white-space: pre;
+  }
+
+  .code-block-wrap-char {
+    word-break: break-all;
+  }
+  .code-block-wrap-char .code-block-code {
+    white-space: pre-wrap;
+  }
+
+  .code-block-wrap-word {
+    word-break: normal;
+  }
+  .code-block-wrap-word .code-block-code {
+    white-space: pre-wrap;
   }
 </style>
 
