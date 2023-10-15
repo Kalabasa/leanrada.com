@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>BlitzCoding · leanrada.com</title>
+  <title>Quickly debug CSS boxes with this bookmarklet · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -154,64 +154,37 @@
   }
 </style>
   <style>
-  .project-info-card {
-    font-family: var(--default-font);
-    font-size: 15px;
-    line-height: 1.6;
-  }
-
-  .project-info-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  .project-info-card-title {
-    flex: 0 0 auto;
-    align-self: stretch;
+  .window-decor {
     position: relative;
-    margin-right: 12px;
-    padding: 12px 18px 6px 12px;
-    border-radius: 18px 18px 0 0;
-    font-style: italic;
-    text-decoration: underline;
-    background-color: var(--card-clr);
+    border-radius: 12px;
+    border: solid var(--card-clr);
+    border-width: 24px 0 12px;
+    box-shadow: 0 0 0 1px #333, 0 0 0 2px #111;
+    background: var(--card-clr);
   }
-  .project-info-card-title::after {
+  .window-decor::after {
     content: "";
+    display: block;
     position: absolute;
-    left: 100%;
-    bottom: 0;
-    width: 36px;
-    height: 18px;
-    border-bottom-left-radius: 18px;
-    box-shadow: -18px 0 0 var(--card-clr);
+    left: 12px;
+    top: -18px;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: #443c3f;
+    box-shadow: 18px 0 0 #4d4a45, 36px 0 0 #3f4745;
   }
 
-  .project-info-card-fields {
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-rows: 1fr 1fr;
-    padding: 12px;
-    border-radius: 0 18px 18px 18px;
-    background-color: var(--card-clr);
-  }
-  @media (max-width: 600px) {
-    .project-info-card-fields {
-      display: block;
-    }
-  }
-
-  .project-info-card-field {
-    display: flex;
-  }
-  .project-info-card-field-label {
-    padding: 6px;
-    font-style: italic;
-  }
-  .project-info-card-field-value {
-    padding: 6px;
+  .window-decor-title {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translate(-50%);
+    line-height: 24px;
+    font-family: var(--default-font);
+    font-size: 12px;
     font-weight: bold;
+    color: var(--text2-clr);
   }
 </style>
   <style>
@@ -268,6 +241,221 @@
   .blog-media-caption {
     display: block;
     font-size: 15px;
+  }
+</style>
+  <style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
+  <style>
+  /**
+   * Modified by Kalabasa.
+   * Based on:
+   * a11y-dark theme for JavaScript, CSS, and HTML
+   * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+   * @author ericwbailey
+   */
+
+  .code-block .token.inserted:not(.prefix) {
+    background: #00b6a71c;
+    display: block;
+  }
+
+  .code-block .token.comment,
+  .code-block .token.prolog,
+  .code-block .token.doctype,
+  .code-block .token.cdata {
+    color: #628b9e;
+    font-style: italic;
+  }
+
+  .code-block .token.punctuation {
+    color: #fefefe;
+  }
+
+  .code-block .token.property,
+  .code-block .token.tag,
+  .code-block .token.constant,
+  .code-block .token.symbol,
+  .code-block .token.deleted {
+    color: #ffa07a;
+  }
+
+  .code-block .token.boolean,
+  .code-block .token.number {
+    color: #00e0e0;
+  }
+
+  .code-block .token.selector,
+  .code-block .token.attr-name,
+  .code-block .token.string,
+  .code-block .token.char,
+  .code-block .token.builtin,
+  .code-block .token.inserted {
+    color: #abe338;
+  }
+
+  .code-block .token.operator,
+  .code-block .token.entity,
+  .code-block .token.url,
+  .code-block .token.variable {
+    color: #00e0e0;
+  }
+
+  .code-block .token.atrule,
+  .code-block .token.attr-value,
+  .code-block .token.function {
+    color: #ffd700;
+  }
+
+  .code-block .token.keyword {
+    color: #00e0e0;
+  }
+
+  .code-block .token.regex,
+  .code-block .token.important {
+    color: #ffd700;
+  }
+
+  .code-block .token.important,
+  .code-block .token.bold {
+    font-weight: bold;
+  }
+
+  .code-block .token.italic {
+    font-style: italic;
+  }
+
+  .code-block .token.entity {
+    cursor: help;
+  }
+
+  @media screen and (-ms-high-contrast: active) {
+    .code-block .token.important {
+      background: highlight;
+      color: window;
+      font-weight: normal;
+    }
+
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.selector {
+      font-weight: bold;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.comment,
+    .code-block .token.doctype,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.property,
+    .code-block .token.string {
+      color: highlight;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.url {
+      font-weight: normal;
+    }
+  }
+</style>
+  <style>
+  .code-block {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .code-block-code {
+    display: inline-block;
+    padding: 18px;
+    min-width: 100%;
+    box-sizing: border-box;
+    border-radius: 18px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    line-height: 1.6;
+    background: var(--card-clr);
+    white-space: pre;
+  }
+
+  .code-block-wrap-char {
+    word-break: break-all;
+  }
+  .code-block-wrap-char .code-block-code {
+    white-space: pre-wrap;
+  }
+
+  .code-block-wrap-word {
+    word-break: normal;
+  }
+  .code-block-wrap-word .code-block-code {
+    white-space: pre-wrap;
+  }
+</style>
+  <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
+  }
+</style>
+  <style>
+  .tag-row {
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+  }
+</style>
+  <style>
+  .blog-post-info {
+    margin: 24px 0;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+  .blog-post-info-hidden {
+    display: none;
+  }
+</style>
+  <style>
+  .content-header {
+    font-family: var(--default-font);
+    margin: 90px 0 60px;
+    padding: 0 18px;
+  }
+
+  .content-header-title {
+    margin: 0 0 6px;
+    font-family: var(--display-font);
+    font-size: 27px;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .content-header-subtitle {
+    margin: 6px 0 0;
+    font-size: 18px;
+    font-style: italic;
+    text-align: center;
+    color: var(--text2-clr);
   }
 </style>
   <style>
@@ -823,106 +1011,69 @@
   <div class="page-wrapper">
     <header class="main-header">
       <div class="main-header-bar">
-        <a href="/" class="main-header-item ">Home</a> <a href="/wares/" class="main-header-item select">Wares</a>
+        <a href="/" class="main-header-item ">Home</a> <a href="/wares/" class="main-header-item ">Wares</a>
         <img class="main-header-icon main-header-icon-yay" src="/icons/yay_sheet.png" alt="">
-        <a href="/art/" class="main-header-item ">Art</a> <a href="/notes/" class="main-header-item ">Notes</a>
+        <a href="/art/" class="main-header-item ">Art</a> <a href="/notes/" class="main-header-item select">Notes</a>
         <div class="main-header-indicator"></div>
       </div>
     </header>
     <div class="page-wrapper-content">
 
       <div class="blog-page">
+        <div class="content-header">
+          <h1 class="content-header-title">Quickly debug CSS boxes with this bookmarklet</h1>
 
+        </div>
         <div class="content">
 
+
+          <div class="blog-post-info blog-post-info-hidden" hidden="">
+            15 Oct 2023 · min read
+          </div>
+          <!-- textlint-disable -->
+          <div class="tag-row">tags:
+            <span class="tag-component" style="background: rgb(129,125,181); color: rgb(48,46,71)">css</span>
+            <span class="tag-component" title="micropost" style="background: rgb(204,204,204); color: rgb(68,68,68)">µpost</span>
+          </div>
+          <!-- textlint-enable -->
           <!-- prettier-ignore -->
           <div class="markdown">
-            <h1 id="blitzcoding">BlitzCoding</h1>
+            <p>Here’s a quick &amp; simple way to show all element bounds on a page.</p>
+            <pre class="code-block  code-block-wrap-word "><code class="code-block-code"><span class="token literal-property property">javascript</span><span class="token operator">:</span><span class="token punctuation">(</span>a<span class="token operator">=</span><span class="token punctuation">(</span>d<span class="token operator">=</span>document<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">createElement</span><span class="token punctuation">(</span><span class="token string">'style'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>innerHTML<span class="token operator">=</span><span class="token string">'*{outline:solid 1px red}'</span><span class="token punctuation">;</span>d<span class="token punctuation">.</span>head<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>a<span class="token punctuation">)</span></code></pre>
+            <p>The bookmarklet: <a target="_self" class="text-link " href="javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:solid 1px red}';d.head.append(a)"><strong>▤outlinify</strong></a></p>
             <p>
             <div class="blog-media blog-media-bleed">
-              <img srcset="/wares/blitz-coding/media/hero_800.generated.png 800w,/wares/blitz-coding/media/hero_1020.generated.png 1020w,/wares/blitz-coding/media/hero_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-media-element" alt="screenshot of BlitzCoding" src="/wares/blitz-coding/media/hero.png" spec="100% [800) 80% [1750) 1400" loading="lazy" width="400%" height="" style="aspect-ratio: 1.3336113427856546; background: #080808">
+              <img srcset="/notes/quickly-debug-boxes-bookmarklet/example_800.generated.png 800w,/notes/quickly-debug-boxes-bookmarklet/example_1020.generated.png 1020w,/notes/quickly-debug-boxes-bookmarklet/example_1400.generated.png 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-media-element" alt="example of a website with element outlines visible" src="/notes/quickly-debug-boxes-bookmarklet/example.png" spec="100% [800) 80% [1750) 1400" loading="lazy" width="400%" height="" style="aspect-ratio: 1.3333333333333333; background: #f8f8f8"><span class="blog-media-caption">Example result on threads.net</span>
             </div>
             </p>
-            <h2 id="fast-paced-javascript-coding-game">Fast-paced JavaScript coding game</h2>
-            <p><strong>BlitzCoding</strong> is a fast-paced programming game for JavaScript that you can play on the web. Test your JS skills!</p>
+            <p>Not sure how to use it? Save or <em>drag</em> the following link into your bookmarks:</p>
+            <div class="center">
+              <a target="_self" class="btn " tag="aa" href="javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:solid 1px red}';d.head.append(a)">
+                ▤outlinify
+              </a>
+            </div>
+            <div class="center">☝</div>
+
             <p>
-            <aside class="project-info-card">
-              <div class="project-info-card-header">
-                <div class="project-info-card-title">Project details</div>
-                <a target="_blank" class="btn " tag="a" href="https://leanrada.com/blitz-coding/">
-                  Play online
-                </a>
+            <div class="blog-media blog-media-windowed">
+              <div class="window-decor">
+                <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="video of dragging the bookmarklet into the bookmarks bar">
+                  <source src="/notes/quickly-debug-boxes-bookmarklet/drag.mp4">
+                  <a href="/notes/quickly-debug-boxes-bookmarklet/drag.mp4">video of dragging the bookmarklet into the bookmarks bar</a>
+                </video>
+
               </div>
-              <div class="project-info-card-fields">
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">released</div>
-                  <div class="project-info-card-field-value">2021</div>
-                </div>
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">role</div>
-                  <div class="project-info-card-field-value">creator</div>
-                </div>
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">platform</div>
-                  <div class="project-info-card-field-value">Web</div>
-                </div>
-                <div class="project-info-card-field">
-                  <div class="project-info-card-field-label">tech</div>
-                  <div class="project-info-card-field-value">React, TypeScript</div>
-                </div>
-              </div>
-            </aside>
-            </p>
-            <p>
-            <div class="blog-media blog-media-bleed">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="even function" onloadstart="this.playbackRate = 1.5">
-                <source src="/wares/blitz-coding/media/play.opt.mp4">
-                <a href="/wares/blitz-coding/media/play.opt.mp4">even function</a>
-              </video>
             </div>
             </p>
-            <p>In the game, you face a series of function stubs to implement, having only the function name as a hint and test cases as the spec. Within seconds you must write the function correctly and pass all the test cases.</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/wares/blitz-coding/media/factorial_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="factorial challenge" src="/wares/blitz-coding/media/factorial.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.7782340862422998; background: #080808">
-            </div>
-            </p>
-            <p>The game features a lot of small to medium programming challenges, from simple math formulas to factorials, sequences, object mappings, and array reductions.</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/wares/blitz-coding/media/iseven_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="even function" src="/wares/blitz-coding/media/iseven.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.926896551724138; background: #181828">
-            </div>
-            </p>
-            <p>Random <strong>Modifiers</strong> are little game changers that impose certain restrictions on the round, such as disabling certain methods, banning operations, banning certain language constructs like loops.</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/wares/blitz-coding/media/banplus_403.generated.png 403w" sizes=" 403px" class="blog-media-element" alt="" src="/wares/blitz-coding/media/banplus.png" spec="100% [1200) 80%" loading="lazy" width="100%" height="" style="aspect-ratio: 7.0701754385964914; background: #181828"><span class="blog-media-caption">A modifier bannng the use of addition and subtraction</span>
-            </div>
-            </p>
-            <p>Imagine computing a sum but not being able to use the addition and subtraction operations.</p>
-            <p>For the record, here’s how I would compute a sum without using addition: I’ve come up with a tallying system, but it only works with positive numbers!</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/wares/blitz-coding/media/sumtally_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="sum tally" src="/wares/blitz-coding/media/sumtally.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.4247104247104247; background: #282828"><span class="blog-media-caption">Summation of positive numbers without using addition</span>
-            </div>
-            </p>
-            <p>I think a big part of the fun in this game was playing around the modifiers, coming up weird ways to solve a problem.</p>
-            <p>There are four levels of difficulty, with the hardest one involving lots of modifiers, and sometimes, <em>emoji strings</em> 🆘. I mean, I wouldn’t be able reverse a string with emojis myself, but it was funny to put those in anyway.</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/wares/blitz-coding/media/emoji_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="emoji manipulation" src="/wares/blitz-coding/media/emoji.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.9226519337016574; background: #181828">
-            </div>
-            </p>
-            <p>It was an interesting project involving JavaScript parsing, JS "VM"s / sandboxes, meta unit testing, and silly JavaScript quirks.</p>
-            <p>Try it out! (or just watch some gameplay clips)</p>
-            <p>
-            <div class="blog-media blog-media-bleed">
-              <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="even function" onloadstart="this.playbackRate = 2">
-                <source src="/wares/blitz-coding/media/play2.opt.mp4">
-                <a href="/wares/blitz-coding/media/play2.opt.mp4">even function</a>
-              </video><span class="blog-media-caption">More gameplay clips</span>
-            </div>
-            </p>
+            <p>If you prefer different styles:</p>
+            <ul>
+              <li>Dashed: <a target="_self" class="btn " tag="aa" href="javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:dashed 1px red}';d.head.append(a)">
+                  ▤outlinify
+                </a></li>
+              <li>Dotted: <a target="_self" class="btn " tag="aa" href="javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:dotted 1px red}';d.head.append(a)">
+                  ▤outlinify
+                </a></li>
+            </ul>
 
           </div>
 
