@@ -1,6 +1,9 @@
 <html lang="en">
   <page-title title="Pure CSS tic-tac-toe with game AI" />
-  <link rel="syndication" href="https://www.reddit.com/r/css/comments/14ebp66/tic_tac_toe_with_perfect_ai_implemented_in_pure/" />
+  <link
+    rel="syndication"
+    href="https://www.reddit.com/r/css/comments/14ebp66/tic_tac_toe_with_perfect_ai_implemented_in_pure/"
+  />
   <blog-page header-select="/notes/">
     <!-- prettier-ignore -->
     <markdown>
@@ -18,7 +21,7 @@
 
       <!-- textlint-enable -->
 
-      As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only **HTML** and **CSS**. That is, no JavaScript! We already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.
+      As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only **HTML** and **CSS**. That is, no JavaScript! I already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.
 
       Here’s a CodePen of it! Can you beat a style sheet in a game of tic-tac-toe?
       
@@ -43,7 +46,7 @@
       
       <div class="demo-box demo1">
         <label><input type="checkbox" /><span></span> Check this out</label>
-        <div><small>(these demos are interactive!)</small></div>
+        <div><small>(Hey, these demos are interactive!)</small></div>
       </div>
       
       To do this, we need an extra element for the checkbox visuals, like an empty span element.
@@ -69,7 +72,7 @@ input:checked ~ span {
 
       ### Action at a distance
 
-      The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”, for example:
+      The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”. For example, if you can tick the following “Is it raining” checkbox, the distant “Advice” box reacts:
 
       <div class="demo-box demo2">
         <input type="checkbox" id="demo2_input" />
@@ -95,19 +98,21 @@ input:checked ~ .advice .no-umbrella {
 
       ### The next level
 
-      Let’s take this to the next level, shall we?
-      
-      Using the `&lt;label&gt;`’s `for` attribute, we can get even more action at a distance. We can make pretty much any kind of UI we want!
+      Let’s make this system a lot more flexible.
 
-      Presenting&hellip; the weather-advice-o-matic! 🌈 Go ahead, press the button!
+      Using the `&lt;label&gt;`’s `for` attribute, we can get even more action at a distance. We can make just about any kind of UI we want!
+
+      To demonstrate, I present&hellip; the weather-advice-o-matic! 🌈 Go ahead, press the button!
 
       <css-rain-machine-demo demo-number="1" />
 
+      The way this generalises is that all the `&lt;input&gt;`s are placed at the very top of the document. These inputs represent the global state. We can use `&lt;label for=&hellip;` to control those inputs from anywhere, and sibling selectors to react to those inputs anywhere.
+
       ### OR
 
-      A single button is not very exciting, is it? Let’s add another input and implement an **OR** construct to determine the output. I mean this kind of thing: "if A or B then C".
+      A single button is not very exciting, is it? Let’s add another input and implement an **OR** construct to determine the output. That is, implement "if A or B then C".
 
-      In CSS this can be easily achieved by using a **selector list** (i.e., comma-separated selectors).
+      In CSS this can be easily achieved by using a **selector list** (comma-separated selectors).
 
       <code-block language="css" :code="`
 input#raining:checked ~ .advice .take-umbrella,
@@ -124,7 +129,7 @@ input#sunny:checked ~ .advice .take-umbrella {
 
       ### AND
 
-      How about **AND**? We can implement an AND construct too! This involves chaining the inputs together in a single selector using sibling combinators.
+      How about **AND**? We can implement an AND construct too. This involves chaining the inputs together in a single selector using sibling combinators.
 
       <code-block language="css" :code="`
 input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat {
@@ -212,11 +217,13 @@ A ~ B ~ C {
 
       We need a way to **“consume”** inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.
 
-      So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn. Stacked on top of each other, each set is only interactable on its turn.
+      So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn.
 
       <blog-media
         alt="input sets illustration"
         :src="url('./input_sets.mp4')" />
+      
+      Stacked on top of each other, each set is only interactable on its turn.
 
       <code-block language="css" :code="`
 /* Disable turn 1 inputs when turn 1 is played */
@@ -284,26 +291,31 @@ input[value=&quot;1&quot;]:checked
 
       If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).
 
-      Now, this rule needs knowledge of the AI’s previous moves. But we can’t really check for that as they’re not inputs. There is no direct translation of **O(3)** and **O(7)** into CSS conditions.
+      Now, this rule needs knowledge of the AI’s previous moves, but the AI’s moves aren’t inputs! The AI’s state is not encoded in the checkboxes.
       
       But since the AI is deterministic, we already know how those previous *O*s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute **O(3)** with the inputs that produced it, such as **X(1)** & **X(2)**.
 
-      <code-block language="css" :code="`
+      <code-block language="css" code="
+/* We know X(1) and X(2) produces O(3), */
+/*     and X(1) and X(4) produces O(7). */
+/* Therefore, X(1) & X(2) & X(4) is equivalent to O(3) & O(7). */
+
+/* 'if X(1) & X(2) & X(4) then O(5)' is a winning move! */
 input[value=&quot;1&quot;]:checked
-~ input[value=&quot;2&quot;]:checked /* We know X(1) and X(2) produces O(3) */
-~ input[value=&quot;4&quot;]:checked /* X(1) and X(4) produces O(7) */
+~ input[value=&quot;2&quot;]:checked
+~ input[value=&quot;4&quot;]:checked
 .o5 {
   visibility: visible,
 }
-/* Therefore, X(1) & X(2) & X(4) is equivalent to O(3) & O(7). */
-/* If X(1) & X(2) & X(4) then O(5) is a winning move! */
-`" />
+" />
 
-      <box-note>
-        ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
-      </box-note>
+      <p>
+        <box-note>
+          ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
+        </box-note>
+      </p>
 
-      Alright, so the game AI is really just a bunch of if-statements of the form *“if [inputs leading up to a scenario], then [show optimal response]”*, **for every scenario**. Problem is, how do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?
+      Alright, so the game AI is really just a bunch of if-statements of the form *“if [inputs leading up to a scenario], then [show optimal response]”*, **for every scenario**. How do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?
 
       Actually, there is one, but it’s for humans.
 
@@ -392,7 +404,7 @@ function evaluate(xPlays: number[], currentTurn: 'X' | 'O', board: ('X' | 'O' | 
   }
 }`" />
 
-      And here’s the function that outputs CSS:
+      And here’s the function that outputs CSS for a given rule:
 
       <code-block language="javascript" :code="`
 /**
@@ -426,6 +438,7 @@ function printCSS(xPlays: number[], oPlay: number) {
 
 <style>
   .demo-box {
+    margin: 18px 0;
     border-radius: 12px;
     background-color: #eee;
     color: #000;
@@ -455,17 +468,13 @@ function printCSS(xPlays: number[], oPlay: number) {
     min-height: 2em;
     min-height: 2lh;
   }
-  .demo2 .advice span {
-    display: block;
-    position: absolute;
-  }
   .demo2 .take-umbrella {
-    visibility: hidden;
+    display: none;
   }
   .demo2 input:checked ~ .advice .take-umbrella {
-    visibility: visible;
+    display: revert;
   }
   .demo2 input:checked ~ .advice .no-umbrella {
-    visibility: hidden;
+    display: none;
   }
 </style>
