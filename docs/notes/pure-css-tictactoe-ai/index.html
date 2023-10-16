@@ -1458,6 +1458,7 @@
 </style>
   <style>
   .demo-box {
+    margin: 18px 0;
     border-radius: 12px;
     background-color: #eee;
     color: #000;
@@ -1487,18 +1488,14 @@
     min-height: 2em;
     min-height: 2lh;
   }
-  .demo2 .advice span {
-    display: block;
-    position: absolute;
-  }
   .demo2 .take-umbrella {
-    visibility: hidden;
+    display: none;
   }
   .demo2 input:checked ~ .advice .take-umbrella {
-    visibility: visible;
+    display: revert;
   }
   .demo2 input:checked ~ .advice .no-umbrella {
-    visibility: hidden;
+    display: none;
   }
 </style>
 </head>
@@ -1551,7 +1548,7 @@
 
             <!--  textlint-enable  -->
 
-            <p>As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only <strong>HTML</strong> and <strong>CSS</strong>. That is, no JavaScript! We already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.</p>
+            <p>As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only <strong>HTML</strong> and <strong>CSS</strong>. That is, no JavaScript! I already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.</p>
             <p>Here’s a CodePen of it! Can you beat a style sheet in a game of tic-tac-toe?</p>
             <p class="codepen" data-height="700" data-theme-id="dark" data-default-tab="result" data-slug-hash="oVMOZK" data-user="kalabasa" style="height: 300px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;">
               <span>See the Pen <a href="https://codepen.io/kalabasa/pen/oVMOZK">
@@ -1570,7 +1567,7 @@
             <p>For starters, let’s do something that’s fairly common on the web: <strong>custom checkbox styles</strong>.</p>
             <div class="demo-box demo1">
               <label><input type="checkbox"><span></span> Check this out</label>
-              <div><small>(these demos are interactive!)</small></div>
+              <div><small>(Hey, these demos are interactive!)</small></div>
             </div>
 
             <p>To do this, we need an extra element for the checkbox visuals, like an empty span element.</p>
@@ -1585,7 +1582,7 @@
 <span class="token punctuation">}</span></code></pre>
             <p>Custom checkboxes! Easy.</p>
             <h3 id="action-at-a-distance">Action at a distance</h3>
-            <p>The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”, for example:</p>
+            <p>The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”. For example, if you can tick the following “Is it raining” checkbox, the distant “Advice” box reacts:</p>
             <div class="demo-box demo2">
               <input type="checkbox" id="demo2_input">
               <label for="demo2_input">Is it raining?</label>
@@ -1605,9 +1602,9 @@
 <span class="token punctuation">}</span></code></pre>
             <p>As you’ll see later, the sibling combinator <code>~</code> can be very useful for these types of interactions.</p>
             <h3 id="the-next-level">The next level</h3>
-            <p>Let’s take this to the next level, shall we?</p>
-            <p>Using the <code>&lt;label&gt;</code>’s <code>for</code> attribute, we can get even more action at a distance. We can make pretty much any kind of UI we want!</p>
-            <p>Presenting… the weather-advice-o-matic! 🌈 Go ahead, press the button!</p>
+            <p>Let’s make this system a lot more flexible.</p>
+            <p>Using the <code>&lt;label&gt;</code>’s <code>for</code> attribute, we can get even more action at a distance. We can make just about any kind of UI we want!</p>
+            <p>To demonstrate, I present… the weather-advice-o-matic! 🌈 Go ahead, press the button!</p>
             <p>
             <div class="css-rain-machine-demo css-rain-machine-demo-1" data-rss="interactive" aria-label="demo of CSS-only machine">
               <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--1" type="checkbox">
@@ -1627,9 +1624,10 @@
               </div>
             </div>
             </p>
+            <p>The way this generalises is that all the <code>&lt;input&gt;</code>s are placed at the very top of the document. These inputs represent the global state. We can use <code>&lt;label for=…</code> to control those inputs from anywhere, and sibling selectors to react to those inputs anywhere.</p>
             <h3 id="or">OR</h3>
-            <p>A single button is not very exciting, is it? Let’s add another input and implement an <strong>OR</strong> construct to determine the output. I mean this kind of thing: "if A or B then C".</p>
-            <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (i.e., comma-separated selectors).</p>
+            <p>A single button is not very exciting, is it? Let’s add another input and implement an <strong>OR</strong> construct to determine the output. That is, implement "if A or B then C".</p>
+            <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (comma-separated selectors).</p>
             <pre class="code-block "><code class="code-block-code"><span class="token selector">input#raining:checked ~ .advice .take-umbrella,
 input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
@@ -1656,7 +1654,7 @@ input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuati
             </p>
             <p>(If RAINY or SUNNY then UMBRELLA)</p>
             <h3 id="and">AND</h3>
-            <p>How about <strong>AND</strong>? We can implement an AND construct too! This involves chaining the inputs together in a single selector using sibling combinators.</p>
+            <p>How about <strong>AND</strong>? We can implement an AND construct too. This involves chaining the inputs together in a single selector using sibling combinators.</p>
             <pre class="code-block "><code class="code-block-code"><span class="token selector">input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span class="token punctuation">{</span>
   <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
@@ -1759,7 +1757,7 @@ B ~ C</span> <span class="token punctuation">{</span>
             <h2 id="taking-turns">Taking turns</h2>
             <p>So far, the order of your inputs doesn’t matter. You can even undo your inputs by unchecking the boxes (Try it above). That won’t fly in a game of tic-tac-toe, where we take turns incrementally marking the board. No backsies!</p>
             <p>We need a way to <strong>“consume”</strong> inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.</p>
-            <p>So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn. Stacked on top of each other, each set is only interactable on its turn.</p>
+            <p>So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn.</p>
             <p>
             <div class="blog-media blog-media-default">
               <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="input sets illustration">
@@ -1768,6 +1766,7 @@ B ~ C</span> <span class="token punctuation">{</span>
               </video>
             </div>
             </p>
+            <p>Stacked on top of each other, each set is only interactable on its turn.</p>
             <pre class="code-block "><code class="code-block-code"><span class="token comment">/* Disable turn 1 inputs when turn 1 is played */</span>
 <span class="token selector">input[name="turn_1"]:checked ~ input[name="turn_1"]</span> <span class="token punctuation">{</span>
     <span class="token property">pointer-events</span><span class="token punctuation">:</span> none<span class="token punctuation">;</span>
@@ -1883,20 +1882,26 @@ B ~ C</span> <span class="token punctuation">{</span>
             <h3 id="winning-moves">Winning moves</h3>
             <p>Another example: <em>If <strong>O(3)</strong> and <strong>O(7)</strong> then <strong>O(5)</strong>.</em></p>
             <p>If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).</p>
-            <p>Now, this rule needs knowledge of the AI’s previous moves. But we can’t really check for that as they’re not inputs. There is no direct translation of <strong>O(3)</strong> and <strong>O(7)</strong> into CSS conditions.</p>
+            <p>Now, this rule needs knowledge of the AI’s previous moves, but the AI’s moves aren’t inputs! The AI’s state is not encoded in the checkboxes.</p>
             <p>But since the AI is deterministic, we already know how those previous <em>O</em>s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute <strong>O(3)</strong> with the inputs that produced it, such as <strong>X(1)</strong> &amp; <strong>X(2)</strong>.</p>
-            <pre class="code-block "><code class="code-block-code">input[value=<span class="token string">"1"</span>]<span class="token punctuation">:</span>checked
-~ input[value=<span class="token string">"2"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* We know X(1) and X(2) produces O(3) */</span>
-~ input[value=<span class="token string">"4"</span>]<span class="token punctuation">:</span>checked <span class="token comment">/* X(1) and X(4) produces O(7) */</span>
-<span class="token selector">.o5</span> <span class="token punctuation">{</span>
-  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">,</span>
-<span class="token punctuation">}</span>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">/* We know X(1) and X(2) produces O(3), */</span>
+<span class="token comment">/*     and X(1) and X(4) produces O(7). */</span>
 <span class="token comment">/* Therefore, X(1) &amp; X(2) &amp; X(4) is equivalent to O(3) &amp; O(7). */</span>
-<span class="token comment">/* If X(1) &amp; X(2) &amp; X(4) then O(5) is a winning move! */</span></code></pre><span class="box-note ">
-              ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
-            </span>
 
-            <p>Alright, so the game AI is really just a bunch of if-statements of the form <em>“if [inputs leading up to a scenario], then [show optimal response]”</em>, <strong>for every scenario</strong>. Problem is, how do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?</p>
+<span class="token comment">/* 'if X(1) &amp; X(2) &amp; X(4) then O(5)' is a winning move! */</span>
+<span class="token selector">input[value="1"]:checked
+~ input[value="2"]:checked
+~ input[value="4"]:checked
+.o5</span> <span class="token punctuation">{</span>
+  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">,</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>
+              <span class="box-note ">
+                ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
+              </span>
+            </p>
+
+            <p>Alright, so the game AI is really just a bunch of if-statements of the form <em>“if [inputs leading up to a scenario], then [show optimal response]”</em>, <strong>for every scenario</strong>. How do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?</p>
             <p>Actually, there is one, but it’s for humans.</p>
             <a target="_blank" class="text-link " href="https://xkcd.com/832/">
               <div class="blog-media blog-media-default">
@@ -1978,7 +1983,7 @@ B ~ C</span> <span class="token punctuation">{</span>
     <span class="token keyword">return</span> <span class="token constant">DRAW</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>And here’s the function that outputs CSS:</p>
+            <p>And here’s the function that outputs CSS for a given rule:</p>
             <pre class="code-block "><code class="code-block-code"><span class="token comment">/**
  * Print CSS rule for the given game state and O's next play.
  */</span>
