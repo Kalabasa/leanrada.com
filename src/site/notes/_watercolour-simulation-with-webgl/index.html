@@ -22,9 +22,9 @@
       ## Watercolour rules
 
       1. Parts of the canvas can be in varying degrees of wetness.
-      2. Parts of the canvas can have paint in varying amounts and colour.
-      3. Water transports paint.
-      4. Water spreads to less wet areas.
+      2. Water spreads to less wet areas.
+      3. Parts of the canvas can have paint in varying amounts and colour.
+      4. Water transports paint.
       5. Water evaporates over time.
       6. Paint settles over time.
 
@@ -34,33 +34,35 @@
 
       This can be implemented by creating a 2D greyscale image as a map of wetness, with black (0.0) representing total dryness and white (1.0) as maximum wateriness.
 
-      <watercolor-demo rules="water" action="water" />
+      <watercolor-demo rules="water" action="water" display="water" />
 
       You can put water by <span class="interaction-type">touching</span> the canvas, but the water does not do anything yet, so let us continue implementing the rest of the rules.
 
-      ## Rule 2. Parts of the canvas can have paint in varying amounts and colour.
-
-      Like water, there is a 2D variable for paint too. This determines the visible colour on the canvas. We can model paint using a 2D colour image with transparency (i.e. RGBA), with each pixel representing the colour and the amount of paint at each location.
-
-      <watercolor-demo rules="paint" action="paint" />
-
-      They do not interact with each other yet. There are multiple interactions but we can start with the simplest one, which is the next rule.
-
-      ## Rule 3. Water transports paint.
-
-      <img todo alt="diagram of water transporting paint in multiple steps" />
-
-      Whenever water moves, it carries a relative amount of paint with it. But our water does not move yet! Before we can see the results, we first need to make the water move as a simple fluid. This brings us to the next rule.
-
-      ## Rule 4. Water spreads to less wet areas
+      ## Rule 2. Water spreads to less wet areas
 
       Since watercolour is mostly water, this rule is the most important.
 
       Naively, this could be implemented by applying a blur filter on the wetness map repeatedly.
 
-      <watercolor-demo rules="water,paint,blur-water" action="water,paint" />
+      <watercolor-demo rules="water,blur-water" action="water" display="water" />
 
       However, it does not look right. This is because a simple blur filter cannot capture a very important property of water, **surface tension**.
+
+      ## Rule 3. Parts of the canvas can have paint in varying amounts and colour.
+
+      Like water, there is a 2D variable for paint too. This determines the visible colour on the canvas. We can model paint using a 2D colour image with transparency (i.e. RGBA), with each pixel representing the colour and the amount of paint at each location.
+
+      <watercolor-demo rules="water,paint,blur-water" action="water,paint" display="water,paint" />
+
+      They do not interact with each other yet. There are multiple interactions but we can start with the simplest one, which is the next rule.
+
+      ## Rule 4. Water transports paint.
+
+      <img todo alt="diagram of water transporting paint in multiple steps" />
+
+      Whenever water moves, it carries a relative amount of paint with it. But our water does not move yet! Before we can see the results, we first need to make the water move as a simple fluid. This brings us to the next rule.
+
+      <watercolor-demo rules="water,paint,blur-water" action="water,paint" display="water,paint" />
 
       ### Surface tension
 
