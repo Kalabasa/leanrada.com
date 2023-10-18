@@ -44,7 +44,12 @@
         action.water = rulesAttr.includes("water");
         action.paint = rulesAttr.includes("paint");
 
-        this.watercolorDemo = new WatercolorDemo(this, rules, action);
+        const displayAttr = this.getAttribute("display").split(",");
+        const display = {};
+        display.water = displayAttr.includes("water");
+        display.paint = displayAttr.includes("paint");
+
+        this.watercolorDemo = new WatercolorDemo(this, rules, action, display);
         this.watercolorDemo.init();
       }
 

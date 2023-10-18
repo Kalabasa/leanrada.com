@@ -3,14 +3,15 @@
 
   const reactionTypes = ["bubble", "heart", "sun", "cloud", "fire"];
   const reactionData = {};
-  const loadingData = loadData();
+  const loadedData = loadData();
 
   for (const type of reactionTypes) {
     const buttonClass = `reaction-${type}-btn`;
     const countClass = `reaction-${type}-count`;
 
     const increment = async () => {
-      await loadingData;
+      if (!(await loadedData)) return;
+
       window.goatcounter.count(eventVars(type));
       reactionData[type]++;
 
@@ -24,13 +25,13 @@
     }
   }
 
-  function renderCount(countElement, number) {
+  function renderCount(countElement, content) {
     const prev =
       countElement.querySelector(".reaction-count-next")?.textContent ??
       countElement.textContent;
     countElement.innerHTML =
       `<div class="reaction-count-prev">${prev}</div>` +
-      `<div class="reaction-count-next">${number}</div>`;
+      `<div class="reaction-count-next">${content}</div>`;
     countElement.addEventListener("animationend", async () => {
       if (
         !countElement
@@ -39,10 +40,13 @@
       )
         return;
 
-      countElement.textContent = number;
-      countElement.classList.add("reaction-spark");
-      await delay(200);
-      countElement.classList.remove("reaction-spark");
+      countElement.textContent = content;
+
+      if (!Number.isNaN(parseInt(content))) {
+        countElement.classList.add("reaction-spark");
+        await delay(200);
+        countElement.classList.remove("reaction-spark");
+      }
     });
   }
 
@@ -54,23 +58,45 @@
     };
   }
 
+  // todo: prerender counts so they don't depend on the client lib
   async function loadData() {
-    await waitFor(() => window.goatcounter?.count != null);
-    await Promise.all(
-      reactionTypes.map(async (type) => {
-        const eventURL = window.goatcounter.url(eventVars(type));
-        const pagePath = new URL(eventURL).searchParams.get("p");
-        const hits = await getHits(pagePath);
-        reactionData[type] = hits;
+    const timeout = Symbol();
+    try {
+      await Promise.race([
+        waitFor(() => window.goatcounter?.count != null),
+        delay(8000).finally(() => {
+          throw timeout;
+        }),
+      ]);
+      await Promise.all(
+        reactionTypes.map(async (type) => {
+          const eventURL = window.goatcounter.url(eventVars(type));
+          const pagePath = new URL(eventURL).searchParams.get("p");
+          const hits = await getHits(pagePath);
+          reactionData[type] = hits;
 
-        if (hits > 0) {
-          const countClass = `reaction-${type}-count`;
-          for (const count of document.querySelectorAll("." + countClass)) {
-            renderCount(count, hits);
+          if (hits > 0) {
+            const countClass = `reaction-${type}-count`;
+            for (const count of document.querySelectorAll("." + countClass)) {
+              renderCount(count, hits);
+            }
           }
-        }
-      })
-    );
+        })
+      );
+      return true;
+    } catch (error) {
+      if (error !== timeout) throw error;
+
+      for (const count of document.querySelectorAll(".reaction-count")) {
+        renderCount(count, "?");
+      }
+
+      const title = document.querySelector(".reaction-title");
+      title.classList.add("reaction-title-error");
+      title.textContent = "Couldn’t load reactions :(";
+
+      return false;
+    }
   }
 
   async function getHits(pagePath) {
