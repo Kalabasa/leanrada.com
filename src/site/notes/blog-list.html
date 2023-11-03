@@ -11,7 +11,11 @@
   const generatedIndex = require("./index.generated.json");
   const staticIndex = require("./index.static.json");
 
-  const index = generatedIndex.concat(staticIndex);
+  const { filterTag } = attrs;
+
+  const index = generatedIndex
+    .concat(staticIndex)
+    .filter((item) => !filterTag || item.tags.includes(filterTag));
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 </script>
 
