@@ -1,0 +1,98 @@
+<script render>
+  if (attrs.provider == null) return;
+
+  yield html`
+    <div class="cursor-provider" aria-hidden="true">
+      <h2 class="cursor-provider-title">It’s dangerous to go alone!<br/>Take these (free cursors)!<h2>
+      <button class="cursor-provider-button" data-cursor="note"></button>
+      <button class="cursor-provider-button" data-cursor="sword"></button>
+      <button class="cursor-provider-button" data-cursor="boba"></button>
+    </div>
+    <style>
+      .cursor-provider {
+        display: inline-block;
+        padding: 0 24px 12px;
+        border: solid 1px var(--card-clr);
+        border-radius: 12px;
+        text-align: center;
+      }
+      .cursor-provider-title {
+        font-size: 18px;
+        font-weight: normal;
+        line-height: 27px;
+      }
+      .cursor-provider-button {
+        cursor: inherit;
+        width: 60px;
+        height: 60px;
+        border: inset 4px var(--text-clr);
+        background-color: var(--bg-clr);
+        background-size: 24px 24px;
+        background-position: center;
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+      }
+      .cursor-provider-button:hover {
+        border-color: var(--clr0);
+        background-position: center calc(50% - 4px);
+      }
+    </style>`;
+
+  yield html`
+    <${'script'} client async defer>
+      (() => {
+        const cursorKey = "cursorSelected";
+        const buttons = document.querySelectorAll(".cursor-provider-button");
+
+        function lrUpdateButtons() {
+          for (const button of buttons) {
+            const itsName = button.dataset.cursor;
+            const image = "url('/icons/cursor_" + itsName + ".png')";
+            const taken = sessionStorage.getItem(cursorKey) === itsName;
+            button.style.backgroundImage = taken ? null : image;
+          }
+        }
+
+        window.lrUpdateButtons = lrUpdateButtons;
+
+        lrUpdateButtons();
+
+        for (const button of buttons) {
+          button.addEventListener("click", () => {
+            if (window.lrCursorSelect) lrCursorSelect(button.dataset.cursor);
+          });
+        }
+      })();
+    </${'script'}>`;
+</script>
+
+<script client async>
+  (() => {
+    const cursorKey = "cursorSelected";
+    const cursorNames = ["note", "sword", "boba"];
+    let cursorSelected = null;
+
+    function lrCursorSelect(name) {
+      if (name && !cursorNames.includes(name)) return;
+
+      if (name == null || cursorSelected === name) {
+        cursorSelected = null;
+        sessionStorage.removeItem(cursorKey);
+        document.body.style.cursor = null;
+      } else {
+        cursorSelected = name;
+        sessionStorage.setItem(cursorKey, name);
+        document.body.style.cursor = `url('/icons/cursor_${name}.png'), auto`;
+      }
+
+      if (window.lrUpdateButtons) lrUpdateButtons();
+
+      // todo: support touch users
+    }
+
+    cursorSelected = null;
+    window.lrCursorSelect = lrCursorSelect;
+
+    lrCursorSelect(sessionStorage.getItem(cursorKey));
+  })();
+</script>
