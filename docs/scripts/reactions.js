@@ -69,9 +69,11 @@
         }),
       ]);
       await Promise.all(
-        reactionTypes.map(async (type) => {
+        reactionTypes.map(async (type, i) => {
+          await delay(i * 1000);
           const eventURL = window.goatcounter.url(eventVars(type));
           const pagePath = new URL(eventURL).searchParams.get("p");
+          if (pagePath) throw new Error("Invalid eventURL!");
           const hits = await getHits(pagePath);
           reactionData[type] = hits;
 

@@ -240,6 +240,63 @@
   }
 </style>
   <style>
+  .blog-list {
+    margin: auto;
+    max-width: 800px;
+  }
+</style>
+  <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
+  }
+</style>
+  <style>
+  .blog-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 12px;
+    border-bottom: solid 1px var(--card-clr);
+    font-weight: bold;
+    color: var(--text-clr);
+    text-decoration: none;
+  }
+
+  .blog-list-item-title {
+    font-family: var(--reading-font);
+    font-size: 16px;
+  }
+
+  .blog-list-item-date {
+    flex: 0 0 auto;
+    font-weight: bold;
+    color: var(--text2-clr);
+  }
+
+  @media (hover: hover) {
+    .blog-list-item:hover {
+      background: var(--card-clr);
+    }
+    .blog-list-item:hover .blog-list-item-title {
+      color: var(--clr0-light);
+      text-decoration: underline;
+    }
+    .blog-list-item:hover .blog-list-item-date {
+      color: inherit;
+    }
+  }
+</style>
+  <style>
   .card-grid-item {
     display: block;
     text-decoration: none;
@@ -1160,6 +1217,15 @@
     z-index: -1;
   }
 
+  .cursor-section {
+    display: none;
+  }
+  @media (any-hover: hover) {
+    .cursor-section {
+      display: revert;
+    }
+  }
+
   .projects-section {
     overflow: hidden;
   }
@@ -1172,6 +1238,16 @@
     font-weight: bold;
   }
   .more-projects::after {
+    content: "→";
+    display: inline-block;
+  }
+
+  .more-notes {
+    display: inline-block;
+    margin-top: 30px;
+    font-weight: bold;
+  }
+  .more-notes::after {
     content: "→";
     display: inline-block;
   }
@@ -1218,6 +1294,7 @@
     font-size: 36px;
   }
 </style>
+  <script async="" src="/scripts/cursor.js"></script>
 </head>
 
 
@@ -1328,6 +1405,48 @@
           <canvas>
           </canvas></magnetic-field-client>
       </div>
+
+      <section class="section cursor-section">
+
+        <div class="cursor-provider" aria-hidden="true">
+          <h2 class="cursor-provider-title">It’s dangerous to go alone!<br>Take these <strong>free cursors</strong>!</h2>
+          <h2>
+            <button class="cursor-provider-button" data-cursor="note"></button>
+            <button class="cursor-provider-button" data-cursor="sword"></button>
+            <button class="cursor-provider-button" data-cursor="boba"></button>
+          </h2>
+        </div>
+        <style>
+      .cursor-provider {
+        display: inline-block;
+        padding: 0 24px 12px;
+        border: solid 1px var(--card-clr);
+        border-radius: 12px;
+        text-align: center;
+      }
+      .cursor-provider-title {
+        font-size: 18px;
+        font-weight: normal;
+        line-height: 27px;
+      }
+      .cursor-provider-button {
+        cursor: inherit;
+        width: 60px;
+        height: 60px;
+        border: inset 4px var(--text-clr);
+        background-color: var(--bg-clr);
+        background-size: 24px 24px;
+        background-position: center;
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+      }
+      .cursor-provider-button:hover {
+        border-color: var(--clr0);
+        background-position: center calc(50% - 4px);
+      }
+    </style>
+        <script client="" async="" defer="" src="/scripts/index_html.js"></script>
+      </section>
 
       <section class="section projects-section">
         <h2 class="section-title">Some things I’ve made</h2>
@@ -1465,6 +1584,23 @@
           projects</a>
       </section>
 
+      <section class="section notes-section">
+        <h2 class="section-title">Latest notes</h2>
+        <div class="blog-list undefined">
+          <a class="blog-list-item" href="/notes/debug-css-boxes-bookmarklet/">
+            <span class="blog-list-item-title">Debug CSS boxes with this bookmarklet <span class="tag-component" style="background: rgb(129,125,181); color: rgb(48,46,71)">css</span> <span class="tag-component" title="micropost" style="background: rgb(204,204,204); color: rgb(68,68,68)">µpost</span></span>
+            <span class="blog-list-item-date">15 Oct 2023</span>
+          </a><a class="blog-list-item" href="/notes/compressing-websites-into-urls/">
+            <span class="blog-list-item-title">Compressing a website into a URL <span class="tag-component" style="background: rgb(240,222,145); color: rgb(114,95,21)">js</span></span>
+            <span class="blog-list-item-date">10 Oct 2023</span>
+          </a><a class="blog-list-item" href="/notes/developing-bitwise-input-method/">
+            <span class="blog-list-item-title">Bitwise keyboard input method <span class="tag-component" style="background: rgb(226,187,158); color: rgb(96,62,37)">c</span></span>
+            <span class="blog-list-item-date">16 Mar 2023</span>
+          </a>
+        </div>
+        <a target="_self" class="text-link more-notes" href="/notes/"> More notes</a>
+      </section>
+
       <section class="section labs-section">
         <h2 class="section-title">From the lab</h2>
         <div class="gallery-grid">
@@ -1581,7 +1717,7 @@
         <p class="main-footer-line">
           <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
           <span style="display: inline-block">
-            · <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook‼️</a><br>
+            · <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook!</a><br>
             · Drop a
             <a target="_blank" class="main-footer-link" href="mailto:mail@leanrada.com">
               mail@leanrada.com</a>
@@ -1631,6 +1767,10 @@
       <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
     </footer>
   </div>
+
+
+
+
 
 
 
