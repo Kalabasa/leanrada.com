@@ -1,4 +1,4 @@
-<div class="blog-list">
+<div :class="'blog-list ' + attrs.class">
   <script render>
     for (const item of index){
       const tags = item.tags.map(tag => `<tag>${tag}</tag>`).join(" ");
@@ -11,17 +11,18 @@
   const generatedIndex = require("./index.generated.json");
   const staticIndex = require("./index.static.json");
 
-  const { filterTag } = attrs;
+  const { filterTag, limit = Infinity } = attrs;
 
-  const index = generatedIndex
+  let index = generatedIndex
     .concat(staticIndex)
     .filter((item) => !filterTag || item.tags.includes(filterTag));
+  index = index.slice(0, limit);
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 </script>
 
 <style>
   .blog-list {
-    margin: 60px auto;
+    margin: auto;
     max-width: 800px;
   }
 </style>
