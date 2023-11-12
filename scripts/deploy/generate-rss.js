@@ -28,7 +28,7 @@ async function main() {
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const feed = new RSS({
-    title: `${domain} Notes`,
+    title: `${domain} notes`,
     feed_url: `https://${domain}/rss.xml`,
     site_url: `https://${domain}`,
   });
