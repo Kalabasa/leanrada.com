@@ -156,5 +156,5 @@ async function main() {
 function makeURL(domain, page, href) {
   if (/^(.+):\/\//.test(href)) return href;
   const urlPath = path.resolve("/", page, href);
-  return `https://${domain}${urlPath}`;
+  return `https://${domain}${urlPath}?ref=rss`;
 }
