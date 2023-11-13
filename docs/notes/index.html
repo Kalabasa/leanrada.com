@@ -3,6 +3,45 @@
 <head>
   <title>Notes · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <style>
+
+    .blog-list > *:nth-child(1) {
+      --blog-list-item-delay: -0.1s;
+    }
+    .blog-list > *:nth-child(2) {
+      --blog-list-item-delay: 0s;
+    }
+    .blog-list > *:nth-child(3) {
+      --blog-list-item-delay: 0.1s;
+    }
+    .blog-list > *:nth-child(4) {
+      --blog-list-item-delay: 0.177s;
+    }
+    .blog-list > *:nth-child(5) {
+      --blog-list-item-delay: 0.222s;
+    }
+    .blog-list > *:nth-child(6) {
+      --blog-list-item-delay: 0.258s;
+    }
+    .blog-list > *:nth-child(7) {
+      --blog-list-item-delay: 0.289s;
+    }
+    .blog-list > *:nth-child(8) {
+      --blog-list-item-delay: 0.316s;
+    }
+    .blog-list > *:nth-child(9) {
+      --blog-list-item-delay: 0.339s;
+    }
+    .blog-list > *:nth-child(10) {
+      --blog-list-item-delay: 0.361s;
+    }
+    .blog-list > *:nth-child(11) {
+      --blog-list-item-delay: 0.38s;
+    }
+    .blog-list > *:nth-child(12) {
+      --blog-list-item-delay: 0.397s;
+    }
+    </style>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
@@ -44,15 +83,59 @@
     text-decoration: none;
   }
 
+  .blog-list-animated .blog-list-item {
+    animation: blog-list-item-reveal 0.4s var(--ease) backwards;
+    animation-delay: var(--blog-list-item-delay);
+  }
+  @keyframes blog-list-item-reveal {
+    0% {
+      clip-path: inset(0 0 100% 0);
+      transform: translateY(100%);
+      background: var(--card-clr);
+    }
+    80% {
+      clip-path: inset(0 0 0 0);
+      transform: translateY(0);
+      background: var(--card-clr);
+    }
+    100% {
+      background: translate;
+    }
+  }
+
   .blog-list-item-title {
     font-family: var(--reading-font);
     font-size: 16px;
+    text-align: start;
+  }
+
+  .blog-list-animated .blog-list-item-title .tag-component {
+    animation: blog-list-item-tag-reveal 0.2s ease-out backwards;
+    animation-delay: calc(0.4s + var(--blog-list-item-delay));
+  }
+  .blog-list-animated .blog-list-item-title .tag-component:last-child {
+    animation-delay: calc(0.45s + var(--blog-list-item-delay));
+  }
+  @keyframes blog-list-item-tag-reveal {
+    0% {
+      opacity: 0;
+      filter: brightness(4) contrast(0.8);
+    }
+    60% {
+      opacity: 1;
+      filter: brightness(4) contrast(0.8);
+    }
+    100% {
+      opacity: 1;
+      filter: brightness(1);
+    }
   }
 
   .blog-list-item-date {
     flex: 0 0 auto;
     font-weight: bold;
     color: var(--text2-clr);
+    text-align: end;
   }
 
   @media (hover: hover) {
@@ -456,7 +539,7 @@
         <h1 class="content-header-title">Notes / Blog</h1>
         <div class="content-header-subtitle">An index of notes, links, stories, anything really.</div>
       </div>
-      <div class="blog-list notes-list">
+      <div class="blog-list notes-list blog-list-animated ">
         <a class="blog-list-item" href="/notes/debug-css-boxes-bookmarklet/">
           <span class="blog-list-item-title">Debug CSS boxes with this bookmarklet <span class="tag-component" style="background: rgb(129,125,181); color: rgb(48,46,71)">css</span> <span class="tag-component" title="micropost" style="background: rgb(204,204,204); color: rgb(68,68,68)">µpost</span></span>
           <span class="blog-list-item-date">15 Oct 2023</span>
@@ -495,6 +578,8 @@
           <span class="blog-list-item-date">18 Feb 2023</span>
         </a>
       </div>
+
+
 
     </div>
     <footer class="main-footer">
@@ -573,5 +658,19 @@
 
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+  (() => {
+    const seenKey = "seenNotesListAnimation";
+    const seenTimes = Number.parseInt(sessionStorage.getItem(seenKey) || 0);
+
+    const shouldAnimate = seenTimes < 2 && window.scrollY < 50;
+    const projectGrid = document.querySelector(".blog-list");
+    projectGrid.classList.toggle("blog-list-animated", shouldAnimate);
+
+    if (shouldAnimate) {
+      sessionStorage.setItem(seenKey, seenTimes + 1);
+    }
+  })();
+</script>
 </body>
 </html>
