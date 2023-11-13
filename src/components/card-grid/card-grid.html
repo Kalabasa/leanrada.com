@@ -5,13 +5,32 @@
 </div>
 
 <script render>
+  if (!attrs.animated) return;
+
+  function delay(index) {
+    const seconds = Math.min(index - 1, Math.log(index * 8)) * 0.3;
+    return Math.round(seconds * 1000) / 1000 + "s";
+  }
+
+  const maxDelayed = 10;
+  const itemCount = children.length;
+  const max = Math.min(itemCount, maxDelayed);
+
   let styles = "";
-  for (let i = 1; i <= children.length; i++) {
+  for (let i = 1; i <= max; i++) {
     styles += `
     .card-grid > *:nth-child(${i}) {
-      --card-grid-item-delay: ${Math.min(i - 1, Math.log(i * 8)) * 0.3}s;
+      --card-grid-item-delay: ${delay(i)};
     }`;
   }
+
+  if (itemCount > maxDelayed) {
+    styles += `
+    .card-grid > *:nth-child(n + ${maxDelayed + 1}) {
+      --card-grid-item-delay: ${delay(maxDelayed + 1)};
+    }`;
+  }
+
   return html`<head>
     <style>
       ${styles}

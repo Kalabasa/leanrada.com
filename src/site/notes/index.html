@@ -5,7 +5,7 @@
       title="Notes / Blog"
       subtitle="An index of notes, links, stories, anything really."
     />
-    <blog-list class="notes-list" />
+    <blog-list class="notes-list" animated="true" />
   </page>
 </html>
 
@@ -14,3 +14,18 @@
     margin-bottom: 60px;
   }
 </style>
+
+<script client defer>
+  (() => {
+    const seenKey = "seenNotesListAnimation";
+    const seenTimes = Number.parseInt(sessionStorage.getItem(seenKey) || 0);
+
+    const shouldAnimate = seenTimes < 2 && window.scrollY < 50;
+    const projectGrid = document.querySelector(".blog-list");
+    projectGrid.classList.toggle("blog-list-animated", shouldAnimate);
+
+    if (shouldAnimate) {
+      sessionStorage.setItem(seenKey, seenTimes + 1);
+    }
+  })();
+</script>

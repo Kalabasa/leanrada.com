@@ -1,4 +1,6 @@
-<div :class="'blog-list ' + attrs.class">
+<div
+  :class="'blog-list ' + attrs.class + (attrs.animated ? ' blog-list-animated ' : '')"
+>
   <script render>
     for (const item of index){
       const tags = item.tags.map(tag => `<tag>${tag}</tag>`).join(" ");
@@ -6,6 +8,40 @@
     }
   </script>
 </div>
+
+<script render>
+  if (!attrs.animated) return;
+
+  function delay(index) {
+    const seconds = Math.min(index - 1, Math.log(index) * 2) * 0.1 - 0.1;
+    return Math.round(seconds * 1000) / 1000 + "s";
+  }
+
+  const maxDelayed = 20;
+  const itemCount = index.length;
+  const max = Math.min(itemCount, maxDelayed);
+
+  let styles = "";
+  for (let i = 1; i <= max; i++) {
+    styles += `
+    .blog-list > *:nth-child(${i}) {
+      --blog-list-item-delay: ${delay(i)};
+    }`;
+  }
+
+  if (itemCount > maxDelayed) {
+    styles += `
+    .card-grid > *:nth-child(n + ${maxDelayed + 1}) {
+      --card-grid-item-delay: ${delay(maxDelayed + 1)};
+    }`;
+  }
+
+  return html`<head>
+    <style>
+      ${styles}
+    </style>
+  </head>`;
+</script>
 
 <script static>
   const generatedIndex = require("./index.generated.json");
