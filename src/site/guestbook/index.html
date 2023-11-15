@@ -66,8 +66,10 @@
     align-items: center;
     border-radius: 12px;
     background: var(--card-clr);
+    animation: guestbook-loaded 0.4s var(--ease);
   }
   .guestbook.loading {
+    animation: none;
     pointer-events: none;
   }
   .guestbook.loading * {
@@ -75,6 +77,15 @@
   }
   .guestbook.error {
     box-shadow: 0 0 0 2px var(--clr1);
+  }
+
+  @keyframes guestbook-loaded {
+    from {
+      filter: brightness(2);
+    }
+    to {
+      filter: brightness(1);
+    }
   }
 
   .page-input {
@@ -181,6 +192,7 @@
         .then((content) => {
           pageInput.value = content;
           pageInput.disabled = false;
+          submit.textContent = "Save";
           submit.disabled = false;
         })
         .catch(() => {
@@ -247,7 +259,10 @@
       let insertEnd = offset;
 
       let builder = [source.slice(0, cursor)];
-      const insertLines = insert.split("\n").reverse();
+      const insertLines = insert
+        .replace(/[^\x0A-\x7F]/g, " ")
+        .split("\n")
+        .reverse();
       while (insertLines.length) {
         let insert = insertLines.pop();
 
