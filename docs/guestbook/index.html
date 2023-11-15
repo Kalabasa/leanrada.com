@@ -414,8 +414,10 @@
     align-items: center;
     border-radius: 12px;
     background: var(--card-clr);
+    animation: guestbook-loaded 0.4s var(--ease);
   }
   .guestbook.loading {
+    animation: none;
     pointer-events: none;
   }
   .guestbook.loading * {
@@ -423,6 +425,15 @@
   }
   .guestbook.error {
     box-shadow: 0 0 0 2px var(--clr1);
+  }
+
+  @keyframes guestbook-loaded {
+    from {
+      filter: brightness(2);
+    }
+    to {
+      filter: brightness(1);
+    }
   }
 
   .page-input {
@@ -592,7 +603,7 @@
     const PAGE_WIDTH = 40;
     const PAGE_HEIGHT = 30;
 
-    // Must sync with client (or make a top-level config)
+    // Must sync with backend (or make a top-level config)
     const MAX_PAGE = 8;
     const LAST_VALUE_KEY = Symbol("LAST_VALUE");
 
@@ -655,6 +666,7 @@
         .then((content) => {
           pageInput.value = content;
           pageInput.disabled = false;
+          submit.textContent = "Save";
           submit.disabled = false;
         })
         .catch(() => {
@@ -721,7 +733,10 @@
       let insertEnd = offset;
 
       let builder = [source.slice(0, cursor)];
-      const insertLines = insert.split("\n").reverse();
+      const insertLines = insert
+        .replace(/[^\x0A-\x7F]/g, " ")
+        .split("\n")
+        .reverse();
       while (insertLines.length) {
         let insert = insertLines.pop();
 
