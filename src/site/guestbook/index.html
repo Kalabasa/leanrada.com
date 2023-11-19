@@ -1,49 +1,24 @@
 <html lang="en">
   <page-title title="Guestbook" />
   <script render>
-    const prod = process.env.NODE_ENV === "production";
-
-    const GUESTBOOK_API =
-      process.env.GUESTBOOK_API ??
-      (prod ? "https://guestbook.leanrada.com/" : "http://127.0.0.1:8787/");
-
     // prettier-ignore
     return html`<head><${"script"}>window.GUESTBOOK_API="${GUESTBOOK_API}"</${"script"}></head>`;
   </script>
   <page>
     <content-header title="Guestbook" />
 
-    <noscript>
-      <p class="intro">
-        ⛔ Writing in the guestbook requires JavaScript. Unfortunately your
-        browser does not run it. :&lpar;
-      </p>
-    </noscript>
-
     <p class="intro">
-      Hello, visitor! Thanks for visiting. Write anywhere in the box below!
+      Thanks for visiting the site. Write and customise your message below!
     </p>
-    <p class="intro">
-      I’d appreciate it if you leave a nice comment for others and sign your
-      name. Don’t forget to hit Save!
-    </p>
-    <p class="intro">-Lean</p>
 
-    <div class="guestbook-row">
-      <pre class="guestbook"><textarea
-        class="page-input"
-        :cols="PAGE_WIDTH"
-        :rows="PAGE_HEIGHT"
-        :style="`width:${PAGE_WIDTH}ch`"
-        disabled
-      ></textarea></pre>
-    </div>
-
-    <div class="button-row">
-      <btn id="prev">← Prev page</btn>
-      <btn id="submit">Save</btn>
-      <btn id="next">Next page →</btn>
-    </div>
+    <form class="form" method="post" :action="GUESTBOOK_API">
+      <input name="schemaVersion" type="hidden" :value="SCHEMA_VERSION" />
+      <div class="message-box">
+        <textarea class="message-text" name="text" placeholder="Your message"></textarea>
+        <input class="message-name" name="name" type="text" placeholder="Your name" />
+      </div>
+      <button type="submit">Send</button>
+    </form>
   </page>
 </html>
 
@@ -52,271 +27,37 @@
     margin: 18px auto;
     max-width: 384px;
   }
-
-  .guestbook-row {
-    margin: 24px auto;
-    text-align: center;
-  }
-
-  .guestbook {
-    margin: 0;
-    display: inline-flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    border-radius: 12px;
-    background: var(--card-clr);
-    animation: guestbook-loaded 0.4s var(--ease);
-  }
-  .guestbook.loading {
-    animation: none;
-    pointer-events: none;
-  }
-  .guestbook.loading * {
-    opacity: 0.2;
-  }
-  .guestbook.error {
-    box-shadow: 0 0 0 2px var(--clr1);
-  }
-
-  @keyframes guestbook-loaded {
-    from {
-      filter: brightness(2);
-    }
-    to {
-      filter: brightness(1);
-    }
-  }
-
-  .page-input {
-    flex: 0 0 auto;
-    padding: 12px;
-    border: none;
-    background: transparent;
-    color: var(--text-clr);
-    font: inherit;
-    outline: none;
-    resize: none;
-    white-space: pre;
-  }
-
-  .button-row {
-    margin: 18px auto 90px;
+  .form {
+    margin: 18px auto;
     max-width: 384px;
+  }
+  .message-box {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    background: red;
+    min-width: 384px;
+    min-height: 192px;
+    box-sizing: border-box;
   }
-
-  #submit {
-    font-size: 15px;
-    text-transform: uppercase;
+  .message-text {
+    flex: 1 1 auto;
+    resize: none;
   }
-  #submit.error {
-    box-shadow: 0 0 0 2px var(--clr1);
+  .message-name {
+    flex: 0 1 auto;
   }
 </style>
 
 <script static>
-  // Must be constant forever
-  const PAGE_WIDTH = 40;
-  const PAGE_HEIGHT = 30;
+  const prod = process.env.NODE_ENV === "production";
+  const GUESTBOOK_API =
+    process.env.GUESTBOOK_API ??
+    (prod ? "https://guestbook.leanrada.com/" : "http://127.0.0.1:8787/");
+  const SCHEMA_VERSION = "v2";
 </script>
 
 <script client defer>
   (() => {
-    // Must be constant forever
-    const PAGE_WIDTH = 40;
-    const PAGE_HEIGHT = 30;
-
-    // Must sync with backend (or make a top-level config)
-    const MAX_PAGE = 8;
-    const LAST_VALUE_KEY = Symbol("LAST_VALUE");
-
-    const guestbook = document.querySelector(".guestbook");
-    const pageInput = document.querySelector(".page-input");
-    pageInput.addEventListener("beforeinput", (event) => {
-      prepareTextBeforeInput(event.target);
-    });
-    pageInput.addEventListener("input", (event) => {
-      updateTextAfterInput(event.target);
-    });
-
-    const submit = document.getElementById("submit");
-    submit.addEventListener("click", async () => {
-      submit.classList.remove("error");
-
-      submit.textContent = "Saving";
-
-      try {
-        const res = await fetch(window.GUESTBOOK_API, {
-          method: "POST",
-          body: JSON.stringify({
-            page: currentPage,
-            content: pageInput.value,
-          }),
-        });
-
-        if (!res.ok) throw new Error("Not OK");
-
-        submit.textContent = "Saved";
-      } catch (e) {
-        submit.classList.add("error");
-        submit.textContent = "Retry";
-      }
-    });
-
-    let currentPage =
-      new URLSearchParams(window.location.search).get("page") ?? 0;
-    goToPage(currentPage);
-
-    const prev = document.getElementById("prev");
-    prev.addEventListener("click", () => {
-      goToPage((currentPage + MAX_PAGE - 1) % MAX_PAGE);
-    });
-
-    const next = document.getElementById("next");
-    next.addEventListener("click", () => {
-      goToPage((currentPage + 1) % MAX_PAGE);
-    });
-
-    function goToPage(index) {
-      currentPage = index;
-
-      guestbook.classList.remove("error");
-      guestbook.classList.add("loading");
-      pageInput.disabled = true;
-      submit.disabled = true;
-
-      getPageContent(index)
-        .then((content) => {
-          pageInput.value = content;
-          pageInput.disabled = false;
-          submit.textContent = "Save";
-          submit.disabled = false;
-        })
-        .catch(() => {
-          guestbook.classList.add("error");
-          pageInput.value = "Can't load this page right now :(";
-        })
-        .finally(() => {
-          guestbook.classList.remove("loading");
-        });
-    }
-
-    async function getPageContent(index) {
-      const res = await fetch(`${window.GUESTBOOK_API}?page=${index}`);
-      const data = await res.json();
-      return data.join("\n");
-    }
-
-    function prepareTextBeforeInput(pageInput) {
-      pageInput[LAST_VALUE_KEY] = pageInput.value;
-    }
-
-    function updateTextAfterInput(pageInput) {
-      const [editStart, editEnd] = findEditRange(pageInput);
-
-      // Fill deleted text with spaces
-      let value = pageInput.value;
-      const newLen = value.length;
-      const fullLen = PAGE_WIDTH * PAGE_HEIGHT + (PAGE_HEIGHT - 1);
-      if (newLen < fullLen) {
-        pageInput.value = value =
-          value.slice(0, editEnd) +
-          "".padEnd(fullLen - newLen, " ") +
-          value.slice(editEnd);
-        pageInput.selectionStart = pageInput.selectionEnd = editEnd;
-      }
-
-      // Overwrite text
-      if (newLen > fullLen) {
-        let cursor;
-        [value, cursor] = overwrite(
-          pageInput[LAST_VALUE_KEY],
-          value.slice(editStart, editEnd),
-          editStart
-        );
-        pageInput.value = value;
-        pageInput.selectionStart = pageInput.selectionEnd = cursor;
-      }
-
-      // Preserve line width and newlines
-      const selection = pageInput.selectionStart;
-      let builder = [];
-      for (let i = 0; i < PAGE_HEIGHT; i++) {
-        const line = value
-          .slice(i * (PAGE_WIDTH + 1), (i + 1) * (PAGE_WIDTH + 1) - 1)
-          .replaceAll(/\s/gm, " ");
-        builder.push(line, i < PAGE_HEIGHT - 1 ? "\n" : "");
-      }
-      pageInput.value = pageInput[LAST_VALUE_KEY] = builder.join("");
-      pageInput.selectionStart = pageInput.selectionEnd = selection;
-    }
-
-    function overwrite(source, insert, offset) {
-      let cursor = offset;
-      let insertEnd = offset;
-
-      let builder = [source.slice(0, cursor)];
-      const insertLines = insert
-        .replace(/[^\x0A-\x7F]/g, " ")
-        .split("\n")
-        .reverse();
-      while (insertLines.length) {
-        let insert = insertLines.pop();
-
-        // Wrap insert line
-        if (source.slice(cursor, cursor + insert.length).includes("\n")) {
-          const index = source.indexOf("\n", cursor) - cursor;
-          insertLines.push(insert.slice(index));
-          insert = insert.slice(0, index);
-        }
-
-        builder.push(insert);
-        cursor += insert.length;
-        insertEnd = cursor;
-
-        let lineEnd = source.indexOf("\n", cursor);
-        if (lineEnd === -1) lineEnd = Infinity;
-        lineEnd++; // Include "\n"
-
-        builder.push(source.slice(cursor, lineEnd));
-        cursor = lineEnd;
-      }
-
-      builder.push(source.slice(cursor));
-
-      return [builder.join(""), insertEnd];
-    }
-
-    function findEditRange(pageInput) {
-      const lastValue = pageInput[LAST_VALUE_KEY];
-
-      const maxStart = Math.min(
-        pageInput.selectionStart,
-        pageInput.value.length
-      );
-      const maxEndDist = Math.min(
-        pageInput.value.length - pageInput.selectionEnd,
-        pageInput.value.length
-      );
-
-      let start = 0;
-      while (start < maxStart && pageInput.value[start] === lastValue[start]) {
-        start++;
-      }
-
-      let endDist = 0;
-      while (
-        endDist < maxEndDist &&
-        pageInput.value[pageInput.value.length - endDist] ===
-          lastValue[lastValue.length - endDist]
-      ) {
-        endDist++;
-      }
-
-      return [start, pageInput.value.length - endDist];
-    }
+    console.log("Hello guests");
   })();
 </script>

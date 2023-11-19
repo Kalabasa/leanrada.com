@@ -1,33 +1,40 @@
-// MVP version. See if anybody uses the guestbook at all before making a proper system.
-// todo: Top-level config for PAGE_WIDTH, PAGE_HEIGHT, MAX_PAGE for client code and worker code
-// todo: Better concurrent editing by multiple users
-//   - idea: separate data into one key per line (~320 entries in KV)
-// todo: Better UX
-
 export interface Env {
   data: KVNamespace;
-  notify: SendEmail;
 }
 
-// Must be constant forever
-const PAGE_WIDTH = 40;
-const PAGE_HEIGHT = 30;
-// Must sync with client (or make a top-level config)
-const MAX_PAGE = 8;
-const TEMPLATE_URL =
-  "https://raw.githubusercontent.com/Kalabasa/kalabasa.github.io/src/src/site/guestbook/template.json";
-
-const LOG_PAGE_DIVIDER = Array.from({ length: PAGE_WIDTH })
-  .map(() => "-")
-  .join("");
+const MASTER_KEY = "v2";
+const CURRENT_SCHEMA_VERSION = "v2";
+const GET_PAGE_SIZE = 20;
 
 type GetRequest = {
   page: number;
 };
 
 type SubmitRequest = {
-  page: number;
-  content: string;
+  schemaVersion: string;
+  text: string;
+  name?: string;
+  fontIndex?: number;
+  bgStyleIndex?: number;
+  bgRGB?: number;
+  fgRGB?: number;
+  stamps?: Array<{ typeIndex: number; seed: number; x: number; y: number }>;
+};
+
+type StoredData = {
+  messages?: Array<StoredMessage>;
+};
+
+type StoredMessage = {
+  schemaVersion?: string;
+  createdUnixTime?: number;
+  text?: string;
+  name?: string;
+  fontIndex?: number;
+  bgStyleIndex?: number;
+  bgRGB?: number;
+  fgRGB?: number;
+  stamps?: Array<{ typeIndex: number; seed: number; x: number; y: number }>;
 };
 
 async function handleRequest(
@@ -68,18 +75,15 @@ async function handleGet(request: Request, env: Env) {
   console.log("Handling GET request:", getRequest);
   checkGetRequest(getRequest);
 
-  let data = await env.data.get("master", { type: "json" });
-  if (data) {
-    checkData(data, "-master");
-  } else {
-    console.log("Get data from template");
-    data = await fetch(TEMPLATE_URL).then((r) => r.json());
-    checkData(data, "-template");
+  const data = await getData(env);
+
+  if (!data.messages) {
+    return new Response(JSON.stringify([]));
   }
 
-  const slice = data.slice(
-    getRequest.page * PAGE_HEIGHT,
-    (getRequest.page + 1) * PAGE_HEIGHT
+  const slice = data.messages.slice(
+    getRequest.page * GET_PAGE_SIZE,
+    (getRequest.page + 1) * GET_PAGE_SIZE
   );
 
   return new Response(JSON.stringify(slice));
@@ -90,30 +94,28 @@ async function handlePost(request: Request, env: Env) {
   console.log("Handling POST request:", submitRequest);
   checkSubmitRequest(submitRequest);
 
-  let data: string[] | null = await env.data.get("master", { type: "json" });
-  const snapshot = data?.slice();
-  if (data) {
-    checkData(data, "-master");
-  } else {
-    console.log("New data from template");
-    data = await fetch(TEMPLATE_URL).then((r) => r.json());
-    checkData(data, "-template");
-  }
-
-  const newContent = submitRequest.content.split("\n");
-  const offset = submitRequest.page * PAGE_HEIGHT;
-  console.log("Splicing at", offset, ":");
-  console.log(LOG_PAGE_DIVIDER);
-  console.log(newContent.join("\n"));
-  console.log(LOG_PAGE_DIVIDER);
-  data.splice(offset, PAGE_HEIGHT, ...newContent);
-  checkData(data, "-spliced");
-
-  if (same(data, snapshot)) {
-    return new Response(null);
-  }
-
   const now = new Date();
+  const data = await getData(env);
+  const snapshot = structuredClone(data);
+
+  data.messages = data.messages || [];
+  data.messages.unshift({
+    schemaVersion: submitRequest.schemaVersion,
+    createdUnixTime: Math.floor(now.getTime() / 1000),
+    text: String(submitRequest.text),
+    name: submitRequest.name && String(submitRequest.name),
+    fontIndex: numberOrUndefined(submitRequest.fontIndex),
+    bgStyleIndex: numberOrUndefined(submitRequest.bgStyleIndex),
+    bgRGB: numberOrUndefined(submitRequest.bgRGB),
+    fgRGB: numberOrUndefined(submitRequest.fgRGB),
+    stamps: (submitRequest.stamps || []).map((stamp) => ({
+      typeIndex: stamp.typeIndex,
+      seed: stamp.seed,
+      x: stamp.x,
+      y: stamp.y,
+    })),
+  });
+
   const snapshotName =
     "snapshot-" +
     now.getFullYear() +
@@ -124,55 +126,77 @@ async function handlePost(request: Request, env: Env) {
 
   await Promise.all([
     env.data.put(snapshotName, JSON.stringify(snapshot)),
-    env.data.put("master", JSON.stringify(data)),
+    env.data.put(MASTER_KEY, JSON.stringify(data)),
   ]);
 
   return new Response(null);
 }
 
+async function getData(env: Env): Promise<StoredData> {
+  let data: StoredData | null = await env.data.get(MASTER_KEY, {
+    type: "json",
+  });
+
+  if (!data) {
+    console.log("New blank data");
+    data = {};
+  }
+
+  return data;
+}
+
 function checkGetRequest(getRequest: any): asserts getRequest is GetRequest {
   if (!Number.isInteger(getRequest.page))
     throw new TypeError("getRequest.page is not an integer");
-  if (getRequest.page < 0 || getRequest.page > MAX_PAGE)
-    throw new TypeError("getRequest.page is out of valid range");
 }
 
 function checkSubmitRequest(
   submitRequest: any
 ): asserts submitRequest is SubmitRequest {
-  if (!Number.isInteger(submitRequest.page))
-    throw new TypeError("submitRequest.page is not an integer");
-  if (submitRequest.page < 0 || submitRequest.page > MAX_PAGE)
-    throw new TypeError("submitRequest.page is out of valid range");
-  if (typeof submitRequest.content !== "string")
-    throw new TypeError("submitRequest is missing content");
+  if (submitRequest.version !== CURRENT_SCHEMA_VERSION)
+    throw new TypeError("submitRequest.version is unsupported");
+  if (!submitRequest.text) throw new TypeError("submitRequest.text is empty");
+  if (typeof submitRequest.text !== "string")
+    throw new TypeError("submitRequest.text is not a string");
+  if (submitRequest.name != undefined && typeof submitRequest.name !== "string")
+    throw new TypeError("submitRequest.name is not a string");
   if (
-    submitRequest.content.length !==
-    PAGE_WIDTH * PAGE_HEIGHT + (PAGE_HEIGHT - 1)
+    submitRequest.fontIndex != undefined &&
+    !Number.isInteger(submitRequest.fontIndex)
   )
-    throw new TypeError("submitRequest.content is malformed");
-  if (submitRequest.content.split("\n").length !== PAGE_HEIGHT)
-    throw new TypeError("submitRequest.content is malformed");
+    throw new TypeError("submitRequest.fontIndex is not an integer");
+  if (
+    submitRequest.bgStyleIndex != undefined &&
+    !Number.isInteger(submitRequest.bgStyleIndex)
+  )
+    throw new TypeError("submitRequest.bgStyleIndex is not an integer");
+  if (
+    submitRequest.bgRGB != undefined &&
+    !Number.isInteger(submitRequest.bgRGB)
+  )
+    throw new TypeError("submitRequest.bgRGB is not an integer");
+  if (
+    submitRequest.fgRGB != undefined &&
+    !Number.isInteger(submitRequest.fgRGB)
+  )
+    throw new TypeError("submitRequest.fgRGB is not an integer");
+
+  for (const stamp of submitRequest.stamps || []) {
+    if (stamp.typeIndex != undefined && !Number.isInteger(stamp.typeIndex))
+      throw new TypeError("stamp.typeIndex is not an integer");
+    if (stamp.seed != undefined && !Number.isInteger(stamp.seed))
+      throw new TypeError("stamp.seed is not an integer");
+    if (stamp.x != undefined && typeof stamp.x !== "number")
+      throw new TypeError("stamp.x is not an number");
+    if (stamp.y != undefined && typeof stamp.y !== "number")
+      throw new TypeError("stamp.y is not an number");
+  }
 }
 
-function checkData(data: any, suffix?: string): asserts data is string[] {
-  const name = "data" + suffix;
-  if (!Array.isArray(data)) throw new TypeError(`${name} is not an array!`);
-  if (!data.every((i) => typeof i === "string"))
-    throw new TypeError(`${name} is not an array of strings!`);
-  if (data.length !== PAGE_HEIGHT * MAX_PAGE)
-    throw new TypeError(
-      `${name} is not an array with MAX_PAGE * PAGE_HEIGHT items!`
-    );
-  if (!data.every((i) => i.length === PAGE_WIDTH))
-    throw new TypeError(
-      `${name} is not an array of PAGE_WIDTH length strings!`
-    );
-}
-
-function same(data1: string[], data2: string[] | undefined) {
-  if (!data2) return false;
-  return data1.length === data2.length && data1.every((v, i) => v === data2[i]);
+function numberOrUndefined(number: any): number | undefined {
+  const value = Number(number);
+  if (Number.isNaN(value)) return undefined;
+  return value;
 }
 
 export default { fetch: handleRequest };
