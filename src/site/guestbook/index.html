@@ -7,44 +7,109 @@
   <page>
     <content-header title="Guestbook" />
 
-    <p class="intro">
-      Thanks for visiting the site. Write and customise your message below!
-    </p>
+    <p class="intro">Thanks for visiting the site. Leave a message below!</p>
 
     <form class="form" method="post" :action="GUESTBOOK_API">
       <input name="schemaVersion" type="hidden" :value="SCHEMA_VERSION" />
-      <div class="message-box">
-        <textarea class="message-text" name="text" placeholder="Your message"></textarea>
-        <input class="message-name" name="name" type="text" placeholder="Your name" />
+      <input name="fontIndex" type="hidden" :value="0" />
+      <input name="bgStyleIndex" type="hidden" :value="0" />
+      <input name="bgRGB" type="hidden" :value="0xffffff" />
+      <input name="fgRGB" type="hidden" :value="0x000000" />
+      <guestbook-card id="guestbook-card" />
+      <div class="button-row">
+        <btn class="style-button" id="bgStyleBtn" type="button">Style</btn>
+        <btn class="style-button" id="bgBtn" type="button">Background</btn>
+        <btn class="style-button" id="fgBtn" type="button">Foreground</btn>
+        <!-- <btn class="style-button" id="fontBtn" type="button">Font</btn> -->
+        <btn class="submit-button" id="submitBtn" type="submit">Send</btn>
       </div>
-      <button type="submit">Send</button>
     </form>
+
+    <div class="messages-list"></div>
   </page>
 </html>
 
 <style>
-  .intro {
-    margin: 18px auto;
-    max-width: 384px;
-  }
+  .intro,
   .form {
     margin: 18px auto;
     max-width: 384px;
-  }
-  .message-box {
-    display: flex;
-    flex-direction: column;
-    background: red;
-    min-width: 384px;
-    min-height: 192px;
     box-sizing: border-box;
   }
-  .message-text {
-    flex: 1 1 auto;
-    resize: none;
+  .button-row {
+    display: flex;
+    margin-top: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
-  .message-name {
-    flex: 0 1 auto;
+  .style-button {
+    position: relative;
+    width: 30px;
+    overflow: hidden;
+    color: transparent;
+    background: var(--card-clr);
+  }
+  .style-button::after {
+    position: absolute;
+    inset: 6px;
+    content: "";
+  }
+  #fgBtn::after {
+    content: "A";
+    font-size: 18px;
+    line-height: 18px;
+    color: var(--gbc-color, black);
+    text-shadow: -1px -2px 0 white, 1px -2px 0 white, -2px 0 0 white,
+      2px 0 0 white, -2px 1px 0 white, 2px 1px 0 white, -2px 2px 0 white,
+      2px 2px 0 white, 0 2px 0 white;
+  }
+  #bgBtn::after {
+    background: var(--gbc-background, white);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px white;
+  }
+  .submit-button {
+    margin-left: auto;
+  }
+  .messages-list {
+    margin: 120px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 90px;
+  }
+  .messages-list > *:nth-child(2n) {
+    transform-origin: -50% -50%;
+  }
+  .messages-list > *:nth-child(2n + 1) {
+    transform-origin: 150% 150%;
+  }
+  .messages-list > *:nth-child(3n) {
+    transform: rotate(3deg);
+    transform-origin: -50% 150%;
+  }
+  .messages-list > *:nth-child(3n + 1) {
+    transform: rotate(-3deg);
+    transform-origin: 150% -150%;
+  }
+  .messages-list > *:nth-child(3n + 2) {
+    transform: rotate(2deg);
+    transform-origin: 50% 50%;
+  }
+  .messages-list > *:nth-child(4n) {
+    transform: rotate(-2deg);
+  }
+  .messages-list > *:nth-child(5n) {
+    transform: rotate(1deg);
+  }
+  .messages-list > *:nth-child(6n) {
+    transform: rotate(2deg);
+  }
+  .messages-list > *:nth-child(7n) {
+    transform: rotate(-1deg);
+  }
+  .messages-list > *:nth-child(8n) {
+    transform: rotate(-2deg);
   }
 </style>
 
@@ -56,8 +121,100 @@
   const SCHEMA_VERSION = "v2";
 </script>
 
-<script client defer>
+<script client async defer>
   (() => {
-    console.log("Hello guests");
+    initForm();
+    initMessagesList();
+
+    async function initForm() {
+      const { BG_COLORS, FG_COLORS, getCSS } = await loadGuestbookCardLib();
+      const form = document.querySelector(".form");
+      const { fgRGB, bgRGB, bgStyleIndex, fontIndex } = form.elements;
+      const guestbookCard = document.getElementById("guestbook-card");
+      const submitBtn = document.getElementById("submitBtn");
+      const bgStyleBtn = document.getElementById("bgStyleBtn");
+      const bgBtn = document.getElementById("bgBtn");
+      const fgBtn = document.getElementById("fgBtn");
+      const fontButton = document.getElementById("fontButton");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        submitBtn.disabled = true;
+        await fetch(form.action, {
+          method: "post",
+          body: new FormData(form),
+        });
+        setTimeout(() => location.reload(), 200);
+      });
+
+      fgBtn.addEventListener("click", async () => {
+        fgRGB.value =
+          FG_COLORS[
+            (FG_COLORS.indexOf(Number(fgRGB.value)) + 1) % FG_COLORS.length
+          ];
+        const style = await guestbookCard.updateStyle({
+          fgRGB: Number(fgRGB.value),
+        });
+        form.setAttribute("style", getCSS(style));
+      });
+
+      bgBtn.addEventListener("click", async () => {
+        bgRGB.value =
+          BG_COLORS[
+            (BG_COLORS.indexOf(Number(bgRGB.value)) + 1) % BG_COLORS.length
+          ];
+        const style = await guestbookCard.updateStyle({
+          bgRGB: Number(bgRGB.value),
+        });
+        form.setAttribute("style", getCSS(style));
+      });
+
+      bgStyleBtn.addEventListener("click", async () => {
+        bgStyleIndex.value = (Number(bgStyleIndex.value) + 1) % 4;
+        const style = await guestbookCard.updateStyle({
+          bgStyleIndex: Number(bgStyleIndex.value),
+        });
+        form.setAttribute("style", getCSS(style));
+      });
+    }
+
+    async function initMessagesList() {
+      const messagesList = document.querySelector(".messages-list");
+
+      let currentPage = 0;
+      let loading = loadPage(currentPage);
+
+      async function loadPage(page) {
+        const response = await fetch(GUESTBOOK_API + "?page=" + page);
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        if (!data || data.length === 0) return 0;
+        for (const message of data) {
+          messagesList.appendChild(await renderMessage(message));
+        }
+      }
+
+      async function renderMessage(message) {
+        const { createGuestbookCard } = await loadGuestbookCardLib();
+        return createGuestbookCard({
+          text: message.text,
+          name: message.name,
+          style: {
+            fontIndex: message.fontIndex,
+            bgStyleIndex: message.bgStyleIndex,
+            bgRGB: message.bgRGB,
+            fgRGB: message.fgRGB,
+          },
+        });
+      }
+    }
+
+    async function loadGuestbookCardLib() {
+      return (loadGuestbookCardLib.result =
+        loadGuestbookCardLib.result ??
+        import("/guestbook/guestbook-card.js").then(
+          () => window.GUESTBOOK_CARD
+        ));
+    }
   })();
 </script>

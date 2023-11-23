@@ -57,7 +57,7 @@ async function handleRequest(
         ? e.name + ": " + e.message.slice(0, 70).replaceAll(/\s/g, " ")
         : " unknown error"
     );
-    return new Response(null, { status: 404 });
+    return new Response("Error", { status: 404 });
   }
 }
 
@@ -90,7 +90,9 @@ async function handleGet(request: Request, env: Env) {
 }
 
 async function handlePost(request: Request, env: Env) {
-  const submitRequest: Partial<SubmitRequest> = await request.json();
+  const submitRequest: Partial<SubmitRequest> = Object.fromEntries(
+    (await request.formData()).entries()
+  );
   console.log("Handling POST request:", submitRequest);
   checkSubmitRequest(submitRequest);
 
@@ -129,7 +131,7 @@ async function handlePost(request: Request, env: Env) {
     env.data.put(MASTER_KEY, JSON.stringify(data)),
   ]);
 
-  return new Response(null);
+  return new Response(null, Response.redirect("https://leanrada.com/guestbook/"));
 }
 
 async function getData(env: Env): Promise<StoredData> {
@@ -153,8 +155,8 @@ function checkGetRequest(getRequest: any): asserts getRequest is GetRequest {
 function checkSubmitRequest(
   submitRequest: any
 ): asserts submitRequest is SubmitRequest {
-  if (submitRequest.version !== CURRENT_SCHEMA_VERSION)
-    throw new TypeError("submitRequest.version is unsupported");
+  if (submitRequest.schemaVersion !== CURRENT_SCHEMA_VERSION)
+    throw new TypeError("submitRequest.schemaVersion is unsupported");
   if (!submitRequest.text) throw new TypeError("submitRequest.text is empty");
   if (typeof submitRequest.text !== "string")
     throw new TypeError("submitRequest.text is not a string");
@@ -162,33 +164,36 @@ function checkSubmitRequest(
     throw new TypeError("submitRequest.name is not a string");
   if (
     submitRequest.fontIndex != undefined &&
-    !Number.isInteger(submitRequest.fontIndex)
+    !Number.isInteger(parseInt(submitRequest.fontIndex, 10))
   )
     throw new TypeError("submitRequest.fontIndex is not an integer");
   if (
     submitRequest.bgStyleIndex != undefined &&
-    !Number.isInteger(submitRequest.bgStyleIndex)
+    !Number.isInteger(parseInt(submitRequest.bgStyleIndex, 10))
   )
     throw new TypeError("submitRequest.bgStyleIndex is not an integer");
   if (
     submitRequest.bgRGB != undefined &&
-    !Number.isInteger(submitRequest.bgRGB)
+    !Number.isInteger(parseInt(submitRequest.bgRGB, 10))
   )
     throw new TypeError("submitRequest.bgRGB is not an integer");
   if (
     submitRequest.fgRGB != undefined &&
-    !Number.isInteger(submitRequest.fgRGB)
+    !Number.isInteger(parseInt(submitRequest.fgRGB, 10))
   )
     throw new TypeError("submitRequest.fgRGB is not an integer");
 
   for (const stamp of submitRequest.stamps || []) {
-    if (stamp.typeIndex != undefined && !Number.isInteger(stamp.typeIndex))
+    if (
+      stamp.typeIndex != undefined &&
+      !Number.isInteger(parseInt(stamp.typeIndex, 10))
+    )
       throw new TypeError("stamp.typeIndex is not an integer");
-    if (stamp.seed != undefined && !Number.isInteger(stamp.seed))
+    if (stamp.seed != undefined && !Number.isInteger(parseInt(stamp.seed, 10)))
       throw new TypeError("stamp.seed is not an integer");
-    if (stamp.x != undefined && typeof stamp.x !== "number")
+    if (stamp.x != undefined && isNaN(stamp.x))
       throw new TypeError("stamp.x is not an number");
-    if (stamp.y != undefined && typeof stamp.y !== "number")
+    if (stamp.y != undefined && isNaN(stamp.y))
       throw new TypeError("stamp.y is not an number");
   }
 }
