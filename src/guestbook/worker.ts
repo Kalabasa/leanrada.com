@@ -62,6 +62,9 @@ async function handleRequest(
 }
 
 async function handleRequestMethod(request: Request, env: Env) {
+  if (new URL(request.url).pathname !== "/api") {
+    return new Response(null, { status: 404 });
+  }
   if (request.method == "GET") return await handleGet(request, env);
   else if (request.method == "POST") return await handlePost(request, env);
   else throw new Error("Wrong HTTP method");
@@ -131,7 +134,10 @@ async function handlePost(request: Request, env: Env) {
     env.data.put(MASTER_KEY, JSON.stringify(data)),
   ]);
 
-  return new Response(null, Response.redirect("https://leanrada.com/guestbook/"));
+  return new Response(
+    null,
+    Response.redirect("https://leanrada.com/guestbook/")
+  );
 }
 
 async function getData(env: Env): Promise<StoredData> {
