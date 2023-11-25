@@ -12,7 +12,7 @@
       const bgStyleBtn = document.getElementById("bgStyleBtn");
       const bgBtn = document.getElementById("bgBtn");
       const fgBtn = document.getElementById("fgBtn");
-      const fontButton = document.getElementById("fontButton");
+      const fontBtn = document.getElementById("fontBtn");
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -50,6 +50,14 @@
         bgStyleIndex.value = (Number(bgStyleIndex.value) + 1) % 4;
         const style = await guestbookCard.updateStyle({
           bgStyleIndex: Number(bgStyleIndex.value),
+        });
+        form.setAttribute("style", getCSS(style));
+      });
+
+      fontBtn.addEventListener("click", async () => {
+        fontIndex.value = (Number(fontIndex.value) + 1) % 3;
+        const style = await guestbookCard.updateStyle({
+          fontIndex: Number(fontIndex.value),
         });
         form.setAttribute("style", getCSS(style));
       });

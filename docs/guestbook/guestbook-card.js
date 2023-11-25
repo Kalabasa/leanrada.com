@@ -17,6 +17,7 @@
       bgRGB: 0xffffff,
       fgRGB: 0x000000,
       bgStyleIndex: 0,
+      fontIndex: 0,
     };
   }
 
@@ -31,22 +32,36 @@
     bgRGB = defaults.bgRGB,
     fgRGB = defaults.fgRGB,
     bgStyleIndex = defaults.bgStyleIndex,
+    fontIndex = defaults.fontIndex,
   }) {
     return formatStyle({
-      "--gbc-background": formatBgImageSize(bgStyleIndex) + " " + rgbToCSS(bgRGB),
+      "--gbc-font": getFont(fontIndex),
+      "--gbc-background-image": formatBgImageSize(bgStyleIndex),
+      "--gbc-background-color": rgbToCSS(bgRGB),
       "--gbc-color": rgbToCSS(fgRGB),
     });
+  }
+
+  function getFont(fontIndex) {
+    if (fontIndex === /* sans-serif */ 0) {
+      return "'Helvetica', 'Arial', sans-serif";
+    } else if (fontIndex === /* serif */ 1) {
+      return "'Times', 'Times New Roman', serif";
+    } else if (fontIndex === /* mono */ 2) {
+      return "'Courier New', 'Courier', monospace";
+    }
+    return "";
   }
 
   function formatBgImageSize(bgStyleIndex) {
     if (bgStyleIndex === /* solid */ 0) {
       return "none";
     } else if (bgStyleIndex === /* hlines */ 1) {
-      return "linear-gradient(0deg, #00002211 2%, #ffffdd22 2%) top / 1px 30px";
+      return "linear-gradient(0deg, #00002211 2px, #ffffdd22 2px) top / 1px 30px";
     } else if (bgStyleIndex === /* dlines */ 2) {
       return "linear-gradient(135deg, #00002206 25%, #ffffdd22 25%, #ffffdd22 50%, #00002206 50%, #00002206 75%, #ffffdd22 75%) top / 60px 60px";
     } else if (bgStyleIndex === /* grid */ 3) {
-      return "linear-gradient(0deg, #00002211 3%, #ffffdd22 3%) top / 20px 20px, linear-gradient(90deg, #00002211 3%, #ffffdd22 3%) top / 20px 20px";
+      return "linear-gradient(0deg, #00002211 2px, #ffffdd22 2px) top / 20px 20px, linear-gradient(90deg, #00002211 2px, #ffffdd22 2px) top / 20px 20px";
     }
     return "";
   }

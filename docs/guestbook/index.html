@@ -41,9 +41,10 @@
   guestbook-card-client {
     display: flex;
     flex-direction: column;
-    background: var(--gbc-background, white);
+    background: var(--gbc-background-image, none)
+      var(--gbc-background-color, white);
     color: var(--gbc-color, black);
-    font-family: sans-serif;
+    font-family: var(--gbc-font, sans-serif);
     font-size: 1rem;
     font-weight: bold;
     padding: 1em;
@@ -55,18 +56,22 @@
   .guestbook-card-body {
     flex: 1 1 auto;
     resize: none;
+  }
+  .guestbook-card-name {
+    flex: 0 1 auto;
+    text-align: right;
+  }
+  .guestbook-card-body,
+  .guestbook-card-name {
     background: none;
     border: none;
     font: inherit;
     color: inherit;
   }
-  .guestbook-card-name {
-    flex: 0 1 auto;
-    background: none;
-    border: none;
-    font: inherit;
+  .guestbook-card-body::placeholder,
+  .guestbook-card-name::placeholder {
     color: inherit;
-    text-align: right;
+    opacity: 0.4;
   }
 </style>
   <style>
@@ -456,6 +461,13 @@
     inset: 6px;
     content: "";
   }
+  #bgStyleBtn::after {
+    background: var(--gbc-background-image, none) #fff;
+    inset: -25%;
+    border-radius: 18px;
+    filter: brightness(0.5) contrast(8) brightness(2);
+    transform: scale(0.5);
+  }
   #fgBtn::after {
     content: "A";
     font-size: 18px;
@@ -466,9 +478,17 @@
       2px 2px 0 white, 0 2px 0 white;
   }
   #bgBtn::after {
-    background: var(--gbc-background, white);
+    background: var(--gbc-background-color, white);
     border-radius: 50%;
     box-shadow: 0 0 0 2px white;
+  }
+  #fontBtn::after {
+    content: "f";
+    font-family: var(--gbc-font, sans-serif);
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 18px;
+    color: white;
   }
   .submit-button {
     margin-left: auto;
@@ -546,7 +566,7 @@
         <input name="bgStyleIndex" type="hidden" value="0">
         <input name="bgRGB" type="hidden" value="16777215">
         <input name="fgRGB" type="hidden" value="0">
-        <guestbook-card-client id="guestbook-card" style="--gbc-background:none #ffffff;--gbc-color:#000000">
+        <guestbook-card-client id="guestbook-card" style="--gbc-font:'Helvetica', 'Arial', sans-serif;--gbc-background-image:none;--gbc-background-color:#ffffff;--gbc-color:#000000">
         </guestbook-card-client>
         <div class="button-row">
           <button class="btn style-button" id="bgStyleBtn" type="button">
@@ -558,7 +578,9 @@
           <button class="btn style-button" id="fgBtn" type="button">
             Foreground
           </button>
-          <!-- <btn class="style-button" id="fontBtn" type="button">Font</btn> -->
+          <button class="btn style-button" id="fontBtn" type="button">
+            Font
+          </button>
           <button class="btn submit-button" id="submitBtn" type="submit">
             Send
           </button>
@@ -659,7 +681,7 @@
       const bgStyleBtn = document.getElementById("bgStyleBtn");
       const bgBtn = document.getElementById("bgBtn");
       const fgBtn = document.getElementById("fgBtn");
-      const fontButton = document.getElementById("fontButton");
+      const fontBtn = document.getElementById("fontBtn");
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -697,6 +719,14 @@
         bgStyleIndex.value = (Number(bgStyleIndex.value) + 1) % 4;
         const style = await guestbookCard.updateStyle({
           bgStyleIndex: Number(bgStyleIndex.value),
+        });
+        form.setAttribute("style", getCSS(style));
+      });
+
+      fontBtn.addEventListener("click", async () => {
+        fontIndex.value = (Number(fontIndex.value) + 1) % 3;
+        const style = await guestbookCard.updateStyle({
+          fontIndex: Number(fontIndex.value),
         });
         form.setAttribute("style", getCSS(style));
       });
