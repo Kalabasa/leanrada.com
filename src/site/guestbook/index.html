@@ -20,7 +20,7 @@
         <btn class="style-button" id="bgStyleBtn" type="button">Style</btn>
         <btn class="style-button" id="bgBtn" type="button">Background</btn>
         <btn class="style-button" id="fgBtn" type="button">Foreground</btn>
-        <!-- <btn class="style-button" id="fontBtn" type="button">Font</btn> -->
+        <btn class="style-button" id="fontBtn" type="button">Font</btn>
         <btn class="submit-button" id="submitBtn" type="submit">Send</btn>
       </div>
     </form>
@@ -74,6 +74,14 @@
     background: var(--gbc-background-color, white);
     border-radius: 50%;
     box-shadow: 0 0 0 2px white;
+  }
+  #fontBtn::after {
+    content: "f";
+    font-family: var(--gbc-font, sans-serif);
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 18px;
+    color: white;
   }
   .submit-button {
     margin-left: auto;
@@ -180,6 +188,14 @@
         bgStyleIndex.value = (Number(bgStyleIndex.value) + 1) % 4;
         const style = await guestbookCard.updateStyle({
           bgStyleIndex: Number(bgStyleIndex.value),
+        });
+        form.setAttribute("style", getCSS(style));
+      });
+
+      fontBtn.addEventListener("click", async () => {
+        fontIndex.value = (Number(fontIndex.value) + 1) % 3;
+        const style = await guestbookCard.updateStyle({
+          fontIndex: Number(fontIndex.value),
         });
         form.setAttribute("style", getCSS(style));
       });

@@ -17,6 +17,7 @@
       bgRGB: 0xffffff,
       fgRGB: 0x000000,
       bgStyleIndex: 0,
+      fontIndex: 0,
     };
   }
 
@@ -31,12 +32,25 @@
     bgRGB = defaults.bgRGB,
     fgRGB = defaults.fgRGB,
     bgStyleIndex = defaults.bgStyleIndex,
+    fontIndex = defaults.fontIndex,
   }) {
     return formatStyle({
+      "--gbc-font": getFont(fontIndex),
       "--gbc-background-image": formatBgImageSize(bgStyleIndex),
       "--gbc-background-color": rgbToCSS(bgRGB),
       "--gbc-color": rgbToCSS(fgRGB),
     });
+  }
+
+  function getFont(fontIndex) {
+    if (fontIndex === /* sans-serif */ 0) {
+      return "'Helvetica', 'Arial', sans-serif";
+    } else if (fontIndex === /* serif */ 1) {
+      return "'Times', 'Times New Roman', serif";
+    } else if (fontIndex === /* mono */ 2) {
+      return "'Courier New', 'Courier', monospace";
+    }
+    return "";
   }
 
   function formatBgImageSize(bgStyleIndex) {
