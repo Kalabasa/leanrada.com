@@ -33,7 +33,8 @@
     bgStyleIndex = defaults.bgStyleIndex,
   }) {
     return formatStyle({
-      "--gbc-background": formatBgImageSize(bgStyleIndex) + " " + rgbToCSS(bgRGB),
+      "--gbc-background-image": formatBgImageSize(bgStyleIndex),
+      "--gbc-background-color": rgbToCSS(bgRGB),
       "--gbc-color": rgbToCSS(fgRGB),
     });
   }
@@ -42,11 +43,11 @@
     if (bgStyleIndex === /* solid */ 0) {
       return "none";
     } else if (bgStyleIndex === /* hlines */ 1) {
-      return "linear-gradient(0deg, #00002211 2%, #ffffdd22 2%) top / 1px 30px";
+      return "linear-gradient(0deg, #00002211 2px, #ffffdd22 2px) top / 1px 30px";
     } else if (bgStyleIndex === /* dlines */ 2) {
       return "linear-gradient(135deg, #00002206 25%, #ffffdd22 25%, #ffffdd22 50%, #00002206 50%, #00002206 75%, #ffffdd22 75%) top / 60px 60px";
     } else if (bgStyleIndex === /* grid */ 3) {
-      return "linear-gradient(0deg, #00002211 3%, #ffffdd22 3%) top / 20px 20px, linear-gradient(90deg, #00002211 3%, #ffffdd22 3%) top / 20px 20px";
+      return "linear-gradient(0deg, #00002211 2px, #ffffdd22 2px) top / 20px 20px, linear-gradient(90deg, #00002211 2px, #ffffdd22 2px) top / 20px 20px";
     }
     return "";
   }
