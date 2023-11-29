@@ -32,6 +32,7 @@
       <kbd class="lily58-x2 lily58-shade">{k(4,2)}</kbd>
       <kbd class="lily58-x3 lily58-shade">{k(4,3)}</kbd>
       <kbd class="lily58-x4 lily58-shade">{k(4,4)}</kbd>
+      <div class="lily58-oled">{renderLeftOLED()}</div>
     </div>
     <slot name="left" />
   </div>
@@ -68,6 +69,7 @@
       <kbd class="lily58-x2 lily58-shade">{k(9,2)}</kbd>
       <kbd class="lily58-x3 lily58-shade">{k(9,3)}</kbd>
       <kbd class="lily58-x4 lily58-shade">{k(9,4)}</kbd>
+      <div class="lily58-oled">{renderRightOLED()}</div>
     </div>
     <slot name="right" />
   </div>
@@ -96,10 +98,10 @@
     color: black;
   }
   kbd.lily58-accent {
-    background: #66d9ff;
+    background: #72cbe9;
   }
   kbd.lily58-shade {
-    background: #9fb6c9;
+    background: #bed4e5;
   }
   .lily58-half-container {
     display: inline-block;
@@ -108,6 +110,7 @@
     position: relative;
     width: 246px;
     height: 187px;
+    filter: drop-shadow(0 4px 0 #4c5858);
   }
   .lily58-left-half .lily58-grid > kbd:nth-child(6n + 1),
   .lily58-right-half .lily58-grid > kbd:nth-child(6n) {
@@ -198,6 +201,30 @@
     right: 216px;
     top: 90px;
   }
+  .lily58-oled {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px;
+    height: 64px;
+    background: black;
+    border: solid 1px #222;
+  }
+  .lily58-oled > img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(-2px 0 3px #cff8) drop-shadow(2px 0 3px #cff8);
+  }
+  .lily58-left-half .lily58-oled {
+    left: 218px;
+    top: 5px;
+  }
+  .lily58-right-half .lily58-oled {
+    right: 218px;
+    top: 5px;
+  }
   .lily58-layer-button {
     position: relative;
     padding: 0;
@@ -239,7 +266,10 @@
     height: 100%;
     line-height: inherit;
   }
-  .lily58-layer1 {
+  .lily58-on-layer0 .lily58-layer1 {
+    display: none;
+  }
+  .lily58-on-layer1 .lily58-layer0 {
     display: none;
   }
 </style>
@@ -252,20 +282,12 @@
 
       if (!layerButtons.length) continue;
 
-      const layerKeys = [
-        lily.querySelectorAll(".lily58-layer0"),
-        lily.querySelectorAll(".lily58-layer1"),
-      ];
-
       let currentLayer = 0;
+      lily.classList.add("lily58-on-layer" + currentLayer);
       const toggleLayer = () => {
-        for (const key of layerKeys[currentLayer]) {
-          key.style.display = "none";
-        }
+        lily.classList.remove("lily58-on-layer" + currentLayer);
         currentLayer = 1 - currentLayer;
-        for (const key of layerKeys[currentLayer]) {
-          key.style.display = "inherit";
-        }
+        lily.classList.add("lily58-on-layer" + currentLayer);
       };
 
       for (const layerButton of layerButtons) {
@@ -276,6 +298,7 @@
 </script>
 
 <script static>
+  const { oledLeft, oledRight } = attrs;
   const keys = attrs.keys && JSON.parse(attrs.keys);
   const layer = attrs.layer && JSON.parse(attrs.layer);
   const layerButton =
@@ -334,5 +357,15 @@
         ${content}
       </span>`;
     }
+  }
+
+  function renderLeftOLED() {
+    if (!oledLeft) return null;
+    return html`<img class="lily58-layer0" src="${oledLeft}" />`;
+  }
+
+  function renderRightOLED() {
+    if (!oledRight) return null;
+    return html`<img class="lily58-layer0" src="${oledRight}" />`;
   }
 </script>

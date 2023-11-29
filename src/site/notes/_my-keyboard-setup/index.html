@@ -22,27 +22,29 @@
         <div class="caption" slot="right">Right hand</div>
       </lily58>
 
-      This is the _base layer_ of my keyboard. Layers are activated using the layer <kbd>L(*)</kbd> buttons in the bottom row. More on layers later. The rest of the bottom row are modifiers keys like `Control`, and Space <kbd>␣</kbd>.
-
-      In the middle part lies the alphabet in a variant of the Colemak layout called [Colemak Mod-DH](https://colemakmods.github.io/mod-dh/), instead of QWERTY. A sprinkle of punctuations in the periphery.
+      This is the _base layer_ of my keyboard, where all the typing happens primarily.
       
-      The top row are mostly shortcuts. For example, <kbd>⌃[</kbd> and <kbd>⌃]</kbd> (`Control+[` and `Control+]`) are shortcuts for **Back** and **Forward** in most web browsers and code editors.
+      Non-primary functions go into layers which are activated using the layer <kbd>L(*)</kbd> keys found on the bottom row. More on layers later. The rest of the bottom row are modifiers keys like `Control` and Space <kbd>␣</kbd>.
 
-      <kbd>Wksp←</kbd> and <kbd>Wksp→</kbd> are shortcuts for switching between workspaces (a.k.a. spaces and virtual desktops in MacOS and Windows). Workspace Up <kbd>Wksp↑</kbd> and Workspace Down <kbd>Wksp↓</kbd> are bound to desktop-specific actions like Exposé in MacOS. I don’t actually remember because it’s not consistent across OSes.
+      In the middle section lies the alphabet in a variant of the Colemak layout called [Colemak Mod-DH](https://colemakmods.github.io/mod-dh/), instead of the usual QWERTY layout. A sprinkle of common punctuations gather around the periphery.
+      
+      The top row gets more interesting. <kbd>⌃[</kbd> and <kbd>⌃]</kbd> (`Control+[` and `Control+]`) are shortcuts for **Back** and **Forward**, used by most web browsers and code editors.
+
+      <kbd>Wksp←</kbd> and <kbd>Wksp→</kbd> are shortcuts for switching between workspaces (a.k.a. spaces and virtual desktops in MacOS and Windows). Workspace Up <kbd>Wksp↑</kbd> and Workspace Down <kbd>Wksp↓</kbd> are bound to desktop-specific actions like Exposé in MacOS. I don’t actually remember these vertical ones because they’re not consistent across OSes.
 
       ## Home row modifiers
       
       <lily58 :keys="HOME_ROW_LAYER_JSON" />
       
-      The home row contains special inputs that are only triggered when held down for a certain amount of time. When held down they activate modifiers like `Control`, `Alt`/`Option`, `Super`/`Command`, and `Shift`.
+      The home row is where fingers rest by default. It contains special inputs that are only triggered when they are held down for a certain amount of time. Upon activation, it inputs modifiers like `Control`, `Alt`/`Option`, `Super`/`Command`, and `Shift`.
       
-      For example, <kbd>a</kbd>, the 2nd key on the left hand side’s home row. When tapped, it inputs `a`; but when held down, it activates `Shift`.
+      For example, the key <kbd>a</kbd> has a dual-purpose as `Shift` when held down. So when tapped, it inputs `a`; but when held down, activates `Shift`.
       
       Home row modifiers make keyboard shortcuts much more comfortable, as opposed to the contortions that you have to perform on regular keyboards (Anyone remember `Ctrl+Alt+Del`?). My home row mods, among other things, were inspired by the famous [**Miryoku**](https://github.com/manna-harbour/miryoku) layout.
       
       ## Layers
       
-      Since the keyboard only has a limited number of keys (58 to be exact), I had to use **layers**. By switching between layers, I am able to access inputs beyond the base layer, like more symbols and numbers.
+      As touched upon earlier, I use **layers**. Since the keyboard only has a limited number of keys (58 to be exact), inputs like numbers and other symbols have to be organised into layers. I can switch layers using a special layer key or programmatically. Layers are a QMK framework feature.
       
       My layers are:
       1. Alphabet (Default)
@@ -55,38 +57,36 @@
       
       ## Shift layer
       
-      <lily58 :keys="SHIFT_LAYER_JSON" :layer="BASE_LAYER_JSON" layer-button="4,3" />
+      <lily58 :keys="SHIFT_LAYER_JSON" :oled-left="url('shift_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="4,3" />
       <div class="caption">Interactive diagram! Click the highlighted <kbd class="kbd layer-button-inline">⇧</kbd> layer activation key above to toggle between the base layer and the Shift layer.</div>
       
       The shift layer is just a shifted or uppercase version of the base layer. You know, like when you hold Shift on a regular keyboard! Though, this layer is activated by holding down the left Space key <kbd>␣</kbd> instead of the Shift key.
       
       Some of the shifted counterparts differ from those of a regular keyboard. For example, the dot <kbd>.</kbd> shifts into a colon <kbd>:</kbd>, not a comma. The comma itself <kbd>,</kbd> shifts into a semicolon <kbd>;</kbd>. I opted for a more logical pattern for the shifted punctuations. <kbd>?</kbd> shifts into <kbd>!</kbd>, and so on&hellip;
       
-      Finally, custom OLED icons! All layers have a custom icon for the built-in display.
-      
-      > todo OLED
-      
       ## Symbols
       
-      For the rest of the layers, I again took inspiration from [Miryoku](https://github.com/manna-harbour/miryoku), where each layer lies on only one side of the keyboard.
+      For the rest of the layers, I again took inspiration from [Miryoku](https://github.com/manna-harbour/miryoku), where the contents of each layer are arranged to only one side of the keyboard.
       
-      <lily58 :keys="SYMBOL_LAYER_JSON" :layer="BASE_LAYER_JSON" layer-button="4,1" />
+      <lily58 :keys="SYMBOL_LAYER_JSON" :oled-left="url('symbol_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="4,1" />
 
-      The Symbol layer, activated by holding the dedicated Symbol layer key <kbd>L(s)</kbd>, is on the left half; while the other empty half defaults to home row mods.
+      The Symbol layer, activated by holding the dedicated Symbol layer key <kbd>L(s)</kbd>, is on the left half. The other empty half defaults to home row mods.
       
-      There is a bit of special programming for this layer. The parentheses, brackets, braces, and angle brackets - the "enclosure" keys - have a little nifty shortcut for smoother coding.
+      There is a bit of special programming that I added for this layer. The parentheses, brackets, braces, and angle brackets - the "enclosure" keys - have a nifty litle shortcut in them for smoother coding.
       
       <blog-media
         :src="url('closing-bracket-reposition.mp4')"
         caption="Caret repositioning in brackets"/>
       
-      That is, it allows me to automatically reposition the caret or cursor inside the brackets without the need for arrow keys. Arrow keys are on a separate layer.
+      What it does is it allows me to automatically reposition the caret or cursor inside the brackets without the need for arrow keys. Arrow keys are on a separate layer, you see.
 
-      The trigger for it is simple: if I still have the opening key held down when I release the closing key, reposition. Otherwise, type as normal. This lets me choose whether I want to quickly reposition or not.
+      This lets me write structured text (like programming languages) uninterrupted.
+
+      The trigger for it is simple: if I still have the opening key held down when I release the closing key, reposition. Otherwise, type as normal. So I can choose everytime whether I want to quickly reposition or not.
       
       ## Navigation
       
-      <lily58 :keys="NAVIGATION_LAYER_JSON" :layer="BASE_LAYER_JSON" layer-button="9,2" />
+      <lily58 :keys="NAVIGATION_LAYER_JSON" :oled-right="url('navigation_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="9,2" />
 
       The Navigation layer provides the arrow keys, page navigation keys, and word navigation, all on the right side. Some text manipulation functions are here as well. This layer is especially useful when coding or when editing text.
 
@@ -124,13 +124,13 @@
       
       ## Numbers
       
-      <lily58 :keys="NUMBER_LAYER_JSON" :layer="BASE_LAYER_JSON" layer-button="9,3" />
+      <lily58 :keys="NUMBER_LAYER_JSON" :oled-right="url('number_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="9,3" />
 
       Numbers and some arithmetic operators laid out like a numpad on the right hand side. Really handy when doing calculations. Nothing much here.
       
       ## Functions
       
-      <lily58 :keys="FUNCTION_LAYER_JSON" :layer="BASE_LAYER_JSON" layer-button="9,4" />
+      <lily58 :keys="FUNCTION_LAYER_JSON" :oled-right="url('function_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="9,4" />
 
       The Function layer contains “functions”, or things that do stuff instead of typing text. Volume buttons, brightness buttons. Media controls, etc.
       
@@ -142,7 +142,7 @@
       
       ## Emojis
       
-      <lily58 :keys="EMOJI_LAYER_JSON" :layer="BASE_LAYER_JSON" layer-button="5,0" />
+      <lily58 :keys="EMOJI_LAYER_JSON" :oled-right="url('emoji_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="5,0" />
 
       Yep, an Emoji layer!
       
@@ -168,7 +168,7 @@
       
       ### Gaming mode / QWERTY
       
-      <lily58 :keys="QWERTY_LAYER_JSON" />
+      <lily58 :keys="QWERTY_LAYER_JSON" :oled-left="url('qwerty_mode_oled.png')" :oled-right="url('qwerty_mode_oled.png')" />
 
       I play video games. Most of the time, games assume a QWERTY layout. Most of the time, I can’t be bothered to remap the keybindings to fit into my own layout.
 
