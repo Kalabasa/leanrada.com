@@ -1,0 +1,387 @@
+<html lang="en">
+  <page-title title="My 58-key keyboard setup" />
+  <blog-page path-group="/notes/">
+    <blog-header
+      title="My 58-key keyboard setup"
+      :heroimgsrc="url('hero.jpg')"
+    />
+    <blog-post-info date="01 Jan 1970" hidden />
+    <!-- textlint-disable -->
+    <tag-row>
+      <tag>c</tag>
+    </tag-row>
+    <!-- textlint-enable -->
+    <!-- prettier-ignore -->
+    <markdown>
+      I've been using my [**Lily58 split keyboard**](https://github.com/kata0510/Lily58) for more than a year now. Thanks to the open-source firmware/framework [QMK](https://qmk.fm/), I was able to program it to my satisfaction. The seemingly endless tweaks that I wanted to make have died down so I figured now's a good time to post about my keyboard layout so far.
+
+      <blog-media
+        :src="url('photo.jpg')"
+        caption="The keyboard in question" />
+
+      ## Quick rundown
+
+      **Hardware:** The Lily58 keyboard is a column-staggered split keyboard with 6×4+4 keys (58 keys). There are two 32×128 pixel OLED screens on both halves. Both halves are connected by wire, and the whole thing is wired USB-C to the computer.
+
+      **Software:** It uses the QMK firmware, which I used to implement 7 layers and several custom functions. Being a programmer and tinkerer, I customised the heck out of the firmware.
+      
+      ## The basics
+      
+      <lily58 :keys="BASE_LAYER_JSON">
+        <div class="caption" slot="left">Left hand</div>
+        <div class="caption" slot="right">Right hand</div>
+      </lily58>
+
+      This is the _base layer_ of my keyboard, where all the typing happens primarily.
+      
+      Non-primary functions go into hidden layers which can be activated using the layer <kbd>L(*)</kbd> keys found in the bottom row. More on layers later.
+
+      In the middle section lies the alphabet. But instead of the usual QWERTY layout, it’s in a variant of the Colemak layout called [**Colemak Mod-DH**](https://colemakmods.github.io/mod-dh/). It took some time to get used to but I appreciate how easier it is for typing (in English). The most common letters are in the home row.
+      
+      A sprinkle of common punctuations gather around the periphery.
+      
+      The top row gets more interesting. <kbd>⌃[</kbd> and <kbd>⌃]</kbd> (`Control+[` and `Control+]`) are shortcuts for **Back** and **Forward**, used by most web browsers and code editors. They’re really handy when surfing the web or when tracing code across multiple files.
+
+      <kbd>Wksp←</kbd> and <kbd>Wksp→</kbd> are shortcuts for switching between workspaces (a.k.a. spaces and virtual desktops in MacOS and Windows). **Workspace Up** <kbd>Wksp↑</kbd> and **Workspace Down** <kbd>Wksp↓</kbd> are bound to desktop-specific actions like Exposé in MacOS. I don’t actually remember these vertical ones because they’re not consistent across OSes.
+
+      ## Home row modifiers
+      
+      <lily58 :keys="HOME_ROW_LAYER_JSON" />
+      
+      The home row on a keyboard is where fingers rest by default. As such, the home row on my keyboard serves a second purpose, activated by holding the keys for a certain duration. When held, it activates modifiers such as `Control`, `Alt`, and `Super`.
+      
+      For example, the key <kbd>a</kbd> activates `Shift` when held down, while a tap produces the letter `a`.
+      
+      It’s a feature called [**Mod-Tap**](https://docs.qmk.fm/#/mod_tap) within the QMK framework, a.k.a. Tap/Hold keys.
+      
+      Home row modifiers make keyboard shortcuts much more comfortable, in contrast to the awkward contortions you have to perform on regular keyboards.
+      
+      My home row mods, among other things, were inspired by the famous [**Miryoku**](https://github.com/manna-harbour/miryoku) layout.
+
+      <!-- ### Demo
+
+      // todo interactive demo - home row on virtual QWERTY keyboard - keyboard input -->
+      
+      ## Layers
+      
+      As mentioned earlier, I use **layers**, due to the limited number of physical keys on the keyboard. Inputs such as numbers and symbols have to be organised into layers. I can switch between these layers either through dedicated layer keys or programmatically.
+      
+      Layers are a QMK framework feature.
+      
+      Here are the layers I ended up with:
+      1. Alphabet (Default)
+      2. <img class="layer-icon" :src="url('shift_layer_oled.png')" /> Shifted alphabet (Uppercase)
+      3. <img class="layer-icon" :src="url('symbol_layer_oled.png')" /> Symbols
+      4. <img class="layer-icon" :src="url('navigation_layer_oled.png')" /> Navigation
+      5. <img class="layer-icon" :src="url('number_layer_oled.png')" /> Numbers
+      6. <img class="layer-icon" :src="url('function_layer_oled.png')" /> Functions
+      7. <img class="layer-icon" :src="url('emoji_layer_oled.png')" /> Emojis
+      
+      ## Shift layer <img class="layer-icon-large" :src="url('shift_layer_oled.png')" />
+      
+      <lily58 :keys="SHIFT_LAYER_JSON" :oled-left="url('shift_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="4,3" />
+      <div class="caption">Interactive diagram! Click the highlighted <kbd class="kbd layer-button-inline">⇧</kbd> layer activation key above to toggle between the base layer and the Shift layer.</div>
+      
+      The **shift layer** is just a shifted or uppercase version of the base layer. You know, like when you hold _Shift_ on a regular keyboard! Though, this layer is activated by holding down the left _Space_ key <kbd>␣</kbd> instead of the _Shift_ key.
+
+      The OLED screen is programmed to show the current layer’s icon.
+      
+      Some of the shifted counterparts differ from those of a regular keyboard. For example, the dot <kbd>.</kbd> shifts into a colon <kbd>:</kbd>, not an angle bracket. The comma <kbd>,</kbd> shifts into a semicolon <kbd>;</kbd>. I opted for a more logical pattern for the shifted punctuations. <kbd>?</kbd> shifts into <kbd>!</kbd>, and so on&hellip;
+      
+      ## Symbols <img class="layer-icon-large" :src="url('symbol_layer_oled.png')" />
+      
+      <lily58 :keys="SYMBOL_LAYER_JSON" :oled-left="url('symbol_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="4,1" />
+
+      The **Symbol layer**, activated by holding the dedicated _Symbol layer key_ <kbd>L(s)</kbd> using the thumb, is on the left half of the keyboard. The other empty half defaults to home row mods.
+      
+      <box-note>For this and the rest of the layers, I again took inspiration from [Miryoku](https://github.com/manna-harbour/miryoku), where the contents of each layer are contained within one side of the keyboard only.</box-note>
+      
+      There is a bit of special programming that I added for this layer. The parentheses, brackets, braces, and angle brackets &mdash; the "enclosure" keys &mdash; have a nifty litle shortcut in them for a smoother coding experience.
+      
+      <blog-media
+        :src="url('closing-bracket-reposition.mp4')"
+        caption="Caret repositioning in brackets"/>
+      
+      What it does exactly is it lets me automatically reposition the caret or cursor inside the brackets without the need for arrow keys. The arrow keys are on a separate layer, you see.
+
+      The trigger for it is simple: if I still have the opening symbol’s key held down as I release the closing symbol’s key, it repositions. Otherwise, it types normally. I can control whether I want to quickly reposition or not, depending on the situation.
+      
+      <!-- ### Demo
+
+      // todo interactive demo - virtual ( & ) keys - keyboard input -->
+      
+      ## Navigation <img class="layer-icon-large" :src="url('navigation_layer_oled.png')" />
+      
+      <lily58 :keys="NAVIGATION_LAYER_JSON" :oled-right="url('navigation_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="9,2" />
+
+      The **Navigation layer** provides the arrow keys, page navigation keys, and word navigation, all on the right side. Some text manipulation functions are here as well. This layer is especially useful when coding or when editing text.
+
+      As the most used keys, the arrow keys sit on the home row.
+
+      <box-note>Yes, the Up and Down arrows are in that order &mdash; opposite of Vim style. I think it’s more logical this way.</box-note>
+      
+      Above the arrow keys are the _word navigation_ keys: <kbd>W←</kbd>, <kbd>W→</kbd>, <kbd>WSel</kbd>, and <kbd>W⌫</kbd>. They are used for navigating and manipulating words in text.
+      
+      Basic word navigation works by using a lesser-known feature native to most desktop operating systems, which lets you jump to the next or previous word using keyboard shortcuts. On MacOS, it’s `Option+Left` and `Option+Right`. On Linux, `Control+Left` and `Control+Right`. These commands are mapped to the <kbd>W←</kbd> and <kbd>W→</kbd> keys, depending on the current OS.
+      
+      <blog-media
+        :src="url('word-jump.mp4')"
+        caption="Moving the cursor, one word at a time"/>
+      
+      One of the other word keys is the **Select Word** <kbd>WSel</kbd> key, which selects the current word under the caret.
+      
+      <blog-media
+        :src="url('word-sel.mp4')"
+        alt="Word selection demo"/>
+      
+      The _Select Word_ key itself is just a macro. It’s composed of the following sequence of keystrokes:
+      
+      1. <kbd class="kbd">W←</kbd>
+      2. <kbd class="kbd">W→</kbd>
+      3. Hold `Shift`
+      4. <kbd class="kbd">W←</kbd>
+      5. Release `Shift`
+      
+      Which results in a selection spanning the nearest word boundaries around the caret. There are edge cases with this macro (literally), but they’re not that annoying. In any case, this macro has been extremely useful.
+
+      The **Delete Word** <kbd>W⌫</kbd> key is just the _Select Word_ macro + <kbd>⌫</kbd>.
+      
+      These word navigation functions greatly increases my text and code editing efficiency.
+      
+      <!-- ### Demo
+
+      // todo interactive demo - arrow keys as word keys - keyboard input -->
+      
+      ## Numbers <img class="layer-icon-large" :src="url('number_layer_oled.png')" />
+      
+      <lily58 :keys="NUMBER_LAYER_JSON" :oled-right="url('number_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="9,3" />
+
+      This layer contains numbers and some arithmetic operators laid out like a numpad on the right hand side. Convenient when doing calculations. Nothing much to see here, move along.
+      
+      ## Functions <img class="layer-icon-large" :src="url('function_layer_oled.png')" />
+      
+      <lily58 :keys="FUNCTION_LAYER_JSON" :oled-right="url('function_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="9,4" />
+
+      The **Function layer** contains “functions”, or things that do stuff instead of inputting text. Volume buttons, brightness buttons, media controls, you name it.
+      
+      And of course, the _Function_ keys themselves (i.e., F1, F2, F3, &hellip;, F12) are here, though not that obvious. That’s because the Function keys are inputted in a _bitwise_ manner using the four bitwise keys <kbd>FB1</kbd>, <kbd>FB2</kbd>, <kbd>FB3</kbd>, and <kbd>FB4</kbd>. For details and demos, I wrote a <text-link href="/notes/developing-bitwise-input-method/" target="_blank">post about how the bitwise Function input works</text-link>.
+      
+      On the left side we have the OS switchers, providing the <kbd>MacOS</kbd> & <kbd>Linux</kbd> modes. The selected OS determines a lot of things, such as the primary modifier (either `Control` or `Command`) and some desktop shortcuts.
+
+      Finally, the <kbd>QWERTY</kbd> button. Its function should be obvious enough, but we’ll get to that later.
+      
+      ## Emojis <img class="layer-icon-large" :src="url('emoji_layer_oled.png')" />
+      
+      <lily58 :keys="EMOJI_LAYER_JSON" :oled-right="url('emoji_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="5,0" />
+
+      Yep, an **Emoji layer**! 😃 ⬅ I typed that with my keyboard!
+      
+      This layer works a bit differently. It’s a [one-shot layer](https://docs.qmk.fm/#/one_shot_keys) in QMK terms. That is, you don't hold down the layer key. It stays active until you select an emoji or you cancel. This allows the Emoji layer key to be tucked in the top corner without sacrificing comfort.
+
+      I mapped the emojis so they line up against the base layer. For example, 🎉 is on the same position as <kbd>p</kbd>, which can stand for “party”. 👋 on <kbd>w</kbd>ave. 🤔 on <kbd>t</kbd>hink. `✔` on `Enter`, and so on. Meanwhile, the arrow symbols correspond to the arrow keys in the Navigation layer.
+
+      I’m a heavy user of the arrow symbols. I guess that should be obvious due to the fact that there are three sets of directional symbols here☝. For instance, I use the right arrow to indicate a change when writing pull request descriptions.
+      
+      As for the the left side emojis, I don’t actually use them that much, but whatever.
+
+      ## Other features
+      
+      ### OLED
+
+      I drew and implemented my own graphics for the keyboard’s built-in OLED. You must have already seen them in the examples above. The OLED shows the current active layer, the current OS mode, and any active modifiers.
+
+      The OLED is a tiny 32×128 pixel screen, and QMK works in tiles of size 6×8 pixels. It has been a struggle making legible tile graphics for this, but I think they turned out fine (for my purposes).
+
+      <blog-media
+        :src="url('legend.png')" 
+        alt="OLED icons legend" />
+      
+      ### Layer lock
+      
+      Sometimes it gets tiring to hold down a layer key for long. Like when browsing a web page, I would want to have Page Down and Page Up easily accessible.
+      
+      Layer Lock to the rescue. I used this [Layer Lock library from Getreuer](https://getreuer.info/posts/keyboards/layer-lock/index.html) which was really nice (actually, all of their QMK libraries are nice & clean!).
+      
+      ### Gaming mode / QWERTY
+      
+      <lily58 :keys="QWERTY_LAYER_JSON" :oled-left="url('qwerty_mode_oled.png')" :oled-right="url('qwerty_mode_oled.png')" />
+
+      I play video games. Most of the time, games assume a QWERTY layout. Most of the time, I can’t be bothered to remap the keybindings to my own keyboard layout.
+
+      Thus, **QWERTY mode**. It’s technically a layer, but it doesn’t really overlay with the base layer, so I call it a _mode_.
+      
+      The interesting bit is the <kbd>Chat</kbd> key. It’s a function to temporarily activate the base layer for typing chat messages in-game (I’m not used to typing on QWERTY on this keyboard). It reverts back to QWERTY on `Enter` or `Escape`, so I can get back to the action in no time.
+
+      ## Conclusion
+      
+      Programming my keyboard was definitely worth it. You see, I get wrist pain sometimes. Part of the job, I guess. It helps to have a split keyboard, positioning both halves shoulder-width apart, and to reduce overall finger movement thanks to home row mods and the Colemak layout.
+      
+      It’s fun too. I knew I was going to like having a programmable keyboard because of my experience with the Steam Controller which was a kind of a programmable controller in a sense. I might have overdone it with the layers, but it works for me.
+
+      As a bonus, I get to practice my C programming skills.
+
+      It wasn’t easy adjusting to a completely new keyboard layout. I even made <text-link :href="url('layers.pdf')" target="_blank">cheatsheets</text-link> for my own reference. I got comfortable with it after about 2 months of use. Today, I’m still not as fast as I was typing with QWERTY, and I don’t think I ever will be, but I choose comfort over speed. Maybe you should too. :)
+      
+      tl;dr:
+      * Comfort 👍
+      * Speed ❌
+      * Efficiency ✅
+      * Programming practice ✅
+    </markdown>
+  </blog-page>
+</html>
+
+<script static>
+  const HOME_ROW_RIGHT = ["", "⌃", "⌥", "⌘", "⇧", ""];
+  const BASE_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ["Esc", "⌃[", "⌃]", "⌃⇧Tab", "⌃Tab", ""],
+    ["?", "q", "w", "f", "p", "b"],
+    ["Tab", "a", "r", "s", "t", "g"],
+    ["+", "z", "x", "c", "d", "v"],
+    ["⌃", "L(s)", "❖", "␣", "◆"],
+    // Right hand
+    ["L(e)", "Wksp←", "Wksp↑", "Wksp↓", "Wksp→", "⌫"],
+    ["j", "l", "u", "y", "=", "'"],
+    ["m", "n", "e", "i", "o", "↵"],
+    ["k", "h", ".", ",", "/", "-"],
+    ["◆", "␣", "L(n)", "L(#)", "L(f)"],
+  ]);
+  const SHIFT_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ["Esc", "~", "@", "#", "%", ""],
+    ["!", "Q", "W", "F", "P", "B"],
+    ["Tab", "A", "R", "S", "T", "G"],
+    ["", "Z", "X", "C", "D", "V"],
+    ["", "", "", "⇧", ""],
+    // Right hand
+    ["", "^", "&", "|", "\\", "⌫"],
+    ["J", "L", "U", "Y", "_", '"'],
+    ["M", "N", "E", "I", "O", "↵"],
+    ["K", "H", ":", ";", "*", ""],
+    [" ", "␣", "", "", ""],
+  ]);
+  const HOME_ROW_LAYER_LEFT = [
+    ["", "", "", "", "", ""],
+    ["", "", "", "", "", ""],
+    [...HOME_ROW_RIGHT].reverse(),
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+  ];
+  const HOME_ROW_LAYER_RIGHT = [
+    ["", "", "", "", "", ""],
+    ["", "", "", "", "", ""],
+    HOME_ROW_RIGHT,
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+  ];
+  const HOME_ROW_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ...HOME_ROW_LAYER_LEFT,
+    // Right hand
+    ...HOME_ROW_LAYER_RIGHT,
+  ]);
+  const SYMBOL_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ["", "", "", "", "", ""],
+    ["`", "\\", "$", "{", "}", ""],
+    ["<", "=", "-", "(", ")", ">"],
+    ["", "", "", "[", "]", ""],
+    ["", "L(s)", "", "", ""],
+    // Right hand
+    ...HOME_ROW_LAYER_RIGHT,
+  ]);
+  const NAVIGATION_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ...HOME_ROW_LAYER_LEFT,
+    // Right hand
+    ["", "", "", "⇧Tab", "Tab", "⌫"],
+    ["W⌫", "W←", "WSel", "", "W→", ""],
+    ["⌦", "←", "↑", "↓", "→", "↵"],
+    ["", "Home", "PgUp", "PgDn", "End", ""],
+    ["", "", "L(n)", "", ""],
+  ]);
+  const NUMBER_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ...HOME_ROW_LAYER_LEFT,
+    // Right hand
+    ["", "", "", "*", "/", "⌫"],
+    ["", "", "7", "8", "9", "-"],
+    ["", "0", "4", "5", "6", "↵"],
+    ["", "+", "1", "2", "3", "."],
+    ["", "", "", "L(#)", ""],
+  ]);
+  const FUNCTION_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ["", "QWERTY", "", "", "", ""],
+    ["", "", "Linux", "", "MacOS", ""],
+    [...HOME_ROW_RIGHT].reverse(),
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+    // Right hand
+    ["", "", "🔉-", "🔊+", "🔅-", "🔆+"],
+    ["", "", "⏮️", "⏯️", "PrtScr", "⏭️"],
+    ["", "🔇", "FB1", "FB2", "FB3", "FB4"],
+    ["", "", "", "", "", ""],
+    ["", "", "", "", "L(f)"],
+  ]);
+  const EMOJI_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ["Cancel", "", "", "", "", ""],
+    ["", "😭", "👋", "🥺", "🎉", ""],
+    ["", "😂", "😃", "🙂", "🤔", ""],
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+    // Right hand
+    ["L(e)", "", "", "", "", "❌"],
+    ["", "👈", "☝", "👇", "👉", "👍"],
+    ["", "←", "↑", "↓", "→", "✔"],
+    ["", "⬅", "⬆", "⬇", "➡", "✅"],
+    ["", "", "", "", ""],
+  ]);
+  const QWERTY_LAYER_JSON = JSON.stringify([
+    // Left hand
+    ["Esc", "1", "2", "3", "4", "5"],
+    ["`", "Q", "W", "E", "R", "T"],
+    ["Tab", "A", "S", "D", "F", "G"],
+    ["⇧", "Z", "X", "C", "V", "B"],
+    ["⌃", "⌥", "❖", "␣", ""],
+    // Right hand
+    ["6", "7", "8", "9", "0", "⌫"],
+    ["Y", "U", "I", "O", "P", "-"],
+    ["H", "J", "K", "L", "↑", "↵"],
+    ["N", "M", ".", "←", "↓", "→"],
+    ["Cancel", "␣", "◆", "", "Chat"],
+  ]);
+</script>
+
+<style>
+  p > kbd,
+  .kbd {
+    display: inline-block;
+    border-radius: 6px;
+    padding: 3px;
+    line-height: normal;
+    min-width: 1.5ch;
+    font-family: var(--default-font);
+    text-align: center;
+    background: white;
+    color: black;
+  }
+  .layer-button-inline {
+    border: double 4px #0f0;
+    color: #0f0;
+    background: none;
+  }
+  .layer-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+  }
+  .layer-icon-large {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+    vertical-align: middle;
+  }
+</style>
