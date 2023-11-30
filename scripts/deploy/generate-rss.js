@@ -24,7 +24,8 @@ async function main() {
   const generatedIndex = JSON.parse(await fs.readFile(generatedIndexFile));
   const staticIndex = JSON.parse(await fs.readFile(staticIndexFile));
 
-  const index = generatedIndex.concat(staticIndex);
+  const index = generatedIndex.concat(staticIndex)
+    .filter(item => item.public);
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const feed = new RSS({

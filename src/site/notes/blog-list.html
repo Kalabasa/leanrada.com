@@ -46,13 +46,27 @@
 <script static>
   const generatedIndex = require("./index.generated.json");
   const staticIndex = require("./index.static.json");
+  const dev = process.env.NODE_ENV === "development";
 
-  const { filterTag, limit = Infinity } = attrs;
+  const { filterTag, limit = Infinity, devHidden } = attrs;
 
   let index = generatedIndex
     .concat(staticIndex)
+    .filter((item) => item.public)
     .filter((item) => !filterTag || item.tags.includes(filterTag));
+
+  // newest first
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  if (devHidden && dev) {
+    index = generatedIndex
+      .concat(staticIndex)
+      .filter((item) => !item.public)
+      .filter((item) => !filterTag || item.tags.includes(filterTag))
+      .map((item) => ({ ...item, tags: ["⮾hidden", ...item.tags] }))
+      .concat(index);
+  }
+
   index = index.slice(0, limit);
 </script>
 

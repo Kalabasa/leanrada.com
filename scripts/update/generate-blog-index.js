@@ -22,7 +22,7 @@ async function main() {
     const href = path.relative(siteSrc, dir);
 
     // Underscore-prefixed directories are unpublished.
-    if (path.basename(dir).startsWith("_")) return null;
+    const public = !path.basename(dir).startsWith("_");
 
     // HTML is the source of truth
     // todo: use microformat?
@@ -45,7 +45,7 @@ async function main() {
 
     const tags = tag.map(function () { return ch(this).text() }).toArray();
 
-    return { href: `/${href}/`, title: titleText, date, tags };
+    return { href: `/${href}/`, title: titleText, date, public, tags };
   }))).filter(it => it);
 
   console.log(index);
