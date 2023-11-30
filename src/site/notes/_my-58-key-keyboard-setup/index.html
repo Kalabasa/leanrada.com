@@ -13,7 +13,9 @@
     <!-- textlint-enable -->
     <!-- prettier-ignore -->
     <markdown>
-      I've been using my [**Lily58 split keyboard**](https://github.com/kata0510/Lily58) for more than a year now. Thanks to the open-source firmware/framework [QMK](https://qmk.fm/), I was able to program it to my satisfaction. The seemingly endless tweaks that I wanted to make have died down so I figured now's a good time to post about my keyboard layout so far.
+      I've been using my [**Lily58 split keyboard**](https://github.com/kata0510/Lily58) for more than a year now.
+      
+      Thanks to the open-source firmware/framework [QMK](https://qmk.fm/), I was able to program it to my satisfaction. The seemingly endless tweaks I was making have died down so I figured now's a good time to post about my keyboard layout so far.
 
       <blog-media
         :src="url('photo.jpg')"
@@ -21,7 +23,7 @@
 
       ## Quick rundown
 
-      **Hardware:** The Lily58 keyboard is a column-staggered split keyboard with 6×4+4 keys (58 keys). There are two 32×128 pixel OLED screens on both halves. Both halves are connected by wire, and the whole thing is wired USB-C to the computer.
+      **Hardware:** The Lily58 keyboard is a column-staggered split keyboard with 6×4+5 keys per half (58 keys total). There are two 32×128 pixel OLED screens on both halves. Both halves are connected by wire, and the whole thing is wired USB-C to the computer.
 
       **Software:** It uses the QMK firmware, which I used to implement 7 layers and several custom functions. Being a programmer and tinkerer, I customised the heck out of the firmware.
       
@@ -34,25 +36,42 @@
 
       This is the _base layer_ of my keyboard, where all the typing happens primarily.
       
-      Non-primary functions go into hidden layers which can be activated using the layer <kbd>L(*)</kbd> keys found in the bottom row. More on layers later.
-
       In the middle section lies the alphabet. But instead of the usual QWERTY layout, it’s in a variant of the Colemak layout called [**Colemak Mod-DH**](https://colemakmods.github.io/mod-dh/). It took some time to get used to but I appreciate how easier it is for typing (in English). The most common letters are in the home row.
       
-      A sprinkle of common punctuations gather around the periphery.
+      A sprinkle of common punctuations gather around the periphery, flanked by the familiar <kbd>Esc</kbd>, <kbd>⌫</kbd>, <kbd>↵</kbd>, and <kbd>Tab</kbd> keys.
       
-      The top row gets more interesting. <kbd>⌃[</kbd> and <kbd>⌃]</kbd> (`Control+[` and `Control+]`) are shortcuts for **Back** and **Forward**, used by most web browsers and code editors. They’re really handy when surfing the web or when tracing code across multiple files.
+      The bottom row gives access to hidden _layers_ which can be activated by holding down the layer <kbd>L(*)</kbd> keys. More on layers later.
 
-      <kbd>Wksp←</kbd> and <kbd>Wksp→</kbd> are shortcuts for switching between workspaces (a.k.a. spaces and virtual desktops in MacOS and Windows). **Workspace Up** <kbd>Wksp↑</kbd> and **Workspace Down** <kbd>Wksp↓</kbd> are bound to desktop-specific actions like Exposé in MacOS. I don’t actually remember these vertical ones because they’re not consistent across OSes.
+      The top row gets more interesting. On the left hand, we got <kbd>⌃[</kbd> (`Control+[`), <kbd>⌃]</kbd> (`Control+]`), <kbd>⌃⇧Tab</kbd>, and <kbd>⌃Tab</kbd>, “universal” shortcuts for navigation within most applications. They’re compatible with most web browsers and code editors.
+
+      <blog-media
+        :src="url('appnav.mp4')"
+        caption="Using the application navigation keys." />
+      
+      * <kbd class="kbd">⌃[</kbd> - Back
+      * <kbd class="kbd">⌃]</kbd> - Forward
+      * <kbd class="kbd">⌃⇧Tab</kbd> - Previous tab
+      * <kbd class="kbd">⌃Tab</kbd> - Next tab
+
+      Really handy when surfing the web or when tracing code across multiple files.
+
+      On the other _hand_, we have <kbd>Wksp←</kbd> and <kbd>Wksp→</kbd>, shortcuts for switching between workspaces (a.k.a. spaces and virtual desktops in MacOS and Windows, respectively).
+
+      <blog-media
+        :src="url('wksp.mp4')"
+        alt="demo video of using the workspace switcher keys" />
+      
+      <kbd>Wksp↑</kbd> and <kbd>Wksp↓</kbd> are bound to desktop-specific actions like Exposé in MacOS. I don’t actually remember these vertical ones because they’re not consistent across OSes.
 
       ## Home row modifiers
       
       <lily58 :keys="HOME_ROW_LAYER_JSON" />
       
-      The home row on a keyboard is where fingers rest by default. As such, the home row on my keyboard serves a second purpose, activated by holding the keys for a certain duration. When held, it activates modifiers such as `Control`, `Alt`, and `Super`.
+      The home row on a keyboard is where fingers rest by default. As such, the home row on my keyboard serves a second purpose besides alphabetic input. Each of them can be held down to activate _modifiers_ such as `Control`, `Alt`, and `Super`.
       
       For example, the key <kbd>a</kbd> activates `Shift` when held down, while a tap produces the letter `a`.
       
-      It’s a feature called [**Mod-Tap**](https://docs.qmk.fm/#/mod_tap) within the QMK framework, a.k.a. Tap/Hold keys.
+      The feature is called [**Mod-Tap**](https://docs.qmk.fm/#/mod_tap) within the QMK framework, a.k.a. Tap/Hold keys.
       
       Home row modifiers make keyboard shortcuts much more comfortable, in contrast to the awkward contortions you have to perform on regular keyboards.
       
@@ -174,7 +193,7 @@
       
       <lily58 :keys="EMOJI_LAYER_JSON" :oled-right="url('emoji_layer_oled.png')" :layer="BASE_LAYER_JSON" layer-button="5,0" />
 
-      Yep, an **Emoji layer**! 😃 ⬅ I typed that with my keyboard!
+      Yep, an **Emoji layer**! 😃 <span style="opacity:0.5">⬅ I typed that with my keyboard!</span> Also other useful Unicode symbols.
       
       This layer works a bit differently. It’s a [one-shot layer](https://docs.qmk.fm/#/one_shot_keys) in QMK terms. That is, you don't hold down the layer key. It stays active until you select an emoji or you cancel. This allows the Emoji layer key to be tucked in the top corner without sacrificing comfort.
 
@@ -333,7 +352,7 @@
     ["", "", "", "", "", ""],
     ["", "", "", "", ""],
     // Right hand
-    ["L(e)", "", "", "", "", "❌"],
+    ["L(e)", "‘", "’", "“", "”", "❌"],
     ["", "👈", "☝", "👇", "👉", "👍"],
     ["", "←", "↑", "↓", "→", "✔"],
     ["", "⬅", "⬆", "⬇", "➡", "✅"],
