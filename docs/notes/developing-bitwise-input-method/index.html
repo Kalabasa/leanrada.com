@@ -1159,6 +1159,7 @@
             </p>
             <div class="tag-row">tags:
               <span class="tag-component" style="background: #e2bb9e; color: #603e25">c</span>
+              <span class="tag-component" style="background: #d8aef3; color: #4d1f6a">keyboard</span>
             </div>
 
             <p>This post is about how I achieved the power of 15 keys using just 4 keys on the keyboard. I go over the motivation, the design, and the implementation. At the end, I wrap the solution into a small library. Maybe you’ll find it useful!</p>
@@ -1215,53 +1216,53 @@
             <p>To do any of this, we need a way to keep track of the state of the bits. Let’s use an unsigned integer variable to store it.</p>
             <p>When a button is pressed, its corresponding bit is set to 1. But when released, we do not necessarily clear the bit back to 0. There will be a separate mechanism for flushing the accumulated bits.</p>
             <p>Let’s call the variable <code>accumulator</code>.</p>
-            <pre class="code-block "><code class="code-block-code">static uint8_t accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
-
-void <span class="token function">on_press</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
-
-  accumulator <span class="token operator">|</span><span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;</span><span class="token operator">&lt;</span> index<span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-clike"><span class="token prefix unchanged"> </span> static uint8_t accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+</span>
+<span class="token unchanged language-clike"><span class="token prefix unchanged"> </span> void <span class="token function">on_press</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>   int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>   <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
+</span>
+<span class="token unchanged language-clike"><span class="token prefix unchanged"> </span>   accumulator <span class="token operator">|</span><span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;</span><span class="token operator">&lt;</span> index<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">}</span></span></code></pre>
             <p>Now, the accumulated bits will only be evaluated when all of the buttons have been released. A quick way of knowing when that happens is to watch for the last button to be released. To do this, another integer variable tracks how many buttons are currently being pressed.</p>
-            <pre class="code-block "><code class="code-block-code"><span class="token comment">// Keep count of keys being pressed</span>
-static int8_t pressed_keys <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
-static uint8_t accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
-
-void <span class="token function">on_press</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
-
-  <span class="token comment">// Count key being pressed</span>
-  pressed_keys<span class="token operator">++</span><span class="token punctuation">;</span>
-
-  accumulator <span class="token operator">|</span><span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;</span><span class="token operator">&lt;</span> index<span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
-
-void <span class="token function">on_release</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
-
-  <span class="token comment">// Count key being released</span>
-  pressed_keys<span class="token operator">--</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
+            <pre class="code-block "><code class="code-block-code"><span class="token inserted-sign inserted language-clike"><span class="token prefix inserted">+</span> <span class="token comment">// Keep count of keys being pressed</span>
+<span class="token prefix inserted">+</span> static int8_t pressed_keys <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+</span><span class="token unchanged language-clike"><span class="token prefix unchanged"> </span> static uint8_t accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+</span>
+<span class="token unchanged language-clike"><span class="token prefix unchanged"> </span> void <span class="token function">on_press</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>   int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>   <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
+</span>
+<span class="token inserted-sign inserted language-clike"><span class="token prefix inserted">+</span>   <span class="token comment">// Count key being pressed</span>
+<span class="token prefix inserted">+</span>   pressed_keys<span class="token operator">++</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>
+</span><span class="token unchanged language-clike"><span class="token prefix unchanged"> </span>   accumulator <span class="token operator">|</span><span class="token operator">=</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">&lt;</span><span class="token operator">&lt;</span> index<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span> <span class="token punctuation">}</span>
+</span>
+<span class="token inserted-sign inserted language-clike"><span class="token prefix inserted">+</span> void <span class="token function">on_release</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix inserted">+</span>   int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>   <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>
+<span class="token prefix inserted">+</span>   <span class="token comment">// Count key being released</span>
+<span class="token prefix inserted">+</span>   pressed_keys<span class="token operator">--</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span> <span class="token punctuation">}</span></span></code></pre>
             <p>Once the last button is released, it is time to flush the input. The resulting decimal number is mapped to a function key that will finally be sent to the computer.</p>
-            <pre class="code-block "><code class="code-block-code">void <span class="token function">on_release</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
-
-  pressed_keys<span class="token operator">--</span><span class="token punctuation">;</span>
-
-  <span class="token comment">// When all keys have been released, flush the input</span>
-  <span class="token keyword">if</span> <span class="token punctuation">(</span>pressed_keys <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token comment">// Map accumulated value to the corresponding F-key code</span>
-    <span class="token function">send_to_computer</span><span class="token punctuation">(</span>FUNCTION_KEYS<span class="token punctuation">[</span>accumulator<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-    <span class="token comment">// Reset state for next round</span>
-    pressed_keys <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
-    accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-clike"><span class="token prefix unchanged"> </span> void <span class="token function">on_release</span><span class="token punctuation">(</span>uint16_t keycode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>   int index <span class="token operator">=</span> <span class="token function">get_bit_index</span><span class="token punctuation">(</span>keycode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>   <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>
+</span>
+<span class="token unchanged language-clike"><span class="token prefix unchanged"> </span>   pressed_keys<span class="token operator">--</span><span class="token punctuation">;</span>
+</span>
+<span class="token inserted-sign inserted language-clike"><span class="token prefix inserted">+</span>   <span class="token comment">// When all keys have been released, flush the input</span>
+<span class="token prefix inserted">+</span>   <span class="token keyword">if</span> <span class="token punctuation">(</span>pressed_keys <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="token prefix inserted">+</span>     <span class="token comment">// Map accumulated value to the corresponding F-key code</span>
+<span class="token prefix inserted">+</span>     <span class="token function">send_to_computer</span><span class="token punctuation">(</span>FUNCTION_KEYS<span class="token punctuation">[</span>accumulator<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>
+<span class="token prefix inserted">+</span>     <span class="token comment">// Reset state for next round</span>
+<span class="token prefix inserted">+</span>     pressed_keys <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>     accumulator <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>   <span class="token punctuation">}</span>
+</span><span class="token unchanged language-clike"><span class="token prefix unchanged"> </span> <span class="token punctuation">}</span></span></code></pre>
             <p>And that’s about it! This is how I got more space on my keyboard. As a bonus, it forces me to practice converting decimal to binary! 😂</p>
             <p>Of course, the code shown here skips some details and totally lacks integration with the QMK framework, but you get the gist.</p>
             <p>There’s one limitation to this approach though: you cannot hold down a function key. It will only send the function key at the end when the last button has been released. I haven’t found a need to hold down function keys so it’s not a problem for me right now.</p>
@@ -1289,6 +1290,7 @@ void <span class="token function">on_release</span><span class="token punctuatio
             </p>
             <div class="caption center">Demo! You need to use a keyboard for this. Put your input focus on this box and start pressing combinations!</div>
 
+            <p><span class="box-note "><strong>Update, 8 months later:</strong> Coming back to this post, I realise that not many people have finger independence and would not find the above combinatorial input very useful. Um, I guess it helps to play the piano. But I believe experienced typists would be able to use it too!</span></p>
             <h2 id="how-to-get-it">How to get it</h2>
             <p>If you use QMK you can easily integrate this with your own keymap. Here’s a step-by-step on how you may use this utility:</p>
             <h3 id="step-1-define-the-bit-keys">Step 1: Define the bit keys.</h3>
@@ -1314,7 +1316,7 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
             <h3 id="step-3-include-the-library-in-your-project">Step 3: Include the library in your project.</h3>
             <p>Finally, copy <a target="_blank" class="text-link " href="https://raw.githubusercontent.com/Kalabasa/qmk_firmware/2d1608287bb8b52669255266472975875f7c2423/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.h"><code>bitwise_f.h</code></a> and <a target="_blank" class="text-link " href="https://raw.githubusercontent.com/Kalabasa/qmk_firmware/2d1608287bb8b52669255266472975875f7c2423/keyboards/lily58/keymaps/Kalabasa/features/bitwise_f.c"><code>bitwise_f.c</code></a> into your keymap directory, and include <code>bitwise_f.c</code> in your <code>rules.mk</code> build file.</p>
             <p>Don’t forget to <code>#include "dir/where/you/copied/bitwise_f.h"</code> in your <code>keymap.c</code>!</p>
-            <p><span class="box-note ">Props to reddit user hakbraley for helping improve the code!</span>
+            <p><span class="box-note ">Props to reddit user u/hakbraley for helping improve the code!</span>
             </p>
 
           </div>
@@ -1425,119 +1427,7 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
 
 
   <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
-  <script defer="">
-  (() => {
-    const demos = document.querySelectorAll(".bitwise-key-demo");
-    for (const demo of demos) {
-      initDemo(demo);
-    }
-
-    function initDemo(demo) {
-      const full = demo.dataset.mode === "full";
-
-      const digits = demo.querySelectorAll(".bitwise-key-demo-digit");
-      const bits = demo.querySelectorAll(".bitwise-key-demo-bit");
-      const keys = demo.querySelectorAll(".bitwise-key-demo-key");
-
-      const result = demo.querySelector(".bitwise-key-demo-result");
-      let resultNum = 0;
-
-      const numDigits = digits.length;
-      if (bits.length !== numDigits || keys.length !== numDigits) {
-        throw new Error("Invalid DOM structure!");
-      }
-
-      const hotkeys = full ? "QWER" : "abcd";
-      for (let i = 0; i < numDigits; i++) {
-        keys[i].textContent = hotkeys[i];
-      }
-
-      const state = full ? [0, 0, 0, 0] : [0, 1, 1, 0];
-      const down = [0, 0, 0, 0];
-      resultNum = full ? 0 : 6;
-      renderState();
-
-      if (full) {
-        for (let i = 0; i < numDigits; i++) {
-          digits[i].style.pointerEvents = "none";
-        }
-
-        demo.addEventListener("keydown", (event) => {
-          event.preventDefault();
-          const index = hotkeys.indexOf(event.key.toUpperCase());
-
-          if (index < 0) return;
-
-          if (down[index] !== 0) return;
-          down[index] = 1;
-
-          state[index] = 1;
-          resultNum = 0;
-          renderState();
-          digits[index].classList.add("bitwise-key-demo-digit-active");
-        });
-
-        demo.addEventListener("keyup", (event) => {
-          event.preventDefault();
-          const index = hotkeys.indexOf(event.key.toUpperCase());
-
-          if (index < 0) return;
-
-          if (down[index] === 0) return;
-          down[index] = 0;
-
-          if (down.reduce((sum, b) => sum + b) === 0) {
-            resultNum = Number.parseInt(state.slice().reverse().join(""), 2);
-            state.forEach((_, i) => (state[i] = 0));
-          }
-
-          renderState();
-          digits[index].classList.remove("bitwise-key-demo-digit-active");
-        });
-      } else {
-        demo.addEventListener("click", (event) => {
-          let index = -1;
-          for (let i = 0; i < numDigits; i++) {
-            if (digits[i].contains(event.target)) {
-              index = i;
-              break;
-            }
-          }
-
-          if (index < 0) {
-            demo.focus();
-            return;
-          }
-
-          state[index] = 1 - state[index];
-          resultNum = Number.parseInt(state.slice().reverse().join(""), 2);
-          renderState();
-        });
-      }
-
-      function renderState() {
-        for (let i = 0; i < numDigits; i++) {
-          digits[i].classList.toggle(
-            "bitwise-key-demo-digit-set",
-            state[i] !== 0
-          );
-
-          const label =
-            full && !state.some((b) => b)
-              ? `\u00A0×${2 ** i}`
-              : `${state[i]}×${2 ** i}`;
-          bits[i].textContent = label;
-        }
-
-        if (full) {
-          result.textContent = resultNum ? `➡ F${resultNum}` : "";
-        } else {
-          result.textContent = `= ${resultNum}`;
-        }
-      }
-    }
-  })();
-</script>
+  <script defer="" src="/scripts/bitwise-key-demo.js"></script>
   <script defer="" src="/scripts/blog-media.js"></script>
   <script defer="" src="/scripts/blog-header.js"></script>
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>

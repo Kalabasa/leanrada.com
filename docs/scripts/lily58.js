@@ -4,7 +4,10 @@
     for (const lily of lilies) {
       const layerButtons = lily.querySelectorAll(".lily58-layer-button");
 
-      if (!layerButtons.length) continue;
+      if (!layerButtons.length) {
+        lily.classList.add("lily58-no-layers");
+        continue;
+      }
 
       let currentLayer = 0;
       lily.classList.add("lily58-on-layer" + currentLayer);
