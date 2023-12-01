@@ -11,6 +11,7 @@
 
       <tag-row>
         <tag>c</tag>
+        <tag>keyboard</tag>
       </tag-row>
 
       This post is about how I achieved the power of 15 keys using just 4 keys on the keyboard. I go over the motivation, the design, and the implementation. At the end, I wrap the solution into a small library. Maybe you’ll find it useful!
@@ -61,62 +62,62 @@
 
       Let’s call the variable `accumulator`.
 
-      <code-block language="clike" :code="`\
-static uint8_t accumulator = 0;
+      <code-block language="diff" language-code="diff-clike" :code="`\
+  static uint8_t accumulator = 0;
 
-void on_press(uint16_t keycode) {
-  int index = get_bit_index(keycode);
-  if (index == -1) return;
+  void on_press(uint16_t keycode) {
+    int index = get_bit_index(keycode);
+    if (index == -1) return;
 
-  accumulator |= (1 << index);
-}
+    accumulator |= (1 << index);
+  }
 `" />
 
       Now, the accumulated bits will only be evaluated when all of the buttons have been released. A quick way of knowing when that happens is to watch for the last button to be released. To do this, another integer variable tracks how many buttons are currently being pressed.
 
-      <code-block language="clike" :code="`\
-// Keep count of keys being pressed
-static int8_t pressed_keys = 0;
-static uint8_t accumulator = 0;
+      <code-block language="diff" language-code="diff-clike" :code="`\
++ // Keep count of keys being pressed
++ static int8_t pressed_keys = 0;
+  static uint8_t accumulator = 0;
 
-void on_press(uint16_t keycode) {
-  int index = get_bit_index(keycode);
-  if (index == -1) return;
+  void on_press(uint16_t keycode) {
+    int index = get_bit_index(keycode);
+    if (index == -1) return;
 
-  // Count key being pressed
-  pressed_keys++;
++   // Count key being pressed
++   pressed_keys++;
++
+    accumulator |= (1 << index);
+  }
 
-  accumulator |= (1 << index);
-}
-
-void on_release(uint16_t keycode) {
-  int index = get_bit_index(keycode);
-  if (index == -1) return;
-
-  // Count key being released
-  pressed_keys--;
-}
++ void on_release(uint16_t keycode) {
++   int index = get_bit_index(keycode);
++   if (index == -1) return;
++
++   // Count key being released
++   pressed_keys--;
++ }
 `" />
 
       Once the last button is released, it is time to flush the input. The resulting decimal number is mapped to a function key that will finally be sent to the computer.
 
-      <code-block language="clike" :code="`\
-void on_release(uint16_t keycode) {
-  int index = get_bit_index(keycode);
-  if (index == -1) return;
+      <code-block language="diff" language-code="diff-clike" :code="`\
+  void on_release(uint16_t keycode) {
+    int index = get_bit_index(keycode);
+    if (index == -1) return;
 
-  pressed_keys--;
+    pressed_keys--;
 
-  // When all keys have been released, flush the input
-  if (pressed_keys <= 0) {
-    // Map accumulated value to the corresponding F-key code
-    send_to_computer(FUNCTION_KEYS[accumulator]);
-
-    // Reset state for next round
-    pressed_keys = 0;
-    accumulator = 0;
++   // When all keys have been released, flush the input
++   if (pressed_keys <= 0) {
++     // Map accumulated value to the corresponding F-key code
++     send_to_computer(FUNCTION_KEYS[accumulator]);
++
++     // Reset state for next round
++     pressed_keys = 0;
++     accumulator = 0;
++   }
   }
-}
 `" />
 
       And that’s about it! This is how I got more space on my keyboard. As a bonus, it forces me to practice converting decimal to binary! 😂
@@ -129,6 +130,8 @@ void on_release(uint16_t keycode) {
 
       <bitwise-key-demo mode="full" />
       <div class="caption center">Demo! You need to use a keyboard for this. Put your input focus on this box and start pressing combinations!</div>
+
+      <box-note>**Update, 8 months later:** Coming back to this post, I realise that not many people have finger independence and would not find the above combinatorial input very useful. Um, I guess it helps to play the piano. But I believe experienced typists would be able to use it too!</box-note>
 
       ## How to get it
 
@@ -172,7 +175,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
       Don’t forget to `#include "dir/where/you/copied/bitwise_f.h"` in your `keymap.c`!
 
-      <box-note>Props to reddit user hakbraley for helping improve the code!</box-note> 
+      <box-note>Props to reddit user u/hakbraley for helping improve the code!</box-note> 
     </markdown>
   </blog-page>
 </html>

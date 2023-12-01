@@ -1,0 +1,196 @@
+<div
+  class="bracket-key-demo"
+  tabindex="0"
+  data-rss="interactive"
+  aria-label="interactive simulation of bracket keyboard input"
+>
+  <div class="bracket-key-demo-key">
+    <div class="bracket-key-demo-label">{</div>
+    <div class="bracket-key-demo-label">1</div>
+  </div>
+  <div class="bracket-key-demo-key">
+    <div class="bracket-key-demo-label">}</div>
+    <div class="bracket-key-demo-label">2</div>
+  </div>
+  <div class="bracket-key-demo-result"></div>
+</div>
+
+<style>
+  .bracket-key-demo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: min(16px, 0.5em);
+    padding: 32px 16px;
+    border: solid 1px #466;
+    border-radius: 24px;
+    background: #233;
+    font-family: sans-serif;
+    font-size: min(22px, 4vmin);
+    line-height: 1;
+  }
+
+  .bracket-key-demo-key {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 3em;
+    height: 3em;
+    padding: 0.25em 0.5em;
+    margin-bottom: 16px;
+    border: none;
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+    color: #444;
+    box-shadow: 0 16px 0 #ddd;
+    box-sizing: border-box;
+  }
+  .bracket-key-demo-key-active {
+    background: #f88;
+    color: #422;
+    top: 8px;
+    box-shadow: 0 8px 0 #c77;
+  }
+
+  .bracket-key-demo-label {
+    font-family: monospace;
+    font-weight: bold;
+  }
+
+  .bracket-key-demo-result {
+    width: 30ch;
+    height: 2em;
+    text-align: left;
+    font-family: monospace;
+  }
+  .bracket-key-demo-cursor {
+    display: inline-block;
+    width: 0;
+    position: relative;
+    left: -0.5ch;
+    color: #f00;
+    font-weight: bold;
+    animation: bracket-key-demo-cursor 0.5s steps(2) infinite alternate;
+  }
+  @keyframes bracket-key-demo-cursor {
+    to {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script client defer>
+  (() => {
+    const demos = document.querySelectorAll(".bracket-key-demo");
+    for (const demo of demos) {
+      initDemo(demo);
+    }
+
+    function initDemo(demo) {
+      const keys = demo.querySelectorAll(".bracket-key-demo-key");
+
+      const downState = {};
+
+      const result = demo.querySelector(".bracket-key-demo-result");
+      let resultStr = "";
+      let resultCursor = 0;
+      renderState();
+
+      /*
+      https://github.com/Kalabasa/qmk_firmware/blob/ada3bda0077444f91591821704069c54d4c9a145/keyboards/lily58/keymaps/Kalabasa/main.c#L161
+      bracket_state machine:
+        (0) -- '[' down --> (1) -- ']' down --> (2) -- ']' up --> ((KC_LEFT))
+         ^                   |                   |
+         |                   | '[' up            | '[' or ']' up
+         '---------------------------------------'
+      */
+      let bracketState = 0;
+
+      demo.addEventListener("keydown", (event) => {
+        event.preventDefault();
+        const key = event.key.toUpperCase();
+
+        if (downState[key]) return;
+        downState[key] = true;
+
+        const bracket = getBracket(key);
+
+        if (bracket === 1) {
+          bracketState = 1;
+          resultStr =
+            resultStr.slice(0, resultCursor) +
+            "{" +
+            resultStr.slice(resultCursor);
+          resultCursor++;
+        } else if (bracket === -1) {
+          if (bracketState === 1) bracketState++;
+          resultStr =
+            resultStr.slice(0, resultCursor) +
+            "}" +
+            resultStr.slice(resultCursor);
+          resultCursor++;
+        } else {
+          return;
+        }
+
+        resetIfLong();
+
+        renderState();
+        keys[1 - (bracket + 1) / 2].classList.add(
+          "bracket-key-demo-key-active"
+        );
+      });
+
+      demo.addEventListener("keyup", (event) => {
+        event.preventDefault();
+        const key = event.key.toUpperCase();
+
+        downState[key] = false;
+
+        const bracket = getBracket(key);
+
+        if (bracket === 1) {
+          bracketState = 0;
+        } else if (bracket === -1) {
+          if (bracketState === 2) {
+            bracketState = 0;
+            resultCursor--;
+          }
+        } else {
+          return;
+        }
+
+        resetIfLong();
+
+        renderState();
+        keys[1 - (bracket + 1) / 2].classList.remove(
+          "bracket-key-demo-key-active"
+        );
+      });
+
+      function getBracket(key) {
+        if ("19,(<[{".includes(key)) return 1;
+        if ("20.)>]}".includes(key)) return -1;
+        return 0;
+      }
+
+      function resetIfLong() {
+        if (resultStr.length >= 28) {
+          resultStr = "";
+          resultCursor = 0;
+          bracketState = 0;
+        }
+      }
+
+      function renderState() {
+        result.innerHTML =
+          resultStr.slice(0, resultCursor) +
+          '<span class="bracket-key-demo-cursor">|</span>' +
+          resultStr.slice(resultCursor);
+      }
+    }
+  })();
+</script>
