@@ -1,6 +1,9 @@
-<div class="lily58" data-rss="interactive">
+<div class="lily58" data-rss="interactive" :aria-label="altText()">
   <div class="lily58-half-container">
-    <div :class="'lily58-half lily58-left-half ' + halfClass(0)" aria-hidden="true">
+    <div
+      :class="'lily58-half lily58-left-half ' + halfClass(0)"
+      aria-hidden="true"
+    >
       <div class="lily58-grid">
         {kbd(0,0, "lily58-accent")} {kbd(0,1)} {kbd(0,2)} {kbd(0,3)} {kbd(0,4)}
         {kbd(0,5)} {kbd(1,0)} {kbd(1,1)} {kbd(1,2)} {kbd(1,3)} {kbd(1,4)}
@@ -16,7 +19,10 @@
     <slot name="left" />
   </div>
   <div class="lily58-half-container">
-    <div :class="'lily58-half lily58-right-half ' + halfClass(1)" aria-hidden="true">
+    <div
+      :class="'lily58-half lily58-right-half ' + halfClass(1)"
+      aria-hidden="true"
+    >
       <div class="lily58-grid">
         {kbd(5,0)} {kbd(5,1)} {kbd(5,2)} {kbd(5,3)} {kbd(5,4)} {kbd(5,5,
         "lily58-shade")} {kbd(6,0)} {kbd(6,1)} {kbd(6,2)} {kbd(6,3)} {kbd(6,4)}
@@ -192,7 +198,8 @@
     height: 24px;
     object-fit: contain;
     image-rendering: pixelated;
-    filter: drop-shadow(0 0 8px #cff5) drop-shadow(-4px 2px 1px #cff2) drop-shadow(4px -2px 1px #cff2);
+    filter: drop-shadow(0 0 8px #cff5) drop-shadow(-4px 2px 1px #cff2)
+      drop-shadow(4px -2px 1px #cff2);
   }
   .lily58-left-half .lily58-oled {
     left: 218px;
@@ -283,7 +290,8 @@
 <script static>
   const { oledLeft, oledRight } = attrs;
   const keys = attrs.keys && JSON.parse(attrs.keys);
-  const focusRects = attrs.focusRects && JSON.parse("[" + attrs.focusRects + "]");
+  const focusRects =
+    attrs.focusRects && JSON.parse("[" + attrs.focusRects + "]");
   const layer = attrs.layer && JSON.parse(attrs.layer);
   const layerButton =
     attrs.layerButton && attrs.layerButton.split(",").map(Number);
@@ -310,13 +318,18 @@
   // renders kbd class
   function kbdClass(row, col) {
     if (focusRects) {
-      return focusRects.some(
-        ([x, y, w, h]) => col >= x && col < x + w && row >= y && row < y + h
-      )
-        ? "lily58-focus"
-        : "lily58-nofocus";
+      return isFocused(row, col) ? "lily58-focus" : "lily58-nofocus";
     }
     return "";
+  }
+
+  function isFocused(row, col) {
+    return (
+      !focusRects ||
+      focusRects.some(
+        ([x, y, w, h]) => col >= x && col < x + w && row >= y && row < y + h
+      )
+    );
   }
 
   // renders kbd content
@@ -380,5 +393,38 @@
   function renderRightOLED() {
     if (!oledRight) return null;
     return html`<img alt="" class="lily58-layer0" src="${oledRight}" />`;
+  }
+
+  function altText() {
+    const leftKeymap = renderAltKeymap(keys.slice(0, 5));
+    const rightKeymap = renderAltKeymap(keys.slice(5, 10));
+    return (
+      "Lily58 keyboard layout diagram\n  Left hand:\n" +
+      leftKeymap +
+      "\n  Right hand:\n" +
+      rightKeymap
+    );
+  }
+
+  function renderAltKeymap(keys) {
+    return keys
+      .map(
+        (rowKeys, row) =>
+          "    " +
+          rowKeys
+            .map(
+              (key, col) =>
+                "[" + centerAltKey(isFocused(row, col) ? key : " ") + "]"
+            )
+            .join("")
+      )
+      .join("\n");
+  }
+
+  function centerAltKey(label) {
+    const maxLength = 4;
+    return (
+      "".padStart(Math.floor((maxLength - label.length) / 2), " ") + label
+    ).padEnd(maxLength, " ");
   }
 </script>
