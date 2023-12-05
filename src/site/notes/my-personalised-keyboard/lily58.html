@@ -396,29 +396,34 @@
   }
 
   function altText() {
-    const leftKeymap = renderAltKeymap(keys.slice(0, 5));
-    const rightKeymap = renderAltKeymap(keys.slice(5, 10));
+    const leftKeymap = renderAltKeymap(keys.slice(0, 5), 0);
+    const rightKeymap = renderAltKeymap(keys.slice(5, 10), 5);
+    const wwith = focusRects ? " with highlighted keys" : "";
     return (
-      "Lily58 keyboard layout diagram\n  Left hand:\n" +
+      `Lily58 keyboard layout diagram${wwith}` +
+      "\n  Left hand:\n" +
       leftKeymap +
       "\n  Right hand:\n" +
       rightKeymap
     );
   }
 
-  function renderAltKeymap(keys) {
+  function renderAltKeymap(keys, rowOffset) {
+    // prettier-ignore
     return keys
-      .map(
-        (rowKeys, row) =>
-          "    " +
-          rowKeys
-            .map(
-              (key, col) =>
-                "[" + centerAltKey(isFocused(row, col) ? key : " ") + "]"
-            )
-            .join("")
-      )
-      .join("\n");
+      .map((rowKeys, row) =>
+        "    " + rowKeys.map((key, col) =>
+          renderAltKey(key, row + rowOffset, col)
+        ).join("")
+      ).join("\n");
+  }
+
+  function renderAltKey(key, row, col) {
+    const content = centerAltKey(key);
+    if (focusRects && isFocused(row, col)) {
+      return `〘${content}〙`;
+    }
+    return `〔${content}〕`;
   }
 
   function centerAltKey(label) {
