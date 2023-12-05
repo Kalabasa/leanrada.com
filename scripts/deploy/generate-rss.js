@@ -62,7 +62,7 @@ async function main() {
     const hasInteractive = chInteractives.length > 0;
     chInteractives.each((i, el) => {
       const chEl = ch(el);
-      const label = chEl.attr("aria-label") ?? "";
+      const label = chEl.attr("alt") ?? chEl.attr("aria-label") ?? "";
       chEl.replaceWith(`<pre>Interactive content: <a href="${url}">Visit the website to play with interactive content!</a>\nAlternative text: ${label}</pre>`);
     });
 
