@@ -10,6 +10,9 @@
         if (!attrs.noSig) {
           yield html`<p class="blog-signature">${renderSig()}</p>`;
         }
+        if (!attrs.noRss) {
+          yield html`${maybeRenderRss()}`;
+        }
       </script>
     </div>
   </div>
@@ -33,6 +36,12 @@
     }
 
     return `${introClause}${body}${guestbookClause}${closingClause}`;
+  }
+
+  function maybeRenderRss() {
+    const { pathGroup } = attrs;
+    if (pathGroup !== "/notes/") return "";
+    return `<blog-rss-link />`;
   }
 </script>
 
