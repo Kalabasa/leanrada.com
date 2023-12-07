@@ -18,13 +18,10 @@ const dryRun = process.argv.includes("--dry-run");
 main();
 
 async function main() {
-  const generatedIndexFile = path.resolve(blogSrcDir, "index.generated.json");
-  const staticIndexFile = path.resolve(blogSrcDir, "index.static.json");
+  const combinedIndexFile = path.resolve(blogSrcDir, "index.generated.combined.json");
+  const combinedIndex = JSON.parse(await fs.readFile(combinedIndexFile));
 
-  const generatedIndex = JSON.parse(await fs.readFile(generatedIndexFile));
-  const staticIndex = JSON.parse(await fs.readFile(staticIndexFile));
-
-  const index = generatedIndex.concat(staticIndex)
+  const index = combinedIndex.concat(combinedIndex)
     .filter(item => item.public);
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 

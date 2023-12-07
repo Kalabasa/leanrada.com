@@ -1,0 +1,43 @@
+<aside class="blog-suggestions">
+  <h2 class="blog-suggestions-title">More posts</h2>
+  <card-grid>
+    <script render>
+      for (const item of suggestions) {
+        const tags = item.tags.map(tag => html` <tag>${tag}</tag> `);
+        const imgsrc = url("/notes/placeholder.png");
+        yield html`<card-grid-item
+          href="${item.href}"
+          title="${item.title}"
+          posttitle="${item.date}"
+          imgsrc="${imgsrc}"
+          thumbalign="center"
+        >
+          ${tags}
+        </card-grid-item>`
+      }
+    </script>
+  </card-grid>
+</aside>
+
+<script static>
+  const combinedIndex = require("../../site/notes/index.generated.combined.json");
+  const hrefs = attrs.hrefs.split(",");
+  const suggestions = hrefs.map((href) =>
+    combinedIndex.find((item) => item.href === href)
+  );
+</script>
+
+<style>
+  .blog-suggestions {
+    margin: 120px auto 0;
+    padding: 0 18px;
+    width: 100%;
+    max-width: 1800px;
+    box-sizing: border-box;
+  }
+
+  .blog-suggestions-title {
+    margin: 0 0 30px;
+    text-align: center;
+  }
+</style>

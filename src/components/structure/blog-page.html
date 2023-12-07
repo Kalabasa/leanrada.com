@@ -5,13 +5,20 @@
       <slot />
     </div>
     <div class="postcontent">
-      <reactions />
+      <div class="postcontent-narrow">
+        <reactions />
+        <script render>
+          if (!attrs.noSig) {
+            yield html`<p class="blog-signature">${renderSig()}</p>`;
+          }
+        </script>
+      </div>
       <script render>
-        if (!attrs.noSig) {
-          yield html`<p class="blog-signature">${renderSig()}</p>`;
+        if (!attrs.noSuggestions) {
+          yield maybeRenderSuggestions();
         }
         if (!attrs.noRss) {
-          yield html`${maybeRenderRss()}`;
+          yield maybeRenderRss();
         }
       </script>
     </div>
@@ -19,6 +26,10 @@
 </page>
 
 <script static>
+  const combinedIndex = require("../../site/notes/index.generated.combined.json");
+  const href = __urlPath + "/";
+  // todo: replace pathGroup check with __urlPath prefix
+
   function renderSig() {
     const { pathGroup } = attrs;
 
@@ -38,10 +49,23 @@
     return `${introClause}${body}${guestbookClause}${closingClause}`;
   }
 
+  function maybeRenderSuggestions() {
+    const { pathGroup } = attrs;
+    if (pathGroup !== "/notes/") return "";
+
+    const suggestions = combinedIndex.find(
+      (item) => item.href === href
+    ).suggestions;
+    if (!suggestions.length) return "";
+
+    const hrefs = suggestions.join(",");
+    return html`<blog-suggestions hrefs="${hrefs}" />`;
+  }
+
   function maybeRenderRss() {
     const { pathGroup } = attrs;
     if (pathGroup !== "/notes/") return "";
-    return `<blog-rss-link />`;
+    return html`<blog-rss-link />`;
   }
 </script>
 
@@ -66,7 +90,13 @@
 
   .postcontent {
     margin: auto;
-    padding: 0 18px 60px;
+    padding: 0 0 60px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .postcontent-narrow {
+    margin: auto;
+    padding: 0 18px;
     width: 100%;
     max-width: 700px;
     box-sizing: border-box;
