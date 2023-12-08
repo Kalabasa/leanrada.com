@@ -797,20 +797,6 @@
   }
 </style>
   <style>
-  .tag-component {
-    display: inline-block;
-    padding: 0 3px;
-    height: 16px;
-    line-height: 16px;
-    font-family: var(--default-font);
-    font-size: 12px;
-    font-weight: bold;
-    background: #ccc;
-    color: #444;
-    border-radius: 3px;
-  }
-</style>
-  <style>
   .tag-row {
     font-family: var(--default-font);
     font-size: 12px;
@@ -1270,7 +1256,13 @@
 
   .postcontent {
     margin: auto;
-    padding: 0 18px 60px;
+    padding: 0 0 60px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .postcontent-narrow {
+    margin: auto;
+    padding: 0 18px;
     width: 100%;
     max-width: 700px;
     box-sizing: border-box;
@@ -1510,7 +1502,6 @@
   .blog-rss-link {
     margin: 60px auto 0;
     width: 100%;
-    max-width: 700px;
     text-align: center;
   }
 
@@ -1533,6 +1524,290 @@
     height: 30px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+  }
+</style>
+  <style>
+  .card-grid {
+    display: grid;
+    justify-content: center;
+    grid-template-columns: repeat(auto-fit, calc(min(546px, 100%)));
+    gap: 60px;
+  }
+  .card-grid-tall {
+    gap: 90px 60px;
+  }
+  @media (max-width: 900px) {
+    .card-grid {
+      gap: 30px;
+    }
+  }
+  @media (prefers-reduced-motion) {
+    .card-grid * {
+      animation: none !important;
+    }
+  }
+</style>
+  <style>
+  .blog-suggestions {
+    margin: 120px auto 0;
+    padding: 0 18px;
+    width: 100%;
+    max-width: 1800px;
+    box-sizing: border-box;
+  }
+
+  .blog-suggestions-title {
+    margin: 0 0 30px;
+    text-align: center;
+  }
+</style>
+  <style>
+  .card-grid-item {
+    display: block;
+    text-decoration: none;
+    text-align: start;
+    color: var(--text-clr);
+    overflow: hidden;
+    transition: 0.2s var(--ease);
+    transition-property: margin, padding;
+  }
+  .card-grid-animated .card-grid-item {
+    animation: card-grid-item-reveal 0.8s var(--ease) backwards;
+    animation-delay: var(--card-grid-item-delay);
+  }
+  @keyframes card-grid-item-reveal {
+    0% {
+      clip-path: inset(20% 100% 60% 0 round 18px);
+      filter: brightness(0);
+    }
+    50% {
+      clip-path: inset(20% 0 60% 0 round 18px);
+      filter: brightness(1);
+    }
+    100% {
+      clip-path: inset(0 0 0 0 round 18px);
+    }
+  }
+
+  .card-grid-image-container {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    border-radius: 18px;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .card-grid-image-container::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--clr0);
+    mix-blend-mode: darken;
+    transition: background 1s;
+  }
+
+  .card-grid-image {
+    width: 101%;
+    height: 101%;
+    object-fit: cover;
+    object-position: top;
+    filter: contrast(0.8);
+    transform: scale(1);
+    transform-origin: 9px 9px;
+    transition: filter 1s, transform 1s;
+  }
+  .card-grid-thumbalign-center .card-grid-image {
+    object-position: center;
+    transform-origin: center;
+  }
+
+  .card-grid-title-wrap {
+    position: relative;
+    max-width: 80%;
+    height: 0;
+  }
+  .card-grid-title-bar {
+    position: absolute;
+    bottom: 0;
+    border-top-right-radius: 18px;
+    background: var(--bg-clr);
+  }
+  .card-grid-title-content {
+    position: relative;
+    padding: 12px 24px 0 0;
+    transition: padding 0.2s var(--ease);
+  }
+  .card-grid-title-content::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    width: 18px;
+    height: 36px;
+    border-bottom-left-radius: 18px;
+    box-shadow: 0 18px 0 var(--bg-clr);
+  }
+  .card-grid-title-content::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    width: 36px;
+    height: 18px;
+    border-bottom-left-radius: 18px;
+    box-shadow: -18px 0 0 var(--bg-clr);
+  }
+
+  .card-grid-title {
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-style: italic;
+    font-weight: bold;
+  }
+
+  .card-grid-posttitle {
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: italic;
+    font-weight: bold;
+    opacity: 0.8;
+  }
+
+  .card-grid-postitle-small {
+    display: none;
+  }
+
+  .card-grid-actions {
+    display: none;
+    gap: 5mm;
+    max-height: 48px;
+    padding-top: 12px;
+    overflow: hidden;
+  }
+  .card-grid-action {
+    display: inline-block;
+    font-weight: bold;
+    text-decoration: underline;
+    color: var(--text2-clr);
+    cursor: pointer;
+    position: relative;
+  }
+  .card-grid-info {
+    margin: -2.5mm;
+    padding: 2.5mm;
+  }
+  .card-grid-story::after {
+    content: "→";
+    display: inline-block;
+  }
+
+  .card-grid-content {
+    margin: 30px 0;
+    font-size: 15px;
+    line-height: 2;
+    transition: margin 0.2s var(--ease);
+  }
+
+  .card-grid-animated .card-grid-title {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.8s);
+  }
+  .card-grid-animated .card-grid-posttitle {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.9s);
+  }
+
+  @keyframes card-grid-text-reveal {
+    from {
+      transform: translateY(-100%);
+      clip-path: inset(100% 0 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .card-grid-animated .card-grid-content {
+    animation: card-grid-content 0.6s 1.5s backwards;
+  }
+  @keyframes card-grid-content {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (hover: hover) {
+    .card-grid-item:hover {
+      margin: -12px -24px 0;
+      padding-bottom: 12px;
+    }
+    .card-grid-item:hover .card-grid-image-container::after {
+      background: var(--text-clr);
+      transition: background 2s;
+    }
+    .card-grid-item:hover .card-grid-image {
+      filter: contrast(1);
+      transform: scale(1.1);
+      transition: filter 1s, transform 2s;
+    }
+    .card-grid-item:hover .card-grid-title-content {
+      padding: 24px;
+    }
+    .card-grid-item:hover .card-grid-content {
+      margin-left: 24px;
+      margin-right: 24px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .card-grid-content {
+      margin: 12px 0;
+    }
+
+    .card-grid-image-container {
+      height: 200px;
+    }
+
+    .card-grid-posttitle {
+      display: none;
+    }
+    .card-grid-postitle-small {
+      display: block;
+    }
+
+    .card-grid-actions {
+      display: flex;
+    }
+    .card-grid-item-expanded .card-grid-actions {
+      max-height: 0;
+      transition: max-height 0.2s cubic-bezier(0.2, 0, 0.8, 1);
+    }
+
+    .card-grid-description {
+      max-height: 0;
+      overflow: hidden;
+    }
+    .card-grid-item-expanded .card-grid-description {
+      max-height: 100vh;
+      transition: max-height 1s cubic-bezier(0.2, 0, 1, 1);
+    }
+  }
+</style>
+  <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
   }
 </style>
   <style>
@@ -1632,6 +1907,7 @@
 
             <div class="tag-row">tags:
               <span class="tag-component" style="background: #817db5; color: #302e47">css</span>
+              <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
             </div>
 
             <!--  textlint-enable  -->
@@ -2098,31 +2374,124 @@ B ~ C</span> <span class="token punctuation">{</span>
 
         </div>
         <div class="postcontent">
-          <reactions-client class="reactions reactions-invisible">
-            <h2 class="reaction-title">React to this post</h2>
-            <button class="reaction-btn reaction-heart-btn">
-              <span class="reaction-icon" aria-label="Heart"></span>
-            </button>
-            <div class="reaction-count reaction-heart-count"></div>
-            <button class="reaction-btn reaction-fire-btn">
-              <span class="reaction-icon" aria-label="Fire"></span>
-            </button>
-            <div class="reaction-count reaction-fire-count"></div>
-            <button class="reaction-btn reaction-bubble-btn">
-              <span class="reaction-icon" aria-label="Bubble"></span>
-            </button>
-            <div class="reaction-count reaction-bubble-count"></div>
-            <button class="reaction-btn reaction-sun-btn">
-              <span class="reaction-icon" aria-label="Sun"></span>
-            </button>
-            <div class="reaction-count reaction-sun-count"></div>
-            <button class="reaction-btn reaction-cloud-btn">
-              <span class="reaction-icon" aria-label="Cloud"></span>
-            </button>
-            <div class="reaction-count reaction-cloud-count"></div>
-            <div class="reaction-error"></div>
-          </reactions-client>
-          <p class="blog-signature">Thanks for reading! I’m Lean, and I like making interactive visualisations for my <a target="_self" class="text-link " href="/notes/">programming blog</a>. Sometimes I do <a target="_self" class="text-link " href="/wares/">projects</a> too. Oh, and before you go, sign <a target="_self" class="text-link " href="/guestbook/">the guestbook</a>! See you around! <span class="blog-signature-name"><i>—Lean</i><img class="blog-signature-img" src="/icons/sig.png" alt="liyan"></span></p>
+          <div class="postcontent-narrow">
+            <reactions-client class="reactions reactions-invisible">
+              <h2 class="reaction-title">React to this post</h2>
+              <button class="reaction-btn reaction-heart-btn">
+                <span class="reaction-icon" aria-label="Heart"></span>
+              </button>
+              <div class="reaction-count reaction-heart-count"></div>
+              <button class="reaction-btn reaction-fire-btn">
+                <span class="reaction-icon" aria-label="Fire"></span>
+              </button>
+              <div class="reaction-count reaction-fire-count"></div>
+              <button class="reaction-btn reaction-bubble-btn">
+                <span class="reaction-icon" aria-label="Bubble"></span>
+              </button>
+              <div class="reaction-count reaction-bubble-count"></div>
+              <button class="reaction-btn reaction-sun-btn">
+                <span class="reaction-icon" aria-label="Sun"></span>
+              </button>
+              <div class="reaction-count reaction-sun-count"></div>
+              <button class="reaction-btn reaction-cloud-btn">
+                <span class="reaction-icon" aria-label="Cloud"></span>
+              </button>
+              <div class="reaction-count reaction-cloud-count"></div>
+              <div class="reaction-error"></div>
+            </reactions-client>
+            <p class="blog-signature">Thanks for reading! I’m Lean, and I like making interactive visualisations for my <a target="_self" class="text-link " href="/notes/">programming blog</a>. Sometimes I do <a target="_self" class="text-link " href="/wares/">projects</a> too. Oh, and before you go, sign <a target="_self" class="text-link " href="/guestbook/">the guestbook</a>! See you around! <span class="blog-signature-name"><i>—Lean</i><img class="blog-signature-img" src="/icons/sig.png" alt="liyan"></span></p>
+          </div>
+          <aside class="blog-suggestions">
+            <h2 class="blog-suggestions-title">More posts</h2>
+            <div class="card-grid ">
+
+              <a class="card-grid-item card-grid-thumbalign-center" href="/notes/pure-css-volley-ball-game/">
+                <div class="card-grid-image-container">
+                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
+                </div>
+                <div class="card-grid-title-wrap">
+                  <div class="card-grid-title-bar">
+                    <div class="card-grid-title-content">
+                      <div class="card-grid-title">Pure CSS volley ball game</div>
+                      <div class="card-grid-posttitle">3 Jul 2023</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-grid-content">
+                  <div class="card-grid-posttitle card-grid-postitle-small">
+                    3 Jul 2023
+                  </div>
+                  <div class="card-grid-actions">
+                    <span class="card-grid-action card-grid-info">info</span>
+                    <span class="card-grid-action card-grid-story">story</span>
+                  </div>
+                  <div class="card-grid-description">
+
+                    <span class="tag-component" style="background: #817db5; color: #302e47">css</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span> <span class="tag-component" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
+
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Pure CSS volley ball game">Read post</span>
+                  </div>
+                </div>
+              </a><a class="card-grid-item card-grid-thumbalign-center" href="/notes/dynamic-patrol-stealth-games/">
+                <div class="card-grid-image-container">
+                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
+                </div>
+                <div class="card-grid-title-wrap">
+                  <div class="card-grid-title-bar">
+                    <div class="card-grid-title-content">
+                      <div class="card-grid-title">Dynamic patrol behaviour in stealth games with Markov chains</div>
+                      <div class="card-grid-posttitle">1 Jul 2023</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-grid-content">
+                  <div class="card-grid-posttitle card-grid-postitle-small">
+                    1 Jul 2023
+                  </div>
+                  <div class="card-grid-actions">
+                    <span class="card-grid-action card-grid-info">info</span>
+                    <span class="card-grid-action card-grid-story">story</span>
+                  </div>
+                  <div class="card-grid-description">
+
+                    <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Dynamic patrol behaviour in stealth games with Markov chains">Read post</span>
+                  </div>
+                </div>
+              </a><a class="card-grid-item card-grid-thumbalign-center" href="/notes/sweep-and-prune/">
+                <div class="card-grid-image-container">
+                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
+                </div>
+                <div class="card-grid-title-wrap">
+                  <div class="card-grid-title-bar">
+                    <div class="card-grid-title-content">
+                      <div class="card-grid-title">Sort, sweep, and prune: Collision detection algorithms</div>
+                      <div class="card-grid-posttitle">5 Aug 2023</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-grid-content">
+                  <div class="card-grid-posttitle card-grid-postitle-small">
+                    5 Aug 2023
+                  </div>
+                  <div class="card-grid-actions">
+                    <span class="card-grid-action card-grid-info">info</span>
+                    <span class="card-grid-action card-grid-story">story</span>
+                  </div>
+                  <div class="card-grid-description">
+
+                    <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Sort, sweep, and prune: Collision detection algorithms">Read post</span>
+                  </div>
+                </div>
+              </a>
+
+            </div>
+
+
+          </aside>
           <aside class="blog-rss-link">
             <p>
               Want me to spam your inbox? Me neither.<br>Forget newsletters; use RSS!
@@ -2238,5 +2607,6 @@ B ~ C</span> <span class="token punctuation">{</span>
     }
   })();
 </script>
+  <script defer="" src="/scripts/card-grid-item.js"></script>
 </body>
 </html>
