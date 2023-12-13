@@ -139,6 +139,7 @@
   function eventVars(reactionType) {
     return {
       path: (p) => eventName(p, reactionType),
+      referrer: p,
       event: true,
     };
   }
