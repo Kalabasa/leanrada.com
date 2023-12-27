@@ -21,8 +21,7 @@ async function main() {
   const combinedIndexFile = path.resolve(blogSrcDir, "index.generated.combined.json");
   const combinedIndex = JSON.parse(await fs.readFile(combinedIndexFile));
 
-  const index = combinedIndex.concat(combinedIndex)
-    .filter(item => item.public);
+  const index = combinedIndex.filter(item => item.public);
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const feed = new RSS({
