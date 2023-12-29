@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>2023 in review · leanrada.com</title>
+  <title>Writing a single-file website with Rust · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -161,97 +161,159 @@
   }
 </style>
   <style>
-  .box-note {
+  /**
+   * Modified by Kalabasa.
+   * Based on:
+   * a11y-dark theme for JavaScript, CSS, and HTML
+   * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+   * @author ericwbailey
+   */
+
+  .code-block .token.inserted:not(.prefix) {
+    background: #00b6a71c;
     display: block;
-    padding: 12px 18px;
-    border-radius: 12px;
-    border: solid 2px var(--clr0-dark);
-    box-sizing: border-box;
   }
-</style>
-  <style>
-  .card-component {
-    border: solid 1px var(--card-clr);
-    border-radius: 12px;
-    padding: 18px 24px;
-    min-height: 195px;
-    max-width: 390px;
-    box-sizing: border-box;
+
+  .code-block .token.comment,
+  .code-block .token.prolog,
+  .code-block .token.doctype,
+  .code-block .token.cdata {
+    color: #628b9e;
+    font-style: italic;
   }
-  @media (max-width: 462px) {
-    .card-component {
-      padding: 18px;
-      min-height: 130px;
+
+  .code-block .token.punctuation {
+    color: #fefefe;
+  }
+
+  .code-block .token.property,
+  .code-block .token.tag,
+  .code-block .token.constant,
+  .code-block .token.symbol,
+  .code-block .token.deleted {
+    color: #ffa07a;
+  }
+
+  .code-block .token.boolean,
+  .code-block .token.number {
+    color: #00e0e0;
+  }
+
+  .code-block .token.selector,
+  .code-block .token.attr-name,
+  .code-block .token.string,
+  .code-block .token.char,
+  .code-block .token.builtin,
+  .code-block .token.inserted {
+    color: #abe338;
+  }
+
+  .code-block .token.operator,
+  .code-block .token.entity,
+  .code-block .token.url,
+  .code-block .token.variable {
+    color: #00e0e0;
+  }
+
+  .code-block .token.atrule,
+  .code-block .token.attr-value,
+  .code-block .token.function {
+    color: #ffd700;
+  }
+
+  .code-block .token.keyword {
+    color: #00e0e0;
+  }
+
+  .code-block .token.regex,
+  .code-block .token.important {
+    color: #ffd700;
+  }
+
+  .code-block .token.important,
+  .code-block .token.bold {
+    font-weight: bold;
+  }
+
+  .code-block .token.italic {
+    font-style: italic;
+  }
+
+  .code-block .token.entity {
+    cursor: help;
+  }
+
+  @media screen and (-ms-high-contrast: active) {
+    .code-block .token.important {
+      background: highlight;
+      color: window;
+      font-weight: normal;
+    }
+
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.selector {
+      font-weight: bold;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.comment,
+    .code-block .token.doctype,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.property,
+    .code-block .token.string {
+      color: highlight;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.url {
+      font-weight: normal;
     }
   }
 </style>
   <style>
-  .blog-media {
-    position: relative;
-    text-align: center;
-    /* external margin because it’s expected to be in an article */
-    margin: 36px 0;
+  .code-block {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
   }
-  .blog-media-bleed {
-    margin: 90px 0;
-    max-height: 80vh;
-  }
-
-  .blog-media-element {
+  .code-block-code {
     display: inline-block;
-    max-width: 100%;
-    max-height: 80vh;
-    border-radius: 18px;
+    padding: 18px;
+    min-width: 100%;
     box-sizing: border-box;
-  }
-  .blog-media-bleed .blog-media-element {
-    position: relative;
-    left: 50%;
-    max-width: max(min(100vw, 800px), 80vw);
-    transform: translateX(-50%);
-  }
-  .blog-media-windowed .blog-media-element {
-    width: 100%;
-    border-radius: 0;
+    border-radius: 18px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    line-height: 1.6;
+    background: var(--card-clr);
+    white-space: pre;
   }
 
-  .blog-media-caption {
-    display: block;
-    font-size: 15px;
+  .code-block-wrap-char {
+    word-break: break-all;
+  }
+  .code-block-wrap-char .code-block-code {
+    white-space: pre-wrap;
+  }
+
+  .code-block-wrap-word {
+    word-break: normal;
+  }
+  .code-block-wrap-word .code-block-code {
+    white-space: pre-wrap;
   }
 </style>
   <style>
-  .window-decor {
-    position: relative;
-    border-radius: 12px;
-    border: solid var(--card-clr);
-    border-width: 24px 0 12px;
-    box-shadow: 0 0 0 1px #333, 0 0 0 2px #111;
-    background: var(--card-clr);
-  }
-  .window-decor::after {
-    content: "";
-    display: block;
-    position: absolute;
-    left: 12px;
-    top: -18px;
-    height: 12px;
-    width: 12px;
-    border-radius: 50%;
-    background: #443c3f;
-    box-shadow: 18px 0 0 #4d4a45, 36px 0 0 #3f4745;
-  }
-
-  .window-decor-title {
-    position: absolute;
-    top: -24px;
-    left: 50%;
-    transform: translate(-50%);
-    line-height: 24px;
+  .tag-row {
     font-family: var(--default-font);
     font-size: 12px;
     font-weight: bold;
-    color: var(--text2-clr);
   }
 </style>
   <style>
@@ -1213,39 +1275,7 @@
     color: var(--clr0, #fff);
   }
 </style>
-  <style>
-  .stat-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-  }
-  .stat-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex: 1 1 0px;
-    min-width: 20ch;
-    font-family: var(--default-font);
-    font-style: italic;
-    font-size: 24px;
-  }
-  .stat-num {
-    font-weight: bold;
-    font-size: 30px;
-    line-height: 30px;
-  }
-
-  @media (min-width: 600px) {
-    .spotify-banner {
-      float: left;
-      margin-top: -36px;
-      margin-bottom: -36px;
-      padding-right: 18px;
-      max-width: 40%;
-    }
-  }
-</style>
+  <style></style>
   <script async="" src="/scripts/cursor.js"></script>
 </head>
 
@@ -1265,113 +1295,114 @@
 
       <div class="blog-page">
         <div class="content-header">
-          <h1 class="content-header-title">2023 in review</h1>
+          <h1 class="content-header-title">Writing a single-file website with Rust</h1>
 
         </div>
         <div class="content">
 
 
           <div class="blog-post-info ">
-            25 Dec 2023 · 4 min read
+            30 Dec 2023 · 6 min read
           </div>
+          <!-- textlint-disable -->
+          <div class="tag-row">tags:
+            <span class="tag-component" style="background: #cd8565; color: #543223">rust</span>
+          </div>
+          <!-- textlint-enable -->
           <!-- prettier-ignore -->
           <div class="markdown">
-            <p>What happened in 2023? Stuff happened.</p>
-            <h2 id="2023-website-redesign-🎨">2023 website redesign 🎨</h2>
-            <p>Feb 2023, I redesigned <a target="_self" class="text-link " href="/wares/personal-website/">my site</a>, with a goal of making it more personal instead of just being a mere portfolio.</p>
-            <p>
-            <div class="blog-media blog-media-windowed">
-              <div class="window-decor">
-                <img srcset="/wares/personal-website/media/v4_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="screenshot of 2023 website" src="/wares/personal-website/media/v4.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #181818">
+            <p>At the company I work for, there is something called a “professional education leave”, which lets me take a day off to learn something new or attend conferences or whatever professional education means. I took the opportunity to learn the <a target="_blank" class="text-link " href="https://www.rust-lang.org/"><strong>Rust</strong></a> programming language.</p>
+            <p>I didn’t want to follow tutorials, so I thought of a project to learn with, which ended up being “make a single-file website web server”. It was inspired by the article <a target="_blank" class="text-link " href="https://j3s.sh/thought/my-website-is-one-binary.html"><strong>my website is one binary</strong> by j3s</a>.</p>
+            <h2 id="rust-first-impressions">Rust first impressions</h2>
+            <pre class="code-block "><code class="code-block-code">fn <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  println<span class="token operator">!</span><span class="token punctuation">(</span><span class="token string">"Hello World!"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>My first impression was that it is a mature programming language that is crazy about compile-time stuff. For example, the above <code>println!</code> call is a <em>macro</em>, which expands to something more verbose… Apparently, with macros you can also make full-blown <a target="_blank" class="text-link " href="https://doc.rust-lang.org/rust-by-example/macros/dsl.html">DSL</a>s that are directly embedded in Rust code.</p>
+            <p>The <code>rustc</code> compiler’s error messages were very good.</p>
+            <p>I think I haven’t really dived deep enough to discover the standout features that I keep hearing about like memory management safety. So unfortunately I didn’t get the hype at this time.</p>
+            <h2 id="building-a-web-server">Building a web server</h2>
+            <p>The standard Rust library provides a TCP module, but no HTTP one. So it’s a level lower than NodeJS, which is understandable.</p>
+            <p>I didn’t want to implement the HTTP protocol, so I searched for an HTTP library.</p>
+            <p>I found <a target="_blank" class="text-link " href="https://github.com/tomaka/rouille"><strong>rouille</strong></a>, a web micro-framework. I installed it via <code>cargo</code> which is like <code>npm</code> but for Rust.</p>
+            <p>It was really easy to get it set up and running.</p>
+            <p>For starters, I made two pages: <code>/</code> and <code>/about</code>.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">// main.rs</span>
+use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Response<span class="token punctuation">;</span>
+use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>router<span class="token punctuation">;</span>
 
-              </div>
-            </div>
-            </p>
-            <p>It came with a blog section, which made me start writing a blog.</p>
-            <h2 id="started-a-blog-🖊">Started a blog 🖊</h2>
-            <blockquote>
-              <p>“I’m starting a blog!</p>
-              <p>I’ve done some blogging in the past (for gamedev), and I already do write-ups for my projects, so I think it’d be good to officially keep a blog!</p>
-              <p>I have some ideas to populate the first few posts, then we’ll see how it goes from there.</p>
-              <p>Watch this space!”</p>
-              <p><cite>First blog post on the new site (now unpublished), 24 Feb 2023</cite></p>
-            </blockquote>
-            <p>Well, it went well! In 2023 I had:</p>
-            <div class="stat-cards">
-              <div class="card-component stat-card">
-                <div class="stat-num">12</div> posts
-              </div>
-              <div class="card-component stat-card">
-                <div class="stat-num">1.6k</div> visits
-              </div>
-            </div>
+mod pages <span class="token punctuation">{</span>
+  pub mod index<span class="token punctuation">;</span>
+  pub mod about<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 
-            <p>The hottest posts were:</p>
-            <ul>
-              <li>🔥 <a target="_self" class="text-link " href="/notes/sweep-and-prune/"><strong>Sort, sweep, and prune: Collision detection algorithms</strong></a></li>
-              <li>🔥 <a target="_self" class="text-link " href="/notes/dynamic-patrol-stealth-games/"><strong>Dynamic patrol behaviour in stealth games with Markov chains</strong></a></li>
-            </ul>
-            <p>It is a nice new hobby and something I shall continue. 🙌</p>
-            <h2 id="side-projects-💻">Side projects 💻</h2>
-            <p>This year I launched two webapps, <a target="_self" class="text-link " href="/wares/portabl.ink/">portabl.ink</a> and <a target="_self" class="text-link " href="/guhit-kudlit/">GuhitKudlit</a>!</p>
-            <p>
-            <div class="blog-media blog-media-windowed">
-              <div class="window-decor">
-                <img srcset="/notes/2023-review/portabl.ink_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="screenshot of portablink" src="/notes/2023-review/portabl.ink.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.1333333333333333; background: #f8f8f8">
-                <div class="window-decor-title">portabl.ink</div>
-              </div>
-            </div>
-            </p>
-            <p><strong>Portablink</strong> was just a fun experiment without much utility. I don’t have analytics on it so I don’t know if anyone visits it. We’ll see if I renew the domain.</p>
-            <p>
-            <div class="blog-media blog-media-windowed">
-              <div class="window-decor">
-                <img srcset="/notes/2023-review/guhit-kudlit_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="screenshot of GuhitKudlit" src="/notes/2023-review/guhit-kudlit.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.1333333333333333; background: #f8f8f8">
-                <div class="window-decor-title">GuhitKudlit - Baybayin calligraphy generator</div>
-              </div>
-            </div>
-            </p>
-            <p><strong>GuhitKudlit</strong> did great and is getting regular visitors coming from Google. From the Google Search Console report, it looks like there is demand for baybayin translation and generation or tattoos or whatever. I might rewrite this site properly if it sees more use.</p>
-            <h2 id="personal--misc-✨">Personal / Misc ✨</h2>
-            <ul>
-              <li>💼 Got a new job. Still a software engineer.</li>
-              <li>🎮 Finally finished <a target="_blank" class="text-link " href="https://zelda.nintendo.com/tears-of-the-kingdom/"><strong>Tears of the Kingdom</strong></a>.</li>
-              <li>🎮 Replayed <strong>Splinter Cell: Chaos Theory</strong>. First was around 15 years ago.</li>
-              <li>🎓 Began an attempt to learn the Japanese language.</li>
-            </ul>
-            <h3 id="steam-🫧">Steam 🫧</h3>
-            <p>Here’s a bit of my <strong>Steam Year in Review</strong>:</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/notes/2023-review/steam-spider_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="This spider graph shows the kinds of games you spent the most time in 2023. MOBA, 3; Card Battler, 1.7; Puzzle Platformer, 1.3; Automation, 1; Stealth, 3.8; Platformer, 2.6" src="/notes/2023-review/steam-spider.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.5960591133004927; background: #081818">
-            </div>
-            </p>
-            <p>MOBA, Platformer, and Stealth… I guess I can conclude that I played a diverse range of games this year? This graph is missing the roguelike category though.</p>
-            <p>
-            <div class="blog-media blog-media-default">
-              <img srcset="/notes/2023-review/steam_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Dota 2, Splinter Cell: Chaos Theory, Portal 2, Monster Train, Noita, Peglin, Braid, FTL, Factorio, Black Mesa" src="/notes/2023-review/steam.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 6.705501618122978; background: #080808"><span class="blog-media-caption">Most played games on Steam in order</span>
-            </div>
-            </p>
-            <p>Apparently, I played a lot of <strong>Dota</strong>. I don’t even remember playing it this year.</p>
-            <p>You might have noticed the bias for the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Roguelike">roguelike genre</a>. Shoutout to <a target="_blank" class="text-link " href="https://store.steampowered.com/app/881100/Noita/"><strong>Noita</strong></a>, <a target="_blank" class="text-link " href="https://store.steampowered.com/app/212680/FTL_Faster_Than_Light/"><strong>FTL</strong></a>, and <a target="_blank" class="text-link " href="https://store.steampowered.com/app/1102190/Monster_Train/"><strong>Monster Train</strong></a>. Great games.</p>
-            <h3 id="spotify-🎵">Spotify 🎵</h3>
-            <p>Here’s a nonsensical thing from my <strong>Spotify Wrapped</strong> — <em>My Top Artists</em> in 2023:</p>
-            <div class="spotify-banner">
-              <div class="blog-media blog-media-default">
-                <img srcset="/notes/2023-review/spotify_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="My top artists on Spotify." src="/notes/2023-review/spotify.jpg" spec="100% [664) 664" loading="lazy" width="" height="100%" style="aspect-ratio: 0.5625; background: #a8b8f8">
-              </div>
-            </div>
+fn <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  rouille<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">start_server</span><span class="token punctuation">(</span><span class="token string">"0.0.0.0:8080"</span><span class="token punctuation">,</span> move <span class="token operator">|</span>request<span class="token operator">|</span> <span class="token punctuation">{</span>
+    let response <span class="token operator">=</span> router<span class="token operator">!</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span>
+      <span class="token punctuation">(</span>GET<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token operator">/</span><span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
+        pages<span class="token punctuation">:</span><span class="token punctuation">:</span>index<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">page</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
 
-            <p><a target="_blank" class="text-link " href="https://open.spotify.com/artist/5oOhM2DFWab8XhSdQiITry"><strong>Tycho</strong></a> is chillwave ambient IDM downtempo post-rock instrumental music. Nice listening.</p>
-            <p><a target="_blank" class="text-link " href="https://open.spotify.com/artist/7pnSUizGuS2tAW2yCAhafn"><strong>Vanilla</strong></a> is instrumental hip hop soul-sampling electronic music. Nice grooves.</p>
-            <p>The third artist is me, so it doesn’t count.</p>
-            <p>I don’t actually know who the fourth artist is. I’ll explain below.</p>
-            <p><a target="_blank" class="text-link " href="https://open.spotify.com/artist/0rFHElzeddB9ymDjgpBENX"><strong>Lamp</strong></a> is a Japanese band making indie pop jazz pop bossa nova J-pop music. I like the chord progressions.</p>
-            <div style="clear:left"></div>
+      <span class="token punctuation">(</span>GET<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token operator">/</span>about<span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
+        pages<span class="token punctuation">:</span><span class="token punctuation">:</span>about<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">page</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
 
-            <p><span class="box-note ">I think I use Spotify a bit differently than most people. I don’t primarily listen to <em>artists</em>. I just use the playlists, especially the dynamic <strong>Discover Weekly</strong> playlist. As such, “top artists” don’t really make sense. These top 5 artists don’t make up a majority of my listens. Accidentally listening to any artist’s song twice skyrockets them to my “top artists” list. Nonetheless, there are some exceptional artists that I discover and do replay from time to time; some were mentioned above.</span></p>
-            <h2 id="conclusion-💡">Conclusion 💡</h2>
-            <p>The year two thousand and twenty-three was definitely one of the years of all time.</p>
+      _ <span class="token operator">=</span><span class="token operator">&gt;</span> Response<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">empty_404</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> response<span class="token punctuation">;</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Notice the <code>router!</code> macro! Apparently it allows me to write <code>GET</code> and the routes <code>/</code> and <code>/about</code> plainly into code. Those aren’t strings! Nor are they Rust keywords! It’s macro magic. It’s even more magical than Kotlin’s lambdas. I think this is a powerful but dangerous tool which could make learning Rust codebases harder. I like it though. Instead of parsing these routes at runtime, errors can be caught at compile time.</p>
+            <h2 id="rust-modules">Rust modules</h2>
+            <p>One little snag was that Rust’s module system was a little confusing, coming from ES6 where everything is explicit.</p>
+            <p>In Rust, modules map to files. Module naming and hierarchy follows the filesystem structure.</p>
+            <p>I didn’t fully understand modules properly but it seems that I can use the <code>mod</code> keyword to import modules. And that was enough knowledge to proceed with the project.</p>
+            <p>In the above code I separated the code that renders the pages into separate files in <code>pages/index.rs</code> and <code>pages/about.rs</code>. To import them in the main file, I had this declaration at the top:</p>
+            <pre class="code-block "><code class="code-block-code">mod pages <span class="token punctuation">{</span>
+  pub mod index<span class="token punctuation">;</span>
+  pub mod about<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>As I defined a top-level <code>page()</code> function in each of these files, calling them from the main file would be something like this: <code>pages::index::page(request)</code>.</p>
+            <h2 id="rendering-html">Rendering HTML</h2>
+            <p>The top-level <code>page</code> functions simply return static HTML <code>Response</code>s for now.</p>
+            <p>Here’s one that handles the root <code>/</code> route:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">// pages/index.rs</span>
+use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Request<span class="token punctuation">;</span>
+use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Response<span class="token punctuation">;</span>
+
+pub fn <span class="token function">page</span><span class="token punctuation">(</span>_request<span class="token punctuation">:</span> <span class="token operator">&amp;</span>Request<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">&gt;</span> Response <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> Response<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">html</span><span class="token punctuation">(</span>r#"<span class="token operator">&lt;</span><span class="token operator">!</span>doctype html<span class="token operator">&gt;</span>
+    <span class="token operator">&lt;</span>title<span class="token operator">&gt;</span>Tiny site<span class="token operator">&lt;</span><span class="token operator">/</span>title<span class="token operator">&gt;</span>
+    <span class="token operator">&lt;</span>h1<span class="token operator">&gt;</span>Hello<span class="token punctuation">,</span> world<span class="token operator">!</span><span class="token operator">&lt;</span><span class="token operator">/</span>h1<span class="token operator">&gt;</span>
+    <span class="token operator">&lt;</span>p<span class="token operator">&gt;</span>Welcome to my tiny site<span class="token operator">!</span><span class="token operator">&lt;</span><span class="token operator">/</span>p<span class="token operator">&gt;</span>
+    <span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"/about"</span><span class="token operator">&gt;</span>About<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span>
+  "#<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Which renders this page:</p>
+            <iframe srcdoc="
+<!doctype html>
+<title>Tiny site</title>
+<h1>Hello, world!</h1>
+<p>Welcome to my tiny site!</p>
+<a href=&quot;/about&quot;>About</a>
+<base href=&quot;about:blank&quot;/>">
+            </iframe>
+
+            <p>To avoid repetitively escaping double quotes in HTML, I used the raw string literal which looks <code>r#"something like this"#</code> to write the HTML response in Rust.</p>
+            <h2 id="html-templates--components">HTML templates / components</h2>
+            <p>I haven’t done this, but I imagine components or “includes” can be implemented by simply calling component functions normally and concatenating the resulting HTML fragments together. Nothing fancy required, for a tiny website.</p>
+            <p>I wonder if there are templating systems that take advantage of Rust’s compile-time macros. A quick search revealed a lot of them. In fact, that seems to be the “Rust way” of doing HTML templates. One example is <a target="_blank" class="text-link " href="https://maud.lambda.xyz/">Maud</a>:</p>
+            <pre class="code-block "><code class="code-block-code">html<span class="token operator">!</span> <span class="token punctuation">{</span>
+  article data<span class="token operator">-</span>index<span class="token operator">=</span><span class="token string">"12345"</span> <span class="token punctuation">{</span>
+    h1 <span class="token punctuation">{</span> <span class="token string">"My blog"</span> <span class="token punctuation">}</span>
+    tag<span class="token operator">-</span>cloud <span class="token punctuation">{</span> <span class="token string">"pinkie pie pony cute"</span> <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>That looks a lot like Jetpack Compose in Kotlin. Seems like fun way to write HTML. I fear I might be taken by a strange mood and convert my entire website into Rust. I guess paid hosting for non-static sites would be a good deterrent.</p>
+            <h2 id="conclusion">Conclusion</h2>
+            <p>That was a nice dip into Rust. I’m still interested in the hyped-up features like memory management but I guess an HTML web server wouldn’t need much of those things after all. Maybe the next Rust learning exercise would be something like a small video game. Now that’s something that would require memory management and algorithms.</p>
+            <p>Here’s the repo for my tiny web server in Rust: <a target="_blank" class="text-link " href="https://github.com/Kalabasa/tala"><strong>github.com/Kalabasa/tala</strong></a>.
+            </p>
 
           </div>
 
@@ -1421,21 +1452,21 @@
             <h2 class="blog-suggestions-title">More posts</h2>
             <div class="card-grid ">
 
-              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune/">
+              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/simple-image-recognition-vanilla-js/">
                 <div class="card-grid-image-container">
                   <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
                 </div>
                 <div class="card-grid-title-wrap">
                   <div class="card-grid-title-bar">
                     <div class="card-grid-title-content">
-                      <div class="card-grid-title">Sort, sweep, and prune: Collision detection algorithms</div>
-                      <div class="card-grid-posttitle">5 Aug 2023</div>
+                      <div class="card-grid-title">Simple image recognition with vanilla JavaScript</div>
+                      <div class="card-grid-posttitle">25 Feb 2023</div>
                     </div>
                   </div>
                 </div>
                 <div class="card-grid-content">
                   <div class="card-grid-posttitle card-grid-postitle-small">
-                    5 Aug 2023
+                    25 Feb 2023
                   </div>
                   <div class="card-grid-actions">
                     <span class="card-grid-action card-grid-info">info</span>
@@ -1443,26 +1474,26 @@
                   </div>
                   <div class="card-grid-description">
 
-                    <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+                    <span class="tag-component" style="background: #f0de91; color: #725f15">js</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Sort, sweep, and prune: Collision detection algorithms">Read post</span>
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Simple image recognition with vanilla JavaScript">Read post</span>
                   </div>
                 </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/dynamic-patrol-stealth-games/">
+              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/developing-bitwise-input-method/">
                 <div class="card-grid-image-container">
                   <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
                 </div>
                 <div class="card-grid-title-wrap">
                   <div class="card-grid-title-bar">
                     <div class="card-grid-title-content">
-                      <div class="card-grid-title">Dynamic patrol behaviour in stealth games with Markov chains</div>
-                      <div class="card-grid-posttitle">1 Jul 2023</div>
+                      <div class="card-grid-title">Bitwise keyboard input method</div>
+                      <div class="card-grid-posttitle">16 Mar 2023</div>
                     </div>
                   </div>
                 </div>
                 <div class="card-grid-content">
                   <div class="card-grid-posttitle card-grid-postitle-small">
-                    1 Jul 2023
+                    16 Mar 2023
                   </div>
                   <div class="card-grid-actions">
                     <span class="card-grid-action card-grid-info">info</span>
@@ -1470,26 +1501,26 @@
                   </div>
                   <div class="card-grid-description">
 
-                    <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+                    <span class="tag-component" style="background: #e2bb9e; color: #603e25">c</span> <span class="tag-component" style="background: #d8aef3; color: #4d1f6a">keyboard</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Dynamic patrol behaviour in stealth games with Markov chains">Read post</span>
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Bitwise keyboard input method">Read post</span>
                   </div>
                 </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/single-file-website-rust/">
+              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-tictactoe-ai/">
                 <div class="card-grid-image-container">
                   <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
                 </div>
                 <div class="card-grid-title-wrap">
                   <div class="card-grid-title-bar">
                     <div class="card-grid-title-content">
-                      <div class="card-grid-title">Writing a single-file website with Rust</div>
-                      <div class="card-grid-posttitle">30 Dec 2023</div>
+                      <div class="card-grid-title">Pure CSS tic-tac-toe with game AI</div>
+                      <div class="card-grid-posttitle">5 May 2023</div>
                     </div>
                   </div>
                 </div>
                 <div class="card-grid-content">
                   <div class="card-grid-posttitle card-grid-postitle-small">
-                    30 Dec 2023
+                    5 May 2023
                   </div>
                   <div class="card-grid-actions">
                     <span class="card-grid-action card-grid-info">info</span>
@@ -1497,9 +1528,9 @@
                   </div>
                   <div class="card-grid-description">
 
-                    <span class="tag-component" style="background: #cd8565; color: #543223">rust</span>
+                    <span class="tag-component" style="background: #817db5; color: #302e47">css</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Writing a single-file website with Rust">Read post</span>
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Pure CSS tic-tac-toe with game AI">Read post</span>
                   </div>
                 </div>
               </a>
@@ -1586,7 +1617,6 @@
 
 
   <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
-  <script defer="" src="/scripts/blog-media.js"></script>
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
   <script defer="">

@@ -7,6 +7,139 @@
         
         <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
         <item>
+            <title><![CDATA[Writing a single-file website with Rust]]></title>
+            <description><![CDATA[
+<p>At the company I work for, there is something called a “professional education leave”, which lets me take a day off to learn something new or attend conferences or whatever professional education means. I took the opportunity to learn the <a target="_blank" href="https://www.rust-lang.org/"><strong>Rust</strong></a> programming language.</p>
+
+<p>I didn’t want to follow tutorials, so I thought of a project to learn with, which ended up being “make a single-file website web server”. It was inspired by the article <a target="_blank" href="https://j3s.sh/thought/my-website-is-one-binary.html"><strong>my website is one binary</strong> by j3s</a>.</p>
+
+<h2 id="rust-first-impressions">Rust first impressions</h2>
+
+<pre><code>fn <span>main</span><span>(</span><span>)</span> <span>{</span>
+  println<span>!</span><span>(</span><span>"Hello World!"</span><span>)</span><span>;</span>
+<span>}</span></code></pre>
+
+<p>My first impression was that it is a mature programming language that is crazy about compile-time stuff. For example, the above <code>println!</code> call is a <em>macro</em>, which expands to something more verbose… Apparently, with macros you can also make full-blown <a target="_blank" href="https://doc.rust-lang.org/rust-by-example/macros/dsl.html">DSL</a>s that are directly embedded in Rust code.</p>
+
+<p>The <code>rustc</code> compiler’s error messages were very good.</p>
+
+<p>I think I haven’t really dived deep enough to discover the standout features that I keep hearing about like memory management safety. So unfortunately I didn’t get the hype at this time.</p>
+
+<h2 id="building-a-web-server">Building a web server</h2>
+
+<p>The standard Rust library provides a TCP module, but no HTTP one. So it’s a level lower than NodeJS, which is understandable.</p>
+
+<p>I didn’t want to implement the HTTP protocol, so I searched for an HTTP library.</p>
+
+<p>I found <a target="_blank" href="https://github.com/tomaka/rouille"><strong>rouille</strong></a>, a web micro-framework. I installed it via <code>cargo</code> which is like <code>npm</code> but for Rust.</p>
+
+<p>It was really easy to get it set up and running.</p>
+
+<p>For starters, I made two pages: <code>/</code> and <code>/about</code>.</p>
+
+<pre><code><span>// main.rs</span>
+use rouille<span>:</span><span>:</span>Response<span>;</span>
+use rouille<span>:</span><span>:</span>router<span>;</span>
+
+mod pages <span>{</span>
+  pub mod index<span>;</span>
+  pub mod about<span>;</span>
+<span>}</span>
+
+fn <span>main</span><span>(</span><span>)</span> <span>{</span>
+  rouille<span>:</span><span>:</span><span>start_server</span><span>(</span><span>"0.0.0.0:8080"</span><span>,</span> move <span>|</span>request<span>|</span> <span>{</span>
+    let response <span>=</span> router<span>!</span><span>(</span>request<span>,</span>
+      <span>(</span>GET<span>)</span> <span>(</span><span>/</span><span>)</span> <span>=</span><span>&gt;</span> <span>{</span>
+        pages<span>:</span><span>:</span>index<span>:</span><span>:</span><span>page</span><span>(</span>request<span>)</span>
+      <span>}</span><span>,</span>
+
+      <span>(</span>GET<span>)</span> <span>(</span><span>/</span>about<span>)</span> <span>=</span><span>&gt;</span> <span>{</span>
+        pages<span>:</span><span>:</span>about<span>:</span><span>:</span><span>page</span><span>(</span>request<span>)</span>
+      <span>}</span><span>,</span>
+
+      _ <span>=</span><span>&gt;</span> Response<span>:</span><span>:</span><span>empty_404</span><span>(</span><span>)</span>
+    <span>)</span><span>;</span>
+
+    <span>return</span> response<span>;</span>
+  <span>}</span><span>)</span><span>;</span>
+<span>}</span></code></pre>
+
+<p>Notice the <code>router!</code> macro! Apparently it allows me to write <code>GET</code> and the routes <code>/</code> and <code>/about</code> plainly into code. Those aren’t strings! Nor are they Rust keywords! It’s macro magic. It’s even more magical than Kotlin’s lambdas. I think this is a powerful but dangerous tool which could make learning Rust codebases harder. I like it though. Instead of parsing these routes at runtime, errors can be caught at compile time.</p>
+
+<h2 id="rust-modules">Rust modules</h2>
+
+<p>One little snag was that Rust’s module system was a little confusing, coming from ES6 where everything is explicit.</p>
+
+<p>In Rust, modules map to files. Module naming and hierarchy follows the filesystem structure.</p>
+
+<p>I didn’t fully understand modules properly but it seems that I can use the <code>mod</code> keyword to import modules. And that was enough knowledge to proceed with the project.</p>
+
+<p>In the above code I separated the code that renders the pages into separate files in <code>pages/index.rs</code> and <code>pages/about.rs</code>. To import them in the main file, I had this declaration at the top:</p>
+
+<pre><code>mod pages <span>{</span>
+  pub mod index<span>;</span>
+  pub mod about<span>;</span>
+<span>}</span></code></pre>
+
+<p>As I defined a top-level <code>page()</code> function in each of these files, calling them from the main file would be something like this: <code>pages::index::page(request)</code>.</p>
+
+<h2 id="rendering-html">Rendering HTML</h2>
+
+<p>The top-level <code>page</code> functions simply return static HTML <code>Response</code>s for now.</p>
+
+<p>Here’s one that handles the root <code>/</code> route:</p>
+
+<pre><code><span>// pages/index.rs</span>
+use rouille<span>:</span><span>:</span>Request<span>;</span>
+use rouille<span>:</span><span>:</span>Response<span>;</span>
+
+pub fn <span>page</span><span>(</span>_request<span>:</span> <span>&amp;</span>Request<span>)</span> <span>-</span><span>&gt;</span> Response <span>{</span>
+  <span>return</span> Response<span>:</span><span>:</span><span>html</span><span>(</span>r#"<span>&lt;</span><span>!</span>doctype html<span>&gt;</span>
+    <span>&lt;</span>title<span>&gt;</span>Tiny site<span>&lt;</span><span>/</span>title<span>&gt;</span>
+    <span>&lt;</span>h1<span>&gt;</span>Hello<span>,</span> world<span>!</span><span>&lt;</span><span>/</span>h1<span>&gt;</span>
+    <span>&lt;</span>p<span>&gt;</span>Welcome to my tiny site<span>!</span><span>&lt;</span><span>/</span>p<span>&gt;</span>
+    <span>&lt;</span>a href<span>=</span><span>"/about"</span><span>&gt;</span>About<span>&lt;</span><span>/</span>a<span>&gt;</span>
+  "#<span>)</span><span>;</span>
+<span>}</span></code></pre>
+
+<p>Which renders this page:</p>
+<iframe srcdoc="
+<!doctype html>
+<title>Tiny site</title>
+<h1>Hello, world!</h1>
+<p>Welcome to my tiny site!</p>
+<a href=&quot;/about&quot;>About</a>
+<base href=&quot;about:blank&quot;/>">
+            </iframe>
+<p>To avoid repetitively escaping double quotes in HTML, I used the raw string literal which looks <code>r#"something like this"#</code> to write the HTML response in Rust.</p>
+
+<h2 id="html-templates--components">HTML templates / components</h2>
+
+<p>I haven’t done this, but I imagine components or “includes” can be implemented by simply calling component functions normally and concatenating the resulting HTML fragments together. Nothing fancy required, for a tiny website.</p>
+
+<p>I wonder if there are templating systems that take advantage of Rust’s compile-time macros. A quick search revealed a lot of them. In fact, that seems to be the “Rust way” of doing HTML templates. One example is <a target="_blank" href="https://maud.lambda.xyz/">Maud</a>:</p>
+
+<pre><code>html<span>!</span> <span>{</span>
+  article data<span>-</span>index<span>=</span><span>"12345"</span> <span>{</span>
+    h1 <span>{</span> <span>"My blog"</span> <span>}</span>
+    tag<span>-</span>cloud <span>{</span> <span>"pinkie pie pony cute"</span> <span>}</span>
+  <span>}</span>
+<span>}</span></code></pre>
+
+<p>That looks a lot like Jetpack Compose in Kotlin. Seems like fun way to write HTML. I fear I might be taken by a strange mood and convert my entire website into Rust. I guess paid hosting for non-static sites would be a good deterrent.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>That was a nice dip into Rust. I’m still interested in the hyped-up features like memory management but I guess an HTML web server wouldn’t need much of those things after all. Maybe the next Rust learning exercise would be something like a small video game. Now that’s something that would require memory management and algorithms.</p>
+
+<p>Here’s the repo for my tiny web server in Rust: <a target="_blank" href="https://github.com/Kalabasa/tala"><strong>github.com/Kalabasa/tala</strong></a>.
+            </p>
+]]></description>
+            <link>https://leanrada.com/notes/single-file-website-rust?ref=rss</link>
+            <guid isPermaLink="true">https://leanrada.com/notes/single-file-website-rust?ref=rss</guid>
+            <pubDate>Sat, 30 Dec 2023 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title><![CDATA[2023 in review]]></title>
             <description><![CDATA[
 <p>What happened in 2023? Stuff happened.</p>
