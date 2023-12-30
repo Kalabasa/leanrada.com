@@ -10,12 +10,17 @@
     left: 50%;
     transform: translateX(-50%);
     display: inline-block;
+    margin: 200px 0;
+    margin: 15vh 0;
     width: 400px;
     width: min(100vw, 40vh);
     aspect-ratio: 1;
     border-radius: 12px;
-    background: #fff;
+    background: #444;
     overflow: hidden;
+  }
+  watercolor-demo-client:has(*) {
+    background: transparent;
   }
 </style>
 
@@ -37,13 +42,8 @@
         super.connectedCallback();
 
         this.visibilityListener({
-          show: () => {
-            if (!this.hasInit) this.init();
-            this.watercolorDemo.start();
-          },
-          hide: () => {
-            this.watercolorDemo.stop();
-          },
+          show: () => this.start(),
+          hide: () => this.stop(),
         });
 
         this.aliveListener(this, "pointerdown", this.onDown);
@@ -51,9 +51,7 @@
         this.aliveListener(this, "pointerup", this.onUp);
       }
 
-      init() {
-        this.hasInit = true;
-
+      start() {
         const rulesAttr = this.getAttribute("rules").split(",");
         const rules = {};
         rules.water = rulesAttr.includes("water");
@@ -72,6 +70,13 @@
 
         this.watercolorDemo = new WatercolorDemo(this, rules, action, display);
         this.watercolorDemo.init();
+        this.watercolorDemo.start();
+      }
+
+      stop() {
+        this.watercolorDemo.stop();
+        this.watercolorDemo.destroy();
+        this.watercolorDemo = null;
       }
 
       onDown = (event) => {
