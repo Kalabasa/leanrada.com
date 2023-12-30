@@ -16,13 +16,8 @@
         super.connectedCallback();
 
         this.visibilityListener({
-          show: () => {
-            if (!this.hasInit) this.init();
-            this.watercolorDemo.start();
-          },
-          hide: () => {
-            this.watercolorDemo.stop();
-          },
+          show: () => this.start(),
+          hide: () => this.stop(),
         });
 
         this.aliveListener(this, "pointerdown", this.onDown);
@@ -30,9 +25,7 @@
         this.aliveListener(this, "pointerup", this.onUp);
       }
 
-      init() {
-        this.hasInit = true;
-
+      start() {
         const rulesAttr = this.getAttribute("rules").split(",");
         const rules = {};
         rules.water = rulesAttr.includes("water");
@@ -51,6 +44,13 @@
 
         this.watercolorDemo = new WatercolorDemo(this, rules, action, display);
         this.watercolorDemo.init();
+        this.watercolorDemo.start();
+      }
+
+      stop() {
+        this.watercolorDemo.stop();
+        this.watercolorDemo.destroy();
+        this.watercolorDemo = null;
       }
 
       onDown = (event) => {
