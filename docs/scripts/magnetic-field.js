@@ -31,7 +31,18 @@
         });
       }
 
-      ripple(center) {
+      async ripple(center) {
+        const canvas = await this.asyncCanvas.promise;
+
+        if (
+          center.x < 0 ||
+          center.y < 0 ||
+          center.x > canvas.width ||
+          center.y > canvas.height
+        ) {
+          return;
+        }
+
         this.ripples.push({
           center,
           radius: 0,
@@ -94,7 +105,7 @@
 
             angle += t * 0.02;
 
-            let color = [0x22, 0x2c, 0x2c];
+            let color = [0x1e, 0x28, 0x28];
             const highlightColor = [0x54, 0xf8, 0xc1];
 
             for (const ripple of this.ripples) {
