@@ -145,7 +145,9 @@
   }
 
   function eventName(pagePath, reactionType) {
-    return `reaction-${reactionType}-${pagePath}`;
+    const url = new URL(pagePath, "https://leanrada.com");
+    const id = url.pathname;
+    return `reaction-${reactionType}-${id}`;
   }
 
   function delay(ms) {
