@@ -20,6 +20,7 @@ cd update
 node scripts/update/update-reputation.js
 node scripts/update/update-hits.js
 node scripts/update/update-gh-contribs.js
+node scripts/update/update-streak.js
 
 # Commit updates
 git add .
