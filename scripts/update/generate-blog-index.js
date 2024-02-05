@@ -29,7 +29,7 @@ async function main() {
     const public = !path.basename(dir).startsWith("_");
 
     // HTML is the source of truth
-    // todo: use microformat?
+    // todo: use output HTML + microformat, to scrape the hero image
     const code = await fs.readFile(page);
     const ch = cheerio.load(code, { xmlMode: true });
 
