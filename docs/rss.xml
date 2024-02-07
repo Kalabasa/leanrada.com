@@ -7,6 +7,46 @@
         
         <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
         <item>
+            <title><![CDATA[getDuolingoStreak()]]></title>
+            <description><![CDATA[
+<p>How to fetch your Duolingo streak using an unconfirmed API on duolingo.com:</p>
+
+<pre><code><span>function</span> <span>getDuolingoStreak</span><span>(</span><span>username</span><span>)</span> <span>{</span>
+  <span>const</span> res <span>=</span> <span>await</span> <span>fetch</span><span>(</span>
+    <span><span>`</span><span>https://www.duolingo.com/2017-06-30/users?username=</span><span><span>${</span>username<span>}</span></span><span>&amp;fields=streak,streakData%7BcurrentStreak,previousStreak%7D%7D</span><span>`</span></span>
+  <span>)</span><span>;</span>
+  <span>const</span> data <span>=</span> <span>await</span> res<span>.</span><span>json</span><span>(</span><span>)</span><span>;</span>
+  <span>const</span> userData <span>=</span> data<span>.</span>users<span>[</span><span>0</span><span>]</span><span>;</span>
+  <span>// I didn't know which of these fields matter, so I just get the max of them.</span>
+  <span>const</span> streak <span>=</span> Math<span>.</span><span>max</span><span>(</span>
+    userData<span>?.</span>streak <span>??</span> <span>0</span><span>,</span>
+    userData<span>?.</span>streakData<span>?.</span>currentStreak<span>?.</span>length <span>??</span> <span>0</span><span>,</span>
+    userData<span>?.</span>streakData<span>?.</span>previousStreak<span>?.</span>length <span>??</span> <span>0</span>
+  <span>)</span><span>;</span>
+  <span>return</span> streak<span>;</span>
+<span>}</span></code></pre>
+
+<p>I can then render this data into a card like this:</p>
+
+                87
+<img alt="" src="https://leanrada.com/misc/streak.png?ref=rss" loading="lazy">
+This card is live ;)<br>That’s my current max streak.
+<p>I put one of these cards in the <a target="_self" href="https://leanrada.com/misc?ref=rss">/misc/</a> section.</p>
+
+<p>Let’s look at the API itself. <code>www.duolingo.com/2017-06-30</code> seems to be the API prefix, which is a bit weird. What is <code>2017-06-30</code>? <a target="_blank" href="https://en.wikipedia.org/wiki/Portal:Current_events/2017_June_30">What happened on that date?</a> Maybe the Duolingo team used <a target="_blank" href="https://calver.org/">a date-based versioning</a> at the time?</p>
+
+<p>In any case, big thanks to the Duolingo team for keeping this apparently-6-year-old public API alive and accessible.</p>
+
+<p>The query parameters for the <code>/users</code> endpoint are interesting. It’s similar to <a target="_blank" href="https://graphql.org/">GraphQL</a> where you can specify exactly which fields you want in the response. You can even specify specific sub-fields within objects, using some kind of a DSL in the <code>fields</code> parameter.</p>
+
+<p>The <code>fields</code> parameter in the above query, when decoded, is <code>fields=streak,streakDate{currentStreak,previousStreak}}</code>. Fields are comma-delimited and objects are enclosed in braces. This could actually be GraphQL! There is an extra closing brace at the end which seems necessary for the request to be successful.
+            </p>
+]]></description>
+            <link>https://leanrada.com/notes/get-duolingo-streak?ref=rss</link>
+            <guid isPermaLink="true">https://leanrada.com/notes/get-duolingo-streak?ref=rss</guid>
+            <pubDate>Wed, 07 Feb 2024 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title><![CDATA[Writing a single-file website with Rust]]></title>
             <description><![CDATA[
 <p>At the company I work for, there is something called a “professional education leave”, which lets me take a day off to learn something new or attend conferences or whatever professional education means. I took the opportunity to learn the <a target="_blank" href="https://www.rust-lang.org/"><strong>Rust</strong></a> programming language.</p>

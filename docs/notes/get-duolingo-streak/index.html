@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Writing a single-file website with Rust · leanrada.com</title>
+  <title>getDuolingoStreak() · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -157,6 +157,20 @@
     }
     100% {
       background-position: var(--sheet-x) 200%;
+    }
+  }
+</style>
+  <style>
+  .card-component {
+    border: solid 1px var(--card-clr);
+    border-radius: 12px;
+    padding: 18px 24px;
+    box-sizing: border-box;
+    background: var(--bg-clr);
+  }
+  @media (max-width: 462px) {
+    .card-component {
+      padding: 18px;
     }
   }
 </style>
@@ -1294,7 +1308,22 @@
     color: var(--clr0, #fff);
   }
 </style>
-  <style></style>
+  <style>
+  .streak-card {
+    display: inline-block;
+    text-align: center;
+  }
+  .big-number {
+    margin: 18px;
+    font-size: 48px;
+    font-family: var(--display-font);
+    font-weight: bold;
+  }
+  .streak-icon {
+    width: 32px;
+    image-rendering: pixelated;
+  }
+</style>
   <script async="" src="/scripts/cursor.js"></script>
 </head>
 
@@ -1318,113 +1347,54 @@
 
       <div class="blog-page">
         <div class="content-header">
-          <h1 class="content-header-title">Writing a single-file website with Rust</h1>
+          <h1 class="content-header-title">getDuolingoStreak()</h1>
 
         </div>
         <div class="content">
 
 
           <div class="blog-post-info ">
-            30 Dec 2023 · 6 min read
+            7 Feb 2024 · 2 min read
           </div>
           <!-- textlint-disable -->
           <div class="tag-row">tags:
-            <span class="tag-component" style="background: #cd8565; color: #543223">rust</span>
+            <span class="tag-component" style="background: #f0de91; color: #725f15">js</span>
+            <span class="tag-component" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
           </div>
           <!-- textlint-enable -->
           <!-- prettier-ignore -->
           <div class="markdown">
-            <p>At the company I work for, there is something called a “professional education leave”, which lets me take a day off to learn something new or attend conferences or whatever professional education means. I took the opportunity to learn the <a target="_blank" class="text-link " href="https://www.rust-lang.org/"><strong>Rust</strong></a> programming language.</p>
-            <p>I didn’t want to follow tutorials, so I thought of a project to learn with, which ended up being “make a single-file website web server”. It was inspired by the article <a target="_blank" class="text-link " href="https://j3s.sh/thought/my-website-is-one-binary.html"><strong>my website is one binary</strong> by j3s</a>.</p>
-            <h2 id="rust-first-impressions">Rust first impressions</h2>
-            <pre class="code-block "><code class="code-block-code">fn <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  println<span class="token operator">!</span><span class="token punctuation">(</span><span class="token string">"Hello World!"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <p>How to fetch your Duolingo streak using an unconfirmed API on duolingo.com:</p>
+            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">getDuolingoStreak</span><span class="token punctuation">(</span><span class="token parameter">username</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> res <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">fetch</span><span class="token punctuation">(</span>
+    <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">https://www.duolingo.com/2017-06-30/users?username=</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>username<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">&amp;fields=streak,streakData%7BcurrentStreak,previousStreak%7D%7D</span><span class="token template-punctuation string">`</span></span>
+  <span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> data <span class="token operator">=</span> <span class="token keyword">await</span> res<span class="token punctuation">.</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> userData <span class="token operator">=</span> data<span class="token punctuation">.</span>users<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+  <span class="token comment">// I didn't know which of these fields matter, so I just get the max of them.</span>
+  <span class="token keyword">const</span> streak <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">max</span><span class="token punctuation">(</span>
+    userData<span class="token operator">?.</span>streak <span class="token operator">??</span> <span class="token number">0</span><span class="token punctuation">,</span>
+    userData<span class="token operator">?.</span>streakData<span class="token operator">?.</span>currentStreak<span class="token operator">?.</span>length <span class="token operator">??</span> <span class="token number">0</span><span class="token punctuation">,</span>
+    userData<span class="token operator">?.</span>streakData<span class="token operator">?.</span>previousStreak<span class="token operator">?.</span>length <span class="token operator">??</span> <span class="token number">0</span>
+  <span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> streak<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>My first impression was that it is a mature programming language that is crazy about compile-time stuff. For example, the above <code>println!</code> call is a <em>macro</em>, which expands to something more verbose… Apparently, with macros you can also make full-blown <a target="_blank" class="text-link " href="https://doc.rust-lang.org/rust-by-example/macros/dsl.html">DSL</a>s that are directly embedded in Rust code.</p>
-            <p>The <code>rustc</code> compiler’s error messages were very good.</p>
-            <p>I think I haven’t really dived deep enough to discover the standout features that I keep hearing about like memory management safety. So unfortunately I didn’t get the hype at this time.</p>
-            <h2 id="building-a-web-server">Building a web server</h2>
-            <p>The standard Rust library provides a TCP module, but no HTTP one. So it’s a level lower than NodeJS, which is understandable.</p>
-            <p>I didn’t want to implement the HTTP protocol, so I searched for an HTTP library.</p>
-            <p>I found <a target="_blank" class="text-link " href="https://github.com/tomaka/rouille"><strong>rouille</strong></a>, a web micro-framework. I installed it via <code>cargo</code> which is like <code>npm</code> but for Rust.</p>
-            <p>It was really easy to get it set up and running.</p>
-            <p>For starters, I made two pages: <code>/</code> and <code>/about</code>.</p>
-            <pre class="code-block "><code class="code-block-code"><span class="token comment">// main.rs</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Response<span class="token punctuation">;</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>router<span class="token punctuation">;</span>
+            <p>I can then render this data into a card like this:</p>
+            <div class="card-component streak-card">
 
-mod pages <span class="token punctuation">{</span>
-  pub mod index<span class="token punctuation">;</span>
-  pub mod about<span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
+              <div class="big-number">
+                87<!--
+          --><img class="streak-icon" alt="" src="/misc/streak.png" loading="lazy">
+              </div>
+              <div>This card is live ;)<br>That’s my current max streak.</div>
 
-fn <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  rouille<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">start_server</span><span class="token punctuation">(</span><span class="token string">"0.0.0.0:8080"</span><span class="token punctuation">,</span> move <span class="token operator">|</span>request<span class="token operator">|</span> <span class="token punctuation">{</span>
-    let response <span class="token operator">=</span> router<span class="token operator">!</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span>
-      <span class="token punctuation">(</span>GET<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token operator">/</span><span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
-        pages<span class="token punctuation">:</span><span class="token punctuation">:</span>index<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">page</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span>
-      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            </div>
 
-      <span class="token punctuation">(</span>GET<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token operator">/</span>about<span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
-        pages<span class="token punctuation">:</span><span class="token punctuation">:</span>about<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">page</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span>
-      <span class="token punctuation">}</span><span class="token punctuation">,</span>
-
-      _ <span class="token operator">=</span><span class="token operator">&gt;</span> Response<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">empty_404</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-    <span class="token keyword">return</span> response<span class="token punctuation">;</span>
-  <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>Notice the <code>router!</code> macro! Apparently it allows me to write <code>GET</code> and the routes <code>/</code> and <code>/about</code> plainly into code. Those aren’t strings! Nor are they Rust keywords! It’s macro magic. It’s even more magical than Kotlin’s lambdas. I think this is a powerful but dangerous tool which could make learning Rust codebases harder. I like it though. Instead of parsing these routes at runtime, errors can be caught at compile time.</p>
-            <h2 id="rust-modules">Rust modules</h2>
-            <p>One little snag was that Rust’s module system was a little confusing, coming from ES6 where everything is explicit.</p>
-            <p>In Rust, modules map to files. Module naming and hierarchy follows the filesystem structure.</p>
-            <p>I didn’t fully understand modules properly but it seems that I can use the <code>mod</code> keyword to import modules. And that was enough knowledge to proceed with the project.</p>
-            <p>In the above code I separated the code that renders the pages into separate files in <code>pages/index.rs</code> and <code>pages/about.rs</code>. To import them in the main file, I had this declaration at the top:</p>
-            <pre class="code-block "><code class="code-block-code">mod pages <span class="token punctuation">{</span>
-  pub mod index<span class="token punctuation">;</span>
-  pub mod about<span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>As I defined a top-level <code>page()</code> function in each of these files, calling them from the main file would be something like this: <code>pages::index::page(request)</code>.</p>
-            <h2 id="rendering-html">Rendering HTML</h2>
-            <p>The top-level <code>page</code> functions simply return static HTML <code>Response</code>s for now.</p>
-            <p>Here’s one that handles the root <code>/</code> route:</p>
-            <pre class="code-block "><code class="code-block-code"><span class="token comment">// pages/index.rs</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Request<span class="token punctuation">;</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Response<span class="token punctuation">;</span>
-
-pub fn <span class="token function">page</span><span class="token punctuation">(</span>_request<span class="token punctuation">:</span> <span class="token operator">&amp;</span>Request<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">&gt;</span> Response <span class="token punctuation">{</span>
-  <span class="token keyword">return</span> Response<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">html</span><span class="token punctuation">(</span>r#"<span class="token operator">&lt;</span><span class="token operator">!</span>doctype html<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>title<span class="token operator">&gt;</span>Tiny site<span class="token operator">&lt;</span><span class="token operator">/</span>title<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>h1<span class="token operator">&gt;</span>Hello<span class="token punctuation">,</span> world<span class="token operator">!</span><span class="token operator">&lt;</span><span class="token operator">/</span>h1<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>p<span class="token operator">&gt;</span>Welcome to my tiny site<span class="token operator">!</span><span class="token operator">&lt;</span><span class="token operator">/</span>p<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"/about"</span><span class="token operator">&gt;</span>About<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span>
-  "#<span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>Which renders this page:</p>
-            <iframe srcdoc="
-<!doctype html>
-<title>Tiny site</title>
-<h1>Hello, world!</h1>
-<p>Welcome to my tiny site!</p>
-<a href=&quot;/about&quot;>About</a>
-<base href=&quot;about:blank&quot;/>">
-            </iframe>
-
-            <p>To avoid repetitively escaping double quotes in HTML, I used the raw string literal which looks <code>r#"something like this"#</code> to write the HTML response in Rust.</p>
-            <h2 id="html-templates--components">HTML templates / components</h2>
-            <p>I haven’t done this, but I imagine components or “includes” can be implemented by simply calling component functions normally and concatenating the resulting HTML fragments together. Nothing fancy required, for a tiny website.</p>
-            <p>I wonder if there are templating systems that take advantage of Rust’s compile-time macros. A quick search revealed a lot of them. In fact, that seems to be the “Rust way” of doing HTML templates. One example is <a target="_blank" class="text-link " href="https://maud.lambda.xyz/">Maud</a>:</p>
-            <pre class="code-block "><code class="code-block-code">html<span class="token operator">!</span> <span class="token punctuation">{</span>
-  article data<span class="token operator">-</span>index<span class="token operator">=</span><span class="token string">"12345"</span> <span class="token punctuation">{</span>
-    h1 <span class="token punctuation">{</span> <span class="token string">"My blog"</span> <span class="token punctuation">}</span>
-    tag<span class="token operator">-</span>cloud <span class="token punctuation">{</span> <span class="token string">"pinkie pie pony cute"</span> <span class="token punctuation">}</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>That looks a lot like Jetpack Compose in Kotlin. Seems like fun way to write HTML. I fear I might be taken by a strange mood and convert my entire website into Rust. I guess paid hosting for non-static sites would be a good deterrent.</p>
-            <h2 id="conclusion">Conclusion</h2>
-            <p>That was a nice dip into Rust. I’m still interested in the hyped-up features like memory management but I guess an HTML web server wouldn’t need much of those things after all. Maybe the next Rust learning exercise would be something like a small video game. Now that’s something that would require memory management and algorithms.</p>
-            <p>Here’s the repo for my tiny web server in Rust: <a target="_blank" class="text-link " href="https://github.com/Kalabasa/tala"><strong>github.com/Kalabasa/tala</strong></a>.
+            <p>I put one of these cards in the <a target="_self" class="text-link " href="/misc/">/misc/</a> section.</p>
+            <p>Let’s look at the API itself. <code>www.duolingo.com/2017-06-30</code> seems to be the API prefix, which is a bit weird. What is <code>2017-06-30</code>? <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Portal:Current_events/2017_June_30">What happened on that date?</a> Maybe the Duolingo team used <a target="_blank" class="text-link " href="https://calver.org/">a date-based versioning</a> at the time?</p>
+            <p>In any case, big thanks to the Duolingo team for keeping this apparently-6-year-old public API alive and accessible.</p>
+            <p>The query parameters for the <code>/users</code> endpoint are interesting. It’s similar to <a target="_blank" class="text-link " href="https://graphql.org/">GraphQL</a> where you can specify exactly which fields you want in the response. You can even specify specific sub-fields within objects, using some kind of a DSL in the <code>fields</code> parameter.</p>
+            <p>The <code>fields</code> parameter in the above query, when decoded, is <code>fields=streak,streakDate{currentStreak,previousStreak}}</code>. Fields are comma-delimited and objects are enclosed in braces. This could actually be GraphQL! There is an extra closing brace at the end which seems necessary for the request to be successful.
             </p>
 
           </div>
@@ -1475,21 +1445,21 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
             <h2 class="blog-suggestions-title">More posts</h2>
             <div class="card-grid ">
 
-              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/get-duolingo-streak/">
+              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/introducing-portabl.ink/">
                 <div class="card-grid-image-container">
                   <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
                 </div>
                 <div class="card-grid-title-wrap">
                   <div class="card-grid-title-bar">
                     <div class="card-grid-title-content">
-                      <div class="card-grid-title">getDuolingoStreak()</div>
-                      <div class="card-grid-posttitle">07 Feb 2024</div>
+                      <div class="card-grid-title">Introducing portabl.ink</div>
+                      <div class="card-grid-posttitle">25 Sep 2023</div>
                     </div>
                   </div>
                 </div>
                 <div class="card-grid-content">
                   <div class="card-grid-posttitle card-grid-postitle-small">
-                    07 Feb 2024
+                    25 Sep 2023
                   </div>
                   <div class="card-grid-actions">
                     <span class="card-grid-action card-grid-info">Deets…</span>
@@ -1499,7 +1469,7 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
 
                     <span class="tag-component" style="background: #f0de91; color: #725f15">js</span> <span class="tag-component" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - getDuolingoStreak()">Read post</span>
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Introducing portabl.ink">Read post</span>
                   </div>
                 </div>
               </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/simple-image-recognition-vanilla-js/">
@@ -1529,21 +1499,21 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
                     <span class="card-grid-action card-grid-story" aria-label="Read post - Simple image recognition with vanilla JavaScript">Read post</span>
                   </div>
                 </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/developing-bitwise-input-method/">
+              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-volley-ball-game/">
                 <div class="card-grid-image-container">
                   <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
                 </div>
                 <div class="card-grid-title-wrap">
                   <div class="card-grid-title-bar">
                     <div class="card-grid-title-content">
-                      <div class="card-grid-title">Bitwise keyboard input method</div>
-                      <div class="card-grid-posttitle">16 Mar 2023</div>
+                      <div class="card-grid-title">Pure CSS volley ball game</div>
+                      <div class="card-grid-posttitle">3 Jul 2023</div>
                     </div>
                   </div>
                 </div>
                 <div class="card-grid-content">
                   <div class="card-grid-posttitle card-grid-postitle-small">
-                    16 Mar 2023
+                    3 Jul 2023
                   </div>
                   <div class="card-grid-actions">
                     <span class="card-grid-action card-grid-info">Deets…</span>
@@ -1551,9 +1521,9 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
                   </div>
                   <div class="card-grid-description">
 
-                    <span class="tag-component" style="background: #e2bb9e; color: #603e25">c</span> <span class="tag-component" style="background: #d8aef3; color: #4d1f6a">keyboard</span>
+                    <span class="tag-component" style="background: #817db5; color: #302e47">css</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span> <span class="tag-component" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Bitwise keyboard input method">Read post</span>
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Pure CSS volley ball game">Read post</span>
                   </div>
                 </div>
               </a>
