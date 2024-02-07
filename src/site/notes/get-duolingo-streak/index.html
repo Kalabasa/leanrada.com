@@ -1,0 +1,80 @@
+<html lang="en">
+  <page-title title="getDuolingoStreak()" />
+  <blog-page path-group="/notes/">
+    <content-header slot="precontent" title="getDuolingoStreak()" />
+    <blog-post-info date="07 Feb 2024" hidden />
+    <!-- textlint-disable -->
+    <tag-row>
+      <tag>js</tag>
+      <tag>µpost</tag>
+    </tag-row>
+    <!-- textlint-enable -->
+    <!-- prettier-ignore -->
+    <markdown>
+      How to fetch your Duolingo streak using an unconfirmed API on duolingo.com:
+
+      <code-block language="js" wrap="char" code="
+function getDuolingoStreak(username) {
+  const res = await fetch(
+    `https://www.duolingo.com/2017-06-30/users?username=${username}&fields=streak,streakData%7BcurrentStreak,previousStreak%7D%7D`
+  );
+  const data = await res.json();
+  const userData = data.users[0];
+  // I didn't know which of these fields matter, so I just get the max of them.
+  const streak = Math.max(
+    userData?.streak ?? 0,
+    userData?.streakData?.currentStreak?.length ?? 0,
+    userData?.streakData?.previousStreak?.length ?? 0
+  );
+  return streak;
+}
+"/>
+
+      I can then render this data into a card like this:
+
+      <card class="streak-card">
+        <div class="big-number">
+          {streak}<!--
+          --><img
+            class="streak-icon"
+            alt=""
+            :src="url('../../misc/streak.png')"
+            loading="lazy"
+          />
+        </div>
+        <div>This card is live ;)<br/>That’s my current max streak.</div>
+      </card>
+
+      I put one of these cards in the [/misc/](/misc/) section.
+
+      Let’s look at the API itself. `www.duolingo.com/2017-06-30` seems to be the API prefix, which is a bit weird. What is `2017-06-30`? [What happened on that date?](https://en.wikipedia.org/wiki/Portal:Current_events/2017_June_30) Maybe the Duolingo team used [a date-based versioning](https://calver.org/) at the time?
+
+      In any case, big thanks to the Duolingo team for keeping this apparently-6-year-old public API alive and accessible.
+
+      The query parameters for the `/users` endpoint are interesting. It’s similar to [GraphQL](https://graphql.org/) where you can specify exactly which fields you want in the response. You can even specify specific sub-fields within objects, using some kind of a DSL in the `fields` parameter.
+      
+      The `fields` parameter in the above query, when decoded, is <code><script render>'fields=streak,streakDate{currentStreak,previousStreak}}'</script></code>. Fields are comma-delimited and objects are enclosed in braces. This could actually be GraphQL! There is an extra closing brace at the end which seems necessary for the request to be successful.
+    </markdown>
+  </blog-page>
+</html>
+
+<script static>
+  const { streak } = require("../../misc/streak.json");
+</script>
+
+<style>
+  .streak-card {
+    display: inline-block;
+    text-align: center;
+  }
+  .big-number {
+    margin: 18px;
+    font-size: 48px;
+    font-family: var(--display-font);
+    font-weight: bold;
+  }
+  .streak-icon {
+    width: 32px;
+    image-rendering: pixelated;
+  }
+</style>
