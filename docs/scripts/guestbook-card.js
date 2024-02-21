@@ -32,7 +32,7 @@
   class="guestbook-card-name"
   name="name"
   type="text"
-  placeholder="${disabled ? "" : "Your name"}"
+  placeholder="${disabled ? "" : "Name / pseudonym"}"
   ${disabled ? "disabled" : ""}
 />
 `;
