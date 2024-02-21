@@ -4,7 +4,7 @@ export interface Env {
 
 const MASTER_KEY = "v2";
 const CURRENT_SCHEMA_VERSION = "v2";
-const GET_PAGE_SIZE = 20;
+const GET_PAGE_SIZE = 100;
 
 type GetRequest = {
   page: number;
