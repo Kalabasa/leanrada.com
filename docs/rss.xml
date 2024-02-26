@@ -7,6 +7,73 @@
         
         <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
         <item>
+            <title><![CDATA[Pure CSS single-page app routing]]></title>
+            <description><![CDATA[
+<p>You’re probably a busy person, so here’s the CSS:</p>
+
+<pre><code><span>section:not(:target)</span> <span>{</span>
+  <span>display</span><span>:</span> none<span>;</span>
+<span>}</span></code></pre>
+
+<p><strong>Demo:</strong> <a target="_blank" href="https://leanrada.com/notes/pure-css-spa-router/example1?ref=rss">Open in a new tab</a></p>
+<iframe src="example1/"></iframe><a target="_blank" href="https://leanrada.com/notes/pure-css-spa-router/example1?ref=rss">Open in a new tab</a>
+<h2 id="explanation">Explanation</h2>
+
+<p>The <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/CSS/:target"><code>:target</code></a> CSS selector selects the element that is targeted by the URL fragment.</p>
+
+<p>Combined with <code>:not</code>, we can hide sections that are <em>not</em> referenced by the URL fragment.</p>
+
+<p>Just as JS routers use the fragment to hide/show sections in the DOM, this “CSS router” uses the same fragment to hide/show sections in the DOM.</p>
+
+<h2 id="experiment-default-section">Experiment: Default section</h2>
+
+<p>Notice that the example above doesn’t start with the Home section. The content is blank initially. This is because on initial page load we don’t have a URL fragment to begin with.</p>
+
+<p>We need to make an exception for the Home section.</p>
+
+<p>Let’s start by not hiding the <code>#home</code> section by default. Only hide <code>#home</code> if there’s a specific <code>:target</code> section.</p>
+
+<pre><code><span><span>-</span><span> section:not(:target) {
+</span></span><span><span>+</span><span> section:not(#home, :target),
+</span><span>+</span><span> :root:has(:target) #home {
+</span></span><span><span> </span><span>   display: none;
+</span><span> </span><span> }</span></span></code></pre>
+
+<p><strong>Demo v2:</strong> <a target="_blank" href="https://leanrada.com/notes/pure-css-spa-router/example2?ref=rss">Open in a new tab</a></p>
+<iframe src="example2/"></iframe><a target="_blank" href="https://leanrada.com/notes/pure-css-spa-router/example2?ref=rss">Open in a new tab</a>
+<h2 id="experiment-nested-routes">Experiment: Nested routes</h2>
+
+<p>One thing that makes most client-side routers modular is the ability to nest routes. We can do the same with CSS.</p>
+
+<pre><code><span><span>-</span><span> section:not(:target) {
+</span></span><span><span>+</span><span> section:not(:target, :has(:target)) {
+</span></span><span><span> </span><span>   display: none;
+</span><span> </span><span> }</span></span></code></pre>
+
+<p><strong>Demo v3: This demo is best when you <a target="_blank" href="https://leanrada.com/notes/pure-css-spa-router/example3?ref=rss">view it in a separate tab</a></strong></p>
+<iframe src="example3/"></iframe><a target="_blank" href="https://leanrada.com/notes/pure-css-spa-router/example3?ref=rss">Open in a new tab</a>
+<h2 id="parameterised-routes">Parameterised routes?</h2>
+
+<p>The ultimate feature for client-side routers is to dynamically catch routes with parameters like for example <code>/post/:id</code>.</p>
+
+<p>Since HTML is static, there’s no real way to do this with CSS. ☹</p>
+
+<p>Unless… you could render all possible <code>:id</code> values in the markup and use it like you would nested routes.</p>
+
+<pre><code><span>&lt;!-- ... --&gt;</span>
+<span><span><span>&lt;</span>section</span> <span>id</span><span><span>=</span><span>"</span>post/128<span>"</span></span><span>&gt;</span></span><span>&lt;!-- ... --&gt;</span><span><span><span>&lt;/</span>section</span><span>&gt;</span></span>
+<span><span><span>&lt;</span>section</span> <span>id</span><span><span>=</span><span>"</span>post/129<span>"</span></span><span>&gt;</span></span><span>&lt;!-- ... --&gt;</span><span><span><span>&lt;/</span>section</span><span>&gt;</span></span>
+<span><span><span>&lt;</span>section</span> <span>id</span><span><span>=</span><span>"</span>post/130<span>"</span></span><span>&gt;</span></span><span>&lt;!-- ... --&gt;</span><span><span><span>&lt;/</span>section</span><span>&gt;</span></span>
+<span>&lt;!-- ... --&gt;</span></code></pre>
+
+<p>But that’d be like putting the entire database in HTML. What if you have two parameters in the route? It could be a combinatorial explosion. So no, the experiments end here. 👋
+            </p>
+]]></description>
+            <link>https://leanrada.com/notes/pure-css-spa-router?ref=rss</link>
+            <guid isPermaLink="true">https://leanrada.com/notes/pure-css-spa-router?ref=rss</guid>
+            <pubDate>Tue, 27 Feb 2024 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title><![CDATA[getDuolingoStreak()]]></title>
             <description><![CDATA[
 <p>How to fetch your Duolingo streak using an unconfirmed API on duolingo.com:</p>
