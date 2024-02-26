@@ -1,0 +1,97 @@
+<html lang="en">
+  <page-title title="Pure CSS single-page app routing" />
+  <blog-page path-group="/notes/">
+    <content-header
+      slot="precontent"
+      title="Pure CSS single-page app routing"
+    />
+    <blog-post-info date="27 Feb 2024" read-mins="2" />
+    <!-- textlint-disable -->
+    <tag-row>
+      <tag>css</tag>
+    </tag-row>
+    <!-- textlint-enable -->
+    <!-- prettier-ignore -->
+    <markdown>
+      You’re probably a busy person, so here’s the CSS:
+
+      <code-block language="css" :code="`
+section:not(:target) {
+  display: none;
+}
+`" />
+
+      **Demo:** <text-link href="example1/" target="_blank">Open in a new tab</text-link>
+      <iframe class="example" src="example1/"></iframe>
+      <text-link href="example1/" target="_blank">Open in a new tab</text-link>
+
+      ## Explanation
+
+      The [`:target`](https://developer.mozilla.org/en-US/docs/Web/CSS/:target) CSS selector selects the element that is targeted by the URL fragment.
+      
+      Combined with `:not`, we can hide sections that are *not* referenced by the URL fragment.
+      
+      Just as JS routers use the fragment to hide/show sections in the DOM, this “CSS router” uses the same fragment to hide/show sections in the DOM.
+
+      ## Experiment: Default section
+
+      Notice that the example above doesn’t start with the Home section. The content is blank initially. This is because on initial page load we don’t have a URL fragment to begin with.
+      
+      We need to make an exception for the Home section.
+
+      Let’s start by not hiding the `#home` section by default. Only hide `#home` if there’s a specific `:target` section.
+
+      <code-block language="diff" language-code="css" :code="`
+- section:not(:target) {
++ section:not(#home, :target),
++ :root:has(:target) #home {
+    display: none;
+  }
+`" />
+
+      **Demo v2:** <text-link href="example2/" target="_blank">Open in a new tab</text-link>
+      <iframe class="example" src="example2/"></iframe>
+      <text-link href="example2/" target="_blank">Open in a new tab</text-link>
+
+      ## Experiment: Nested routes
+
+      One thing that makes most client-side routers modular is the ability to nest routes. We can do the same with CSS.
+
+      <code-block language="diff" language-code="css" :code="`
+- section:not(:target) {
++ section:not(:target, :has(:target)) {
+    display: none;
+  }
+`" />
+
+      **Demo v3: This demo is best when you <text-link href="example3/" target="_blank">view it in a separate tab</text-link>**
+      <iframe class="example" src="example3/"></iframe>
+      <text-link href="example3/" target="_blank">Open in a new tab</text-link>
+
+      ## Parameterised routes?
+
+      The ultimate feature for client-side routers is to dynamically catch routes with parameters like for example `/post/:id`.
+
+      Since HTML is static, there’s no real way to do this with CSS. ☹
+      
+      Unless&hellip; you could render all possible `:id` values in the markup and use it like you would nested routes.
+
+      <code-block language="html" :code='`
+<!-- ... -->
+<section id="post/128"><!-- ... --></section>
+<section id="post/129"><!-- ... --></section>
+<section id="post/130"><!-- ... --></section>
+<!-- ... -->
+`' />
+
+      But that’d be like putting the entire database in HTML. What if you have two parameters in the route? It could be a combinatorial explosion. So no, the experiments end here. 👋
+    </markdown>
+  </blog-page>
+</html>
+
+<style>
+  .example {
+    width: 100%;
+    min-height: 32rem;
+  }
+</style>
