@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Writing a single-file website with Rust · leanrada.com</title>
+  <title>htmz story · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -158,6 +158,50 @@
     100% {
       background-position: var(--sheet-x) 200%;
     }
+  }
+</style>
+  <style>
+  .box-note {
+    display: block;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: solid 2px var(--clr0-dark);
+    box-sizing: border-box;
+  }
+</style>
+  <style>
+  .blog-media {
+    position: relative;
+    text-align: center;
+    /* external margin because it’s expected to be in an article */
+    margin: 36px 0;
+  }
+  .blog-media-bleed {
+    margin: 90px 0;
+    max-height: 80vh;
+  }
+
+  .blog-media-element {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 18px;
+    box-sizing: border-box;
+  }
+  .blog-media-bleed .blog-media-element {
+    position: relative;
+    left: 50%;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+  .blog-media-windowed .blog-media-element {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .blog-media-caption {
+    display: block;
+    font-size: 15px;
   }
 </style>
   <style>
@@ -330,32 +374,88 @@
   }
 </style>
   <style>
-  .content-header {
-    font-family: var(--default-font);
-    margin: 90px 0 60px;
-    padding: 0 18px;
+  .text-with-bg-span {
+    display: inline;
+    margin: 0;
+    padding: 0.7em;
+    padding: 0.35lh;
+    border-radius: 18px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    font: inherit;
+    background: var(--text-with-bg-color);
+  }
+</style>
+  <style>
+  .blog-header {
+    isolation: isolate;
+    margin: 90px 0 24px;
+    position: relative;
+    left: 50%;
+    height: 400px; /* .blog-header-title::before must match */
+    width: max(800px, 60vw);
+    transform: translateX(-50%);
+    box-sizing: border-box;
   }
   @media (max-width: 600px) {
-    .content-header {
-      margin: 60px 0;
+    .blog-header {
+      margin-top: 60px;
     }
   }
 
-  .content-header-title {
-    margin: 0 0 6px;
+  .blog-header-title {
+    position: relative;
+    max-width: 800px;
     font-family: var(--display-font);
-    font-size: 27px;
-    font-style: italic;
+    font-size: 36px;
     font-weight: bold;
-    text-align: center;
+    font-style: italic;
+    text-align: left;
+    z-index: 2;
+  }
+  .blog-header-title-inner {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  /* Wrap lines in an angle */
+  .blog-header-title::before {
+    content: "";
+    width: 0;
+    width: calc(min(50%, 120vw - 600px));
+    height: 400px;
+    float: right;
+    shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
   }
 
-  .content-header-subtitle {
-    margin: 6px 0 0;
-    font-size: 18px;
-    font-style: italic;
-    text-align: center;
-    color: var(--text2-clr);
+  .blog-header-hero {
+    position: absolute;
+    inset: 1px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    background: gray;
+    z-index: -1;
+  }
+
+  .blog-header-decor {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    fill: var(--bg-clr);
+    z-index: 1;
+  }
+
+  @media (max-width: 800px) {
+    .blog-header {
+      width: 100vw;
+      width: 100svw;
+      height: 400px;
+      padding-right: 36px;
+    }
+    .blog-header-title {
+      font-size: clamp(24px, 20px + 2vw, 36px);
+    }
   }
 </style>
   <style>
@@ -1317,114 +1417,107 @@
     <div class="page-wrapper-content">
 
       <div class="blog-page">
-        <div class="content-header">
-          <h1 class="content-header-title">Writing a single-file website with Rust</h1>
 
-        </div>
         <div class="content">
 
-
+          <div class="blog-header">
+            <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+              <h1 class="text-with-bg-span blog-header-title-inner">
+                htmz story
+              </h1>
+            </div>
+            <img srcset="/notes/htmz-story/hero_800.generated.png 800w,/notes/htmz-story/hero_1067.generated.png 1067w" sizes="not (min-width:800px) 800px, 1067px" class="blog-header-hero" src="/notes/htmz-story/hero.png" alt="" spec="100% [800) 80%">
+            <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+              <path></path>
+            </svg>
+          </div>
           <div class="blog-post-info ">
-            30 Dec 2023 · 6 min read
+            1 Mar 2024 · 7 min read
           </div>
           <!-- textlint-disable -->
           <div class="tag-row">tags:
-            <span class="tag-component" style="background: #cd8565; color: #543223">rust</span>
+            <span class="tag-component" style="background: #e8c37d; color: #684c19">html</span>
+            <span class="tag-component" style="background: #f0de91; color: #725f15">js</span>
           </div>
           <!-- textlint-enable -->
           <!-- prettier-ignore -->
           <div class="markdown">
-            <p>At the company I work for, there is something called a “professional education leave”, which lets me take a day off to learn something new or attend conferences or whatever professional education means. I took the opportunity to learn the <a target="_blank" class="text-link " href="https://www.rust-lang.org/"><strong>Rust</strong></a> programming language.</p>
-            <p>I didn’t want to follow tutorials, so I thought of a project to learn with, which ended up being “make a single-file website web server”. It was inspired by the article <a target="_blank" class="text-link " href="https://j3s.sh/thought/my-website-is-one-binary.html"><strong>my website is one binary</strong> by j3s</a>.</p>
-            <h2 id="rust-first-impressions">Rust first impressions</h2>
-            <pre class="code-block "><code class="code-block-code">fn <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  println<span class="token operator">!</span><span class="token punctuation">(</span><span class="token string">"Hello World!"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>My first impression was that it is a mature programming language that is crazy about compile-time stuff. For example, the above <code>println!</code> call is a <em>macro</em>, which expands to something more verbose… Apparently, with macros you can also make full-blown <a target="_blank" class="text-link " href="https://doc.rust-lang.org/rust-by-example/macros/dsl.html">DSL</a>s that are directly embedded in Rust code.</p>
-            <p>The <code>rustc</code> compiler’s error messages were very good.</p>
-            <p>I think I haven’t really dived deep enough to discover the standout features that I keep hearing about like memory management safety. So unfortunately I didn’t get the hype at this time.</p>
-            <h2 id="building-a-web-server">Building a web server</h2>
-            <p>The standard Rust library provides a TCP module, but no HTTP one. So it’s a level lower than NodeJS, which is understandable.</p>
-            <p>I didn’t want to implement the HTTP protocol, so I searched for an HTTP library.</p>
-            <p>I found <a target="_blank" class="text-link " href="https://github.com/tomaka/rouille"><strong>rouille</strong></a>, a web micro-framework. I installed it via <code>cargo</code> which is like <code>npm</code> but for Rust.</p>
-            <p>It was really easy to get it set up and running.</p>
-            <p>For starters, I made two pages: <code>/</code> and <code>/about</code>.</p>
-            <pre class="code-block "><code class="code-block-code"><span class="token comment">// main.rs</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Response<span class="token punctuation">;</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>router<span class="token punctuation">;</span>
-
-mod pages <span class="token punctuation">{</span>
-  pub mod index<span class="token punctuation">;</span>
-  pub mod about<span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
-
-fn <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-  rouille<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">start_server</span><span class="token punctuation">(</span><span class="token string">"0.0.0.0:8080"</span><span class="token punctuation">,</span> move <span class="token operator">|</span>request<span class="token operator">|</span> <span class="token punctuation">{</span>
-    let response <span class="token operator">=</span> router<span class="token operator">!</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span>
-      <span class="token punctuation">(</span>GET<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token operator">/</span><span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
-        pages<span class="token punctuation">:</span><span class="token punctuation">:</span>index<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">page</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span>
-      <span class="token punctuation">}</span><span class="token punctuation">,</span>
-
-      <span class="token punctuation">(</span>GET<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token operator">/</span>about<span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
-        pages<span class="token punctuation">:</span><span class="token punctuation">:</span>about<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">page</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span>
-      <span class="token punctuation">}</span><span class="token punctuation">,</span>
-
-      _ <span class="token operator">=</span><span class="token operator">&gt;</span> Response<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">empty_404</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-    <span class="token keyword">return</span> response<span class="token punctuation">;</span>
-  <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>Notice the <code>router!</code> macro! Apparently it allows me to write <code>GET</code> and the routes <code>/</code> and <code>/about</code> plainly into code. Those aren’t strings! Nor are they Rust keywords! It’s macro magic. It’s even more magical than Kotlin’s lambdas. I think this is a powerful but dangerous tool which could make learning Rust codebases harder. I like it though. Instead of parsing these routes at runtime, errors can be caught at compile time.</p>
-            <h2 id="rust-modules">Rust modules</h2>
-            <p>One little snag was that Rust’s module system was a little confusing, coming from ES6 where everything is explicit.</p>
-            <p>In Rust, modules map to files. Module naming and hierarchy follows the filesystem structure.</p>
-            <p>I didn’t fully understand modules properly but it seems that I can use the <code>mod</code> keyword to import modules. And that was enough knowledge to proceed with the project.</p>
-            <p>In the above code I separated the code that renders the pages into separate files in <code>pages/index.rs</code> and <code>pages/about.rs</code>. To import them in the main file, I had this declaration at the top:</p>
-            <pre class="code-block "><code class="code-block-code">mod pages <span class="token punctuation">{</span>
-  pub mod index<span class="token punctuation">;</span>
-  pub mod about<span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>As I defined a top-level <code>page()</code> function in each of these files, calling them from the main file would be something like this: <code>pages::index::page(request)</code>.</p>
-            <h2 id="rendering-html">Rendering HTML</h2>
-            <p>The top-level <code>page</code> functions simply return static HTML <code>Response</code>s for now.</p>
-            <p>Here’s one that handles the root <code>/</code> route:</p>
-            <pre class="code-block "><code class="code-block-code"><span class="token comment">// pages/index.rs</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Request<span class="token punctuation">;</span>
-use rouille<span class="token punctuation">:</span><span class="token punctuation">:</span>Response<span class="token punctuation">;</span>
-
-pub fn <span class="token function">page</span><span class="token punctuation">(</span>_request<span class="token punctuation">:</span> <span class="token operator">&amp;</span>Request<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">&gt;</span> Response <span class="token punctuation">{</span>
-  <span class="token keyword">return</span> Response<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">html</span><span class="token punctuation">(</span>r#"<span class="token operator">&lt;</span><span class="token operator">!</span>doctype html<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>title<span class="token operator">&gt;</span>Tiny site<span class="token operator">&lt;</span><span class="token operator">/</span>title<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>h1<span class="token operator">&gt;</span>Hello<span class="token punctuation">,</span> world<span class="token operator">!</span><span class="token operator">&lt;</span><span class="token operator">/</span>h1<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>p<span class="token operator">&gt;</span>Welcome to my tiny site<span class="token operator">!</span><span class="token operator">&lt;</span><span class="token operator">/</span>p<span class="token operator">&gt;</span>
-    <span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"/about"</span><span class="token operator">&gt;</span>About<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span>
-  "#<span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>Which renders this page:</p>
-            <iframe srcdoc="
-<!doctype html>
-<title>Tiny site</title>
-<h1>Hello, world!</h1>
-<p>Welcome to my tiny site!</p>
-<a href=&quot;/about&quot;>About</a>
-<base href=&quot;about:blank&quot;/>">
-            </iframe>
-
-            <p>To avoid repetitively escaping double quotes in HTML, I used the raw string literal which looks <code>r#"something like this"#</code> to write the HTML response in Rust.</p>
-            <h2 id="html-templates--components">HTML templates / components</h2>
-            <p>I haven’t done this, but I imagine components or “includes” can be implemented by simply calling component functions normally and concatenating the resulting HTML fragments together. Nothing fancy required, for a tiny website.</p>
-            <p>I wonder if there are templating systems that take advantage of Rust’s compile-time macros. A quick search revealed a lot of them. In fact, that seems to be the “Rust way” of doing HTML templates. One example is <a target="_blank" class="text-link " href="https://maud.lambda.xyz/">Maud</a>:</p>
-            <pre class="code-block "><code class="code-block-code">html<span class="token operator">!</span> <span class="token punctuation">{</span>
-  article data<span class="token operator">-</span>index<span class="token operator">=</span><span class="token string">"12345"</span> <span class="token punctuation">{</span>
-    h1 <span class="token punctuation">{</span> <span class="token string">"My blog"</span> <span class="token punctuation">}</span>
-    tag<span class="token operator">-</span>cloud <span class="token punctuation">{</span> <span class="token string">"pinkie pie pony cute"</span> <span class="token punctuation">}</span>
-  <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-            <p>That looks a lot like Jetpack Compose in Kotlin. Seems like fun way to write HTML. I fear I might be taken by a strange mood and convert my entire website into Rust. I guess paid hosting for non-static sites would be a good deterrent.</p>
-            <h2 id="conclusion">Conclusion</h2>
-            <p>That was a nice dip into Rust. I’m still interested in the hyped-up features like memory management but I guess an HTML web server wouldn’t need much of those things after all. Maybe the next Rust learning exercise would be something like a small video game. Now that’s something that would require memory management and algorithms.</p>
-            <p>Here’s the repo for my tiny web server in Rust: <a target="_blank" class="text-link " href="https://github.com/Kalabasa/tala"><strong>github.com/Kalabasa/tala</strong></a>.
+            <p>This post is not the usual programming post. It’s been an interesting week, I guess.</p>
+            <p>I just finished my mini side-project <a target="_blank" class="text-link " href="//leanrada.com/htmz/"><strong>htmz</strong></a>, a snippet / library / microframework / whatever for HTML whose main feature was that it only weighed a total of <strong>181 bytes</strong>. It almost fits inside a single ‘tweet’ (wait, the limit is now 280 not 140?).</p>
+            <p>Here is the entire framework in its final form:</p>
+            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
+document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token keyword">null</span><span class="token punctuation">)</span>
+<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
+            <p>See the <a target="_blank" class="text-link " href="//leanrada.com/htmz/">project documentation</a> for more info on what it does.</p>
+            <p>I <a target="_blank" class="text-link " href="https://news.ycombinator.com/item?id=39429370">posted it on Hacker News</a>, went to sleep because it was 3am at that point. Then the next morning it was at the top of HN!</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/htmz-story/hn_585.generated.png 585w,/notes/htmz-story/hn_664.generated.png 664w" sizes="not (min-width:664px) 585px, 664px" class="blog-media-element" alt="screenshot of HN. Stories from February 19, 2024. 1. Show HN: htmz – a low power tool for HTML (leanrada.com). 1017 points by Kalabasa 9 days ago | 242 comments" src="/notes/htmz-story/hn.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #f8f8e8">
+            </div>
+            </p>
+            <p>I didn’t expect this at all. But naturally I rushed to the comments section which quickly grew too numerous for me to read. They were generally positive, and acknowledged the project’s hackyness and elegance (these adjectives usually mean opposite things). It was pretty cool! The top comment in the thread sums it up.</p>
+            <p>A bunch of common themes were raised. I guess I’ll write about them in this post.</p>
+            <h2 id="why-htmz">Why htmz?</h2>
+            <p>htmz was initially inspired by <a target="_blank" class="text-link " href="https://htmx.org/">htmx</a>, another web library/framework. One of htmx’s main features was that it provides the capability for any element, not just the entire window, to be the target for update by an HTTP request (e.g. by clicking a link you load a partial HTML update to the page).</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/htmz-story/htmx_573.generated.png 573w,/notes/htmz-story/htmx_664.generated.png 664w" sizes="not (min-width:664px) 573px, 664px" class="blog-media-element" alt="Why should you only be able to replace the entire screen? By removing these constraints, htmx completes HTML as a hypertext." src="/notes/htmz-story/htmx.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 6.741176470588235; background: #f8f8f8">
+            </div>
+            </p>
+            <p>I wondered for a bit then remembered that we already have <strong>iframes</strong>, a native HTML way for links to update not just the entire window, but a ‘part’ of the page. Granted, iframes are limited and not as dynamic as some of htmx’s operations like appends and deletions.</p>
+            <p>So I set out to make an iframe-only solution to this class of problems. htmz initially stood for <strong>‘htmx zero’</strong> or something like that, because you need exactly zero JavaScript to be able to use iframes, while htmx stood at around 16 kB compressed (decompresses to a total of 48 kB of JavaScript!). Minimising the amount of code needed was the primary goal from the start.</p>
+            <p>Eventually, the original iframe solution evolved to support most of the usual operations like deletions, and a <em>bit</em> of JS was required after all. htmz was then backronymised as <em><b>H</b>tml with <b>T</b>argeted <b>M</b>anipulation <b>Z</b>ones</em>.</p>
+            <h2 id="was-it-a-joke">Was it a joke?</h2>
+            <p><em>(short answer: maybe)</em></p>
+            <p>Starting with the name itself, htmz sounded like a parody of the more popular htmx. I thought it was obvious that this project was just a fun hack to share.</p>
+            <p>But some people took it too seriously. I know, this is HN, where serious startups and stuff are posted daily. Or rather, this is the Internet.</p>
+            <p>I was reminded of <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Poe%27s_law">Poe’s law</a>. On the other hand, the initial documentation for the project did give mixed vibes (it was a half-joke half-solution project after all). And the marketing bits were too good for the project’s own good.</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/htmz-story/logo_200.generated.png 200w,/notes/htmz-story/logo_664.generated.png 664w" sizes="not (min-width:664px) 200px, 664px" class="blog-media-element" alt="" src="/notes/htmz-story/logo.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #080808"><span class="blog-media-caption">This project has a favicon while htmx.org has none. Marketing overload! But really, I just enjoy polishing the little details in projects.</span>
+            </div>
+            </p>
+            <p>Orrr maybe I’m the only one who finds humour in a section called ‘Installing’ that, instead of telling you to install a package, tells you to simply copy a snippet. Orrr what about when ‘Extensions’ are not plugins but code you actually have to write yourself… Ha! Get it? 😂😂😂 Subversion of expectations, anyone? No? OK, fine…</p>
+            <p>In any case, I had my fun writing these aspects of the project!</p>
+            <p>I made an npm package for good measure:</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/htmz-story/npm_597.generated.png 597w,/notes/htmz-story/npm_664.generated.png 664w" sizes="not (min-width:664px) 597px, 664px" class="blog-media-element" alt="For npm enjoyers, use the following npm commands to automate the simple process of copying the snippet. For maximum npm enjoyment, this npm package contains 25 bonus dependencies!" src="/notes/htmz-story/npm.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 3.1587301587301586; background: #e8f8f8">
+            </div>
+            </p>
+            <h2 id="code-golfing">Code golfing</h2>
+            <p>Some commenters pointed out insights which led to significant reductions in the size of the snippet. Some even made pull requests, that I reviewed and merged (Am I an ‘open-source maintainer’ yet?).</p>
+            <p>My initial release started with <strong>181</strong> bytes:</p>
+            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
+document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token string">':not(*)'</span><span class="token punctuation">)</span>
+<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
+            <p>Turns out <code>':not(*)'</code> is <em>not</em> necessary as a selector fallback. <code>querySelector</code> can accept null! Down to <strong>176</strong> bytes:</p>
+            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
+document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token keyword">null</span><span class="token punctuation">)</span>
+<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
+            <p>Apparently, <code>this</code> is also unnecessary within inline attribute scripts when referring to the element it’s attached to. Now down to <strong>166</strong> bytes (its final form as of today):</p>
+            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
+document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token keyword">null</span><span class="token punctuation">)</span>
+<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
+            <p>That’s about 90% of the original! I’m pretty sure this could be reduced further (<code>setTimeout</code> isn’t strictly required) but I’m leaving it as it is. This code golfing diversion has been fun and I learned about HTML spec stuff that I wouldn’t normally discover in my day job as a React framework user.</p>
+            <h2 id="knowledge-sharing">Knowledge sharing</h2>
+            <p>Some commenters shared similar approaches and techniques. Some tips / workarounds on how to best utilise the snippet were thrown around. There were even discussions in the project’s Issue tracker on GitHub.</p>
+            <p><span class="box-note ">For one, the new <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Dest">Sec-Fetch-Dest</a> header that someone mentioned is pretty cool. It lets the server know if the request is for an iframe or for a new tab, etc. Pretty handy for <em>hypertext</em> servers!</span></p>
+            <p>I learned lots and, not wanting to get these learnings lost into the archives, incorporated these tips into the main documentation, into the examples/demos, and some even became real-ish <a target="_blank" class="text-link " href="//leanrada.com/htmz/extensions/">extensions</a>:</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/htmz-story/extensions_621.generated.png 621w,/notes/htmz-story/extensions_664.generated.png 664w" sizes="not (min-width:664px) 621px, 664px" class="blog-media-element" alt="Screenshot of the Extensions page" src="/notes/htmz-story/extensions.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.9589905362776026; background: #e8f8f8">
+            </div>
+            </p>
+            <p>It’s a multi-way exchange. htmz and its iframe shenanigans have apparently inspired the creation of new HTML frameworks, such as <a target="_blank" class="text-link " href="https://github.com/joeldrapper/morphlex">morphlex</a> and <a target="_blank" class="text-link " href="https://github.com/callionica/htmf">htmf</a>. I also saw people taking the idea into different directions, like using <a target="_blank" class="text-link " href="https://zenn.dev/kawarimidoll/articles/33316cf9caa465">iframes to lazy-load HTML partials</a>. I feel happy about having inspired people! There are even some who said so via the <a target="_self" class="text-link " href="/guestbook/">guestbook</a>, which was especially nice!</p>
+            <h2 id="future">Future</h2>
+            <p>I think the htmz story is done and I’m already looking forward to my next project (the 7DRL challenge). It’s still getting some mentions in blogs, podcasts, here and there, but it’s not like I’m gonna turn this into some serious full-time open-source project with versions and releases and (lack of) funds and all that jazz.</p>
+            <p>GitHub activity (stars, issues, PRs) have slowed down as well. There’s not much you can work with 166 characters, after all.</p>
+            <p>But the idea lives on; may the snippet proliferate! :D</p>
+            <p>
+            <div class="blog-media blog-media-default">
+              <img srcset="/notes/htmz-story/stars_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Chart of htmz’s number of GitHub stars over time" src="/notes/htmz-story/stars.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4009181331293037; background: #f8f8f8">
+            </div>
             </p>
 
           </div>
@@ -1475,21 +1568,48 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
             <h2 class="blog-suggestions-title">More posts</h2>
             <div class="card-grid ">
 
-              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/get-duolingo-streak/">
+              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/simple-image-recognition-vanilla-js/">
                 <div class="card-grid-image-container">
                   <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
                 </div>
                 <div class="card-grid-title-wrap">
                   <div class="card-grid-title-bar">
                     <div class="card-grid-title-content">
-                      <div class="card-grid-title">getDuolingoStreak()</div>
-                      <div class="card-grid-posttitle">07 Feb 2024</div>
+                      <div class="card-grid-title">Simple image recognition with vanilla JavaScript</div>
+                      <div class="card-grid-posttitle">25 Feb 2023</div>
                     </div>
                   </div>
                 </div>
                 <div class="card-grid-content">
                   <div class="card-grid-posttitle card-grid-postitle-small">
-                    07 Feb 2024
+                    25 Feb 2023
+                  </div>
+                  <div class="card-grid-actions">
+                    <span class="card-grid-action card-grid-info">Deets…</span>
+                    <span class="card-grid-action card-grid-story">Read post</span>
+                  </div>
+                  <div class="card-grid-description">
+
+                    <span class="tag-component" style="background: #f0de91; color: #725f15">js</span>
+
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Simple image recognition with vanilla JavaScript">Read post</span>
+                  </div>
+                </div>
+              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/introducing-portabl.ink/">
+                <div class="card-grid-image-container">
+                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
+                </div>
+                <div class="card-grid-title-wrap">
+                  <div class="card-grid-title-bar">
+                    <div class="card-grid-title-content">
+                      <div class="card-grid-title">Introducing portabl.ink</div>
+                      <div class="card-grid-posttitle">25 Sep 2023</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-grid-content">
+                  <div class="card-grid-posttitle card-grid-postitle-small">
+                    25 Sep 2023
                   </div>
                   <div class="card-grid-actions">
                     <span class="card-grid-action card-grid-info">Deets…</span>
@@ -1499,24 +1619,24 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
 
                     <span class="tag-component" style="background: #f0de91; color: #725f15">js</span> <span class="tag-component" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - getDuolingoStreak()">Read post</span>
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Introducing portabl.ink">Read post</span>
                   </div>
                 </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-spa-router/">
+              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/compressing-websites-into-urls/">
                 <div class="card-grid-image-container">
                   <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
                 </div>
                 <div class="card-grid-title-wrap">
                   <div class="card-grid-title-bar">
                     <div class="card-grid-title-content">
-                      <div class="card-grid-title">Pure CSS single-page app routing</div>
-                      <div class="card-grid-posttitle">27 Feb 2024</div>
+                      <div class="card-grid-title">Compressing a website into a URL</div>
+                      <div class="card-grid-posttitle">10 Oct 2023</div>
                     </div>
                   </div>
                 </div>
                 <div class="card-grid-content">
                   <div class="card-grid-posttitle card-grid-postitle-small">
-                    27 Feb 2024
+                    10 Oct 2023
                   </div>
                   <div class="card-grid-actions">
                     <span class="card-grid-action card-grid-info">Deets…</span>
@@ -1524,36 +1644,9 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
                   </div>
                   <div class="card-grid-description">
 
-                    <span class="tag-component" style="background: #817db5; color: #302e47">css</span>
+                    <span class="tag-component" style="background: #f0de91; color: #725f15">js</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Pure CSS single-page app routing">Read post</span>
-                  </div>
-                </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/htmz-story/">
-                <div class="card-grid-image-container">
-                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
-                </div>
-                <div class="card-grid-title-wrap">
-                  <div class="card-grid-title-bar">
-                    <div class="card-grid-title-content">
-                      <div class="card-grid-title">htmz story</div>
-                      <div class="card-grid-posttitle">01 Mar 2024</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-grid-content">
-                  <div class="card-grid-posttitle card-grid-postitle-small">
-                    01 Mar 2024
-                  </div>
-                  <div class="card-grid-actions">
-                    <span class="card-grid-action card-grid-info">Deets…</span>
-                    <span class="card-grid-action card-grid-story">Read post</span>
-                  </div>
-                  <div class="card-grid-description">
-
-                    <span class="tag-component" style="background: #e8c37d; color: #684c19">html</span> <span class="tag-component" style="background: #f0de91; color: #725f15">js</span>
-
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - htmz story">Read post</span>
+                    <span class="card-grid-action card-grid-story" aria-label="Read post - Compressing a website into a URL">Read post</span>
                   </div>
                 </div>
               </a>
@@ -1640,6 +1733,8 @@ pub fn <span class="token function">page</span><span class="token punctuation">(
 
 
   <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
+  <script defer="" src="/scripts/blog-media.js"></script>
+  <script defer="" src="/scripts/blog-header.js"></script>
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
   <script defer="">
