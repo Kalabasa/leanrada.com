@@ -35,9 +35,24 @@ document.querySelector(contentWindow.location.hash||null)
 
       I wondered for a bit then remembered that we already have **iframes**, a native HTML way for links to update not just the entire window, but a ‘part’ of the page. Granted, iframes are limited and not as dynamic as some of htmx’s operations like appends and deletions.
 
-      So I set out to make an iframe-only solution to this class of problems. htmz initially stood for **‘htmx zero’** or something like that, because you need exactly zero JavaScript to be able to use iframes, while htmx stood at around 16 kB compressed (decompresses to a total of 48 kB of JavaScript!). Minimising the amount of code needed was the primary goal from the start.
+      So I set out to make an iframe-only solution to this class of problems. htmz initially stood for **‘htmx zero’** or something like that, because you need exactly zero JavaScript to be able to use iframes, while htmx stood at around 16 kB compressed (decompresses to a total of 48 kB of JavaScript!).
+
+      ## Principles
       
-      Eventually, the original iframe solution evolved to support most of the usual operations like deletions, and a *bit* of JS was required after all. htmz was then backronymised as *<b>H</b>tml with <b>T</b>argeted <b>M</b>anipulation <b>Z</b>ones*.
+      The initial premise was that browsers already offer much of the required functionality out of the box. Unfortunately, iframes have lots of limitations and a bit of JS is needed after all. As the solution evolved, I needed to keep the amount of JS in check, otherwise I’d just reinvent existing libraries.
+      
+      The main principle became “lean on existing browser functionality”. This meant, among other things:
+
+      * **No click handlers.** Browsers can handle clicks by themselves. No need for JS to intercept and babysit every interaction.
+      * **No AJAX / fetch.** Browsers can fetch HTML resources by themselves. In fact, this is a primary function of a browser!
+      * **No DOM parsing.** Browsers can load HTML by themselves. In fact, this is a primary function&hellip;
+      * **No extra attributes.** Scanning for and parsing extra attributes is a lot of JS.
+
+      I ended up with minimal JS that transplants content from the iframe into the main document. That was the only thing browsers don’t do (yet).
+
+      The only exception to this rule was the `setTimeout` wrapper which is to prevent browsers from automatically scrolling to the updated content on click. (It’s optional!)
+      
+      Since the solution was not zero JS anymore, htmz was backronymised as *<b>H</b>tml with <b>T</b>argeted <b>M</b>anipulation <b>Z</b>ones*.
 
       ## Was it a joke?
 
@@ -87,7 +102,7 @@ document.querySelector(contentWindow.location.hash||null)
 ?.replaceWith(...contentDocument.body.childNodes))&quot;>&lt;/iframe>
 `" />
 
-      That’s about 90% of the original! I’m pretty sure this could be reduced further (`setTimeout` isn’t strictly required) but I’m leaving it as it is. This code golfing diversion has been fun and I learned about HTML spec stuff that I wouldn’t normally discover in my day job as a React framework user.
+      That’s about 90% of the original! I’m pretty sure this could be reduced further (`setTimeout` isn’t strictly required) but I left it as it was. This code golfing diversion has been fun and I learned about HTML spec stuff that I wouldn’t normally discover in my day job as a React framework user.
 
       ## Knowledge sharing
             
