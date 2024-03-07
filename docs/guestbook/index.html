@@ -39,6 +39,7 @@
 </style>
   <style>
   guestbook-card-client {
+    position: relative;
     display: flex;
     flex-direction: column;
     box-shadow: 0 0 10px #0002;
@@ -73,6 +74,19 @@
   .guestbook-card-name::placeholder {
     color: inherit;
     opacity: 0.4;
+  }
+  .guestbook-card-stamp-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .guestbook-card-stamp {
+    position: absolute;
+    font-size: 60px;
+    color: black;
+    filter: grayscale(0.5) brightness(1.07) drop-shadow(0 1px 0 #0002);
+    mix-blend-mode: multiply;
   }
 </style>
   <style>
@@ -508,6 +522,10 @@
     line-height: 21px;
     color: white;
   }
+  #stampBtn {
+    padding: 0;
+    color: unset;
+  }
   .submit-button {
     margin-left: auto;
   }
@@ -629,6 +647,9 @@
           <button class="btn style-button" id="fontBtn" type="button">
             Font
           </button>
+          <button class="btn style-button" id="stampBtn" type="button">
+            Stamp
+          </button>
           <button class="btn submit-button" id="submitBtn" type="submit">
             Send
           </button>
@@ -720,7 +741,8 @@
     initMessagesList();
 
     async function initForm() {
-      const { BG_COLORS, FG_COLORS, getCSS } = await loadGuestbookCardLib();
+      const { BG_COLORS, FG_COLORS, STAMPS, getCSS, getStampContent } =
+        await loadGuestbookCardLib();
       const form = document.querySelector(".form");
       const { fgRGB, bgRGB, bgStyleIndex, fontIndex } = form.elements;
       const guestbookCard = document.getElementById("guestbook-card");
@@ -729,6 +751,7 @@
       const bgBtn = document.getElementById("bgBtn");
       const fgBtn = document.getElementById("fgBtn");
       const fontBtn = document.getElementById("fontBtn");
+      const stampBtn = document.getElementById("stampBtn");
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -777,6 +800,67 @@
         });
         form.setAttribute("style", getCSS(style));
       });
+
+      // Stamp logic
+      let holdingStampState = null;
+      let stampIndex = Math.floor(Math.random() * STAMPS.length);
+      stampBtn.textContent = getStampContent(stampIndex);
+      stampBtn.addEventListener("click", async () => {
+        if (holdingStampState) {
+          stampIndex = (Number(stampIndex) + 1) % STAMPS.length;
+          stampBtn.textContent = getStampContent(stampIndex);
+        } else {
+          const cursorStyle = document.createElement("style");
+          document.head.appendChild(cursorStyle);
+
+          holdingStampState = {
+            cursorStyle,
+          };
+
+          const listenerParameters = [
+            "click",
+            (event) => {
+              if (stampBtn.contains(event.target)) return;
+
+              const bounds = guestbookCard.getBoundingClientRect();
+              if (
+                event.clientX + size > bounds.left &&
+                event.clientX < bounds.right &&
+                event.clientY + size > bounds.top &&
+                event.clientY < bounds.bottom
+              ) {
+                const x = Math.round(
+                  (100 * (event.clientX - bounds.x)) / bounds.width
+                );
+                const y = Math.round(
+                  (100 * (event.clientY - bounds.y)) / bounds.height
+                );
+                guestbookCard.addStamp(stampIndex, x, y);
+              }
+
+              setTimeout(() => cursorStyle.remove());
+              holdingStampState = null;
+
+              event.preventDefault();
+              document.activeElement?.blur();
+              window.removeEventListener(...listenerParameters);
+            },
+            { capture: true },
+          ];
+          window.addEventListener(...listenerParameters);
+        }
+
+        const content = getStampContent(stampIndex);
+        const size = 60;
+        holdingStampState.cursorStyle.textContent = `
+            body, #guestbook-card * {
+              cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${
+                (size * 5) / 3
+              }px' height='${
+          size * 2
+        }px' viewport='0 0 100 100' style='fill:black;font-size:${size}px;'><text y='50%'>${content}</text></svg>") 0 0,grabbing
+            }`;
+      });
     }
 
     async function initMessagesList() {
@@ -800,6 +884,7 @@
         return createGuestbookCard({
           text: message.text,
           name: message.name,
+          stamps: message.stamps,
           style: {
             fontIndex: message.fontIndex,
             bgStyleIndex: message.bgStyleIndex,
