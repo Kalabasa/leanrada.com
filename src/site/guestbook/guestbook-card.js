@@ -9,6 +9,7 @@
 }(function () {
   const BG_COLORS = [0xffccdd, 0xffffcc, 0xddffcc, 0xccffff, 0xddccff, 0xffffff];
   const FG_COLORS = [0xcc0000, 0xaa6600, 0x00aa00, 0x0066ff, 0x000000];
+  const STAMPS = "💾,🔖,🕶,🧬,📌,🎃,🎀,👾,🐚,🔱,➰".split(",");
 
   const defaults = getDefaults();
 
@@ -53,6 +54,10 @@
     return "";
   }
 
+  function getStampContent(stampTypeIndex) {
+    return STAMPS[stampTypeIndex % STAMPS.length];
+  }
+
   function formatBgImageSize(bgStyleIndex) {
     if (bgStyleIndex === /* solid */ 0) {
       return "none";
@@ -75,7 +80,6 @@
   }
 
   return {
-    BG_COLORS, FG_COLORS, getDefaults, getCSS, createGuestbookCard
+    BG_COLORS, FG_COLORS, STAMPS, getDefaults, getCSS, getStampContent, createGuestbookCard
   };
 }));
-

@@ -5,6 +5,7 @@ export interface Env {
 const MASTER_KEY = "v2";
 const CURRENT_SCHEMA_VERSION = "v2";
 const GET_PAGE_SIZE = 100;
+const MAX_STAMPS = 4;
 
 type GetRequest = {
   page: number;
@@ -18,7 +19,9 @@ type SubmitRequest = {
   bgStyleIndex?: number;
   bgRGB?: number;
   fgRGB?: number;
-  stamps?: Array<{ typeIndex: number; seed: number; x: number; y: number }>;
+  stampTypes?: number | number[];
+  stampXs?: number | number[];
+  stampYs?: number | number[];
 };
 
 type StoredData = {
@@ -34,7 +37,7 @@ type StoredMessage = {
   bgStyleIndex?: number;
   bgRGB?: number;
   fgRGB?: number;
-  stamps?: Array<{ typeIndex: number; seed: number; x: number; y: number }>;
+  stamps?: Array<{ typeIndex: number; x: number; y: number }>;
 };
 
 async function handleRequest(
@@ -93,11 +96,13 @@ async function handleGet(request: Request, env: Env) {
 }
 
 async function handlePost(request: Request, env: Env) {
-  const submitRequest: Partial<SubmitRequest> = Object.fromEntries(
-    (await request.formData()).entries()
+  const submitRequest: Partial<SubmitRequest> = parseFormData(
+    await request.formData()
   );
   console.log("Handling POST request:", submitRequest);
   checkSubmitRequest(submitRequest);
+  const stampXs = arrayField(submitRequest.stampXs);
+  const stampYs = arrayField(submitRequest.stampYs);
 
   const now = new Date();
   const data = await getData(env);
@@ -113,12 +118,13 @@ async function handlePost(request: Request, env: Env) {
     bgStyleIndex: numberOrUndefined(submitRequest.bgStyleIndex),
     bgRGB: numberOrUndefined(submitRequest.bgRGB),
     fgRGB: numberOrUndefined(submitRequest.fgRGB),
-    stamps: (submitRequest.stamps || []).map((stamp) => ({
-      typeIndex: stamp.typeIndex,
-      seed: stamp.seed,
-      x: stamp.x,
-      y: stamp.y,
-    })),
+    stamps: arrayField(submitRequest.stampTypes)
+      .slice(0, Math.min(stampXs.length, stampYs.length, MAX_STAMPS))
+      .map((typeIndex, index) => ({
+        typeIndex: typeIndex,
+        x: stampXs[index],
+        y: stampYs[index],
+      })),
   });
 
   const snapshotName =
@@ -189,19 +195,37 @@ function checkSubmitRequest(
   )
     throw new TypeError("submitRequest.fgRGB is not an integer");
 
-  for (const stamp of submitRequest.stamps || []) {
-    if (
-      stamp.typeIndex != undefined &&
-      !Number.isInteger(parseInt(stamp.typeIndex, 10))
-    )
-      throw new TypeError("stamp.typeIndex is not an integer");
-    if (stamp.seed != undefined && !Number.isInteger(parseInt(stamp.seed, 10)))
-      throw new TypeError("stamp.seed is not an integer");
-    if (stamp.x != undefined && isNaN(stamp.x))
-      throw new TypeError("stamp.x is not an number");
-    if (stamp.y != undefined && isNaN(stamp.y))
-      throw new TypeError("stamp.y is not an number");
+  const stampTypes = arrayField(submitRequest.stampTypes);
+  const stampXs = arrayField(submitRequest.stampXs);
+  const stampYs = arrayField(submitRequest.stampYs);
+
+  if (
+    stampTypes.length !== stampXs.length ||
+    stampTypes.length !== stampYs.length
+  )
+    throw new TypeError("submitRequest.stamp*s not equal in length");
+  for (const type of stampTypes)
+    if (type != undefined && !Number.isInteger(parseInt(type, 10)))
+      throw new TypeError("stampTypes[] is not an integer");
+  for (const x of stampXs)
+    if (x != undefined && isNaN(x))
+      throw new TypeError("stampXs[] is not an number");
+  for (const y of stampYs)
+    if (y != undefined && isNaN(y))
+      throw new TypeError("stampYs[] is not an number");
+}
+
+function parseFormData(formData: FormData): Record<string, any> {
+  const object: Record<string, any> = {};
+  for (const key of formData.keys()) {
+    object[key] = formData.getAll(key);
+    if (object[key].length === 1) object[key] = object[key][0];
   }
+  return object;
+}
+
+function arrayField<T>(value: undefined | T | T[]): T[] {
+  return value == null ? [] : Array.isArray(value) ? value : [value];
 }
 
 function numberOrUndefined(number: any): number | undefined {
