@@ -161,6 +161,40 @@
   }
 </style>
   <style>
+  .window-decor {
+    position: relative;
+    border-radius: 12px;
+    border: solid var(--card-clr);
+    border-width: 24px 0 12px;
+    box-shadow: 0 0 0 1px #333, 0 0 0 2px #111;
+    background: var(--card-clr);
+  }
+  .window-decor::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 12px;
+    top: -18px;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: #443c3f;
+    box-shadow: 18px 0 0 #4d4a45, 36px 0 0 #3f4745;
+  }
+
+  .window-decor-title {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translate(-50%);
+    line-height: 24px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text2-clr);
+  }
+</style>
+  <style>
   /**
    * Modified by Kalabasa.
    * Based on:
@@ -1296,7 +1330,9 @@
   }
 </style>
   <style>
-  .example {
+  .example-frame {
+    display: block;
+    border: none;
     width: 100%;
     min-height: 32rem;
   }
@@ -1344,10 +1380,14 @@
             <pre class="code-block "><code class="code-block-code"><span class="token selector">section:not(:target)</span> <span class="token punctuation">{</span>
   <span class="token property">display</span><span class="token punctuation">:</span> none<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-            <p><strong>Demo:</strong> <a target="_blank" class="text-link " href="example1/">Open in a new tab</a></p>
-            <iframe class="example" src="example1/"></iframe>
-            <a target="_blank" class="text-link " href="example1/">Open in a new tab</a>
+            <p><strong>Demo:</strong> <a target="_blank" class="text-link " href="example1/">Open in a new tab</a>
+            <div class="window-decor">
 
+              <iframe class="example-frame" src="example1/"></iframe>
+
+              <div class="window-decor-title">My App</div>
+            </div>
+            <a target="_blank" class="text-link " href="example1/">Open in a new tab</a></p>
             <h2 id="explanation">Explanation</h2>
             <p>The <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/CSS/:target"><code>:target</code></a> CSS selector selects the element that is targeted by the URL fragment.</p>
             <p>Combined with <code>:not</code>, we can hide sections that are <em>not</em> referenced by the URL fragment.</p>
@@ -1361,20 +1401,28 @@
 </span><span class="token prefix inserted">+</span><span class="token line"> :root:has(:target) #home {
 </span></span><span class="token unchanged"><span class="token prefix unchanged"> </span><span class="token line">   display: none;
 </span><span class="token prefix unchanged"> </span><span class="token line"> }</span></span></code></pre>
-            <p><strong>Demo v2:</strong> <a target="_blank" class="text-link " href="example2/">Open in a new tab</a></p>
-            <iframe class="example" src="example2/"></iframe>
-            <a target="_blank" class="text-link " href="example2/">Open in a new tab</a>
+            <p><strong>Demo v2:</strong> <a target="_blank" class="text-link " href="example2/">Open in a new tab</a>
+            <div class="window-decor">
 
+              <iframe class="example-frame" src="example2/"></iframe>
+
+              <div class="window-decor-title">My App</div>
+            </div>
+            <a target="_blank" class="text-link " href="example2/">Open in a new tab</a></p>
             <h2 id="experiment-nested-routes">Experiment: Nested routes</h2>
             <p>One thing that makes most client-side routers modular is the ability to nest routes. We can do the same with CSS.</p>
             <pre class="code-block "><code class="code-block-code"><span class="token deleted-sign deleted"><span class="token prefix deleted">-</span><span class="token line"> section:not(:target) {
 </span></span><span class="token inserted-sign inserted"><span class="token prefix inserted">+</span><span class="token line"> section:not(:target, :has(:target)) {
 </span></span><span class="token unchanged"><span class="token prefix unchanged"> </span><span class="token line">   display: none;
 </span><span class="token prefix unchanged"> </span><span class="token line"> }</span></span></code></pre>
-            <p><strong>Demo v3: This demo is best when you <a target="_blank" class="text-link " href="example3/">view it in a separate tab</a></strong></p>
-            <iframe class="example" src="example3/"></iframe>
-            <a target="_blank" class="text-link " href="example3/">Open in a new tab</a>
+            <p><strong>Demo v3: This demo is best when you <a target="_blank" class="text-link " href="example3/">view it in a separate tab</a></strong>
+            <div class="window-decor">
 
+              <iframe class="example-frame" src="example3/"></iframe>
+
+              <div class="window-decor-title">My App</div>
+            </div>
+            <a target="_blank" class="text-link " href="example3/">Open in a new tab</a></p>
             <h2 id="parameterised-routes">Parameterised routes?</h2>
             <p>The ultimate feature for client-side routers is to dynamically catch routes with parameters like for example <code>/post/:id</code>.</p>
             <p>Since HTML is static, there’s no real way to do this with CSS. ☹</p>
@@ -1384,7 +1432,7 @@
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>section</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>post/129<span class="token punctuation">"</span></span><span class="token punctuation">&gt;</span></span><span class="token comment">&lt;!-- ... --&gt;</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>section</span><span class="token punctuation">&gt;</span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>section</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>post/130<span class="token punctuation">"</span></span><span class="token punctuation">&gt;</span></span><span class="token comment">&lt;!-- ... --&gt;</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>section</span><span class="token punctuation">&gt;</span></span>
 <span class="token comment">&lt;!-- ... --&gt;</span></code></pre>
-            <p>But that’d be like putting the entire database in HTML. What if you have two parameters in the route? It could be a combinatorial explosion. So no, the experiments end here. 👋
+            <p>But that’d be like putting the entire database in HTML. And if you had multiple parameters in the route, it would be combinatorial explosion. So, nope. 👋
             </p>
 
           </div>
