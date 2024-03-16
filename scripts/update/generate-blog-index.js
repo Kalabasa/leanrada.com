@@ -3,19 +3,34 @@ const glob = require("glob");
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const cheerio = require('cheerio');
+const childProcess = require("node:child_process");
 
 process.chdir(path.resolve(__dirname, "..", ".."));
 const projectRoot = process.cwd();
 console.log(projectRoot);
 
 const siteSrc = path.resolve(projectRoot, "src", "site");
-const blogDir = path.resolve(siteSrc, "notes");
+const siteOut = path.resolve(projectRoot, "out", "site");
+const blogSrcDir = path.resolve(siteSrc, "notes");
+const blogOutDir = path.resolve(siteOut, "notes");
 const dryRun = process.argv.includes("--dry-run");
+const noBuild = process.argv.includes("--no-build");
+
+if (!noBuild) {
+  childProcess.execSync(
+    "npm run clean-lite",
+    { stdio: 'inherit' }
+  );
+  childProcess.execSync(
+    "npm run build-dev -p /notes/",
+    { stdio: 'inherit' }
+  );
+}
 
 main();
 
 async function main() {
-  const subPages = glob.sync(path.resolve(blogDir, "*", "index.html"));
+  const subPages = glob.sync(path.resolve(blogOutDir, "*", "index.html"));
 
   const references = new Map();
   const backReferences = new Map();
@@ -23,51 +38,62 @@ async function main() {
   // build index from parsed pages
   const index = (await Promise.all(subPages.map(async page => {
     const dir = path.dirname(page);
-    const href = '/' + path.relative(siteSrc, dir) + '/';
+    const href = '/' + path.relative(siteOut, dir) + '/';
 
     // Underscore-prefixed directories are unpublished.
     const public = !path.basename(dir).startsWith("_");
 
-    // HTML is the source of truth
-    // todo: use output HTML + microformat, to scrape the hero image
-    const code = await fs.readFile(page);
-    const ch = cheerio.load(code, { xmlMode: true });
+    try {
+      // HTML is the source of truth
+      const code = await fs.readFile(page);
+      const ch = cheerio.load(code, { xmlMode: true });
 
-    const header = ch("blog-header");
-    const pageTitle = ch("page-title");
-    const title = ch("title");
-    const info = ch("blog-post-info");
-    const tag = ch("tag-row").find("tag");
-    const markdown = ch("markdown");
+      // Use microformats
+      const hEntry = ch(".h-entry").first();
+      if (hEntry.length === 0) {
+        console.log("Skipping:", href);
+        return;
+      }
 
-    const titleText =
-      pageTitle.attr("title")
-      ?? header.attr("title")
-      ?? title.text();
+      const pName = hEntry.find(".p-name").first();
+      const uMedia = hEntry.find(".u-media").first();
+      const dtPublished = hEntry.find(".dt-published").first();
+      const pCategory = hEntry.find(".tag-row .p-category");
+      const eContent = hEntry.find(".e-content").first();
 
-    const date = info.attr("date");
-    if (!date) console.error("No date for page:", titleText);
+      const title = pName.text();
+      if (!title) throw new Error("Missing title!");
 
-    const tags = tag.map(function () { return ch(this).text() }).toArray();
+      const media = uMedia.attr("src");
 
-    const refdNotePaths = markdown.html().match(/(?<=\/)notes\/[\w\-]+\b/g) ?? [];
-    for (const path of refdNotePaths) {
-      const otherHref = `/${path}/`;
+      const date = dtPublished.text();
+      if (!date) console.error("No date for page:", title);
 
-      if (href === otherHref) continue;
+      const tags = pCategory.map(function () { return ch(this).text() }).toArray();
 
-      multimapAdd(references, href, otherHref);
-      multimapAdd(backReferences, otherHref, href);
+      const refdNotePaths = eContent.html().match(/(?<=\/)notes\/[\w\-]+\b/g) ?? [];
+      for (const path of refdNotePaths) {
+        const otherHref = `/${path}/`;
+
+        if (href === otherHref) continue;
+
+        multimapAdd(references, href, otherHref);
+        multimapAdd(backReferences, otherHref, href);
+      }
+
+      return { href, title, media, date, public, tags, suggestions: [] };
+    } catch (error) {
+      console.error("Error while processing:", href);
+      throw error;
     }
-
-    return { href, title: titleText, date, public, tags, suggestions: [] };
   }))).filter(it => it);
 
-  const staticIndex = require(path.resolve(blogDir, "index.static.json"));
+  const staticIndex = require(path.resolve(blogOutDir, "index.static.json"));
   const combinedIndex = index.concat(staticIndex);
 
   // populate suggestions
-  const maxSuggestions = 3;
+  const maxSuggestions = 4;
+  const maxSmartSuggestions = maxSuggestions - 1;
   const suggestionsIndex = index.filter(item => item.public).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   for (let i = 0; i < suggestionsIndex.length; i++) {
     const item = suggestionsIndex[i];
@@ -80,10 +106,10 @@ async function main() {
 
     item.suggestions = refs
       .filter(unique)
-      .slice(0, maxSuggestions);
+      .slice(0, maxSmartSuggestions);
 
     // suggest by tag
-    if (item.suggestions < maxSuggestions) {
+    if (item.suggestions < maxSmartSuggestions) {
       const cotagged = suggestionsIndex
         .filter(other => other !== item)
         .map(other => ({
@@ -96,10 +122,10 @@ async function main() {
       item.suggestions = item.suggestions
         .concat(cotagged)
         .filter(unique)
-        .slice(0, maxSuggestions);
+        .slice(0, maxSmartSuggestions);
     }
 
-    // fallback: suggest notes in sequence
+    // suggest notes in sequence
     for (
       let j = (i + 1) % suggestionsIndex.length;
       item.suggestions.length < maxSuggestions && j !== i;
@@ -116,7 +142,7 @@ async function main() {
 
   console.log(combinedIndex.length, combinedIndex.map(item => item.href).sort().join(", "));
   if (!dryRun) {
-    const outFile = path.resolve(blogDir, "index.generated.combined.json");
+    const outFile = path.resolve(blogSrcDir, "index.generated.combined.json");
     await fs.writeFile(outFile, JSON.stringify(combinedIndex, undefined, " "));
   }
 }

@@ -1,0 +1,22 @@
+<script render>
+  if (!post) return "";
+
+  const tags = post.tags.map(tag => html` <tag>${tag}</tag> `) ?? [];
+  const mediaSrc = post.media ?? url("/notes/placeholder.png");
+  yield html`<card-grid-item
+    href="${post.href}"
+    title="${post.title}"
+    posttitle="${post.date}"
+    media-src="${mediaSrc}"
+    thumbalign="center"
+    expanded="true"
+  >
+    ${tags}
+  </card-grid-item>`
+</script>
+
+<script static>
+  const combinedIndex = require("../../site/notes/index.generated.combined.json");
+  const href = attrs.href;
+  const post = combinedIndex.find((item) => item.href === href);
+</script>
