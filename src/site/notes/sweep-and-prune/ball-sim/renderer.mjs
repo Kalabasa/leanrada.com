@@ -34,26 +34,26 @@ export class Renderer {
     context.fillStyle = "#000";
     context.fillRect(0, 0, width, height);
 
-    context.lineWidth = 2;
-
     for (let i = 0; i < balls.length; i++) {
       const ball = balls[i];
+      const color = getColor(ball);
 
       context.beginPath();
       context.arc(
         ball.x,
         ball.y,
-        ball.radius + context.lineWidth * 0.5,
+        ball.radius,
         0,
         2 * Math.PI
       );
-      context.fillStyle = getColor(ball);
-      context.fill();
+      context.strokeStyle = color;
+      context.lineWidth = 3;
+      context.stroke();
 
       const label = this.labels[i];
       if (label) {
         context.font = "30px bold Space Mono, sans-serif";
-        context.fillStyle = "#000";
+        context.fillStyle = color;
         context.fillText(label, ball.x - 10 * label.length, ball.y + 10);
       }
     }
@@ -65,11 +65,12 @@ export class Renderer {
         context.arc(
           ball.x,
           ball.y,
-          ball.radius - context.lineWidth * 1,
+          ball.radius - 4,
           0,
           2 * Math.PI
         );
-        context.strokeStyle = "#000";
+        context.strokeStyle = getColor(ball);
+        context.lineWidth = 3;
         context.stroke();
       }
       context.setLineDash([]);
@@ -82,6 +83,7 @@ export class Renderer {
       context.moveTo(x1, y1)
       context.lineTo(x2, y2);
       context.strokeStyle = color;
+      context.lineWidth = 2;
       context.stroke();
     }
     context.setLineDash([]);
