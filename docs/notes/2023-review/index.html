@@ -885,38 +885,95 @@
   }
 </style>
   <style>
-  .card-grid {
-    display: grid;
-    justify-content: center;
-    grid-template-columns: repeat(auto-fit, calc(min(546px, 100%)));
-    gap: 60px;
+  .card-carousel-container {
+    position: relative;
   }
-  .card-grid-tall {
-    gap: 90px 60px;
+
+  .card-carousel {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(min(546px, 100svw - 90px));
+    justify-content: start;
+    gap: 60px;
+    padding: 12px 12px 0;
+    scrollbar-width: none;
+    overflow: auto;
   }
   @media (max-width: 900px) {
-    .card-grid {
+    .card-carousel {
       gap: 30px;
     }
   }
-  @media (prefers-reduced-motion) {
-    .card-grid * {
-      animation: none !important;
+
+  .card-carousel-btn-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+  }
+
+  .card-carousel-btn {
+    position: absolute;
+    min-width: 60px;
+    height: 60px;
+    padding: 0 18px;
+    box-sizing: border-box;
+    border: none;
+    background: var(--bg-clr);
+    color: var(--clr0-light);
+    cursor: pointer;
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 0 18px #000;
+    pointer-events: all;
+    transition: opacity 60ms ease-out;
+  }
+  .card-carousel-btn:hover {
+    color: var(--clr1);
+  }
+  .card-carousel-btn-next {
+    right: 0;
+    bottom: 0;
+    text-align: left;
+    padding-left: 5mm;
+    border-top-left-radius: 12px;
+  }
+  .card-carousel-btn-prev {
+    left: 0;
+    top: 0;
+    text-align: right;
+    padding-right: 5mm;
+    border-bottom-right-radius: 12px;
+  }
+  .card-carousel-btn-hidden {
+    opacity: 0;
+  }
+
+  /* approximately select touch-based media */
+  @media (hover: none) and (pointer: coarse) {
+    .card-carousel-btn {
+      display: none;
     }
   }
 </style>
   <style>
   .blog-suggestions {
     margin: 120px auto 0;
-    padding: 0 18px;
     width: 100%;
-    max-width: 1800px;
     box-sizing: border-box;
   }
 
   .blog-suggestions-title {
     margin: 0 0 30px;
     text-align: center;
+  }
+
+  .blog-suggestions-carousel {
+    /* virtual max width 2400px */
+    padding-inline: calc(max(30px, 50svw - 1200px));
   }
 </style>
   <style>
@@ -984,7 +1041,7 @@
 
   .card-grid-title-wrap {
     position: relative;
-    max-width: 80%;
+    max-width: 70%;
     height: 0;
   }
   .card-grid-title-bar {
@@ -1272,6 +1329,7 @@
 
 <body>
 
+  <span hidden="" class="p-name">2023 in review</span>
   <div class="page-wrapper">
     <header class="main-header">
       <div class="main-header-bar">
@@ -1287,16 +1345,16 @@
     </header>
     <div class="page-wrapper-content">
 
-      <div class="blog-page">
+      <div class="blog-page h-entry">
         <div class="content-header">
-          <h1 class="content-header-title">2023 in review</h1>
+          <h1 class="content-header-title p-name">2023 in review</h1>
 
         </div>
-        <div class="content">
+        <div class="content e-content">
 
 
           <div class="blog-post-info ">
-            25 Dec 2023 · 4 min read
+            <span class="dt-published">25 Dec 2023</span> · 4 min read
           </div>
           <!-- prettier-ignore -->
           <div class="markdown">
@@ -1306,7 +1364,7 @@
             <p>
             <div class="blog-media blog-media-windowed">
               <div class="window-decor">
-                <img srcset="/wares/personal-website/media/v4_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="screenshot of 2023 website" src="/wares/personal-website/media/v4.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #181818">
+                <img srcset="" sizes="" class="blog-media-element" alt="screenshot of 2023 website" src="/wares/personal-website/media/v4.png" spec="100% [664) 664" loading="lazy" width="" height="" style="">
 
               </div>
             </div>
@@ -1341,7 +1399,7 @@
             <p>
             <div class="blog-media blog-media-windowed">
               <div class="window-decor">
-                <img srcset="/notes/2023-review/portabl.ink_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="screenshot of portablink" src="/notes/2023-review/portabl.ink.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.1333333333333333; background: #f8f8f8">
+                <img srcset="" sizes="" class="blog-media-element" alt="screenshot of portablink" src="/notes/2023-review/portabl.ink.png" spec="100% [664) 664" loading="lazy" width="" height="" style="">
                 <div class="window-decor-title">portabl.ink</div>
               </div>
             </div>
@@ -1350,7 +1408,7 @@
             <p>
             <div class="blog-media blog-media-windowed">
               <div class="window-decor">
-                <img srcset="/notes/2023-review/guhit-kudlit_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="screenshot of GuhitKudlit" src="/notes/2023-review/guhit-kudlit.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.1333333333333333; background: #f8f8f8">
+                <img srcset="" sizes="" class="blog-media-element" alt="screenshot of GuhitKudlit" src="/notes/2023-review/guhit-kudlit.png" spec="100% [664) 664" loading="lazy" width="" height="" style="">
                 <div class="window-decor-title">GuhitKudlit - Baybayin calligraphy generator</div>
               </div>
             </div>
@@ -1367,13 +1425,13 @@
             <p>Here’s a bit of my <strong>Steam Year in Review</strong>:</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/2023-review/steam-spider_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="This spider graph shows the kinds of games you spent the most time in 2023. MOBA, 3; Card Battler, 1.7; Puzzle Platformer, 1.3; Automation, 1; Stealth, 3.8; Platformer, 2.6" src="/notes/2023-review/steam-spider.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.5960591133004927; background: #081818">
+              <img srcset="" sizes="" class="blog-media-element" alt="This spider graph shows the kinds of games you spent the most time in 2023. MOBA, 3; Card Battler, 1.7; Puzzle Platformer, 1.3; Automation, 1; Stealth, 3.8; Platformer, 2.6" src="/notes/2023-review/steam-spider.png" spec="100% [664) 664" loading="lazy" width="" height="" style="">
             </div>
             </p>
             <p>MOBA, Platformer, and Stealth… I guess I can conclude that I played a diverse range of games this year? This graph is missing the roguelike category though.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/2023-review/steam_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Dota 2, Splinter Cell: Chaos Theory, Portal 2, Monster Train, Noita, Peglin, Braid, FTL, Factorio, Black Mesa" src="/notes/2023-review/steam.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 6.705501618122978; background: #080808"><span class="blog-media-caption">Most played games on Steam in order</span>
+              <img srcset="" sizes="" class="blog-media-element" alt="Dota 2, Splinter Cell: Chaos Theory, Portal 2, Monster Train, Noita, Peglin, Braid, FTL, Factorio, Black Mesa" src="/notes/2023-review/steam.png" spec="100% [664) 664" loading="lazy" width="" height="" style=""><span class="blog-media-caption">Most played games on Steam in order</span>
             </div>
             </p>
             <p>Apparently, I played a lot of <strong>Dota</strong>. I don’t even remember playing it this year.</p>
@@ -1382,7 +1440,7 @@
             <p>Here’s a nonsensical thing from my <strong>Spotify Wrapped</strong> — <em>My Top Artists</em> in 2023:</p>
             <div class="spotify-banner">
               <div class="blog-media blog-media-default">
-                <img srcset="/notes/2023-review/spotify_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="My top artists on Spotify." src="/notes/2023-review/spotify.jpg" spec="100% [664) 664" loading="lazy" width="" height="100%" style="aspect-ratio: 0.5625; background: #a8b8f8">
+                <img srcset="" sizes="" class="blog-media-element" alt="My top artists on Spotify." src="/notes/2023-review/spotify.jpg" spec="100% [664) 664" loading="lazy" width="" height="" style="">
               </div>
             </div>
 
@@ -1443,94 +1501,145 @@
           </aside>
           <aside class="blog-suggestions">
             <h2 class="blog-suggestions-title">More posts</h2>
-            <div class="card-grid ">
+            <div class="card-carousel-container">
+              <div class="card-carousel blog-suggestions-carousel">
 
-              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune/">
-                <div class="card-grid-image-container">
-                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
-                </div>
-                <div class="card-grid-title-wrap">
-                  <div class="card-grid-title-bar">
-                    <div class="card-grid-title-content">
-                      <div class="card-grid-title">Sort, sweep, and prune: Collision detection algorithms</div>
-                      <div class="card-grid-posttitle">5 Aug 2023</div>
+                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/sweep-and-prune/hero.jpg" spec="546" loading="lazy" width="" height="" style="">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Sort, sweep, and prune: Collision detection algorithms
+
+                        </div>
+                        <div class="card-grid-posttitle">5 Aug 2023</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="card-grid-content">
-                  <div class="card-grid-posttitle card-grid-postitle-small">
-                    5 Aug 2023
-                  </div>
-                  <div class="card-grid-actions">
-                    <span class="card-grid-action card-grid-info">Deets…</span>
-                    <span class="card-grid-action card-grid-story">Read post</span>
-                  </div>
-                  <div class="card-grid-description">
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      5 Aug 2023
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
 
-                    <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Sort, sweep, and prune: Collision detection algorithms">Read post</span>
-                  </div>
-                </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/dynamic-patrol-stealth-games/">
-                <div class="card-grid-image-container">
-                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
-                </div>
-                <div class="card-grid-title-wrap">
-                  <div class="card-grid-title-bar">
-                    <div class="card-grid-title-content">
-                      <div class="card-grid-title">Dynamic patrol behaviour in stealth games with Markov chains</div>
-                      <div class="card-grid-posttitle">1 Jul 2023</div>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Sort, sweep, and prune: Collision detection algorithms
+                
+              ">Read post</span>
                     </div>
                   </div>
-                </div>
-                <div class="card-grid-content">
-                  <div class="card-grid-posttitle card-grid-postitle-small">
-                    1 Jul 2023
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/dynamic-patrol-stealth-games/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/dynamic-patrol-stealth-games/hero.jpg" spec="546" loading="lazy" width="" height="" style="">
                   </div>
-                  <div class="card-grid-actions">
-                    <span class="card-grid-action card-grid-info">Deets…</span>
-                    <span class="card-grid-action card-grid-story">Read post</span>
-                  </div>
-                  <div class="card-grid-description">
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
 
-                    <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+                          Dynamic patrol behaviour in stealth games with Markov chains
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Dynamic patrol behaviour in stealth games with Markov chains">Read post</span>
-                  </div>
-                </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/single-file-website-rust/">
-                <div class="card-grid-image-container">
-                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
-                </div>
-                <div class="card-grid-title-wrap">
-                  <div class="card-grid-title-bar">
-                    <div class="card-grid-title-content">
-                      <div class="card-grid-title">Writing a single-file website with Rust</div>
-                      <div class="card-grid-posttitle">30 Dec 2023</div>
+                        </div>
+                        <div class="card-grid-posttitle">1 Jul 2023</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="card-grid-content">
-                  <div class="card-grid-posttitle card-grid-postitle-small">
-                    30 Dec 2023
-                  </div>
-                  <div class="card-grid-actions">
-                    <span class="card-grid-action card-grid-info">Deets…</span>
-                    <span class="card-grid-action card-grid-story">Read post</span>
-                  </div>
-                  <div class="card-grid-description">
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      1 Jul 2023
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
 
-                    <span class="tag-component" style="background: #cd8565; color: #543223">rust</span>
+                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Writing a single-file website with Rust">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Dynamic patrol behaviour in stealth games with Markov chains
+                
+              ">Read post</span>
+                    </div>
                   </div>
-                </div>
-              </a>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/single-file-website-rust/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/placeholder.png" spec="546" loading="lazy" width="" height="" style="">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">Writing a single-file website with Rust</div>
+                        <div class="card-grid-posttitle">30 Dec 2023</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      30 Dec 2023
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
 
+                      <span class="tag-component p-category" style="background: #cd8565; color: #543223">rust</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Writing a single-file website with Rust">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/get-duolingo-streak/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/placeholder.png" spec="546" loading="lazy" width="" height="" style="">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">getDuolingoStreak()</div>
+                        <div class="card-grid-posttitle">7 Feb 2024</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      7 Feb 2024
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" style="background: #f0de91; color: #725f15">js</span> <span class="tag-component p-category" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - getDuolingoStreak()">Read post</span>
+                    </div>
+                  </div>
+                </a>
+
+              </div>
+              <div class="card-carousel-btn-container">
+                <button class="card-carousel-btn card-carousel-btn-prev" aria-label="Previous">
+                  &lt;&lt;
+                </button>
+                <button class="card-carousel-btn card-carousel-btn-next" aria-label="Next">
+                  &gt;&gt;
+                </button>
+              </div>
             </div>
-
-
           </aside>
         </div>
       </div>
@@ -1608,23 +1717,75 @@
 
 
 
-
+  <script id="livejs" defer="" src="https://livejs.com/live.js"></script>
   <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
   <script defer="" src="/scripts/blog-media.js"></script>
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
-  <script defer="">
+  <script async="" defer="">
   (() => {
-    const items = document.querySelectorAll(".card-grid-item");
-    for (const item of items) {
-      const info = item.querySelector(".card-grid-info");
-      info.addEventListener("click", (event) => {
-        event.preventDefault();
-        item.classList.add("card-grid-item-expanded");
-      });
+    const containers = document.querySelectorAll(".card-carousel-container");
+
+    for (const container of containers) {
+      const carousel = container.firstElementChild;
+
+      container.addEventListener(
+        "click",
+        (event) => {
+          const { target } = event;
+
+          const isButton = target.classList.contains("card-carousel-btn");
+          if (!isButton) return;
+
+          const isNext = target.classList.contains("card-carousel-btn-next");
+          const stepUnitSize =
+            carousel.children[1]?.offsetLeft - carousel.children[0]?.offsetLeft;
+          const delta =
+            (isNext ? 1 : -1) *
+            Math.max(1, Math.floor(carousel.offsetWidth / stepUnitSize)) *
+            stepUnitSize;
+          carousel.scrollBy({
+            left: delta,
+            behavior: "smooth",
+          });
+
+          updateButtons(container, delta);
+        },
+        { capture: true }
+      );
+
+      let debouncedScrollTimeout = null;
+      carousel.addEventListener(
+        "scroll",
+        () => {
+          if (debouncedScrollTimeout) clearTimeout(debouncedScrollTimeout);
+          debouncedScrollTimeout = setTimeout(() => {
+            updateButtons(container);
+          }, 50);
+        },
+        { passive: true }
+      );
+
+      updateButtons(container);
+    }
+
+    function updateButtons(container, delta = 0) {
+      const carousel = container.firstElementChild;
+      const nextButton = container.querySelector(".card-carousel-btn-next");
+      const prevButton = container.querySelector(".card-carousel-btn-prev");
+      nextButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta >
+          carousel.scrollWidth - carousel.offsetWidth - 60
+      );
+      prevButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta < 60
+      );
     }
   })();
 </script>
+  <script defer="" src="/scripts/card-grid-item.js"></script>
   <script defer="" async="" src="/scripts/blog-rss-link.js"></script>
 </body>
 </html>

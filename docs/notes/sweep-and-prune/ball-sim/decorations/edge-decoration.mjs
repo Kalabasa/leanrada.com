@@ -140,14 +140,14 @@ export function createEdgeDecorations(ballSim, renderer, pause, showEdgesArray, 
         if (!edgesCache) return;
         setEdgeColor(a, secondaryColor);
         setEdgeColor(b, secondaryColor);
-        await pause(20);
+        await pause(50);
         setEdgeColor(a, inactiveColor);
         setEdgeColor(b, inactiveColor);
       },
       async onSwap(a, b) {
         setEdgeColor(a, primaryColor);
         setEdgeColor(b, primaryColor);
-        await pause(80);
+        await pause(100);
         setEdgeColor(a, inactiveColor);
         setEdgeColor(b, inactiveColor);
       },

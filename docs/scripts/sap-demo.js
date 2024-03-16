@@ -74,7 +74,7 @@
           for (let i = 0; i < balls.length; i++) {
             const ball = balls[i];
             const h = i / balls.length;
-            ball.color = `hsl(${h}turn 90% 70%)`;
+            ball.color = `hsl(${h}turn 100% 75%)`;
           }
         }
 

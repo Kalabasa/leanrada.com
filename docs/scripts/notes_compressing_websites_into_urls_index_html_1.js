@@ -31,7 +31,7 @@
               input.value = "data:text/html,";
             }
 
-            frame.src = input.value;
+            frame.contentWindow.location.replace(input.value);
           }
         })();
       

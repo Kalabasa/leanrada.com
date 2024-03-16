@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script async="" src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>
   <title>Sort, sweep, and prune: Part 2 · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
@@ -324,7 +325,7 @@
   }
   sap-demo-client > canvas {
     width: 100%;
-    border: solid 2px #ccc;
+    border: solid 2px #222;
     border-radius: 12px;
   }
   .sap-demo-draggable > canvas {
@@ -1062,38 +1063,95 @@
   }
 </style>
   <style>
-  .card-grid {
-    display: grid;
-    justify-content: center;
-    grid-template-columns: repeat(auto-fit, calc(min(546px, 100%)));
-    gap: 60px;
+  .card-carousel-container {
+    position: relative;
   }
-  .card-grid-tall {
-    gap: 90px 60px;
+
+  .card-carousel {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(min(546px, 100svw - 90px));
+    justify-content: start;
+    gap: 60px;
+    padding: 12px 12px 0;
+    scrollbar-width: none;
+    overflow: auto;
   }
   @media (max-width: 900px) {
-    .card-grid {
+    .card-carousel {
       gap: 30px;
     }
   }
-  @media (prefers-reduced-motion) {
-    .card-grid * {
-      animation: none !important;
+
+  .card-carousel-btn-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+  }
+
+  .card-carousel-btn {
+    position: absolute;
+    min-width: 60px;
+    height: 60px;
+    padding: 0 18px;
+    box-sizing: border-box;
+    border: none;
+    background: var(--bg-clr);
+    color: var(--clr0-light);
+    cursor: pointer;
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 0 18px #000;
+    pointer-events: all;
+    transition: opacity 60ms ease-out;
+  }
+  .card-carousel-btn:hover {
+    color: var(--clr1);
+  }
+  .card-carousel-btn-next {
+    right: 0;
+    bottom: 0;
+    text-align: left;
+    padding-left: 5mm;
+    border-top-left-radius: 12px;
+  }
+  .card-carousel-btn-prev {
+    left: 0;
+    top: 0;
+    text-align: right;
+    padding-right: 5mm;
+    border-bottom-right-radius: 12px;
+  }
+  .card-carousel-btn-hidden {
+    opacity: 0;
+  }
+
+  /* approximately select touch-based media */
+  @media (hover: none) and (pointer: coarse) {
+    .card-carousel-btn {
+      display: none;
     }
   }
 </style>
   <style>
   .blog-suggestions {
     margin: 120px auto 0;
-    padding: 0 18px;
     width: 100%;
-    max-width: 1800px;
     box-sizing: border-box;
   }
 
   .blog-suggestions-title {
     margin: 0 0 30px;
     text-align: center;
+  }
+
+  .blog-suggestions-carousel {
+    /* virtual max width 2400px */
+    padding-inline: calc(max(30px, 50svw - 1200px));
   }
 </style>
   <style>
@@ -1161,7 +1219,7 @@
 
   .card-grid-title-wrap {
     position: relative;
-    max-width: 80%;
+    max-width: 70%;
     height: 0;
   }
   .card-grid-title-bar {
@@ -1485,6 +1543,7 @@
 
 <body>
 
+  <span hidden="" class="p-name">Sort, sweep, and prune: Part 2</span>
   <div class="page-wrapper">
     <header class="main-header">
       <div class="main-header-bar">
@@ -1500,20 +1559,20 @@
     </header>
     <div class="page-wrapper-content">
 
-      <div class="blog-page">
+      <div class="blog-page h-entry">
 
-        <div class="content">
+        <div class="content e-content">
 
           <!-- prettier-ignore -->
           <div class="markdown">
             <p>
             <div class="blog-header">
-              <div class="text-with-bg blog-header-title" style="--text-with-bg-color: var(--bg-clr)">
+              <div class="text-with-bg blog-header-title p-name" style="--text-with-bg-color: var(--bg-clr)">
                 <h1 class="text-with-bg-span blog-header-title-inner">
                   Sort, sweep, and prune: Part&nbsp;2
                 </h1>
               </div>
-              <img srcset="/notes/sweep-and-prune-2/hero_800.generated.jpg 800w,/notes/sweep-and-prune-2/hero_1200.generated.jpg 1200w" sizes="not (min-width:800px) 800px, 1200px" class="blog-header-hero" src="/notes/sweep-and-prune-2/hero.jpg" alt="" spec="100% [800) 80%">
+              <img srcset="" sizes="" class="blog-header-hero u-media" src="/notes/sweep-and-prune-2/hero.jpg" alt="" spec="100% [800) 80%">
               <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
                 <path></path>
               </svg>
@@ -1521,12 +1580,12 @@
             </p>
             <p>
             <div class="blog-post-info ">
-              6 Aug 2023 · 13 min read
+              <span class="dt-published">6 Aug 2023</span> · 13 min read
             </div>
             </p>
             <div class="tag-row">tags:
-              <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span>
-              <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+              <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span>
+              <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
             </div>
 
             <p>In the <a target="_self" class="text-link " href="/notes/sweep-and-prune/">first part</a>, we figured that sorting lets us exploit the transitive property of inequality to optimise the number of pairwise tests.</p>
@@ -1534,7 +1593,7 @@
             <p>This part explores the more sophisticated versions of sweep-and-prune.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/sweep-and-prune-2/sophisticated_250.generated.png 250w" sizes=" 250px" class="blog-media-element" alt="Classy rageface" src="/notes/sweep-and-prune-2/sophisticated.png" spec="250" loading="lazy" width="100%" height="" style="aspect-ratio: 1.0769230769230769; background: #f8f8f8"><span class="blog-media-caption">Sophisticated sip and prune.</span>
+              <img srcset="" sizes="" class="blog-media-element" alt="Classy rageface" src="/notes/sweep-and-prune-2/sophisticated.png" spec="250" loading="lazy" width="" height="" style=""><span class="blog-media-caption">Sophisticated sip and prune.</span>
             </div>
             </p>
             <h2 id="proper-sweep-and-prune-🧐">Proper sweep-and-prune 🧐</h2>
@@ -1716,7 +1775,7 @@
             <p>Let’s look at the sort step, which is the bottleneck of the algorithm according to the analysis.</p>
             <p>The following is a visualisation of the sorting of the edges array, using an optimised <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Quicksort">quicksort</a> (n&nbsp;log&nbsp;n):</p>
             <div class="demo-row">
-              <sap-demo-client class="" data-rss="interactive" alt="demo of the collision detection algorithm using 'sap-quicksort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" strategy="sap-quicksort" decorations="edges:array:#f00:#0ff"></sap-demo-client>
+              <sap-demo-client class="" data-rss="interactive" alt="demo of the collision detection algorithm using 'sap-quicksort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" strategy="sap-quicksort" skip-interval="3" decorations="edges:array:#f00:#0ff"></sap-demo-client>
               <div class="demo-caption">
                 Sort <span style="color:#0ff">comparisons</span> and <span style="color:#f00">swaps</span> are highlighted. The fixed lines at the top are edge array positions, connected to actual ball edge x positions below. Line crossings signal incorrect order.
               </div>
@@ -1736,7 +1795,7 @@
             <p>Insertion sort has a running time of <em>O(n)</em> at best when the list is already sorted or nearly-sorted, and <em>O(n<sup>2</sup>)</em> at worst when the list is in reverse. We can argue that the average case is <em><strong>O(n)</strong></em>, since the list is almost always sorted due to the previous frame’s sort.</p>
             <p>Here’s insertion sort in action:</p>
             <div class="demo-row">
-              <sap-demo-client class="" data-rss="interactive" alt="demo of the collision detection algorithm using 'sap-insertionsort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" strategy="sap-insertionsort" decorations="edges:array:#f00:#0ff"></sap-demo-client>
+              <sap-demo-client class="" data-rss="interactive" alt="demo of the collision detection algorithm using 'sap-insertionsort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" strategy="sap-insertionsort" skip-interval="3" decorations="edges:array:#f00:#0ff"></sap-demo-client>
               <div class="demo-caption">
                 Sort <span style="color:#0ff">comparisons</span> and <span style="color:#f00">swaps</span> are highlighted.
               </div>
@@ -1923,9 +1982,8 @@
             <p>n = number of balls, m = number of collisions</p>
             <p>(todo: Add benchmark here. I’m a little lazy right now. 😺)</p>
             <p>The real measure of speed lies in real measurements on real hardware!</p>
-            <p><img src="https://preview.redd.it/hqs9fcbor3z61.jpg?width=640&amp;crop=smart&amp;auto=webp&amp;s=8aad431aefed7b4d80bc3667ac2472764b7322ac" alt="Stop doing algorithm analysis">
-              <a target="_blank" class="text-link " href="https://www.reddit.com/r/ProgrammerHumor/comments/ncb11u/stop_doing_algorithm_analysis">from r/ProgrammerHumor</a>
-            </p>
+            <blockquote class="reddit-embed-bq" style="height:500px" data-embed-locale="en-EN" data-embed-theme="dark" data-embed-showedits="false" data-embed-created="2024-03-16T14:19:12.213Z" data-embed-height="740"><a href="https://www.reddit.com/r/ProgrammerHumor/comments/ncb11u/stop_doing_algorithm_analysis/">Stop Doing Algorithm Analysis</a><br> by<a href="https://www.reddit.com/user/theawesomenachos/">u/theawesomenachos</a> in<a href="https://www.reddit.com/r/ProgrammerHumor/">ProgrammerHumor</a></blockquote>
+
             <h2 id="appendix">Appendix</h2>
             <p>Things I’ve noted or realised while writing this post:</p>
             <ul>
@@ -1997,94 +2055,145 @@
           </aside>
           <aside class="blog-suggestions">
             <h2 class="blog-suggestions-title">More posts</h2>
-            <div class="card-grid ">
+            <div class="card-carousel-container">
+              <div class="card-carousel blog-suggestions-carousel">
 
-              <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune/">
-                <div class="card-grid-image-container">
-                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
-                </div>
-                <div class="card-grid-title-wrap">
-                  <div class="card-grid-title-bar">
-                    <div class="card-grid-title-content">
-                      <div class="card-grid-title">Sort, sweep, and prune: Collision detection algorithms</div>
-                      <div class="card-grid-posttitle">5 Aug 2023</div>
+                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/sweep-and-prune/hero.jpg" spec="546" loading="lazy" width="" height="" style="">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Sort, sweep, and prune: Collision detection algorithms
+
+                        </div>
+                        <div class="card-grid-posttitle">5 Aug 2023</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="card-grid-content">
-                  <div class="card-grid-posttitle card-grid-postitle-small">
-                    5 Aug 2023
-                  </div>
-                  <div class="card-grid-actions">
-                    <span class="card-grid-action card-grid-info">Deets…</span>
-                    <span class="card-grid-action card-grid-story">Read post</span>
-                  </div>
-                  <div class="card-grid-description">
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      5 Aug 2023
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
 
-                    <span class="tag-component" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component" style="background: #b7eaa6; color: #336920">games</span>
+                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Sort, sweep, and prune: Collision detection algorithms">Read post</span>
-                  </div>
-                </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/introducing-portabl.ink/">
-                <div class="card-grid-image-container">
-                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
-                </div>
-                <div class="card-grid-title-wrap">
-                  <div class="card-grid-title-bar">
-                    <div class="card-grid-title-content">
-                      <div class="card-grid-title">Introducing portabl.ink</div>
-                      <div class="card-grid-posttitle">25 Sep 2023</div>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Sort, sweep, and prune: Collision detection algorithms
+                
+              ">Read post</span>
                     </div>
                   </div>
-                </div>
-                <div class="card-grid-content">
-                  <div class="card-grid-posttitle card-grid-postitle-small">
-                    25 Sep 2023
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/introducing-portabl.ink/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/placeholder.png" spec="546" loading="lazy" width="" height="" style="">
                   </div>
-                  <div class="card-grid-actions">
-                    <span class="card-grid-action card-grid-info">Deets…</span>
-                    <span class="card-grid-action card-grid-story">Read post</span>
-                  </div>
-                  <div class="card-grid-description">
-
-                    <span class="tag-component" style="background: #f0de91; color: #725f15">js</span> <span class="tag-component" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
-
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Introducing portabl.ink">Read post</span>
-                  </div>
-                </div>
-              </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/compressing-websites-into-urls/">
-                <div class="card-grid-image-container">
-                  <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" src="/notes/placeholder.png" alt="" spec="546" loading="lazy">
-                </div>
-                <div class="card-grid-title-wrap">
-                  <div class="card-grid-title-bar">
-                    <div class="card-grid-title-content">
-                      <div class="card-grid-title">Compressing a website into a URL</div>
-                      <div class="card-grid-posttitle">10 Oct 2023</div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">Introducing portabl.ink</div>
+                        <div class="card-grid-posttitle">25 Sept 2023</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="card-grid-content">
-                  <div class="card-grid-posttitle card-grid-postitle-small">
-                    10 Oct 2023
-                  </div>
-                  <div class="card-grid-actions">
-                    <span class="card-grid-action card-grid-info">Deets…</span>
-                    <span class="card-grid-action card-grid-story">Read post</span>
-                  </div>
-                  <div class="card-grid-description">
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      25 Sept 2023
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
 
-                    <span class="tag-component" style="background: #f0de91; color: #725f15">js</span>
+                      <span class="tag-component p-category" style="background: #f0de91; color: #725f15">js</span> <span class="tag-component p-category" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
 
-                    <span class="card-grid-action card-grid-story" aria-label="Read post - Compressing a website into a URL">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Introducing portabl.ink">Read post</span>
+                    </div>
                   </div>
-                </div>
-              </a>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/compressing-websites-into-urls/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/compressing-websites-into-urls/hero.jpg" spec="546" loading="lazy" width="" height="" style="">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
 
+                          Compressing a website into a URL
+
+                        </div>
+                        <div class="card-grid-posttitle">10 Oct 2023</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      10 Oct 2023
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" style="background: #f0de91; color: #725f15">js</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Compressing a website into a URL
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/debug-css-boxes-bookmarklet/">
+                  <div class="card-grid-image-container">
+                    <img srcset="" sizes="" class="card-grid-image" alt="" src="/notes/placeholder.png" spec="546" loading="lazy" width="" height="" style="">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">Debug CSS boxes with this bookmarklet</div>
+                        <div class="card-grid-posttitle">15 Oct 2023</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+                      15 Oct 2023
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Debug CSS boxes with this bookmarklet">Read post</span>
+                    </div>
+                  </div>
+                </a>
+
+              </div>
+              <div class="card-carousel-btn-container">
+                <button class="card-carousel-btn card-carousel-btn-prev" aria-label="Previous">
+                  &lt;&lt;
+                </button>
+                <button class="card-carousel-btn card-carousel-btn-next" aria-label="Next">
+                  &gt;&gt;
+                </button>
+              </div>
             </div>
-
-
           </aside>
         </div>
       </div>
@@ -2162,25 +2271,77 @@
 
 
 
-
+  <script id="livejs" defer="" src="https://livejs.com/live.js"></script>
   <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
   <script type="module" async="" defer="" src="/scripts/sap-demo.js"></script>
   <script defer="" src="/scripts/blog-media.js"></script>
   <script defer="" src="/scripts/blog-header.js"></script>
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
-  <script defer="">
+  <script async="" defer="">
   (() => {
-    const items = document.querySelectorAll(".card-grid-item");
-    for (const item of items) {
-      const info = item.querySelector(".card-grid-info");
-      info.addEventListener("click", (event) => {
-        event.preventDefault();
-        item.classList.add("card-grid-item-expanded");
-      });
+    const containers = document.querySelectorAll(".card-carousel-container");
+
+    for (const container of containers) {
+      const carousel = container.firstElementChild;
+
+      container.addEventListener(
+        "click",
+        (event) => {
+          const { target } = event;
+
+          const isButton = target.classList.contains("card-carousel-btn");
+          if (!isButton) return;
+
+          const isNext = target.classList.contains("card-carousel-btn-next");
+          const stepUnitSize =
+            carousel.children[1]?.offsetLeft - carousel.children[0]?.offsetLeft;
+          const delta =
+            (isNext ? 1 : -1) *
+            Math.max(1, Math.floor(carousel.offsetWidth / stepUnitSize)) *
+            stepUnitSize;
+          carousel.scrollBy({
+            left: delta,
+            behavior: "smooth",
+          });
+
+          updateButtons(container, delta);
+        },
+        { capture: true }
+      );
+
+      let debouncedScrollTimeout = null;
+      carousel.addEventListener(
+        "scroll",
+        () => {
+          if (debouncedScrollTimeout) clearTimeout(debouncedScrollTimeout);
+          debouncedScrollTimeout = setTimeout(() => {
+            updateButtons(container);
+          }, 50);
+        },
+        { passive: true }
+      );
+
+      updateButtons(container);
+    }
+
+    function updateButtons(container, delta = 0) {
+      const carousel = container.firstElementChild;
+      const nextButton = container.querySelector(".card-carousel-btn-next");
+      const prevButton = container.querySelector(".card-carousel-btn-prev");
+      nextButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta >
+          carousel.scrollWidth - carousel.offsetWidth - 60
+      );
+      prevButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta < 60
+      );
     }
   })();
 </script>
+  <script defer="" src="/scripts/card-grid-item.js"></script>
   <script defer="" async="" src="/scripts/blog-rss-link.js"></script>
   <script defer="">
   const edgesArrays = document.querySelectorAll(".edges-array");
