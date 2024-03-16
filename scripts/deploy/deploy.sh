@@ -19,7 +19,7 @@ npm run build-prod
 # Generate source-controlled generated files
 node scripts/update/clean-redirects.js
 node scripts/update/generate-redirects.js
-node scripts/update/generate-blog-index.js
+node scripts/update/generate-blog-index.js --no-build
 
 if [[ `git status --porcelain` ]]; then
   echo >&2 "Unclean generated files"
