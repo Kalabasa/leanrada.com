@@ -3,7 +3,15 @@
 >
   <!-- textlint-disable -->
   <script render>
+    let year = null;
     for (const item of index){
+      if (attrs.yearHeadings) {
+        const itemYear = new Date(item.date).getFullYear();
+        if (year !== itemYear) {
+          year = itemYear;
+          yield html`<h3 class="blog-list-heading">${formatYearHeading(year)}</h3>`;
+        }
+      }
       const tags = item.tags.map(tag => `<tag>${tag}</tag>`).join(" ");
       yield html`<blog-list-item href="${item.href}" date="${item.date}">${item.title} ${tags}</blog-list-item>`;
     }
@@ -49,29 +57,69 @@
   const combinedIndex = require("./index.generated.combined.json");
   const dev = process.env.NODE_ENV === "development";
 
-  const { filterTag, limit = Infinity, devHidden } = attrs;
+  const { filterTag, filterYear, limit = Infinity, withPrivate } = attrs;
+  const filterYearInt = filterYear && Number.parseInt(filterYear);
 
   let index = combinedIndex
     .filter((item) => item.public)
-    .filter((item) => !filterTag || item.tags.includes(filterTag));
+    .filter((item) => filter(item, filterTag, filterYearInt));
 
   // newest first
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  if (devHidden && dev) {
+  if (withPrivate && dev) {
     index = combinedIndex
       .filter((item) => !item.public)
-      .filter((item) => !filterTag || item.tags.includes(filterTag))
-      .map((item) => ({ ...item, tags: ["✎hidden", ...item.tags] }))
+      .filter((item) => filter(item, filterTag, filterYearInt))
+      .map((item) => ({
+        ...item,
+        date: String(new Date().getFullYear() + 1),
+        tags: ["✎hidden", ...item.tags],
+      }))
       .concat(index);
   }
 
   index = index.slice(0, limit);
+
+  function filter(item, tag, year) {
+    if (tag && !item.tags.includes(tag)) return false;
+    if (year && new Date(item.date).getFullYear() !== year) return false;
+    return true;
+  }
+
+  function formatYearHeading(year) {
+    return `‘${year % 100}`;
+  }
 </script>
 
 <style>
   .blog-list {
     margin: auto;
     max-width: 800px;
+  }
+  .blog-list-heading {
+    margin: 0;
+    padding: 24px 0 6px;
+    border-bottom: solid 1px var(--card-clr);
+    font-size: 16px;
+    font-weight: lighter;
+    font-style: italic;
+    font-family: var(--display-font);
+    color: var(--text2-clr);
+  }
+  .blog-list-heading:first-child {
+    padding-top: 0;
+  }
+  .blog-list-animated .blog-list-heading {
+    animation: blog-list-heading-reveal 0.4s var(--ease) backwards;
+    animation-delay: var(--blog-list-item-delay);
+  }
+  @keyframes blog-list-heading-reveal {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 </style>
