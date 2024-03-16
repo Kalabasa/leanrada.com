@@ -1,0 +1,152 @@
+<script render>
+  yield* renderMediaElement();
+</script>
+
+<script static>
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const sharp = require("sharp");
+
+  const prod = process.env.NODE_ENV === "production";
+
+  // server can't know client’s viewport, so we assume this
+  const priorAspectRatio = 2 / 3;
+
+  async function* renderMediaElement() {
+    if (isExternal(attrs.src)) {
+      yield html`<img
+        class=${attrs.class}
+        alt="${attrs.alt ?? ""}"
+        src="${attrs.src}"
+        loading="lazy"
+      />`;
+    } else if (isResizeableImg(attrs.src)) {
+      yield html`<responsive-img
+        class=${attrs.class}
+        alt="${attrs.alt ?? ""}"
+        src="${attrs.src}"
+        spec="${attrs.spec || defaultResponsiveImageSpec()}"
+        loading="lazy"
+        width="${await imgWidthAttr(attrs.src)}"
+        height="${await imgHeightAttr(attrs.src)}"
+        style="${await imgStyle(attrs.src)}"
+      />`;
+    } else if (isImg(attrs.src)) {
+      yield html`<img
+        class=${attrs.class}
+        alt="${attrs.alt ?? ""}"
+        src="${attrs.src}"
+        loading="lazy"
+        width="${await imgWidthAttr(attrs.src)}"
+        height="${await imgHeightAttr(attrs.src)}"
+        style="${await imgStyle(attrs.src)}"
+      />`;
+    } else if (isVideo(attrs.src)) {
+      // todo: video placeholders
+      // todo: aspect-ratio
+      // todo: <responsive-video> component
+      // todo: lazy-load
+      yield html`<video
+        class=${attrs.class}
+        muted
+        autoplay
+        loop
+        aria-label="${attrs.alt ?? ""}"
+        ${attrs.playbackRate
+          ? 'onloadstart="this.playbackRate = ' + attrs.playbackRate + '"'
+          : ""}
+      >
+        <source src="${attrs.src}" />
+        <a href="${attrs.src}">${attrs.alt}</a>
+      </video>`;
+    } else {
+      throw new Error("invalid media src: " + attrs.src);
+    }
+  }
+
+  function isResizeableImg(src) {
+    const ext = src.substring(src.length - 4);
+    return ext === ".png" || ext === ".jpg";
+  }
+
+  function isImg(src) {
+    const ext = src.substring(src.length - 4);
+    return ext === ".png" || ext === ".jpg" || ext === ".gif";
+  }
+
+  function isVideo(src) {
+    const ext = src.substring(src.length - 4);
+    return ext === ".mp4";
+  }
+
+  function isExternal(src) {
+    return /^(\w+:)?\/\/.*$/.test(src.trim());
+  }
+
+  function defaultResponsiveImageSpec() {
+    switch (attrs.type) {
+      case "bleed":
+        return "100% [800) 80% [1750) 1400";
+      default:
+        return "100% [664) 664";
+    }
+  }
+
+  async function isWide(src) {
+    const {
+      metadata: { width, height },
+    } = await imgData(src);
+
+    return width > height * priorAspectRatio;
+  }
+
+  async function imgWidthAttr(src) {
+    if (!prod) return "";
+    return (await isWide(src))
+      ? attrs.type === "bleed"
+        ? "400%"
+        : "100%"
+      : "";
+  }
+
+  async function imgHeightAttr(src) {
+    if (!prod) return "";
+    return (await isWide(src)) ? "" : "100%";
+  }
+
+  async function imgStyle(src) {
+    if (!prod) return "";
+
+    const {
+      metadata: { width, height },
+      stats: { dominant },
+    } = await imgData(src);
+
+    const { r, g, b } = dominant;
+    const bg =
+      "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+
+    return `aspect-ratio: ${width / height}; background: ${bg}`;
+  }
+
+  const cache = {};
+  async function imgData(src) {
+    if (!cache[src]) {
+      const srcFilePath = path.join(__outputDir, src);
+      if (!fs.existsSync(srcFilePath)) {
+        throw new Error("Blog-media image src does not exist: " + srcFilePath);
+      }
+
+      console.log("Analyzing img:", srcFilePath);
+      const image = await fs.promises.readFile(srcFilePath);
+      const sharpObj = sharp(image);
+      const [metadata, stats] = await Promise.all([
+        sharpObj.metadata(),
+        sharpObj.stats(),
+      ]);
+
+      cache[src] = { metadata, stats };
+    }
+    return cache[src];
+  }
+</script>
