@@ -2,16 +2,16 @@
   if (!post) return "";
 
   const tags = post.tags.map(tag => html` <tag>${tag}</tag> `) ?? [];
-  const mediaSrc = post.media ?? url("/notes/placeholder.png");
+  const mediaSrc = attrs.mediaSrc || post.media || url("/notes/placeholder.png");
   yield html`<card-grid-item
-    href="${post.href}"
-    title="${post.title}"
-    posttitle="${post.date}"
+    href="${attrs.href || post.href}"
+    title="${attrs.title || post.title}"
+    posttitle="${attrs.posttitle || post.date}"
     media-src="${mediaSrc}"
     thumbalign="center"
     expanded="true"
   >
-    ${tags}
+    ${tags} ${attrs.description}
   </card-grid-item>`
 </script>
 

@@ -12,8 +12,16 @@
           yield html`<h3 class="blog-list-heading">${formatYearHeading(year)}</h3>`;
         }
       }
+
       const tags = item.tags.map(tag => html` <tag>${tag}</tag> `);
-      yield html`<blog-list-item href="${item.href}" date="${item.date}">${item.title} ${tags}</blog-list-item>`;
+
+      yield html`<blog-list-item
+        href="${item.href}"
+        date="${item.date}"
+        date-style="${attrs.yearHeadings ? 'no-year' : ''}"
+      >
+        ${item.title} ${tags}
+      </blog-list-item>`;
     }
   </script>
   <!-- textlint-enable -->
@@ -88,7 +96,7 @@
   }
 
   function formatYearHeading(year) {
-    return `‘${year % 100}`;
+    return `${year}`;
   }
 </script>
 
@@ -99,10 +107,11 @@
   }
   .blog-list-heading {
     margin: 0;
-    padding: 24px 0 6px;
+    padding: 36px 12px 6px;
     border-bottom: solid 1px var(--card-clr);
+    text-align: end;
     font-size: 16px;
-    font-weight: lighter;
+    font-weight: bold;
     font-style: italic;
     font-family: var(--display-font);
     color: var(--text2-clr);
