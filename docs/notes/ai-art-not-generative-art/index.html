@@ -220,20 +220,6 @@
   }
 </style>
   <style>
-  .tag-component {
-    display: inline-block;
-    padding: 0 3px;
-    height: 16px;
-    line-height: 16px;
-    font-family: var(--default-font);
-    font-size: 12px;
-    font-weight: bold;
-    background: #ccc;
-    color: #444;
-    border-radius: 3px;
-  }
-</style>
-  <style>
   .tag-row {
     font-family: var(--default-font);
     font-size: 12px;
@@ -873,6 +859,378 @@
   }
 </style>
   <style>
+  .card-carousel-container {
+    position: relative;
+  }
+
+  .card-carousel {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(min(546px, 100svw - 90px));
+    justify-content: start;
+    gap: 60px;
+    padding: 12px 12px 0;
+    scrollbar-width: none;
+    overflow: auto;
+  }
+  @media (max-width: 900px) {
+    .card-carousel {
+      gap: 30px;
+    }
+  }
+
+  .card-carousel-btn-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+  }
+
+  .card-carousel-btn {
+    position: absolute;
+    min-width: 60px;
+    height: 60px;
+    padding: 0 18px;
+    box-sizing: border-box;
+    border: none;
+    background: var(--bg-clr);
+    color: var(--text-clr);
+    cursor: pointer;
+    font-family: var(--display-font);
+    font-size: 21px;
+    font-weight: bold;
+    text-shadow: 0 0 18px #000;
+    pointer-events: all;
+    transition: opacity 60ms ease-out;
+  }
+  .card-carousel-container:hover .card-carousel-btn {
+    color: var(--clr0-light);
+  }
+  .card-carousel-btn:hover {
+    color: var(--clr1);
+  }
+  .card-carousel-btn-next {
+    right: 0;
+    bottom: 0;
+    text-align: left;
+    padding-left: 5mm;
+    border-top-left-radius: 12px;
+  }
+  .card-carousel-btn-prev {
+    left: 0;
+    top: 0;
+    text-align: right;
+    padding-right: 5mm;
+    border-bottom-right-radius: 12px;
+  }
+  .card-carousel-btn-hidden {
+    opacity: 0;
+  }
+
+  .card-carousel-btn-symbol {
+    display: inline-block;
+    pointer-events: none;
+  }
+  .card-carousel-container:hover .card-carousel-btn-next .card-carousel-btn-symbol {
+    animation: card-carousel-btn-next-symbol 0.5s var(--ease) infinite alternate;
+  }
+  .card-carousel-container:hover .card-carousel-btn-prev .card-carousel-btn-symbol {
+    animation: card-carousel-btn-prev-symbol 0.5s var(--ease) infinite alternate;
+  }
+  @keyframes card-carousel-btn-next-symbol {
+    to {
+      transform: translateX(0.5ch);
+    }
+  }
+  @keyframes card-carousel-btn-prev-symbol {
+    to {
+      transform: translateX(-0.5ch);
+    }
+  }
+
+  /* approximately select touch-based media */
+  @media (hover: none) and (pointer: coarse) {
+    .card-carousel-btn {
+      display: none;
+    }
+  }
+</style>
+  <style>
+  .blog-suggestions {
+    margin: 120px auto 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .blog-suggestions-title {
+    margin: 0 0 30px;
+    text-align: center;
+  }
+
+  .blog-suggestions-carousel {
+    /* virtual max width 2400px */
+    padding-inline: calc(max(30px, 50svw - 1200px));
+  }
+</style>
+  <style>
+  .card-grid-item {
+    display: block;
+    text-decoration: none;
+    text-align: start;
+    color: var(--text-clr);
+    overflow: hidden;
+    transition: 0.2s var(--ease);
+    transition-property: margin, padding;
+  }
+  .card-grid-animated .card-grid-item {
+    animation: card-grid-item-reveal 0.8s var(--ease) backwards;
+    animation-delay: var(--card-grid-item-delay);
+  }
+  @keyframes card-grid-item-reveal {
+    0% {
+      clip-path: inset(20% 100% 60% 0 round 18px);
+      filter: brightness(0);
+    }
+    50% {
+      clip-path: inset(20% 0 60% 0 round 18px);
+      filter: brightness(1);
+    }
+    100% {
+      clip-path: inset(0 0 0 0 round 18px);
+    }
+  }
+
+  .card-grid-image-container {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    border-radius: 18px;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .card-grid-image-container::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--clr0);
+    mix-blend-mode: darken;
+    transition: background 1s;
+  }
+
+  .card-grid-image {
+    width: 101%;
+    height: 101%;
+    object-fit: cover;
+    object-position: top;
+    filter: contrast(0.8);
+    transform: scale(1);
+    transform-origin: 9px 9px;
+    transition: filter 1s, transform 1s;
+  }
+  .card-grid-thumbalign-center .card-grid-image {
+    object-position: center;
+    transform-origin: center;
+  }
+  .card-grid-thumbalign-top .card-grid-image {
+    object-position: top;
+    transform-origin: top;
+  }
+
+  .card-grid-title-wrap {
+    position: relative;
+    max-width: 70%;
+    height: 0;
+  }
+  .card-grid-title-bar {
+    position: absolute;
+    bottom: 0;
+    border-top-right-radius: 18px;
+    background: var(--bg-clr);
+  }
+  .card-grid-title-content {
+    position: relative;
+    padding: 12px 24px 0 0;
+    transition: padding 0.2s var(--ease);
+  }
+  .card-grid-title-content::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    width: 18px;
+    height: 36px;
+    border-bottom-left-radius: 18px;
+    box-shadow: 0 18px 0 var(--bg-clr);
+  }
+  .card-grid-title-content::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    width: 36px;
+    height: 18px;
+    border-bottom-left-radius: 18px;
+    box-shadow: -18px 0 0 var(--bg-clr);
+  }
+
+  .card-grid-title {
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-style: italic;
+    font-weight: bold;
+  }
+
+  .card-grid-posttitle {
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: italic;
+    font-weight: bold;
+    opacity: 0.8;
+  }
+  .card-grid-posttitle:empty {
+    display: none;
+  }
+
+  .card-grid-postitle-small {
+    display: none;
+  }
+
+  .card-grid-actions {
+    display: none;
+    gap: 5mm;
+    max-height: 48px;
+    padding-top: 6px;
+    overflow: hidden;
+  }
+  .card-grid-action {
+    display: inline-block;
+    font-weight: bold;
+    text-decoration: underline;
+    color: var(--text2-clr);
+    cursor: pointer;
+    position: relative;
+  }
+  .card-grid-info {
+    margin: -2.5mm;
+    padding: 2.5mm;
+  }
+  .card-grid-story::after {
+    content: "→";
+    display: inline-block;
+  }
+
+  .card-grid-content {
+    margin: 18px 0;
+    font-size: 15px;
+    line-height: 2;
+    transition: margin 0.2s var(--ease);
+  }
+
+  .card-grid-animated .card-grid-title {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.8s);
+  }
+  .card-grid-animated .card-grid-posttitle {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.9s);
+  }
+
+  @keyframes card-grid-text-reveal {
+    from {
+      transform: translateY(-100%);
+      clip-path: inset(100% 0 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .card-grid-animated .card-grid-content {
+    animation: card-grid-content 0.6s 1.5s backwards;
+  }
+  @keyframes card-grid-content {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (hover: hover) {
+    .card-grid-item:hover {
+      margin: -12px -24px 0;
+      padding-bottom: 12px;
+    }
+    .card-grid-item:hover .card-grid-image-container::after {
+      background: var(--text-clr);
+      transition: background 2s;
+    }
+    .card-grid-item:hover .card-grid-image {
+      filter: contrast(1);
+      transform: scale(1.1);
+      transition: filter 1s, transform 2s;
+    }
+    .card-grid-item:hover .card-grid-title-content {
+      padding: 24px;
+    }
+    .card-grid-item:hover .card-grid-content {
+      margin-left: 24px;
+      margin-right: 24px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .card-grid-content {
+      margin: 12px 0;
+    }
+
+    .card-grid-image-container {
+      height: 200px;
+    }
+
+    .card-grid-posttitle {
+      display: none;
+    }
+    .card-grid-postitle-small {
+      display: block;
+    }
+
+    .card-grid-actions {
+      display: flex;
+    }
+    .card-grid-item-expanded .card-grid-actions {
+      max-height: 0;
+      transition: max-height 0.2s cubic-bezier(0.2, 0, 0.8, 1);
+    }
+
+    .card-grid-description {
+      max-height: 0;
+      overflow: hidden;
+    }
+    .card-grid-item-expanded .card-grid-description {
+      max-height: 100vh;
+      transition: max-height 1s cubic-bezier(0.2, 0, 1, 1);
+    }
+  }
+</style>
+  <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
+  }
+</style>
+  <style>
   .btn,
   .btn:visited {
     padding: 6px 12px;
@@ -934,7 +1292,7 @@
   }
 </style>
   <style>
-  :root { 
+  :root {
     --ai-clr-dark: #5a2a87;
     --gen-clr-dark: #325300;
   }
@@ -1088,7 +1446,7 @@
 
 
           <div class="blog-post-info blog-post-info-hidden" hidden="">
-            <span class="dt-published">18 Nov 2023</span> · min read
+            <span class="dt-published">25 Mar 2024</span> · min read
           </div>
           <!-- textlint-disable -->
           <div class="tag-row">tags:
@@ -1099,7 +1457,8 @@
           <div class="markdown">
             <p><strong>AI art is not <em>generative art</em></strong> (clickbait title). While the technical definition says that one is a subset of the other, I think it’s useful to distinguish between these two categories.</p>
             <p><strong>Why I’m writing this in the first place —</strong> Starting 2022, the term “generative art” had been progressively becoming synonymous with art produced by AI text-to-image systems. As a consumer and producer of (traditional) generative art, it was becoming a bit annoying to browse generative art content on the internet. Whether through tags like <code>#generativeart</code> or communities like <code>r/generative</code>, spaces are being flooded with AI-generated images which I and many others are not interested in. End rant.</p>
-            <p><span class="box-note ">In 2024, things are a bit different. AI art is now commonly referred to as ‘AI art’. I shouldn’t have procrastinated writing this essay for so long.</span></p>
+            <p><span class="box-note ">In 2024, things are a bit different. AI art is now commonly referred to as ‘AI art’. I shouldn’t have procrastinated writing this post for so long.</span></p>
+            <p>There are also cases where generative artists are pressured to relabel their art, so as to not be mistaken for being AI (and avoid the silly AI witch hunts). It’s an unfortunate niche pressured to be nichey-er.</p>
             <p>At this point you may be asking, what’s the difference anyway? Well, that’s the point of this post. It’s kinda like animals vs humans. While technically &amp; scientifically, humans are (a subset of) animals; in daily life “animals” usually mean non-human animals, as in “animal lover” and “animal rights”. I digress.</p>
             <h2 id="section-overview">Section overview</h2>
             <p>This article looks at the similarities and differences between (traditional) generative art and text-to-image AI art in <span style="display:inline-block;transform:rotate(-3deg)">different</span> <span style="display:inline-block;transform:rotate(27deg)">angles</span>. Skip to different sections if you want.</p>
@@ -1122,7 +1481,7 @@
               </div>
               <div class="timeline-entry timeline-entry-ai">
                 <div class="blog-media blog-media-default">
-                  <img srcset="/notes/_no-ai/neurons_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Diagrams of a human neuron and an artificial neuron" src="/notes/_no-ai/neurons.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
+                  <img srcset="/notes/ai-art-not-generative-art/neurons_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="Diagrams of a human neuron and an artificial neuron" src="/notes/ai-art-not-generative-art/neurons.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
                 </div>
               </div>
               <div class="timeline-entry timeline-entry-ai">
@@ -1144,9 +1503,9 @@
                   <blockquote>“<strong>Wall Drawing #797.</strong> <i>The first drafter has a black marker and makes an irregular horizontal line near the top of the wall. Then the second drafter tries to copy it (without touching it) using a red marker. The third drafter does the same, using a yellow marker. The fourth drafter does the same using a blue marker. Then the second drafter followed by the third and fourth copies the last line drawn until the bottom of the wall is reached.</i>”</blockquote>
                   <!-- todo: popout interactive -->
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/lewitt_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Picture of Wall Drawing #797" src="/notes/_no-ai/lewitt.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f838"><span class="blog-media-caption">Product of Wall Drawing #797, executed from instructions written by LeWitt.</span>
+                    <img srcset="/notes/ai-art-not-generative-art/lewitt_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="Picture of Wall Drawing #797" src="/notes/ai-art-not-generative-art/lewitt.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f838"><span class="blog-media-caption">Product of Wall Drawing #797, executed from instructions written by LeWitt.</span>
                   </div>
-                  <p>"The idea becomes a machine that makes the art." (Paragraphs on Conceptual Art, 1967) It's not quite <em>generative art</em> but it’s close. Besides, LeWitt called it something else: <strong>“conceptual art”</strong>.</p>
+                  <p>"The idea becomes a machine that makes the art." (Paragraphs on Conceptual Art, 1967) It’s not quite <em>generative art</em> but it’s close. Besides, LeWitt called it something else: <strong>‘conceptual art’</strong>.</p>
 
                 </div>
               </div>
@@ -1155,10 +1514,10 @@
                 <div class="card-component timeline-card">
 
                   <h3>Code art</h3>
-                  <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Vera_Moln%C3%A1r">Vera Molnár</a> brought us closer to modern generative art by actually using computers and writing code to generate artworks.<p></p>
+                  <p><a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Vera_Moln%C3%A1r">Vera Molnár</a> brought us closer to modern generative art by actually using computers and writing code to generate artworks.</p>
                   <!-- todo: popout interactive -->
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/molnar_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Picture of art of Vera Molnár" src="/notes/_no-ai/molnar.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #080808"><span class="blog-media-caption">Vera Molnár</span>
+                    <img srcset="/notes/ai-art-not-generative-art/molnar_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="Picture of art of Vera Molnár" src="/notes/ai-art-not-generative-art/molnar.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #080808"><span class="blog-media-caption">Vera Molnár</span>
                   </div>
 
                 </div>
@@ -1194,7 +1553,7 @@
               </div>
               <div class="timeline-entry timeline-entry-ai">
                 <div class="blog-media blog-media-default">
-                  <img srcset="/notes/_no-ai/deepdream_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Picture of DeepDream output" src="/notes/_no-ai/deepdream.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.5; background: #080808"><span class="blog-media-caption">Google’s DeepDream exploits image recognition feeding into digital pareidolia. It can be considered early AI art, but it’s quite different from modern AI art.</span>
+                  <img srcset="/notes/ai-art-not-generative-art/deepdream_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="Picture of DeepDream output" src="/notes/ai-art-not-generative-art/deepdream.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.5; background: #080808"><span class="blog-media-caption">Google’s DeepDream exploits image recognition feeding into digital pareidolia. It can be considered early AI art, but it’s quite different from modern AI art.</span>
                 </div>
               </div>
               <div class="timeline-entry timeline-entry-ai">
@@ -1202,10 +1561,9 @@
 
                   <h3>Generative networks</h3>
                   <p>Due to deep learning, we had advancements in generative networks, which are networks that can generate new data on their own instead of simply being a complex input-output mapping.</p>
-                  <p>This seems to be the start of the <strong>image synthesis</strong> wave.</p>
+                  <p>This appears to be the start of the <strong>image synthesis</strong> wave.</p>
                   <p>
-                    <!-- todo: interactive (just cycle through prerendereds) -->
-                    <img srcset="/notes/_no-ai/thisperson_100.generated.jpg 100w" sizes=" 100px" class="thisperson" alt="Portrait of a person" src="/notes/_no-ai/thisperson.jpg" spec="100"> Here is a fake person generated by <a target="_blank" class="text-link " href="https://www.thispersondoesnotexist.com/">a generative adversarial network (GAN) trained specifically on portraits</a>.
+                    <img srcset="/notes/ai-art-not-generative-art/thisperson_100.generated.jpg 100w" sizes=" 100px" class="thisperson" alt="Portrait of a person" src="/notes/ai-art-not-generative-art/thisperson.jpg" spec="100"> Here is a fake person generated by a generative adversarial network (GAN) trained specifically on portraits. Tap the face to regenerate a new one from <a target="_blank" class="text-link " href="https://www.thispersondoesnotexist.com/">thispersondoesnotexist.com</a>.
                   </p>
                   <div style="clear:left"></div>
 
@@ -1220,7 +1578,7 @@
                   <p>It was called <strong>alignDRAW</strong>.</p>
                   <p>It can generate images from <em>natural language descriptions</em>, making these machines massively accessible as the general public could simply type in what they wanted to see.</p>
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/aligndraw_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="8 blurry images of a white blob on a green background" src="/notes/_no-ai/aligndraw.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.030456852791878; background: #f8f8f8"><span class="blog-media-caption">alignDRAW’s output for “A toilet seat sits open in
+                    <img srcset="/notes/ai-art-not-generative-art/aligndraw_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="8 blurry images of a white blob on a green background" src="/notes/ai-art-not-generative-art/aligndraw.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.030456852791878; background: #f8f8f8"><span class="blog-media-caption">alignDRAW’s output for “A toilet seat sits open in
                       the grass field.”</span>
                   </div>
 
@@ -1233,7 +1591,7 @@
                   <p><strong><a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/DALL-E">DALL·E</a></strong> was revealed by OpenAI. Another text-to-image model, and it became famous. (Or, rather it was made famous by “DALL-E mini” which was <em>viral</em>.)</p>
                   <!-- todo: interactive (just cycle through prerendereds) -->
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/dalle_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Image of a toilet seat in a field" src="/notes/_no-ai/dalle.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #686808"><span class="blog-media-caption">DALL·E’s output for “A toilet seat sits open in the grass field.”</span>
+                    <img srcset="/notes/ai-art-not-generative-art/dalle_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="Image of a toilet seat in a field" src="/notes/ai-art-not-generative-art/dalle.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #686808"><span class="blog-media-caption">DALL·E’s output for “A toilet seat sits open in the grass field.”</span>
                   </div>
 
                 </div>
@@ -1243,9 +1601,9 @@
                 <div class="card-component timeline-card">
 
                   <p>Meanwhile, 2022 saw a burst of NFTs, most of which have been associated with generative art.</p>
-                  <p>Honestly, some of them are on the borderline shallow end of generative art, Mad Libs-style images generated from shufflings of pre-drawn hairstyles, sunglasses, and clothes. They are more akin to the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Musikalisches_W%C3%BCrfelspiel">musical dice game</a>.</p>
+                  <p>Honestly, some of them are on the borderline shallow end of generative art, Mad Libs-style images generated from shufflings of pre-drawn hairstyles, sunglasses, and clothes. Automated dress-up. They are more akin to the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Musikalisches_W%C3%BCrfelspiel">musical dice game</a>.</p>
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/apes_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Images resembling the Bored Apes collection of images" src="/notes/_no-ai/apes.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 4.571428571428571; background: #18e8b8"><span class="blog-media-caption">Typical images associated with NFTs</span>
+                    <img srcset="/notes/ai-art-not-generative-art/apes_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="Images resembling the Bored Apes collection of images" src="/notes/ai-art-not-generative-art/apes.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 4.571428571428571; background: #18e8b8"><span class="blog-media-caption">Typical images associated with NFTs</span>
                   </div>
 
                 </div>
@@ -1254,10 +1612,10 @@
                 <div class="timeline-bullet">2022</div>
                 <div class="card-component timeline-card">
 
-                  <p>Text-to-image models were approaching the quality of real images such as photographs. People were using these image generators to generate artworks that approach the quality of human art.</p>
+                  <p>Text-to-image models were approaching the quality of real images. Generated artworks were approaching the quality of human art.</p>
                   <!-- todo: interactive (just cycle through prerendereds) -->
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/house_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Image of a painting of a house" src="/notes/_no-ai/house.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #e8e8e8"><span class="blog-media-caption">AI-generated painting</span>
+                    <img srcset="/notes/ai-art-not-generative-art/house_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="Image of a painting of a house" src="/notes/ai-art-not-generative-art/house.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #e8e8e8"><span class="blog-media-caption">AI-generated painting</span>
                   </div>
 
                 </div>
@@ -1269,7 +1627,7 @@
                   <p>Today, we see different techniques and tools to make generative art, from straight up canvas coding, to frameworks like <a target="_blank" class="text-link " href="https://p5js.org/">p5.js</a>, to full-blown authoring software like <a target="_blank" class="text-link " href="https://derivative.ca/">TouchDesigner</a> and <a target="_blank" class="text-link " href="https://www.sidefx.com/">Houdini</a>.</p>
                   <!-- todo: interactive (just cycle through prerendereds) -->
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/qql_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Abstract art composed of many non-overlapping small circles" src="/notes/_no-ai/qql.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.8; background: #d8d8d8"><span class="blog-media-caption">An output of the QQL algorithm which uses the p5.js library</span>
+                    <img srcset="/notes/ai-art-not-generative-art/qql_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="Abstract art composed of many non-overlapping small circles" src="/notes/ai-art-not-generative-art/qql.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.8; background: #d8d8d8"><span class="blog-media-caption">An output of the QQL algorithm which uses the p5.js library</span>
                   </div>
 
                 </div>
@@ -1279,9 +1637,8 @@
                 <div class="card-component timeline-card">
 
                   <p>Tools to make AI art and images have been heavily commercialised, with online image generation services provided by OpenAI/Microsoft, Google, and Midjourney. There are also local models for advanced users and tinkerers.</p>
-                  <!-- todo: interactive (just cycle through prerendereds) -->
                   <div class="blog-media blog-media-default">
-                    <img srcset="/notes/_no-ai/midjournee_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="Screenshot of an online image generator" src="/notes/_no-ai/midjournee.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.605351170568562; background: #f8f8f8"><span class="blog-media-caption">Microsoft’s image creator which at the time used the DALL·E 3 model</span>
+                    <img srcset="/notes/ai-art-not-generative-art/midjournee_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="Screenshot of an online image generator" src="/notes/ai-art-not-generative-art/midjournee.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.605351170568562; background: #f8f8f8"><span class="blog-media-caption">Microsoft’s image creator which at the time used the DALL·E 3 model</span>
                   </div>
 
                 </div>
@@ -1290,7 +1647,7 @@
 
             <p>So. AI art is a relatively new movement borne out of general image synthesizers. This was made possible since visual artworks are images too. Meanwhile, there have been decades of development and refinement in (traditional) generative art, techniques, and algorithms.</p>
             <p>The terminology may overlap (generative networks ~ generative art), but these are just labels. You may call them whatever you want, but they’re still <strong>separate art movements that cannot be historically reconciled</strong>.</p>
-            <p><span class="box-note ">By the way, I don’t care if you want to call them ‘art’ or not. That’s not the point of this essay. If it bothers you, please imagine that all instances of the word ‘art’ were replaced with ‘image’. Same for the word ‘artist’.</span></p>
+            <p><span class="box-note ">By the way, I don’t care if you want to call them ‘art’ or not. That’s not the point of this post. If it bothers you, please imagine that all instances of the word ‘art’ were replaced with ‘image’. Same for the word ‘artist’.</span></p>
             <h2 id="the-craft">The craft</h2>
             <p>OK so, whatever sure, history is in the past. Why don’t we look at it in terms of what artists are doing today. What do they do? What do they practise to improve?</p>
             <h3 id="unique-skills">Unique skills</h3>
@@ -1310,7 +1667,7 @@
                     <td class="venn venn-ai">
                       prompting<br>
                       curation / training<br>
-                      describing<br>
+                      data science<br>
                     </td>
                   </tr>
                 </tbody>
@@ -1318,16 +1675,16 @@
             </div>
 
 
-            <p><strong>Generative art</strong> involves programming and uses math (usually geometry or trigonometry) to create graphics. A good undertanding of functions and their domains and ranges and how they compose together is essential, especially when taming random number generators.</p>
+            <p><strong>Generative art</strong> involves programming and uses math (usually geometry or trigonometry) to create graphics. A good undertanding of functions and their domains and ranges and how they compose together is essential, especially when utilising random number generators.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/_no-ai/math_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/_no-ai/math.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #f8f8f8"><span class="blog-media-caption">Typical generative art math</span>
+              <img srcset="/notes/ai-art-not-generative-art/math_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="" src="/notes/ai-art-not-generative-art/math.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #f8f8f8"><span class="blog-media-caption">Typical generative art math</span>
             </div>
             </p>
-            <p>Beyond these core skills, there are a lot of areas generative artists could expand into, like graph theory, simulations, fractals, image processing, and other advanced algorithms.</p>
+            <p>Beyond these core skills, there are a lot of areas generative artists could expand into, like graph theory, simulations, fractals, image processing, and other algorithms.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/_no-ai/pathways_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/_no-ai/pathways.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #f8b828"><span class="blog-media-caption"><span slot="caption">
+              <img srcset="/notes/ai-art-not-generative-art/pathways_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="" src="/notes/ai-art-not-generative-art/pathways.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #f8b828"><span class="blog-media-caption"><span slot="caption">
                   <a target="_blank" class="text-link " href="https://www.fxhash.xyz/generative/slug/scattered-pathways">Scattered Pathways</a> by Nate Nolting.<br>Generative art using a graph pathfinding algorithm
                 </span></span>
             </div>
@@ -1345,15 +1702,16 @@
             <p>Beyond writing prompts, there are several tools that allow more control like influencing certain compositional elements. AI artists could also train or fine-tune models by curating image-label datasets as extra training data.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/_no-ai/control_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/_no-ai/control.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 3.1977715877437327; background: #080808"><span class="blog-media-caption"><span slot="caption">
+              <img srcset="/notes/ai-art-not-generative-art/control_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="" src="/notes/ai-art-not-generative-art/control.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 3.1977715877437327; background: #080808"><span class="blog-media-caption"><span slot="caption">
                   Images generated with <a target="_blank" class="text-link " href="https://github.com/lllyasviel/ControlNet">ControlNet</a>, controlling the general shape of the subject.
                 </span></span>
             </div>
             </p>
-            <p>There seems to be little to no transferable skills between these practices. Sure, you can program some scripts to automate parts of an AI art workflow, or add an AI filter step to an otherwise procedurally-generated image. But for the most part, there is no necessary overlap.</p>
-            <p>That’s why you can’t just ask an AI artist to please create an interactive audio-reactive visualisation for your music video, but a generative artist could. Likewise, you can’t expect a generative artist to easily generate photorealistic art but an AI artist can in seconds.</p>
+            <p>There seems to be little to no transferable skills between these practices. Sure, you can program some scripts to automate parts of an AI art workflow, or add an AI filter step to an otherwise procedurally-generated image. But there is no inherent overlap.</p>
+            <p>At the highest level, it is the difference between computer science vs data science. At the lowest, it is the difference between coding and writing English.</p>
+            <p>That’s why you can’t just ask an AI artist to please create an interactive audio-reactive visualisation for your music video, or <a target="_blank" class="text-link " href="https://www.cityartsydney.com.au/artwork/high-water/">a public art installation that reacts to the weather</a>. Likewise, you can’t expect a generative artist to easily generate photorealistic art in seconds.</p>
             <h3 id="skills-in-common">Skills in common</h3>
-            <p>One big thing that’s common between these practices is the need to curate. Since both involve chaos and randomness, a curation step is almost always required before finishing a work. Curation requires artistic vision, which is a skill.</p>
+            <p>One big thing that’s common between these practices is the need to curate. Since both practices involve chaos and randomness, a curation step is almost always required before finishing a work. Curation requires artistic vision, which could be considered a skill in itself.</p>
             <div class="horizontal-scroll">
               <table class="venn-table" aria-label="Venn-diagram showing curation &amp; artistic vision in the intersection between Generative artists and AI artists">
                 <tbody>
@@ -1375,19 +1733,20 @@
               </table>
             </div>
 
-            <p><strong>What’s curation?</strong> As you finish a piece, you’d usually want to generate multiple outputs, not just one. Then you’d select the best one(s) to publish. That’s curation. This happens in either practice. Alternatively, you might refine and iterate your prompt / program until the generated outputs satisfy your artistic vision.</p>
+            <p><strong>What’s curation?</strong> As one finishes a piece, they usually generate multiple outputs by running the process with different seeds or starting parameters. These produce different variations, from which the best one(s) are selected for publishing, discarding the rest. That’s curation.</p>
+            <p>Alternatively, you might refine and iterate your prompt / program until the generated outputs satisfy your artistic vision.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/_no-ai/uncurated_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/_no-ai/uncurated.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.2062780269058297; background: #384858"><span class="blog-media-caption">Uncurated set of outputs from a generative art algorithm</span>
+              <img srcset="/notes/ai-art-not-generative-art/uncurated_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="" src="/notes/ai-art-not-generative-art/uncurated.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.2062780269058297; background: #384858"><span class="blog-media-caption">Uncurated set of outputs from a generative art algorithm</span>
             </div>
             </p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/_no-ai/ai-outputs_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/_no-ai/ai-outputs.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4166666666666667; background: #080808"><span class="blog-media-caption">AI image generators usually generate multiple outputs at a time for you to curate.</span>
+              <img srcset="/notes/ai-art-not-generative-art/ai-outputs_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="" src="/notes/ai-art-not-generative-art/ai-outputs.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4166666666666667; background: #080808"><span class="blog-media-caption">AI image generators usually generate multiple outputs at a time for you to curate.</span>
             </div>
             </p>
             <p>It could be argued that having artistic vision and doing iterations are pretty common to all arts, and so those alone don’t make generative art and AI art any more similar to each other than any other art.</p>
-            <p><span class="box-note "><strong>Disclaimer:</strong> I’m not very good at AI image generation. I don’t have first-hand experience of the advanced skills that I mentioned like fancy prompt engineering or fine-tuning. (Though I did train a different type of <a target="_blank" class="text-link " href="/wares/pong-ai/">neural network</a> before). In any case, I attempted to reduce my bias and subjectivity.</span></p>
+            <p><span class="box-note "><strong>Disclaimer:</strong> I’m not very good at AI image generation. I don’t have first-hand experience of the advanced skills that I mentioned like fancy prompt engineering or fine-tuning. (Though I did train a different type of <a target="_blank" class="text-link " href="/wares/pong-ai/">neural network</a> before).</span></p>
             <p>Overall, the significant differences in skillsets mean that <strong>generative artists and AI artists are not interchangeable</strong>, and the same should go for their respective arts.</p>
             <h2 id="the-process">The process</h2>
             <p>Finally, let’s attack the subject from the POV of processes and systems.</p>
@@ -1398,48 +1757,50 @@
           grid-template-columns: repeat(2, minmax(min(80vw, 320px), min-content));
           gap: 18px">
               <div class="blog-media blog-media-default">
-                <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
-                  <source src="/notes/_no-ai/diffusion.mp4">
-                  <a href="/notes/_no-ai/diffusion.mp4"></a>
+                <video class="blog-media-element " src="/notes/ai-art-not-generative-art/diffusion.mp4" muted="" autoplay="" loop="" aria-label="">
+                  Video: | Source: /notes/ai-art-not-generative-art/diffusion.mp4
                 </video><span class="blog-media-caption">AI art being formed via denoising</span>
               </div>
               <div class="blog-media blog-media-default">
-                <video class="blog-media-element" muted="" autoplay="" loop="" aria-label="">
-                  <source src="/notes/_no-ai/flowers.mp4">
-                  <a href="/notes/_no-ai/flowers.mp4"></a>
-                </video><span class="blog-media-caption">Generative art being formed via programmed strokes</span>
+                <video class="blog-media-element " src="/notes/ai-art-not-generative-art/flowers.mp4" muted="" autoplay="" loop="" aria-label="">
+                  Video: | Source: /notes/ai-art-not-generative-art/flowers.mp4
+                </video><span class="blog-media-caption">Generative art being formed via procedural strokes</span>
               </div>
             </div>
 
-            <p>Recent AI image generators form images via <strong>denoising</strong>. The animation above (left) shows the sequence of steps taken by the generator to progressively denoise a pure noise image into something coherent based on a prompt.</p>
-            <p>Generative art algorithms, on the other hand, are relatively hand-crafted with specific instructions to draw every element in the piece. This is very apparent in the above animation (right) where each stroke is individually drawn according to the artist’s rules. (animation from <a target="_blank" class="text-link " href="https://www.fxhash.xyz/generative/slug/the-soul-of-flowers">The Soul of Flowers</a> by Che-Yu Wu)</p>
+            <p>Most modern AI image generators are based on diffusion models — they form images via <strong>‘denoising’</strong>. The animation above (left) shows the sequence of steps to progressively denoise a pure noise image into something coherent based on a prompt. The prompt for the above generation specifically was <i>‘cherry blossom branches against a clear blue sky’</i>.</p>
+            <p>The denoising process is a black box, an inscrutable network of billions of artificial neurons trained to generate coherent arrays of pixels.</p>
+            <p>Generative art algorithms, on the other hand, are relatively more hand-crafted, less magical. Explicit instructions are written to draw every element in the piece. This is apparent in the above animation (right) where each stroke is individually drawn according to the artist’s rules. <i>This particular animation was from <strong><a target="_blank" class="text-link " href="https://www.fxhash.xyz/generative/slug/the-soul-of-flowers">The Soul of Flowers</a></strong> by Che-Yu Wu.</i></p>
+            <p>In fact, it’s impossible to not have total control of the art because programming is precise. You have to artificially create <em>whim</em> (i.e. randomness) to produce dynamic results. For example, a quivering brush stroke must be backed by a mathematical rule such as Gaussian or Brownian noise.</p>
+            <p>It comes down to the explainability or transparency of the process. One is a black box. The other is literally the instructions to create the art. The level of control is just a consequence of the intelligibility of the process. It’s easier to control something that is understandable.</p>
+            <p>On an opposite note, AI artists can be thought of as high-level artistic directors who don’t concern themselves with the rendering of mid- to low-level details. Unlike AI art, generative artists must always specify the exact procedure for both the broad strokes and the fine details.</p>
             <h3 id="system-diagrams">System diagrams</h3>
-            <p>Beyond the processes themselves, art interacts with the context of its creation. And, whew, there is a lot to unpack here, especially for AI art. I’ll use diagrams to illustrate the context of the creation process.</p>
-            <p><strong>In the process of generative art,</strong> there are three components at the least: the artist, the program, and the rendered output.</p>
+            <p>Beyond the processes themselves, art interacts with the context of its creation. And there is a lot to unpack here, especially for AI art. I’ll use diagrams to illustrate the context of the creation process.</p>
             <p>
             <div class="blog-media blog-media-bleed">
-              <img srcset="/notes/_no-ai/gen-system_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/_no-ai/gen-system.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 4.25; background: #080808"><span class="blog-media-caption">System diagram of generative art</span>
+              <img srcset="/notes/ai-art-not-generative-art/gen-system_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="" src="/notes/ai-art-not-generative-art/gen-system.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 4.25; background: #080808"><span class="blog-media-caption">The generative artist writes the program that renders the piece of art</span>
             </div>
             </p>
-            <p>The artist writes the program that renders the piece of art.</p>
-            <p>They may use libraries or frameworks as part of the program, but the artist ultimately specifies the steps or rules which the program would execute at a certain level of abstraction.</p>
-            <p>The artist has full control over how the program would render the art. In fact, it’s impossible to not have full control because programming is precise. You have to artificially create <em>whim</em> (i.e. randomness) to produce dynamic results.</p>
-            <p><strong>In the process of AI art,</strong> there are four components at the minimum: the artist, the model, the rendered output, and <em>the dataset</em>.</p>
+            <p><strong>In the generative art process,</strong> there are three components at the minimum: the artist, the program, and the rendered output.</p>
+            <p>They may use libraries or frameworks as part of the program, but the artist ultimately writes the specific steps or rules which the program would execute at a certain level of abstraction.</p>
             <p>
             <div class="blog-media blog-media-bleed">
-              <img srcset="/notes/_no-ai/ai-system_664.generated.png 664w" sizes=" 664px" class="blog-media-element" alt="" src="/notes/_no-ai/ai-system.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3076923076923077; background: #080808"><span class="blog-media-caption">System diagram of AI art</span>
+              <img srcset="/notes/ai-art-not-generative-art/ai-system_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="" src="/notes/ai-art-not-generative-art/ai-system.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3076923076923077; background: #080808"><span class="blog-media-caption">The AI artist prompts the model trained from the dataset to produce the piece of art</span>
             </div>
             </p>
-            <p>The artist prompts the model trained from the dataset to produce the piece of art.</p>
+            <p><strong>In AI art,</strong> there are four components to the process at the minimum: the artist, the model, the rendered output, and <em>the dataset</em>.</p>
             <p>Comparing the generative art process with the AI art process, there is an immediate difference. Unlike AI art, <strong>generative art don’t need datasets</strong>.</p>
-            <p>And it’s the controversial thing, the dataset. The data used to train a text-to-image model can consist of billions of images, usually scraped from the Internet and includes other artworks by other artists.</p>
-            <p>If you consider that the model has been influenced by a lot of other artists (and whole lot more of other random images on the web), then the question of how important the AI artist’s influence over the final piece is raised. <em>Was that chiaroscuro an artistic choice, or an emergent byproduct of the model? Was the rule of thirds intentional, or just some typical composition produced by the model?</em></p>
-            <p>Unlike AI art, there is no confusion in generative art over who worked out the art of the artwork.</p>
-            <p>Leaving the contentious topic aside, generative artists also have more control over the render, while AI art is constrained to a more vague level of influence. There’s always an unavoidable level of indirection in the AI art process. A black box.</p>
-            <p>On an opposite note, AI artists can be thought of as high-level artistic directors who don’t concern themselves with the rendering of mid- to low-level strokes and details. Generative artists must always specify the exact procedure for both the broad strokes and the fine details.</p>
+            <p>And it’s a controversial thing, <strong>the dataset</strong>. The data used to train a text-to-image model can consist of billions of images, usually scraped from the internet and includes other artworks by other artists.</p>
+            <p>If you consider that the model has been influenced by a lot of other images on the web, then the question of how important the AI artist’s influence over the final piece is raised. <em>Was that chiaroscuro an artistic choice, or an emergent byproduct of the model? Were those bold paint strokes intentional, or just some style produced by the model?</em></p>
+            <p>In AI art, there is confusion over which elements were expressed by the artist and which by the machine. Utlimately, there comes a question of who worked out the art of the artwork.</p>
+            <p>Leaving the contentious topic of datasets aside, there is another point, but not as essential, of <strong>who authored the main program</strong>. Who created the most crucial piece of the system?</p>
+            <p>Generative art programs are usually created by the artists themselves, while AI art programs are usually created by AI researchers (plus datasets), only to be used as a product by AI artists. One makes the machine that makes the art, the other uses a machine to make the art.</p>
+            <p>Of course, AI artists could train (not just fine-tune!) their own models, if they have a big enough dataset and some machine learning know-how. That’s why I said it’s not an essential point.</p>
             <h2 id="conclusion">Conclusion</h2>
             <p>The point is that these are separate <em>art mediums</em>. Or <em>art movements</em>, if you will. The histories, the crafts, and the processes point to the same conclusion — they are no more similar than oil painting is to photography, or a film director to an animator.</p>
-            <p>On naming — Actually, AI art is mostly being called ‘AI art’ nowadays. When I started writing this essay, there was a bit of uncertainty as people came up with new names for this new thing. Now, some aspects of the essay have probably been outdated. I’ll still include them in the post because why not. The stand may be pointless, but the point still stands.
+            <p><span class="box-note ">Some aspects of the post have probably been outdated by the time I publish this post. I’ll still include them in the post because why not. The stand may be pointless, but the points still stand.</span></p>
+            <p>P.S. a similar thing: <a target="_blank" class="text-link " href="https://cryptoisnotcryptocurrency.com">cryptoisnotcryptocurrency.com</a>, <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Crypto_naming_controversy">Wikipedia article</a>.</p>
+            <p><span class="box-note ">P.P.S. I’m still refining this post. Let’s say it’s in Beta.</span>
             </p>
 
           </div>
@@ -1484,6 +1845,164 @@
               <button class="btn blog-rss-link-button">
                 Copy
               </button>
+            </div>
+          </aside>
+          <aside class="blog-suggestions">
+            <h2 class="blog-suggestions-title">More posts</h2>
+            <div class="card-carousel-container">
+              <div class="card-carousel blog-suggestions-carousel">
+
+                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/simple-image-recognition-vanilla-js/">
+                  <div class="card-grid-image-container">
+                    <img srcset="/notes/simple-image-recognition-vanilla-js/hero_546.generated.png 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/simple-image-recognition-vanilla-js/hero.png" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #48c8d8">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Simple image recognition with vanilla JavaScript
+
+                        </div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" style="background: #f0de91; color: #725f15">js</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Simple image recognition with vanilla JavaScript
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/developing-bitwise-input-method/">
+                  <div class="card-grid-image-container">
+                    <img srcset="/notes/developing-bitwise-input-method/hero_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/developing-bitwise-input-method/hero.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.5003750937734435; background: #080808">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Bitwise keyboard input method
+
+                        </div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" style="background: #e2bb9e; color: #603e25">c</span> <span class="tag-component p-category" style="background: #d8aef3; color: #4d1f6a">keyboard</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Bitwise keyboard input method
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-tictactoe-ai/">
+                  <div class="card-grid-image-container">
+                    <img srcset="/notes/pure-css-tictactoe-ai/hero_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/pure-css-tictactoe-ai/hero.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #080808">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Pure CSS tic-tac-toe with game AI
+
+                        </div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Pure CSS tic-tac-toe with game AI
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/dynamic-patrol-stealth-games/">
+                  <div class="card-grid-image-container">
+                    <img srcset="/notes/dynamic-patrol-stealth-games/hero_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/dynamic-patrol-stealth-games/hero.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.328125; background: #a8a8a8">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Dynamic patrol behaviour with Markov chains
+
+                        </div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Dynamic patrol behaviour with Markov chains
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a>
+
+              </div>
+              <div class="card-carousel-btn-container">
+                <button class="card-carousel-btn card-carousel-btn-prev" aria-label="Previous">
+                  <span class="card-carousel-btn-symbol">&lt;&lt;</span>
+                </button>
+                <button class="card-carousel-btn card-carousel-btn-next" aria-label="Next">
+                  <span class="card-carousel-btn-symbol">&gt;&gt;</span>
+                </button>
+              </div>
             </div>
           </aside>
         </div>
@@ -1567,24 +2086,71 @@
   <script defer="" src="/scripts/blog-media.js"></script>
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
-  <script defer="" async="">
+  <script async="" defer="">
   (() => {
-    for (const button of document.querySelectorAll(".blog-rss-link-button")) {
-      button.addEventListener("click", (e) => {
-        const copied = copy();
-        if (copied) button.textContent = "Copied";
-      });
+    const containers = document.querySelectorAll(".card-carousel-container");
+
+    for (const container of containers) {
+      const carousel = container.firstElementChild;
+
+      container.addEventListener(
+        "click",
+        (event) => {
+          const { target } = event;
+
+          const isButton = target.classList.contains("card-carousel-btn");
+          if (!isButton) return;
+
+          const isNext = target.classList.contains("card-carousel-btn-next");
+          const stepUnitSize =
+            carousel.children[1]?.offsetLeft - carousel.children[0]?.offsetLeft;
+          const delta =
+            (isNext ? 1 : -1) *
+            Math.max(1, Math.floor(carousel.offsetWidth / stepUnitSize)) *
+            stepUnitSize;
+          carousel.scrollBy({
+            left: delta,
+            behavior: "smooth",
+          });
+
+          updateButtons(container, delta);
+        },
+        { capture: true }
+      );
+
+      let debouncedScrollTimeout = null;
+      carousel.addEventListener(
+        "scroll",
+        () => {
+          if (debouncedScrollTimeout) clearTimeout(debouncedScrollTimeout);
+          debouncedScrollTimeout = setTimeout(() => {
+            updateButtons(container);
+          }, 50);
+        },
+        { passive: true }
+      );
+
+      updateButtons(container);
     }
 
-    async function copy() {
-      const href = document.querySelector(".blog-rss-link-a").href;
-      try {
-        await navigator.clipboard.writeText(href);
-        return true;
-      } catch (e) {}
-      return false;
+    function updateButtons(container, delta = 0) {
+      const carousel = container.firstElementChild;
+      const nextButton = container.querySelector(".card-carousel-btn-next");
+      const prevButton = container.querySelector(".card-carousel-btn-prev");
+      nextButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta >
+          carousel.scrollWidth - carousel.offsetWidth - 60
+      );
+      prevButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta < 60
+      );
     }
   })();
 </script>
+  <script defer="" src="/scripts/card-grid-item.js"></script>
+  <script defer="" async="" src="/scripts/blog-rss-link.js"></script>
+  <script async="" defer="" src="/scripts/notes_ai_art_not_generative_art_index_html.js"></script>
 </body>
 </html>

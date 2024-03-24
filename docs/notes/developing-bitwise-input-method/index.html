@@ -1157,14 +1157,17 @@
     box-sizing: border-box;
     border: none;
     background: var(--bg-clr);
-    color: var(--clr0-light);
+    color: var(--text-clr);
     cursor: pointer;
     font-family: var(--display-font);
-    font-size: 18px;
+    font-size: 21px;
     font-weight: bold;
     text-shadow: 0 0 18px #000;
     pointer-events: all;
     transition: opacity 60ms ease-out;
+  }
+  .card-carousel-container:hover .card-carousel-btn {
+    color: var(--clr0-light);
   }
   .card-carousel-btn:hover {
     color: var(--clr1);
@@ -1185,6 +1188,27 @@
   }
   .card-carousel-btn-hidden {
     opacity: 0;
+  }
+
+  .card-carousel-btn-symbol {
+    display: inline-block;
+    pointer-events: none;
+  }
+  .card-carousel-container:hover .card-carousel-btn-next .card-carousel-btn-symbol {
+    animation: card-carousel-btn-next-symbol 0.5s var(--ease) infinite alternate;
+  }
+  .card-carousel-container:hover .card-carousel-btn-prev .card-carousel-btn-symbol {
+    animation: card-carousel-btn-prev-symbol 0.5s var(--ease) infinite alternate;
+  }
+  @keyframes card-carousel-btn-next-symbol {
+    to {
+      transform: translateX(0.5ch);
+    }
+  }
+  @keyframes card-carousel-btn-prev-symbol {
+    to {
+      transform: translateX(-0.5ch);
+    }
   }
 
   /* approximately select touch-based media */
@@ -1272,6 +1296,10 @@
   .card-grid-thumbalign-center .card-grid-image {
     object-position: center;
     transform-origin: center;
+  }
+  .card-grid-thumbalign-top .card-grid-image {
+    object-position: top;
+    transform-origin: top;
   }
 
   .card-grid-title-wrap {
@@ -1580,14 +1608,14 @@
             <p>I use a compact keyboard called the <strong>Lily58</strong> as my main keyboard. It’s a column-staggered split keyboard.</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/developing-bitwise-input-method/lily58_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element" alt="Photo of a Lily58 keyboard" src="/notes/developing-bitwise-input-method/lily58.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4994780793319415; background: #e8f8f8"><span class="blog-media-caption">The Lily58 keyboard. Photo from github.com/kata0510/Lily58</span>
+              <img srcset="/notes/developing-bitwise-input-method/lily58_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="Photo of a Lily58 keyboard" src="/notes/developing-bitwise-input-method/lily58.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.4994780793319415; background: #e8f8f8"><span class="blog-media-caption">The Lily58 keyboard. Photo from github.com/kata0510/Lily58</span>
             </div>
             </p>
             <p>As the name implies, it has only 58 buttons instead of the normal 80+ buttons. Space was limited and it was hard to fit all the letters, numbers, symbols, and other unique keys that I need.</p>
             <p>The function keys (F1, F2, F3, etc) were particularly cumbersome. I don’t use them very often, yet they take a lot of space. You can see with my previous function key layout that they’re not very space-efficient:</p>
             <p>
             <div class="blog-media blog-media-default">
-              <img srcset="/notes/developing-bitwise-input-method/prevlayout_656.generated.png 656w,/notes/developing-bitwise-input-method/prevlayout_664.generated.png 664w" sizes="not (min-width:664px) 656px, 664px" class="blog-media-element" alt="" src="/notes/developing-bitwise-input-method/prevlayout.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.1672597864768683; background: #f8f8f8"><span class="blog-media-caption">My previous layout with function keys on the right half of the keyboard. It’s on a layer that I call the “function layer”.</span>
+              <img srcset="/notes/developing-bitwise-input-method/prevlayout_656.generated.png 656w,/notes/developing-bitwise-input-method/prevlayout_664.generated.png 664w" sizes="not (min-width:664px) 656px, 664px" class="blog-media-element " alt="" src="/notes/developing-bitwise-input-method/prevlayout.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.1672597864768683; background: #f8f8f8"><span class="blog-media-caption">My previous layout with function keys on the right half of the keyboard. It’s on a layer that I call the “function layer”.</span>
             </div>
             </p>
             <p>Luckily, the Lily58 is <strong>programmable</strong>! Using the framework slash firmware called <a target="_blank" class="text-link " href="https://qmk.fm/">QMK</a>, I can program the keyboard to add whatever functionality I wanted. And that’s exactly how I optimized the function keys’ space usage.</p>
@@ -1888,7 +1916,9 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
                   </div>
                 </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-volley-ball-game/">
                   <div class="card-grid-image-container">
-                    <img srcset="/notes/placeholder_546.generated.png 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/placeholder.png" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.6058823529411765; background: #c89878">
+                    <video class="card-grid-image" src="/notes/pure-css-volley-ball-game/video.web.mp4" muted="" autoplay="" loop="" aria-label="">
+                      Video: | Source: /notes/pure-css-volley-ball-game/video.web.mp4
+                    </video>
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
@@ -1918,10 +1948,10 @@ uint8_t NUM_BITWISE_F_KEYS <span class="token operator">=</span>
               </div>
               <div class="card-carousel-btn-container">
                 <button class="card-carousel-btn card-carousel-btn-prev" aria-label="Previous">
-                  &lt;&lt;
+                  <span class="card-carousel-btn-symbol">&lt;&lt;</span>
                 </button>
                 <button class="card-carousel-btn card-carousel-btn-next" aria-label="Next">
-                  &gt;&gt;
+                  <span class="card-carousel-btn-symbol">&gt;&gt;</span>
                 </button>
               </div>
             </div>
