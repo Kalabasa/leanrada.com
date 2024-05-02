@@ -12,15 +12,15 @@
     <!-- textlint-enable -->
     <!-- prettier-ignore -->
     <markdown>
-      This is a halftone effect using CSS with only a couple of divs.
+      This is a halftone effect using CSS with only one, two, or three divs (depending on your standards for quality).
       
       First of all, here’s a live demo:
 
-      <halftone-demo :imgsrc="url('flowers.jpg')" can-disable />
+      <halftone-demo :imgsrc="url('flowers.jpg')" separate-k can-disable />
 
       To further illustrate the halftone effect, you may vary the **size** of the dots and the degree to which they **‘bleed’** in the following demo:
 
-      <halftone-demo :imgsrc="url('flowers.jpg')" size="15" can-resize can-change-bleed />
+      <halftone-demo :imgsrc="url('flowers.jpg')" separate-k size="15" can-resize can-change-bleed />
 
       Note that this is only a fake halftone effect. It is not a simulation, but a shallow emulation of a halftone print.
       
@@ -38,9 +38,7 @@
 
       <halftone-demo :imgsrc="url('gradient.jpg')" grayscale bleed="1.5" can-resize can-change-bleed />
 
-      <box-note>Note: The demo automatically compensates for the darkness caused by too much bleed in order to keep the dynamic range normal.</box-note>
-
-      A halftone pattern is simply an array of ink dots with varying size to simulate the appearance of more tones using just one ink. In the example above, dots in the darker areas are larger than dots in the lighter areas. Large dots would bleed into each other, creating the effect of negative dots.
+      A halftone pattern is simply an array of ink dots of varying size, simulating the appearance of smooth gradiation of tones using just one discrete ink. In the example above, dots in the darker areas are larger than dots in the lighter areas. Large dots would bleed into each other, creating the effect of negative dots.
 
       Dot size and bleed can be emulated in one go using two simple image processing operations, **screen** and **threshold**.
 
@@ -230,7 +228,9 @@ background:
 
       The demo in these pages have two overlay divs to achieve better staggering of the dots (involves transform: rotations). You can even have a div for each of CMYK to achieve better results!
 
-      <halftone-demo :imgsrc="url('eye.jpg')" size="20" can-disable can-resize can-change-bleed />
+      Practcally, you only need to separate the K layer (black) with its own greyscale copy of the source image to clean up the accuracy of the dots.
+
+      <halftone-demo :imgsrc="url('eye.jpg')" size="20" can-disable can-separate-k can-resize can-change-bleed can-rotate />
     </markdown>
   </blog-page>
 </html>

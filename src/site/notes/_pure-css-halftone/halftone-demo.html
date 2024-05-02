@@ -1,10 +1,17 @@
 <div
-  :class="'halftone-demo-box' + (attrs.grayscale != null ? ' halftone-grayscale ' : '')"
-  :style="`--halftone-size:${initialSize}px;--halftone-bleed:${initialBleed}`" data-rss="interactive" alt="CSS halftone demo"
+  :class="'halftone-demo-box'
+    + (attrs.grayscale != null ? ' halftone-grayscale ' : '')
+    + (attrs.separateK != null ? ' halftone-separate-k ' : '')"
+  :style="`--halftone-size:${initialSize}px;--halftone-bleed:${initialBleed}`"
+  data-rss="interactive"
+  alt="CSS halftone demo"
 >
   <div class="halftone-demo">
     <img :src="attrs.imgsrc" />
     <div class="halftone-demo-ink"></div>
+  </div>
+  <div class="halftone-demo-k-layer">
+    <img :src="attrs.imgsrc" />
   </div>
 </div>
 <script render>
@@ -12,6 +19,12 @@
     yield html`<label class="halftone-demo-control-row">
       Enable effect
       <input type="checkbox" checked onchange="onChangeHalftoneDemoEnabled(event)">
+    </label>`;
+  }
+  if (attrs.canSeparateK != null) {
+    yield html`<label class="halftone-demo-control-row">
+      Separate K layer
+      <input type="checkbox" onchange="onChangeHalftoneDemoSeparateK(event)">
     </label>`;
   }
   if (attrs.canResize != null) {
@@ -26,11 +39,21 @@
       <input type="range" min="0.1" max="${attrs.grayscale != null ? 2 : 0.45}" value="${initialBleed}" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
     </label>`;
   }
+  if (attrs.canRotate != null) {
+    yield html`<label class="halftone-demo-control-row">
+      Rotation
+      <input type="range" min="0" max="360" value="${0}" step="0.1" oninput="onInputHalftoneDemoRotation(event)">
+    </label>`;
+  }
 </script>
 
 <script static>
-  const initialSize = attrs.size ?? 5;
-  const initialBleed = attrs.bleed ?? (attrs.grayscale != null ? 1 : 0.2);
+  const initialSize = attrs.size ?? 8;
+  const initialBleed =
+    attrs.bleed ??
+    0.2 +
+      (attrs.grayscale != null ? 0.8 : 0) +
+      (attrs.separateK != null ? 0.2 : 0);
 </script>
 
 <script client>
@@ -38,6 +61,13 @@
     getHalftoneDemoBox(event.currentTarget)?.classList.toggle(
       "halftone-disabled",
       !event.currentTarget.checked
+    );
+  }
+
+  function onChangeHalftoneDemoSeparateK() {
+    getHalftoneDemoBox(event.currentTarget)?.classList.toggle(
+      "halftone-separate-k",
+      event.currentTarget.checked
     );
   }
 
@@ -52,6 +82,13 @@
     getHalftoneDemoBox(event.currentTarget)?.style.setProperty(
       "--halftone-bleed",
       event.currentTarget.value
+    );
+  }
+
+  function onInputHalftoneDemoRotation(event) {
+    getHalftoneDemoBox(event.currentTarget)?.style.setProperty(
+      "--halftone-rotation",
+      event.currentTarget.value + "deg"
     );
   }
 
@@ -85,22 +122,24 @@
   }
 
   .halftone-demo-box {
+    position: relative;
     overflow: hidden;
     border-radius: 18px;
     margin: 36px 0;
+    filter: sepia(0.2) contrast(0.8);
   }
   .halftone-demo-box:has(+ .halftone-demo-control-row) {
     margin-bottom: 18px;
   }
 
-  .halftone-demo {
+  .halftone-demo,
+  .halftone-demo-k-layer {
     --halftone-dot-size: calc(var(--halftone-size) * var(--halftone-bleed));
     --halftone-color-dot-size: var(--halftone-dot-size);
     position: relative;
     margin: -18px;
     filter: brightness(calc(0.5 + var(--halftone-bleed) * 0.4))
-      blur(calc(var(--halftone-size) * 0.1)) contrast(200) blur(0.6px)
-      sepia(0.2) contrast(0.8);
+      blur(calc(var(--halftone-size) * 0.1)) contrast(200) blur(0.6px);
     overflow: hidden;
     border: solid 54px #fff;
   }
@@ -110,18 +149,41 @@
   .halftone-disabled .halftone-demo {
     filter: none;
   }
+  .halftone-disabled img {
+    filter: none !important;
+  }
+  .halftone-disabled .halftone-demo-k-layer {
+    display: none !important;
+  }
   @media (max-width: 800px) {
     .halftone-demo {
       border-width: 36px;
     }
   }
 
-  .halftone-demo > img {
+  .halftone-demo-k-layer {
+    display: none;
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: multiply;
+  }
+  .halftone-separate-k .halftone-demo-k-layer {
+    display: block;
+  }
+
+  .halftone-demo > img,
+  .halftone-demo-k-layer > img {
     display: block;
     width: 100%;
   }
   .halftone-grayscale .halftone-demo > img {
     filter: grayscale(1);
+  }
+  .halftone-separate-k .halftone-demo > img {
+    filter: saturate(2);
+  }
+  .halftone-demo-k-layer > img {
+    filter: grayscale(1) brightness(2);
   }
 
   .halftone-disabled .halftone-demo-ink {
@@ -147,20 +209,84 @@
         #666,
         #fff
       ),
-      radial-gradient(var(--halftone-color-dot-size) at 75% 25%, #000, #666, #fff),
-      radial-gradient(var(--halftone-color-dot-size) at 25% 25%, #ff0, #ff6, #fff),
-      radial-gradient(var(--halftone-color-dot-size) at 75% 75%, #ff0, #ff6, #fff);
+      radial-gradient(
+        var(--halftone-color-dot-size) at 75% 25%,
+        #000,
+        #666,
+        #fff
+      ),
+      radial-gradient(
+        var(--halftone-color-dot-size) at 25% 25%,
+        #ff0,
+        #ff6,
+        #fff
+      ),
+      radial-gradient(
+        var(--halftone-color-dot-size) at 75% 75%,
+        #ff0,
+        #ff6,
+        #fff
+      );
   }
   .halftone-demo-ink::after {
-    transform: rotate(-27deg) translateX(calc(var(--halftone-size) * 0.58));
+    transform: rotate(calc(-21deg + var(--halftone-rotation)))
+      translateX(calc(var(--halftone-size) * 0.58));
     background-image: radial-gradient(
         var(--halftone-color-dot-size) at 75% 25%,
         #f0f,
         #f6f,
         #fff
       ),
-      radial-gradient(var(--halftone-color-dot-size) at 25% 75%, #f0f, #f6f, #fff),
-      radial-gradient(var(--halftone-color-dot-size) at 75% 75%, #0ff, #6ff, #fff),
-      radial-gradient(var(--halftone-color-dot-size) at 25% 25%, #0ff, #6ff, #fff);
+      radial-gradient(
+        var(--halftone-color-dot-size) at 25% 75%,
+        #f0f,
+        #f6f,
+        #fff
+      ),
+      radial-gradient(
+        var(--halftone-color-dot-size) at 75% 75%,
+        #0ff,
+        #6ff,
+        #fff
+      ),
+      radial-gradient(
+        var(--halftone-color-dot-size) at 25% 25%,
+        #0ff,
+        #6ff,
+        #fff
+      );
+    transition: transform 100ms;
+  }
+
+  .halftone-separate-k .halftone-demo-ink::before {
+    background-image: radial-gradient(
+        var(--halftone-color-dot-size) at 25% 25%,
+        #ff0,
+        #ff6,
+        #fff
+      ),
+      radial-gradient(
+        var(--halftone-color-dot-size) at 75% 75%,
+        #ff0,
+        #ff6,
+        #fff
+      );
+  }
+  .halftone-demo-k-layer::after {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background-size: var(--halftone-size) var(--halftone-size);
+    background-blend-mode: multiply;
+    mix-blend-mode: screen;
+    transform: rotate(30deg);
+    background-image: radial-gradient(
+        var(--halftone-color-dot-size) at 25% 25%,
+        #000,
+        #666,
+        #ccc,
+        #fff
+      ),
+      radial-gradient(var(--halftone-color-dot-size) at 75% 75%, #000, #fff);
   }
 </style>
