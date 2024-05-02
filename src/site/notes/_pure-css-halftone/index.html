@@ -1,0 +1,242 @@
+<html lang="en">
+  <page-title title="Creating a halftone effect with CSS" />
+  <blog-page path-group="/notes/">
+    <blog-header
+      title="Creating a halftone effect with CSS"
+      :heroimgsrc="url('hero.jpg')"
+    />
+    <blog-post-info date="4 May 2024" />
+    <tag-row>
+      <tag>css</tag>
+    </tag-row>
+    <!-- textlint-enable -->
+    <!-- prettier-ignore -->
+    <markdown>
+      This is a halftone effect using CSS with only a couple of divs.
+      
+      First of all, here’s a live demo:
+
+      <halftone-demo :imgsrc="url('flowers.jpg')" can-disable />
+
+      To further illustrate the halftone effect, you may vary the **size** of the dots and the degree to which they **‘bleed’** in the following demo:
+
+      <halftone-demo :imgsrc="url('flowers.jpg')" size="15" can-resize can-change-bleed />
+
+      Note that this is only a fake halftone effect. It is not a simulation, but a shallow emulation of a halftone print.
+      
+      If you look closely (*try a large size, low bleed setting above*), there are places where black dots are supposed to be but actually contain a different colour.
+      
+      This is due to the relatively simple CSS method used to emulate the halftone effect, which will be covered next.
+
+      ## The method
+
+      To keep it simple, let’s start with a black-and-white image. The same principle should apply to other colors, and it’s easy to layer in additional colors.
+
+      <halftone-demo :imgsrc="url('flowers.jpg')" grayscale size="8" />
+
+      Actually, let’s start with a simpler image. A gradient, to illustrate how halftone works in the first place.
+
+      <halftone-demo :imgsrc="url('gradient.jpg')" grayscale bleed="1.5" can-resize can-change-bleed />
+
+      <box-note>Note: The demo automatically compensates for the darkness caused by too much bleed in order to keep the dynamic range normal.</box-note>
+
+      A halftone pattern is simply an array of ink dots with varying size to simulate the appearance of more tones using just one ink. In the example above, dots in the darker areas are larger than dots in the lighter areas. Large dots would bleed into each other, creating the effect of negative dots.
+
+      Dot size and bleed can be emulated in one go using two simple image processing operations, **screen** and **threshold**.
+
+      The first step is to *screen* the source image (in this case, the gradient) with a *blurry halftone pattern*.
+      
+      *Screen* is a blend operation that operates on the pixels of the source image and the overlay image, with some kind of an inverted multiplication formula. Essentially, it lightens light areas multiplicatively.
+      
+      And that is why the blurry halftone overlay must be blurry. It makes the screen operation effectively *shrink the dots in lighter areas*.
+
+      <div class="multiplication">
+        <div class="multiplication-pattern-behind"></div>
+        <div class="multiplication-source"></div>
+        <div class="multiplication-pattern"></div>
+      </div>
+      <style>
+        .multiplication {
+          position: relative;
+          width: 100%;
+          height: 300px;
+          background: white;
+          border-radius: 18px;
+        }
+        .multiplication-source {
+          position: absolute;
+          margin: 5%;
+          width: 42.5%;
+          height: 80%;
+          background-image: linear-gradient(to bottom, black, #666, white);
+        }
+        .multiplication-pattern-behind,
+        .multiplication-pattern {
+          position: absolute;
+          margin: 5%;
+          width: 42.5%;
+          height: 80%;
+          background-image: radial-gradient(
+              14px at 50% 50%,
+              #000,
+              #666,
+              #fff
+            );
+          background-size: 20px 20px;
+          animation: multiplication-pattern ease-in 3s infinite;
+        }
+        .multiplication-pattern {
+          mix-blend-mode: screen;
+        }
+        @keyframes multiplication-pattern {
+          0%, 10% {
+            right: 0;
+          }
+          60%, 100% {
+            right: 47.5%;
+          }
+        }
+      </style>
+
+      This can be done via CSS `mix-blend-mode: screen`.
+      
+      The dot pattern is just a `radial-gradient` as a repeated `background-image`.
+
+      The next step is to *threshold* the resulting image. That is, convert the image into pure black & pure white pixels. Dark pixels become fully black, and light pixels become white &mdash; according to some defined threshold between light vs dark.
+
+      This creates the signature ink matrix look.
+
+      <div class="thresholding">
+        <div class="thresholding-before"></div>
+        <div class="thresholding-after"></div>
+      </div>
+      <style>
+        .thresholding {
+          position: relative;
+          width: 100%;
+          height: 300px;
+          background: white;
+          border-radius: 18px;
+        }
+        .thresholding-before,
+        .thresholding-after {
+          position: absolute;
+          margin: 5% 25%;
+          width: 50%;
+          height: 80%;
+          background:
+            linear-gradient(to bottom, black, #666, white),
+            radial-gradient(
+              14px at 50% 50%,
+              #000,
+              #666,
+              #fff
+            ) top left / 20px 20px;
+          background-blend-mode: screen;
+        }
+        .thresholding-after {
+          filter: brightness(0.8) contrast(100);
+          animation: thresholding-after ease-in 3s infinite;
+        }
+        @keyframes thresholding-after {
+          0%, 10% {
+            clip-path: inset(0 100% 0 0);
+          }
+          60%, 100% {
+            clip-path: inset(0 0 0 0);
+          }
+        }
+      </style>
+
+      In CSS, there is no threshold filter, but it can be simulated by applying an extremely high contrast filter, pushing pixel values to the extremes of pure white and pure black. Effectively the same result as thresholding. In code, it’s essentially a `filter: contrast(999)`.
+
+      Another thing we can add is a blur filter, *just before* the thresholding operation. This emulates surface tension of the ink, or something.
+
+      <div class="blurred-thresholding">
+        <div class="blurred-thresholding-sample"></div>
+      </div>
+      <style>
+        .blurred-thresholding {
+          position: relative;
+          width: 100%;
+          height: 300px;
+          background: white;
+          border-radius: 18px;
+        }
+        .blurred-thresholding-sample {
+          position: absolute;
+          margin: 5% 25%;
+          width: 50%;
+          height: 80%;
+          background:
+            linear-gradient(to bottom, #bbb, #fff),
+            radial-gradient(
+              10px at 50% 50%,
+              #000,
+              #ccc
+            ) top left / 20px 20px;
+          background-blend-mode: multiply;
+          animation: blurred-thresholding-sample ease-out 3s infinite alternate;
+        }
+        @keyframes blurred-thresholding-sample {
+          from {
+            filter: blur(0) contrast(999);
+          }
+          to {
+            filter: blur(6px) contrast(999);
+          }
+        }
+      </style>
+
+      The basic black-and-white solution that we have so far would be something like the following:
+
+      <code-block language="html" code="
+<div class=&quot;halftone&quot;>
+  <img>
+</div>
+
+<style>
+  .halftone {
+    position: relative;
+    filter: brightness(0.8) blur(3px) contrast(999);
+  }
+  .halftone::after {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(10px at center, black, white);
+    background-size: 20px 20px;
+    mix-blend-mode: screen;
+  }
+</style>
+" />
+
+      ## Colours may yeet knowingly
+
+      Adding colours is easy. Just add CMY dots to the overlay to complete the CMYK primary colors of ink! Make sure to stagger the dots so they are distributed evenly. How to stagger them well is left as an exercise to the dear reader, you.
+
+      <code-block language="css" code="
+background:
+  radial-gradient(10px at center, #000, white),
+  radial-gradient(10px at something, #0ff, white),
+  radial-gradient(10px at something, #f0f, white),
+  radial-gradient(10px at something, #ff0, white);
+" />
+
+      This will work just as well because the `contrast` filter operates on each RGB channel independently. The colours CMY &mdash; cyan <span class="cmyk-color" style="color:#0ff">(#0ff)</span>, magenta <span class="cmyk-color" style="color:#f0f">(#f0f)</span>, and yellow <span class="cmyk-color" style="color:#ff0">(#ff0)</span> &mdash; are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the `contrast` filter produces a similar thresholding effect to each colour independently and simultaneously!
+
+      <box-note>As noted, this is not very accurate, mainly due to the native operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But this is good enough and close enough to the real thing.</box-note>
+
+      Aaand that’s it. Halftone effect with a single div wrapper.
+
+      The demo in these pages have two overlay divs to achieve better staggering of the dots (involves transform: rotations). You can even have a div for each of CMYK to achieve better results!
+
+      <halftone-demo :imgsrc="url('eye.jpg')" size="20" can-disable can-resize can-change-bleed />
+    </markdown>
+  </blog-page>
+</html>
+
+<style>
+  .cmyk-color {
+    background: black;
+  }
+</style>

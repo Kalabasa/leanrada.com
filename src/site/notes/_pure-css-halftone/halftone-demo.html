@@ -1,0 +1,166 @@
+<div
+  :class="'halftone-demo-box' + (attrs.grayscale != null ? ' halftone-grayscale ' : '')"
+  :style="`--halftone-size:${initialSize}px;--halftone-bleed:${initialBleed}`" data-rss="interactive" alt="CSS halftone demo"
+>
+  <div class="halftone-demo">
+    <img :src="attrs.imgsrc" />
+    <div class="halftone-demo-ink"></div>
+  </div>
+</div>
+<script render>
+  if (attrs.canDisable != null) {
+    yield html`<label class="halftone-demo-control-row">
+      Enable effect
+      <input type="checkbox" checked onchange="onChangeHalftoneDemoEnabled(event)">
+    </label>`;
+  }
+  if (attrs.canResize != null) {
+    yield html`<label class="halftone-demo-control-row">
+      Size
+      <input type="range" min="4" max="20" value="${initialSize}" step="1" oninput="onInputHalftoneDemoSize(event)">
+    </label>`;
+  }
+  if (attrs.canChangeBleed != null) {
+    yield html`<label class="halftone-demo-control-row">
+      Bleed
+      <input type="range" min="0.1" max="${attrs.grayscale != null ? 2 : 0.45}" value="${initialBleed}" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+    </label>`;
+  }
+</script>
+
+<script static>
+  const initialSize = attrs.size ?? 5;
+  const initialBleed = attrs.bleed ?? (attrs.grayscale != null ? 1 : 0.2);
+</script>
+
+<script client>
+  function onChangeHalftoneDemoEnabled() {
+    getHalftoneDemoBox(event.currentTarget)?.classList.toggle(
+      "halftone-disabled",
+      !event.currentTarget.checked
+    );
+  }
+
+  function onInputHalftoneDemoSize(event) {
+    getHalftoneDemoBox(event.currentTarget)?.style.setProperty(
+      "--halftone-size",
+      event.currentTarget.value + "px"
+    );
+  }
+
+  function onInputHalftoneDemoBleed(event) {
+    getHalftoneDemoBox(event.currentTarget)?.style.setProperty(
+      "--halftone-bleed",
+      event.currentTarget.value
+    );
+  }
+
+  const halftoneDemoBoxCacheKey = Symbol();
+  function getHalftoneDemoBox(from) {
+    if (!(halftoneDemoBoxCacheKey in from)) {
+      const selector = ".halftone-demo-box";
+
+      let found = null;
+      let current = from;
+      do {
+        if (current.matches(selector)) found = current;
+        if (!found) found = current.querySelector(selector);
+        current = current.previousElementSibling ?? current.parentElement;
+      } while (!found && current);
+
+      from[halftoneDemoBoxCacheKey] = found;
+    }
+    return from[halftoneDemoBoxCacheKey];
+  }
+</script>
+
+<style>
+  .halftone-demo-control-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    justify-items: start;
+    align-items: center;
+    font-weight: bold;
+    padding: 0 18px;
+  }
+
+  .halftone-demo-box {
+    overflow: hidden;
+    border-radius: 18px;
+    margin: 36px 0;
+  }
+  .halftone-demo-box:has(+ .halftone-demo-control-row) {
+    margin-bottom: 18px;
+  }
+
+  .halftone-demo {
+    --halftone-dot-size: calc(var(--halftone-size) * var(--halftone-bleed));
+    --halftone-color-dot-size: var(--halftone-dot-size);
+    position: relative;
+    margin: -18px;
+    filter: brightness(calc(0.5 + var(--halftone-bleed) * 0.4))
+      blur(calc(var(--halftone-size) * 0.1)) contrast(200) blur(0.6px)
+      sepia(0.2) contrast(0.8);
+    overflow: hidden;
+    border: solid 54px #fff;
+  }
+  .halftone-grayscale .halftone-demo {
+    --halftone-color-dot-size: 0;
+  }
+  .halftone-disabled .halftone-demo {
+    filter: none;
+  }
+  @media (max-width: 800px) {
+    .halftone-demo {
+      border-width: 36px;
+    }
+  }
+
+  .halftone-demo > img {
+    display: block;
+    width: 100%;
+  }
+  .halftone-grayscale .halftone-demo > img {
+    filter: grayscale(1);
+  }
+
+  .halftone-disabled .halftone-demo-ink {
+    visibility: hidden;
+  }
+  .halftone-demo-ink {
+    mix-blend-mode: screen;
+  }
+  .halftone-demo-ink::before,
+  .halftone-demo-ink::after {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background-size: var(--halftone-size) var(--halftone-size);
+    background-blend-mode: multiply;
+    mix-blend-mode: multiply;
+  }
+  .halftone-demo-ink::before {
+    transform: rotate(30deg);
+    background-image: radial-gradient(
+        var(--halftone-dot-size) at 25% 75%,
+        #000,
+        #666,
+        #fff
+      ),
+      radial-gradient(var(--halftone-color-dot-size) at 75% 25%, #000, #666, #fff),
+      radial-gradient(var(--halftone-color-dot-size) at 25% 25%, #ff0, #ff6, #fff),
+      radial-gradient(var(--halftone-color-dot-size) at 75% 75%, #ff0, #ff6, #fff);
+  }
+  .halftone-demo-ink::after {
+    transform: rotate(-27deg) translateX(calc(var(--halftone-size) * 0.58));
+    background-image: radial-gradient(
+        var(--halftone-color-dot-size) at 75% 25%,
+        #f0f,
+        #f6f,
+        #fff
+      ),
+      radial-gradient(var(--halftone-color-dot-size) at 25% 75%, #f0f, #f6f, #fff),
+      radial-gradient(var(--halftone-color-dot-size) at 75% 75%, #0ff, #6ff, #fff),
+      radial-gradient(var(--halftone-color-dot-size) at 25% 25%, #0ff, #6ff, #fff);
+  }
+</style>
