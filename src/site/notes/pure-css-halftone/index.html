@@ -5,7 +5,7 @@
       title="Creating a halftone effect with CSS"
       :heroimgsrc="url('hero.jpg')"
     />
-    <blog-post-info date="4 May 2024" />
+    <blog-post-info date="5 May 2024" read-mins="8" />
     <tag-row>
       <tag>css</tag>
     </tag-row>
@@ -24,9 +24,9 @@
 
       <halftone-demo :mediasrc="url('flowers.jpg')" separate-k size="12" bleed="0.2" can-resize can-change-bleed />
 
-      There are several ways to do this in CSS. The above is a bit more advanced with 2-3 extra divs. I’ll try to show a simple method, next.
+      There are several ways to do this in CSS. The above is a bit more advanced with 2-3 extra divs. I’ll try to show a simple method, first.
 
-      ## The method
+      ## Halftone basics
 
       To keep it simple, let’s start with a black-and-white image. It should be easy to layer in additional colors with the same principle.
 
@@ -36,17 +36,19 @@
 
       <halftone-demo :mediasrc="url('gradient.jpg')" grayscale bleed="1.5" can-resize can-change-bleed />
 
-      A [halftone](https://en.wikipedia.org/wiki/Halftone) pattern is an array of ink dots simulating the appearance of smooth gradiation of tones using just two pure tones (pure black ink and pure white background in this case). By varying the size of the dots, the average ink coverage in a given area simulates lighter or darker tones in that area.
+      A [halftone](https://en.wikipedia.org/wiki/Halftone) pattern is an array of ink dots simulating the appearance of smooth gradiation of tones using just two pure tones (pure black ‘ink’ and pure white background in this case). By varying the size of the dots, the average ink coverage in a given area determines how light or dark the tone is in that area.
       
       Dots large enough would bleed into each other, creating the effect of negative dots.
 
+      ## Screen and threshold
+
       Dot size and bleed can be emulated in one go using two simple image processing operations, **screen** and **threshold**.
 
-      The first step is to *screen* the source image (in this case, the gradient) with a *blurry halftone pattern*.
+      The first step is to *screen* the source image (in this case, the gradient) with a *blurry dot matrix pattern*.
       
       **Screen** is an operation that mixes the pixels of the source image and the overlay image using some kind of an inverted multiplication formula. Essentially, it *lightens lighter areas multiplicatively*.
       
-      Because the dots are blurry, the screen operation gives us smaller dots in lighter areas on the original image and bigger dots in darker areas. Another way to put it is, lighter images chip more away from dots’ fringes.
+      Because the dots are blurry (i.e. having feathered edges), the screen operation gives us smaller-looking dots in lighter areas on the original image and denser dots in darker areas.
 
       <div class="multiplication">
         <div class="multiplication-pattern-behind"></div>
@@ -221,28 +223,30 @@ background-size: 20px 20px;
       <code-block language="css" code="
 background:
   radial-gradient(10px at center, #000, white),
-  radial-gradient(10px at something, #0ff, white),
-  radial-gradient(10px at something, #f0f, white),
-  radial-gradient(10px at something, #ff0, white);
+  radial-gradient(10px at ..., #0ff, white),
+  radial-gradient(10px at ..., #f0f, white),
+  radial-gradient(10px at ..., #ff0, white);
 " />
 
-      These will work just as well as black because the `contrast` filter operates on each RGB channel independently. The colours of cyan <span class="cmyk-color" style="color:#0ff">(#0ff)</span>, magenta <span class="cmyk-color" style="color:#f0f">(#f0f)</span>, and yellow <span class="cmyk-color" style="color:#ff0">(#ff0)</span> are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the `contrast` filter produces a similar thresholding effect on each colour independently and simultaneously!
+      These additional layers will work just as well as black because the `contrast` filter operates on each RGB channel independently. The colours of cyan <span class="cmyk-color" style="color:#0ff">(#0ff)</span>, magenta <span class="cmyk-color" style="color:#f0f">(#f0f)</span>, and yellow <span class="cmyk-color" style="color:#ff0">(#ff0)</span> are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the `contrast` filter produces a similar thresholding effect on each colour in CMYK independently and simultaneously!
 
-      <box-note>This is not a very accurate representation of halftone, mainly due to the operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But it looks good enough in many cases.</box-note>
+      <box-note>Note: This is not a very accurate representation of halftone, mainly due to the operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But this shallow emulation may look good enough in many cases.</box-note>
 
-      Here’s the result&hellip;
+      Here’s the result&hellip;?
 
       <blog-media :src="url('no-ink-mixing.png')" alt="halftone effect with only magenta dots visible" />
 
       Only magenta is showing, because the magenta layer is the top layer in that `background-image` list! The other layers are hidden beneath the magenta layer. We need to combine these layers to see all the colours.
 
-      In order to mix the four layers of ‘ink’ correctly, you must use the **multipy** blend mode to simulate how inks mix together ([subtractive colour mixing](https://en.wikipedia.org/wiki/Subtractive_color)).
+      In order to mix the four layers of ‘ink’ correctly, you must use the **multipy** blend mode to simulate how inks mix together (i.e. [subtractive colour mixing](https://en.wikipedia.org/wiki/Subtractive_color)).
       
       Since we’re mixing `background-image`s together, we use this property: `background-blend-mode: multiply`.
 
       <halftone-demo :mediasrc="url('flowers.jpg')" can-resize />
 
       Aaand that’s it! A simple Halftone effect with a single div wrapper!
+
+      This simple filter is not very robust, so you may want to tailor the brightness and saturation levels of the particular source image.
 
       <code-block language="html" code="
 <div class=&quot;halftone&quot;>
@@ -269,17 +273,29 @@ background:
 </style>
 " />
 
-      <box-note>A minor point, but the demo above actually uses two separate overlay divs to achieve better dot staggering.</box-note>
+      <box-note>A minor point, but the demo above actually uses two separate overlay divs instead of a single div. This is to achieve better dot staggering.</box-note>
 
-      Notice anything wrong with the last image above? There’s a weird magenta pattern on that flower petal. There are more magenta dots than expected! 🤔
+      ## Variations
 
-      Apparently, the black dots were turning into the wrong colours. I think the problem was that: **coloured source image ⊕ black dot pattern = coloured dots**! *The symbol ⊕ represents the screen-threshold operation.* In other words, colour is contagious!
+      Notice anything wrong with the last image above? There’s a weird magenta pattern on that flower petal. In fact, there are more magenta dots than expected!
 
-      What I did to fix this was separate the K layer (black), using its own greyscale copy of the source image. **greyscale source source image ⊕ black dot pattern = black dots**. Here’s a vivid example where you can toggle the ‘separate-K’ version for comparison purposes:
+      Apparently, the black dots were turning into the coloured ones. I think the problem was that: **<span class="colored-item">coloured source image</span> ⊕ black dot pattern = <span class="colored-item">coloured dots</span>**! *The symbol ⊕ represents the screen-threshold operation.* In other words, colour is contagious!
+      
+      <style>
+        .colored-item {
+          color: #f8f;
+        }
+      </style>
+
+      What I did to fix this was separate the K layer (black) from CMY, and have it use its own greyscale copy of the source image. **greyscale source image ⊕ black dot pattern = black dots**.
+      
+      Here’s a vivid example where you can toggle the ‘separate-K’ version for comparison purposes:
 
       <halftone-demo :mediasrc="url('eye.jpg')" size="7" bleed="0.35" can-disable can-separate-k can-resize can-change-bleed can-rotate />
 
-      There are more ways to go about this with different qualities and levels of realism, such as overprinting and dithering. I think the single-div solution is actually fine to the unaided eye.
+      There are more ways to go about this with different qualities and levels of realism and complexity. For example, dithering.
+      
+      I think the single-div solution is actually fine as long as you tweak the source image to be more readable under the filter.
 
       ## Gallery
 
