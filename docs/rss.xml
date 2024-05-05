@@ -7,6 +7,281 @@
         
         <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
         <item>
+            <title><![CDATA[
+              
+                Creating a halftone effect with CSS
+              
+            ]]></title>
+            <description><![CDATA[<p><em>For RSS readers: This article contains interactive content available on the <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">original post on leanrada.com</a>.</em></p>
+
+<p>Here’s a quick halftone effect (i.e. a retro printed look) using CSS with only one div at the minimum.</p>
+
+<p>First of all, here’s a live demo:</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Toggle effect
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoEnabled(event)">
+            </label>
+<p>Toggle the filter class using the checkbox above.</p>
+
+<p>To further illustrate the halftone effect, the following demo can vary the <strong>size</strong> of the dots and the degree to which they <strong>‘bleed’</strong>:</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Size
+              <input type="range" min="4" max="20" value="12" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label><label>
+              Bleed
+              <input type="range" min="0.1" max="0.45" value="0.2" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+            </label>
+<p>There are several ways to do this in CSS. The above is a bit more advanced with 2-3 extra divs. I’ll try to show a simple method, first.</p>
+
+<h2 id="halftone-basics">Halftone basics</h2>
+
+<p>To keep it simple, let’s start with a black-and-white image. It should be easy to layer in additional colors with the same principle.</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+
+<p>Actually, let’s start with a simpler image. A gradient, to illustrate how halftone works in the first place.</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Size
+              <input type="range" min="4" max="20" value="5" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label><label>
+              Bleed
+              <input type="range" min="0.1" max="2" value="1.5" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+            </label>
+<p>A <a target="_blank" href="https://en.wikipedia.org/wiki/Halftone">halftone</a> pattern is an array of ink dots simulating the appearance of smooth gradiation of tones using just two pure tones (pure black ‘ink’ and pure white background in this case). By varying the size of the dots, the average ink coverage in a given area determines how light or dark the tone is in that area.</p>
+
+<p>Dots large enough would bleed into each other, creating the effect of negative dots.</p>
+
+<h2 id="screen-and-threshold">Screen and threshold</h2>
+
+<p>Dot size and bleed can be emulated in one go using two simple image processing operations, <strong>screen</strong> and <strong>threshold</strong>.</p>
+
+<p>The first step is to <em>screen</em> the source image (in this case, the gradient) with a <em>blurry dot matrix pattern</em>.</p>
+
+<p><strong>Screen</strong> is an operation that mixes the pixels of the source image and the overlay image using some kind of an inverted multiplication formula. Essentially, it <em>lightens lighter areas multiplicatively</em>.</p>
+
+<p>Because the dots are blurry (i.e. having feathered edges), the screen operation gives us smaller-looking dots in lighter areas on the original image and denser dots in darker areas.</p>
+
+<p>This operation is done via CSS <code>mix-blend-mode: screen</code>.</p>
+
+<p>The blurry dot pattern is generated using a <code>radial-gradient</code> as a repeated <code>background-image</code>, like this:</p>
+
+<pre><code><span>background-image</span><span>:</span> <span>radial-gradient</span><span>(</span>14px at 50% 50%<span>,</span> black<span>,</span> white<span>)</span><span>;</span>
+<span>background-size</span><span>:</span> 20px 20px<span>;</span></code></pre>
+
+<p>The next step is to <strong>threshold</strong> the resulting image. That is, convert the image into pure black &amp; pure white pixels. Dark pixels become fully black, and light pixels become white — according to some defined threshold between light vs dark.</p>
+
+<p>This creates the signature black-ink-matrix-on-white-paper look.</p>
+
+<p>In CSS, there is no threshold filter, but it can be simulated by applying an extremely high <strong>contrast</strong> filter, pushing pixel values to the extremes of pure white and pure black. Effectively the same result as thresholding. In code, that’s simply a <code>filter: contrast(999)</code>.</p>
+
+<p>Another thing we can add is a <strong>blur</strong> filter, <em>just before</em> the thresholding operation. This emulates surface tension of the ink, or something.</p>
+
+<p>Let’s take a moment to look at the basic black-and-white solution so far:</p>
+
+<pre><code><span><span><span>&lt;</span>div</span> <span>class</span><span><span>=</span><span>"</span>halftone<span>"</span></span><span>&gt;</span></span>
+  <span><span><span>&lt;</span>img</span> <span>src</span><span><span>=</span>...</span><span>&gt;</span></span>
+<span><span><span>&lt;/</span>div</span><span>&gt;</span></span>
+
+<span><span><span>&lt;</span>style</span><span>&gt;</span></span><span><span>
+  <span>.halftone</span> <span>{</span>
+    <span>position</span><span>:</span> relative<span>;</span>
+    <span>/* brightness controls the threshold point */</span>
+    <span>filter</span><span>:</span> <span>brightness</span><span>(</span>0.8<span>)</span> <span>blur</span><span>(</span>3px<span>)</span> <span>contrast</span><span>(</span>999<span>)</span><span>;</span>
+  <span>}</span>
+  <span>.halftone::after</span> <span>{</span>
+    <span>position</span><span>:</span> absolute<span>;</span>
+    <span>inset</span><span>:</span> 0<span>;</span>
+    <span>background</span><span>:</span> <span>radial-gradient</span><span>(</span>10px at center<span>,</span> black<span>,</span> white<span>)</span><span>;</span>
+    <span>background-size</span><span>:</span> 20px 20px<span>;</span>
+    <span>mix-blend-mode</span><span>:</span> screen<span>;</span>
+  <span>}</span>
+</span></span><span><span><span>&lt;/</span>style</span><span>&gt;</span></span></code></pre>
+
+<h2 id="colours-may-yeet-knowingly">Colours may yeet knowingly</h2>
+
+<p>When you get the black ink dots going, adding the rest of the colours is easy. Just add a set of dots for each of CMY — cyan, magenta, and yellow, the “primary colours” of ink — to complete the <a target="_blank" href="https://en.wikipedia.org/wiki/CMYK_color_model">CMYK</a>! Make sure to stagger the dots so they are distributed evenly. How to stagger them well is left as an exercise to the dear reader, you (see <a target="_blank" href="https://the-print-guide.blogspot.com/2009/05/halftone-screen-angles.html">halftone angles</a>, <a target="_blank" href="https://proofing.de/whats-moire-and-can-i-see-moire-in-a-proof/">moiré patterns</a>, etc).</p>
+
+<pre><code><span>background</span><span>:</span>
+  <span>radial-gradient</span><span>(</span>10px at center<span>,</span> #000<span>,</span> white<span>)</span><span>,</span>
+  <span>radial-gradient</span><span>(</span>10px at ...<span>,</span> #0ff<span>,</span> white<span>)</span><span>,</span>
+  <span>radial-gradient</span><span>(</span>10px at ...<span>,</span> #f0f<span>,</span> white<span>)</span><span>,</span>
+  <span>radial-gradient</span><span>(</span>10px at ...<span>,</span> #ff0<span>,</span> white<span>)</span><span>;</span></code></pre>
+
+<p>These additional layers will work just as well as black because the <code>contrast</code> filter operates on each RGB channel independently. The colours of cyan <span>(#0ff)</span>, magenta <span>(#f0f)</span>, and yellow <span>(#ff0)</span> are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the <code>contrast</code> filter produces a similar thresholding effect on each colour in CMYK independently and simultaneously!</p>
+
+<p><span>Note: This is not a very accurate representation of halftone, mainly due to the operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But this shallow emulation may look good enough in many cases.</span></p>
+
+<p>Here’s the result…?</p>
+
+<img srcset="/notes/pure-css-halftone/no-ink-mixing_628.generated.png 628w,/notes/pure-css-halftone/no-ink-mixing_664.generated.png 664w" sizes="not (min-width:664px) 628px, 664px" alt="halftone effect with only magenta dots visible" src="https://leanrada.com/notes/pure-css-halftone/no-ink-mixing.png?ref=rss" spec="100% [664) 664" loading="lazy" width="100%" height="">
+
+<p>Only magenta is showing, because the magenta layer is the top layer in that <code>background-image</code> list! The other layers are hidden beneath the magenta layer. We need to combine these layers to see all the colours.</p>
+
+<p>In order to mix the four layers of ‘ink’ correctly, you must use the <strong>multipy</strong> blend mode to simulate how inks mix together (i.e. <a target="_blank" href="https://en.wikipedia.org/wiki/Subtractive_color">subtractive colour mixing</a>).</p>
+
+<p>Since we’re mixing <code>background-image</code>s together, we use this property: <code>background-blend-mode: multiply</code>.</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Size
+              <input type="range" min="4" max="20" value="5" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label>
+<p>Aaand that’s it! A simple Halftone effect with a single div wrapper!</p>
+
+<p>This simple filter is not very robust, so you may want to tailor the brightness and saturation levels of the particular source image.</p>
+
+<pre><code><span><span><span>&lt;</span>div</span> <span>class</span><span><span>=</span><span>"</span>halftone<span>"</span></span><span>&gt;</span></span>
+  <span><span><span>&lt;</span>img</span> <span>src</span><span><span>=</span>...</span><span>&gt;</span></span>
+<span><span><span>&lt;/</span>div</span><span>&gt;</span></span>
+
+<span><span><span>&lt;</span>style</span><span>&gt;</span></span><span><span>
+  <span>.halftone</span> <span>{</span>
+    <span>position</span><span>:</span> relative<span>;</span>
+    <span>filter</span><span>:</span> <span>brightness</span><span>(</span>0.8<span>)</span> <span>blur</span><span>(</span>3px<span>)</span> <span>contrast</span><span>(</span>999<span>)</span><span>;</span>
+  <span>}</span>
+  <span>.halftone::after</span> <span>{</span>
+    <span>position</span><span>:</span> absolute<span>;</span>
+    <span>inset</span><span>:</span> 0<span>;</span>
+    <span>background</span><span>:</span>
+      <span>radial-gradient</span><span>(</span>10px at center<span>,</span> black<span>,</span> white<span>)</span><span>,</span>
+      <span>radial-gradient</span><span>(</span>10px at 5px 5px<span>,</span> cyan<span>,</span> white<span>)</span><span>,</span>
+      <span>radial-gradient</span><span>(</span>10px at 15px 5px<span>,</span> magenta<span>,</span> white<span>)</span><span>,</span>
+      <span>radial-gradient</span><span>(</span>10px at 10px 15px<span>,</span> yellow<span>,</span> white<span>)</span><span>;</span>
+    <span>background-size</span><span>:</span> 20px 20px<span>;</span>
+    <span>background-blend-mode</span><span>:</span> multiply<span>;</span>
+    <span>mix-blend-mode</span><span>:</span> screen<span>;</span>
+  <span>}</span>
+</span></span><span><span><span>&lt;/</span>style</span><span>&gt;</span></span></code></pre>
+
+<p><span>A minor point, but the demo above actually uses two separate overlay divs instead of a single div. This is to achieve better dot staggering.</span></p>
+
+<h2 id="variations">Variations</h2>
+
+<p>Notice anything wrong with the last image above? There’s a weird magenta pattern on that flower petal. In fact, there are more magenta dots than expected!</p>
+
+<p>Apparently, the black dots were turning into the coloured ones. I think the problem was that: <strong><span>coloured source image</span> ⊕ black dot pattern = <span>coloured dots</span></strong>! <em>The symbol ⊕ represents the screen-threshold operation.</em> In other words, colour is contagious!</p>
+
+<p>What I did to fix this was separate the K layer (black) from CMY, and have it use its own greyscale copy of the source image. <strong>greyscale source image ⊕ black dot pattern = black dots</strong>.</p>
+
+<p>Here’s a vivid example where you can toggle the ‘separate-K’ version for comparison purposes:</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Toggle effect
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoEnabled(event)">
+            </label><label>
+              Separate K layer
+              <input type="checkbox" onchange="onChangeHalftoneDemoSeparateK(event)">
+            </label><label>
+              Size
+              <input type="range" min="4" max="20" value="7" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label><label>
+              Bleed
+              <input type="range" min="0.1" max="0.45" value="0.35" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+            </label><label>
+              Rotation
+              <input type="range" min="0" max="360" value="0" step="0.1" oninput="onInputHalftoneDemoRotation(event)">
+            </label>
+<p>There are more ways to go about this with different qualities and levels of realism and complexity. For example, dithering.</p>
+
+<p>I think the single-div solution is actually fine as long as you tweak the source image to be more readable under the filter.</p>
+
+<h2 id="gallery">Gallery</h2>
+
+<p>To finish with, here are a more demos!</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Toggle effect
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoEnabled(event)">
+            </label><label>
+              Separate K layer
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoSeparateK(event)">
+            </label><label>
+              Size
+              <input type="range" min="4" max="20" value="5" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label><label>
+              Bleed
+              <input type="range" min="0.1" max="0.45" value="0.4" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+            </label><label>
+              Rotation
+              <input type="range" min="0" max="360" value="0" step="0.1" oninput="onInputHalftoneDemoRotation(event)">
+            </label>
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Toggle effect
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoEnabled(event)">
+            </label><label>
+              Separate K layer
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoSeparateK(event)">
+            </label><label>
+              Size
+              <input type="range" min="4" max="20" value="5" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label><label>
+              Bleed
+              <input type="range" min="0.1" max="0.45" value="0.4" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+            </label><label>
+              Rotation
+              <input type="range" min="0" max="360" value="0" step="0.1" oninput="onInputHalftoneDemoRotation(event)">
+            </label>
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Toggle effect
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoEnabled(event)">
+            </label><label>
+              Separate K layer
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoSeparateK(event)">
+            </label><label>
+              Size
+              <input type="range" min="4" max="20" value="5" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label><label>
+              Bleed
+              <input type="range" min="0.1" max="0.45" value="0.4" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+            </label><label>
+              Rotation
+              <input type="range" min="0" max="360" value="0" step="0.1" oninput="onInputHalftoneDemoRotation(event)">
+            </label>
+<pre>Interactive content: <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: CSS halftone demo</pre>
+<label>
+              Toggle effect
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoEnabled(event)">
+            </label><label>
+              Separate K layer
+              <input type="checkbox" checked="" onchange="onChangeHalftoneDemoSeparateK(event)">
+            </label><label>
+              Size
+              <input type="range" min="4" max="20" value="5" step="1" oninput="onInputHalftoneDemoSize(event)">
+            </label><label>
+              Bleed
+              <input type="range" min="0.1" max="0.45" value="0.4" step="0.01" oninput="onInputHalftoneDemoBleed(event)">
+            </label><label>
+              Rotation
+              <input type="range" min="0" max="360" value="0" step="0.1" oninput="onInputHalftoneDemoRotation(event)">
+            </label>
+<p>P.S. Please don’t look at the demos’ source code. It’s terrible.
+            </p>
+]]></description>
+            <link>https://leanrada.com/notes/pure-css-halftone?ref=rss</link>
+            <guid isPermaLink="true">https://leanrada.com/notes/pure-css-halftone?ref=rss</guid>
+            <pubDate>Sun, 05 May 2024 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title><![CDATA[AI art is not generative art]]></title>
             <description><![CDATA[
 <p><strong>AI art is not <em>generative art</em></strong> (clickbait title). While the technical definition says that one is a subset of the other, I think it’s useful to distinguish between these two categories.</p>
