@@ -12,7 +12,7 @@
     <!-- textlint-enable -->
     <!-- prettier-ignore -->
     <markdown>
-      Here’s a quick halftone effect (a retro printed look) using CSS with only one div at the minimum.
+      Here’s a quick halftone effect (i.e. a retro printed look) using CSS with only one div at the minimum.
       
       First of all, here’s a live demo:
 
@@ -216,7 +216,7 @@ background-size: 20px 20px;
 
       ## Colours may yeet knowingly
 
-      When you get the black ink dots going, adding the rest of the colours is easy. Just add a set of dots for each of CMY &mdash; cyan, magenta, and yellow, the “primary colours” of ink &mdash; to complete the [CMYK](https://en.wikipedia.org/wiki/CMYK_color_model)! Make sure to stagger the dots so they are distributed evenly. How to stagger them well is left as an exercise to the dear reader, you.
+      When you get the black ink dots going, adding the rest of the colours is easy. Just add a set of dots for each of CMY &mdash; cyan, magenta, and yellow, the “primary colours” of ink &mdash; to complete the [CMYK](https://en.wikipedia.org/wiki/CMYK_color_model)! Make sure to stagger the dots so they are distributed evenly. How to stagger them well is left as an exercise to the dear reader, you (see [halftone angles](https://the-print-guide.blogspot.com/2009/05/halftone-screen-angles.html), [moiré patterns](https://proofing.de/whats-moire-and-can-i-see-moire-in-a-proof/), etc).
 
       <code-block language="css" code="
 background:
@@ -226,39 +226,64 @@ background:
   radial-gradient(10px at something, #ff0, white);
 " />
 
-      These will work just as well as black because the `contrast` filter operates on each RGB channel independently. The colours of cyan <span class="cmyk-color" style="color:#0ff">(#0ff)</span>, magenta <span class="cmyk-color" style="color:#f0f">(#f0f)</span>, and yellow <span class="cmyk-color" style="color:#ff0">(#ff0)</span> are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the `contrast` filter produces a similar thresholding effect to each colour independently and simultaneously!
+      These will work just as well as black because the `contrast` filter operates on each RGB channel independently. The colours of cyan <span class="cmyk-color" style="color:#0ff">(#0ff)</span>, magenta <span class="cmyk-color" style="color:#f0f">(#f0f)</span>, and yellow <span class="cmyk-color" style="color:#ff0">(#ff0)</span> are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the `contrast` filter produces a similar thresholding effect on each colour independently and simultaneously!
 
-      <box-note>This is not very accurate, mainly due to the operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But this is good enough and close enough to the real thing.</box-note>
+      <box-note>This is not a very accurate representation of halftone, mainly due to the operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But it looks good enough in many cases.</box-note>
 
       Here’s the result&hellip;
 
-      <blog-media :src="url('no-ink-mixing.png')" alt="halftone effect with only magenta ink visible" />
+      <blog-media :src="url('no-ink-mixing.png')" alt="halftone effect with only magenta dots visible" />
 
-      Why is only magenta showing? Well, you see, the magenta layer is the top layer in that `background-image` list! The other layers are hidden beneath the magenta layer. How do we combine these ink layers? Maybe use `transparent` instead of `white`?
+      Only magenta is showing, because the magenta layer is the top layer in that `background-image` list! The other layers are hidden beneath the magenta layer. We need to combine these layers to see all the colours.
 
-      To mix the four layers of ink correctly, you must use the **multipy** blend mode to simulate how inks mix together ([subtractive colour mixing](https://en.wikipedia.org/wiki/Subtractive_color)).
+      In order to mix the four layers of ‘ink’ correctly, you must use the **multipy** blend mode to simulate how inks mix together ([subtractive colour mixing](https://en.wikipedia.org/wiki/Subtractive_color)).
       
       Since we’re mixing `background-image`s together, we use this property: `background-blend-mode: multiply`.
 
-      <halftone-demo :mediasrc="url('flowers.jpg')" size="8" can-resize />
+      <halftone-demo :mediasrc="url('flowers.jpg')" can-resize />
 
-      Aaand that’s it! Simple Halftone effect with a single div wrapper!
+      Aaand that’s it! A simple Halftone effect with a single div wrapper!
 
-      <box-note>A minor point, but the demo above uses twos separate overlay divs to achieve better dot staggering. A bit of rotation helps.</box-note>
+      <code-block language="html" code="
+<div class=&quot;halftone&quot;>
+  <img src=...>
+</div>
 
-      But did you notice anything wrong? There’s a weird magenta pattern on that flower petal. There are more magenta dots than expected! 🤔
+<style>
+  .halftone {
+    position: relative;
+    filter: brightness(0.8) blur(3px) contrast(999);
+  }
+  .halftone::after {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(10px at center, black, white),
+      radial-gradient(10px at 5px 5px, cyan, white),
+      radial-gradient(10px at 15px 5px, magenta, white),
+      radial-gradient(10px at 10px 15px, yellow, white);
+    background-size: 20px 20px;
+    background-blend-mode: multiply;
+    mix-blend-mode: screen;
+  }
+</style>
+" />
 
-      Apparently, the black ink was turning into the wrong colour. I think the problem was: coloured source image + black dot pattern = coloured dots! Colour is contagious!
+      <box-note>A minor point, but the demo above actually uses two separate overlay divs to achieve better dot staggering.</box-note>
 
-      What I did to fix this was separate the K layer (black), using its own greyscale copy of the source image. Here’s comparison where you can toggle that improved version:
+      Notice anything wrong with the last image above? There’s a weird magenta pattern on that flower petal. There are more magenta dots than expected! 🤔
 
-      <halftone-demo :mediasrc="url('eye.jpg')" size="20" can-disable can-separate-k can-resize can-change-bleed can-rotate />
+      Apparently, the black dots were turning into the wrong colours. I think the problem was that: **coloured source image ⊕ black dot pattern = coloured dots**! *The symbol ⊕ represents the screen-threshold operation.* In other words, colour is contagious!
 
-      There are more ways to go about this, with different qualities and levels of realism. I think the single-div solution is actually fine, to the untrained and unaided eye. And the above ‘separate-K’ version should be more than enough for all cases.
+      What I did to fix this was separate the K layer (black), using its own greyscale copy of the source image. **greyscale source source image ⊕ black dot pattern = black dots**. Here’s a vivid example where you can toggle the ‘separate-K’ version for comparison purposes:
+
+      <halftone-demo :mediasrc="url('eye.jpg')" size="7" bleed="0.35" can-disable can-separate-k can-resize can-change-bleed can-rotate />
+
+      There are more ways to go about this with different qualities and levels of realism, such as overprinting and dithering. I think the single-div solution is actually fine to the unaided eye.
 
       ## Gallery
 
-      To finish with, here are a couple more demos!
+      To finish with, here are a more demos!
 
       <halftone-demo :mediasrc="url('sydney.jpg')" separate-k can-disable can-separate-k can-resize can-change-bleed can-rotate />
 

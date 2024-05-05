@@ -17,7 +17,7 @@
 <script render>
   if (attrs.canDisable != null) {
     yield html`<label class="halftone-demo-control-row">
-      Enable effect
+      Toggle effect
       <input type="checkbox" checked onchange="onChangeHalftoneDemoEnabled(event)">
     </label>`;
   }
@@ -122,11 +122,12 @@
   }
 
   .halftone-demo-box {
+    --halftone-separate-k: 0;
     position: relative;
     overflow: hidden;
     border-radius: 18px;
     margin: 36px 0;
-    filter: sepia(0.3) contrast(0.7);
+    filter: sepia(0.4);
   }
   .halftone-demo-box:has(+ .halftone-demo-control-row) {
     margin-bottom: 18px;
@@ -135,14 +136,18 @@
     filter: none;
   }
 
+  .halftone-separate-k {
+    --halftone-separate-k: 1;
+  }
+
   .halftone-demo,
   .halftone-demo-k-layer {
     --halftone-dot-size: calc(var(--halftone-size) * var(--halftone-bleed));
     --halftone-color-dot-size: var(--halftone-dot-size);
     position: relative;
     margin: -18px;
-    filter: brightness(calc(0.5 + var(--halftone-bleed) * 0.4))
-      blur(calc(var(--halftone-size) * 0.1)) contrast(200) blur(0.6px);
+    filter: brightness(calc(0.50 + var(--halftone-bleed) * 0.3 - var(--halftone-separate-k) * 0.02))
+      blur(calc(var(--halftone-size) * 0.1)) contrast(1000) blur(0.6px);
     overflow: hidden;
     border: solid 54px #fff;
   }
@@ -152,7 +157,7 @@
   .halftone-disabled .halftone-demo {
     filter: none;
   }
-  .halftone-disabled .hafltone-media {
+  .halftone-disabled .halftone-media {
     filter: none !important;
   }
   .halftone-disabled .halftone-demo-k-layer {
@@ -179,13 +184,18 @@
     display: block;
     width: 100%;
   }
+  .halftone-demo > .halftone-media {
+    filter: brightness(1.5);
+  }
   .halftone-grayscale .halftone-demo > .halftone-media {
     filter: grayscale(1);
   }
   .halftone-separate-k .halftone-demo > .halftone-media {
-    filter: saturate(2);
+    /* main layer is hues only */
+    filter: invert(1) brightness(0.75) invert(1) saturate(2);
   }
   .halftone-demo-k-layer > .halftone-media {
+    /* K layer is greyscale only */
     filter: grayscale(1) brightness(2);
   }
 
