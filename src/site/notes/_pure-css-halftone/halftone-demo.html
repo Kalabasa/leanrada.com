@@ -7,11 +7,11 @@
   alt="CSS halftone demo"
 >
   <div class="halftone-demo">
-    <img :src="attrs.imgsrc" />
+    <responsive-media class="halftone-media" :src="attrs.mediasrc" />
     <div class="halftone-demo-ink"></div>
   </div>
   <div class="halftone-demo-k-layer">
-    <img :src="attrs.imgsrc" />
+    <responsive-media class="halftone-media" :src="attrs.mediasrc" />
   </div>
 </div>
 <script render>
@@ -24,7 +24,7 @@
   if (attrs.canSeparateK != null) {
     yield html`<label class="halftone-demo-control-row">
       Separate K layer
-      <input type="checkbox" onchange="onChangeHalftoneDemoSeparateK(event)">
+      <input type="checkbox" ${attrs.separateK != null ? "checked" : ""} onchange="onChangeHalftoneDemoSeparateK(event)">
     </label>`;
   }
   if (attrs.canResize != null) {
@@ -48,7 +48,7 @@
 </script>
 
 <script static>
-  const initialSize = attrs.size ?? 8;
+  const initialSize = attrs.size ?? 5;
   const initialBleed =
     attrs.bleed ??
     0.2 +
@@ -126,10 +126,13 @@
     overflow: hidden;
     border-radius: 18px;
     margin: 36px 0;
-    filter: sepia(0.2) contrast(0.8);
+    filter: sepia(0.3) contrast(0.7);
   }
   .halftone-demo-box:has(+ .halftone-demo-control-row) {
     margin-bottom: 18px;
+  }
+  .halftone-demo-box.halftone-disabled {
+    filter: none;
   }
 
   .halftone-demo,
@@ -149,7 +152,7 @@
   .halftone-disabled .halftone-demo {
     filter: none;
   }
-  .halftone-disabled img {
+  .halftone-disabled .hafltone-media {
     filter: none !important;
   }
   .halftone-disabled .halftone-demo-k-layer {
@@ -171,18 +174,18 @@
     display: block;
   }
 
-  .halftone-demo > img,
-  .halftone-demo-k-layer > img {
+  .halftone-demo > .halftone-media,
+  .halftone-demo-k-layer > .halftone-media {
     display: block;
     width: 100%;
   }
-  .halftone-grayscale .halftone-demo > img {
+  .halftone-grayscale .halftone-demo > .halftone-media {
     filter: grayscale(1);
   }
-  .halftone-separate-k .halftone-demo > img {
+  .halftone-separate-k .halftone-demo > .halftone-media {
     filter: saturate(2);
   }
-  .halftone-demo-k-layer > img {
+  .halftone-demo-k-layer > .halftone-media {
     filter: grayscale(1) brightness(2);
   }
 

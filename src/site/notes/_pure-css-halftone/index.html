@@ -12,41 +12,41 @@
     <!-- textlint-enable -->
     <!-- prettier-ignore -->
     <markdown>
-      This is a halftone effect using CSS with only one, two, or three divs (depending on your standards for quality).
+      Here’s a quick halftone effect (a retro printed look) using CSS with only one div at the minimum.
       
       First of all, here’s a live demo:
 
-      <halftone-demo :imgsrc="url('flowers.jpg')" separate-k can-disable />
+      <halftone-demo :mediasrc="url('flowers.jpg')" separate-k can-disable />
 
-      To further illustrate the halftone effect, you may vary the **size** of the dots and the degree to which they **‘bleed’** in the following demo:
+      Toggle the filter class using the checkbox above.
 
-      <halftone-demo :imgsrc="url('flowers.jpg')" separate-k size="15" can-resize can-change-bleed />
+      To further illustrate the halftone effect, the following demo can vary the **size** of the dots and the degree to which they **‘bleed’**:
 
-      Note that this is only a fake halftone effect. It is not a simulation, but a shallow emulation of a halftone print.
-      
-      If you look closely (*try a large size, low bleed setting above*), there are places where black dots are supposed to be but actually contain a different colour.
-      
-      This is due to the relatively simple CSS method used to emulate the halftone effect, which will be covered next.
+      <halftone-demo :mediasrc="url('flowers.jpg')" separate-k size="12" bleed="0.2" can-resize can-change-bleed />
+
+      There are several ways to do this in CSS. The above is a bit more advanced with 2-3 extra divs. I’ll try to show a simple method, next.
 
       ## The method
 
-      To keep it simple, let’s start with a black-and-white image. The same principle should apply to other colors, and it’s easy to layer in additional colors.
+      To keep it simple, let’s start with a black-and-white image. It should be easy to layer in additional colors with the same principle.
 
-      <halftone-demo :imgsrc="url('flowers.jpg')" grayscale size="8" />
+      <halftone-demo :mediasrc="url('flowers.jpg')" grayscale size="8" />
 
       Actually, let’s start with a simpler image. A gradient, to illustrate how halftone works in the first place.
 
-      <halftone-demo :imgsrc="url('gradient.jpg')" grayscale bleed="1.5" can-resize can-change-bleed />
+      <halftone-demo :mediasrc="url('gradient.jpg')" grayscale bleed="1.5" can-resize can-change-bleed />
 
-      A halftone pattern is simply an array of ink dots of varying size, simulating the appearance of smooth gradiation of tones using just one discrete ink. In the example above, dots in the darker areas are larger than dots in the lighter areas. Large dots would bleed into each other, creating the effect of negative dots.
+      A [halftone](https://en.wikipedia.org/wiki/Halftone) pattern is an array of ink dots simulating the appearance of smooth gradiation of tones using just two pure tones (pure black ink and pure white background in this case). By varying the size of the dots, the average ink coverage in a given area simulates lighter or darker tones in that area.
+      
+      Dots large enough would bleed into each other, creating the effect of negative dots.
 
       Dot size and bleed can be emulated in one go using two simple image processing operations, **screen** and **threshold**.
 
       The first step is to *screen* the source image (in this case, the gradient) with a *blurry halftone pattern*.
       
-      *Screen* is a blend operation that operates on the pixels of the source image and the overlay image, with some kind of an inverted multiplication formula. Essentially, it lightens light areas multiplicatively.
+      **Screen** is an operation that mixes the pixels of the source image and the overlay image using some kind of an inverted multiplication formula. Essentially, it *lightens lighter areas multiplicatively*.
       
-      And that is why the blurry halftone overlay must be blurry. It makes the screen operation effectively *shrink the dots in lighter areas*.
+      Because the dots are blurry, the screen operation gives us smaller dots in lighter areas on the original image and bigger dots in darker areas. Another way to put it is, lighter images chip more away from dots’ fringes.
 
       <div class="multiplication">
         <div class="multiplication-pattern-behind"></div>
@@ -96,13 +96,18 @@
         }
       </style>
 
-      This can be done via CSS `mix-blend-mode: screen`.
+      This operation is done via CSS `mix-blend-mode: screen`.
       
-      The dot pattern is just a `radial-gradient` as a repeated `background-image`.
+      The blurry dot pattern is generated using a `radial-gradient` as a repeated `background-image`, like this:
 
-      The next step is to *threshold* the resulting image. That is, convert the image into pure black & pure white pixels. Dark pixels become fully black, and light pixels become white &mdash; according to some defined threshold between light vs dark.
+      <code-block language="css" code="
+background-image: radial-gradient(14px at 50% 50%, black, white);
+background-size: 20px 20px;
+" />
 
-      This creates the signature ink matrix look.
+      The next step is to **threshold** the resulting image. That is, convert the image into pure black & pure white pixels. Dark pixels become fully black, and light pixels become white &mdash; according to some defined threshold between light vs dark.
+
+      This creates the signature black-ink-matrix-on-white-paper look.
 
       <div class="thresholding">
         <div class="thresholding-before"></div>
@@ -146,9 +151,9 @@
         }
       </style>
 
-      In CSS, there is no threshold filter, but it can be simulated by applying an extremely high contrast filter, pushing pixel values to the extremes of pure white and pure black. Effectively the same result as thresholding. In code, it’s essentially a `filter: contrast(999)`.
+      In CSS, there is no threshold filter, but it can be simulated by applying an extremely high **contrast** filter, pushing pixel values to the extremes of pure white and pure black. Effectively the same result as thresholding. In code, that’s simply a `filter: contrast(999)`.
 
-      Another thing we can add is a blur filter, *just before* the thresholding operation. This emulates surface tension of the ink, or something.
+      Another thing we can add is a **blur** filter, *just before* the thresholding operation. This emulates surface tension of the ink, or something.
 
       <div class="blurred-thresholding">
         <div class="blurred-thresholding-sample"></div>
@@ -186,16 +191,17 @@
         }
       </style>
 
-      The basic black-and-white solution that we have so far would be something like the following:
+      Let’s take a moment to look at the basic black-and-white solution so far:
 
       <code-block language="html" code="
 <div class=&quot;halftone&quot;>
-  <img>
+  <img src=...>
 </div>
 
 <style>
   .halftone {
     position: relative;
+    /* brightness controls the threshold point */
     filter: brightness(0.8) blur(3px) contrast(999);
   }
   .halftone::after {
@@ -210,7 +216,7 @@
 
       ## Colours may yeet knowingly
 
-      Adding colours is easy. Just add CMY dots to the overlay to complete the CMYK primary colors of ink! Make sure to stagger the dots so they are distributed evenly. How to stagger them well is left as an exercise to the dear reader, you.
+      When you get the black ink dots going, adding the rest of the colours is easy. Just add a set of dots for each of CMY &mdash; cyan, magenta, and yellow, the “primary colours” of ink &mdash; to complete the [CMYK](https://en.wikipedia.org/wiki/CMYK_color_model)! Make sure to stagger the dots so they are distributed evenly. How to stagger them well is left as an exercise to the dear reader, you.
 
       <code-block language="css" code="
 background:
@@ -220,17 +226,49 @@ background:
   radial-gradient(10px at something, #ff0, white);
 " />
 
-      This will work just as well because the `contrast` filter operates on each RGB channel independently. The colours CMY &mdash; cyan <span class="cmyk-color" style="color:#0ff">(#0ff)</span>, magenta <span class="cmyk-color" style="color:#f0f">(#f0f)</span>, and yellow <span class="cmyk-color" style="color:#ff0">(#ff0)</span> &mdash; are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the `contrast` filter produces a similar thresholding effect to each colour independently and simultaneously!
+      These will work just as well as black because the `contrast` filter operates on each RGB channel independently. The colours of cyan <span class="cmyk-color" style="color:#0ff">(#0ff)</span>, magenta <span class="cmyk-color" style="color:#f0f">(#f0f)</span>, and yellow <span class="cmyk-color" style="color:#ff0">(#ff0)</span> are at their own extremes in each RGB channel, just like black (#000) and white (#fff). Thus, the `contrast` filter produces a similar thresholding effect to each colour independently and simultaneously!
 
-      <box-note>As noted, this is not very accurate, mainly due to the native operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But this is good enough and close enough to the real thing.</box-note>
+      <box-note>This is not very accurate, mainly due to the operations being in RGB, not CMY. An accurate simulation would be to apply thresholding to each channel in some CMY space via JS or maybe WebGL. But this is good enough and close enough to the real thing.</box-note>
 
-      Aaand that’s it. Halftone effect with a single div wrapper.
+      Here’s the result&hellip;
 
-      The demo in these pages have two overlay divs to achieve better staggering of the dots (involves transform: rotations). You can even have a div for each of CMYK to achieve better results!
+      <blog-media :src="url('no-ink-mixing.png')" alt="halftone effect with only magenta ink visible" />
 
-      Practcally, you only need to separate the K layer (black) with its own greyscale copy of the source image to clean up the accuracy of the dots.
+      Why is only magenta showing? Well, you see, the magenta layer is the top layer in that `background-image` list! The other layers are hidden beneath the magenta layer. How do we combine these ink layers? Maybe use `transparent` instead of `white`?
 
-      <halftone-demo :imgsrc="url('eye.jpg')" size="20" can-disable can-separate-k can-resize can-change-bleed can-rotate />
+      To mix the four layers of ink correctly, you must use the **multipy** blend mode to simulate how inks mix together ([subtractive colour mixing](https://en.wikipedia.org/wiki/Subtractive_color)).
+      
+      Since we’re mixing `background-image`s together, we use this property: `background-blend-mode: multiply`.
+
+      <halftone-demo :mediasrc="url('flowers.jpg')" size="8" can-resize />
+
+      Aaand that’s it! Simple Halftone effect with a single div wrapper!
+
+      <box-note>A minor point, but the demo above uses twos separate overlay divs to achieve better dot staggering. A bit of rotation helps.</box-note>
+
+      But did you notice anything wrong? There’s a weird magenta pattern on that flower petal. There are more magenta dots than expected! 🤔
+
+      Apparently, the black ink was turning into the wrong colour. I think the problem was: coloured source image + black dot pattern = coloured dots! Colour is contagious!
+
+      What I did to fix this was separate the K layer (black), using its own greyscale copy of the source image. Here’s comparison where you can toggle that improved version:
+
+      <halftone-demo :mediasrc="url('eye.jpg')" size="20" can-disable can-separate-k can-resize can-change-bleed can-rotate />
+
+      There are more ways to go about this, with different qualities and levels of realism. I think the single-div solution is actually fine, to the untrained and unaided eye. And the above ‘separate-K’ version should be more than enough for all cases.
+
+      ## Gallery
+
+      To finish with, here are a couple more demos!
+
+      <halftone-demo :mediasrc="url('sydney.jpg')" separate-k can-disable can-separate-k can-resize can-change-bleed can-rotate />
+
+      <halftone-demo :mediasrc="url('wheel.jpg')" separate-k can-disable can-separate-k can-resize can-change-bleed can-rotate />
+
+      <halftone-demo :mediasrc="url('sunflower.jpg')" separate-k can-disable can-separate-k can-resize can-change-bleed can-rotate />
+
+      <halftone-demo :mediasrc="url('waves.mp4')" separate-k can-disable can-separate-k can-resize can-change-bleed can-rotate />
+
+      P.S. Please don’t look at the demos’ source code. It’s terrible.
     </markdown>
   </blog-page>
 </html>
