@@ -35,13 +35,15 @@ git worktree add -f prod origin/master
 node scripts/deploy/generate-rss.js
 
 # Copy build files to prod
-rsync -Pr --del out/site/ prod/docs/
+rsync -Pr --del out/site/ prod/docs/s
 
+# todo: move to top-level
 # Copy static files to prod
 rsync -Pr prod-static/ prod/
 
+# todo: move to top-level
 # Copy github files to prod
-rsync -Pr --del .github/ prod/.github/
+rsync -Pr --del ../.github/ prod/.github/
 
 # Commit prod changes
 cd prod
