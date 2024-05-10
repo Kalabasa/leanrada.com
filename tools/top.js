@@ -8,6 +8,5 @@ module.exports = {
       throw new Error("Unexpected top directory!");
     }
     process.chdir(top.toString().trim());
-    console.log(">", process.cwd());
   },
 };

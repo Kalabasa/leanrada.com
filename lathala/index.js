@@ -19,7 +19,7 @@ import { execSync } from "node:child_process";
 const require = createRequire(import.meta.url);
 
 goTop();
-const topDir = path.resolve();
+console.log(">", process.cwd());
 
 const args = arg({
   "--dry-run": Boolean,
@@ -31,6 +31,12 @@ const argDirs = args._;
 const rsyncArgs =
   " --checksum --del --progress --recursive" +
   (args["--dry-run"] ? " --dry-run" : "");
+
+function exe(cmd) {
+  return execSync(cmd, {
+    stdio: "inherit",
+  });
+}
 
 // Read configs
 const configs = glob
@@ -92,7 +98,7 @@ for (const argDir of argDirs) {
     )
     .map((otherDir) => ` --exclude '${otherDir}'`);
   commands.push(
-    'rsync' +
+    "rsync" +
       rsyncArgs +
       excludes +
       ` '${path.relative(".", srcDir)}/'` +
@@ -118,7 +124,7 @@ try {
 
   // Run commands
   for (const command of commands) {
-    execSync(command, { stdio: "inherit" });
+    exe(command);
   }
 } finally {
   // Clean up?
@@ -136,24 +142,40 @@ if (!args["--no-deploy"]) {
 
   try {
     rmSync(wwwProdDir, { recursive: true, force: true });
-    execSync("git fetch", { stdio: "inherit" });
-    execSync(
-      `git worktree add -f ${path.relative(".", wwwProdDir)} origin/master`,
-      { stdio: "inherit" }
-    );
+    exe("git fetch");
+    exe(`git worktree add -f ${path.relative(".", wwwProdDir)} origin/master`);
 
     closeSync(openSync(`${wwwProdDir}/.nojekyll`, "a"));
 
-    execSync(`rsync ${rsyncArgs} '.github/' '${wwwProdDir}/.github/'`, {
-      stdio: "inherit",
-    });
-    execSync(
-      `rsync ${rsyncArgs} '${wwwStagingDir}/' '${wwwProdDir}/docs/'`,
-      { stdio: "inherit" }
-    );
+    exe(`rsync ${rsyncArgs} '.github/' '${wwwProdDir}/.github/'`);
+    exe(`rsync ${rsyncArgs} '${wwwStagingDir}/' '${wwwProdDir}/docs/'`);
+
+    chdir(wwwProdDir);
+    exe(`git add .`);
+
+    let hasDiff = false;
+    try {
+      // exits with 1 if there were differences and 0 means no differences.
+      exe("git diff-index --cached --quiet HEAD");
+    } catch (e) {
+      hasDiff = true;
+      if (e.status !== 1) throw e;
+    }
+
+    if (hasDiff) {
+      exe("git config extensions.worktreeConfig true");
+      exe(
+        "git config --worktree user.email 'Kalabasa@users.noreply.github.com'"
+      );
+      exe("git config --worktree user.name 'Kalabasa'");
+      exe(`git commit -m 'Deploy ${argDirs.join(", ")}'`);
+      exe("git push origin HEAD:master");
+    } else {
+      console.log("No changes to deploy");
+    }
   } finally {
     goTop();
-    // rmSync(wwwProdDir, { recursive: true });
-    execSync("git worktree prune", { stdio: "inherit" });
+    rmSync(wwwProdDir, { recursive: true });
+    exe("git worktree prune");
   }
 }
