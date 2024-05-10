@@ -7,21 +7,30 @@ import {
   rmSync,
   statSync,
   default as fs,
+  openSync,
+  closeSync,
 } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { cwd, exit, stdin, stdout } from "node:process";
+import { chdir, cwd, exit, stdin, stdout } from "node:process";
 import { createInterface } from "node:readline/promises";
 import { goTop } from "../tools/top.js";
 import { execSync } from "node:child_process";
 const require = createRequire(import.meta.url);
 
 goTop();
+const topDir = path.resolve();
 
 const args = arg({
   "--dry-run": Boolean,
+  "--no-prepare": Boolean,
+  "--no-deploy": Boolean,
 });
 const argDirs = args._;
+
+const rsyncArgs =
+  " --checksum --del --progress --recursive" +
+  (args["--dry-run"] ? " --dry-run" : "");
 
 // Read configs
 const configs = glob
@@ -33,6 +42,8 @@ const configs = glob
   .sort((a, b) => a.dstDir.length - b.dstDir.length);
 
 const wwwDir = path.resolve("www");
+const wwwStagingDir = `${wwwDir}/staging`;
+const wwwProdDir = `${wwwDir}/prod`;
 
 // Pre-process commands
 const commands = [];
@@ -47,7 +58,7 @@ for (const argDir of argDirs) {
 
   const rootDir = path.resolve(config.rootDir);
   const srcDir = path.resolve(rootDir, config.srcDir);
-  const dstDir = path.resolve(wwwDir, config.dstDir);
+  const dstDir = path.resolve(wwwStagingDir, config.dstDir);
   const prepareScriptPath =
     config.prepare && path.resolve(rootDir, config.prepare);
 
@@ -57,7 +68,7 @@ for (const argDir of argDirs) {
     continue;
   }
 
-  if (prepareScriptPath) {
+  if (!args["--no-prepare"] && prepareScriptPath) {
     const stat = statSync(prepareScriptPath);
     if (!stat.isFile || !(stat.mode & fs.constants.S_IXUSR)) {
       console.error(
@@ -75,13 +86,14 @@ for (const argDir of argDirs) {
     .filter(
       (otherDir) =>
         config.dstDir !== otherDir &&
-        !path.relative(dstDir, path.resolve(wwwDir, otherDir)).startsWith("..")
+        !path
+          .relative(dstDir, path.resolve(wwwStagingDir, otherDir))
+          .startsWith("..")
     )
-    .map((otherDir) => `--exclude '${otherDir}'`)
-    .join(" ");
+    .map((otherDir) => ` --exclude '${otherDir}'`);
   commands.push(
-    `rsync -Pr --del ` +
-      (args["--dry-run"] ? " --dry-run" : "") +
+    'rsync' +
+      rsyncArgs +
       excludes +
       ` '${path.relative(".", srcDir)}/'` +
       ` '${path.relative(".", dstDir)}/'`
@@ -92,24 +104,56 @@ if (invalidState || !commands.length) {
   exit(1);
 }
 
-// Confirm
+// Confirm run
 console.log(`Preview: \n${commands.map((cmd) => "> " + cmd).join("\n")}`);
 const rl = createInterface({ input: stdin, output: stdout });
-const answer = await rl.question("Run commands? (y/n) ");
+const runCommandsAnswer = await rl.question("Run commands? (y/n) ");
 rl.close();
-if (answer.toLowerCase() !== "y") exit(0);
+if (runCommandsAnswer.toLowerCase() !== "y") exit(0);
 
 // Setup working directory
 try {
   mkdirSync(wwwDir, { recursive: true });
+  mkdirSync(wwwStagingDir, { recursive: true });
 
   // Run commands
   for (const command of commands) {
     execSync(command, { stdio: "inherit" });
   }
 } finally {
-  // Clean up
-  // if (!args["--clean-"]) {
-  //   rmSync(wwwDir, { recursive: true });
-  // }
+  // Clean up?
+}
+
+if (!args["--no-deploy"]) {
+  // Confirm deploy
+  console.log(
+    `Website files in ${path.relative(".", wwwStagingDir)} up to date`
+  );
+  const rl = createInterface({ input: stdin, output: stdout });
+  const deployWebsiteAnswer = await rl.question("Deploy website? (y/n) ");
+  rl.close();
+  if (deployWebsiteAnswer.toLowerCase() !== "y") exit(0);
+
+  try {
+    rmSync(wwwProdDir, { recursive: true, force: true });
+    execSync("git fetch", { stdio: "inherit" });
+    execSync(
+      `git worktree add -f ${path.relative(".", wwwProdDir)} origin/master`,
+      { stdio: "inherit" }
+    );
+
+    closeSync(openSync(`${wwwProdDir}/.nojekyll`, "a"));
+
+    execSync(`rsync ${rsyncArgs} '.github/' '${wwwProdDir}/.github/'`, {
+      stdio: "inherit",
+    });
+    execSync(
+      `rsync ${rsyncArgs} '${wwwStagingDir}/' '${wwwProdDir}/docs/'`,
+      { stdio: "inherit" }
+    );
+  } finally {
+    goTop();
+    // rmSync(wwwProdDir, { recursive: true });
+    execSync("git worktree prune", { stdio: "inherit" });
+  }
 }
