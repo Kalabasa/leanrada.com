@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="//www.instagram.com/embed.js" async=""></script>
+  <title>Dimensions - Part 1: Generative art · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <link rel="alternate" type="application/rss+xml" title="leanrada.com notes" href="/rss.xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  .reactions {
+    display: grid;
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+    justify-content: center;
+    justify-items: center;
+    gap: 6px;
+    border: solid 1px var(--card-clr);
+    border-radius: 6px;
+    padding: 18px;
+    font-family: var(--default-font);
+  }
+
+  .reaction-title {
+    grid-column: span 5;
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+
+  .reaction-title-error {
+    color: var(--clr1);
+  }
+
+  .reaction-heart-btn,
+  .reaction-heart-count {
+    --reaction-color: #bf1852;
+  }
+  .reaction-fire-btn,
+  .reaction-fire-count {
+    --reaction-color: #c68306;
+  }
+  .reaction-bubble-btn,
+  .reaction-bubble-count {
+    --reaction-color: #07bd80;
+  }
+  .reaction-sun-btn,
+  .reaction-sun-count {
+    --reaction-color: #a09b00;
+  }
+  .reaction-cloud-btn,
+  .reaction-cloud-count {
+    --reaction-color: #8063ff;
+  }
+
+  .reaction-count {
+    position: relative;
+    font-size: 18px;
+    width: 100%;
+    height: 18px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .reaction-count-prev,
+  .reaction-count-next {
+    position: relative;
+    height: 100%;
+    animation: reaction-tick 0.3s var(--ease) forwards;
+  }
+
+  @keyframes reaction-tick {
+    from {
+      top: 0;
+    }
+    to {
+      top: -100%;
+    }
+  }
+
+  .reaction-count.reaction-spark::after {
+    position: absolute;
+    content: "";
+    width: 36px;
+    height: 36px;
+    left: calc(50% - 18px);
+    top: calc(100% - 18px);
+    border-radius: 50%;
+    animation: reaction-spark 0.1s ease-out;
+  }
+
+  @keyframes reaction-spark {
+    from {
+      box-shadow: inset 0 0 0 18px var(--reaction-color);
+    }
+    to {
+      box-shadow: inset 0 0 0 0px var(--reaction-color);
+    }
+  }
+
+  .reaction-btn {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+    box-sizing: content-box;
+    cursor: pointer;
+  }
+  .reaction-btn:focus-visible,
+  .reaction-btn:hover {
+    background: var(--reaction-color);
+  }
+  .reaction-btn:focus-visible .reaction-icon,
+  .reaction-btn:hover .reaction-icon {
+    animation-duration: 0.5s;
+  }
+  .reaction-btn:active .reaction-icon {
+    position: relative;
+    top: 2px;
+  }
+
+  .reaction-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    background-image: url("/icons/reactions.png");
+    background-size: 500% 200%;
+    animation: reaction-icon 1.5s steps(2) infinite;
+  }
+  .reactions-invisible .reaction-icon {
+    background-image: none;
+  }
+  .reaction-heart-btn .reaction-icon {
+    --sheet-x: 25%;
+  }
+  .reaction-bubble-btn .reaction-icon {
+    --sheet-x: 0%;
+  }
+  .reaction-sun-btn .reaction-icon {
+    --sheet-x: 100%;
+  }
+  .reaction-cloud-btn .reaction-icon {
+    --sheet-x: 75%;
+  }
+  .reaction-fire-btn .reaction-icon {
+    --sheet-x: 50%;
+  }
+
+  @keyframes reaction-icon {
+    0% {
+      background-position: var(--sheet-x) 0%;
+    }
+    100% {
+      background-position: var(--sheet-x) 200%;
+    }
+  }
+</style>
+  <style>
+  .blog-media {
+    position: relative;
+    text-align: center;
+    /* external margin because it’s expected to be in an article */
+    margin: 36px 0;
+  }
+  .blog-media-bleed {
+    margin: min(36px, 5vw, 90px) 0;
+    max-height: 80vh;
+  }
+
+  .blog-media-element {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 18px;
+    box-sizing: border-box;
+  }
+  .blog-media-bleed .blog-media-element {
+    position: relative;
+    left: 50%;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+  .blog-media-windowed .blog-media-element {
+    display: block;
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .blog-media-caption {
+    display: block;
+    font-size: 15px;
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 12px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: top;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    padding: 0 calc(min(18px,  -18px + 8vw));
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  @media (max-width: 600px) {
+    .main-header {
+      height: 90px;
+      padding-top: 6px;
+    }
+    .main-header-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+      row-gap: 6px;
+    }
+    .main-header-icon {
+      display: none;
+    }
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.4;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .blog-page {
+    margin: auto;
+    overflow: hidden;
+  }
+
+  .content {
+    margin: auto;
+    padding: 0 18px 60px;
+    width: 100%;
+    max-width: 700px;
+    font-family: var(--reading-font, sans-serif);
+    font-size: 16px;
+    line-height: 2.2;
+    letter-spacing: 0.02em;
+    color: #ddd;
+    box-sizing: border-box;
+  }
+
+  .postcontent {
+    margin: auto;
+    padding: 0 0 60px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .postcontent-narrow {
+    margin: auto;
+    padding: 0 18px;
+    width: 100%;
+    max-width: 700px;
+    box-sizing: border-box;
+  }
+
+  .blog-signature {
+    position: relative;
+    margin: 0 0 60px;
+    line-height: 21px;
+  }
+  .blog-signature::before {
+    content: "❝";
+    position: absolute;
+    left: -15px;
+    top: 0;
+    font-size: 60px;
+    opacity: 0.2;
+  }
+  .blog-signature a {
+    font-weight: bold;
+  }
+  .blog-signature-name {
+    white-space: nowrap;
+  }
+  .blog-signature-img {
+    position: relative;
+    top: 3px;
+  }
+
+  .markdown > h1,
+  .markdown > h2,
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    margin: 48px 0 36px;
+    font-family: var(--display-font);
+    font-weight: normal;
+    font-style: italic;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .markdown > h1 {
+    text-align: center;
+    font-size: 200%;
+  }
+  .markdown > h2 {
+    font-size: 150%;
+  }
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    font-size: 120%;
+    font-weight: bold;
+  }
+
+  .markdown > p {
+    margin: 36px 0;
+  }
+  .markdown .box-note > p {
+    margin: 18px 0;
+  }
+  .markdown .box-note > p:first-child {
+    margin-top: 0;
+  }
+  .markdown .box-note > p:last-child {
+    margin-bottom: 0;
+  }
+
+  .markdown-table,
+  .markdown .horizontal-scroll {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .markdown-table > table {
+    min-width: 100%;
+    box-sizing: border-box;
+    border-collapse: collapse;
+    background-color: var(--card-clr);
+    border-radius: 12px;
+  }
+  .markdown-table > table th,
+  .markdown-table > table td {
+    min-width: min(25vw, 8ch);
+    box-sizing: border-box;
+    text-align: start;
+    padding: 9px 6px;
+    padding-inline-end: 18px;
+    border-bottom: solid 1px #444;
+  }
+  .markdown-table > table th:first-child,
+  .markdown-table > table td:first-child {
+    padding-left: 12px;
+  }
+  .markdown-table > table th:last-child,
+  .markdown-table > table td:last-child {
+    padding-right: 12px;
+  }
+  .markdown-table > table > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+
+  .markdown > hr {
+    width: 36px;
+    margin: 90px auto;
+    border: solid 1.5px #ccc;
+    background: #ccc;
+    border-radius: 3px;
+  }
+
+  .markdown code:not([class]):not([class]) {
+    display: inline-block;
+    padding: 0 6px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-style: italic;
+  }
+  .markdown > pre:not([class]) > code:not([class]) {
+    display: block;
+    padding: 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 15px;
+    font-style: normal;
+    overflow-x: auto;
+    background: var(--card-clr);
+  }
+
+  .markdown > blockquote {
+    position: relative;
+    margin: 0;
+    padding: 18px 24px;
+    border-radius: 18px;
+    border: solid 1px var(--clr0);
+    font-size: 21px;
+  }
+  .markdown > blockquote::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 0;
+    height: 24px;
+    width: 24px;
+    border-bottom: solid 1px var(--clr0);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote::after {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 24px;
+    bottom: 18px;
+    width: 24px;
+    border-top-right-radius: 24px;
+    border: solid var(--clr0);
+    border-width: 1px 1px 0 0;
+    box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote > :first-child {
+    margin-top: 0;
+  }
+  .markdown > blockquote > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown > blockquote cite {
+    display: block;
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: inherit;
+  }
+  .markdown > blockquote cite::before {
+    content: "—";
+  }
+
+  .markdown > iframe,
+  .markdown > p > iframe {
+    max-width: calc(100vw - 18px);
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .markdown .center {
+    text-align: center;
+  }
+  .markdown .center-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+  .markdown .bleed {
+    position: relative;
+    left: 50%;
+    width: 100vh;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+
+  /* todo: convert to component <caption>, reuse across <blog-media> */
+  .markdown .caption {
+    display: block;
+    font-size: 15px;
+    text-align: center;
+  }
+</style>
+  <style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
+  <script async="" src="/scripts/cursor.js"></script>
+</head>
+
+
+
+<body>
+
+  <span hidden="" class="p-name">Dimensions - Part 1: Generative art</span>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/notes/" class="main-header-item ">Notes</a>
+        <a href="/about/" class="main-header-item ">About</a>
+        <img class="main-header-icon main-header-icon-yay" src="/icons/yay_sheet.png" alt="">
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/music/" class="main-header-item ">Music</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page h-entry">
+
+        <div class="content e-content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <h1 id="dimensions">Dimensions</h1>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_0_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="example" src="/wares/dimensions/media/dimensions_0.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #a8c8a8">
+            </div>
+            </p>
+            <h2 id="part-1-generative-art">Part 1. Generative art</h2>
+            <p><a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Generative_art"><strong>Generative art</strong></a> is a kind of art where a set of rules creates the artwork, instead of the artist rendering it manually.</p>
+            <p>These rules are usually in the form of computer programs written by the artist.</p>
+            <p>Since I know more about coding than actual artistic skills, this is exactly the right stuff for this project.</p>
+            <div class="center-flex">
+              <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/BnSBALPBGaF/" data-instgrm-version="12" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
+                <div style="padding:16px;"> <a class="anchor-plain" href="https://www.instagram.com/p/BnSBALPBGaF/" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank">
+                    <div style=" display: flex; flex-direction: row; align-items: center;">
+                      <div style="background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;"></div>
+                      <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;">
+                        <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;"></div>
+                        <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;"></div>
+                      </div>
+                    </div>
+                    <div style="padding: 19% 0;"></div>
+                    <div style="display:block; height:50px; margin:0 auto 12px; width:50px;"><svg width="50px" height="50px" viewBox="0 0 60 60" version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                          <g transform="translate(-511.000000, -20.000000)" fill="#000000">
+                            <g>
+                              <path d="M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631"></path>
+                            </g>
+                          </g>
+                        </g>
+                      </svg></div>
+                    <div style="padding-top: 8px;">
+                      <div style=" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;"> View this post on Instagram</div>
+                    </div>
+                    <div style="padding: 12.5% 0;"></div>
+                    <div style="display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;">
+                      <div>
+                        <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);"></div>
+                        <div style="background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;"></div>
+                        <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);"></div>
+                      </div>
+                      <div style="margin-left: 8px;">
+                        <div style=" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;"></div>
+                        <div style=" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)"></div>
+                      </div>
+                      <div style="margin-left: auto;">
+                        <div style=" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);"></div>
+                        <div style=" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);"></div>
+                        <div style=" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);"></div>
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;">
+                      <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;"></div>
+                      <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;"></div>
+                    </div>
+                  </a>
+                  <p style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;"><a class="anchor-plain" href="https://www.instagram.com/p/BnSBALPBGaF/" style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;" target="_blank">A post shared by Tyler Hobbs (@tylerxhobbs)</a> on <time style=" font-family:Arial,sans-serif; font-size:14px; line-height:17px;" datetime="2018-09-03T22:55:42+00:00">Sep 3, 2018 at 3:55pm PDT</time></p>
+                </div>
+              </blockquote>
+              <span class="caption">Example of generative art</span>
+            </div>
+
+            <p>One of the simpler kinds of generative art revolves around <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Tessellation"><strong>tessellations</strong></a> or tilings.</p>
+            <p>The main idea was that the whole image would be a random arrangement of square tiles. The tiles would be laid out side-by-side with no overlaps nor gaps. The resulting geometric pattern itself would be the source of aesthetic value.</p>
+            <p>I wanted to symbolize <em>Creativity</em>, one of the event’s themes. Creative tools and instruments served as inspiration for the tiles’ appearances.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_notes1_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="notes for the second attempt" src="/wares/dimensions/media/dimensions_notes1.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2; background: #f8f8f8">
+            </div>
+            </p>
+            <p>Pen, paper, pencil, brush, and tablet: these would become the building blocks of the piece.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_notes2_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_notes2.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1.001230012300123; background: #f8f8f8"><span class="blog-media-caption">Testing some random tiling</span>
+            </div>
+            </p>
+            <p>In designing the individual tiles I restricted them to one basic shape — a quarter circle — as basis for the tiles’ forms.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_notes0_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_notes0.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #f8f8f8"><span class="blog-media-caption">Studies of how different tilesets look in the same tiling compositions</span>
+            </div>
+            </p>
+            <p>The point of limiting to one basic shape was to create unity across the whole piece and mitigate chaos from the randomness of the algorithm.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_tiletypes_620.generated.jpg 620w,/wares/dimensions/media/dimensions_tiletypes_664.generated.jpg 664w" sizes="not (min-width:664px) 620px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_tiletypes.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 4.428571428571429; background: #080808"><span class="blog-media-caption">Tile types from left to right: a paintbrush head, paper with dog-ear fold, pencil tip, fountain pen tip, and a tablet</span>
+            </div>
+            </p>
+            <p>The tiles’ curves should seamlessly connect with neighboring tiles, forming more complex shapes like semicircles and S-curves.</p>
+            <p>After some more doodling around, it was time to code!</p>
+            <hr>
+            <h2 id="rendering-the-image">Rendering the image</h2>
+            <p>The image generator was implemented in JavaScript with <a target="_blank" class="text-link " href="https://vuejs.org/"><strong>Vue.js</strong></a>. The individual shapes themselves were implemented using CSS (lots of <code>border-radius</code>!).</p>
+            <p>The image generation process worked along these lines:</p>
+            <p>Make a 9in&nbsp;×&nbsp;12in board, subdivided into a 6&nbsp;×&nbsp;8 grid of tiles.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_grid_400.generated.jpg 400w" sizes=" 400px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_grid.jpg" spec="100% [400) 400" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #c8c8c8"><span class="blog-media-caption">.board { display: grid }</span>
+            </div>
+            </p>
+            <p><small class="small-block">That day I learned that CSS inches don’t actually match physical inches on a computer screen.</small></p>
+            <p>For each cell, randomly render any of the five tile types:</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_1tiles_400.generated.jpg 400w" sizes=" 400px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_1tiles.jpg" spec="100% [400) 400" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #1808f8"><span class="blog-media-caption">Random tiles added with placeholder colors. Board truncated to a square here for brevity.</span>
+            </div>
+            </p>
+            <p>Each tile is randomly rotated in 90-degree increments, or flipped horizontally or vertically.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_2tiles_400.generated.jpg 400w" sizes=" 400px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_2tiles.jpg" spec="100% [400) 400" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #1808f8"><span class="blog-media-caption">Tiles randomly oriented</span>
+            </div>
+            </p>
+            <p>You may start seeing some semicircles and larger contours forming across tiles.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_tileedges_400.generated.jpg 400w" sizes=" 400px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_tileedges.jpg" spec="100% [400) 400" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #080808"><span class="blog-media-caption">Contours highlighted via edge detector. The effect actually looks cool though. This could’ve been an entirely different direction for the piece!</span>
+            </div>
+            </p>
+            <p>See those other shapes <em>emerging</em> from the five basic tiles? If you squint hard enough, you might be able to see a Pacman, maybe an apple logo, or maybe a bird.</p>
+            <p><em>Emergence</em> is a common feature of generative art. It’s the idea that something more arises from simple systems — whether intentional or coincidental. A good example of emergence is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Fractal_art">fractal art</a>.</p>
+            <p>Anyway, the next step was to pick a palette from a color scheme generator <small>(because everything’s generated!)</small>, and randomly assign each region a color.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_coloring_200.generated.jpg 200w,/wares/dimensions/media/dimensions_coloring_400.generated.jpg 400w" sizes="not (min-width:400px) 200px, 400px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_coloring.jpg" spec="100% [400) 400" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #f8f8f8"><span class="blog-media-caption">Each tile colored randomly</span>
+            </div>
+            </p>
+            <p>Random noise textures were overlayed as well. The textures were generated solely using <a target="_blank" class="text-link " href="https://www.gimp.org/">GIMP</a>’s noise generators and filters. <small>Could’ve implemented a live texture generator into the renderer, but time was limited.</small></p>
+            <p>The result of all the rules above was this:</p>
+            <p>
+            <div class="blog-media blog-media-bleed ">
+              <img srcset="/wares/dimensions/media/dimensions_tfull_600.generated.jpg 600w,/wares/dimensions/media/dimensions_tfull_664.generated.jpg 664w" sizes="not (min-width:664px) 600px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_tfull.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #c87878"><span class="blog-media-caption">First decent result</span>
+            </div>
+            </p>
+            <p>I was pretty happy with the results so far. This one could probably pass as MVP.</p>
+            <p>However, it was kinda monotonous. There was a lack of structure or composition in the image.</p>
+            <p>This is the downside of tile-based algorithms. But nothing that can’t be fixed!</p>
+            <p>I added big off-grid circles, which manifested as different color schemes for intersecting tiles.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_tcircle2_600.generated.jpg 600w,/wares/dimensions/media/dimensions_tcircle2_664.generated.jpg 664w" sizes="not (min-width:664px) 600px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_tcircle2.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #e8e8e8"><span class="blog-media-caption">Circle intersections added</span>
+            </div>
+            </p>
+            <p>It got contrasting regions, which should improve composition. Points of interest also emerged from the intersections between edges, and it broke the monotony of the grid.</p>
+            <p>I implemented this effect by overlaying multiple copies of the board, each copy having a different palette. Then on each copy I applied circular clipping masks (CSS <code>clip-path</code>) that correspond to regions in the image.</p>
+            <p>Next tweak was on color selection. I changed the selection from a uniform random distribution to a <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Normal_distribution">normal distribution</a>.</p>
+            <p>Instead of having equal chances for each color to be picked, colors in the middle of the palette got higher chances of getting picked than those near the ends.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_colorweight_230.generated.jpg 230w,/wares/dimensions/media/dimensions_colorweight_400.generated.jpg 400w" sizes="not (min-width:400px) 230px, 400px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_colorweight.jpg" spec="100% [400) 400" loading="lazy" width="100%" height="" style="aspect-ratio: 1.0454545454545454; background: #f8f8f8"><span class="blog-media-caption">Uniform palette distribution (left) and normal distribution (right, not to scale!)</span>
+            </div>
+            </p>
+            <p>This made some colors more prominent than others, building a hierarchy of colors that produced a less chaotic image.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_tsmall_600.generated.jpg 600w,/wares/dimensions/media/dimensions_tsmall_664.generated.jpg 664w" sizes="not (min-width:664px) 600px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_tsmall.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #e8e8e8"><span class="blog-media-caption">Experimenting with color schemes and tile sizes</span>
+            </div>
+            </p>
+            <p>The image generation algorithm evolved a little more before reaching the final form.</p>
+            <p>
+            <div class="blog-media blog-media-bleed ">
+              <img srcset="/wares/dimensions/media/dimensions_tfinal_600.generated.jpg 600w,/wares/dimensions/media/dimensions_tfinal_664.generated.jpg 664w" sizes="not (min-width:664px) 600px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_tfinal.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #989898"><span class="blog-media-caption">The final form (almost)</span>
+            </div>
+            </p>
+            <p>Generative art is fun! It’s experimental, explorative, and iterative!</p>
+            <p>Going back to the exhibit: each participant can submit a maximum of six pieces. So far I’ve got one. </p>
+            <p>Fortunately, I could just generate more pieces to submit if I wanted!</p>
+            <p>So I randomized the parameters, generated hundreds of instances, and picked some of the good ones.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/wares/dimensions/media/dimensions_renders_664.generated.png 664w" sizes=" 664px" class="blog-media-element " alt="set of random renders" src="/wares/dimensions/media/dimensions_renders.png" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.4774774774774775; background: #f8f8f8">
+            </div>
+            </p>
+            <p>I could’ve randomized the palette each time too, but color is tricky and best left to human eyes.</p>
+            <p>All that’s left was adding the QR code that would link to the augmented reality app.</p>
+            <p>The QR code would connect the physical and the virtual components, making it a seamless single experience.</p>
+            <p>Adding the QR code involved changing the center tiles to a lighter palette before adding in the code, ensuring that the code will be readable in every randomly-generated instance of the piece.</p>
+            <p>
+            <div class="blog-media blog-media-bleed ">
+              <img srcset="/wares/dimensions/media/dimensions_finalset_664.generated.jpg 664w" sizes=" 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_finalset.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 2.296875; background: #080808"><span class="blog-media-caption">The final set</span>
+            </div>
+            </p>
+            <p>And that’s it for the physical prints! The next part is about the non-physical half of the piece, the augmented reality component.</p>
+            <p><a target="_self" class="text-link " href="../part-two-augmented-reality/">Part two: Augmented reality</a></p>
+            <hr>
+            <h3 id="bonus-art-randomized-color-scheme-and-recursive-tiles-edition">Bonus art: randomized color scheme and recursive tiles edition!</h3>
+            <p>This is a post-exhibit version, where I finally figured out color palette generation, and made the tiles recursive.</p>
+            <p>
+            <div class="blog-media blog-media-bleed ">
+              <img srcset="/wares/dimensions/media/dimensions_e1_600.generated.jpg 600w,/wares/dimensions/media/dimensions_e1_664.generated.jpg 664w" sizes="not (min-width:664px) 600px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_e1.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #a8d858"><span class="blog-media-caption">“Frog”</span>
+            </div>
+            </p>
+            <p>
+            <div class="blog-media blog-media-bleed ">
+              <img srcset="/wares/dimensions/media/dimensions_e2_600.generated.jpg 600w,/wares/dimensions/media/dimensions_e2_664.generated.jpg 664w" sizes="not (min-width:664px) 600px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_e2.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #282808"><span class="blog-media-caption">“Coffee”</span>
+            </div>
+            </p>
+            <p>
+            <div class="blog-media blog-media-bleed ">
+              <img srcset="/wares/dimensions/media/dimensions_e3_600.generated.jpg 600w,/wares/dimensions/media/dimensions_e3_664.generated.jpg 664w" sizes="not (min-width:664px) 600px, 664px" class="blog-media-element " alt="" src="/wares/dimensions/media/dimensions_e3.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.75; background: #f8f8f8"><span class="blog-media-caption">“Earth”</span>
+            </div>
+            </p>
+            <hr>
+            <p><a target="_self" class="text-link " href="../part-two-augmented-reality/">Part two: Augmented reality</a>
+            </p>
+
+          </div>
+
+        </div>
+        <div class="postcontent">
+          <div class="postcontent-narrow">
+            <p class="blog-signature">Thanks for reading! I like creating <a target="_self" class="text-link " href="/wares/">interactive things</a>, meta-creating <a target="_self" class="text-link " href="/art/">art</a> and writing interactive <a target="_self" class="text-link " href="/notes">blogs</a>! Oh, and before you go, sign <a target="_self" class="text-link " href="/guestbook/">the guestbook</a>! See you around! <span class="blog-signature-name"><i>—Lean</i><img class="blog-signature-img" src="/icons/sig.png" alt="liyan"></span></p>
+            <reactions-client class="reactions reactions-invisible">
+              <h2 class="reaction-title">React to this post</h2>
+              <button class="reaction-btn reaction-heart-btn">
+                <span class="reaction-icon" aria-label="Heart"></span>
+              </button>
+              <div class="reaction-count reaction-heart-count"></div>
+              <button class="reaction-btn reaction-fire-btn">
+                <span class="reaction-icon" aria-label="Fire"></span>
+              </button>
+              <div class="reaction-count reaction-fire-count"></div>
+              <button class="reaction-btn reaction-bubble-btn">
+                <span class="reaction-icon" aria-label="Bubble"></span>
+              </button>
+              <div class="reaction-count reaction-bubble-count"></div>
+              <button class="reaction-btn reaction-sun-btn">
+                <span class="reaction-icon" aria-label="Sun"></span>
+              </button>
+              <div class="reaction-count reaction-sun-count"></div>
+              <button class="reaction-btn reaction-cloud-btn">
+                <span class="reaction-icon" aria-label="Cloud"></span>
+              </button>
+              <div class="reaction-count reaction-cloud-count"></div>
+              <div class="reaction-error"></div>
+            </reactions-client>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/about/">About</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/music/">Music</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          <span style="display: inline-block">
+            ·
+            <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook!</a>
+            <br>
+            · Drop a
+            <a target="_blank" class="main-footer-link" href="mailto:mail%40leanrada.com">
+              mail＠leanrada·com
+            </a>
+            <br>
+          </span>
+        </p>
+        <p class="main-footer-line">
+          (C) 2015-2024 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source</a>.
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://mastodon.social/@Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="Mastodon" src="/icons/mastodon.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+
+
+  <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
+  <script defer="" src="/scripts/blog-media.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+</body>
+</html>

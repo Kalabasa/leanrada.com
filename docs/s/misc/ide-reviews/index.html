@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>IDE reviews · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <link rel="alternate" type="application/rss+xml" title="leanrada.com notes" href="/rss.xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
+  <style>
+  .box-note {
+    display: block;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: solid 2px var(--clr0-dark);
+    box-sizing: border-box;
+  }
+</style>
+  <style>
+  .content-header {
+    font-family: var(--default-font);
+    margin: 90px 0 60px;
+    padding: 0 18px;
+  }
+  @media (max-width: 600px) {
+    .content-header {
+      margin: 60px 0;
+    }
+  }
+
+  .content-header-title {
+    margin: 0 0 6px;
+    font-family: var(--display-font);
+    font-size: 27px;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .content-header-subtitle {
+    margin: 6px 0 0;
+    font-size: 18px;
+    font-style: italic;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 12px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: top;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    padding: 0 calc(min(18px,  -18px + 8vw));
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  @media (max-width: 600px) {
+    .main-header {
+      height: 90px;
+      padding-top: 6px;
+    }
+    .main-header-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+      row-gap: 6px;
+    }
+    .main-header-icon {
+      display: none;
+    }
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.4;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .section {
+    margin: 24px auto 48px;
+    padding: 0 24px;
+    max-width: 800px;
+    box-sizing: border-box;
+  }
+
+  .screenshot {
+    width: 100%;
+  }
+
+  .body,
+  .details {
+    font-family: var(--reading-font);
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  .inline-code {
+    font-family: var(--default-font);
+  }
+
+  .summary {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .ui-notepad {
+    margin-top: 12px;
+    border-style: solid;
+    border-image-source: var(--src);
+    border-image-slice: 69 170 62 175 fill;
+    border-width: 69px 170px 62px 175px;
+  }
+  .content-notepad {
+    position: relative;
+    inset: -15px -147px -17px -168px;
+    width: calc(100% + 147px + 168px);
+    color: black;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+  }
+
+  .ui-flashdevelop {
+    display: grid;
+    grid-template: 48px 1fr 47px / 1fr 249px;
+    grid-template-areas:
+      "top top"
+      "content side"
+      "bottom bottom";
+  }
+  .ui-flashdevelop-top {
+    grid-area: top;
+    background: var(--src) top left;
+  }
+  .ui-flashdevelop-side {
+    grid-area: side;
+    border-style: solid;
+    border-image: var(--src);
+    border-image-slice: 124 1 21 5 fill;
+    border-width: 124px 1px 21px 5px;
+  }
+  .ui-flashdevelop-bottom {
+    grid-area: bottom;
+    background: var(--src) top left;
+  }
+  .content-flashdevelop {
+    grid-area: content;
+    border-style: solid;
+    border-image: var(--src);
+    border-image-slice: 21 1 1 61 fill;
+    border-width: 21px 1px 1px 61px;
+    position: relative;
+    color: black;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+  }
+  @media (max-width: 720px) {
+    .ui-flashdevelop {
+      grid-template-areas:
+        "top top"
+        "content content"
+        "bottom bottom";
+    }
+    .ui-flashdevelop-side {
+      display: none;
+    }
+  }
+
+  .fl-keyword {
+    color: #00f;
+  }
+  .fl-string {
+    color: #808;
+  }
+
+  .ui-code-blocks {
+    margin-bottom: 12px;
+    display: grid;
+    grid-template: 117px 1fr 26px / 208px 1fr;
+    grid-template-areas:
+      "top top"
+      "side content"
+      "bottom bottom";
+  }
+  .ui-code-blocks-top {
+    grid-area: top;
+    display: flex;
+    overflow: hidden;
+    border-radius: 6px 6px 0 0;
+  }
+  .ui-code-blocks-top::after {
+    content: "";
+    width: 100%;
+    border-style: solid;
+    border-image: var(--src);
+    border-image-slice: 117 5 0 580 fill;
+    border-width: 117px 5px 0px 580px;
+  }
+  .ui-code-blocks-side {
+    grid-area: side;
+    border-style: solid;
+    border-image: var(--src);
+    border-image-slice: 144 7 2 3 fill;
+    border-width: 144px 7px 2px 3px;
+  }
+  .ui-code-blocks-bottom {
+    grid-area: bottom;
+    background: var(--src) top left;
+  }
+  .content-code-blocks {
+    grid-area: content;
+    border-style: solid;
+    border-image: var(--src);
+    border-image-slice: 31 2 2 84 fill;
+    border-width: 31px 2px 2px 84px;
+    position: relative;
+    color: #060;
+    font-family: "Ubuntu Mono", "Courier New", Courier, monospace;
+    font-size: 15px;
+  }
+  @media (max-width: 720px) {
+    .ui-code-blocks {
+      grid-template-areas:
+        "top top"
+        "content content"
+        "bottom bottom";
+    }
+    .ui-code-blocks-side {
+      display: none;
+    }
+  }
+
+  .ui-sublime-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .ui-sublime-text-top {
+    grid-area: top;
+    display: flex;
+    overflow: hidden;
+  }
+  .ui-sublime-text-top::after {
+    content: "";
+    width: 100%;
+    border-style: solid;
+    border-image: var(--src);
+    border-image-slice: 34 22 0 227 fill;
+    border-width: 34px 22px 0px 227px;
+  }
+  .content-sublime-text {
+    padding: 8px 80px 8px 48px;
+    background-color: #292922;
+    background-image: var(--src);
+    background-position: top right 8px;
+    background-repeat: no-repeat;
+    color: #f8f8f2;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+  }
+  @media (max-width: 600px) {
+    .content-sublime-text {
+      padding: 8px 8px 8px 48px;
+      background-image: none;
+    }
+  }
+
+  .ui-vsc {
+    display: flex;
+    flex-direction: column;
+  }
+  .ui-vsc-top {
+    grid-area: top;
+    display: flex;
+    overflow: hidden;
+  }
+  .ui-vsc-top::after {
+    content: "";
+    width: 100%;
+    border-style: solid;
+    border-image: var(--src);
+    border-image-slice: 58 82 0 172 fill;
+    border-width: 58px 82px 0px 172px;
+  }
+  .content-vsc {
+    padding: 8px 120px 8px 80px;
+    background-color: #23272e;
+    background-image: var(--src);
+    background-position: top right 24px;
+    background-repeat: no-repeat;
+    color: #abb2bf;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+  }
+  @media (max-width: 600px) {
+    .content-vsc {
+      padding: 8px 8px 8px 80px;
+      background-image: none;
+    }
+  }
+
+  .content-notepad p,
+  .content-flashdevelop p,
+  .content-code-blocks p,
+  .content-sublime-text p,
+  .content-vsc p {
+    margin: 18px 0;
+    margin: 1lh 0;
+  }
+</style>
+  <script async="" src="/scripts/cursor.js"></script>
+</head>
+
+
+<body>
+
+  <span hidden="" class="p-name">IDE reviews</span>
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/notes/" class="main-header-item ">Notes</a>
+        <a href="/about/" class="main-header-item ">About</a>
+        <img class="main-header-icon main-header-icon-yay" src="/icons/yay_sheet.png" alt="">
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/music/" class="main-header-item ">Music</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="content-header">
+        <h1 class="content-header-title p-name">IDE reviews</h1>
+        <div class="content-header-subtitle">Also a history of all the IDEs I’ve ever used</div>
+      </div>
+
+      <section class="section">
+        <h2>Notepad.exe</h2>
+        <span class="box-note ">
+          🟠 Hey! Sometimes the review is embedded <em>inside</em> the editor UI,
+          like this one. Watch out for the insides!
+        </span>
+        <div class="ui-notepad" style="--src:url('/misc/ide-reviews/notepad.png')">
+          <div class="content-notepad">
+            ._____________.<br>
+            | notepad.exe |<br>
+            |________[7/10]<br>
+            <p>
+              Ah, Notepad, the default text editor in Microsoft Windows XP, my OS
+              not-by-choice back when I didn’t know what “programming” was and
+              only cared about making mods for a game called Clonk. The game used
+              a C-like language, but I didn’t know that nor anything about syntax
+              and syntax coloring and other good editor stuff.
+            </p>
+            <p>
+              However, it got the job done. You open a file, you save it. It’s
+              compatible with any programming language, any build tool. In fact
+              it’s not incompatible with anything! Except Unix line endings.
+            </p>
+            <p>
+              Due to its simplicity and speed (tho it’s not really fast when large
+              files), I give it a 7/10. Note that Windowses 7/10 being the only
+              good versions of Windows is purely coincidental.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Macromedia Flash 8</h2>
+        <img srcset="/misc/ide-reviews/macromedia-flash-8_800.generated.png 800w" sizes=" 800px" class="screenshot" alt="screenshot of Macromedia Flash 8" src="/misc/ide-reviews/macromedia-flash-8.png" spec="100% [800) 800" loading="lazy">
+        <p class="body">
+        </p>
+        <details class="details">
+          <summary class="summary">What is Macromedia Flash?</summary>
+          <strong>
+            <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Adobe_Flash">
+              Macromedia Flash</a></strong>, or just Flash, was a Web browser plugin that everyone had back in
+          the day before JS was powerful enough. It was used for animations,
+          interactive experiences, Web games, Web ads, YouTube, you name it. It
+          was the platform of all webapps before the term webapp became a thing.
+          It was also the name of the authoring software, or IDE.
+        </details>
+        <p></p>
+        <p class="body">
+          This IDE, as you can see, was very much focused on the
+          <strong>graphics and animation</strong> part of the authoring
+          experience, not so much on the programming side of rich Web
+          applications. Scripts existed merely as augmentation of objects in the
+          scene.
+        </p>
+        <p class="body">
+          I didn’t care for the graphical, scene-graph-oriented development and
+          preferred pure programming with text and text files. Same reason why I
+          don’t like the Unity Editor. So it’s a <strong>6/10</strong> for me.
+        </p>
+      </section>
+
+      <!-- <section class="section">
+      <h2>Adobe Flash CS3-or-whatever</h2>
+    </section> -->
+
+      <section class="section">
+        <h2>FlashDevelop</h2>
+        <div class="ui-flashdevelop">
+          <div class="content-flashdevelop" style="--src:url('/misc/ide-reviews/flashdevelop-content.png')">
+            .______________.<br>
+            | FlashDevelop |<br>
+            |_________[9/10]<br>
+            <p>
+              FlashDevelop was a code-first Flash IDE. My first experience
+              <span class="fl-keyword">with</span> a
+              <span class="fl-string">“real”</span> programming IDE
+              <span class="fl-keyword">with</span> refactoring, build
+              configurations, logging, libraries, and more.
+            </p>
+            <p>
+              I like how it renders code <span class="fl-keyword">in</span> bitmap
+              fonts. Very crisp <span class="fl-keyword">in</span> the old CRT
+              monitors <span class="fl-keyword">with</span> 800x600 screen
+              resolution. I customized it
+              <span class="fl-keyword">with</span> some downloaded programming
+              fonts too.
+            </p>
+            <p>
+              Extremely lightweight compared to the alternative Adobe Flash.
+              It<span class="fl-string">’s simple and fast. Plus code completion, snippets, and
+                REFACTORING IN ActionScript!? It’</span>s a high 9/10.
+            </p>
+            <p>
+              My only problem was when some clients wanted the .fla file
+              (Adobe<span class="fl-string">’s file format for Flash projects). But that’</span>s not a real problem.
+            </p>
+          </div>
+          <div class="ui-flashdevelop-top" style="--src:url('/misc/ide-reviews/flashdevelop-top.png')"></div>
+          <div class="ui-flashdevelop-side" style="--src:url('/misc/ide-reviews/flashdevelop-side.png')"></div>
+          <div class="ui-flashdevelop-bottom" style="--src:url('/misc/ide-reviews/flashdevelop-bottom.png')"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Code::Blocks</h2>
+        <div class="ui-code-blocks">
+          <div class="content-code-blocks" style="--src:url('/misc/ide-reviews/code-blocks-content.png')">
+            // .______________.<br>
+            // | Code::Blocks |<br>
+            // |_________[6/10]<br>
+            <p>
+              /* The only reason why I used Code::Blocks in the first place was
+              that it was the IDE recommended for my first programming course when
+              I was taking up CS. It was also preinstalled on the university
+              compsci lab computers.
+            </p>
+            <p>
+              It’s fine. UI was not so great...? I found the build configuration
+              setup confusing and so just ran gcc using cli. Then again it was my
+              first time writing C, and (as I find out later in my career) build
+              configs are always confusing.
+            </p>
+            <p>I rate it a good 6/10. */</p>
+          </div>
+          <div class="ui-code-blocks-top" style="--src:url('/misc/ide-reviews/code-blocks-top.png')"></div>
+          <div class="ui-code-blocks-side" style="--src:url('/misc/ide-reviews/code-blocks-side.png')"></div>
+          <div class="ui-code-blocks-bottom" style="--src:url('/misc/ide-reviews/code-blocks-bottom.png')"></div>
+        </div>
+        <span class="box-note ">
+          💡 Did you know that I manually did syntax highlighting for these
+          in-editor reviews? At this point it became too tedious so I just made
+          the text a code comment.
+        </span>
+      </section>
+
+      <section class="section">
+        <h2>vi</h2>
+        <p class="body">
+          I use
+          <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Vi">vi</a> to
+          write commit messages. It was git that trapped me in vi in the first
+          place. I never really learned to use the advanced commands in vi, as I
+          only use it to write in English - as in commit messages.
+        </p>
+        <p class="body">
+          My rating would be <code class="inline-code">export EDITOR=nano</code>.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Eclipse</h2>
+        <img srcset="/misc/ide-reviews/eclipse_800.generated.png 800w" sizes=" 800px" class="screenshot" alt="screenshot of Eclipse" src="/misc/ide-reviews/eclipse.png" spec="100% [800) 800" loading="lazy">
+        <em>
+          image stolen from
+          <a target="_blank" class="text-link " href="https://draculatheme.com/">draculatheme.com</a>
+        </em>
+        <p class="body">
+          Eclipse was <em>the</em> Java IDE a few years back. It was even the
+          official IDE for developing Android apps for a while. How the mighty
+          have
+          <a target="_blank" class="text-link " href="https://movingfulcrum.com/the-fall-of-eclipse/">fallen</a>.
+        </p>
+        <p class="body">
+          I used Eclipse throughout college for Java courses, and in my first job
+          working on Java backends and Android apps. It was a very big app, in
+          terms of features and memory usage.
+        </p>
+        <p class="body">
+          Unfortunately, it was really slow. It’s like waiting for an eclipse. At
+          work, I used to come in at like 9:30AM, boot up the computer, start up
+          Eclipse, then immediately go get some snacks. After 5 minutes the toast
+          is ready. 10 minutes later, Eclipse becomes usable and I could finally
+          work.
+        </p>
+        <p class="body">
+          It’s a <strong>4/10</strong> for me, due to slow performance. I’d rather
+          use a text editor, if I only knew how the JARs and the APKs got built.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Android Studio</h2>
+        <img srcset="/misc/ide-reviews/android-studio_800.generated.png 800w" sizes=" 800px" class="screenshot" alt="screenshot of Android Studio" src="/misc/ide-reviews/android-studio.png" spec="100% [800) 800" loading="lazy">
+        <em>image from Wikimedia Commons</em>
+        <p class="body">
+          Android Studio saved my productivity as an Android dev. Sadly, that
+          meant no more snacks while starting up the IDE. And no more naps while
+          compiling. I guess JetBrains saved the Android development experience as
+          a whole, from Android Studio to Kotlin and Compose.
+        </p>
+        <p class="body">
+          It was still kinda slow at startup (?), ‘cause of all the indexing going
+          on. JetBrains really redefined IDEs with their Indexing Development
+          Environments.
+        </p>
+        <p class="body">
+          Still pretty good and still getting better. Search anywhere is awesome.
+          The refactoring shortcuts are great. Android tools unmatched. Good
+          <strong>9/10</strong>. (Only problem is memory usage 👎)
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>Sublime Text</h2>
+        <div class="ui-sublime-text">
+          <div class="ui-sublime-text-top" style="--src:url('/misc/ide-reviews/sublime-text-top.png')"></div>
+          <div class="content-sublime-text" style="--src:url('/misc/ide-reviews/sublime-text-minimap.png')">
+            .______________.<br>
+            | Sublime Text |<br>
+            |________[10/10]<br>
+            <p>
+              Best text editor. Not an IDE per se, but it could be. Very snappy.
+              Simple and easy-to-use with some advanced tricks.
+            </p>
+            <p>
+              I believe they also invented the minimap. Both the minimap and the
+              command palette are super useful features. It’s also quite
+              customizable and could be turned into a semi-IDE with build
+              commands.
+            </p>
+            <p>
+              Due to Sublime Text I’ve grown to love the simpler, more
+              minimalistic tools. It’s life-changing. 10/10
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Visual Studio Code</h2>
+        <div class="ui-vsc">
+          <div class="ui-vsc-top" style="--src:url('/misc/ide-reviews/vsc-top.png')"></div>
+          <div class="content-vsc" style="--src:url('/misc/ide-reviews/vsc-minimap.png')">
+            ._________.<br>
+            | VS Code |<br>
+            |___[<span style="color: #59a6e9">10/10</span>]<br>
+            <p>
+              VS Code is the new Sublime Text. This has been my main tool in many
+              projects for a long time now.
+            </p>
+            <p>
+              Sublime Text is still faster, I think, but I haven’t really compared
+              them in a long time. I still use Sublime Text keybindings though.
+              Muscle memory.
+            </p>
+            <p>
+              As a web dev, I like the built-in web browser so I could just open
+              the page I’m working on and its source code side-by-side. And
+              TypeScript / JavaScript support is strong.
+            </p>
+            <p>
+              Even outside of web development, the plugin marketplace is very
+              extensive, and almost every language / workflow is supported.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Cider V</h2>
+        <p class="body">
+          Cider V is an internal cloud-based editor used at Google. It’s like this
+          <a target="_blank" class="text-link " href="https://github.dev/Kalabasa/kalabasa.github.io/blob/src/src/site/misc/ide-reviews/index.html">cloud-based code editor</a>, but for Google’s internal monorepo. It’s based on VS Code and pretty
+          much behaves just like VS Code but with internal extensions.
+        </p>
+        <p class="body">
+          The best thing about it is its
+          <a target="_blank" class="text-link " href="https://ai.googleblog.com/2022/07/ml-enhanced-code-completion-improves.html">AI-powered autocomplete</a>, trained on Google’s own huge repository of code. Most (not all) of
+          the time it just suggests what’s in my mind before it even exists in my
+          mind.
+        </p>
+        <img class="screenshot" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj4vLV_OWhGUw9u2badD0ZlCFdl1mwBlYzQCQ_XRTtCyu2DKy-yGZhKgnRvruSrAdqQOpThDNi0lbpHjSn5b18aqJ-pJnvCZTEOgrpyVO75CWGTugrrN4e_RY65v_bUdLkOvmDBI9v2j3qA7pWaUAeorGXUzAYHShoNff52lK1lSd2u1seEOSn9JW7hvg/s1043/image5.gif" alt="demo of autcompletion" loading="lazy">
+        <p class="body">
+          However, the normal dumb autcompletion sometimes doesn’t work (or is
+          slow?) which gets frustrating. tbf, I get that in VS Code too when
+          working on very large projects.
+        </p>
+        <p class="body">
+          I haven’t used GitHub Copilot + VS Code so I don’t have a reference for
+          comparison. I rate this <strong>9/10</strong>.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>IntelliJ IDEA Community Edition</h2>
+        <img srcset="/misc/ide-reviews/idea_800.generated.png 800w" sizes=" 800px" class="screenshot" alt="screenshot of IntelliJ IDEA" src="/misc/ide-reviews/idea.png" spec="100% [800) 800" loading="lazy">
+        <em>image from IntelliJ</em>
+        <p class="body">
+          Great Java and Kotlin IDE. I love the refactoring tools. Also, the data
+          flow analysis tool is great for debugging.
+        </p>
+        <p class="body">
+          But it’s slow and heavy sometimes. Must be the indexing. For me, a slow
+          tool really ruins the flow of work and decreases productivity. IDEA
+          makes up for it due to its features, so it’s tolerable.
+        </p>
+        <p class="body">
+          As a Java IDE (without the Android goodness of Android Studio), it only
+          gets
+          <strong>8.5/10</strong>.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>IntelliJ IDEA Ultimate Edition</h2>
+        <img srcset="/misc/ide-reviews/idea_800.generated.png 800w" sizes=" 800px" class="screenshot" alt="screenshot of IntelliJ IDEA" src="/misc/ide-reviews/idea.png" spec="100% [800) 800" loading="lazy">
+        <em>image from IntelliJ</em>
+        <p class="body">
+          This is the paid version of the above. Uh, I really didn’t notice any
+          difference from the Community edition besides the splash screen. It’s
+          rated <strong>8.5/$</strong>.
+        </p>
+      </section>
+
+      <section class="section">
+        <span class="box-note ">
+          That’s all for now. I will update this page as I use more IDEs. 🏄
+        </span>
+      </section>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/about/">About</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/music/">Music</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          <span style="display: inline-block">
+            ·
+            <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook!</a>
+            <br>
+            · Drop a
+            <a target="_blank" class="main-footer-link" href="mailto:mail%40leanrada.com">
+              mail＠leanrada·com
+            </a>
+            <br>
+          </span>
+        </p>
+        <p class="main-footer-line">
+          (C) 2015-2024 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source</a>.
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://mastodon.social/@Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="Mastodon" src="/icons/mastodon.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+
+
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+</body>
+</html>

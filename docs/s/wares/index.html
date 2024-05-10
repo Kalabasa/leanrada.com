@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Wares · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <style>
+
+    .card-grid > *:nth-child(1) {
+      --card-grid-item-delay: 0s;
+    }
+    .card-grid > *:nth-child(2) {
+      --card-grid-item-delay: 0.3s;
+    }
+    .card-grid > *:nth-child(3) {
+      --card-grid-item-delay: 0.6s;
+    }
+    .card-grid > *:nth-child(4) {
+      --card-grid-item-delay: 0.9s;
+    }
+    .card-grid > *:nth-child(5) {
+      --card-grid-item-delay: 1.107s;
+    }
+    .card-grid > *:nth-child(6) {
+      --card-grid-item-delay: 1.161s;
+    }
+    .card-grid > *:nth-child(7) {
+      --card-grid-item-delay: 1.208s;
+    }
+    .card-grid > *:nth-child(8) {
+      --card-grid-item-delay: 1.248s;
+    }
+    .card-grid > *:nth-child(9) {
+      --card-grid-item-delay: 1.283s;
+    }
+    .card-grid > *:nth-child(10) {
+      --card-grid-item-delay: 1.315s;
+    }
+    .card-grid > *:nth-child(n + 11) {
+      --card-grid-item-delay: 1.343s;
+    }
+    </style>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <link rel="alternate" type="application/rss+xml" title="leanrada.com notes" href="/rss.xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  .project-item {
+    position: relative;
+    display: flex;
+    justify-content: stretch;
+    align-items: center;
+    height: 42px;
+    border-bottom: solid 1px var(--card-clr);
+    font-size: 15px;
+    text-decoration: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    color: inherit;
+  }
+
+  .project-item:first-child,
+  .project-item:first-child .project-item-img-container {
+    border-top-left-radius: 18px;
+  }
+  .project-item:last-child,
+  .project-item:last-child .project-item-img-container {
+    border-bottom-left-radius: 18px;
+  }
+
+  .project-item-img-container {
+    flex: 0 0 auto;
+    width: 90px;
+    height: 100%;
+    background: var(--clr0);
+    overflow: hidden;
+    pointer-events: none;
+    transition: all 0.1s var(--ease);
+    transition-property: border-radius, height, background;
+  }
+  .project-item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .project-item-title {
+    flex: 0 0 auto;
+    margin-left: 18px;
+    font-family: var(--display-font);
+    font-weight: bold;
+    color: var(--text-clr);
+  }
+
+  .project-item-posttitle {
+    display: flex;
+    flex: 0 0 auto;
+    color: var(--text2-clr);
+  }
+  .project-item-posttitle::before {
+    content: "·";
+    margin: 0 6px;
+  }
+
+  .project-item-content {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    color: var(--text2-clr);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .project-item-content::before {
+    content: "·";
+    margin: 0 6px;
+  }
+
+  .project-item-link {
+    flex: 0 0 auto;
+    margin: 0 18px 0 24px;
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--text2-clr);
+  }
+  .project-item-link-internal::after {
+    content: "→";
+    display: inline-block;
+  }
+  .project-item-link-external::after {
+    content: "↗";
+    display: inline-block;
+  }
+
+  @media (max-width: 1600px) {
+    .project-item {
+      font-size: 15px;
+    }
+  }
+  @media (max-width: 1200px) {
+    .project-item {
+      display: grid;
+      grid-template-columns: min-content min-content 1fr min-content;
+      grid-template-rows: 12px 1fr 1fr 12px;
+      grid-template-areas:
+        "img _ _ _"
+        "img title posttitle link"
+        "img content content content"
+        "img __ __ __";
+      height: 72px;
+    }
+    .project-item-img-container {
+      grid-area: img;
+      align-self: center;
+    }
+    .project-item-title {
+      grid-area: title;
+      margin-left: 12px;
+    }
+    .project-item-posttitle {
+      grid-area: posttitle;
+    }
+    .project-item-content {
+      grid-area: content;
+      margin-left: 12px;
+    }
+    .project-item-content::before {
+      display: none;
+    }
+    .project-item-link {
+      grid-area: link;
+      font-size: 12px;
+    }
+  }
+  @media (max-width: 600px) {
+    .project-item {
+      display: grid;
+      grid-template-columns: min-content 12px 1fr;
+      grid-template-rows: 12px min-content min-content min-content 12px;
+      grid-template-areas:
+        "img _ __"
+        "img _ title"
+        "img _ content"
+        "img _ link"
+        "img _ ___";
+      height: auto;
+    }
+    .project-item-title {
+      margin: 0 0 6px;
+    }
+    .project-item-content {
+      margin: 0;
+      white-space: normal;
+    }
+    .project-item-posttitle {
+      display: none;
+    }
+    .project-item-link {
+      margin: 0;
+      text-align: right;
+      text-decoration: underline;
+    }
+  }
+
+  @media (hover: hover) {
+    .project-item:hover {
+      background: var(--card-clr);
+    }
+    .project-item:hover .project-item-img-container {
+      background: #fff;
+    }
+    .project-item-img {
+      mix-blend-mode: darken;
+    }
+    .project-item:hover .project-item-content {
+      border-radius: 6px;
+      white-space: normal;
+      background: var(--card-clr);
+      overflow: visible;
+    }
+    .project-item:hover .project-item-link {
+      color: var(--clr0-light);
+      text-decoration: underline;
+    }
+
+    @media not (max-width: 1200px) {
+      .project-item:hover {
+        overflow: visible;
+        z-index: 1;
+      }
+      .project-item-img-container {
+        height: inherit;
+      }
+      .project-item:hover .project-item-img-container {
+        height: 90px;
+        border-radius: 18px;
+      }
+    }
+  }
+</style>
+  <style>
+  .card-grid-item {
+    display: block;
+    text-decoration: none;
+    text-align: start;
+    color: var(--text-clr);
+    overflow: hidden;
+    transition: 0.2s var(--ease);
+    transition-property: margin, padding;
+  }
+  .card-grid-animated .card-grid-item {
+    animation: card-grid-item-reveal 0.8s var(--ease) backwards;
+    animation-delay: var(--card-grid-item-delay);
+  }
+  @keyframes card-grid-item-reveal {
+    0% {
+      clip-path: inset(20% 100% 60% 0 round 18px);
+      filter: brightness(0);
+    }
+    50% {
+      clip-path: inset(20% 0 60% 0 round 18px);
+      filter: brightness(1);
+    }
+    100% {
+      clip-path: inset(0 0 0 0 round 18px);
+    }
+  }
+
+  .card-grid-image-container {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    border-radius: 18px;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .card-grid-image-container::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--clr0);
+    mix-blend-mode: darken;
+    transition: background 1s;
+  }
+
+  .card-grid-image {
+    width: 101%;
+    height: 101%;
+    object-fit: cover;
+    object-position: top;
+    filter: contrast(0.8);
+    transform: scale(1);
+    transform-origin: 9px 9px;
+    transition: filter 1s, transform 1s;
+  }
+  .card-grid-thumbalign-center .card-grid-image {
+    object-position: center;
+    transform-origin: center;
+  }
+  .card-grid-thumbalign-top .card-grid-image {
+    object-position: top;
+    transform-origin: top;
+  }
+
+  .card-grid-title-wrap {
+    position: relative;
+    max-width: 70%;
+    height: 0;
+  }
+  .card-grid-title-bar {
+    position: absolute;
+    bottom: 0;
+    border-top-right-radius: 18px;
+    background: var(--bg-clr);
+  }
+  .card-grid-title-content {
+    position: relative;
+    padding: 12px 24px 0 0;
+    transition: padding 0.2s var(--ease);
+  }
+  .card-grid-title-content::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    width: 18px;
+    height: 36px;
+    border-bottom-left-radius: 18px;
+    box-shadow: 0 18px 0 var(--bg-clr);
+  }
+  .card-grid-title-content::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    width: 36px;
+    height: 18px;
+    border-bottom-left-radius: 18px;
+    box-shadow: -18px 0 0 var(--bg-clr);
+  }
+
+  .card-grid-title {
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-style: italic;
+    font-weight: bold;
+  }
+
+  .card-grid-posttitle {
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: italic;
+    font-weight: bold;
+    opacity: 0.8;
+  }
+  .card-grid-posttitle:empty {
+    display: none;
+  }
+
+  .card-grid-postitle-small {
+    display: none;
+  }
+
+  .card-grid-actions {
+    display: none;
+    gap: 5mm;
+    max-height: 48px;
+    padding-top: 6px;
+    overflow: hidden;
+  }
+  .card-grid-action {
+    display: inline-block;
+    font-weight: bold;
+    text-decoration: underline;
+    color: var(--text2-clr);
+    cursor: pointer;
+    position: relative;
+  }
+  .card-grid-info {
+    margin: -2.5mm;
+    padding: 2.5mm;
+  }
+  .card-grid-story::after {
+    content: "→";
+    display: inline-block;
+  }
+
+  .card-grid-content {
+    margin: 18px 0;
+    font-size: 15px;
+    line-height: 2;
+    transition: margin 0.2s var(--ease);
+  }
+
+  .card-grid-animated .card-grid-title {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.8s);
+  }
+  .card-grid-animated .card-grid-posttitle {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.9s);
+  }
+
+  @keyframes card-grid-text-reveal {
+    from {
+      transform: translateY(-100%);
+      clip-path: inset(100% 0 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .card-grid-animated .card-grid-content {
+    animation: card-grid-content 0.6s 1.5s backwards;
+  }
+  @keyframes card-grid-content {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (hover: hover) {
+    .card-grid-item:hover {
+      margin: -12px -24px 0;
+      padding-bottom: 12px;
+    }
+    .card-grid-item:hover .card-grid-image-container::after {
+      background: var(--text-clr);
+      transition: background 2s;
+    }
+    .card-grid-item:hover .card-grid-image {
+      filter: contrast(1);
+      transform: scale(1.1);
+      transition: filter 1s, transform 2s;
+    }
+    .card-grid-item:hover .card-grid-title-content {
+      padding: 24px;
+    }
+    .card-grid-item:hover .card-grid-content {
+      margin-left: 24px;
+      margin-right: 24px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .card-grid-content {
+      margin: 12px 0;
+    }
+
+    .card-grid-image-container {
+      height: 200px;
+    }
+
+    .card-grid-posttitle {
+      display: none;
+    }
+    .card-grid-postitle-small {
+      display: block;
+    }
+
+    .card-grid-actions {
+      display: flex;
+    }
+    .card-grid-item-expanded .card-grid-actions {
+      max-height: 0;
+      transition: max-height 0.2s cubic-bezier(0.2, 0, 0.8, 1);
+    }
+
+    .card-grid-description {
+      max-height: 0;
+      overflow: hidden;
+    }
+    .card-grid-item-expanded .card-grid-description {
+      max-height: 100vh;
+      transition: max-height 1s cubic-bezier(0.2, 0, 1, 1);
+    }
+  }
+</style>
+  <style>
+  .card-grid {
+    display: grid;
+    justify-content: center;
+    grid-template-columns: repeat(auto-fit, calc(min(546px, 100%)));
+    gap: 60px;
+  }
+  .card-grid-tall {
+    gap: 90px 60px;
+  }
+  @media (max-width: 900px) {
+    .card-grid {
+      gap: 30px;
+    }
+  }
+  @media (prefers-reduced-motion) {
+    .card-grid * {
+      animation: none !important;
+    }
+  }
+</style>
+  <style>
+  .content-header {
+    font-family: var(--default-font);
+    margin: 90px 0 60px;
+    padding: 0 18px;
+  }
+  @media (max-width: 600px) {
+    .content-header {
+      margin: 60px 0;
+    }
+  }
+
+  .content-header-title {
+    margin: 0 0 6px;
+    font-family: var(--display-font);
+    font-size: 27px;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .content-header-subtitle {
+    margin: 6px 0 0;
+    font-size: 18px;
+    font-style: italic;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 12px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: top;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    padding: 0 calc(min(18px,  -18px + 8vw));
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  @media (max-width: 600px) {
+    .main-header {
+      height: 90px;
+      padding-top: 6px;
+    }
+    .main-header-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+      row-gap: 6px;
+    }
+    .main-header-icon {
+      display: none;
+    }
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.4;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .section {
+    padding: 0 18px;
+    margin: 60px auto;
+    box-sizing: border-box;
+  }
+
+  .section-title {
+    margin: 30px 0;
+    font-family: var(--display-font);
+    font-size: 21px;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .main-section {
+    max-width: 1800px;
+  }
+
+  .more-section {
+    margin-bottom: 90px;
+    max-width: 1600px;
+  }
+</style>
+  <script async="" src="/scripts/cursor.js"></script>
+</head>
+
+
+<body>
+
+  <span hidden="" class="p-name">Wares</span>
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/notes/" class="main-header-item ">Notes</a>
+        <a href="/about/" class="main-header-item ">About</a>
+        <img class="main-header-icon " src="/icons/pot.png" alt="">
+        <a href="/wares/" class="main-header-item select">Wares</a>
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/music/" class="main-header-item ">Music</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="content-header">
+        <h1 class="content-header-title p-name">Check out my wares</h1>
+        <div class="content-header-subtitle">(the soft kind)</div>
+      </div>
+      <section class="section main-section">
+        <div class="card-grid  card-grid-animated  card-grid-tall project-grid">
+
+
+          <a class="card-grid-item card-grid-thumbalign-center" href="/wares/wikawik/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/wikawik/media/wikawik_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/wikawik/media/wikawik.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #48c8d8">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">Wikawik</div>
+                  <div class="card-grid-posttitle">2020 · Interactive language map</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2020 · Interactive language map
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                A webapp that shows the diversity of languages in the Philippines. Learn about
+                the local languages. Listen to local songs and other media. Made in vanilla JS
+                with D3.js. Passion project.
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - Wikawik">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-center" href="/wares/hypertangram/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/hypertangram/media/ht-thumb_546.generated.png 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/hypertangram/media/ht-thumb.png" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #0838a8">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">Hypertangram</div>
+                  <div class="card-grid-posttitle">2018 · Geometric puzzle game</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2018 · Geometric puzzle game
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                A puzzle game about fitting shapes together. Just like tangram, but the pieces
+                are resizable! Runs on Android. Supports multi-touch interactions for rotating
+                and resizing! Hobby project.
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - Hypertangram">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-center" href="/wares/dimensions/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/dimensions/media/dimensions_0_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/dimensions/media/dimensions_0.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #a8c8a8">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">Dimensions</div>
+                  <div class="card-grid-posttitle">2019 · Augmented reality generative art</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2019 · Augmented reality generative art
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                Generative art with extra dimensions. Web-based, uses Vue.js for the generator
+                and a three.js-based mobile webapp for the AR experience. Made for a workplace
+                event.
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - Dimensions">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-center" href="/wares/guhit-kudlit/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/guhit-kudlit/pakita_546.generated.png 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/guhit-kudlit/pakita.png" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.7777777777777777; background: #f8f8f8">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">GuhitKudlit</div>
+                  <div class="card-grid-posttitle">2023 · Baybayin calligraphy generator</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2023 · Baybayin calligraphy generator
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                Online calligraphy generator for baybayin, an ancient writing system
+                in the Philippines. It can also transliterate text! Passion project.
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - GuhitKudlit">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-default" href="/wares/photo-editor/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/photo-editor/img/canvaphotoeditor_1_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/photo-editor/img/canvaphotoeditor_1.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.599609375; background: #181818">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">Photo Editor</div>
+                  <div class="card-grid-posttitle">2019 · Online image editing</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2019 · Online image editing
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                A webapp for quick photo edits. Apply filters. Adjust contrast.
+                Sharpen, blur. Crop, rotate, and resize. Made with React, Canvas API,
+                and WebGL. Project at Canva.
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - Photo Editor">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-center" href="/wares/miniforts/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/miniforts/media/miniforts_thumb_546.generated.png 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/miniforts/media/miniforts_thumb.png" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.8457101658255226; background: #a8b888">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">MiniForts</div>
+                  <div class="card-grid-posttitle">2021 · Base-builder game</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2021 · Base-builder game
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                A game about building and defending a fort set in the miniature world
+                of mushroom people. Build defenses against the evil slugs, snails, and
+                other evil critters! Hobby project.
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - MiniForts">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-center" href="/wares/canva-pasko/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/canva-pasko/media/thumb_546.generated.png 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/canva-pasko/media/thumb.png" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 0.7987220447284346; background: #181858">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">Canva Pasko</div>
+                  <div class="card-grid-posttitle">2019 · Design contest microsite</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2019 · Design contest microsite
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                A microsite hosting a country-wide design contest for Christmas 2019
+                run by Canva Philippines. Fun site with animations and interactions.
+                Company project (obvs).
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - Canva Pasko">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-center" href="/wares/planet-defense/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/planet-defense/media/planetdefense_0_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/planet-defense/media/planetdefense_0.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1; background: #080808">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">Planet Defense</div>
+                  <div class="card-grid-posttitle">2017 · Game jam game</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2017 · Game jam game
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                A game about defending a planet against extraterrestrial nukes using
+                missiles. Made in 48 hours for Ludum Dare 38 game jam with the theme
+                "A Small World".
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - Planet Defense">Read post</span>
+              </div>
+            </div>
+          </a>
+          <a class="card-grid-item card-grid-thumbalign-default" href="/wares/dynaviz/">
+            <div class="card-grid-image-container">
+              <img srcset="/wares/dynaviz/media/dynastymap_1_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/wares/dynaviz/media/dynastymap_1.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3689839572192513; background: #f8f8f8">
+            </div>
+            <div class="card-grid-title-wrap">
+              <div class="card-grid-title-bar">
+                <div class="card-grid-title-content">
+                  <div class="card-grid-title">Dynaviz</div>
+                  <div class="card-grid-posttitle">2015 · Philippine dynasty map visualization</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-grid-content">
+              <div class="card-grid-posttitle card-grid-postitle-small">
+                2015 · Philippine dynasty map visualization
+              </div>
+              <div class="card-grid-actions">
+                <span class="card-grid-action card-grid-info">Deets…</span>
+                <span class="card-grid-action card-grid-story">Read post</span>
+              </div>
+              <div class="card-grid-description">
+
+                Map-based visualization of political dynasties. Features various
+                visualizations like tag clouds, choropleth maps, and scatterplots.
+                School project.
+
+                <span class="card-grid-action card-grid-story" aria-label="Read post - Dynaviz">Read post</span>
+              </div>
+            </div>
+          </a>
+
+
+        </div>
+
+
+      </section>
+      <section class="section more-section">
+        <h2 class="section-title">More stuff</h2>
+        <div>
+          <a target="_blank" class="project-item" href="//leanrada.com/htmz/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/htmz/thumb_90.generated.png 90w" sizes=" 90px" class="project-item-img" src="/wares/htmz/thumb.png" alt="" spec="90">
+            </div>
+            <span class="project-item-title">htmz</span>
+            <span class="project-item-posttitle">2024</span>
+            <span class="project-item-content">
+              A minimalist HTML microframework.
+            </span>
+            <span class="project-item-link project-item-link-external">open website</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/personal-website/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/personal-website/media/v4_90.generated.png 90w" sizes=" 90px" class="project-item-img" src="/wares/personal-website/media/v4.png" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Personal Website</span>
+            <span class="project-item-posttitle">20XX</span>
+            <span class="project-item-content">
+              This site. So meta.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/portabl.ink/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/portabl.ink/thumb_90.generated.png 90w" sizes=" 90px" class="project-item-img" src="/wares/portabl.ink/thumb.png" alt="" spec="90">
+            </div>
+            <span class="project-item-title">portabl.ink</span>
+            <span class="project-item-posttitle">2023</span>
+            <span class="project-item-content">
+              Compress a web page into a portable link.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/blitz-coding/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/blitz-coding/media/hero_90.generated.png 90w" sizes=" 90px" class="project-item-img" src="/wares/blitz-coding/media/hero.png" alt="" spec="90">
+            </div>
+            <span class="project-item-title">BlitzCoding</span>
+            <span class="project-item-posttitle">2021</span>
+            <span class="project-item-content">
+              Fast-paced JavaScript coding game.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/svelte-spreadsheet/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/svelte-spreadsheet/media/sheetz_90.generated.jpg 90w" sizes=" 90px" class="project-item-img" src="/wares/svelte-spreadsheet/media/sheetz.jpg" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Svelte Spreadsheet</span>
+            <span class="project-item-posttitle">2020</span>
+            <span class="project-item-content">
+              Spreadsheet test app, trying out Svelte.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/freeform-gesture-detector/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/freeform-gesture-detector/media/freeformgesturedetector_head_90.generated.png 90w" sizes=" 90px" class="project-item-img" src="/wares/freeform-gesture-detector/media/freeformgesturedetector_head.png" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Freeform Gesture Detector</span>
+            <span class="project-item-posttitle">2018</span>
+            <span class="project-item-content">
+              Android freeform gesture manipulation library.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_blank" class="project-item" href="https://kalabasa.github.io/heart-game/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/heart-game/thumb_90.generated.jpg 90w" sizes=" 90px" class="project-item-img" src="/wares/heart-game/thumb.jpg" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Heart game</span>
+
+            <span class="project-item-content">
+              Very simple game about avoiding heartbreaks.
+            </span>
+            <span class="project-item-link project-item-link-external">open webapp</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/canva-enterprise/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/canva-enterprise/media/canvaenterprise_0_90.generated.jpg 90w" sizes=" 90px" class="project-item-img" src="/wares/canva-enterprise/media/canvaenterprise_0.jpg" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Canva for Enterprises</span>
+            <span class="project-item-posttitle">2018</span>
+            <span class="project-item-content">
+              Enterprise marketing page for Canva.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/canva-logo-maker/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/canva-logo-maker/media/canvalogomaker_0_90.generated.jpg 90w" sizes=" 90px" class="project-item-img" src="/wares/canva-logo-maker/media/canvalogomaker_0.jpg" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Canva Logo Maker</span>
+            <span class="project-item-posttitle">2018</span>
+            <span class="project-item-content">
+              Experimental logo maker for Canva.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/pong-ai/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/pong-ai/media/pongai-thumb_90.generated.png 90w" sizes=" 90px" class="project-item-img" src="/wares/pong-ai/media/pongai-thumb.png" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Pong AI</span>
+            <span class="project-item-posttitle">2014</span>
+            <span class="project-item-content">
+              Neural networks × genetic algorithms experiment.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+          <a target="_self" class="project-item" href="/wares/mandelbrot/">
+            <div class="project-item-img-container">
+              <img srcset="/wares/mandelbrot/media/mb-thumb_90.generated.png 90w" sizes=" 90px" class="project-item-img" src="/wares/mandelbrot/media/mb-thumb.png" alt="" spec="90">
+            </div>
+            <span class="project-item-title">Mandelbrot</span>
+            <span class="project-item-posttitle">2012</span>
+            <span class="project-item-content">
+              Fractal renderer.
+            </span>
+            <span class="project-item-link project-item-link-internal">read post</span>
+          </a>
+        </div>
+      </section>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/about/">About</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/music/">Music</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          <span style="display: inline-block">
+            ·
+            <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook!</a>
+            <br>
+            · Drop a
+            <a target="_blank" class="main-footer-link" href="mailto:mail%40leanrada.com">
+              mail＠leanrada·com
+            </a>
+            <br>
+          </span>
+        </p>
+        <p class="main-footer-line">
+          (C) 2015-2024 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source</a>.
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://mastodon.social/@Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="Mastodon" src="/icons/mastodon.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+
+
+  <script defer="" src="/scripts/card-grid-item.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script defer="">
+  (() => {
+    const seenKey = "seenProjectGridAnimation";
+    const seenTimes = Number.parseInt(sessionStorage.getItem(seenKey) || 0);
+
+    const shouldAnimate = seenTimes < 2 && window.scrollY < 50;
+    const projectGrid = document.querySelector(".project-grid");
+    projectGrid.classList.toggle("card-grid-animated", shouldAnimate);
+
+    if (shouldAnimate) {
+      sessionStorage.setItem(seenKey, seenTimes + 1);
+    }
+  })();
+</script>
+</body>
+</html>

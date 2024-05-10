@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script defer="" src="//tarptaeya.github.io/repo-card/repo-card.js"></script>
+  <title>Freeform Gesture Detector · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <link rel="alternate" type="application/rss+xml" title="leanrada.com notes" href="/rss.xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  .reactions {
+    display: grid;
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+    justify-content: center;
+    justify-items: center;
+    gap: 6px;
+    border: solid 1px var(--card-clr);
+    border-radius: 6px;
+    padding: 18px;
+    font-family: var(--default-font);
+  }
+
+  .reaction-title {
+    grid-column: span 5;
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+
+  .reaction-title-error {
+    color: var(--clr1);
+  }
+
+  .reaction-heart-btn,
+  .reaction-heart-count {
+    --reaction-color: #bf1852;
+  }
+  .reaction-fire-btn,
+  .reaction-fire-count {
+    --reaction-color: #c68306;
+  }
+  .reaction-bubble-btn,
+  .reaction-bubble-count {
+    --reaction-color: #07bd80;
+  }
+  .reaction-sun-btn,
+  .reaction-sun-count {
+    --reaction-color: #a09b00;
+  }
+  .reaction-cloud-btn,
+  .reaction-cloud-count {
+    --reaction-color: #8063ff;
+  }
+
+  .reaction-count {
+    position: relative;
+    font-size: 18px;
+    width: 100%;
+    height: 18px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .reaction-count-prev,
+  .reaction-count-next {
+    position: relative;
+    height: 100%;
+    animation: reaction-tick 0.3s var(--ease) forwards;
+  }
+
+  @keyframes reaction-tick {
+    from {
+      top: 0;
+    }
+    to {
+      top: -100%;
+    }
+  }
+
+  .reaction-count.reaction-spark::after {
+    position: absolute;
+    content: "";
+    width: 36px;
+    height: 36px;
+    left: calc(50% - 18px);
+    top: calc(100% - 18px);
+    border-radius: 50%;
+    animation: reaction-spark 0.1s ease-out;
+  }
+
+  @keyframes reaction-spark {
+    from {
+      box-shadow: inset 0 0 0 18px var(--reaction-color);
+    }
+    to {
+      box-shadow: inset 0 0 0 0px var(--reaction-color);
+    }
+  }
+
+  .reaction-btn {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+    box-sizing: content-box;
+    cursor: pointer;
+  }
+  .reaction-btn:focus-visible,
+  .reaction-btn:hover {
+    background: var(--reaction-color);
+  }
+  .reaction-btn:focus-visible .reaction-icon,
+  .reaction-btn:hover .reaction-icon {
+    animation-duration: 0.5s;
+  }
+  .reaction-btn:active .reaction-icon {
+    position: relative;
+    top: 2px;
+  }
+
+  .reaction-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    background-image: url("/icons/reactions.png");
+    background-size: 500% 200%;
+    animation: reaction-icon 1.5s steps(2) infinite;
+  }
+  .reactions-invisible .reaction-icon {
+    background-image: none;
+  }
+  .reaction-heart-btn .reaction-icon {
+    --sheet-x: 25%;
+  }
+  .reaction-bubble-btn .reaction-icon {
+    --sheet-x: 0%;
+  }
+  .reaction-sun-btn .reaction-icon {
+    --sheet-x: 100%;
+  }
+  .reaction-cloud-btn .reaction-icon {
+    --sheet-x: 75%;
+  }
+  .reaction-fire-btn .reaction-icon {
+    --sheet-x: 50%;
+  }
+
+  @keyframes reaction-icon {
+    0% {
+      background-position: var(--sheet-x) 0%;
+    }
+    100% {
+      background-position: var(--sheet-x) 200%;
+    }
+  }
+</style>
+  <style>
+  .project-info-card {
+    font-family: var(--default-font);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .project-info-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .project-info-card-title {
+    flex: 0 0 auto;
+    align-self: stretch;
+    position: relative;
+    margin-right: 12px;
+    padding: 12px 18px 6px 12px;
+    border-radius: 18px 18px 0 0;
+    font-style: italic;
+    text-decoration: underline;
+    background-color: var(--card-clr);
+  }
+  .project-info-card-title::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    width: 36px;
+    height: 18px;
+    border-bottom-left-radius: 18px;
+    box-shadow: -18px 0 0 var(--card-clr);
+  }
+
+  .project-info-card-fields {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: 1fr 1fr;
+    padding: 12px;
+    border-radius: 0 18px 18px 18px;
+    background-color: var(--card-clr);
+  }
+  @media (max-width: 600px) {
+    .project-info-card-fields {
+      display: block;
+    }
+  }
+
+  .project-info-card-field {
+    display: flex;
+  }
+  .project-info-card-field-label {
+    padding: 6px;
+    font-style: italic;
+  }
+  .project-info-card-field-value {
+    padding: 6px;
+    font-weight: bold;
+  }
+</style>
+  <style>
+  .btn,
+  .btn:visited {
+    padding: 6px 12px;
+    border-radius: 12px;
+    border: none;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    background: var(--clr0-dark);
+    color: #fff;
+    cursor: pointer;
+  }
+  .btn:not(:disabled):hover {
+    background: var(--clr0);
+  }
+  .btn:not(:disabled):active {
+    background: var(--clr0-dark);
+  }
+  .btn:disabled {
+    color: #888;
+    cursor: not-allowed;
+  }
+</style>
+  <style>
+  .blog-media {
+    position: relative;
+    text-align: center;
+    /* external margin because it’s expected to be in an article */
+    margin: 36px 0;
+  }
+  .blog-media-bleed {
+    margin: min(36px, 5vw, 90px) 0;
+    max-height: 80vh;
+  }
+
+  .blog-media-element {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 18px;
+    box-sizing: border-box;
+  }
+  .blog-media-bleed .blog-media-element {
+    position: relative;
+    left: 50%;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+  .blog-media-windowed .blog-media-element {
+    display: block;
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .blog-media-caption {
+    display: block;
+    font-size: 15px;
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 12px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: top;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    padding: 0 calc(min(18px,  -18px + 8vw));
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  @media (max-width: 600px) {
+    .main-header {
+      height: 90px;
+      padding-top: 6px;
+    }
+    .main-header-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+      row-gap: 6px;
+    }
+    .main-header-icon {
+      display: none;
+    }
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.4;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .blog-page {
+    margin: auto;
+    overflow: hidden;
+  }
+
+  .content {
+    margin: auto;
+    padding: 0 18px 60px;
+    width: 100%;
+    max-width: 700px;
+    font-family: var(--reading-font, sans-serif);
+    font-size: 16px;
+    line-height: 2.2;
+    letter-spacing: 0.02em;
+    color: #ddd;
+    box-sizing: border-box;
+  }
+
+  .postcontent {
+    margin: auto;
+    padding: 0 0 60px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .postcontent-narrow {
+    margin: auto;
+    padding: 0 18px;
+    width: 100%;
+    max-width: 700px;
+    box-sizing: border-box;
+  }
+
+  .blog-signature {
+    position: relative;
+    margin: 0 0 60px;
+    line-height: 21px;
+  }
+  .blog-signature::before {
+    content: "❝";
+    position: absolute;
+    left: -15px;
+    top: 0;
+    font-size: 60px;
+    opacity: 0.2;
+  }
+  .blog-signature a {
+    font-weight: bold;
+  }
+  .blog-signature-name {
+    white-space: nowrap;
+  }
+  .blog-signature-img {
+    position: relative;
+    top: 3px;
+  }
+
+  .markdown > h1,
+  .markdown > h2,
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    margin: 48px 0 36px;
+    font-family: var(--display-font);
+    font-weight: normal;
+    font-style: italic;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .markdown > h1 {
+    text-align: center;
+    font-size: 200%;
+  }
+  .markdown > h2 {
+    font-size: 150%;
+  }
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    font-size: 120%;
+    font-weight: bold;
+  }
+
+  .markdown > p {
+    margin: 36px 0;
+  }
+  .markdown .box-note > p {
+    margin: 18px 0;
+  }
+  .markdown .box-note > p:first-child {
+    margin-top: 0;
+  }
+  .markdown .box-note > p:last-child {
+    margin-bottom: 0;
+  }
+
+  .markdown-table,
+  .markdown .horizontal-scroll {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .markdown-table > table {
+    min-width: 100%;
+    box-sizing: border-box;
+    border-collapse: collapse;
+    background-color: var(--card-clr);
+    border-radius: 12px;
+  }
+  .markdown-table > table th,
+  .markdown-table > table td {
+    min-width: min(25vw, 8ch);
+    box-sizing: border-box;
+    text-align: start;
+    padding: 9px 6px;
+    padding-inline-end: 18px;
+    border-bottom: solid 1px #444;
+  }
+  .markdown-table > table th:first-child,
+  .markdown-table > table td:first-child {
+    padding-left: 12px;
+  }
+  .markdown-table > table th:last-child,
+  .markdown-table > table td:last-child {
+    padding-right: 12px;
+  }
+  .markdown-table > table > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+
+  .markdown > hr {
+    width: 36px;
+    margin: 90px auto;
+    border: solid 1.5px #ccc;
+    background: #ccc;
+    border-radius: 3px;
+  }
+
+  .markdown code:not([class]):not([class]) {
+    display: inline-block;
+    padding: 0 6px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-style: italic;
+  }
+  .markdown > pre:not([class]) > code:not([class]) {
+    display: block;
+    padding: 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 15px;
+    font-style: normal;
+    overflow-x: auto;
+    background: var(--card-clr);
+  }
+
+  .markdown > blockquote {
+    position: relative;
+    margin: 0;
+    padding: 18px 24px;
+    border-radius: 18px;
+    border: solid 1px var(--clr0);
+    font-size: 21px;
+  }
+  .markdown > blockquote::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 0;
+    height: 24px;
+    width: 24px;
+    border-bottom: solid 1px var(--clr0);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote::after {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 24px;
+    bottom: 18px;
+    width: 24px;
+    border-top-right-radius: 24px;
+    border: solid var(--clr0);
+    border-width: 1px 1px 0 0;
+    box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote > :first-child {
+    margin-top: 0;
+  }
+  .markdown > blockquote > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown > blockquote cite {
+    display: block;
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: inherit;
+  }
+  .markdown > blockquote cite::before {
+    content: "—";
+  }
+
+  .markdown > iframe,
+  .markdown > p > iframe {
+    max-width: calc(100vw - 18px);
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .markdown .center {
+    text-align: center;
+  }
+  .markdown .center-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+  .markdown .bleed {
+    position: relative;
+    left: 50%;
+    width: 100vh;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+
+  /* todo: convert to component <caption>, reuse across <blog-media> */
+  .markdown .caption {
+    display: block;
+    font-size: 15px;
+    text-align: center;
+  }
+</style>
+  <style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
+  <script async="" src="/scripts/cursor.js"></script>
+</head>
+
+
+
+<body>
+
+  <span hidden="" class="p-name">Freeform Gesture Detector</span>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/notes/" class="main-header-item ">Notes</a>
+        <a href="/about/" class="main-header-item ">About</a>
+        <img class="main-header-icon main-header-icon-yay" src="/icons/yay_sheet.png" alt="">
+        <a href="/wares/" class="main-header-item select">Wares</a>
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/music/" class="main-header-item ">Music</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page h-entry">
+
+        <div class="content e-content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <h1 id="freeform-gesture-detector">Freeform Gesture Detector</h1>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <video class="blog-media-element " src="/wares/freeform-gesture-detector/media/freeformgesturedetector.mp4" muted="" autoplay="" loop="" aria-label="demo">
+                Video: demo | Source: /wares/freeform-gesture-detector/media/freeformgesturedetector.mp4
+              </video>
+            </div>
+            </p>
+            <h2 id="multi-touch-transform-gestures-for-android">Multi-touch transform gestures for Android.</h2>
+            <p><strong>FreeformGestureDetector</strong> (2018) is an Android library that converts multi-touch gestures into incremental Matrix transformations.</p>
+            <p>
+            <aside class="project-info-card">
+              <div class="project-info-card-header">
+                <div class="project-info-card-title">Project details</div>
+                <a target="_blank" class="btn " tag="a" href="https://github.com/Kalabasa/FreeformGestureDetector">
+                  Get the source
+                </a>
+              </div>
+              <div class="project-info-card-fields">
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">released</div>
+                  <div class="project-info-card-field-value">2018</div>
+                </div>
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">role</div>
+                  <div class="project-info-card-field-value">creator</div>
+                </div>
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">platform</div>
+                  <div class="project-info-card-field-value">Android</div>
+                </div>
+                <div class="project-info-card-field">
+                  <div class="project-info-card-field-label">tech</div>
+                  <div class="project-info-card-field-value">Java</div>
+                </div>
+              </div>
+            </aside>
+            </p>
+            <p>It processes any kind of touch gesture, from single-finger dragging to multitouch skew and scale, and spits out the corresponding Matrix transforms needed to render that manipulation.</p>
+            <p>This library arose from the development of <a target="_self" class="text-link " href="../hypertangram/">Hypertangram</a>. I wanted free manipulation of puzzle pieces because I wanted intuitive game controls.</p>
+            <p>Credits to <a target="_blank" class="text-link " href="https://developer.android.com/reference/android/graphics/Matrix"><code>Matrix.setPolyToPoly</code></a> for making this easy.</p>
+            <p>It’s open-source and available on <a target="_blank" class="text-link " href="https://github.com/Kalabasa/FreeformGestureDetector"><strong>GitHub</strong></a>.</p>
+            <div class="center-flex">
+              <div class="repo-card" data-repo="Kalabasa/FreeformGestureDetector" data-theme="dark-theme"></div>
+            </div>
+
+          </div>
+
+        </div>
+        <div class="postcontent">
+          <div class="postcontent-narrow">
+            <p class="blog-signature">Thanks for reading! I like making <a target="_self" class="text-link " href="/wares/">software projects</a>. I also keep a visual &amp; interactive <a target="_self" class="text-link " href="/notes/">programming blog</a>! Oh, and before you go, sign <a target="_self" class="text-link " href="/guestbook/">the guestbook</a>! See you around! <span class="blog-signature-name"><i>—Lean</i><img class="blog-signature-img" src="/icons/sig.png" alt="liyan"></span></p>
+            <reactions-client class="reactions reactions-invisible">
+              <h2 class="reaction-title">React to this post</h2>
+              <button class="reaction-btn reaction-heart-btn">
+                <span class="reaction-icon" aria-label="Heart"></span>
+              </button>
+              <div class="reaction-count reaction-heart-count"></div>
+              <button class="reaction-btn reaction-fire-btn">
+                <span class="reaction-icon" aria-label="Fire"></span>
+              </button>
+              <div class="reaction-count reaction-fire-count"></div>
+              <button class="reaction-btn reaction-bubble-btn">
+                <span class="reaction-icon" aria-label="Bubble"></span>
+              </button>
+              <div class="reaction-count reaction-bubble-count"></div>
+              <button class="reaction-btn reaction-sun-btn">
+                <span class="reaction-icon" aria-label="Sun"></span>
+              </button>
+              <div class="reaction-count reaction-sun-count"></div>
+              <button class="reaction-btn reaction-cloud-btn">
+                <span class="reaction-icon" aria-label="Cloud"></span>
+              </button>
+              <div class="reaction-count reaction-cloud-count"></div>
+              <div class="reaction-error"></div>
+            </reactions-client>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/about/">About</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/music/">Music</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          <span style="display: inline-block">
+            ·
+            <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook!</a>
+            <br>
+            · Drop a
+            <a target="_blank" class="main-footer-link" href="mailto:mail%40leanrada.com">
+              mail＠leanrada·com
+            </a>
+            <br>
+          </span>
+        </p>
+        <p class="main-footer-line">
+          (C) 2015-2024 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source</a>.
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://mastodon.social/@Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="Mastodon" src="/icons/mastodon.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+
+
+  <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
+  <script defer="" src="/scripts/blog-media.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+</body>
+</html>

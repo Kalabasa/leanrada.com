@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="syndication" href="https://www.reddit.com/r/css/comments/14ebp66/tic_tac_toe_with_perfect_ai_implemented_in_pure/">
+  <script async="" src="https://cpwebassets.codepen.io/assets/embed/ei.js"></script>
+  <title>Pure CSS tic-tac-toe with game AI · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <link rel="alternate" type="application/rss+xml" title="leanrada.com notes" href="/rss.xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  .reactions {
+    display: grid;
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+    justify-content: center;
+    justify-items: center;
+    gap: 6px;
+    border: solid 1px var(--card-clr);
+    border-radius: 6px;
+    padding: 18px;
+    font-family: var(--default-font);
+  }
+
+  .reaction-title {
+    grid-column: span 5;
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+
+  .reaction-title-error {
+    color: var(--clr1);
+  }
+
+  .reaction-heart-btn,
+  .reaction-heart-count {
+    --reaction-color: #bf1852;
+  }
+  .reaction-fire-btn,
+  .reaction-fire-count {
+    --reaction-color: #c68306;
+  }
+  .reaction-bubble-btn,
+  .reaction-bubble-count {
+    --reaction-color: #07bd80;
+  }
+  .reaction-sun-btn,
+  .reaction-sun-count {
+    --reaction-color: #a09b00;
+  }
+  .reaction-cloud-btn,
+  .reaction-cloud-count {
+    --reaction-color: #8063ff;
+  }
+
+  .reaction-count {
+    position: relative;
+    font-size: 18px;
+    width: 100%;
+    height: 18px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .reaction-count-prev,
+  .reaction-count-next {
+    position: relative;
+    height: 100%;
+    animation: reaction-tick 0.3s var(--ease) forwards;
+  }
+
+  @keyframes reaction-tick {
+    from {
+      top: 0;
+    }
+    to {
+      top: -100%;
+    }
+  }
+
+  .reaction-count.reaction-spark::after {
+    position: absolute;
+    content: "";
+    width: 36px;
+    height: 36px;
+    left: calc(50% - 18px);
+    top: calc(100% - 18px);
+    border-radius: 50%;
+    animation: reaction-spark 0.1s ease-out;
+  }
+
+  @keyframes reaction-spark {
+    from {
+      box-shadow: inset 0 0 0 18px var(--reaction-color);
+    }
+    to {
+      box-shadow: inset 0 0 0 0px var(--reaction-color);
+    }
+  }
+
+  .reaction-btn {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+    box-sizing: content-box;
+    cursor: pointer;
+  }
+  .reaction-btn:focus-visible,
+  .reaction-btn:hover {
+    background: var(--reaction-color);
+  }
+  .reaction-btn:focus-visible .reaction-icon,
+  .reaction-btn:hover .reaction-icon {
+    animation-duration: 0.5s;
+  }
+  .reaction-btn:active .reaction-icon {
+    position: relative;
+    top: 2px;
+  }
+
+  .reaction-icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    background-image: url("/icons/reactions.png");
+    background-size: 500% 200%;
+    animation: reaction-icon 1.5s steps(2) infinite;
+  }
+  .reactions-invisible .reaction-icon {
+    background-image: none;
+  }
+  .reaction-heart-btn .reaction-icon {
+    --sheet-x: 25%;
+  }
+  .reaction-bubble-btn .reaction-icon {
+    --sheet-x: 0%;
+  }
+  .reaction-sun-btn .reaction-icon {
+    --sheet-x: 100%;
+  }
+  .reaction-cloud-btn .reaction-icon {
+    --sheet-x: 75%;
+  }
+  .reaction-fire-btn .reaction-icon {
+    --sheet-x: 50%;
+  }
+
+  @keyframes reaction-icon {
+    0% {
+      background-position: var(--sheet-x) 0%;
+    }
+    100% {
+      background-position: var(--sheet-x) 200%;
+    }
+  }
+</style>
+  <style>
+  .css-three-in-a-row-seq {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+  }
+  .css-three-in-a-row-seq > input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    appearance: none;
+  }
+  .css-three-in-a-row-seq-box {
+    position: relative;
+    width: 400px;
+    height: 400px;
+  }
+  .css-three-in-a-row-seq-grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
+    pointer-events: none;
+  }
+  .css-three-in-a-row-seq-grid > label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: solid 4px var(--text2-clr);
+    margin: 0 -4px -4px 0;
+    font-family: var(--default-font);
+    font-size: 100px;
+    line-height: 1;
+    cursor: pointer;
+    color: transparent;
+    transition: color 0.1s;
+  }
+  .css-three-in-a-row-seq-grid > label:hover {
+    background-color: #fff1;
+  }
+
+  /* Rules for enabling the appropriate set of inputs per turn */
+
+  .css-three-in-a-row-seq label[for^="css-three-in-a-row-seq-1"] {
+    pointer-events: all;
+  }
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"] {
+    pointer-events: none;
+  }
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"] {
+    pointer-events: all;
+  }
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"] {
+    pointer-events: none;
+  }
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"] {
+    pointer-events: all;
+  }
+
+  /* Rules for showing markers */
+
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="1"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="1"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="2"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="2"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="3"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="3"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="4"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="4"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="5"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="5"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="6"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="6"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="7"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="7"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="8"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="8"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-1"][value="9"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-1"][data-value="9"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="1"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="1"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="2"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="2"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="3"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="3"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="4"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="4"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="5"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="5"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="6"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="6"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="7"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="7"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="8"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="8"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-2"][value="9"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-2"][data-value="9"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="1"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="1"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="2"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="2"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="3"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="3"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="4"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="4"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="5"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="5"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="6"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="6"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="7"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="7"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="8"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="8"],
+  .css-three-in-a-row-seq
+    > input[name="css-three-in-a-row-seq-3"][value="9"]:checked
+    ~ .css-three-in-a-row-seq-box
+    label[for^="css-three-in-a-row-seq-3"][data-value="9"] {
+    color: var(--text-clr);
+  }
+</style>
+  <style>
+  .blog-media {
+    position: relative;
+    text-align: center;
+    /* external margin because it’s expected to be in an article */
+    margin: 36px 0;
+  }
+  .blog-media-bleed {
+    margin: min(36px, 5vw, 90px) 0;
+    max-height: 80vh;
+  }
+
+  .blog-media-element {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 18px;
+    box-sizing: border-box;
+  }
+  .blog-media-bleed .blog-media-element {
+    position: relative;
+    left: 50%;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+  .blog-media-windowed .blog-media-element {
+    display: block;
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .blog-media-caption {
+    display: block;
+    font-size: 15px;
+  }
+</style>
+  <style>
+  .css-three-in-a-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+  }
+  .css-three-in-a-row > input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    appearance: none;
+  }
+  .css-three-in-a-row-box {
+    position: relative;
+    display: grid;
+    grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
+    width: 400px;
+    height: 400px;
+  }
+  .css-three-in-a-row-box > label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: solid 4px var(--text2-clr);
+    margin: 0 -4px -4px 0;
+    font-family: var(--default-font);
+    font-size: 100px;
+    line-height: 1;
+    cursor: pointer;
+    color: transparent;
+    transition: color 0.1s;
+  }
+  .css-three-in-a-row-box > label:hover {
+    background-color: #fff1;
+  }
+  .css-three-in-a-row
+    > input#css-three-in-a-row-1:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-1"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-2:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-2"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-3:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-3"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-4:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-4"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-5:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-5"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-6:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-6"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-7:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-7"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-8:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-8"],
+  .css-three-in-a-row
+    > input#css-three-in-a-row-9:checked
+    ~ .css-three-in-a-row-box
+    > label[for="css-three-in-a-row-9"] {
+    color: var(--text-clr);
+  }
+  .css-three-in-a-row-win {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--default-font);
+    font-size: min(150px, 5vw);
+    font-weight: bold;
+    line-height: 1;
+    color: greenyellow;
+    text-shadow: 0 0.1em 0 green;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.1s 0.2s, transform 0.3s 0.2s;
+    pointer-events: none;
+  }
+  .css-three-in-a-row
+    > input#css-three-in-a-row-1:checked
+    ~ input#css-three-in-a-row-2:checked
+    ~ input#css-three-in-a-row-3:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win,
+  .css-three-in-a-row
+    > input#css-three-in-a-row-4:checked
+    ~ input#css-three-in-a-row-5:checked
+    ~ input#css-three-in-a-row-6:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win,
+  .css-three-in-a-row
+    > input#css-three-in-a-row-7:checked
+    ~ input#css-three-in-a-row-8:checked
+    ~ input#css-three-in-a-row-9:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win,
+  .css-three-in-a-row
+    > input#css-three-in-a-row-1:checked
+    ~ input#css-three-in-a-row-4:checked
+    ~ input#css-three-in-a-row-7:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win,
+  .css-three-in-a-row
+    > input#css-three-in-a-row-2:checked
+    ~ input#css-three-in-a-row-5:checked
+    ~ input#css-three-in-a-row-8:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win,
+  .css-three-in-a-row
+    > input#css-three-in-a-row-3:checked
+    ~ input#css-three-in-a-row-6:checked
+    ~ input#css-three-in-a-row-9:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win,
+  .css-three-in-a-row
+    > input#css-three-in-a-row-1:checked
+    ~ input#css-three-in-a-row-5:checked
+    ~ input#css-three-in-a-row-9:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win,
+  .css-three-in-a-row
+    > input#css-three-in-a-row-3:checked
+    ~ input#css-three-in-a-row-5:checked
+    ~ input#css-three-in-a-row-7:checked
+    ~ .css-three-in-a-row-box
+    > .css-three-in-a-row-win {
+    opacity: 1;
+    transform: scale(1);
+  }
+</style>
+  <style>
+  .css-rain-machine-demo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+  }
+  .css-rain-machine-demo > input {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+    appearance: none;
+  }
+  .css-rain-machine-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px;
+    padding: 30px;
+    border-radius: 20px;
+    border-top: solid 1px #88bde0;
+    background-color: #628ab8;
+    box-shadow: 0 40px 0 #587ba3;
+    margin-bottom: 40px; /* match box-shadow */
+    box-sizing: border-box;
+  }
+  .css-rain-machine-screen {
+    position: relative;
+    width: 340px;
+    height: 340px;
+    border-radius: 8px;
+    border-bottom: solid 1px #88bde0;
+    background-color: #1b2c2b;
+  }
+  .css-rain-machine-screen > img {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 20px #50e66c44);
+    opacity: 0;
+  }
+  .css-rain-machine-controls {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .css-rain-machine-controls > label {
+    flex: 0 0 auto;
+    min-width: 60px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 20px;
+    text-transform: uppercase;
+    background-color: #eff2f3;
+    color: #4c5052;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #b6c4c9;
+    display: none; /* overridden per demo number */
+  }
+  .css-rain-machine-demo label.css-rain-machine-rainy,
+  .css-rain-machine-demo.css-rain-machine-demo-2 label.css-rain-machine-sunny,
+  .css-rain-machine-demo.css-rain-machine-demo-3 label.css-rain-machine-windy {
+    display: block;
+  }
+  .css-rain-machine-demo
+    > input.css-rain-machine-rainy:checked
+    ~ .css-rain-machine-box
+    label.css-rain-machine-rainy,
+  .css-rain-machine-demo
+    > input.css-rain-machine-sunny:checked
+    ~ .css-rain-machine-box
+    label.css-rain-machine-sunny,
+  .css-rain-machine-demo
+    > input.css-rain-machine-windy:checked
+    ~ .css-rain-machine-box
+    label.css-rain-machine-windy {
+    transform: translateY(5px);
+    background-color: #b6c4c9;
+    box-shadow: 0 0 0 #b6c4c9;
+  }
+  .css-rain-machine-demo.css-rain-machine-demo-1
+    > input.css-rain-machine-rainy:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-umbrella {
+    opacity: 1;
+  }
+  .css-rain-machine-demo.css-rain-machine-demo-2
+    > input.css-rain-machine-rainy:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-umbrella,
+  .css-rain-machine-demo.css-rain-machine-demo-2
+    > input.css-rain-machine-sunny:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-umbrella {
+    opacity: 1;
+  }
+  .css-rain-machine-demo.css-rain-machine-demo-3
+    > input.css-rain-machine-rainy:checked
+    ~ input.css-rain-machine-windy:checked
+    ~ .css-rain-machine-box
+    .css-rain-machine-raincoat {
+    opacity: 1;
+  }
+</style>
+  <style>
+  /**
+   * Modified by Kalabasa.
+   * Based on:
+   * a11y-dark theme for JavaScript, CSS, and HTML
+   * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+   * @author ericwbailey
+   */
+
+  .code-block .token.inserted:not(.prefix) {
+    background: #00b6a71c;
+    display: block;
+  }
+
+  .code-block .token.comment,
+  .code-block .token.prolog,
+  .code-block .token.doctype,
+  .code-block .token.cdata {
+    color: #628b9e;
+    font-style: italic;
+  }
+
+  .code-block .token.punctuation {
+    color: #fefefe;
+  }
+
+  .code-block .token.property,
+  .code-block .token.tag,
+  .code-block .token.constant,
+  .code-block .token.symbol,
+  .code-block .token.deleted {
+    color: #ffa07a;
+  }
+
+  .code-block .token.boolean,
+  .code-block .token.number {
+    color: #00e0e0;
+  }
+
+  .code-block .token.selector,
+  .code-block .token.attr-name,
+  .code-block .token.string,
+  .code-block .token.char,
+  .code-block .token.builtin,
+  .code-block .token.inserted {
+    color: #abe338;
+  }
+
+  .code-block .token.operator,
+  .code-block .token.entity,
+  .code-block .token.url,
+  .code-block .token.variable {
+    color: #00e0e0;
+  }
+
+  .code-block .token.atrule,
+  .code-block .token.attr-value,
+  .code-block .token.function {
+    color: #ffd700;
+  }
+
+  .code-block .token.keyword {
+    color: #00e0e0;
+  }
+
+  .code-block .token.regex,
+  .code-block .token.important {
+    color: #ffd700;
+  }
+
+  .code-block .token.important,
+  .code-block .token.bold {
+    font-weight: bold;
+  }
+
+  .code-block .token.italic {
+    font-style: italic;
+  }
+
+  .code-block .token.entity {
+    cursor: help;
+  }
+
+  @media screen and (-ms-high-contrast: active) {
+    .code-block .token.important {
+      background: highlight;
+      color: window;
+      font-weight: normal;
+    }
+
+    .code-block .token.atrule,
+    .code-block .token.attr-value,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.selector {
+      font-weight: bold;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.comment,
+    .code-block .token.doctype,
+    .code-block .token.function,
+    .code-block .token.keyword,
+    .code-block .token.operator,
+    .code-block .token.property,
+    .code-block .token.string {
+      color: highlight;
+    }
+
+    .code-block .token.attr-value,
+    .code-block .token.url {
+      font-weight: normal;
+    }
+  }
+</style>
+  <style>
+  .code-block {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .code-block-code {
+    display: inline-block;
+    padding: 18px;
+    min-width: 100%;
+    box-sizing: border-box;
+    border-radius: 18px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    line-height: 1.6;
+    background: var(--card-clr);
+    white-space: pre;
+  }
+
+  .code-block-wrap-char {
+    word-break: break-all;
+  }
+  .code-block-wrap-char .code-block-code {
+    white-space: pre-wrap;
+  }
+
+  .code-block-wrap-word {
+    word-break: normal;
+  }
+  .code-block-wrap-word .code-block-code {
+    white-space: pre-wrap;
+  }
+</style>
+  <style>
+  .box-note {
+    display: block;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: solid 2px var(--clr0-dark);
+    box-sizing: border-box;
+  }
+</style>
+  <style>
+  .tag-row {
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+  }
+</style>
+  <style>
+  .blog-post-info {
+    margin: 24px 0;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+  .blog-post-info-hidden {
+    display: none;
+  }
+</style>
+  <style>
+  .text-with-bg-span {
+    display: inline;
+    margin: 0;
+    padding: 0.7em;
+    padding: 0.35lh;
+    border-radius: 18px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    font: inherit;
+    background: var(--text-with-bg-color);
+  }
+</style>
+  <style>
+  .blog-header {
+    isolation: isolate;
+    margin: 90px 0 24px;
+    position: relative;
+    left: 50%;
+    height: 400px; /* .blog-header-title::before must match */
+    width: max(800px, 60vw);
+    transform: translateX(-50%);
+    box-sizing: border-box;
+  }
+  @media (max-width: 600px) {
+    .blog-header {
+      margin-top: 60px;
+    }
+  }
+
+  .blog-header-title {
+    position: relative;
+    max-width: 800px;
+    font-family: var(--display-font);
+    font-size: 36px;
+    font-weight: bold;
+    font-style: italic;
+    text-align: left;
+    z-index: 2;
+  }
+  .blog-header-title-inner {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  /* Wrap lines in an angle */
+  .blog-header-title::before {
+    content: "";
+    width: 0;
+    width: calc(min(50%, 120vw - 600px));
+    height: 400px;
+    float: right;
+    shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
+  }
+
+  .blog-header-hero {
+    position: absolute;
+    inset: 1px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    background: gray;
+    z-index: -1;
+  }
+
+  .blog-header-decor {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    fill: var(--bg-clr);
+    z-index: 1;
+  }
+
+  @media (max-width: 800px) {
+    .blog-header {
+      width: 100vw;
+      width: 100svw;
+      height: 400px;
+      padding-right: 36px;
+    }
+    .blog-header-title {
+      font-size: clamp(24px, 20px + 2vw, 36px);
+    }
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 12px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: top;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    padding: 0 calc(min(18px,  -18px + 8vw));
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  @media (max-width: 600px) {
+    .main-header {
+      height: 90px;
+      padding-top: 6px;
+    }
+    .main-header-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+      row-gap: 6px;
+    }
+    .main-header-icon {
+      display: none;
+    }
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.4;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .blog-page {
+    margin: auto;
+    overflow: hidden;
+  }
+
+  .content {
+    margin: auto;
+    padding: 0 18px 60px;
+    width: 100%;
+    max-width: 700px;
+    font-family: var(--reading-font, sans-serif);
+    font-size: 16px;
+    line-height: 2.2;
+    letter-spacing: 0.02em;
+    color: #ddd;
+    box-sizing: border-box;
+  }
+
+  .postcontent {
+    margin: auto;
+    padding: 0 0 60px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .postcontent-narrow {
+    margin: auto;
+    padding: 0 18px;
+    width: 100%;
+    max-width: 700px;
+    box-sizing: border-box;
+  }
+
+  .blog-signature {
+    position: relative;
+    margin: 0 0 60px;
+    line-height: 21px;
+  }
+  .blog-signature::before {
+    content: "❝";
+    position: absolute;
+    left: -15px;
+    top: 0;
+    font-size: 60px;
+    opacity: 0.2;
+  }
+  .blog-signature a {
+    font-weight: bold;
+  }
+  .blog-signature-name {
+    white-space: nowrap;
+  }
+  .blog-signature-img {
+    position: relative;
+    top: 3px;
+  }
+
+  .markdown > h1,
+  .markdown > h2,
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    margin: 48px 0 36px;
+    font-family: var(--display-font);
+    font-weight: normal;
+    font-style: italic;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    text-wrap: balance;
+  }
+  .markdown > h1 {
+    text-align: center;
+    font-size: 200%;
+  }
+  .markdown > h2 {
+    font-size: 150%;
+  }
+  .markdown > h3,
+  .markdown > h4,
+  .markdown > h5,
+  .markdown > h6 {
+    font-size: 120%;
+    font-weight: bold;
+  }
+
+  .markdown > p {
+    margin: 36px 0;
+  }
+  .markdown .box-note > p {
+    margin: 18px 0;
+  }
+  .markdown .box-note > p:first-child {
+    margin-top: 0;
+  }
+  .markdown .box-note > p:last-child {
+    margin-bottom: 0;
+  }
+
+  .markdown-table,
+  .markdown .horizontal-scroll {
+    margin: 0 -18px; /* bleed content padding */
+    padding: 0 18px; /* bleed content padding */
+    overflow-x: auto;
+  }
+  .markdown-table > table {
+    min-width: 100%;
+    box-sizing: border-box;
+    border-collapse: collapse;
+    background-color: var(--card-clr);
+    border-radius: 12px;
+  }
+  .markdown-table > table th,
+  .markdown-table > table td {
+    min-width: min(25vw, 8ch);
+    box-sizing: border-box;
+    text-align: start;
+    padding: 9px 6px;
+    padding-inline-end: 18px;
+    border-bottom: solid 1px #444;
+  }
+  .markdown-table > table th:first-child,
+  .markdown-table > table td:first-child {
+    padding-left: 12px;
+  }
+  .markdown-table > table th:last-child,
+  .markdown-table > table td:last-child {
+    padding-right: 12px;
+  }
+  .markdown-table > table > tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+
+  .markdown > hr {
+    width: 36px;
+    margin: 90px auto;
+    border: solid 1.5px #ccc;
+    background: #ccc;
+    border-radius: 3px;
+  }
+
+  .markdown code:not([class]):not([class]) {
+    display: inline-block;
+    padding: 0 6px;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-style: italic;
+  }
+  .markdown > pre:not([class]) > code:not([class]) {
+    display: block;
+    padding: 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 15px;
+    font-style: normal;
+    overflow-x: auto;
+    background: var(--card-clr);
+  }
+
+  .markdown > blockquote {
+    position: relative;
+    margin: 0;
+    padding: 18px 24px;
+    border-radius: 18px;
+    border: solid 1px var(--clr0);
+    font-size: 21px;
+  }
+  .markdown > blockquote::before {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 0;
+    height: 24px;
+    width: 24px;
+    border-bottom: solid 1px var(--clr0);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote::after {
+    content: "";
+    position: absolute;
+    right: 100%;
+    top: 24px;
+    bottom: 18px;
+    width: 24px;
+    border-top-right-radius: 24px;
+    border: solid var(--clr0);
+    border-width: 1px 1px 0 0;
+    box-shadow: 9px 0 0 var(--bg-clr), 18px 0 0 var(--bg-clr);
+    box-sizing: border-box;
+  }
+  .markdown > blockquote > :first-child {
+    margin-top: 0;
+  }
+  .markdown > blockquote > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown > blockquote cite {
+    display: block;
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: inherit;
+  }
+  .markdown > blockquote cite::before {
+    content: "—";
+  }
+
+  .markdown > iframe,
+  .markdown > p > iframe {
+    max-width: calc(100vw - 18px);
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .markdown .center {
+    text-align: center;
+  }
+  .markdown .center-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* todo? convert to component <blog-bleed>, reuse across <blog-media> */
+  .markdown .bleed {
+    position: relative;
+    left: 50%;
+    width: 100vh;
+    max-width: max(min(100vw, 800px), 80vw);
+    transform: translateX(-50%);
+  }
+
+  /* todo: convert to component <caption>, reuse across <blog-media> */
+  .markdown .caption {
+    display: block;
+    font-size: 15px;
+    text-align: center;
+  }
+</style>
+  <style>
+  .card-carousel-container {
+    position: relative;
+  }
+
+  .card-carousel {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(min(546px, 100svw - 90px));
+    justify-content: start;
+    gap: 60px;
+    padding: 12px 12px 0;
+    scrollbar-width: none;
+    overflow: auto;
+  }
+  @media (max-width: 900px) {
+    .card-carousel {
+      gap: 30px;
+    }
+  }
+
+  .card-carousel-btn-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+  }
+
+  .card-carousel-btn {
+    position: absolute;
+    min-width: 60px;
+    height: 60px;
+    padding: 0 18px;
+    box-sizing: border-box;
+    border: none;
+    background: var(--bg-clr);
+    color: var(--text-clr);
+    cursor: pointer;
+    font-family: var(--display-font);
+    font-size: 21px;
+    font-weight: bold;
+    text-shadow: 0 0 18px #000;
+    pointer-events: all;
+    transition: opacity 60ms ease-out;
+  }
+  .card-carousel-container:hover .card-carousel-btn {
+    color: var(--clr0-light);
+  }
+  .card-carousel-btn:hover {
+    color: var(--clr1);
+  }
+  .card-carousel-btn-next {
+    right: 0;
+    bottom: 0;
+    text-align: left;
+    padding-left: 5mm;
+    border-top-left-radius: 12px;
+  }
+  .card-carousel-btn-prev {
+    left: 0;
+    top: 0;
+    text-align: right;
+    padding-right: 5mm;
+    border-bottom-right-radius: 12px;
+  }
+  .card-carousel-btn-hidden {
+    opacity: 0;
+  }
+
+  .card-carousel-btn-symbol {
+    display: inline-block;
+    pointer-events: none;
+  }
+  .card-carousel-container:hover .card-carousel-btn-next .card-carousel-btn-symbol {
+    animation: card-carousel-btn-next-symbol 0.5s var(--ease) infinite alternate;
+  }
+  .card-carousel-container:hover .card-carousel-btn-prev .card-carousel-btn-symbol {
+    animation: card-carousel-btn-prev-symbol 0.5s var(--ease) infinite alternate;
+  }
+  @keyframes card-carousel-btn-next-symbol {
+    to {
+      transform: translateX(0.5ch);
+    }
+  }
+  @keyframes card-carousel-btn-prev-symbol {
+    to {
+      transform: translateX(-0.5ch);
+    }
+  }
+
+  /* approximately select touch-based media */
+  @media (hover: none) and (pointer: coarse) {
+    .card-carousel-btn {
+      display: none;
+    }
+  }
+</style>
+  <style>
+  .blog-suggestions {
+    margin: 120px auto 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .blog-suggestions-title-link {
+    color: inherit;
+  }
+
+  .blog-suggestions-title {
+    margin: 0 0 30px;
+    text-align: center;
+  }
+
+  .blog-suggestions-carousel {
+    /* virtual max width 2400px */
+    padding-inline: calc(max(30px, 50svw - 1200px));
+  }
+</style>
+  <style>
+  .card-grid-item {
+    display: block;
+    text-decoration: none;
+    text-align: start;
+    color: var(--text-clr);
+    overflow: hidden;
+    transition: 0.2s var(--ease);
+    transition-property: margin, padding;
+  }
+  .card-grid-animated .card-grid-item {
+    animation: card-grid-item-reveal 0.8s var(--ease) backwards;
+    animation-delay: var(--card-grid-item-delay);
+  }
+  @keyframes card-grid-item-reveal {
+    0% {
+      clip-path: inset(20% 100% 60% 0 round 18px);
+      filter: brightness(0);
+    }
+    50% {
+      clip-path: inset(20% 0 60% 0 round 18px);
+      filter: brightness(1);
+    }
+    100% {
+      clip-path: inset(0 0 0 0 round 18px);
+    }
+  }
+
+  .card-grid-image-container {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    border-radius: 18px;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .card-grid-image-container::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--clr0);
+    mix-blend-mode: darken;
+    transition: background 1s;
+  }
+
+  .card-grid-image {
+    width: 101%;
+    height: 101%;
+    object-fit: cover;
+    object-position: top;
+    filter: contrast(0.8);
+    transform: scale(1);
+    transform-origin: 9px 9px;
+    transition: filter 1s, transform 1s;
+  }
+  .card-grid-thumbalign-center .card-grid-image {
+    object-position: center;
+    transform-origin: center;
+  }
+  .card-grid-thumbalign-top .card-grid-image {
+    object-position: top;
+    transform-origin: top;
+  }
+
+  .card-grid-title-wrap {
+    position: relative;
+    max-width: 70%;
+    height: 0;
+  }
+  .card-grid-title-bar {
+    position: absolute;
+    bottom: 0;
+    border-top-right-radius: 18px;
+    background: var(--bg-clr);
+  }
+  .card-grid-title-content {
+    position: relative;
+    padding: 12px 24px 0 0;
+    transition: padding 0.2s var(--ease);
+  }
+  .card-grid-title-content::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    width: 18px;
+    height: 36px;
+    border-bottom-left-radius: 18px;
+    box-shadow: 0 18px 0 var(--bg-clr);
+  }
+  .card-grid-title-content::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    width: 36px;
+    height: 18px;
+    border-bottom-left-radius: 18px;
+    box-shadow: -18px 0 0 var(--bg-clr);
+  }
+
+  .card-grid-title {
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-style: italic;
+    font-weight: bold;
+  }
+
+  .card-grid-posttitle {
+    margin-top: 12px;
+    font-size: 15px;
+    font-style: italic;
+    font-weight: bold;
+    opacity: 0.8;
+  }
+  .card-grid-posttitle:empty {
+    display: none;
+  }
+
+  .card-grid-postitle-small {
+    display: none;
+  }
+
+  .card-grid-actions {
+    display: none;
+    gap: 5mm;
+    max-height: 48px;
+    padding-top: 6px;
+    overflow: hidden;
+  }
+  .card-grid-action {
+    display: inline-block;
+    font-weight: bold;
+    text-decoration: underline;
+    color: var(--text2-clr);
+    cursor: pointer;
+    position: relative;
+  }
+  .card-grid-info {
+    margin: -2.5mm;
+    padding: 2.5mm;
+  }
+  .card-grid-story::after {
+    content: "→";
+    display: inline-block;
+  }
+
+  .card-grid-content {
+    margin: 18px 0;
+    font-size: 15px;
+    line-height: 2;
+    transition: margin 0.2s var(--ease);
+  }
+
+  .card-grid-animated .card-grid-title {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.8s);
+  }
+  .card-grid-animated .card-grid-posttitle {
+    animation: card-grid-text-reveal 0.4s cubic-bezier(0, 0.8, 0.6, 1) backwards;
+    animation-delay: calc(var(--card-grid-item-delay) + 0.9s);
+  }
+
+  @keyframes card-grid-text-reveal {
+    from {
+      transform: translateY(-100%);
+      clip-path: inset(100% 0 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .card-grid-animated .card-grid-content {
+    animation: card-grid-content 0.6s 1.5s backwards;
+  }
+  @keyframes card-grid-content {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (hover: hover) {
+    .card-grid-item:hover {
+      margin: -12px -24px 0;
+      padding-bottom: 12px;
+    }
+    .card-grid-item:hover .card-grid-image-container::after {
+      background: var(--text-clr);
+      transition: background 2s;
+    }
+    .card-grid-item:hover .card-grid-image {
+      filter: contrast(1);
+      transform: scale(1.1);
+      transition: filter 1s, transform 2s;
+    }
+    .card-grid-item:hover .card-grid-title-content {
+      padding: 24px;
+    }
+    .card-grid-item:hover .card-grid-content {
+      margin-left: 24px;
+      margin-right: 24px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .card-grid-content {
+      margin: 12px 0;
+    }
+
+    .card-grid-image-container {
+      height: 200px;
+    }
+
+    .card-grid-posttitle {
+      display: none;
+    }
+    .card-grid-postitle-small {
+      display: block;
+    }
+
+    .card-grid-actions {
+      display: flex;
+    }
+    .card-grid-item-expanded .card-grid-actions {
+      max-height: 0;
+      transition: max-height 0.2s cubic-bezier(0.2, 0, 0.8, 1);
+    }
+
+    .card-grid-description {
+      max-height: 0;
+      overflow: hidden;
+    }
+    .card-grid-item-expanded .card-grid-description {
+      max-height: 100vh;
+      transition: max-height 1s cubic-bezier(0.2, 0, 1, 1);
+    }
+  }
+</style>
+  <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
+  }
+</style>
+  <style>
+  .btn,
+  .btn:visited {
+    padding: 6px 12px;
+    border-radius: 12px;
+    border: none;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    background: var(--clr0-dark);
+    color: #fff;
+    cursor: pointer;
+  }
+  .btn:not(:disabled):hover {
+    background: var(--clr0);
+  }
+  .btn:not(:disabled):active {
+    background: var(--clr0-dark);
+  }
+  .btn:disabled {
+    color: #888;
+    cursor: not-allowed;
+  }
+</style>
+  <style>
+  .blog-rss-link {
+    margin: 60px auto 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .blog-rss-link-combo {
+    display: flex;
+    justify-content: center;
+  }
+  .blog-rss-link-a {
+    padding: 0 12px;
+    border: solid 1px var(--clr0);
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    box-sizing: border-box;
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    color: var(--text2-clr);
+  }
+  .blog-rss-link-button {
+    height: 30px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+</style>
+  <style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
+  <style>
+  .demo-box {
+    margin: 18px 0;
+    border-radius: 12px;
+    background-color: #eee;
+    color: #000;
+    padding: 12px;
+    user-select: none;
+  }
+
+  .demo1 label {
+    cursor: pointer;
+  }
+  .demo1 input {
+    appearance: none;
+  }
+  .demo1 span {
+    display: inline-block;
+    width: 1ch;
+    height: 1ch;
+    border: solid 2px red;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  .demo1 input:checked ~ span {
+    background-color: red;
+    transform: rotate(45deg);
+  }
+
+  .demo2 .advice {
+    min-height: 2em;
+    min-height: 2lh;
+  }
+  .demo2 .take-umbrella {
+    display: none;
+  }
+  .demo2 input:checked ~ .advice .take-umbrella {
+    display: revert;
+  }
+  .demo2 input:checked ~ .advice .no-umbrella {
+    display: none;
+  }
+</style>
+  <script async="" src="/scripts/cursor.js"></script>
+</head>
+
+
+
+<body>
+
+  <span hidden="" class="p-name">Pure CSS tic-tac-toe with game AI</span>
+
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/notes/" class="main-header-item select">Notes</a>
+        <a href="/about/" class="main-header-item ">About</a>
+        <img class="main-header-icon main-header-icon-yay" src="/icons/yay_sheet.png" alt="">
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/music/" class="main-header-item ">Music</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="blog-page h-entry">
+
+        <div class="content e-content">
+
+          <!-- prettier-ignore -->
+          <div class="markdown">
+            <p>
+            <div class="blog-header">
+              <div class="text-with-bg blog-header-title p-name" style="--text-with-bg-color: var(--bg-clr)">
+                <h1 class="text-with-bg-span blog-header-title-inner">
+                  Pure CSS tic-tac-toe with game AI
+                </h1>
+              </div>
+              <img srcset="/notes/pure-css-tictactoe-ai/hero_800.generated.jpg 800w,/notes/pure-css-tictactoe-ai/hero_1020.generated.jpg 1020w,/notes/pure-css-tictactoe-ai/hero_1400.generated.jpg 1400w" sizes="not (min-width:800px) 800px,(max-width:1275px) 1020px, 1400px" class="blog-header-hero u-media" src="/notes/pure-css-tictactoe-ai/hero.jpg" alt="" spec="100% [800) 80%">
+              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+                <path></path>
+              </svg>
+            </div>
+            </p>
+            <p>
+            <div class="blog-post-info ">
+              <span class="dt-published">5 May 2023</span> · 14 min read
+            </div>
+            </p>
+            <!--  textlint-disable  -->
+
+            <div class="tag-row">tags:
+              <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span>
+              <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+            </div>
+
+            <!--  textlint-enable  -->
+
+            <p>As a software developer, I’m always looking for new and fun ways to challenge myself. Some time ago, I decided to implement tic-tac-toe with AI using only <strong>HTML</strong> and <strong>CSS</strong>. That is, no JavaScript! I already knew about the possibility of advanced CSS interactions (e.g. fancy checkboxes), but I wanted to see how far I could take it.</p>
+            <p>Here’s a CodePen of it! Can you beat a style sheet in a game of tic-tac-toe?</p>
+            <p class="codepen" data-height="700" data-theme-id="dark" data-default-tab="result" data-slug-hash="oVMOZK" data-user="kalabasa" style="height: 300px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;">
+              <span>See the Pen <a href="https://codepen.io/kalabasa/pen/oVMOZK">
+                  Pure CSS Tic Tac Toe AI</a> by Kalabasa (<a href="https://codepen.io/kalabasa">@kalabasa</a>)
+                on <a href="https://codepen.io">CodePen</a>.</span>
+            </p>
+
+
+            <p>In this post, I’ll write about the steps I took to make it, starting with the fundamentals.</p>
+            <span class="box-note ">
+              Disclaimer: This was an experiment only. Never do this in production code!
+            </span>
+
+            <h2 id="building-blocks">Building blocks</h2>
+            <p>Before starting to build anything complex, it’s important to start small and think about the basic elements. Unlike JavaScript, HTML and CSS are declarative languages. We can’t have procedures or functions, control flow, if-statements, and the like. Instead what we have are markup and rules. We’ll build upon these rules to create complex game logic.</p>
+            <p>For starters, let’s do something that’s fairly common on the web: <strong>custom checkbox styles</strong>.</p>
+            <div class="demo-box demo1">
+              <label><input type="checkbox"><span></span> Check this out</label>
+              <div><small>(Hey, these demos are interactive!)</small></div>
+            </div>
+
+            <p>To do this, we need an extra element for the checkbox visuals, like an empty span element.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>label</span><span class="token punctuation">&gt;</span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>checkbox<span class="token punctuation">"</span></span> <span class="token punctuation">/&gt;</span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">&gt;</span></span> Check this out
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>label</span><span class="token punctuation">&gt;</span></span></code></pre>
+            <p>On the CSS side, the real checkbox input is hidden, while the span is styled as a checkbox in its stead.</p>
+            <p>Now here’s the important part, we’ll use the <code>:checked</code> pseudo-class and the <strong>sibling combinator</strong> <code>~</code> to make it all work. The checked pseudo-class selector reacts to the checkbox input’s state, while the sibling combinator makes it possible to apply the styles on the separate fake checkbox element.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token selector">input:checked ~ span</span> <span class="token punctuation">{</span>
+  <span class="token property">background-color</span><span class="token punctuation">:</span> red<span class="token punctuation">;</span>
+  <span class="token property">transform</span><span class="token punctuation">:</span> <span class="token function">rotate</span><span class="token punctuation">(</span>45deg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Custom checkboxes! Easy.</p>
+            <h3 id="action-at-a-distance">Action at a distance</h3>
+            <p>The sibling combinator has uses beyond styling boxes next to inputs. We can perform some “action at a distance”. For example, if you can tick the following “Is it raining” checkbox, the distant “Advice” box reacts:</p>
+            <div class="demo-box demo2">
+              <input type="checkbox" id="demo2_input">
+              <label for="demo2_input">Is it raining?</label>
+              <p>As you know, when it rains, water falls down from the sky. This may cause undesired wetness. An umbrella is a device which shields the user from falling particles such as the aforementioned rainwater.</p>
+              <fieldset class="advice">
+                <legend>Advice</legend>
+                <span class="take-umbrella">Take an umbrella today!</span>
+                <span class="no-umbrella">No need for an umbrella!</span>
+              </fieldset>
+            </div>
+
+            <pre class="code-block "><code class="code-block-code"><span class="token selector">input:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
+    <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token selector">input:checked ~ .advice .no-umbrella</span> <span class="token punctuation">{</span>
+    <span class="token property">visibility</span><span class="token punctuation">:</span> hidden<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>As you’ll see later, the sibling combinator <code>~</code> can be very useful for these types of interactions.</p>
+            <h3 id="the-next-level">The next level</h3>
+            <p>Let’s make this system a lot more flexible.</p>
+            <p>Using the <code>&lt;label&gt;</code>’s <code>for</code> attribute, we can get even more action at a distance. We can make just about any kind of UI we want!</p>
+            <p>To demonstrate, I present… the weather-advice-o-matic! 🌈 Go ahead, press the button!</p>
+            <p>
+            <div class="css-rain-machine-demo css-rain-machine-demo-1" data-rss="interactive" alt="demo of CSS-only machine">
+              <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--1" type="checkbox">
+              <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--1" type="checkbox">
+              <input class="css-rain-machine-windy" id="css-rain-machine-windy--1" type="checkbox">
+
+              <div class="css-rain-machine-box">
+                <div class="css-rain-machine-screen">
+                  <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
+                  <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
+                </div>
+                <div class="css-rain-machine-controls">
+                  <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--1">Rainy</label>
+                  <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--1">Sunny</label>
+                  <label class="css-rain-machine-windy" for="css-rain-machine-windy--1">Windy</label>
+                </div>
+              </div>
+            </div>
+            </p>
+            <p>The way this generalises is that all the <code>&lt;input&gt;</code>s are placed at the very top of the document. These inputs represent the global state. We can use <code>&lt;label for=…</code> to control those inputs from anywhere, and sibling selectors to react to those inputs anywhere.</p>
+            <h3 id="or">OR</h3>
+            <p>A single button is not very exciting, is it? Let’s add another input and implement an <strong>OR</strong> construct to determine the output. That is, implement "if A or B then C".</p>
+            <p>In CSS this can be easily achieved by using a <strong>selector list</strong> (comma-separated selectors).</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token selector">input#raining:checked ~ .advice .take-umbrella,
+input#sunny:checked ~ .advice .take-umbrella</span> <span class="token punctuation">{</span>
+  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Now, weather-advice-o-matic can make decisions based on two parameters!</p>
+            <p>
+            <div class="css-rain-machine-demo css-rain-machine-demo-2" data-rss="interactive" alt="demo of CSS-only machine">
+              <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--2" type="checkbox">
+              <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--2" type="checkbox">
+              <input class="css-rain-machine-windy" id="css-rain-machine-windy--2" type="checkbox">
+
+              <div class="css-rain-machine-box">
+                <div class="css-rain-machine-screen">
+                  <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
+                  <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
+                </div>
+                <div class="css-rain-machine-controls">
+                  <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--2">Rainy</label>
+                  <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--2">Sunny</label>
+                  <label class="css-rain-machine-windy" for="css-rain-machine-windy--2">Windy</label>
+                </div>
+              </div>
+            </div>
+            </p>
+            <p>(If RAINY or SUNNY then UMBRELLA)</p>
+            <h3 id="and">AND</h3>
+            <p>How about <strong>AND</strong>? We can implement an AND construct too. This involves chaining the inputs together in a single selector using sibling combinators.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token selector">input#raining:checked ~ input#windy:checked ~ .advise .take-raincoat</span> <span class="token punctuation">{</span>
+  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>What’s this? Weather-advice-o-matic can now make nuanced decisions! Wow! Careful, it might be sentient!!!</p>
+            <p>
+            <div class="css-rain-machine-demo css-rain-machine-demo-3" data-rss="interactive" alt="demo of CSS-only machine">
+              <input class="css-rain-machine-rainy" id="css-rain-machine-rainy--3" type="checkbox">
+              <input class="css-rain-machine-sunny" id="css-rain-machine-sunny--3" type="checkbox">
+              <input class="css-rain-machine-windy" id="css-rain-machine-windy--3" type="checkbox">
+
+              <div class="css-rain-machine-box">
+                <div class="css-rain-machine-screen">
+                  <img class="css-rain-machine-umbrella" alt="Take umbrella" src="/notes/pure-css-tictactoe-ai/umbrella.png">
+                  <img class="css-rain-machine-raincoat" alt="Take raincoat" src="/notes/pure-css-tictactoe-ai/raincoat.png">
+                </div>
+                <div class="css-rain-machine-controls">
+                  <label class="css-rain-machine-rainy" for="css-rain-machine-rainy--3">Rainy</label>
+                  <label class="css-rain-machine-sunny" for="css-rain-machine-sunny--3">Sunny</label>
+                  <label class="css-rain-machine-windy" for="css-rain-machine-windy--3">Windy</label>
+                </div>
+              </div>
+            </div>
+            </p>
+            <p>(If RAINY and WINDY then RAINCOAT)</p>
+            <p>Here’s a summary of what we have so far:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">/* if A or B then C */</span>
+<span class="token selector">A ~ C,
+B ~ C</span> <span class="token punctuation">{</span>
+  C
+<span class="token punctuation">}</span>
+
+<span class="token comment">/* if A and B then C */</span>
+<span class="token selector">A ~ B ~ C</span> <span class="token punctuation">{</span>
+  C
+<span class="token punctuation">}</span></code></pre>
+            <p>Another basic computing operator aside from AND and OR is the <strong>NOT</strong> operator. We don’t really need that here, but for the record, there’s the <code>:not()</code> pseudo-class in CSS. You can figure that out.</p>
+            <h2 id="prototype-three-in-a-row">Prototype: Three-in-a-row</h2>
+            <p>As a proof of concept and precursor to tic-tac-toe, let’s look at this three-in-a-row game.</p>
+            <p>
+            <div class="css-three-in-a-row" data-rss="interactive" alt="interactive demo of three-in-a-row">
+              <input id="css-three-in-a-row-1" type="checkbox">
+              <input id="css-three-in-a-row-2" type="checkbox">
+              <input id="css-three-in-a-row-3" type="checkbox">
+              <input id="css-three-in-a-row-4" type="checkbox">
+              <input id="css-three-in-a-row-5" type="checkbox">
+              <input id="css-three-in-a-row-6" type="checkbox">
+              <input id="css-three-in-a-row-7" type="checkbox">
+              <input id="css-three-in-a-row-8" type="checkbox">
+              <input id="css-three-in-a-row-9" type="checkbox">
+
+              <div class="css-three-in-a-row-box">
+                <label for="css-three-in-a-row-1">X</label>
+                <label for="css-three-in-a-row-2">X</label>
+                <label for="css-three-in-a-row-3">X</label>
+                <label for="css-three-in-a-row-4">X</label>
+                <label for="css-three-in-a-row-5">X</label>
+                <label for="css-three-in-a-row-6">X</label>
+                <label for="css-three-in-a-row-7">X</label>
+                <label for="css-three-in-a-row-8">X</label>
+                <label for="css-three-in-a-row-9">X</label>
+                <div class="css-three-in-a-row-win">WINNER</div>
+              </div>
+            </div>
+            </p>
+            <p>This is a 3x3 array of checkbox inputs. Internally, each box is numbered 1 to 9 starting from the top-left box going left-to-right row-wise.</p>
+            <p>Here are the rules for implementing the win condition in CSS:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win</span> <span class="token punctuation">{</span>
+  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>Yes, it’s kinda hacky, but that is expected when you force logic into CSS. For comparison, the CSS for tic-tac-toe goes over 9000 lines! I never said it would be clean.</p>
+            <p>Anyway, these 8 lines correspond to the 8 possible ways to win the game. The 3-input AND rule (remember AND rules?) in each line covers <em>every possible winning combination</em>. The pseudocode in the comment helps illustrate this:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">/*
+ * if
+ *      ([#1 marked] and [#2 marked] and [#3 marked]) // top row
+ *   or ([#4 marked] and [#5 marked] and [#6 marked]) // middle row
+ *   or ([#7 marked] and [#8 marked] and [#9 marked]) // bottom row
+ *   .
+ *   :
+ *   or ([#3 marked] and [#5 marked] and [#7 marked]) // upward diagonal
+ * then
+ *   [win]
+ */</span>
+<span class="token selector">#1:checked ~ #2:checked ~ #3:checked ~ .win,
+#4:checked ~ #5:checked ~ #6:checked ~ .win,
+#7:checked ~ #8:checked ~ #9:checked ~ .win,
+#1:checked ~ #4:checked ~ #7:checked ~ .win,
+#2:checked ~ #5:checked ~ #8:checked ~ .win,
+#3:checked ~ #6:checked ~ #9:checked ~ .win,
+#1:checked ~ #5:checked ~ #9:checked ~ .win,
+#3:checked ~ #5:checked ~ #7:checked ~ .win</span> <span class="token punctuation">{</span>
+  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <h2 id="taking-turns">Taking turns</h2>
+            <p>So far, the order of your inputs doesn’t matter. You can even undo your inputs by unchecking the boxes (Try it above). That won’t fly in a game of tic-tac-toe, where we take turns incrementally marking the board. No backsies!</p>
+            <p>We need a way to <strong>“consume”</strong> inputs. We can do this by hiding the inputs or otherwise making them unclickable. This is just a trick, of course, as we can’t really disable inputs using CSS. But it works fine for the typical mouse and touch users.</p>
+            <p>So for tic-tac-toe, what I did was define multiple sets of the 3x3 input board, that is, one set of inputs for each turn.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <video class="blog-media-element " src="/notes/pure-css-tictactoe-ai/input_sets.mp4" muted="" autoplay="" loop="" aria-label="input sets illustration">
+                Video: input sets illustration | Source: /notes/pure-css-tictactoe-ai/input_sets.mp4
+              </video>
+            </div>
+            </p>
+            <p>Stacked on top of each other, each set is only interactable on its turn.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">/* Disable turn 1 inputs when turn 1 is played */</span>
+<span class="token selector">input[name="turn_1"]:checked ~ input[name="turn_1"]</span> <span class="token punctuation">{</span>
+    <span class="token property">pointer-events</span><span class="token punctuation">:</span> none<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/* Enable next turn's inputs */</span>
+<span class="token selector">input[name="turn_1"]:checked ~ input[name="turn_2"]</span> <span class="token punctuation">{</span>
+    <span class="token property">pointer-events</span><span class="token punctuation">:</span> all<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/* And so on... */</span></code></pre>
+            <p>Here’s little a demo of sequential inputs:</p>
+            <p><span class="box-note ">I was only able to implement up to three turns here. The exponential growth of rules has gotten really tedious to write!</span></p>
+            <p>
+            <form class="css-three-in-a-row-seq" data-rss="interactive" alt="interactive demo of three-in-a-row">
+              <input id="css-three-in-a-row-seq-1-1" type="radio" name="css-three-in-a-row-seq-1" value="1">
+              <input id="css-three-in-a-row-seq-1-2" type="radio" name="css-three-in-a-row-seq-1" value="2">
+              <input id="css-three-in-a-row-seq-1-3" type="radio" name="css-three-in-a-row-seq-1" value="3">
+              <input id="css-three-in-a-row-seq-1-4" type="radio" name="css-three-in-a-row-seq-1" value="4">
+              <input id="css-three-in-a-row-seq-1-5" type="radio" name="css-three-in-a-row-seq-1" value="5">
+              <input id="css-three-in-a-row-seq-1-6" type="radio" name="css-three-in-a-row-seq-1" value="6">
+              <input id="css-three-in-a-row-seq-1-7" type="radio" name="css-three-in-a-row-seq-1" value="7">
+              <input id="css-three-in-a-row-seq-1-8" type="radio" name="css-three-in-a-row-seq-1" value="8">
+              <input id="css-three-in-a-row-seq-1-9" type="radio" name="css-three-in-a-row-seq-1" value="9">
+
+              <input id="css-three-in-a-row-seq-2-1" type="radio" name="css-three-in-a-row-seq-2" value="1">
+              <input id="css-three-in-a-row-seq-2-2" type="radio" name="css-three-in-a-row-seq-2" value="2">
+              <input id="css-three-in-a-row-seq-2-3" type="radio" name="css-three-in-a-row-seq-2" value="3">
+              <input id="css-three-in-a-row-seq-2-4" type="radio" name="css-three-in-a-row-seq-2" value="4">
+              <input id="css-three-in-a-row-seq-2-5" type="radio" name="css-three-in-a-row-seq-2" value="5">
+              <input id="css-three-in-a-row-seq-2-6" type="radio" name="css-three-in-a-row-seq-2" value="6">
+              <input id="css-three-in-a-row-seq-2-7" type="radio" name="css-three-in-a-row-seq-2" value="7">
+              <input id="css-three-in-a-row-seq-2-8" type="radio" name="css-three-in-a-row-seq-2" value="8">
+              <input id="css-three-in-a-row-seq-2-9" type="radio" name="css-three-in-a-row-seq-2" value="9">
+
+              <input id="css-three-in-a-row-seq-3-1" type="radio" name="css-three-in-a-row-seq-3" value="1">
+              <input id="css-three-in-a-row-seq-3-2" type="radio" name="css-three-in-a-row-seq-3" value="2">
+              <input id="css-three-in-a-row-seq-3-3" type="radio" name="css-three-in-a-row-seq-3" value="3">
+              <input id="css-three-in-a-row-seq-3-4" type="radio" name="css-three-in-a-row-seq-3" value="4">
+              <input id="css-three-in-a-row-seq-3-5" type="radio" name="css-three-in-a-row-seq-3" value="5">
+              <input id="css-three-in-a-row-seq-3-6" type="radio" name="css-three-in-a-row-seq-3" value="6">
+              <input id="css-three-in-a-row-seq-3-7" type="radio" name="css-three-in-a-row-seq-3" value="7">
+              <input id="css-three-in-a-row-seq-3-8" type="radio" name="css-three-in-a-row-seq-3" value="8">
+              <input id="css-three-in-a-row-seq-3-9" type="radio" name="css-three-in-a-row-seq-3" value="9">
+              <div class="css-three-in-a-row-seq-box">
+                <div class="css-three-in-a-row-seq-grid">
+                  <label for="css-three-in-a-row-seq-1-1" data-value="1"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-2" data-value="2"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-3" data-value="3"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-4" data-value="4"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-5" data-value="5"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-6" data-value="6"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-7" data-value="7"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-8" data-value="8"> 1 </label>
+                  <label for="css-three-in-a-row-seq-1-9" data-value="9"> 1 </label>
+                </div>
+                <div class="css-three-in-a-row-seq-grid">
+                  <label for="css-three-in-a-row-seq-2-1" data-value="1"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-2" data-value="2"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-3" data-value="3"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-4" data-value="4"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-5" data-value="5"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-6" data-value="6"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-7" data-value="7"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-8" data-value="8"> 2 </label>
+                  <label for="css-three-in-a-row-seq-2-9" data-value="9"> 2 </label>
+                </div>
+                <div class="css-three-in-a-row-seq-grid">
+                  <label for="css-three-in-a-row-seq-3-1" data-value="1"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-2" data-value="2"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-3" data-value="3"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-4" data-value="4"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-5" data-value="5"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-6" data-value="6"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-7" data-value="7"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-8" data-value="8"> 3 </label>
+                  <label for="css-three-in-a-row-seq-3-9" data-value="9"> 3 </label>
+                </div>
+              </div>
+            </form>
+            </p>
+            <p>With the power of sequencing, we’re starting to recreate the power of state machines and procedural programming!</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/pure-css-tictactoe-ai/meme_500.generated.jpg 500w,/notes/pure-css-tictactoe-ai/meme_664.generated.jpg 664w" sizes="not (min-width:664px) 500px, 664px" class="blog-media-element " alt="Look What They Need To Mimic A Fraction Of Our Power meme" src="/notes/pure-css-tictactoe-ai/meme.jpg" spec="100% [664) 664" loading="lazy" width="100%" height="" style="aspect-ratio: 0.8960573476702509; background: #f8f8f8">
+            </div>
+            </p>
+            <h2 id="game-ai">Game AI</h2>
+            <span class="box-note ">
+              I’m referring to the more specific term “game AI” here, because the term “AI” has come to mean some learning machine nowadays. Game AI simply means NPCs or computer-controlled agents.
+            </span>
+
+            <p>Tic-tac-toe is a <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Solved_game">solved game</a>, which means there exists a perfect strategy. For every move, there is a known optimal counter move.</p>
+            <p>This is perfect for CSS as it’s just a bunch of static declarations. We can list all of the optimal moves and directly translate them into CSS declarations!</p>
+            <p>As a side-effect, the AI would never lose. But that’s not a bad thing at all. Here, the CSS will style on you.</p>
+            <p>The rules are essentially a bunch of if-then statements for every scenario. Here are a couple of them:</p>
+            <h3 id="blocking">Blocking</h3>
+            <p>Example rule: <em>If <strong>X(1)</strong> and <strong>X(2)</strong> then <strong>O(3)</strong>.</em></p>
+            <p>In English, if an X was played at box #1 (top-left) and another X is at #2 (top-center), then block the top row by playing O at box #3 (top-right).</p>
+            <p>(In these examples, X is the player and O is the AI.)</p>
+            <p>In CSS, that translates to:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token selector">input[value="1"]:checked
+~ input[value="2"]:checked
+~ .o3</span> <span class="token punctuation">{</span>
+  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">,</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <video class="blog-media-element " src="/notes/pure-css-tictactoe-ai/blocking.mp4" muted="" autoplay="" loop="" aria-label="blocking rule animation">
+                Video: blocking rule animation | Source: /notes/pure-css-tictactoe-ai/blocking.mp4
+              </video>
+            </div>
+            </p>
+            <h3 id="winning-moves">Winning moves</h3>
+            <p>Another example: <em>If <strong>O(3)</strong> and <strong>O(7)</strong> then <strong>O(5)</strong>.</em></p>
+            <p>If O is at box #3 (top-right) and another O is at #7 (bottom-left), then win diagonally by playing O at box #5 (center).</p>
+            <p>Now, this rule needs knowledge of the AI’s previous moves, but the AI’s moves aren’t inputs! The AI’s state is not encoded in the checkboxes.</p>
+            <p>But since the AI is deterministic, we already know how those previous <em>O</em>s came about. They’re just responses to previous inputs as defined in previous rules! So, for example, we can substitute <strong>O(3)</strong> with the inputs that produced it, such as <strong>X(1)</strong> &amp; <strong>X(2)</strong>.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">/* We know X(1) and X(2) produces O(3), */</span>
+<span class="token comment">/*     and X(1) and X(4) produces O(7). */</span>
+<span class="token comment">/* Therefore, X(1) &amp; X(2) &amp; X(4) is equivalent to O(3) &amp; O(7). */</span>
+
+<span class="token comment">/* 'if X(1) &amp; X(2) &amp; X(4) then O(5)' is a winning move! */</span>
+<span class="token selector">input[value="1"]:checked
+~ input[value="2"]:checked
+~ input[value="4"]:checked
+.o5</span> <span class="token punctuation">{</span>
+  <span class="token property">visibility</span><span class="token punctuation">:</span> visible<span class="token punctuation">,</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>
+              <span class="box-note ">
+                ⚠️ Warning: I’m skipping major details in these code examples, like the existence of turn order, but it doesn’t really change the essence of these illustrations.
+              </span>
+            </p>
+
+            <p>Alright, so the game AI is really just a bunch of if-statements of the form <em>“if [inputs leading up to a scenario], then [show optimal response]”</em>, <strong>for every scenario</strong>. How do we find all the possible scenarios and corresponding optimal moves? Is there a list of all the optimal moves somewhere, like a cheatsheet?</p>
+            <p>Actually, there is one, but it’s for humans.</p>
+            <a target="_blank" class="text-link " href="https://xkcd.com/832/">
+              <div class="blog-media blog-media-default ">
+                <img class="blog-media-element " alt="" src="https://imgs.xkcd.com/comics/tic_tac_toe.png" loading="lazy"><span class="blog-media-caption">xkcd/832</span>
+              </div>
+            </a>
+
+            <p>It’s not really feasible to write rules based on this by hand, unless you have more than 60,480 hours to spare.</p>
+            <p>What I did was write some kind of <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Minimax">minimax algorithm</a> to generate all the rules. The algorithm semi-exhaustively searched the game state space, while recording the moves that lead to a win or a draw, and saved those moves as rules.</p>
+            <p>I lost the original code (trashed it after finishing the project), but here’s an untested recreation of the algorithm:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">/**
+ * Evaluates a game state having these parameters: last plays of player X,
+ * the player who has the current turn, and the current board state.
+ *
+ * Along the way, prints CSS rules for O's plays.
+ *
+ * Returns the endgame for O: WIN, LOSS, or a DRAW. Assuming optimal play.
+ */</span>
+<span class="token keyword">function</span> <span class="token function">evaluate</span><span class="token punctuation">(</span>xPlays<span class="token operator">:</span> number<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token literal-property property">currentTurn</span><span class="token operator">:</span> <span class="token string">'X'</span> <span class="token operator">|</span> <span class="token string">'O'</span><span class="token punctuation">,</span> <span class="token literal-property property">board</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token string">'X'</span> <span class="token operator">|</span> <span class="token string">'O'</span> <span class="token operator">|</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+  <span class="token comment">// checkWinner checks for a 3-in-a-row and returns the winner.</span>
+  <span class="token keyword">let</span> winner <span class="token operator">=</span> <span class="token function">checkWinner</span><span class="token punctuation">(</span>board<span class="token punctuation">)</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>winner <span class="token operator">==</span> <span class="token string">'X'</span><span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">LOSS</span>
+  <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>winner <span class="token operator">==</span> <span class="token string">'O'</span><span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">WIN</span>
+  <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>xPlays<span class="token punctuation">.</span>length <span class="token operator">==</span> <span class="token number">5</span><span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">DRAW</span> <span class="token comment">// Board full (5 Xs implies 4 Os)</span>
+
+
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>currentTurn <span class="token operator">==</span> <span class="token string">'O'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// Brute-force find the optimal play for O</span>
+    <span class="token keyword">let</span> optimal <span class="token operator">=</span> <span class="token keyword">null</span>
+    <span class="token keyword">let</span> winnable <span class="token operator">=</span> <span class="token boolean">false</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">9</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>board<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">continue</span>
+
+      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">'O'</span>
+      <span class="token keyword">const</span> result <span class="token operator">=</span> <span class="token function">evaluate</span><span class="token punctuation">(</span>xPlays<span class="token punctuation">,</span> <span class="token string">'X'</span><span class="token punctuation">,</span> board<span class="token punctuation">)</span>
+      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">null</span>
+
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>result <span class="token operator">==</span> <span class="token constant">DRAW</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// This play will lead to a draw. Save it for now.</span>
+        optimal <span class="token operator">=</span> i
+      <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>result <span class="token operator">==</span> <span class="token constant">WIN</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// This play will lead to a win. This is it.</span>
+        optimal <span class="token operator">=</span> i
+        winnable <span class="token operator">=</span> <span class="token boolean">true</span>
+        <span class="token keyword">break</span>
+      <span class="token punctuation">}</span> <span class="token comment">// No else. Discard play that would lead to LOSS.</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>optimal <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// No winning play nor draws found. All paths lead to loss.</span>
+      <span class="token keyword">return</span> <span class="token constant">LOSS</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      <span class="token comment">// Optimal play found. Print rule.</span>
+      <span class="token function">printCSS</span><span class="token punctuation">(</span>xPlays<span class="token punctuation">,</span> optimal<span class="token punctuation">)</span>
+      <span class="token keyword">return</span> winnable <span class="token operator">?</span> <span class="token constant">WIN</span> <span class="token operator">:</span> <span class="token constant">DRAW</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span> <span class="token comment">// currentTurn == 'X'</span>
+    <span class="token comment">// We don't know what the player would play</span>
+    <span class="token comment">// So evaluate every possibe play</span>
+    <span class="token keyword">let</span> loseable <span class="token operator">=</span> <span class="token boolean">false</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">9</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>board<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">continue</span>
+
+      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">'X'</span>
+      <span class="token keyword">const</span> result <span class="token operator">=</span> <span class="token function">evaluate</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token operator">...</span>xPlays<span class="token punctuation">,</span> i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">'O'</span><span class="token punctuation">,</span> board<span class="token punctuation">)</span>
+      board<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">null</span>
+
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>result <span class="token operator">==</span> <span class="token constant">LOSS</span><span class="token punctuation">)</span> loseable <span class="token operator">=</span> <span class="token boolean">true</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">// Assume player plays optimally. If they can win from current state,</span>
+    <span class="token comment">// then immediately presume LOSS. This will factor into O's turn evaluation</span>
+    <span class="token comment">// above, where any play that leads to LOSS is discarded.</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>loseable<span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token constant">LOSS</span>
+
+    <span class="token comment">// Not loseable, either winnable or drawable.</span>
+    <span class="token comment">// Returning DRAW allows both paths to be evaluated.</span>
+    <span class="token keyword">return</span> <span class="token constant">DRAW</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>And here’s the function that outputs CSS for a given rule:</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token comment">/**
+ * Print CSS rule for the given game state and O's next play.
+ */</span>
+<span class="token keyword">function</span> <span class="token function">printCSS</span><span class="token punctuation">(</span><span class="token parameter"><span class="token literal-property property">xPlays</span><span class="token operator">:</span> number<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token literal-property property">oPlay</span><span class="token operator">:</span> number</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  css <span class="token operator">+=</span> xPlays
+    <span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">pos<span class="token punctuation">,</span> turn</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>
+        <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">input[name='turn_</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>turn<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">'][value='</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>pos<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">']:checked</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">join</span><span class="token punctuation">(</span><span class="token string">' ~ '</span><span class="token punctuation">)</span>
+    <span class="token operator">+</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string"> ~ .o</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>oPlay<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+    <span class="token operator">+</span> <span class="token string">' { visibility: visible; }'</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>The CSS output is directly used in the game. Debugging this was a pain, but luckily I only got a couple of miscalculations (if I recall correctly).</p>
+            <h2 id="conclusion">Conclusion</h2>
+            <p>It was a very interesting project. I’m curious how far CSS machines like this could go. A JS to CSS transpiler, perhaps?</p>
+            <span class="box-note ">
+              <strong>See also:</strong> <a target="_blank" class="text-link " href="https://silon.slaks.net/">silon.slaks.net - Adders and logic gates in pure CSS</a> (I found this after writing this article)
+            </span>
+
+            <p>This project serves as a reminder that there are always new and exciting ways to waste our time doing impractical things, and that sometimes fun solutions come from thinking outside of the (check)box.</p>
+            <p><a target="_blank" class="text-link " href="https://codepen.io/kalabasa/pen/oVMOZK">Here’s the link to the CodePen!</a>
+            </p>
+
+          </div>
+
+        </div>
+        <div class="postcontent">
+          <div class="postcontent-narrow">
+            <p class="blog-signature">Thanks for reading! I like making interactive visualisations for my <a target="_self" class="text-link " href="/notes/">programming blog</a>. Sometimes I do <a target="_self" class="text-link " href="/wares/">projects</a> too. Oh, and before you go, sign <a target="_self" class="text-link " href="/guestbook/">the guestbook</a>! See you around! <span class="blog-signature-name"><i>—Lean</i><img class="blog-signature-img" src="/icons/sig.png" alt="liyan"></span></p>
+            <reactions-client class="reactions reactions-invisible">
+              <h2 class="reaction-title">React to this post</h2>
+              <button class="reaction-btn reaction-heart-btn">
+                <span class="reaction-icon" aria-label="Heart"></span>
+              </button>
+              <div class="reaction-count reaction-heart-count"></div>
+              <button class="reaction-btn reaction-fire-btn">
+                <span class="reaction-icon" aria-label="Fire"></span>
+              </button>
+              <div class="reaction-count reaction-fire-count"></div>
+              <button class="reaction-btn reaction-bubble-btn">
+                <span class="reaction-icon" aria-label="Bubble"></span>
+              </button>
+              <div class="reaction-count reaction-bubble-count"></div>
+              <button class="reaction-btn reaction-sun-btn">
+                <span class="reaction-icon" aria-label="Sun"></span>
+              </button>
+              <div class="reaction-count reaction-sun-count"></div>
+              <button class="reaction-btn reaction-cloud-btn">
+                <span class="reaction-icon" aria-label="Cloud"></span>
+              </button>
+              <div class="reaction-count reaction-cloud-count"></div>
+              <div class="reaction-error"></div>
+            </reactions-client>
+          </div>
+          <aside class="blog-rss-link">
+            <p>
+              Want me to spam your inbox? Me neither.<br>Forget newsletters; use RSS!
+            </p>
+            <div class="blog-rss-link-combo">
+              <a href="/rss.xml" target="_blank" class="blog-rss-link-a">
+                leanrada.com/rss.xml
+              </a>
+              <button class="btn blog-rss-link-button">
+                Copy
+              </button>
+            </div>
+          </aside>
+          <aside class="blog-suggestions">
+            <a target="_self" class="blog-suggestions-title-link" href="/notes/">
+              <h2 class="blog-suggestions-title">More posts</h2>
+            </a>
+            <div class="card-carousel-container">
+              <div class="card-carousel blog-suggestions-carousel">
+
+                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-volley-ball-game/">
+                  <div class="card-grid-image-container">
+                    <video class="card-grid-image" src="/notes/pure-css-volley-ball-game/video.web.mp4" muted="" autoplay="" loop="" aria-label="">
+                      Video: | Source: /notes/pure-css-volley-ball-game/video.web.mp4
+                    </video>
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">Volley ball game in pure CSS</div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span> <span class="tag-component p-category" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Volley ball game in pure CSS">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/dynamic-patrol-stealth-games/">
+                  <div class="card-grid-image-container">
+                    <img srcset="/notes/dynamic-patrol-stealth-games/hero_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/dynamic-patrol-stealth-games/hero.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.328125; background: #a8a8a8">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Dynamic patrol behaviour with Markov chains
+
+                        </div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Dynamic patrol behaviour with Markov chains
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune/">
+                  <div class="card-grid-image-container">
+                    <img srcset="/notes/sweep-and-prune/hero_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/sweep-and-prune/hero.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #78e8e8">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Sort, sweep, and prune: Collision detection algorithms
+
+                        </div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Sort, sweep, and prune: Collision detection algorithms
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune-2/">
+                  <div class="card-grid-image-container">
+                    <img srcset="/notes/sweep-and-prune-2/hero_546.generated.jpg 546w" sizes=" 546px" class="card-grid-image" alt="" src="/notes/sweep-and-prune-2/hero.jpg" spec="546" loading="lazy" width="100%" height="" style="aspect-ratio: 1.3333333333333333; background: #e87878">
+                  </div>
+                  <div class="card-grid-title-wrap">
+                    <div class="card-grid-title-bar">
+                      <div class="card-grid-title-content">
+                        <div class="card-grid-title">
+
+                          Sort, sweep, and prune: Part&nbsp;2
+
+                        </div>
+                        <div class="card-grid-posttitle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-grid-content">
+                    <div class="card-grid-posttitle card-grid-postitle-small">
+
+                    </div>
+                    <div class="card-grid-actions">
+                      <span class="card-grid-action card-grid-info">Deets…</span>
+                      <span class="card-grid-action card-grid-story">Read post</span>
+                    </div>
+                    <div class="card-grid-description">
+
+                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - 
+                
+                  Sort, sweep, and prune: Part&nbsp;2
+                
+              ">Read post</span>
+                    </div>
+                  </div>
+                </a>
+
+              </div>
+              <div class="card-carousel-btn-container">
+                <button class="card-carousel-btn card-carousel-btn-prev" aria-label="Previous">
+                  <span class="card-carousel-btn-symbol">&lt;&lt;</span>
+                </button>
+                <button class="card-carousel-btn card-carousel-btn-next" aria-label="Next">
+                  <span class="card-carousel-btn-symbol">&gt;&gt;</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/about/">About</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/music/">Music</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          <span style="display: inline-block">
+            ·
+            <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook!</a>
+            <br>
+            · Drop a
+            <a target="_blank" class="main-footer-link" href="mailto:mail%40leanrada.com">
+              mail＠leanrada·com
+            </a>
+            <br>
+          </span>
+        </p>
+        <p class="main-footer-line">
+          (C) 2015-2024 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source</a>.
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://mastodon.social/@Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="Mastodon" src="/icons/mastodon.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+
+
+  <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
+  <script defer="" src="/scripts/blog-media.js"></script>
+  <script defer="" src="/scripts/blog-header.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+  <script async="" defer="">
+  (() => {
+    const containers = document.querySelectorAll(".card-carousel-container");
+
+    for (const container of containers) {
+      const carousel = container.firstElementChild;
+
+      container.addEventListener(
+        "click",
+        (event) => {
+          const { target } = event;
+
+          const isButton = target.classList.contains("card-carousel-btn");
+          if (!isButton) return;
+
+          const isNext = target.classList.contains("card-carousel-btn-next");
+          const stepUnitSize =
+            carousel.children[1]?.offsetLeft - carousel.children[0]?.offsetLeft;
+          const delta =
+            (isNext ? 1 : -1) *
+            Math.max(1, Math.floor(carousel.offsetWidth / stepUnitSize)) *
+            stepUnitSize;
+          carousel.scrollBy({
+            left: delta,
+            behavior: "smooth",
+          });
+
+          updateButtons(container, delta);
+        },
+        { capture: true }
+      );
+
+      let debouncedScrollTimeout = null;
+      carousel.addEventListener(
+        "scroll",
+        () => {
+          if (debouncedScrollTimeout) clearTimeout(debouncedScrollTimeout);
+          debouncedScrollTimeout = setTimeout(() => {
+            updateButtons(container);
+          }, 50);
+        },
+        { passive: true }
+      );
+
+      updateButtons(container);
+    }
+
+    function updateButtons(container, delta = 0) {
+      const carousel = container.firstElementChild;
+      const nextButton = container.querySelector(".card-carousel-btn-next");
+      const prevButton = container.querySelector(".card-carousel-btn-prev");
+      nextButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta >
+          carousel.scrollWidth - carousel.offsetWidth - 60
+      );
+      prevButton.classList.toggle(
+        "card-carousel-btn-hidden",
+        carousel.scrollLeft + delta < 60
+      );
+    }
+  })();
+</script>
+  <script defer="" src="/scripts/card-grid-item.js"></script>
+  <script defer="" async="" src="/scripts/blog-rss-link.js"></script>
+</body>
+</html>
