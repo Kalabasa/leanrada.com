@@ -30,6 +30,7 @@ const argDirs = args._;
 
 const rsyncArgs =
   " --checksum --del --progress --recursive" +
+  " --exclude lathala.json" +
   (args["--dry-run"] ? " --dry-run" : "");
 
 function exe(cmd) {
