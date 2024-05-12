@@ -153,7 +153,7 @@ export async function deployProjectsToGithubPages({
     }
 
     if (!hasDiff) {
-      console.log("No changes to deploy");
+      console.log(colorInfo("No changes to deploy"));
       process.exit(0);
     }
 
