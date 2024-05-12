@@ -7,6 +7,7 @@ import { colorInfo } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
 
 const args = arg({
+  "--yes": Boolean,
   "--port": Number,
   "--dry-run": Boolean,
 });
@@ -49,5 +50,6 @@ function deploy(targetProjectDirs) {
     branch: "master",
     ghPagesDir: "docs",
     dryRun: args["--dry-run"],
+    noConfirm: args["--yes"],
   });
 }

@@ -16,6 +16,7 @@ export async function deployProjectsToDir({
   targetProjectDirs,
   deployDir,
   dryRun = false,
+  noConfirm = false,
 }) {
   const projects = getProjects();
 
@@ -37,7 +38,9 @@ export async function deployProjectsToDir({
     ].join("\n")
   );
 
-  if (!(await confirmYN("Run build script?"))) process.exit(0);
+  if (!noConfirm && !(await confirmYN("Run build script?"))) {
+    process.exit(0);
+  }
 
   // Run deplyoment script
   try {
@@ -123,6 +126,7 @@ export async function deployProjectsToGithubPages({
   branch,
   ghPagesDir,
   dryRun = false,
+  noConfirm = false,
 }) {
   try {
     fs.rmSync(workingDir, { recursive: true, force: true });
@@ -138,6 +142,8 @@ export async function deployProjectsToGithubPages({
     await deployProjectsToDir({
       targetProjectDirs,
       deployDir: `${workingDir}/${ghPagesDir}/`,
+      dryRun,
+      noConfirm,
     });
 
     process.chdir(workingDir);
@@ -162,7 +168,10 @@ export async function deployProjectsToGithubPages({
       colorInfo("Updated files:") + " " + path.relative(getTopDir(), workingDir)
     );
     exe("git diff --cached HEAD");
-    if (!(await confirmYN(colorPrompt("Commit changes?")))) process.exit(0);
+
+    if (!noConfirm && !(await confirmYN(colorPrompt("Commit changes?")))) {
+      process.exit(0);
+    }
 
     exe("git config extensions.worktreeConfig true");
     exe("git config --worktree user.email 'Kalabasa@users.noreply.github.com'");
