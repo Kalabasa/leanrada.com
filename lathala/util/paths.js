@@ -12,5 +12,5 @@ export function getPath(...paths) {
 }
 
 export function normalizeDirPath(dirPath) {
-  return path.normalize(dirPath && dirPath + "/");
+  return dirPath ? path.normalize(dirPath + "/") : "./";
 }

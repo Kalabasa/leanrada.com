@@ -1,30 +1,34 @@
-import { getProjects } from "./util/get_projects.js";
-import { getPath, getTopDir, normalizeDirPath } from "./util/paths.js";
-import path from "node:path";
-import fs from "node:fs";
-import readline from "node:readline/promises";
-import childProcess from "node:child_process";
 import chalk from "chalk";
+import childProcess from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import readline from "node:readline/promises";
 import {
   colorError,
   colorInfo,
   colorPrompt,
   colorQuote,
 } from "./util/colors.js";
+import { getProjects } from "./util/get_projects.js";
+import { getPath, getTopDir, normalizeDirPath } from "./util/paths.js";
 
-const rsyncArgs =
-  " --checksum --del --progress --recursive" +
-  " --exclude lathala.json" +
-  " --dry-run";
-
-export async function deployProjectsToDir(targetProjectDirs, deployDir) {
+export async function deployProjectsToDir({
+  targetProjectDirs,
+  deployDir,
+  dryRun = false,
+}) {
   const projects = getProjects();
 
   const targetProjects = projects.filter((project) =>
     targetProjectDirs.some((dir) => getPath(dir) === project.rootDir)
   );
 
-  const commands = generateCommands(deployDir, projects, targetProjects);
+  const commands = generateCommands({
+    deployDir,
+    allProjects: projects,
+    targetProjects,
+    dryRun,
+  });
   const script = commands.join(" &&\n ");
   console.log(
     [
@@ -33,16 +37,7 @@ export async function deployProjectsToDir(targetProjectDirs, deployDir) {
     ].join("\n")
   );
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const runCommandsAnswer = await rl.question(
-    colorPrompt("Run build script? (y/N) ")
-  );
-  rl.close();
-
-  if (runCommandsAnswer.toLowerCase() !== "y") process.exit(0);
+  if (!(await confirmYN("Run build script?"))) process.exit(0);
 
   // Run deplyoment script
   try {
@@ -56,7 +51,12 @@ export async function deployProjectsToDir(targetProjectDirs, deployDir) {
   }
 }
 
-function generateCommands(deployDir, allProjects, targetProjects) {
+function generateCommands({
+  deployDir,
+  allProjects,
+  targetProjects,
+  dryRun = false,
+}) {
   const commands = [];
   let invalidState = false;
 
@@ -103,7 +103,7 @@ function generateCommands(deployDir, allProjects, targetProjects) {
 
     commands.push(
       "rsync" +
-        rsyncArgs +
+        rsyncArgs({ dryRun }) +
         excludes +
         ` '${normalizeDirPath(path.relative(rootDir, webFilesDir))}'` +
         ` '${normalizeDirPath(path.relative(rootDir, projectDeployDir))}'`
@@ -117,12 +117,13 @@ function generateCommands(deployDir, allProjects, targetProjects) {
   return commands;
 }
 
-export async function deployProjectsToGithubPages(
+export async function deployProjectsToGithubPages({
   targetProjectDirs,
   workingDir,
   branch,
-  ghPagesDir
-) {
+  ghPagesDir,
+  dryRun = false,
+}) {
   try {
     fs.rmSync(workingDir, { recursive: true, force: true });
     exe("git fetch");
@@ -132,31 +133,15 @@ export async function deployProjectsToGithubPages(
 
     fs.closeSync(fs.openSync(`${workingDir}/.nojekyll`, "a"));
 
-    exe(`rsync ${rsyncArgs} '.github/' '${workingDir}/.github/'`);
+    exe(`rsync ${rsyncArgs({ dryRun })} '.github/' '${workingDir}/.github/'`);
 
-    await deployProjectsToDir(
+    await deployProjectsToDir({
       targetProjectDirs,
-      `${workingDir}/${ghPagesDir}/`
-    );
+      deployDir: `${workingDir}/${ghPagesDir}/`,
+    });
 
     process.chdir(workingDir);
     exe(`git add .`);
-    exe("git diff --cached HEAD");
-
-    // Confirm change
-    console.log(
-      colorInfo("Updated files:") + " " + path.relative(getTopDir(), workingDir)
-    );
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-    const deployWebsiteAnswer = await rl.question(
-      colorPrompt("Commit changes? (y/N) ")
-    );
-    rl.close();
-
-    if (deployWebsiteAnswer.toLowerCase() !== "y") process.exit(0);
 
     let hasDiff = false;
     try {
@@ -167,22 +152,46 @@ export async function deployProjectsToGithubPages(
       if (e.status !== 1) throw e;
     }
 
-    if (hasDiff) {
-      exe("git config extensions.worktreeConfig true");
-      exe(
-        "git config --worktree user.email 'Kalabasa@users.noreply.github.com'"
-      );
-      exe("git config --worktree user.name 'Kalabasa'");
-      exe(`git commit -m 'Deploy ${targetProjectDirs.join(", ")}'`);
-      exe(`git push origin HEAD:${branch}`);
-    } else {
+    if (!hasDiff) {
       console.log("No changes to deploy");
+      process.exit(0);
     }
+
+    // Confirm change
+    console.log(
+      colorInfo("Updated files:") + " " + path.relative(getTopDir(), workingDir)
+    );
+    exe("git diff --cached HEAD");
+    if (!(await confirmYN(colorPrompt("Commit changes?")))) process.exit(0);
+
+    exe("git config extensions.worktreeConfig true");
+    exe("git config --worktree user.email 'Kalabasa@users.noreply.github.com'");
+    exe("git config --worktree user.name 'Kalabasa'");
+    exe(`git commit -m 'Deploy ${targetProjectDirs.join(", ")}'`);
+    exe(`git push origin HEAD:${branch}`);
   } finally {
     process.chdir(getTopDir());
     fs.rmSync(workingDir, { recursive: true });
     exe("git worktree prune");
   }
+}
+
+async function confirmYN(prompt) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const answer = await rl.question(colorPrompt(prompt + " (y/N): "));
+  rl.close();
+  return answer.toLowerCase() === "y";
+}
+
+function rsyncArgs({ dryRun }) {
+  return (
+    " --checksum --del --progress --recursive" +
+    " --exclude lathala.json" +
+    (dryRun ? " --dry-run" : "")
+  );
 }
 
 function exe(cmd) {

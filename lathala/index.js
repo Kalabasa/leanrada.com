@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 import arg from "arg";
-import { createRequire } from "node:module";
 import path from "node:path";
-import { deployProjectsToDir, deployProjectsToGithubPages } from "./deploy.js";
+import { deployProjectsToGithubPages } from "./deploy.js";
 import { runDevServer } from "./dev.js";
-import { getProjects } from "./util/get_projects.js";
-import chalk from "chalk";
 import { colorInfo } from "./util/colors.js";
+import { getProjects } from "./util/get_projects.js";
 
 const args = arg({
   "--port": Number,
+  "--dry-run": Boolean,
 });
 const subcommandFunctions = [dev, deploy];
 const subcommandFunction = subcommandFunctions.find(
@@ -44,5 +43,11 @@ function deploy(targetProjectDirs) {
   const wwwDir = path.resolve("www");
   const wwwStagingDir = `${wwwDir}/staging`;
   const wwwProdDir = `${wwwDir}/prod`;
-  deployProjectsToGithubPages(targetProjectDirs, wwwProdDir, "master", "docs");
+  deployProjectsToGithubPages({
+    targetProjectDirs,
+    workingDir: wwwProdDir,
+    branch: "master",
+    ghPagesDir: "docs",
+    dryRun: args["--dry-run"],
+  });
 }
