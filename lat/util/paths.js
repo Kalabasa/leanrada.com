@@ -2,7 +2,7 @@ import path from "node:path";
 
 export function getTopDir() {
   if (!getTopDir.cache) {
-    getTopDir.cache = path.resolve(import.meta.dirname, "../..");
+    getTopDir.cache = path.resolve(new URL(import.meta.url).pathname, "../../..");
   }
   return getTopDir.cache;
 }
