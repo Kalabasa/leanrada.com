@@ -30,5 +30,23 @@ npm install -D hbs-cli
 npx hbs -D src/html/home.json -o /dev/null/ -s -- src/html/home.handlebars > build/index.html
 cd ..
 
-rsync -r update-archive-worktree/build/ src/site/archive/v2/
+# Remove extra stuff
+rm -rf update-archive-worktree/build/jquery/dist
+rm -rf update-archive-worktree/build/lazysizes/plugins
+rm -rf update-archive-worktree/build/lazysizes/plugins
+rm -rf update-archive-worktree/build/lazysizes/src
+rm -rf update-archive-worktree/build/threejs/docs
+rm -rf update-archive-worktree/build/threejs/editor
+rm -rf update-archive-worktree/build/threejs/examples
+rm -rf update-archive-worktree/build/threejs/src
+rm -rf update-archive-worktree/build/threejs/test
+rm -rf update-archive-worktree/build/threejs/utils
+rm -rf update-archive-worktree/build/underscore/modules
+rm -rf update-archive-worktree/build/underscore/patches
+rm -rf update-archive-worktree/build/underscore/test-treeshake
+
+# Remove files exceeding Cloudflare's per-file size limit
+find update-archive-worktree -type f -size +26M -exec rm -v {} \;
+
+rsync --delete -r update-archive-worktree/build/ src/site/archive/v2/
 git worktree remove --force update-archive-worktree

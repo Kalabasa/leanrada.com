@@ -20,8 +20,8 @@ find update-archive-worktree \
   -exec sed -i "s_return pathname.substring(1); // remove front slash_return pathname.substring(12); // remove front slash_g" {} +
 
 # Remove files exceeding Cloudflare's per-file size limit
-find . -type f -size +26.2M -exec rm -v {} \;
+find update-archive-worktree -type f -size +26M -exec rm -v {} \;
 
-rsync -r update-archive-worktree/ src/site/archive/v3/
+rsync --delete -r update-archive-worktree/ src/site/archive/v3/
 git worktree remove --force update-archive-worktree
 
