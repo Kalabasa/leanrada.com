@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 import arg from "arg";
 import path from "node:path";
-import { deployProjectsToDir, deployProjectsToGithubPages } from "./deploy.js";
+import {
+  deployProjectsToCloudflarePages,
+  deployProjectsToDir,
+  deployProjectsToGithubPages,
+} from "./deploy.js";
 import { runDevServer } from "./dev.js";
 import { colorInfo } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
@@ -45,7 +49,16 @@ function deploy(targetProjectDirs) {
 
   const wwwDir = path.resolve("www");
   if (args["--prod"]) {
-    const wwwProdDir = `${wwwDir}/prod`;
+    const wwwProdDir = `${wwwDir}/cf-prod`;
+    deployProjectsToCloudflarePages({
+      targetProjectDirs,
+      workingDir: wwwProdDir,
+      cfBranch: "cf-pages",
+      dryRun: args["--dry-run"],
+      noConfirm: args["--yes"],
+    });
+  } else if (args["--gh-prod"]) {
+    const wwwProdDir = `${wwwDir}/gh-prod`;
     deployProjectsToGithubPages({
       targetProjectDirs,
       workingDir: wwwProdDir,

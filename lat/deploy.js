@@ -137,6 +137,7 @@ export async function deployProjectsToGithubPages({
 
     fs.closeSync(fs.openSync(`${workingDir}/.nojekyll`, "a"));
 
+    // todo: separate these files
     exe(`rsync ${rsyncArgs({ dryRun })} '.github/' '${workingDir}/.github/'`);
 
     await deployProjectsToDir({
@@ -182,8 +183,29 @@ export async function deployProjectsToGithubPages({
     exe(`git push origin HEAD:${branch}`);
   } finally {
     process.chdir(getTopDir());
-    fs.rmSync(workingDir, { recursive: true });
     exe("git worktree prune");
+  }
+}
+
+export async function deployProjectsToCloudflarePages({
+  targetProjectDirs,
+  workingDir,
+  cfBranch,
+  dryRun = false,
+  noConfirm = false,
+}) {
+  try {
+    fs.rmSync(workingDir, { recursive: true, force: true });
+    
+    await deployProjectsToDir({
+      targetProjectDirs,
+      deployDir: `${workingDir}/`,
+      dryRun,
+      noConfirm,
+    });
+
+    exe(`wrangler pages deploy --project-name leanrada-com --branch ${cfBranch} ${workingDir}`);
+  } finally {
   }
 }
 
