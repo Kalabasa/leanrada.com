@@ -1,0 +1,45 @@
+<base target="htmz" />
+<link rel="stylesheet" href="style.css" />
+
+<h1>simple error handling</h1>
+
+<p>
+  The default behaviour for htmz is to put any response, including error pages,
+  into the target.
+</p>
+<p>
+  This example employs an htmz extension that intercepts and handles error
+  responses generically.
+</p>
+<p>
+  <a href="slide1.html#slide">Start slideshow!</a>
+</p>
+
+<div id="slide"></div>
+
+<!-- htmz with simple error handling -->
+<script>
+  function htmz(frame) {
+    // ------------------------------------------------------------------------
+    // Simple error handling
+    // ------------------------------------------------------------------------
+
+    // hacky way to get the frame's current status code
+    const status =
+      frame.contentWindow.performance.getEntriesByType("navigation")[0]
+        ?.responseStatus;
+
+    if (status && (status < 200 || status > 299)) {
+      alert(frame.contentWindow.document.title);
+      return;
+    }
+    // ------------------------------------------------------------------------
+
+    setTimeout(() =>
+      document
+        .querySelector(frame.contentWindow.location.hash || null)
+        ?.replaceWith(...frame.contentDocument.body.childNodes)
+    );
+  }
+</script>
+<iframe hidden name="htmz" onload="window.htmz(this)"></iframe>

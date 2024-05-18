@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="style.css" />
+
+<h1>tabs</h1>
+
+<p>
+  tabs but with clean attribute values like<br />
+  <code>&lt;a href="dog.html" target="#my-tab-panel"></code>.
+</p>
+
+<div role="tablist">
+  <a class="tab" href="dog.html" target="#my-tab-panel">Dog</a>
+  <a class="tab" href="cat.html" target="#my-tab-panel">Cat</a>
+  <a class="tab" href="horse.html" target="#my-tab-panel">Horse</a>
+</div>
+
+<div id="my-tab-panel" role="tabpanel"></div>
+
+<script>
+  function htmz(frame) {
+    if (frame.contentWindow.location.href === "about:blank") return;
+    const duplicates = document.getElementsByName(frame.name);
+
+    document
+      .querySelector(frame.name)
+      ?.replaceWith(...frame.contentDocument.body.childNodes);
+
+    // Workaround to Chrome bug:
+    // Chrome can't handle iframes being inside the replaced target, but Firefox can.
+    // Since the HTML rewriter inserts the matching iframe outside the target,
+    // we remove the old one
+    duplicates.forEach((dupe) => dupe.remove());
+  }
+</script>

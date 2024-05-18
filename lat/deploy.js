@@ -203,6 +203,10 @@ export async function deployProjectsToCloudflarePages({
 }) {
   try {
     fs.rmSync(workingDir, { recursive: true, force: true });
+    exe("git fetch");
+    exe(
+      `git worktree add -f ${path.relative(".", workingDir)} origin/${cfBranch}`
+    );
 
     await deployProjectsToDir({
       targetProjectDirs,
@@ -211,10 +215,47 @@ export async function deployProjectsToCloudflarePages({
       noConfirm,
     });
 
+    process.chdir(workingDir);
+    exe(`git add .`);
+
+    let hasDiff = false;
+    try {
+      // exits with 1 if there were differences and 0 means no differences.
+      exe("git diff-index --cached --quiet HEAD");
+    } catch (e) {
+      hasDiff = true;
+      if (e.status !== 1) throw e;
+    }
+
+    if (!hasDiff) {
+      console.log(colorInfo("No changes to deploy"));
+      process.exit(0);
+    }
+
+    // Confirm change
+    console.log(
+      colorInfo("Updated files:") + " " + path.relative(getTopDir(), workingDir)
+    );
+    try {
+      exe("git diff --cached HEAD");
+    } catch (e) {}
+
+    if (!noConfirm && !(await confirmYN(colorPrompt("Commit changes?")))) {
+      process.exit(0);
+    }
+
+    exe("git config extensions.worktreeConfig true");
+    exe("git config --worktree user.email 'Kalabasa@users.noreply.github.com'");
+    exe("git config --worktree user.name 'Kalabasa'");
+    exe(`git commit -m 'Deploy ${targetProjectDirs.join(", ")}'`);
+    exe(`git push origin HEAD:${cfBranch}`);
+
     exe(
       `wrangler pages deploy --project-name leanrada-com --branch ${cfBranch} ${workingDir}`
     );
   } finally {
+    process.chdir(getTopDir());
+    exe("git worktree prune");
   }
 }
 
