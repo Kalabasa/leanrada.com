@@ -14,7 +14,7 @@ fi
 # Perform the update in a worktree
 git fetch
 git worktree add -f update origin/src
-cd update
+cd update/main
 
 # Update
 node scripts/update/update-reputation.js
@@ -35,6 +35,6 @@ else
   echo >&2 "No updates to commit"
 fi
 
-cd ..
+cd ../..
 rm -r update
 git worktree prune

@@ -46,7 +46,7 @@ rsync -Pr prod-static/ prod/
 rsync -Pr --del ../.github/ prod/.github/
 
 # Commit prod changes
-cd prod
+cd prod/main
 git add .
 
 if ! git diff-index --cached --quiet HEAD; then
@@ -59,6 +59,6 @@ else
   echo >&2 "No changes to deploy"
 fi
 
-cd ..
+cd ../..
 rm -r prod
 git worktree prune
