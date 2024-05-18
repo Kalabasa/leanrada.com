@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import arg from "arg";
 import path from "node:path";
-import { deployProjectsToGithubPages } from "./deploy.js";
+import { deployProjectsToDir, deployProjectsToGithubPages } from "./deploy.js";
 import { runDevServer } from "./dev.js";
 import { colorInfo } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
 
 const args = arg({
   "--yes": Boolean,
+  "--prod": Boolean,
+  "--staging": Boolean,
   "--port": Number,
   "--dry-run": Boolean,
 });
@@ -42,14 +44,23 @@ function deploy(targetProjectDirs) {
   }
 
   const wwwDir = path.resolve("www");
-  const wwwStagingDir = `${wwwDir}/staging`;
-  const wwwProdDir = `${wwwDir}/prod`;
-  deployProjectsToGithubPages({
-    targetProjectDirs,
-    workingDir: wwwProdDir,
-    branch: "master",
-    ghPagesDir: "docs",
-    dryRun: args["--dry-run"],
-    noConfirm: args["--yes"],
-  });
+  if (args["--prod"]) {
+    const wwwProdDir = `${wwwDir}/prod`;
+    deployProjectsToGithubPages({
+      targetProjectDirs,
+      workingDir: wwwProdDir,
+      branch: "master",
+      ghPagesDir: "docs",
+      dryRun: args["--dry-run"],
+      noConfirm: args["--yes"],
+    });
+  } else {
+    const wwwStagingDir = `${wwwDir}/staging`;
+    deployProjectsToDir({
+      targetProjectDirs,
+      deployDir: wwwStagingDir,
+      dryRun: args["--dry-run"],
+      noConfirm: args["--yes"],
+    });
+  }
 }
