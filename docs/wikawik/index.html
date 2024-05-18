@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="common.css"
+      media="not all"
+      onload="this.media='all'"
+    />
+    <link
+      rel="stylesheet"
+      href="viz.css"
+      media="not all"
+      onload="this.media='all'"
+    />
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+
+    <title>Wikawik — Interactive Philippine languages map</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="title"
+      content="Wikawik — Interactive Philippine languages map"
+    />
+    <meta
+      name="description"
+      content="An interactive visualization of the various languages in the Philippines."
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kalabasa.github.io/wikawik/" />
+    <meta
+      property="og:title"
+      content="Wikawik — Interactive Philippine languages map"
+    />
+    <meta
+      property="og:description"
+      content="An interactive visualization of the various languages in the Philippines."
+    />
+    <meta
+      property="og:image"
+      content="https://kalabasa.github.io/wikawik/images/preview.png"
+    />
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta
+      property="twitter:url"
+      content="https://kalabasa.github.io/wikawik/"
+    />
+    <meta
+      property="twitter:title"
+      content="Wikawik — Interactive Philippine languages map"
+    />
+    <meta
+      property="twitter:description"
+      content="An interactive visualization of the various languages in the Philippines."
+    />
+    <meta
+      property="twitter:image"
+      content="https://kalabasa.github.io/wikawik/images/preview.png"
+    />
+
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      #preloader {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #4ec7dc;
+        color: white;
+        z-index: 5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        transition: opacity 0.2s;
+      }
+      #preloader-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 30px;
+        font-size: 25px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        animation: enter-preloader-content 0.2s;
+      }
+      @keyframes enter-preloader-content {
+        from {
+          visibility: hidden;
+        }
+        99% {
+          visibility: hidden;
+        }
+        to {
+          visibility: visible;
+        }
+      }
+      #preloader-loader {
+        position: relative;
+        margin-bottom: 20px;
+        width: 200px;
+        height: 200px;
+      }
+      #preloader-loader-blob {
+        position: absolute;
+        left: 100px;
+        top: 105px;
+        width: 180px;
+        height: 180px;
+        background: #e95961;
+        border-radius: 46% 54% 53% 47% / 59% 50% 50% 41%;
+        transform: translate(-50%, -50%);
+        animation: blob-turn 9s infinite linear,
+          blob-morph 7s infinite alternate-reverse ease-in-out;
+      }
+      @keyframes blob-turn {
+        to {
+          transform: translate(-50%, -50%) rotate(1turn);
+        }
+      }
+      @keyframes blob-morph {
+        to {
+          border-radius: 54% 46% 41% 59% / 53% 43% 57% 47%;
+        }
+      }
+      .preloader-loader-bar {
+        position: absolute;
+        background: white;
+      }
+      #preloader-loader-top {
+        left: 60px;
+        top: 70px;
+        width: 80px;
+        height: 20px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        animation: bars 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      #preloader-loader-bottom {
+        left: 60px;
+        top: 130px;
+        width: 80px;
+        height: 20px;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 20px;
+        animation: bars 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      @keyframes bars {
+        50% {
+          border-top-left-radius: 20px;
+          border-bottom-left-radius: 0;
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 20px;
+        }
+      }
+      #preloader-loader-w-right {
+        left: 120px;
+        top: 90px;
+        width: 20px;
+        height: 41px;
+        animation: w-right 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      @keyframes w-right {
+        50% {
+          left: 90px;
+          top: 90px;
+          height: 41px;
+        }
+        100% {
+          left: 60px;
+          top: 120px;
+          height: 10px;
+        }
+      }
+      #preloader-loader-w-right-in {
+        left: 140px;
+        top: 70px;
+        width: 0px;
+        height: 61px;
+        animation: w-right-in 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      @keyframes w-right-in {
+        50% {
+          left: 140px;
+          top: 70px;
+          width: 0px;
+          height: 61px;
+        }
+        100% {
+          left: 120px;
+          top: 90px;
+          width: 20px;
+          height: 41px;
+        }
+      }
+      #preloader-loader-w-left {
+        left: 60px;
+        top: 120px;
+        width: 20px;
+        height: 21px;
+        animation: w-left 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      @keyframes w-left {
+        50% {
+          width: 0;
+          height: 30px;
+        }
+        100% {
+          width: 0;
+          height: 30px;
+        }
+      }
+      #preloader-loader-w-tail {
+        left: 60px;
+        top: 100px;
+        width: 40px;
+        height: 21px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 20px;
+        animation: w-tail 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      @keyframes w-tail {
+        50% {
+          top: 120px;
+          width: 0;
+          height: 0;
+        }
+        100% {
+          top: 120px;
+          width: 0;
+          height: 0;
+        }
+      }
+      #preloader-loader-w-tail-in {
+        left: 90px;
+        top: 100px;
+        width: 0;
+        height: 0;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 20px;
+        animation: w-tail-in 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      @keyframes w-tail-in {
+        50% {
+          left: 90px;
+          width: 0;
+          height: 0;
+        }
+        100% {
+          left: 60px;
+          width: 40px;
+          height: 20px;
+        }
+      }
+      #preloader-loader-i {
+        left: 85px;
+        top: 45px;
+        width: 30px;
+        height: 15px;
+        border-top-left-radius: 20px;
+        border-bottom-right-radius: 20px;
+        transform-origin: bottom;
+        animation: i-in 2s 0.5s infinite cubic-bezier(0.6, 0, 0, 1);
+      }
+      @keyframes i-in {
+        50% {
+          transform: scale(0);
+        }
+      }
+      #preloader-loader-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: black;
+        filter: blur(4px) contrast(20);
+        mix-blend-mode: screen;
+      }
+      #content {
+        z-index: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="preloader">
+      <div id="preloader-content">
+        <div id="preloader-loader">
+          <div id="preloader-loader-blob"></div>
+          <div id="preloader-loader-container">
+            <div id="preloader-loader-top" class="preloader-loader-bar"></div>
+            <div
+              id="preloader-loader-bottom"
+              class="preloader-loader-bar"
+            ></div>
+            <div
+              id="preloader-loader-w-right"
+              class="preloader-loader-bar"
+            ></div>
+            <div
+              id="preloader-loader-w-right-in"
+              class="preloader-loader-bar"
+            ></div>
+            <div
+              id="preloader-loader-w-left"
+              class="preloader-loader-bar"
+            ></div>
+            <div
+              id="preloader-loader-w-tail"
+              class="preloader-loader-bar"
+            ></div>
+            <div
+              id="preloader-loader-w-tail-in"
+              class="preloader-loader-bar"
+            ></div>
+            <div id="preloader-loader-i" class="preloader-loader-bar"></div>
+          </div>
+        </div>
+        Loading…
+      </div>
+    </div>
+
+    <div id="hud">
+      <div id="intro-text">
+        <span>
+          <strong>Wikawik</strong> is an interactive tool that visualizes the
+          diverse languages spoken in the Philippines. Use this web app to
+          discover and explore Filipino languages through an interactive map.
+          Select common phrases via the search bar to see their translations in
+          various local dialects and regional languages across the country.
+        </span>
+        <button id="intro-text-dismiss-button">Dismiss</button>
+      </div>
+
+      <button id="zoom-in-button" class="zoom-button" aria-label="Zoom in">
+        +
+      </button>
+      <button id="zoom-out-button" class="zoom-button" aria-label="Zoom out">
+        −
+      </button>
+
+      <div id="phrases-box">
+        <input
+          tabindex="0"
+          id="phrases-input"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          data-message-placeholder="searchPhrases"
+          placeholder="Search for phrases…"
+          aria-label="Search"
+        />
+        <div id="phrases-options">
+          <template id="phrases-item-template">
+            <button tabindex="0" class="phrases-item">
+              <span class="phrases-item-title">Phrase title</span>
+              <span class="phrases-item-indicator">Phrase translations</span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <a id="logo-link" href="about.html" target="_blank">
+        <image
+          id="logo"
+          alt="wikawik logo"
+          src="images/logo.png"
+          alt="Wikawik"
+        />
+      </a>
+      <div id="footer">
+        ©2020
+        <a class="footer-link" href="//leanrada.com" target="_blank"
+          >Lean Rada</a
+        >.
+        <a
+          class="footer-link"
+          href="https://forms.gle/JYe2W9PjXogEcyMw8"
+          target="_blank"
+          data-message="sendFeedback"
+          >Send feedback</a
+        >.
+        <a
+          class="footer-link"
+          href="https://forms.gle/ntRBRPp8ZUyHUSE78"
+          target="_blank"
+          data-message="contribute"
+          >Contribute translations</a
+        >.
+        <a class="footer-link language-button" href="#" data-language="english"
+          >EN</a
+        >
+        |
+        <a class="footer-link language-button" href="#" data-language="tagalog"
+          >TL
+        </a>
+      </div>
+    </div>
+
+    <div id="content">
+      <div id="mapbox">
+        <div id="map"></div>
+        <div id="overlay">
+          <template id="pin-template">
+            <div class="pin">
+              <div class="pin-container">
+                <div class="pin-touch-target"></div>
+                <div class="person-floor"></div>
+                <div class="person">
+                  <div class="person-body"></div>
+                  <div class="person-feet"></div>
+                  <div class="person-head"></div>
+                </div>
+                <div class="pin-label"></div>
+                <div class="bubble bubble-right">
+                  <div class="bubble-title"></div>
+                  <div class="bubble-subtitle"></div>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template id="label-template">
+            <div class="label"></div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <div id="infobar" class="infobar">
+      <button id="infobar-close-button" aria-label="Close">
+        <div id="infobar-close-button-icon"></div>
+      </button>
+      <div id="infobar-container">
+        <header id="infobar-header">
+          <h2 id="infobar-header-title">Phrase</h2>
+          <div id="infobar-header-subtitle">Language</div>
+        </header>
+        <section id="infobar-translation-section" class="infobar-section">
+          <div
+            class="infobar-section-label"
+            data-message="translationListLabel"
+          >
+            Translations in other languages
+          </div>
+          <div id="infobar-translation-list">
+            <template id="infobar-translation-item-template">
+              <div class="infobar-translation-item">
+                <div class="infobar-translation-item-title">Phrase</div>
+                <div class="infobar-translation-item-subtitle">Language</div>
+              </div>
+            </template>
+          </div>
+          <hr class="infobar-section-divider" />
+        </section>
+        <section id="infobar-baybayin-section" class="infobar-section">
+          <div class="infobar-section-label" data-message="inBaybayinScript">
+            In Baybayin script
+          </div>
+          <div id="infobar-baybayin"></div>
+          <hr class="infobar-section-divider" />
+        </section>
+        <section id="infobar-locals-section" class="infobar-section">
+          <div class="infobar-section-label" data-message="localLanguages">
+            Local languages
+          </div>
+          <h2 id="infobar-locals-title" class="infobar-section-title">
+            Language
+          </h2>
+          <div id="infobar-locals-chart">
+            <template id="infobar-locals-chart-item-template">
+              <div class="infobar-locals-chart-item">
+                <div class="infobar-locals-chart-item-label">
+                  <div class="infobar-locals-chart-item-label-container">
+                    <div class="infobar-locals-chart-item-name">Language</div>
+                    <div class="infobar-locals-chart-item-value">
+                      Percentage
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+          <p id="infobar-locals-description" class="infobar-text">
+            Description
+          </p>
+          <hr class="infobar-section-divider" />
+        </section>
+        <section id="infobar-language-section" class="infobar-section">
+          <div class="infobar-section-label" data-message="languageInfoLabel">
+            About the language
+          </div>
+          <h2 class="infobar-section-title" id="infobar-language-title">
+            Language
+          </h2>
+          <div id="infobar-language-code" class="infobar-card">
+            <h3
+              id="infobar-language-code-label"
+              class="infobar-subheading"
+              data-message="languageCode"
+            >
+              ISO code
+            </h3>
+            <span id="infobar-language-code-value"></span>
+          </div>
+          <div id="infobar-language-vitality" class="infobar-card">
+            <h3 class="infobar-subheading" data-message="languageVitality">
+              Linguistic vitality
+            </h3>
+            <a
+              id="vitality-graphic-link"
+              href="https://en.wikipedia.org/wiki/Endangered_language#UNESCO_definitions"
+              target="_blank"
+            >
+              <div id="vitality-legend">
+                <div
+                  class="vitality-legend-item"
+                  id="vitality-legend-extinct"
+                  data-message="vitalityExtinct"
+                >
+                  Extinct
+                </div>
+                <div
+                  class="vitality-legend-item"
+                  id="vitality-legend-endangered"
+                  data-message="vitalityEndangered"
+                >
+                  Endangered
+                </div>
+                <div
+                  class="vitality-legend-item"
+                  id="vitality-legend-safe"
+                  data-message="vitalitySafe"
+                >
+                  Safe
+                </div>
+              </div>
+              <div id="vitality-list">
+                <div
+                  class="vitality-item"
+                  id="vitality-extinct"
+                  data-value="extinct"
+                  data-message="vitalityCodeExtinct"
+                  data-message-title="vitalityNameExtinct"
+                >
+                  Extinct
+                </div>
+                <div
+                  class="vitality-item"
+                  id="vitality-critically-endangered"
+                  data-value="critically_endangered"
+                  data-message="vitalityCodeCriticallyEndangered"
+                  data-message-title="vitalityNameCriticallyEndangered"
+                >
+                  Critically endangered
+                </div>
+                <div
+                  class="vitality-item"
+                  id="vitality-severely-endangered"
+                  data-value="severely_endangered"
+                  data-message="vitalityCodeSeverelyEndangered"
+                  data-message-title="vitalityNameSeverelyEndangered"
+                >
+                  Severely endangered
+                </div>
+                <div
+                  class="vitality-item"
+                  id="vitality-definitely-endangered"
+                  data-value="definitely_endangered"
+                  data-message="vitalityCodeDefinitelyEndangered"
+                  data-message-title="vitalityNameDefinitelyEndangered"
+                >
+                  Definitely endangered
+                </div>
+                <div
+                  class="vitality-item"
+                  id="vitality-vulnerable"
+                  data-value="vulnerable"
+                  data-message="vitalityCodeVulnerable"
+                  data-message-title="vitalityNameVulnerable"
+                >
+                  Vulnerable
+                </div>
+                <div
+                  class="vitality-item"
+                  id="vitality-safe"
+                  data-value="safe"
+                  data-message="vitalityCodeSafe"
+                  data-message-title="vitalityNameSafe"
+                >
+                  Safe
+                </div>
+              </div>
+            </a>
+            <div id="vitality-description" class="infobar-text">
+              Description about how the language is endangered and who are the
+              ones left using it.
+            </div>
+          </div>
+          <div
+            id="infobar-language-description-source"
+            class="infobar-text-note"
+            data-message="fromWikipedia"
+          >
+            Excerpt from Wikipedia
+          </div>
+          <div id="infobar-language-description" class="infobar-text" lang="en">
+            Description about the language
+          </div>
+          <button
+            id="infobar-language-description-expand-button"
+            class="description-expand-button"
+            data-message="readMore"
+          >
+            Read more
+          </button>
+          <hr class="infobar-section-divider" />
+        </section>
+        <section id="infobar-area-section" class="infobar-section">
+          <div class="infobar-section-label" data-message="areaInfoLabel">
+            About the locality
+          </div>
+          <h2 class="infobar-section-title" id="infobar-area-title">
+            Area name
+          </h2>
+          <div
+            id="infobar-area-description-source"
+            class="infobar-text-note"
+            data-message="fromWikipedia"
+          >
+            Excerpt from Wikipedia
+          </div>
+          <div id="infobar-area-description" class="infobar-text" lang="en">
+            <p>Description about the province or the locality</p>
+          </div>
+          <button
+            id="infobar-area-description-expand-button"
+            class="description-expand-button"
+            data-message="readMore"
+          >
+            Read more
+          </button>
+          <hr class="infobar-section-divider" />
+        </section>
+        <section id="infobar-media-section" class="infobar-section">
+          <div class="infobar-section-label" data-message="mediaSectionLabel">
+            Related media
+          </div>
+          <div id="infobar-media-list">
+            <template id="infobar-media-item-template">
+              <div class="infobar-media-item">
+                <a class="infobar-media-item-link" target="_blank">
+                  <h2 class="infobar-media-item-title">Title</h2>
+                </a>
+                <div
+                  class="infobar-media-item-description infobar-text"
+                  lang="en"
+                >
+                  Description
+                </div>
+                <div class="infobar-media-item-content">Embed</div>
+              </div>
+            </template>
+          </div>
+          <hr class="infobar-section-divider" />
+        </section>
+        <div id="infobar-source-section" class="infobar-section">
+          <div id="infobar-source-list">
+            <span id="infobar-source-label" data-message="source">Sources</span>
+          </div>
+          <hr class="infobar-section-divider" />
+        </div>
+        <div id="infobar-footer" class="infobar-section">
+          <a
+            class="infobar-footer-link"
+            href="https://forms.gle/JYe2W9PjXogEcyMw8"
+            target="_blank"
+            data-message="sendFeedback"
+            >Send feedback</a
+          >
+          <a
+            class="infobar-footer-link"
+            href="https://forms.gle/ntRBRPp8ZUyHUSE78"
+            target="_blank"
+            data-message="contribute"
+            >Contirbute translations</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script
+      data-order="0"
+      data-src="https://unpkg.com/tinyqueue@2.0.0/tinyqueue.min.js"
+    ></script>
+    <script
+      data-order="0"
+      data-src="https://unpkg.com/mobx@5.15.4/lib/mobx.umd.min.js"
+    ></script>
+    <script
+      data-order="0"
+      data-src="https://unpkg.com/topojson@3.0.2/dist/topojson.js"
+    ></script>
+    <script
+      data-order="0"
+      data-src="https://cdn.jsdelivr.net/gh/AndriiHeonia/hull@v1.0.0/dist/hull.js"
+    ></script>
+    <script data-order="0" data-src="https://d3js.org/d3.v5.min.js"></script>
+    <script data-order="0" data-src="geo.js"></script>
+    <script data-order="0" data-src="lang.js"></script>
+    <script data-order="0" data-src="media.js"></script>
+    <script data-order="1" data-src="viz.js"></script>
+    <script src="preloader.js" async defer></script>
+
+    <script
+      async
+      src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"
+    ></script>
+  </body>
+</html>

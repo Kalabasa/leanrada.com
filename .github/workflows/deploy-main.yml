@@ -1,11 +1,11 @@
-name: deploy
+name: deploy-main
 
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 22 * * *'
   workflow_run:
-    workflows: [update-data]
+    workflows: [update-main]
     types:
       - completed
 
@@ -22,13 +22,15 @@ jobs:
         with:
           node-version: 19
 
-      - run: npm install
+      - run: npm install --prefix lat
+
+      - run: npm install --prefix main
 
       - name: Cache build artifacts
         id: cache-build
         uses: actions/cache@v3
         with:
-          path: build
-          key: build
+          path: out
+          key: out
 
-      - run: root/scripts/deploy/deploy.sh
+      - run: node lat deploy main --prod --yes
