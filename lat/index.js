@@ -13,6 +13,8 @@ import { getProjects } from "./util/get_projects.js";
 const args = arg({
   "--yes": Boolean,
   "--prod": Boolean,
+  "--cf-prod": Boolean,
+  "--gh-prod": Boolean,
   "--staging": Boolean,
   "--port": Number,
   "--dry-run": Boolean,
@@ -48,7 +50,7 @@ function deploy(targetProjectDirs) {
   }
 
   const wwwDir = path.resolve("www");
-  if (args["--prod"]) {
+  if (args["--cf-prod"]) {
     const wwwProdDir = `${wwwDir}/cf-prod`;
     deployProjectsToCloudflarePages({
       targetProjectDirs,
@@ -57,7 +59,7 @@ function deploy(targetProjectDirs) {
       dryRun: args["--dry-run"],
       noConfirm: args["--yes"],
     });
-  } else if (args["--gh-prod"]) {
+  } else if (args["--gh-prod"] || args["--prod"]) {
     const wwwProdDir = `${wwwDir}/gh-prod`;
     deployProjectsToGithubPages({
       targetProjectDirs,
