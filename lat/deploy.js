@@ -167,7 +167,9 @@ export async function deployProjectsToGithubPages({
     console.log(
       colorInfo("Updated files:") + " " + path.relative(getTopDir(), workingDir)
     );
-    exe("git diff --cached HEAD");
+    try {
+      exe("git diff --cached HEAD");
+    } catch (e) {}
 
     if (!noConfirm && !(await confirmYN(colorPrompt("Commit changes?")))) {
       process.exit(0);
