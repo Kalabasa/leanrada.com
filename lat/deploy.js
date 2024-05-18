@@ -69,26 +69,30 @@ function generateCommands({
 
   for (const targetProject of sortedTargetProjects) {
     const rootDir = path.resolve(targetProject.rootDir);
-    const webFilesDir = path.resolve(rootDir, targetProject.webFilesDir);
+    const webFilesDir =
+      targetProject.webFilesDir &&
+      path.resolve(rootDir, targetProject.webFilesDir);
     const projectDeployDir = path.resolve(
       deployDir,
       targetProject.sitePathPrefix
     );
 
-    if (!fs.existsSync(webFilesDir)) {
-      console.error(
-        colorError("Missing webFilesDir:") +
-          " " +
-          path.relative(cwd(), webFilesDir)
-      );
-      invalidState = true;
-      continue;
+    if (targetProject.webFilesDir) {
+      if (!fs.existsSync(webFilesDir)) {
+        console.error(
+          colorError("Missing webFilesDir:") +
+            " " +
+            path.relative(cwd(), webFilesDir)
+        );
+        invalidState = true;
+        continue;
+      }
     }
 
     commands.push(`cd ${rootDir}`);
 
-    if (targetProject.prepareCommand) {
-      commands.push(targetProject.prepareCommand);
+    if (targetProject.buildCommand) {
+      commands.push(targetProject.buildCommand.replaceAll("$DIR", deployDir));
     }
 
     const excludes = allProjects
@@ -104,13 +108,15 @@ function generateCommands({
       )
       .map((project) => ` --exclude '${project.sitePathPrefix}'`);
 
-    commands.push(
-      "rsync" +
-        rsyncArgs({ dryRun }) +
-        excludes +
-        ` '${normalizeDirPath(path.relative(rootDir, webFilesDir))}'` +
-        ` '${normalizeDirPath(path.relative(rootDir, projectDeployDir))}'`
-    );
+    if (targetProject.webFilesDir) {
+      commands.push(
+        "rsync" +
+          rsyncArgs({ dryRun }) +
+          excludes +
+          ` '${normalizeDirPath(path.relative(rootDir, webFilesDir))}'` +
+          ` '${normalizeDirPath(path.relative(rootDir, projectDeployDir))}'`
+      );
+    }
   }
 
   if (invalidState || !commands.length) {
@@ -196,7 +202,7 @@ export async function deployProjectsToCloudflarePages({
 }) {
   try {
     fs.rmSync(workingDir, { recursive: true, force: true });
-    
+
     await deployProjectsToDir({
       targetProjectDirs,
       deployDir: `${workingDir}/`,
@@ -204,7 +210,9 @@ export async function deployProjectsToCloudflarePages({
       noConfirm,
     });
 
-    exe(`wrangler pages deploy --project-name leanrada-com --branch ${cfBranch} ${workingDir}`);
+    exe(
+      `wrangler pages deploy --project-name leanrada-com --branch ${cfBranch} ${workingDir}`
+    );
   } finally {
   }
 }
