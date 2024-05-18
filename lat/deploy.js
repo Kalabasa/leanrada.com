@@ -92,7 +92,8 @@ function generateCommands({
     commands.push(`cd ${rootDir}`);
 
     if (targetProject.buildCommand) {
-      commands.push(targetProject.buildCommand.replaceAll("$DIR", deployDir));
+      const deployDir = normalizeDirPath(projectDeployDir);
+      commands.push(targetProject.buildCommand.replaceAll("$deployDir", deployDir));
     }
 
     const excludes = allProjects

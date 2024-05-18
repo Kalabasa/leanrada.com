@@ -11,10 +11,12 @@ if [[ `git status --porcelain .` ]]; then
   exit 1
 fi
 
+export DEPLOY_DIR="$@"
+
 # Build project
 npm install
 npm run clean-lite
-npm run build-prod -- "$@"
+npm run build-prod -- -o $DEPLOY_DIR
 
 # Generate source-controlled generated files
 node scripts/update/clean-redirects.js
