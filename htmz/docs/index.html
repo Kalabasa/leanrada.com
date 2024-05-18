@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>htmz - a low power tool for html</title>
+    <link rel="stylesheet" href="style.css?v=352d9bf" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="favicon.png" />
+    <base target="htmz" />
+  </head>
+  <body>
+    <h1 class="title">
+      <span class="title-decor title-arrow" aria-hidden>=></span>htmz<span
+        class="title-decor title-arrowhead"
+        aria-hidden
+        >></span
+      >
+    </h1>
+    <i class="subtitle"> a low power tool for html </i>
+
+    <section>
+      <p class="intro">
+        <b>htmz</b> is a minimalist HTML microframework for creating interactive
+        and modular web user interfaces with the familiar simplicity of
+        <strong class="stronger">plain HTML</strong>.
+        <a href="https://github.com/Kalabasa/htmz" target="_blank">[GitHub]</a>
+      </p>
+    </section>
+
+    <section class="highlights-section">
+      <div>
+        <h2>plain<span class="heading-icon">🍦</span></h2>
+        <p>
+          Use straight up HTML. No supersets. No hz- ng- hx- v- w- x-; no
+          special attributes. No DSLs. No &lt;custom-elements>.
+          <em>Just vanilla HTML.</em>
+        </p>
+      </div>
+      <div>
+        <h2>lightweight<span class="heading-icon">🪶</span></h2>
+        <p>
+          <strong>166 bytes in total.</strong> Zero dependencies. Zero JS
+          bundles to load. Not even a backend is required.
+          <em>Just an inline HTML snippet</em>.
+        </p>
+      </div>
+      <div>
+        <h2>nofilter<span class="heading-icon">⚡</span></h2>
+        <p>
+          No preventDefaults. No hidden layers. Real DOM, real interactions. No
+          VDOM, no click listeners. No AJAX, no fetch.
+          <em>No reinventing browsers</em>.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <p>
+        <b>In a nutshell, htmz</b> lets you swap page fragments on request using
+        vanilla HTML.
+      </p>
+      <p>
+        Imagine clicking a link, but instead of reloading the whole page, it
+        <em>only updates the relevant portion of the page</em>.
+      </p>
+      <p>
+        htmz is an <em>experiment</em> inspired by
+        <a target="_blank" href="https://htmx.org/">htmx</a>,
+        <a
+          target="_blank"
+          href="https://en.wikipedia.org/wiki/Comet_(programming)"
+          >Comet</a
+        >, ‘HTML As The Engine Of Application State’<a
+          target="_blank"
+          href="https://en.wikipedia.org/wiki/HATEOAS"
+          >[1]</a
+        ><a target="_blank" href="https://htmx.org/essays/hateoas/">[2]</a>, and
+        other similar web application architectures.
+      </p>
+    </section>
+
+    <section class="demos-section">
+      <h2>Demos</h2>
+      <p>Check out these demos to get an idea of what htmz can do!</p>
+      <div role="tablist">
+        <a class="panel" role="tab" href="demos/tabs/index.html#demos-tab-panel"
+          >Tabs</a
+        >
+        <a
+          class="panel"
+          role="tab"
+          href="demos/hello/index.html#demos-tab-panel"
+          >Greeting</a
+        >
+        <a class="panel" role="tab" href="demos/edit/index.html#demos-tab-panel"
+          >Edit inline</a
+        >
+        <a
+          class="panel"
+          role="tab"
+          href="demos/dialog/index.html#demos-tab-panel"
+          >Dialog</a
+        >
+        <a class="panel" role="tab" target="_self" href="#examples"
+          >More examples<sup>#</sup></a
+        >
+      </div>
+      <div id="demos-tab-panel" class="panel" role="tabpanel">
+        <div class="demos-empty">🐙 Select an example above!</div>
+      </div>
+      <p>
+        See also:
+        <a href="extensions/" target="_self">Extensions 🍱</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Installing</h2>
+      <p>Simply copy the following snippet into your page:</p>
+      <pre
+        class="code"
+      ><code class="rainbow-mask">&lt;iframe hidden name=htmz onload="setTimeout(()=>document.querySelector(contentWindow.location.hash||null)?.replaceWith(...contentDocument.body.childNodes))">&lt;/iframe></code></pre>
+      <p>
+        For <strong>npm enjoyers</strong>, use the following npm commands to
+        automate the <em>simple process of copying the snippet</em>. For maximum
+        npm enjoyment, this npm package contains 25 bonus dependencies!
+      </p>
+      <pre class="code"><code><!--
+--><span class="code-token">npm install --save-dev</span> htmz
+<span class="code-token">npx</span> htmzify ./path/to/my/index.html<!--
+      --></code></pre>
+      <p>
+        For <strong>hackers</strong>, you may start with the development version
+        (deminified):
+        <a
+          href="https://github.com/Kalabasa/htmz/blob/master/htmz.dev.html"
+          target="_blank"
+          >htmz.dev.html</a
+        >
+      </p>
+    </section>
+
+    <section>
+      <h2>Basic usage</h2>
+      <p>
+        To invoke htmz, you need a hyperlink (or form) having these attributes:
+      </p>
+      <ol>
+        <li>
+          href (or action) pointing to the
+          <strong>resource URL</strong>
+          <code class="code"
+            ><span class="code-token">href</span>="<span class="code-term"
+              >/flower.html</span
+            >⋯</code
+          >
+        </li>
+        <li>
+          Continuing within the href:
+          <strong>destination ID selector</strong>
+          <code class="code"
+            >⋯<span class="code-attention">#my-element</span>"</code
+          >
+        </li>
+        <li>
+          And a <strong>target</strong> attribute with this value
+          <code class="code"
+            ><span class="code-target">target=<strong>htmz</strong></span></code
+          >
+        </li>
+      </ol>
+      <pre class="code"><code><!--
+--><span class="code-comment">&lt;!-- Loads /flower.html onto #my-element --&gt;</span>
+&lt;<span class="code-token">a href</span>="<i>/flower.html</i><b>#my-element</b>" <span class="code-target">target=<strong>htmz</strong></span>>Flower&lt;/<span class="code-token">a</span>><!--
+--></code></pre>
+      <p>
+        While this looks like an abuse of the URL fragment (it is), there is no
+        other use for the URL fragment in this context, so it was repurposed as
+        the destination ID selector. And it already looks like a CSS ID
+        selector.
+      </p>
+      <p>
+        <b>⚠ Important note:</b> The loaded content
+        <strong>replaces</strong> the selected destination. It may not be
+        intuitive at first, but htmz does <em>not</em> insert the content into
+        the destination. The rationale is that replacement is a more powerful
+        operation. With replacement, you can <i>replace</i>,
+        <i>delete</i> (replace with nothing), and <i>insert-into</i> (replace
+        with the same container as original).
+      </p>
+    </section>
+
+    <section>
+      <h2>What does it do exactly?</h2>
+      <p>htmz does one thing and one thing only.</p>
+      <p class="mission">
+        <strong class="stronger">
+          Load HTML onto <em>any element</em> in the page on request.
+        </strong>
+      </p>
+      <p>
+        Think tabbed UIs, dual-pane list-detail layouts, dialogs, in-place
+        editors, and the like.
+      </p>
+      <p>
+        <em>This idea is not new.</em> Dividing web pages into independently
+        reloading parts has been a thing since mid-1990s. They were called
+        <a
+          target="_blank"
+          href="https://www.w3.org/TR/html401/present/frames.html"
+          ><b>frames</b></a
+        >, namely, &lt;iframe>s, &lt;frame>s, and &lt;frameset>s.
+      </p>
+      <p>
+        <strong>htmz is a generalisation of HTML frames.</strong> &mdash; Load
+        HTML resources within <del>any frame</del> <ins>any element</ins> in the
+        page.
+      </p>
+      <p>
+        Read more on <a href="#how" target="_self">how it works</a> in a section
+        below.
+      </p>
+    </section>
+
+    <section>
+      <h2 id="examples">Examples</h2>
+      <div class="examples-photo-grid">
+        <img alt="todo app" src="todo.png" />
+        <img alt="chat app" src="chat.png" />
+        <img class="calendar-screenshot" alt="calendar app" src="cal.png" />
+      </div>
+      <p>
+        More example applications, componentization approaches, and code in
+        different languages can be found in the
+        <code>/examples</code> directory. To start the example server:
+      </p>
+      <pre class="code"><code><!--
+--><span class="code-token">cd</span> examples
+./run_servers.sh<!--
+--></code></pre>
+      <p>Then load <code>http://localhost:3000/</code>.</p>
+    </section>
+
+    <section>
+      <h2>Advanced usage</h2>
+      <p>
+        Naturally, only <code>&lt;a></code> and <code>&lt;form></code> elements
+        can target and invoke htmz (as of current HTML5). This is fine; it’s
+        semantic, after all. However, HTML offers a couple more features that
+        work well with htmz.
+      </p>
+
+      <section>
+        <h3>Per-button action & target</h3>
+        <p>
+          If you want to override the form’s action on a per-button basis, use
+          the
+          <code>&lt;button></code>’s
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#formaction"
+            target="_blank"
+            ><code>formaction</code></a
+          >
+          attribute.
+        </p>
+        <pre class="code"><code><!--
+-->&lt;<span class="code-token">form action</span>="<i>/default</i><b>#my-target</b>" <span class="code-token">target</span><b>=<span class="code-target">htmz</span>></b>
+  &lt;<span class="code-token">button</span>>Default form action&lt;/<span class="code-token">button</span>>
+  &lt;<span class="code-token">button formaction</span>="<i>/button</i><b>#my-target</b>">
+    Different button action
+  &lt;/<span class="code-token">button</span>>
+  &lt;<span class="code-token">button formaction</span>="<i>/another-action</i><b>#another-target</b>">
+    Another action
+  &lt;/<span class="code-token">button</span>>
+&lt;/<span class="code-token">form</span>><!--
+--></code></pre>
+      </section>
+
+      <section>
+        <h3>Base target value</h3>
+        <p>Tired of adding <code>target=htmz</code> to every link and form?</p>
+        <p>
+          Using the
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base"
+            target="_blank"
+            >base</a
+          >
+          element, set htmz as the default target for all relative links. Add
+          this at the top of your page.
+        </p>
+        <pre class="code"><code><!--
+-->&lt;<span class="code-token">base target</span><b>=<span class="code-target">htmz</span>></b><!--
+--></code></pre>
+      </section>
+
+      <section>
+        <h3>Clean target values</h3>
+        <p>
+          Don’t like the look of <code>target=htmz</code> at all? Prefer using
+          the real target as the value?
+        </p>
+        <p>
+          We can do a hack that enables you to write the target ID selector in
+          the target attribute itself! Like this:
+        </p>
+        <pre class="code"><code><!--
+--><span class="code-comment">&lt;!-- Loads /flower.html onto #my-element --&gt;</span>
+&lt;<span class="code-token">a href</span>="<i>/flower.html</i>" <span class="code-token">target</span>="<b>#my-element</b>">Flower&lt;/<span class="code-token">a</span>><!--
+--></code></pre>
+        <p>
+          The key is to add an iframe with a <em>matching name</em>, and modify
+          the htmz snippet accordingly.
+        </p>
+        <pre class="code wide"><code><!--
+-->&lt;<span class="code-token">iframe hidden name</span>="<b>#my-element</b>" <span class="code-token">onload</span>="htmz(<span class="code-token">this</span>)">&lt;/<span class="code-token">iframe</span>>
+&lt;<span class="code-token">script</span>>
+  <span class="code-token">function</span> htmz(frame) {
+    document.<span class="code-token">querySelector</span>(frame.name) <span class="code-comment">// use the iframe's name instead of the URL hash</span>
+      ?.<span class="code-token">replaceWith</span>(...frame.contentDocument.body.childNodes);
+  }
+&lt;/<span class="code-token">script</span>>
+<!--
+--></code></pre>
+        <p>
+          You can even
+          <a
+            href="https://github.com/Kalabasa/htmz/blob/master/examples/cf_clean_target_tabs/worker.js"
+            target="_blank"
+            >automate the generation of matching target iframes</a
+          >.
+        </p>
+      </section>
+
+      <section>
+        <h3>Support opening links in a new tab</h3>
+        <p>
+          What if the user opens an htmz link in a new tab? Well, they would be
+          loading your page fragment, carefully designed to be injected into an
+          exsting page, on its own!
+        </p>
+        <p>
+          Using the
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Dest"
+            target="_blank"
+            ><strong>Sec-Fetch-Dest</strong></a
+          >
+          header, you can
+          <a
+            href="https://github.com/Kalabasa/htmz/blob/master/examples/php_new_tab_detection/content.php"
+            target="_blank"
+            >fall back to a full page</a
+          >
+          in these cases. This header lets the server know the request’s
+          destination and render either a fragment or a full page
+          appropriately.
+        </p>
+      </section>
+
+      <section>
+        <h3>Scripting / interactivity</h3>
+        <p>
+          If you need something more interactive than the request-response
+          model, you may try the htmz companion scripting language:
+          <b>javazcript</b>. Sorry, I meant JavaScript, a scripting language
+          designed to make HTML interactive.
+        </p>
+        <p>
+          htmz does not preclude you writing JS or using UI libraries to enhance
+          interaction. You could, say, enhance a single form control with
+          <a href="http://vanilla-js.com/" target="_blank">vanillaJS</a>, but
+          the form
+          <em>values</em>
+          could still be submitted as a regular HTTP form with htmz.
+        </p>
+        <p>That said, htmz is extensible!</p>
+      </section>
+    </section>
+
+    <section>
+      <h2>Extensibility</h2>
+      <p>
+        Need advanced selectors? Need error handling? Multiple targets? Fear
+        not; the hero is here to save the day. The hero is you.
+      </p>
+      <p>
+        Here’s
+        <a
+          href="https://github.com/Kalabasa/htmz/blob/master/htmz.dev.html"
+          target="_blank"
+          >the development version of the snippet</a
+        >. Feel free to hack and extend according to your needs. You’re a
+        programmer, right?
+      </p>
+      <pre class="code wide"><code><!--
+-->&lt;<span class="code-token">script</span>>
+  <span class="code-token">function</span> htmz(frame) {
+    <b>// Write your extensions here</b>
+
+    <span class="code-comment">// Remove setTimeout to let the browser autoscroll content changes into view</span>
+    <span class="code-token">setTimeout</span>(() =>
+      document
+        .<span class="code-token">querySelector</span>(frame.contentWindow.location.hash || <span class="code-token">null</span>)
+        ?.<span class="code-token">replaceWith</span>(...frame.contentDocument.body.childNodes)
+    );
+  }
+&lt;/<span class="code-token">script</span>>
+&lt;<span class="code-token">iframe hidden name</span>=<span class="code-target">htmz</span> <span class="code-token">onload</span>="htmz(<strong class="code-token">this</strong>)">&lt;/<span class="code-token">iframe</span>><!--
+--></code></pre>
+      <p>
+        <strong>
+          Pre-written extensions are now available in the
+          <a href="extensions/" target="_self">Extensions 🍱 page</a>.
+        </strong>
+      </p>
+    </section>
+
+    <section>
+      <h2><abbr title="Freemptively answered questions">FAQ</abbr></h2>
+
+      <section>
+        <h3 id="how">How does it work?</h3>
+        <p>
+          htmz is an iframe named &quot;htmz&quot;. You invoke htmz by loading a
+          URL into the iframe via target=htmz. By using an iframe, we lean on
+          the browser’s native capability to fetch the URL and parse the HTML.
+          After loading the HTML resource, we take the resulting DOM via an
+          onload handler.
+        </p>
+        <p>htmz is essentially a <strong>proxy target</strong>.</p>
+        <p>
+          Like how a proxy server forwards requests to some specified server,
+          proxy target htmz forwards responses into some specified target.
+        </p>
+        <pre class="code"><code><!--
+--><span class="code-comment">&lt;!-- The ideal:
+     GET /flower.html => #my-element            --&gt;</span>
+&lt;<span class="code-token">a href</span>="<i>/flower.html</i>" <span class="code-token">target</span>="<b>#my-element</b>">Flower&lt;/<span class="code-token">a</span>>
+
+<span class="code-comment">&lt;!-- Actual:
+     GET /flower.html =htmz> #my-element        --&gt;</span>
+&lt;<span class="code-token">a href</span>="<i>/flower.html</i><b>#my-element</b>" <span class="code-token">target</span>=<strong class="code-target">htmz</strong>>Flower&lt;/<span class="code-token">a</span>><!--
+--></code></pre>
+        <p>
+          When you load a URL into the htmz iframe, the onload handler kicks in.
+          It extracts your destination ID selector from the URL hash fragment
+          and transplants the iframe’s contents (now containing the loaded HTML
+          resource) into your specified destination.
+        </p>
+        <p>
+          htmz only runs when you invoke it. It does not continually parse your
+          DOM and scan it for special attributes or syntax, nor does it attach
+          listeners in your DOM. It’s a proxy not a VPN.
+        </p>
+      </section>
+
+      <section>
+        <h3>So it’s just another JavaScript framework?</h3>
+        <p>Oh my! Not the f-word!!!</p>
+        <p>
+          On a more serious note, I would say that rather than a JS one, it’s
+          more of an HTML micro-f*******k. It does use JS, but only the minimum
+          necessary.
+        </p>
+      </section>
+
+      <section>
+        <h3>Is htmz a library or a framework?</h3>
+        <p>htmz is a snippet. ✂️</p>
+      </section>
+
+      <section>
+        <h3>What does htmz mean?</h3>
+        <p>
+          HTMZ stands for
+          <i>
+            <b>H</b>tml with <b>T</b>argeted <b>M</b>anipulation <b>Z</b>ones.
+          </i>
+        </p>
+      </section>
+
+      <section>
+        <h3>Is this a joke?</h3>
+        <p>
+          This started as a
+          <i>
+            “Do I really need htmx? Can’t I do the load-link-into-target thing
+            with current web? Sounds a lot like frames.”
+          </i>
+          and ended up with this.
+        </p>
+        <p>
+          So, it isn’t quite a joke, but a response to htmx. I wanted to try
+          htmx. The premise sounded great (<i
+            >Why should you only be able to replace the entire screen?</i
+          >), then I saw that it was 16kB of JavaScript. Huh. Then there’s
+          special syntax everywhere. Huh. I don’t want to learn a whole new set
+          of instructions and Turing-complete DSLs specific to those
+          instructions.
+        </p>
+        <p>
+          Regardless of joke status, htmz seems fine as a library. It feels
+          kinda powerful for its tiny size. (But really it’s the browser that’s
+          doing the heavy lifting!) Nonetheless, there are limitations.
+        </p>
+      </section>
+
+      <section>
+        <h3>What are the limitations?</h3>
+        <p>
+          The main direct limitation is having only one destination per
+          response. However, this can be fixed by writing an extension. ;)
+        </p>
+        <p>
+          A more general but classic limitation is the request-response model.
+          The Web 1.0 model, and the baggage that comes with it. Like a
+          roundtrip delay on every interaction, a browser history entry on every
+          click, etc.
+        </p>
+        <p>
+          The Web 1.0 model might also mean putting more UI logic in the web
+          server. This can be a good thing or a bad thing, as it could lead to
+          either consolidation or fragmentation of UI logic, which respectively
+          decreases or increases complexity. It really depends on your goal and
+          style.
+        </p>
+        <p>
+          Lastly, this is not a templating library! No HTML imports or
+          client-side includes.
+        </p>
+      </section>
+    </section>
+
+    <div class="footer">
+      <span class="support" aria-hidden="true"></span>
+      <h1>
+        <span class="title-decor">=</span>htmz<span class="title-decor">></span>
+      </h1>
+      <span class="support" aria-hidden="true"></span>
+    </div>
+
+    <!-- prettier-ignore -->
+    <iframe hidden name=htmz onload="setTimeout(()=>document.querySelector(contentWindow.location.hash||null)?.replaceWith(...contentDocument.body.childNodes))"></iframe>
+
+    <script defer src="footer.js"></script>
+    <script
+      async
+      src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"
+    ></script>
+  </body>
+</html>

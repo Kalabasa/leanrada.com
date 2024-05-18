@@ -1,0 +1,93 @@
+<div id="extension-code">
+  <script>
+    function htmz(frame) {
+      setTimeout(() => {
+        if (frame.contentWindow.location.href === "about:blank") return;
+
+        // ---------------------------------8<-----------------------------------
+        // Swap <template>
+        // ----------------------------------------------------------------------
+        // This extension swaps standalone top-level <template> tags into target element(s)
+        // optionally allowing to preserve the element itself or its children, or delete the element altogether.  
+
+        frame.contentDocument.querySelectorAll("head>template").forEach(template => {
+          let target = document.querySelector(frame.contentWindow.location.hash || null);
+          
+          if(!target) return;
+
+          const slot = template.content.querySelector("slot");
+          
+          if(slot) {
+            const copy = target.cloneNode();
+            target.replaceWith(copy);
+            if(!slot.name) {
+              if (!slot.childNodes.length) {
+                slot.replaceWith(target); // <slot></slot>
+              } else {
+                target.replaceChildren(...slot.childNodes); // <slot>...</slot>
+              }
+            } else if(slot.name === "children") {
+              slot.replaceWith(...target.childNodes); // <slot name="children">
+            }
+            target = copy;
+          }
+          
+          frame.contentDocument.body.append(template.content);
+        });
+        // --------------------------------->8-----------------------------------
+
+        document
+          .querySelector(frame.contentWindow.location.hash || null)
+          ?.replaceWith(...frame.contentDocument.body.childNodes);
+
+        frame.contentWindow.location.replace("about:blank");
+      });
+    }
+  </script>
+  <iframe hidden name="htmz" onload="window.htmz(this)"></iframe>
+</div>
+
+<div id="extension-description">
+  <h2>swap-template</h2>
+  <p><i>contributed by yuretz</i></p>
+  <p>
+    Sometimes it would be nice to be able to preserve the target element 
+    or its children in the DOM tree. This extension allows you to do just that by using HTML
+    fragments wrapped in 
+    <a
+    href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template"
+    target="_blank"
+    ><code>&lt;template></code></a
+    >
+    tags and
+    <a
+    href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot"
+    target="_blank"
+    ><code>&lt;slot></code></a
+    > elements within them.
+    <dl>
+      <dt><code>&lt;slot></code></dt> <dd>Represents the original element as is</dd>
+      <dt><code>&lt;slot>...some new content&lt;/slot></code></dt> <dd>Represents the original element 
+        with its children replaced with some new content</dd>
+      <dt><code>&lt;slot name="children"></code></dt> <dd>Represents the original element child nodes</dd>      
+    </dl>
+  </p>
+  <p>
+    The example below demonstrates a simple editable list implemented using this extension features.
+  </p>
+</div>
+
+<form action="add.html#add" target="htmz">
+  <ul class="items">
+    <li id="add">
+      <input name="item">
+      <button>Add</button>
+    </li>
+  </ul>
+</form>
+
+<style>
+  .items li {
+    margin-bottom: 0.5rem;
+  }
+</style>
