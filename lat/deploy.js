@@ -250,9 +250,9 @@ export async function deployProjectsToCloudflarePages({
     exe(`git commit -m 'Deploy ${targetProjectDirs.join(", ")}'`);
     exe(`git push origin HEAD:${cfBranch}`);
 
-    exe(
-      `wrangler pages deploy --project-name leanrada-com --branch ${cfBranch} ${workingDir}`
-    );
+    // exe(
+    //   `wrangler pages deploy --project-name leanrada-com --branch ${cfBranch} ${workingDir}`
+    // );
   } finally {
     process.chdir(getTopDir());
     exe("git worktree prune");
