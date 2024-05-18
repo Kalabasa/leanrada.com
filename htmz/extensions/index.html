@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>htmz/extensions</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../style.css?v=352d9bf" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍱</text></svg>"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+      .header-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: end;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.3rem;
+      }
+      h2 {
+        padding: 0;
+        border: none;
+      }
+      h2:first-child {
+        margin-top: 0;
+      }
+
+      .extensions-explorer {
+        display: flex;
+        gap: 1rem;
+        margin: 2rem 0;
+      }
+
+      .extension-list {
+        flex: 0 0 20%;
+        min-width: 10ch;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        overflow: hidden;
+      }
+
+      .extension-item {
+        font-weight: bold;
+        border-bottom: solid 1px #0002;
+      }
+      .extension-item:focus-visible,
+      .extension-item:hover {
+        background: #fff;
+      }
+      .extension-item a {
+        display: block;
+        padding: 1rem;
+      }
+
+      .extension-pane {
+        flex: 0 0 80%;
+        overflow: auto;
+      }
+
+      iframe[name="extension-demo-frame"] {
+        width: 100%;
+        height: 15rem;
+        opacity: 0;
+      }
+      iframe.loaded {
+        opacity: 1;
+      }
+
+      #extension-code-container pre {
+        margin: 0;
+      }
+      .extension-code-container-empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 15rem;
+      }
+    </style>
+
+    <script>
+      function onExtensionLoad(frame) {
+        const descriptionContainer = document.getElementById(
+          "extension-description-container"
+        );
+        const codeContainer = document.getElementById(
+          "extension-code-container"
+        );
+
+        const code = frame.contentDocument.getElementById("extension-code");
+        const description = frame.contentDocument.getElementById(
+          "extension-description"
+        );
+
+        if (description) descriptionContainer.replaceChildren(description);
+        if (code) codeContainer.replaceChildren(createSourceCodeElement(code));
+
+        frame.classList.add("loaded");
+        frame.contentWindow.addEventListener("unload", () => {
+          frame.classList.remove("loaded");
+        });
+      }
+
+      function createSourceCodeElement(code) {
+        const preElement = document.createElement("pre");
+        preElement.classList.add("code");
+        preElement.classList.add("wide");
+        const codeElement = document.createElement("code");
+        codeElement.textContent = formatSourceCode(code.innerHTML);
+        hljs?.highlightElement(codeElement);
+        preElement.appendChild(codeElement);
+        return preElement;
+      }
+
+      function formatSourceCode(text) {
+        const indent = text.match(/^[\n\r]\s*/)?.[0];
+        return text.replaceAll(indent, "\n").trim();
+      }
+    </script>
+  </head>
+  <body>
+    <div class="header-row">
+      <h1>
+        <span class="title-decor" aria-hidden>=</span>htmz<span
+          class="title-decor"
+          aria-hidden
+          >></span
+        ><br />
+        &ensp;<span class="title-decor">&lt;</span>extensions<span
+          class="title-decor"
+          >></span
+        >
+        🍱
+      </h1>
+      <a href="..">back to main page</a>
+    </div>
+
+    <main class="extensions-explorer">
+      <ul class="extension-list panel">
+        <li class="extension-item">
+          <a href="loader/" target="extension-demo-frame">loader</a>
+        </li>
+        <li class="extension-item">
+          <a href="multitarget/" target="extension-demo-frame">multitarget</a>
+        </li>
+        <li class="extension-item">
+          <a href="no-history/" target="extension-demo-frame">no-history</a>
+        </li>
+        <li class="extension-item">
+          <a href="repeat-gets/" target="extension-demo-frame">repeat-gets</a>
+        </li>
+        <li class="extension-item">
+          <a href="unwrap-template/" target="extension-demo-frame"
+            >unwrap-template</a
+          >
+        </li>
+        <li class="extension-item">
+          <a href="swap-template/" target="extension-demo-frame"
+            >swap-template</a
+          >
+        </li>
+      </ul>
+
+      <div class="extension-pane">
+        <div id="extension-description-container"></div>
+
+        <h2 class="demo-header">Demo</h2>
+        <iframe
+          name="extension-demo-frame"
+          class="demo-result"
+          src="about:blank"
+          onload="window.onExtensionLoad?.(this)"
+        ></iframe>
+
+        <h2 class="demo-header">Code</h2>
+        <div id="extension-code-container">
+          <div class="extension-code-container-empty panel">
+            No extension selected!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script
+      async
+      src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"
+    ></script>
+  </body>
+</html>
