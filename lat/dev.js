@@ -23,7 +23,7 @@ export function runDevServer(port) {
         path.resolve(
           project.rootDir,
           project.webFilesDir,
-          path.relative(path.resolve("/", project.sitePathPrefix), reqPath)
+          path.relative(path.resolve("/", project.sitePathPrefix), decodeURIComponent(reqPath))
         )
       );
     });
