@@ -1,0 +1,212 @@
+
+  import { BaseElement } from "/lib/base_element.mjs";
+  import { BallSim } from "/notes/sweep-and-prune/ball-sim/ball-sim.mjs";
+  import { Runner } from "/notes/sweep-and-prune/ball-sim/runner.mjs";
+  import { Renderer } from "/notes/sweep-and-prune/ball-sim/renderer.mjs";
+  import { setupDragging } from "/notes/sweep-and-prune/ball-sim/dragging.mjs";
+  import { createProcessPhysicsFunc } from "/notes/sweep-and-prune/ball-sim/process-physics.mjs";
+  import { createDecorations } from "/notes/sweep-and-prune/ball-sim/decorations/decorations.mjs";
+  import { NoopStrat } from "/notes/sweep-and-prune/ball-sim/collision-strats/noop-strat.mjs";
+  import { PairwiseStrat } from "/notes/sweep-and-prune/ball-sim/collision-strats/pairwise-strat.mjs";
+  import { SimpleSweepAndPruneStrat } from "/notes/sweep-and-prune/ball-sim/collision-strats/simple-sap-strat.mjs";
+  import { SweepAndPruneStrat } from "/notes/sweep-and-prune/ball-sim/collision-strats/sap-strat.mjs";
+  import { SweepAndPruneSwapStrat } from "/notes/sweep-and-prune/ball-sim/collision-strats/sap-swap-strat.mjs";
+  import { SweepAndPruneSwap2DStrat } from "/notes/sweep-and-prune/ball-sim/collision-strats/sap-swap-2d-strat.mjs";
+  import { SkippingDelegateStrat } from "/notes/sweep-and-prune/ball-sim/collision-strats/skip-delegate-strat.mjs";
+  import { createQuickSort } from "/notes/sweep-and-prune/ball-sim/sorts/quick-sort.mjs";
+  import { createInsertionSort } from "/notes/sweep-and-prune/ball-sim/sorts/insertion-sort.mjs";
+
+  customElements.define(
+    "sap-demo-client",
+    class SweepAndPruneDemoClient extends BaseElement {
+      constructor() {
+        super();
+
+        this.visibilityListener({
+          show: async () => {
+            if (!this.hasInit) this.init();
+            this.runner.start();
+          },
+          hide: async () => {
+            if (this.runner) this.runner.stop();
+          },
+        });
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        this.cleanup();
+      }
+
+      init() {
+        this.cleanup();
+
+        const ballsAttr = this.getAttribute("balls");
+        const strategyAttr = this.getAttribute("strategy");
+        const isStatic = this.hasAttribute("static");
+        const noBounce = this.hasAttribute("no-bounce");
+        const isDraggable = this.hasAttribute("draggable");
+        const labelsAttr = this.getAttribute("labels");
+        const isRainbow = this.hasAttribute("rainbow");
+        const decorationsAttr = this.getAttribute("decorations");
+        const skipIntervalAttr = this.getAttribute("skip-interval");
+
+        const ballSimCreator = BallSim.create(600, 400);
+        if (ballsAttr?.startsWith("[")) {
+          const ballsSpec = JSON.parse(ballsAttr);
+          for (const [x, y, radius] of ballsSpec) {
+            ballSimCreator.addBall(x, y, radius);
+          }
+        } else {
+          const ballCount = ballsAttr?.match(/\d+/)
+            ? Number.parseInt(ballsAttr)
+            : 5;
+          ballSimCreator.addRandomBalls(ballCount, 0.06 + 0.2 / ballCount);
+        }
+
+        this.ballSim = ballSimCreator
+          .setStatic(isStatic)
+          .setEventTarget(this)
+          .build();
+
+        if (isRainbow) {
+          const { balls } = this.ballSim;
+          for (let i = 0; i < balls.length; i++) {
+            const ball = balls[i];
+            const h = i / balls.length;
+            ball.color = `hsl(${h}turn 100% 75%)`;
+          }
+        }
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = this.ballSim.width;
+        this.canvas.height = this.ballSim.height;
+        this.appendChild(this.canvas);
+
+        const labelsValue = labelsAttr?.split(",") ?? [];
+        this.renderer = new Renderer(
+          this.ballSim,
+          this.canvas,
+          labelsValue,
+          isDraggable
+        );
+
+        const pause = (duration) => this.runner.pause(duration);
+
+        const { callbacks } = createDecorations(
+          decorationsAttr,
+          this.ballSim,
+          this.renderer,
+          pause
+        );
+
+        const processFunc = createProcessPhysicsFunc(
+          !noBounce && !isStatic,
+          callbacks
+        );
+
+        const collStrat = createCollisionStrategy(
+          this.ballSim,
+          this.renderer,
+          processFunc,
+          callbacks,
+          this,
+          strategyAttr,
+          skipIntervalAttr
+        );
+
+        this.runner = new Runner(collStrat, this.ballSim, this.renderer);
+
+        if (isDraggable) {
+          setupDragging(this.ballSim, this.canvas, this);
+        }
+
+        this.hasInit = true;
+      }
+
+      cleanup() {
+        this.replaceChildren();
+        if (this.runner) this.runner.stop();
+        this.canvas = undefined;
+        this.renderer = undefined;
+        this.ballSim = undefined;
+        this.runner = undefined;
+        this.hasInit = false;
+      }
+    }
+  );
+
+  function createCollisionStrategy(
+    ballSim,
+    renderer,
+    processFunc,
+    callbacks,
+    eventTarget,
+    strategyAttr,
+    skipIntervalAttr
+  ) {
+    let collStrat;
+    switch (strategyAttr) {
+      case "noop":
+        collStrat = new NoopStrat();
+        break;
+      case "pairwise":
+        collStrat = new PairwiseStrat(ballSim, renderer, processFunc);
+        break;
+      case "simple-sap":
+        collStrat = new SimpleSweepAndPruneStrat(
+          ballSim,
+          (arr) => arr.sort((a, b) => a.x - b.x),
+          processFunc,
+          callbacks,
+          eventTarget
+        );
+        break;
+      case "sap-nativesort":
+        collStrat = new SweepAndPruneStrat(
+          ballSim,
+          (arr) => arr.sort((a, b) => a.x - b.x),
+          processFunc,
+          callbacks,
+          eventTarget
+        );
+        break;
+      case "sap-quicksort":
+        collStrat = new SweepAndPruneStrat(
+          ballSim,
+          createQuickSort(callbacks),
+          processFunc,
+          callbacks
+        );
+        break;
+      case "sap-insertionsort":
+        collStrat = new SweepAndPruneStrat(
+          ballSim,
+          createInsertionSort(callbacks),
+          processFunc,
+          callbacks
+        );
+        break;
+      case "sap-swap":
+        collStrat = new SweepAndPruneSwapStrat(ballSim, processFunc, callbacks);
+        break;
+      case "sap-swap-2d":
+        collStrat = new SweepAndPruneSwap2DStrat(
+          ballSim,
+          processFunc,
+          callbacks
+        );
+        break;
+      default:
+        throw new Error("Invalid strategy: " + strategyAttr);
+    }
+
+    if (skipIntervalAttr) {
+      collStrat = new SkippingDelegateStrat(
+        Number.parseInt(skipIntervalAttr),
+        collStrat
+      );
+    }
+
+    return collStrat;
+  }

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Music · leanrada.com</title>
+  <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
+  <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="webmention" href="https://webmention.io/leanrada.com/webmention">
+  <link rel="alternate" type="application/rss+xml" title="leanrada.com notes" href="/rss.xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="only dark">
+  <meta charset="utf-8">
+  <script async="" src="https://leanrada.com/analytics/analytics.js"></script>
+  <style>
+  .text-link {
+    color: var(--clr0-light, #fff);
+  }
+  .text-link:visited {
+    color: var(--clr0, #fff);
+  }
+</style>
+  <style>
+  .song-image {
+    border-radius: 12px;
+    width: 100%;
+    max-width: 200px;
+  }
+</style>
+  <style>
+  .song-card {
+    display: grid;
+    grid-template-columns: min-content 18px 1fr;
+    grid-template-rows: min-content min-content;
+    grid-template-areas:
+      "play . title"
+      "play . description";
+    border: solid 1px var(--card-clr);
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 84px;
+    box-sizing: border-box;
+    background-color: var(--bg-clr);
+    background-image: linear-gradient(
+      to right,
+      var(--card-clr) var(--song-card-progress),
+      transparent var(--song-card-progress)
+    );
+  }
+  .song-card.song-card-playing {
+    background-image: linear-gradient(
+      to right,
+      var(--clr0-dark) var(--song-card-progress),
+      transparent var(--song-card-progress)
+    );
+  }
+
+  .song-card-play {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    grid-area: play;
+    border: solid 1px var(--card-clr);
+    border-radius: 50%;
+    padding: 0;
+    width: 60px;
+    height: 60px;
+    box-sizing: border-box;
+    background: var(--bg-clr);
+    cursor: pointer;
+  }
+  .song-card-play:focus-visible,
+  .song-card-play:hover {
+    background: var(--clr0-dark);
+  }
+  .song-card-playing .song-card-play {
+    background: var(--clr0-dark);
+    animation: songCardPlayingPlayButton 1s linear infinite;
+  }
+  .song-card-playing .song-card-play:focus-visible,
+  .song-card-playing .song-card-play:hover {
+    background: var(--bg-clr);
+  }
+  .song-card-play.song-card-play:active {
+    background: var(--clr0-light);
+  }
+
+  .song-card-play::after {
+    content: "";
+    margin-left: 16px;
+    border: solid 12px transparent;
+    border-left-color: var(--text-clr);
+    width: 24px;
+    height: 24px;
+    box-sizing: border-box;
+  }
+  .song-card-playing .song-card-play::after {
+    content: "💿";
+    margin: 0;
+    border: none;
+    width: auto;
+    height: auto;
+    font-size: 30px;
+    line-height: 30px;
+    filter: brightness(0.65) contrast(9);
+  }
+  @keyframes songCardPlayingPlayButton {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  .song-card-title {
+    grid-area: title;
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-style: italic;
+  }
+
+  .song-card-description {
+    grid-area: description;
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-style: italic;
+    font-weight: bold;
+    opacity: 0.4;
+  }
+
+  .song-card-audio {
+    grid-area: play;
+  }
+</style>
+  <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
+  }
+</style>
+  <style>
+  .content-header {
+    font-family: var(--default-font);
+    margin: 90px 0 60px;
+    padding: 0 18px;
+  }
+  @media (max-width: 600px) {
+    .content-header {
+      margin: 60px 0;
+    }
+  }
+
+  .content-header-title {
+    margin: 0 0 6px;
+    font-family: var(--display-font);
+    font-size: 27px;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .content-header-subtitle {
+    margin: 6px 0 0;
+    font-size: 18px;
+    font-style: italic;
+    text-align: center;
+    color: var(--text2-clr);
+  }
+</style>
+  <style>
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/space/SpaceMono-Regular.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Space Mono";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/space/SpaceMono-Italic.ttf") format("truetype");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/iosevka/iosevka-custom-regular.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Iosevka";
+    font-display: swap;
+    font-weight: normal;
+    font-style: italic;
+    src: url("/fonts/iosevka/iosevka-custom-italic.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Miriam Libre";
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+    src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
+  }
+
+  :root {
+    --default-font: "Iosevka", "Space Mono", monaco, Consolas, "Lucida Console",
+      monospace;
+    --display-font: "Space Mono", "Iosevka", monaco, Consolas, "Lucida Console",
+      monospace;
+    --reading-font: "Miriam Libre", Futura, "Trebuchet MS", Arial, sans-serif;
+
+    --bg-clr: #111616;
+    --card-clr: #222c2c;
+    --clr0-light: #54f8c1;
+    --clr0: #0ad591;
+    --clr0-dark: #05b97d;
+    --clr1: #df2063;
+
+    --text-clr: #fff;
+    --text2-clr: #999;
+
+    --ease: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--default-font, monospace);
+    font-size: 15px;
+    font-display: swap;
+    font-variant-ligatures: none;
+    background-color: var(--bg-clr, #111);
+    color: var(--text-clr, #fff);
+    overflow-x: hidden;
+  }
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .page-wrapper-content {
+    flex: 1 1 auto;
+  }
+</style>
+  <style>
+  nebula-client {
+    position: relative;
+  }
+  nebula-client > canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .nebula-noise {
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.1;
+    animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+      nebula-noise-y 0.48s steps(3, jump-start) infinite;
+  }
+  @supports (mix-blend-mode: overlay) {
+    .nebula-noise {
+      mix-blend-mode: overlay;
+      opacity: 0.2;
+    }
+  }
+  @keyframes nebula-noise-x {
+    to {
+      background-position-x: 100px;
+    }
+  }
+  @keyframes nebula-noise-y {
+    to {
+      background-position-y: 100px;
+    }
+  }
+</style>
+  <style>
+  .main-footer-web-link {
+    text-decoration: none;
+  }
+
+  .main-footer-web-link-icon {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .main-footer-web-link-icon:hover {
+    filter: invert(1);
+  }
+</style>
+  <style>
+  .main-footer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+    padding: 42px calc(max(36px, 50vw - 600px));
+    font-family: var(--display-font);
+    font-size: 15px;
+    font-weight: bold;
+    background: var(--clr0);
+    color: #000;
+    overflow: hidden;
+    content-visibility: auto;
+    contain-intrinsic-height: 200px;
+  }
+
+  .main-footer-links-heading {
+    margin: 18px 0;
+    font-size: inherit;
+  }
+
+  .main-footer-line {
+    margin: 12px 0;
+  }
+
+  .main-footer-link {
+    color: #000;
+  }
+  .main-footer-link:hover {
+    color: #000;
+  }
+
+  .main-footer-webring-icon {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .main-footer-signature {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    vertical-align: top;
+  }
+
+  .main-footer-content-part {
+    z-index: 1;
+  }
+
+  .main-footer-nebula {
+    position: absolute;
+    left: -30%;
+    top: -30%;
+    width: 160%;
+    height: 160%;
+    z-index: 0;
+  }
+
+  .main-footer-top-btn {
+    display: block;
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 72px;
+    height: 36px;
+    padding-right: 9px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-bottom-left-radius: 18px;
+    background: var(--bg-clr);
+    text-decoration: none;
+    color: var(--clr0-light);
+    font: inherit;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .main-footer-top-btn:hover {
+    color: var(--clr1);
+  }
+  .main-footer-top-btn::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 36px;
+    height: 18px;
+    border-top-right-radius: 18px;
+    transform: translateX(-72px);
+    box-shadow: 18px 0 0 var(--bg-clr);
+  }
+
+  @media (max-width: 700px) {
+    .main-footer {
+      flex-direction: column-reverse;
+    }
+  }
+</style>
+  <style>
+  .main-header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0 calc(25% - 150px);
+    z-index: 100;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .main-header.float {
+    position: fixed;
+  }
+
+  .main-header-bar {
+    position: relative;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    height: 100%;
+  }
+
+  .main-header-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 6ch;
+    height: 36px;
+    padding: 0 18px;
+    padding: 0 calc(min(18px,  -18px + 8vw));
+    border-radius: 18px;
+    font-family: var(--display-font);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    background-color: #2222;
+    background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+    background-repeat: no-repeat;
+    background-size: 220% 100%;
+    background-position: 115%;
+    pointer-events: all;
+    transition: background-color 0.2s var(--ease),
+      background-position 0.2s var(--ease);
+  }
+  .main-header-item:hover {
+    background-image: linear-gradient(
+      60deg,
+      #9994 50%,
+      #fff 50%,
+      #fff 60%,
+      transparent 60%
+    );
+    background-position: 0%;
+  }
+  .main-header-item.select {
+    background: #9994;
+  }
+
+  .main-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 25%;
+    image-rendering: pixelated;
+    object-fit: cover;
+    filter: invert(1);
+    backdrop-filter: blur(8px) invert(1);
+    pointer-events: all;
+  }
+  .main-header-icon-yay {
+    border-radius: 50%;
+    object-position: 0 0;
+  }
+  .main-header-icon-yay:hover {
+    object-position: 100% 0;
+  }
+
+  @media (max-width: 600px) {
+    .main-header {
+      height: 90px;
+      padding-top: 6px;
+    }
+    .main-header-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+      row-gap: 6px;
+    }
+    .main-header-icon {
+      display: none;
+    }
+  }
+
+  .main-header-indicator {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translate(-50%, -50%);
+    /* border acts as extended touch area */
+    border: solid 6mm transparent;
+    border-left-width: 45vw;
+    border-right-width: 45vw;
+    border-radius: 50%;
+    background: #fff;
+    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity 50ms;
+  }
+  .main-header.hidden .main-header-indicator {
+    opacity: 0.4;
+    pointer-events: all;
+  }
+</style>
+  <style>
+  .intro-paragraph {
+    margin: 30px auto;
+    padding: 0 12px;
+    max-width: 600px;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  .section {
+    display: grid;
+    grid-template-columns: 200px 30px 1fr;
+    grid-template-rows: min-content 18px min-content;
+    grid-template-areas:
+      "title title title"
+      ". . ."
+      "meta . songs";
+    margin: 60px auto 90px;
+    padding: 0 12px;
+    max-width: 1200px;
+  }
+  @media (max-width: 800px) {
+    .section {
+      grid-template-columns: 1fr;
+      grid-template-rows: min-content 18px min-content 24px min-content;
+      grid-template-areas:
+        "title"
+        "."
+        "meta"
+        "."
+        "songs";
+    }
+  }
+
+  .section-title {
+    grid-area: title;
+    font-size: 21px;
+    font-family: var(--display-font);
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  .section-meta {
+    grid-area: meta;
+    max-width: 470px;
+  }
+  .section-meta > :first-child {
+    margin-top: 0;
+  }
+
+  .song-card-grid {
+    grid-area: songs;
+    align-self: flex-start;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, calc(min(470px, 100%)));
+    gap: 30px;
+  }
+  .song-card-grid-sparse {
+    grid-template-columns: 1fr;
+  }
+</style>
+  <script async="" src="/scripts/cursor.js"></script>
+</head>
+
+
+<body>
+
+  <span hidden="" class="p-name">Music</span>
+  <div class="page-wrapper">
+    <header class="main-header">
+      <div class="main-header-bar">
+        <a href="/" class="main-header-item ">Home</a>
+        <a href="/notes/" class="main-header-item ">Notes</a>
+        <a href="/about/" class="main-header-item ">About</a>
+        <img class="main-header-icon " src="/icons/sound.png" alt="">
+        <a href="/wares/" class="main-header-item ">Wares</a>
+        <a href="/art/" class="main-header-item ">Art</a>
+        <a href="/music/" class="main-header-item select">Music</a>
+        <div class="main-header-indicator"></div>
+      </div>
+    </header>
+    <div class="page-wrapper-content">
+
+      <div class="content-header">
+        <h1 class="content-header-title p-name">The jukebox</h1>
+
+      </div>
+      <p class="intro-paragraph">
+        I make instrumental music. Here are some of them.
+      </p>
+      <section class="section">
+        <h2 class="section-title">Single(s)</h2>
+        <div class="section-meta">There is currently a single single.</div>
+        <div class="song-card-grid">
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/isolation/Isolation.mp3" controls=""></audio>
+            <div class="song-card-title">Isolation (2020) <span class="tag-component p-category" style="background: #897bb7; color: #342d48">lofi</span></div>
+            <div class="song-card-description">Chill beats to quarantine to</div>
+          </div>
+        </div>
+      </section>
+      <section class="section">
+        <h2 class="section-title">OP-1</h2>
+        <div class="section-meta">
+          <img srcset="/music/op1/art_200.generated.jpg 200w" sizes=" 200px" class="song-image" src="/music/op1/art.jpg" spec="200">
+          <p>
+            Songs made with
+            <a target="_blank" class="text-link " href="https://teenage.engineering/products/op-1">OP-1</a>.
+          </p>
+          <p>
+            Notes recorded live. No sequencers. I’m not good with timing, so
+            expect sloppy.
+          </p>
+        </div>
+        <div class="song-card-grid song-card-grid-sparse">
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/op1/real life.mp3" controls=""></audio>
+            <div class="song-card-title">real life </div>
+            <div class="song-card-description">Piano beats</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/op1/skybox.mp3" controls=""></audio>
+            <div class="song-card-title">skybox </div>
+            <div class="song-card-description">Melodic hip-hop</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/op1/transit.mp3" controls=""></audio>
+            <div class="song-card-title">transit </div>
+            <div class="song-card-description">Organic dance music</div>
+          </div>
+        </div>
+      </section>
+      <section class="section">
+        <h2 class="section-title">Visualisations</h2>
+        <div class="section-meta">🚧 Under construction</div>
+      </section>
+      <section class="section">
+        <h2 class="section-title">Conversations EP (2017)</h2>
+        <div class="section-meta">
+          <img srcset="/music/conversations/art_200.generated.jpg 200w" sizes=" 200px" class="song-image" src="/music/conversations/art.jpg" spec="200">
+          <p>
+            <strong>Conversations</strong> is a four-piece composition of mellow
+            beats, jazz harmony, and mild piano improvisations. Made with
+            <a target="_blank" class="text-link " href="https://lmms.io/">LMMS</a> and Audacity.
+          </p>
+          <p>Here are two of them.</p>
+        </div>
+        <div class="song-card-grid song-card-grid-sparse">
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/conversations/Just wanted to know.mp3" controls=""></audio>
+            <div class="song-card-title">Just wanted to know <span class="tag-component p-category" style="background: #897bb7; color: #342d48">lofi</span></div>
+            <div class="song-card-description">Melancholic piano, slow beats</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/conversations/Catch me.mp3" controls=""></audio>
+            <div class="song-card-title">Catch me <span class="tag-component p-category" style="background: #897bb7; color: #342d48">lofi</span></div>
+            <div class="song-card-description">Relaxed doodling on the piano</div>
+          </div>
+        </div>
+      </section>
+      <section class="section">
+        <h2 class="section-title">Leftovers from the past</h2>
+        <div class="section-meta">
+          <p>
+            I’ve been making music since I was 15, more or less. Starting with the
+            online music-making application Notessimo, to DAWs like LMMS, I’ve
+            made music ranging from solo piano pieces to electronic dance music.
+          </p>
+          <p>
+            Here are some of my old (but not too old) songs and abandoned drafts.
+            This collection is mostly from around 2016.
+          </p>
+        </div>
+        <div class="song-card-grid">
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/old/Gravity.mp3" controls=""></audio>
+            <div class="song-card-title">Gravity </div>
+            <div class="song-card-description">Electronic music for a game</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/old/There.mp3" controls=""></audio>
+            <div class="song-card-title">Ever There </div>
+            <div class="song-card-description">New age, music box, chill</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/old/VariableInitializations.mp3" controls=""></audio>
+            <div class="song-card-title">Variable Initializations <span class="tag-component p-category" style="background: #bc78b0; color: #4b2c45">edm</span></div>
+            <div class="song-card-description">Trance, electronic dance</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/old/Gently.mp3" controls=""></audio>
+            <div class="song-card-title">Gently <span class="tag-component p-category" style="background: #fcfcfc; color: #4c4c4c">piano</span></div>
+            <div class="song-card-description">Gentle but not too gentle song</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/old/2016-09-funk.mp3" controls=""></audio>
+            <div class="song-card-title">2016-09-funk.mp3 <span class="tag-component p-category" style="background: #d38565; color: #573021">funk</span></div>
+            <div class="song-card-description">Funk, chill. Draft.</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/old/electro-loop.mp3" controls=""></audio>
+            <div class="song-card-title">electro-loop.mp3 <span class="tag-component p-category" style="background: #bc78b0; color: #4b2c45">edm</span></div>
+            <div class="song-card-description">Electronic looping music. Draft.</div>
+          </div>
+          <div class="song-card">
+            <button class="song-card-play" aria-label="Play / Pause"></button>
+            <audio class="song-card-audio" src="/music/old/sad.mp3" controls=""></audio>
+            <div class="song-card-title">sad.mp3 </div>
+            <div class="song-card-description">Chill electro pop. Draft.</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+    <footer class="main-footer">
+      <div class="main-footer-content-part">
+        <p class="main-footer-line">
+          <a target="_self" class="main-footer-link" href="/">Home</a> ·
+          <a target="_self" class="main-footer-link" href="/notes/">Notes</a> ·
+          <a target="_self" class="main-footer-link" href="/about/">About</a> ·
+          <a target="_self" class="main-footer-link" href="/wares/">Software</a> ·
+          <a target="_self" class="main-footer-link" href="/art/">Art</a> ·
+          <a target="_self" class="main-footer-link" href="/music/">Music</a>
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-signature" alt="" src="/icons/laptop_user.png" loading="lazy">
+          <span style="display: inline-block">
+            ·
+            <a target="_self" class="main-footer-link" href="/guestbook/">Sign the guestbook!</a>
+            <br>
+            · Drop a
+            <a target="_blank" class="main-footer-link" href="mailto:mail%40leanrada.com">
+              mail＠leanrada·com
+            </a>
+            <br>
+          </span>
+        </p>
+        <p class="main-footer-line">
+          (C) 2015-2024 Lean Rada.
+          <a target="_blank" class="main-footer-link" href="https://github.com/Kalabasa/kalabasa.github.io">
+            Source</a>.
+        </p>
+      </div>
+      <div class="main-footer-content-part">
+        <h2 class="main-footer-links-heading">On the web</h2>
+        <a target="_blank" class="main-footer-web-link" href="https://www.linkedin.com/in/leanrada/">
+          <img class="main-footer-web-link-icon" alt="LinkedIn" src="/icons/linkedin.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://codepen.io/kalabasa">
+          <img class="main-footer-web-link-icon" alt="CodePen" src="/icons/codepen.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://github.com/Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="GitHub" src="/icons/github.png" loading="lazy">
+        </a>
+        <a target="_blank" class="main-footer-web-link" href="https://mastodon.social/@Kalabasa" rel="me">
+          <img class="main-footer-web-link-icon" alt="Mastodon" src="/icons/mastodon.png" loading="lazy">
+        </a>
+        <h2 class="main-footer-links-heading">Webrings</h2>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/">geekring.net</a>
+          [<a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/previous" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/random" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/next" aria-label="Next site">→</a>
+          <a target="_blank" class="main-footer-link" href="http://geekring.net/site/288/frameset" aria-label="Frameset browsing">▣</a>]
+        </p>
+        <p class="main-footer-line">
+          <img class="main-footer-webring-icon" alt="" src="/icons/planet.png" loading="lazy">
+          <a target="_blank" class="main-footer-link" href="https://cs.sjoy.lol/">CSS JOY</a>
+          [<a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com" aria-label="Previous site">←</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com" aria-label="Random site">⁙</a>
+          <a target="_blank" class="main-footer-link" href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com" aria-label="Next site">→</a>]
+        </p>
+      </div>
+      <nebula-client class="main-footer-nebula" palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591" width="40" height="10">
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div class="nebula-noise"></div>
+      </nebula-client>
+      <a class="main-footer-top-btn" href="#top" aria-label="Back to top">^</a>
+    </footer>
+  </div>
+
+
+
+
+
+
+  <script async="" defer="" src="/scripts/song-card.js"></script>
+  <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
+  <script defer="" src="/scripts/main-footer-main-header.js"></script>
+</body>
+</html>

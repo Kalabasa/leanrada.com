@@ -1,0 +1,386 @@
+<html>
+
+<head>
+
+<title>Quine-McCluskey Solver - Documentation</title>
+<link rel = "stylesheet" type = "text/css" href = "res/style.css">
+<script type="text/javascript" src="res/sh/scripts/shCore.js"></script>
+<script type="text/javascript" src="res/sh/scripts/shBrushJScript.js"></script>
+<link type="text/css" rel="stylesheet" href="res/sh/styles/shCoreDefault.css"/>
+<script type="text/javascript">SyntaxHighlighter.all();</script>
+
+</head>
+
+<body>
+
+<div id = "outerw">
+<div id = "middlew">
+<div id = "innerw">
+	<div class = "box">
+		<div id = "navmenu">
+			<ul>
+				<li><span id = "navtitle">QMS</span></li>
+				<li><a href="index.html">olver</a></li>
+				<li>|</li>
+				<li><a href="about.html">about</a></li>
+				<li>|</li>
+				<li><a href="doc.html">documentation</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class ="box content">
+		<div class = "contitle">documentation</div>
+		As QMSolver is written in JavaScript and HTML/CSS, its source code can be viewed anytime 
+		using just your browser. Nevertheless, here are direct links to QMSolver's source code.
+		<p align = "center"><a href = "res/qm.js" target = "_blank">plain text</a> |
+		<a href = "src.html">prettified</a></p>
+		<p>The source code by itself is well commented and relatively easy to understand. However,
+		there is one particular function, <strong>findEsPrImplicants</strong>, that needs a more 
+		in-depth discussion. It will be covered below.</p>
+	</div>
+	
+	<div class ="box content">
+		<div class = "contitle">overview</div>
+		The <strong>findEsPrImplicants</strong> (find essential prime implicants) implements
+		the Quine-McCluskey algorithm.
+		There are three parts in this function.
+		In the Quine-McCluskey algorithm, there are two parts.
+		These two parts, combining implicants and the prime implicant chart, are the last two parts
+		of this function.
+		<p>The three parts of the function are:
+		<ol>
+			<li>Converting minterms to implicants</li>
+			<li>Combining implicants to find prime implicants</li>
+			<li>Finding essential prime implicants (Prime implicant chart)</li>
+		</ol>
+		</p>
+		<p>Each will be covered below. There are other functions and definitions as well.
+		The <strong>util</strong> object contains utility functions for ease in development. There is
+		a class, the <strong>Implicant</strong> class, that represents an implicant. Other functions are
+		mostly for formatting and parsing. The source may be viewed if one wants to learn more about
+		these utility elements.</p>
+		<p>Have fun.</p>
+	</div>
+	
+	<div class ="box content">
+		<div class = "contitle">part one: minterms to implicants</div>
+		The function will receive as argument an integer array containing the minterm indices.
+<pre class="brush: js; toolbar: false; first-line: 199;">
+    // Construct initial table, get implicants from minterms
+    var implicants = [];
+     
+    var mt, obits, iarr, imp;
+    var i, n;
+    for(i = 0, n = minterms.length; i &lt n; i++){
+        mt = minterms[i] = parseInt(minterms[i]);
+        imp = createImplicantWithMinterm(mt);
+        imp.setPrime(true); // assume prime until proven guilty
+         
+        obits = util.popCount(mt);
+        iarr = implicants[obits] = implicants[obits] || [];
+        iarr.push(imp);
+    }
+</pre>
+		First, a data structure is built from and for the minterms so that they would
+		be easier to manipulate. This data structure is the Implicant class.
+<pre class="brush: js; toolbar: false; first-line: 205;">
+mt = minterms[i] = parseInt(minterms[i]);
+imp = createImplicantWithMinterm(mt);
+</pre>
+		<strong>createImplicantWithMinterm</strong> returns an Implicant object that
+		represents the minterm index <strong>mt</strong>. We then have to store these 
+		Implicant objects in an array such that they would be arranged like this:
+<pre class="brush: js; toolbar: false; gutter: false;">
+implicants[0] = [000] // 0 one bits
+implicants[1] = [001, 010, 100] // 1 one bits
+implicants[2] = [011, 101, 110] /// 2 one bits
+implicants[3] = [111] // 3 one bits
+</pre>
+		Note that the number of <strong>1</strong> bits in a minterm should be the same as
+		its index. To store the Implicants in this way, the number of one bits is counted.
+<pre class="brush: js; toolbar: false; first-line: 209;">
+obits = util.popCount(mt);
+iarr = implicants[obits] = implicants[obits] || [];
+iarr.push(imp);
+</pre>
+		<p>Using the <strong>popCount</strong> function we can get the number of one bits, and thus the array index of the Implicants.
+		<strong>popCount</strong> returns the number of 1 bits of the first argument.</p>
+		<img src = "res/1.png" alt = "Implicant objects"></img>		
+	</div>
+	
+	<div class ="box content">
+		<div class = "contitle">part two: finding prime implicants</div>
+		We now have an <strong>Implicants array</strong> where they are grouped based on their number of
+		1 bits ({000}, {001,010}, ..., {111}). We should now be able to combine the implicants.
+		The process of combining the implicants occurs at the do-while loop.
+<pre class="brush: js; toolbar: false; first-line: 222;">
+	do{
+		hasCombined = false;
+		nextImplicants = [];
+		for(i = 0, n = implicants.length - 1; i &lt n; i++){
+			// for each pair of adjacent rows
+			g1 = implicants[i] = implicants[i] || [];
+			g2 = implicants[i+1] = implicants[i+1] || [];
+			
+			// for each implicant in both rows
+			for(j = 0, m = g1.length; j &lt m; j++){
+				imp1 = g1[j];
+				for(k = 0, o = g2.length; k &lt o; k++){
+					imp2 = g2[k];
+					
+					// combine implicants
+					comb = imp1.combine(imp2);
+					if(comb){
+						iarr = nextImplicants[i] = nextImplicants[i] || [];
+						iarr.push(comb);
+						
+						imp1.setPrime(false);
+						imp2.setPrime(false);
+						comb.setPrime(true);
+						hasCombined = true;
+					}
+				}
+			}
+		}
+		
+		// store uncombined implicants as prime implicants
+		for(i = 0, n = implicants.length; i &lt n; i++){
+			g1 = implicants[i];
+			for(j = 0, m = g1.length; j &lt m; j++){
+				imp = g1[j];
+				if(imp.prime){
+					primeImplicants.push(imp);
+				}
+			}
+		}
+		
+		implicants = nextImplicants;
+	}while(hasCombined);
+</pre>
+		<p>For every pair of adjacent groups, we check each implicant if they can be combined. For
+		example, the two groups {001,010,100}, {011,101} are adjacent and shall undergo the checking.</p>
+
+<pre class="brush: js; toolbar: false; first-line: 225;">
+	for(i = 0, n = implicants.length - 1; i &lt n; i++){
+		// for each pair of adjacent rows
+		g1 = implicants[i] = implicants[i] || [];
+		g2 = implicants[i+1] = implicants[i+1] || [];
+</pre>
+	For every pair of adjacent groups, <strong>g1</strong> and <strong>g2</strong>...
+<pre class="brush: js; toolbar: false; first-line: 230;">
+		// for each implicant in both rows
+		for(j = 0, m = g1.length; j &lt m; j++){
+			imp1 = g1[j];
+			for(k = 0, o = g2.length; k &lt o; k++){
+				imp2 = g2[k];
+</pre>
+		We check each implicant <strong>imp1</strong> and <strong>imp2</strong>
+		which come from groups <strong>g1</strong> and <strong>g2</strong>, respectively.
+<pre class="brush: js; toolbar: false; first-line: 236;">
+	// combine implicants
+	comb = imp1.combine(imp2);
+</pre>
+		Here we try to combine the implicants. The <strong>combine</strong> method of the <strong>Implicant</strong>
+		attempts to combine two implicants, and returns the combined <strong>Implicant</strong> if successful, otherwise
+		it returns <strong>null</strong>. As stated in the Quine-McCluskey algorithm, two implicants are combined if
+		they are adjacent in Gray code (they differ in one bit).
+<pre class="brush: js; toolbar: false; first-line: 238;">
+	if(comb){
+		iarr = nextImplicants[i] = nextImplicants[i] || [];
+		iarr.push(comb);
+
+		imp1.setPrime(false);
+		imp2.setPrime(false);
+		comb.setPrime(true);
+		hasCombined = true;
+	}
+</pre>
+		If combining is successful, the results are stored in a <strong>nextImplicants
+		array</strong> for the next round of combining. This is akin to transferring the
+		grouped implicants to the next column in a manual Quine-McCluskey pen-and-paper
+		implementation.
+		<p>Since <strong>imp1</strong> and <strong>imp2</strong> have been combined, they
+		are no longer prime. <strong>setPrime(false)</strong> is called on them. It is assumed
+		that the resulting combination is prime. The next iteration will determine whether the
+		new <strong>Implicant</strong> is truly prime.</p>
+		<p><strong>hasCombined</strong> is then set to true.</p>
+		<img src = "res/2.png" alt = "Compine imlpicants"></img>
+		<p>After combining in this column, we store the implicants that weren't combined
+		because they are now our <strong>Prime implicants</strong>.</p>
+<pre class="brush: js; toolbar: false; first-line: 251;">
+	// store uncombined implicants as prime implicants
+	for(i = 0, n = implicants.length; i &lt n; i++){
+		g1 = implicants[i];
+		for(j = 0, m = g1.length; j &lt m; j++){
+			imp = g1[j];
+			if(imp.prime){
+				primeImplicants.push(imp);
+			}
+		}
+	}
+</pre>
+		Check every group (<strong>g1</strong>) and every implicant in the group
+		(<strong>imp = g1[j]</strong>). If the implicant is prime, then it is pushed
+		into the <strong>primeImplicants array</strong>.
+<pre class="brush: js; toolbar: false; first-line: 262;">
+	implicants = nextImplicants;
+</pre>	
+		We then proceed to the next round of combining. The process is repeated until there are no more implicants to combine.
+		We check for the <strong>hasCombined</strong> flag to check whether to stop the loop.
+<pre class="brush: js; toolbar: false; first-line: 263;">
+	}while(hasCombined);
+</pre>
+
+		The <strong>hasCombined</strong> will be false when there are no more implicants to combine.
+		After the loop, the prime implicants are now identified and stored.
+
+<pre class="brush: js; toolbar: false; first-line: 273;">
+	// remove duplicates
+	for(i = primeImplicants.length-1; i >= 0; i--){
+		for(j = i-1; j >= 0; j--){
+			imp1 = primeImplicants[i];
+			imp2 = primeImplicants[j];
+			
+			if(imp1.binary == imp2.binary && imp1.dnm == imp2.dnm){
+				imp2.minterms = imp1.minterms.length > imp2.minterms.length ? imp1.minterms : imp2.minterms;
+				primeImplicants.splice(i, 1);
+				break;
+			}
+		}
+	}
+</pre>
+
+	Lastly, duplicate prime implicants are removed to avoid problems later.
+	</div>
+	
+	<div class = "box content">
+		<div class = "contitle">part 3: finding essential prime implicants</div>
+		
+		Now we have a <strong>Prime implicants array</strong> containing our prime implicants.
+		The next step is to identify which of these prime implicants are essential prime implicants.
+		<p>To find the essential prime implicants, check each of the given minterms and count
+		the implicants that "cover" the minterm. A minterm that is covered by only one implicant
+		is covered by an essential implicant. So, if the implicant count is one, then that one implicant
+		is essential.
+		</p>
+		
+		<pre class="brush: js; toolbar: false; first-line: 295;">
+			// find "covers" for each minterm
+			for(i = primeImplicants.length-1; i>=0; i--){
+				imp = primeImplicants[i];
+				for(j = imp.minterms.length-1; j>=0; j--){
+					mintermCovers[imp.minterms[j]].push(imp);
+				}
+			}
+		</pre>
+		
+		Each prime implicant is processed. So, for each minterm of the implicant,
+		the implicant is pushed into an array for that minterm.
+		
+		<pre class="brush: js; toolbar: false; first-line: 298;">
+			for(j = imp.minterms.length-1; j>=0; j--){
+				mintermCovers[imp.minterms[j]].push(imp);
+			}
+		</pre>
+		
+		The <strong>mintermCovers</strong> array is an <strong>array of arrays of Implicants.</strong>
+		It is arranged such that there is an array for each minterm; and in that inner array,
+		the implicants covering the corresponding minterm are contained.
+		<p>In the following example, the minterms are 1, 3, 4, and 5; so we will have three prime implicants
+		0-1, -01, and 10-. The <strong>mintermCovers</strong> array will be like this:</p>
+		<pre class="brush: js; toolbar: false; gutter: false;">
+mintermCovers[1] = {-01, 0-1} // implicants for minterm 1
+mintermCovers[3] = {0-1} // implicants for minterm 3
+mintermCovers[4] = {10-} // ...
+mintermCovers[5] = {-01, 10-}
+		</pre>
+		Note that the index of each implicant array is the corresponding minterm.
+		Now the counting/tallying part is done, we can easliy identify which prime implicants are essential.
+		<p>The essential prime implicants are those that are alone in the array. In other words, those that are
+		in a one-length array are essential prime implicants. In the example, they are 0-1, and 10-.</p>
+		
+		<pre class="brush: js; toolbar: false; gutter: false;">
+mintermCovers[3] = {0-1}	
+mintermCovers[4] = {10-}
+		</pre>
+		
+		<pre class="brush: js; toolbar: false; first-line: 303;">
+			// finding essential prime implicants
+			var covers;
+			for(i = mintermCovers.length-1; i>=0; i--){
+				covers = mintermCovers[i];
+		</pre>
+		Each minterm covers array is checked.
+		<pre class="brush: js; toolbar: false; first-line: 307;">
+				if(covers && covers.length == 1){
+					// minterm with single cover is covered by an essential prime implicant
+					imp = covers[0];
+					essentialImplicants.push(imp);
+		</pre>
+		<p>If the length is one, it means there is only one cover, which means that that implicant is essential.
+		The implicant is pushed into an <strong>essentialImplicants</strong> array.</p>
+		<img src = "res/3.png" alt = "Find essential prime implicants"></img>
+		<pre class="brush: js; toolbar: false; first-line: 311;">
+					for(j = imp.minterms.length-1; j>=0; j--){
+						mintermCovers[imp.minterms[j]].length = 0;
+					}
+				}
+			}
+		</pre>
+		For each essential prime implicant found, we must erase other implicants
+		in <strong>mintermCovers</strong> that overlaps with the essential implicant. So, for each minterm
+		of the essential implicant, we clear the implicant array corresponding to the minterm.
+		
+		<p>We now have our essential prime implicants, but not all minterms are covered by the essential implicants.
+		This happens when the implicants overlap each other in a specific way. That is, they form a circular chain
+		of overlapping implicants. These non-essential uncovered implicants must still
+		be included to complete the function.</p>
+		
+		<pre class="brush: js; toolbar: false; first-line: 340;">
+			// find minterms left uncovered by essential implicants
+			//  (all)
+			for(i = mintermCovers.length-1; i>=0; i--){
+			    covers = mintermCovers[i];
+			    if(covers && covers.length){
+		</pre>
+		Each cover array is checked again. Note that some cover arrays are already cleared by the essential prime
+		implicants. Here we are now checking for those that are not cleared. We check the length if it is not zero.
+		<pre class="brush: js; toolbar: false; first-line: 340;">
+				imp = covers[0];
+				essentialImplicants.push(imp);
+				for(j = imp.minterms.length-1; j>=0; j--){
+				    mintermCovers[imp.minterms[j]].length = 0;
+				}
+			    }
+			}
+		</pre>
+		If we find some remaining implicants, the same procedure as above applies: clear all covered minterms.
+		<p>In the code, there is another block <strong>(lines 317-338)</strong> that preceeds this block.
+		They are the same, except that the other filters the implicants found. This is to improve the final
+		function, by preventing redundant prime implicants from being added. In the block, the implicants found
+		are filtered such that those that don't overlap with other non-essential implicants are added, otherwise
+		ignored.</p>
+		
+		<pre class="brush: js; toolbar: false; first-line: 353;">
+			// sort
+			for(i = essentialImplicants.length-1; i>=0; i--){
+				essentialImplicants[i].minterms.sort();
+			}
+		</pre>
+		Just some sorting
+		<pre class="brush: js; toolbar: false; first-line: 358;">
+			return essentialImplicants;
+		</pre>
+		and it is done. Woo!
+	</div>
+	
+	<div id = "footer">
+		&copy 2013 lean&marx
+	</div>
+</div>
+</div>
+</div>
+
+</body>
+
+</html>

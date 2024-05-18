@@ -1,0 +1,188 @@
+
+  import { waitFor } from "/lib/wait_for.mjs";
+  import { BaseElement } from "/lib/base_element.mjs";
+  import { mousePosition } from "/lib/mouse_position.mjs";
+
+  customElements.define(
+    "nebula-client",
+    class Nebula extends BaseElement {
+      constructor() {
+        super();
+
+        this.asyncCanvas = this.asyncQuerySelector("canvas");
+        this.context = null;
+        this.noise = null;
+
+        this.gridWidth = 30;
+        this.gridHeight = 30;
+        this.palette = ["#ffffff"];
+
+        this.cellWidth = 1; // placeholder
+        this.cellHeight = 1; // placeholder
+
+        this.useMouse = false;
+        this.mouseCell = null;
+
+        this.lastT = 0;
+        this.startT = 0;
+        this.loopStartT = 0;
+
+        this.isVisible = false;
+        this.visibilityListener({
+          show: () => {
+            this.isVisible = true;
+            this.startLoop();
+          },
+          hide: () => (this.isVisible = false),
+        });
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        this.useMouse = this.getAttribute("mouse") != null;
+
+        const gridWidth = this.getAttribute("width");
+        if (gridWidth) {
+          this.gridWidth = Number.parseInt(gridWidth);
+        }
+
+        const gridHeight = this.getAttribute("height");
+        if (gridHeight) {
+          this.gridHeight = Number.parseInt(gridHeight);
+        }
+
+        const paletteAttr = this.getAttribute("palette");
+        if (paletteAttr) {
+          this.palette = paletteAttr.split(" ");
+        }
+      }
+
+      startLoop() {
+        this.loopStartT = this.lastT = this.getT();
+        this.loop();
+      }
+
+      async loop() {
+        if (!this.isVisible) {
+          return;
+        }
+
+        if (typeof perlinNoise3d === "undefined") {
+          await waitFor(() => typeof perlinNoise3d !== "undefined");
+        }
+
+        if (!this.noise) {
+          this.noise = initNoise();
+          this.startT = this.getT();
+        }
+
+        const canvas = await this.asyncCanvas.promise;
+
+        // initialize
+        if (!this.context) {
+          this.cellWidth = Math.ceil(canvas.offsetWidth / this.gridWidth);
+          this.cellHeight = Math.ceil(canvas.offsetHeight / this.gridHeight);
+          canvas.width = this.gridWidth;
+          canvas.height = this.gridHeight;
+          canvas.style.filter += ` blur(${
+            Math.min(this.cellWidth, this.cellHeight) * 1.25
+          }px)`;
+          this.context = canvas.getContext("2d");
+        }
+
+        this.draw(canvas, this.context);
+
+        requestAnimationFrame(() => this.loop());
+      }
+
+      /**
+       * @param canvas {HTMLCanvasElement}
+       * @param context {CanvasRenderingContext2D}
+       */
+      draw(canvas, context) {
+        const t = this.getT();
+        if (t <= this.lastT) return;
+
+        const alpha = 1 - Math.pow(1 - 0.016, t - this.lastT);
+        this.lastT = t;
+
+        const { noise, gridWidth, gridHeight, palette, cellWidth, cellHeight } =
+          this;
+        const halfGridWidth = gridWidth / 2;
+        const halfGridHeight = gridHeight / 2;
+
+        this.mouseCell = null;
+        if (this.useMouse) {
+          const { x, y } = mousePosition;
+          const bounds = canvas.getBoundingClientRect();
+          if (
+            bounds.left < x &&
+            x < bounds.right &&
+            bounds.top < y &&
+            y < bounds.bottom
+          ) {
+            this.mouseCell = {
+              x: (x - bounds.x) / cellWidth,
+              y: (y - bounds.y) / cellHeight,
+            };
+          }
+        }
+
+        const paletteLength = palette.length;
+        const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
+        const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+
+        for (let i = 0; i < gridWidth; i++) {
+          for (let j = 0; j < gridHeight; j++) {
+            const mouseProximity =
+              this.mouseCell == null
+                ? 0
+                : 1 -
+                  sigmoid(
+                    Math.hypot(i - this.mouseCell.x, j - this.mouseCell.y) - 3
+                  );
+
+            const xy = [
+              1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
+              1000 +
+                (j - halfGridHeight) * yScale +
+                Math.cos(t * 0.007) * 2 +
+                -mouseProximity,
+            ];
+            const p1 = noise.get(...xy, t * 0.03);
+            const p2 = noise.get(...xy, t * 0.03 + 0.5);
+            // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
+            const p = p1 + p2;
+
+            const paletteIndex = Math.floor(paletteLength * p);
+
+            const rgb = palette[paletteIndex];
+            const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
+              .toString(16)
+              .padStart(2, "0");
+
+            context.fillStyle = `${rgb}${a}`;
+            context.fillRect(i, j, 1, 1);
+          }
+        }
+      }
+
+      getT() {
+        const t = (Date.now() * 24) / 1000;
+        // make it smoother while interacting
+        return this.mouseCell ? t : Math.floor(t);
+      }
+    }
+  );
+
+  function initNoise() {
+    const noise = new perlinNoise3d();
+    noise.perlin_octaves = 1; // ?? defaults
+    noise.perlin_amp_falloff = 1;
+    return noise;
+  }
+
+  function sigmoid(x) {
+    return 1 / (1 + Math.exp(-x));
+  }
