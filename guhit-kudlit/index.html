@@ -1,0 +1,650 @@
+<title>GuhitKudlit - Baybayin calligraphy generator</title>
+
+<link rel="icon" href="./favicon.png" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Guhit Kudlit" />
+<meta property="og:url" content="https://leanrada.com/guhit-kudlit/" />
+<meta
+  property="og:image"
+  content="https://leanrada.com/guhit-kudlit/pakita.png"
+/>
+<meta
+  property="og:description"
+  content="Baybayin calligraphy generator and transliterator!"
+/>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Karla&family=Noto+Sans+Tagalog&display=swap"
+  rel="stylesheet"
+/>
+<link href="./font/font.css" rel="stylesheet" />
+
+<script
+  async
+  src="https://cdn.jsdelivr.net/gh/Kalabasa/analytics/analytics.js"
+></script>
+
+<style>
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%;
+    font-family: "Karla", sans-serif;
+    background: #f8f4f2;
+    color: #3f2e26;
+  }
+  header {
+    display: grid;
+    width: 100%;
+    box-sizing: border-box;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "_ pamagat sulok"
+      "pakilala pakilala pakilala";
+    margin: 0 0 2em;
+    padding: 1em;
+    text-align: center;
+    background: #ffffff;
+  }
+  header > h1 {
+    grid-area: pamagat;
+    justify-self: center;
+    align-self: start;
+    margin: 0;
+    padding: 0.2em;
+    font-family: "Cubao Regular", sans-serif;
+    font-size: 1.6em;
+    line-height: 0.7em;
+    font-weight: normal;
+    background: #000;
+  }
+  .pamagatUnangLinya {
+    font-family: "Cubao Wide", sans-serif;
+    font-size: 0.84em;
+    color: #c2ff19;
+  }
+  .pamagatIkalawangLinya {
+    color: #ff735a;
+  }
+  header > h2 {
+    grid-area: pakilala;
+    margin: 1em 0 0;
+    font-size: 1em;
+    font-weight: bold;
+  }
+  .sulok {
+    grid-area: sulok;
+    justify-self: end;
+    text-align: end;
+  }
+  .sulok a {
+    line-height: 16px;
+  }
+  .sulok a,
+  footer a {
+    color: #aa4f00;
+  }
+  @media (max-width: 900px) {
+    header {
+      grid-template-areas:
+        "pamagat sulok sulok"
+        "pakilala pakilala pakilala";
+    }
+    header > h1 {
+      justify-self: start;
+      font-size: 1.2em;
+    }
+    header > h2 {
+      text-align: start;
+    }
+  }
+  form {
+    position: relative;
+    margin: 0;
+    padding: 0 0 1em;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .tagalog,
+  .baybayin {
+    width: 100%;
+    max-width: 30em;
+    padding: 0 1em;
+    box-sizing: border-box;
+  }
+  #pindutanNgPamalitSalita {
+    margin: 0;
+    padding: 0.5em;
+    border: none;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  #pindutanNgPamalitSalita:focus-visible,
+  #pindutanNgPamalitSalita:hover {
+    color: #aa4f00;
+  }
+  label {
+    display: block;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  input,
+  #pagkapantig,
+  #baybayin {
+    margin: 0.25em 0 1em;
+    padding: 0;
+    width: 100%;
+    min-height: 3rem;
+    box-sizing: border-box;
+    font-size: 1.5em;
+  }
+  #pagkapantig,
+  #baybayin {
+    display: flex;
+    align-items: center;
+  }
+  input {
+    font-family: inherit;
+    border: none;
+    background: none;
+    border: solid 2px currentColor;
+    border-radius: 0.5rem;
+    padding: 0 0.5rem;
+    outline: none;
+  }
+  input:focus {
+    border-color: #edc200;
+  }
+  #baybayin {
+    font-family: "Noto Sans Tagalog", system-ui;
+    font-size: 2.2em;
+    word-break: break-all;
+  }
+  input::placeholder {
+    color: inherit;
+    opacity: 0.2;
+  }
+  #pagkapantig:empty::after,
+  #baybayin:empty::after {
+    content: attr(data-placeholder);
+    opacity: 0.2;
+  }
+  .tagalog {
+    position: relative;
+  }
+  #mali {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 1em;
+    border: solid 1px currentColor;
+    border-radius: 0.5em;
+    box-sizing: border-box;
+    background: #f5efef;
+    color: #9c0000;
+    box-shadow: 0 0.4em 0.4em #6206;
+    z-index: 1;
+  }
+  #mali::after {
+    position: absolute;
+    left: 50%;
+    top: -0.5rem;
+    content: "";
+    display: block;
+    width: 1rem;
+    height: 1rem;
+    box-sizing: border-box;
+    border: inherit;
+    border-right: none;
+    border-bottom: none;
+    background: inherit;
+    transform: translate(-50%, -1px) rotate(45deg);
+  }
+  #mali > p:first-of-type {
+    margin-top: 0;
+  }
+  #mali > p:last-of-type {
+    margin-bottom: 0;
+  }
+  #mali ul {
+    list-style: none;
+  }
+  #mali li {
+    display: flex;
+    justify-content: space-evenly;
+    font-size: 1.2em;
+    color: #000;
+  }
+  #mali .bago,
+  #mali .tapos {
+    flex: 1 1 50%;
+    text-align: center;
+  }
+  #mali del {
+    color: #800;
+    font-weight: bold;
+  }
+  #mali ins {
+    color: #088;
+    font-weight: bold;
+  }
+  #mali label {
+    color: #000;
+    background: #fff;
+  }
+  #pamagatNgMali {
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+  #pindutanParaLikhain {
+    border: none;
+    cursor: pointer;
+    outline: none;
+    position: absolute;
+    bottom: -1.5rem;
+    padding: 0 0.1em;
+    height: 1.08em;
+    font-family: "Cubao Narrow", sans-serif;
+    font-weight: normal;
+    font-size: 3em;
+    letter-spacing: 0.02em;
+    border-radius: 0.1em;
+    background: none;
+    color: #bd1003;
+    overflow: hidden;
+    box-shadow: 0 0.1em 0.2em #6408;
+    z-index: 0;
+    transform-origin: bottom;
+    transition: none 0.04s ease-in;
+    transition-property: box-shadow, transform;
+  }
+  #pindutanParaLikhain:disabled {
+    filter: saturate(0.2) contrast(0.2) brightness(1.8);
+    box-shadow: 0 0.1em 0.1em #6402;
+    cursor: not-allowed;
+  }
+  .lumikha {
+    transform: scaleY(2);
+  }
+  #pindutanParaLikhain::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: #f8f7f6;
+    z-index: -1;
+  }
+  #pindutanParaLikhain::after {
+    content: "";
+    position: absolute;
+    left: 15%;
+    right: 15%;
+    top: 20%;
+    bottom: 10%;
+    border-radius: 50%;
+    background: #f8ed8d;
+    z-index: -1;
+  }
+  #pindutanParaLikhain:enabled:focus-visible,
+  #pindutanParaLikhain:enabled:hover {
+    box-shadow: 0 0.1em 0.3em #6408;
+    transform: scale(1.02);
+  }
+  #pindutanParaLikhain:enabled:active {
+    box-shadow: 0 0.05em 0.05em #6408;
+    transform: scale(1);
+  }
+  .kaligrapiya {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 2em 0 0;
+    box-sizing: border-box;
+  }
+  #kambas {
+    margin: 2em 1em;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 60em;
+    border-radius: 0.2em;
+    background: #fff;
+    box-shadow: 0 0.1em 0.3em #6403;
+    box-sizing: border-box;
+  }
+  #pindutanPandownload {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    margin: 0 2rem 2rem;
+    padding: 0.5em;
+    font: inherit;
+    font-weight: bold;
+    font-size: 1em;
+    text-transform: uppercase;
+    border-radius: 0.2em;
+    background: #ca7125;
+    color: #fffef6;
+    overflow: hidden;
+    box-shadow: 0 0.1em 0.2em #6408;
+    z-index: 0;
+    transform-origin: bottom;
+    transition: none 0.04s ease-in;
+    transition-property: box-shadow, transform, opacity;
+  }
+  #pindutanPandownload:enabled:focus-visible,
+  #pindutanPandownload:enabled:hover {
+    box-shadow: 0 0.1em 0.3em #6408;
+    transform: scale(1.04);
+  }
+  #pindutanPandownload:enabled:active {
+    box-shadow: 0 0.05em 0.05em #6408;
+    transform: scale(1);
+  }
+  #pindutanPandownload:disabled {
+    opacity: 0;
+    transform: translateY(1rem);
+    pointer-events: none;
+  }
+  @media (min-width: 600px) {
+    #pindutanPandownload {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+    }
+  }
+  .kaligrapiya,
+  footer {
+    width: 100%;
+    background: #f2eee7;
+  }
+  footer {
+    text-align: center;
+    padding: 0 0 1rem;
+  }
+  .kontakLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0 1em;
+  }
+</style>
+
+<header>
+  <h1>
+    <span class="pamagatUnangLinya">Guhit</span><br />
+    <span class="pamagatIkalawangLinya">Kudlit</span>
+  </h1>
+  <h2 data-salin="pakilala">
+    Baybayin translator (transliterator) & calligraphy image generator 🖌️
+  </h2>
+  <div class="sulok">
+    <a href="https://www.instagram.com/guhitkudlit/" target="_blank"
+      ><svg
+      style="position: relative; top: 3px"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          fill="currentColor"
+          fill-rule="evenodd"
+          d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+          clip-rule="evenodd"
+        />
+        <path
+          fill="currentColor"
+          fill-rule="evenodd"
+          d="M1.7 4.3C1 5.6 1 7.3 1 10.6v2.8c0 3.4 0 5 .7 6.3a6 6 0 0 0 2.6 2.6c1.3.7 3 .7 6.3.7h2.8c3.4 0 5 0 6.3-.7a6 6 0 0 0 2.6-2.6c.7-1.3.7-3 .7-6.3v-2.8c0-3.4 0-5-.7-6.3a6 6 0 0 0-2.6-2.6c-1.3-.7-3-.7-6.3-.7h-2.8c-3.4 0-5 0-6.3.7a6 6 0 0 0-2.6 2.6ZM13.4 3h-2.8a51.7 51.7 0 0 0-5.4.4 4 4 0 0 0-1.8 1.8c-.1.3-.3.7-.3 1.6L3 10.6v2.8a51.7 51.7 0 0 0 .4 5.4 4 4 0 0 0 1.8 1.8c.3.1.7.3 1.6.3l3.8.1h2.8a51.7 51.7 0 0 0 5.4-.4 4 4 0 0 0 1.8-1.8c.1-.3.3-.7.3-1.6l.1-3.8v-2.8a51.7 51.7 0 0 0-.4-5.4 4 4 0 0 0-1.8-1.8c-.3-.1-.7-.3-1.6-.3L13.4 3Z"
+          clip-rule="evenodd"
+        /></svg
+    ></a>
+    | <a href="?en">English&nbsp;UI</a> |
+    <a href="?tl">Tagalog&nbsp;UI</a>
+  </div>
+</header>
+
+<form id="sagutan" action="#">
+  <div class="tagalog">
+    <label for="salita">
+      <span id="tekstoNgPamalitSalita" data-salin="tagalogNaSalita">
+        Tagalog word
+      </span>
+      <button id="pindutanNgPamalitSalita" type="button">▾</button>
+    </label>
+    <input id="salita" placeholder="salita" autofocus />
+    <div id="mali" hidden>
+      <p id="pamagatNgMali"></p>
+    </div>
+  </div>
+
+  <div class="baybayin">
+    <div>
+      <label data-salin="pagkapantig">Interpretation</label>
+      <div id="pagkapantig" data-placeholder="sa · li · ta"></div>
+    </div>
+    <div>
+      <label>Baybayin</label>
+      <div id="baybayin" data-placeholder="ᜐᜎᜒᜆ"></div>
+    </div>
+  </div>
+
+  <button id="pindutanParaLikhain" disabled>
+    <span class="lumikha" data-salin="lumikha">·Generate·</span>
+  </button>
+</form>
+
+<div class="kaligrapiya">
+  <canvas id="kambas" width="1080" height="1350"></canvas>
+  <button id="pindutanPandownload" disabled>
+    <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+      <path
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M22 20.8a43 43 0 0 1-20 0M12 2v14m4.9-4.2-3.5 3.6a2 2 0 0 1-2.8 0l-3.5-3.6"
+      />
+    </svg>
+    <span data-salin="download">Download</span>
+  </button>
+</div>
+
+<footer>
+  <p>
+    <a
+      href="https://www.instagram.com/guhitkudlit/"
+      target="_blank"
+      class="kontakLink"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          fill="currentColor"
+          fill-rule="evenodd"
+          d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+          clip-rule="evenodd"
+        />
+        <path
+          fill="currentColor"
+          fill-rule="evenodd"
+          d="M1.7 4.3C1 5.6 1 7.3 1 10.6v2.8c0 3.4 0 5 .7 6.3a6 6 0 0 0 2.6 2.6c1.3.7 3 .7 6.3.7h2.8c3.4 0 5 0 6.3-.7a6 6 0 0 0 2.6-2.6c.7-1.3.7-3 .7-6.3v-2.8c0-3.4 0-5-.7-6.3a6 6 0 0 0-2.6-2.6c-1.3-.7-3-.7-6.3-.7h-2.8c-3.4 0-5 0-6.3.7a6 6 0 0 0-2.6 2.6ZM13.4 3h-2.8a51.7 51.7 0 0 0-5.4.4 4 4 0 0 0-1.8 1.8c-.1.3-.3.7-.3 1.6L3 10.6v2.8a51.7 51.7 0 0 0 .4 5.4 4 4 0 0 0 1.8 1.8c.3.1.7.3 1.6.3l3.8.1h2.8a51.7 51.7 0 0 0 5.4-.4 4 4 0 0 0 1.8-1.8c.1-.3.3-.7.3-1.6l.1-3.8v-2.8a51.7 51.7 0 0 0-.4-5.4 4 4 0 0 0-1.8-1.8c-.3-.1-.7-.3-1.6-.3L13.4 3Z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      @guhitkudlit
+    </a>
+    <a
+      href="mailto:guhitkudlit@leanrada.com"
+      target="_blank"
+      class="kontakLink"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="m3 8 5.4 3.6c1.3.9 2 1.3 2.7 1.5a4 4 0 0 0 1.8 0 9 9 0 0 0 2.7-1.5L21 8M6.2 19h11.6c1.1 0 1.7 0 2.1-.2.4-.2.7-.5.9-.9.2-.4.2-1 .2-2.1V8.2c0-1.1 0-1.7-.2-2.1a2 2 0 0 0-.9-.9c-.4-.2-1-.2-2.1-.2H6.2c-1.1 0-1.7 0-2.1.2a2 2 0 0 0-.9.9C3 6.5 3 7 3 8.2v7.6c0 1.1 0 1.7.2 2.1.2.4.5.7.9.9.4.2 1 .2 2.1.2Z"
+        />
+      </svg>
+      guhitkudlit@leanrada.com
+    </a>
+  </p>
+  <p>
+    ©2023
+    <a href="//leanrada.com" target="_blank">Lean Rada</a>
+  </p>
+</footer>
+
+<script type="module" async>
+  import { salin, isalinAngPahina } from "./salin.mjs";
+
+  const sagutan = document.getElementById("sagutan");
+  const patlangNgSalita = document.getElementById("salita");
+  const tekstoNgPamalitSalita = document.getElementById(
+    "tekstoNgPamalitSalita"
+  );
+  const pindutanNgPamalitSalita = document.getElementById(
+    "pindutanNgPamalitSalita"
+  );
+  const resultangMali = document.getElementById("mali");
+  const pamagatNgMali = document.getElementById("pamagatNgMali");
+  const paliwanagNgMali = document.getElementById("paliwanagNgMali");
+  const resultangPagkapantig = document.getElementById("pagkapantig");
+  const resultangBaybayin = document.getElementById("baybayin");
+  const pindutanParaLikhain = document.getElementById("pindutanParaLikhain");
+  const pindutanPandownload = document.getElementById("pindutanPandownload");
+  const kambas = document.querySelector("#kambas");
+
+  const mgaParaanNgSalita = [
+    {
+      teksto: salin.tagalogNaSalita(),
+      paraan: {},
+    },
+    {
+      teksto: salin.inglesNaSalitaEksperimental(),
+      paraan: { ingles: true },
+    },
+    {
+      teksto: salin.tagalogBukodAngRa(),
+      paraan: { bukodAngRa: true },
+    },
+  ];
+  const mgaIstilo = "KMH";
+
+  let paraanNgSalita = 0;
+  let istilo = 0;
+  let baybay = [];
+
+  pindutanNgPamalitSalita.addEventListener("click", palitanAngSalita);
+  patlangNgSalita.addEventListener("input", isalinSaBaybayin);
+  sagutan.addEventListener("submit", isulatAngKaligrapiya);
+  pindutanPandownload.addEventListener("click", idownload);
+
+  async function isalinSaBaybayin() {
+    const [{ baybayin }, { gawingUnicode }, { DiWastongLetra }] =
+      await Promise.all([
+        import("./baybay.mjs"),
+        import("./unicode.mjs"),
+        import("./mali.mjs"),
+      ]);
+
+    try {
+      resultangMali.hidden = true;
+      baybay = baybayin(
+        patlangNgSalita.value,
+        mgaParaanNgSalita[paraanNgSalita].paraan
+      );
+      pindutanParaLikhain.disabled = !patlangNgSalita.value || !baybay;
+      resultangPagkapantig.textContent = baybay.join(" · ");
+      resultangBaybayin.textContent = gawingUnicode(baybay);
+    } catch (mali) {
+      if (mali instanceof DiWastongLetra) {
+        resultangMali.hidden = false;
+        pamagatNgMali.innerHTML = mali.pamagat();
+        resultangMali.replaceChildren(pamagatNgMali);
+        resultangMali.innerHTML += mali.paliwanag();
+      } else {
+        throw mali;
+      }
+    }
+  }
+
+  function palitanAngSalita() {
+    paraanNgSalita = (paraanNgSalita + 1) % mgaParaanNgSalita.length;
+    tekstoNgPamalitSalita.textContent =
+      mgaParaanNgSalita[paraanNgSalita].teksto;
+    isalinSaBaybayin();
+  }
+
+  async function isulatAngKaligrapiya(ganap) {
+    ganap.preventDefault();
+    kambas.scrollIntoView({ block: "center", behavior: "smooth" });
+    const { iguhitAngKaligrapiya } = await import("./kaligrapiya.mjs");
+    await iguhitAngKaligrapiya(baybay, kambas, {
+      ngalanNgIstilo:
+        new URLSearchParams(window.location.search).get("s") ??
+        mgaIstilo[istilo],
+    });
+    pindutanPandownload.disabled = false;
+  }
+
+  function idownload() {
+    const a = document.createElement("a");
+    const url = kambas.toDataURL("image/png");
+    a.href = url;
+    a.download = `${patlangNgSalita.value.replace(/\W/g, "")}.png`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    setTimeout(() => a.remove());
+  }
+
+  isalinAngPahina();
+  setTimeout(() => isalinSaBaybayin(), 2000);
+</script>
+
+<script nomodule>
+  document.write(
+    "Please upgrade your browser. Your browser does not support new features required by this webapp. :("
+  );
+</script>
