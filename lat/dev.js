@@ -22,7 +22,7 @@ export function runDevServer(port) {
       res.sendFile(
         path.resolve(
           project.rootDir,
-          project.webFilesDir,
+          project.webFilesDir ?? project.devWebFilesDir ?? "",
           path.relative(path.resolve("/", project.sitePathPrefix), decodeURIComponent(reqPath))
         )
       );
