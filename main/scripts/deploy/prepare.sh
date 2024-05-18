@@ -15,7 +15,6 @@ export DEPLOY_DIR="$@"
 
 # Build project
 npm install
-npm run clean-lite
 npm run build-prod -- -o $DEPLOY_DIR
 
 # Generate source-controlled generated files

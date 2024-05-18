@@ -2,6 +2,7 @@ import { glob } from "glob";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { getPath, getTopDir, normalizeDirPath } from "./paths.js";
+import { nonNull } from "./preconditions.js";
 const require = createRequire(import.meta.url);
 
 /**
@@ -19,10 +20,14 @@ export function getProjects() {
       .sync(getPath("*/lathala.json"))
       .map((projectConfigPath) => {
         const config = require(projectConfigPath);
+        nonNull(config.devWebFilesDir ?? config.webFilesDir);
         return {
           ...config,
-          webFilesDir: normalizeDirPath(config.webFilesDir),
-          sitePathPrefix: normalizeDirPath(config.sitePathPrefix),
+          devWebFilesDir:
+            config.devWebFilesDir && normalizeDirPath(config.devWebFilesDir),
+          webFilesDir:
+            config.webFilesDir && normalizeDirPath(config.webFilesDir),
+          sitePathPrefix: normalizeDirPath(nonNull(config.sitePathPrefix)),
           rootDir: path.dirname(projectConfigPath),
           name: path.relative(getTopDir(), path.dirname(projectConfigPath)),
         };
