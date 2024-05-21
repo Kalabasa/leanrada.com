@@ -18,7 +18,7 @@ export function runDevServer(port) {
     ];
     app.get(route, (req, res) => {
       const reqPath = normalizeReqPath(req.path);
-      console.log(colorInfo("GET"), req.path);
+      console.log(colorInfo(req.method), req.path);
       res.sendFile(
         path.resolve(
           project.rootDir,
