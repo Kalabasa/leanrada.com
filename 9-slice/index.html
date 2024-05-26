@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    html {
+      width: 100%;
+      height: 100%;
+      background: #141f2b;
+      color: #ffffffdd;
+      font-family: "Inter Tight", sans-serif;
+      font-optical-sizing: auto;
+    }
+    body {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      grid-template-columns: 2fr 1fr;
+      grid-template-areas:
+        "editor preview"
+        "editor code";
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+    @media (max-width: 240mm) {
+      .editor {
+        min-height: 60vh;
+      }
+      body {
+        height: auto;
+        grid-template-rows: 2fr 1fr 1fr;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "editor"
+          "preview"
+          "code";
+      }
+    }
+    .editor {
+      grid-area: editor;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+    .preview {
+      grid-area: preview;
+      background: #1a2531;
+      user-select: none;
+    }
+    .code {
+      grid-area: code;
+      background: #1a2531;
+    }
+
+    .board_container {
+      margin: 15mm;
+      flex: 1 1 auto;
+      display: grid;
+      place-content: center;
+    }
+    .board {
+      position: relative;
+      display: flex;
+    }
+    .board_image {
+      image-rendering: pixelated;
+      pointer-events: none;
+    }
+
+    .handle {
+      width: 1px;
+      height: 1px;
+      position: absolute;
+      background: #24ffe2;
+    }
+    .active_handle {
+      z-index: 9999;
+    }
+    .handle::after {
+      content: "";
+      position: absolute;
+      width: 10mm;
+      height: 10mm;
+      left: -5mm;
+      top: -5mm;
+      border-radius: 5mm;
+      background: #24ffe2;
+      opacity: 0;
+    }
+    .handle:hover::after {
+      opacity: 0.1;
+    }
+    .active_handle.handle::after {
+      opacity: 0.2;
+      cursor: grabbing;
+    }
+    :root:has(.active_handle) {
+      cursor: grabbing !important;
+    }
+
+    .handle_x {
+      height: 100%;
+      cursor: ew-resize;
+    }
+    .handle_x::after {
+      top: -5mm;
+      height: 100%;
+      padding: 5mm 0;
+    }
+
+    .handle_y {
+      width: 100%;
+      cursor: ns-resize;
+    }
+    .handle_y::after {
+      left: -5mm;
+      width: 100%;
+      padding: 0 5mm;
+    }
+  </style>
+  <body>
+    <div class="editor">
+      <div class="board_container">
+        <div class="board">
+          <img class="board_image" src="example.png" />
+          <div class="handle handle_y"></div>
+          <div class="handle handle_y"></div>
+          <div class="handle handle_x"></div>
+          <div class="handle handle_x"></div>
+        </div>
+      </div>
+      <input class="upload_button" type="file" accept="image/*" />
+    </div>
+    <div class="preview">Preview</div>
+    <div class="code">Code</div>
+
+    <script>
+      const boardContainer = document.querySelector(".board_container");
+      const boardImage = document.querySelector(".board_image");
+      const handlesX = document.querySelectorAll(".handle_x");
+      const handlesY = document.querySelectorAll(".handle_y");
+
+      let sliceLeftX = 0;
+      let sliceRightX = 0;
+      let sliceTopY = 0;
+      let sliceBottomY = 0;
+
+      window.addEventListener("resize", resizeBoardImage);
+      boardImage.addEventListener("load", () => {
+        resetSlices();
+        resizeBoardImage();
+      });
+      if (boardImage.complete) {
+        resetSlices();
+        resizeBoardImage();
+      }
+
+      bindSliceDrag(handlesX[0], (x, y) => (sliceLeftX = x));
+      bindSliceDrag(handlesX[1], (x, y) => (sliceRightX = x));
+      bindSliceDrag(handlesY[0], (x, y) => (sliceTopY = y));
+      bindSliceDrag(handlesY[1], (x, y) => (sliceBottomY = y));
+
+      function bindSliceDrag(handle, callback) {
+        let dragState = null;
+        handle.addEventListener("mousedown", (event) => {
+          handle.classList.add("active_handle");
+          const handleRect = handle.getBoundingClientRect();
+          dragState = {
+            offsetX: handleRect.left - event.clientX,
+            offsetY: handleRect.top - event.clientY,
+          };
+        });
+
+        const release = () => {
+          handle.classList.remove("active_handle");
+          dragState = null;
+        };
+
+        window.addEventListener("mousemove", (event) => {
+          if (!dragState) return;
+
+          const imageRect = boardImage.getBoundingClientRect();
+          const x = clampRound(
+            (event.clientX - imageRect.left + dragState.offsetX) *
+              (boardImage.naturalWidth / boardImage.clientWidth),
+            0,
+            boardImage.naturalWidth
+          );
+          const y = clampRound(
+            (event.clientY - imageRect.top + dragState.offsetY) *
+              (boardImage.naturalHeight / boardImage.clientHeight),
+            0,
+            boardImage.naturalHeight
+          );
+          callback(x, y);
+          renderSlices();
+        });
+
+        window.addEventListener("mouseup", release);
+        window.addEventListener("mouseleave", release);
+      }
+
+      function resetSlices() {
+        if (!boardImage.complete) return;
+
+        const srcURL = new URL(boardImage.src);
+        if (srcURL.pathname.split("/").pop() === "example.png") {
+          sliceLeftX = 7;
+          sliceRightX = boardImage.naturalWidth - 11;
+          sliceTopY = 7;
+          sliceBottomY = boardImage.naturalHeight - 11;
+        } else {
+          sliceLeftX = Math.ceil(boardImage.naturalWidth / 3);
+          sliceRightX = Math.floor(boardImage.naturalWidth * (2 / 3));
+          sliceTopY = Math.ceil(boardImage.naturalHeight / 3);
+          sliceBottomY = Math.floor(boardImage.naturalHeight * (2 / 3));
+        }
+
+        renderSlices();
+      }
+
+      function renderSlices() {
+        if (!boardImage.complete) return;
+
+        handlesX[0].style.left =
+          sliceLeftX * (boardImage.clientWidth / boardImage.naturalWidth) +
+          "px";
+        handlesX[1].style.left =
+          sliceRightX * (boardImage.clientWidth / boardImage.naturalWidth) +
+          "px";
+        handlesY[0].style.top =
+          sliceTopY * (boardImage.clientHeight / boardImage.naturalHeight) +
+          "px";
+        handlesY[1].style.top =
+          sliceBottomY * (boardImage.clientHeight / boardImage.naturalHeight) +
+          "px";
+      }
+
+      function resizeBoardImage() {
+        if (!boardImage.complete) return;
+
+        if (
+          boardImage.naturalWidth / boardImage.naturalHeight >
+          boardContainer.clientWidth / boardContainer.clientHeight
+        ) {
+          boardImage.style.width = boardContainer.clientWidth + "px";
+          boardImage.style.height =
+            boardContainer.clientWidth *
+              (boardImage.naturalHeight / boardImage.naturalWidth) +
+            "px";
+        } else {
+          boardImage.style.height = boardContainer.clientHeight + "px";
+          boardImage.style.width =
+            boardContainer.clientHeight *
+              (boardImage.naturalWidth / boardImage.naturalHeight) +
+            "px";
+        }
+
+        renderSlices();
+      }
+
+      function clampRound(x, min, max) {
+        return Math.round(Math.min(max, Math.max(min, x)));
+      }
+    </script>
+  </body>
+</html>
