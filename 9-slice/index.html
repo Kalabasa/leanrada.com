@@ -60,7 +60,7 @@
     }
 
     .board_container {
-      margin: 15mm;
+      margin: calc(max(5mm, 30vmin - 15mm));
       flex: 1 1 auto;
       display: grid;
       place-content: center;
@@ -169,22 +169,27 @@
 
       function bindSliceDrag(handle, callback) {
         let dragState = null;
-        handle.addEventListener("mousedown", (event) => {
-          handle.classList.add("active_handle");
+
+        handle.style.touchAction = "none";
+        handle.addEventListener("dragstart", (event) => event.preventDefault());
+
+        handle.addEventListener("pointerdown", (event) => {
+          if (dragState) return;
+
           const handleRect = handle.getBoundingClientRect();
           dragState = {
+            pointerID: event.pointerId,
             offsetX: handleRect.left - event.clientX,
             offsetY: handleRect.top - event.clientY,
           };
+
+          handle.setPointerCapture(event.pointerId);
+          handle.classList.add("active_handle");
         });
 
-        const release = () => {
-          handle.classList.remove("active_handle");
-          dragState = null;
-        };
-
-        window.addEventListener("mousemove", (event) => {
+        const move = (event) => {
           if (!dragState) return;
+          if (dragState.pointerID !== event.pointerId) return;
 
           const imageRect = boardImage.getBoundingClientRect();
           const x = clampRound(
@@ -199,12 +204,22 @@
             0,
             boardImage.naturalHeight
           );
+
           callback(x, y);
           renderSlices();
-        });
+        };
 
-        window.addEventListener("mouseup", release);
-        window.addEventListener("mouseleave", release);
+        const release = (event) => {
+          if (!dragState) return;
+          if (dragState.pointerID !== event.pointerId) return;
+
+          dragState = null;
+          handle.classList.remove("active_handle");
+        };
+
+        handle.addEventListener("pointermove", move);
+        handle.addEventListener("pointerup", release);
+        handle.addEventListener("pointercancel", release);
       }
 
       function resetSlices() {
@@ -212,9 +227,9 @@
 
         const srcURL = new URL(boardImage.src);
         if (srcURL.pathname.split("/").pop() === "example.png") {
-          sliceLeftX = 7;
+          sliceLeftX = 8;
           sliceRightX = boardImage.naturalWidth - 11;
-          sliceTopY = 7;
+          sliceTopY = 8;
           sliceBottomY = boardImage.naturalHeight - 11;
         } else {
           sliceLeftX = Math.ceil(boardImage.naturalWidth / 3);
