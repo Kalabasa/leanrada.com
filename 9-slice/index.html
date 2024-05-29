@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <title>9-slice CSS generator</title>
+  <title>9-slice CSS Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -65,6 +65,12 @@
       overflow: hidden;
     }
 
+    .title {
+      font-size: 1.8rem;
+      margin: 0 auto;
+      padding: 1rem 1rem 0;
+    }
+
     .board_container {
       margin: calc(max(5mm, 30vmin - 15mm));
       flex: 1 1 auto;
@@ -78,6 +84,14 @@
     .board_image {
       image-rendering: pixelated;
       pointer-events: none;
+    }
+
+    .upload_button {
+      margin: 0 auto;
+      padding: 1rem;
+      font: inherit;
+      font-weight: bold;
+      text-align-last: center;
     }
 
     .handle {
@@ -133,7 +147,7 @@
 
     .preview_box_container {
       display: inline-block;
-      padding: 1em;
+      padding: 1rem;
       overflow: hidden;
       resize: both;
       max-width: 100%;
@@ -145,24 +159,47 @@
       box-sizing: border-box;
       overflow: hidden;
       color: #fff;
-      text-shadow: 0.08em 0.08em 0.04em #000;
+      text-shadow: 0.08rem 0.08rem 0.04rem #000;
     }
 
     .preview_box_container:nth-child(1),
     .preview_box_container:nth-child(2) {
-      height: 15em;
+      height: 15rem;
     }
     .preview_box_container:nth-child(1),
     .preview_box_container:nth-child(3) {
-      width: 15em;
+      width: 15rem;
+    }
+
+    .upload_button::file-selector-button,
+    .copy_button {
+      font: inherit;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      margin: 1rem 1rem 0;
+      padding: 0 1rem;
+      height: 2rem;
+      border-radius: 1rem;
+      border: none;
+      background: #00abee;
+      color: #ffffff;
+    }
+    .upload_button::file-selector-button:hover,
+    .copy_button:hover {
+      background: #0392ca;
+    }
+    .upload_button::file-selector-button:active,
+    .copy_button:active {
+      background: #0373a0;
     }
 
     .code_content {
       display: block;
-      margin: 1em;
-      padding: 1em;
-      border-radius: 1em;
-      box-shadow: 0 1em 1em #0002 inset;
+      margin: 1rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      box-shadow: 0 1rem 1rem #0002 inset;
       background: #141f2b;
       font-family: "Nanum Gothic Coding", monospace;
     }
@@ -173,6 +210,8 @@
   </style>
   <body>
     <div class="editor">
+      <h1 class="title">9-slice CSS Generator</h1>
+      <input class="upload_button" type="file" accept="image/*" />
       <div class="board_container">
         <div class="board">
           <img class="board_image" src="example.png" />
@@ -182,7 +221,6 @@
           <div class="handle handle_x"></div>
         </div>
       </div>
-      <input class="upload_button" type="file" accept="image/*" />
     </div>
     <div class="preview">
       <div class="preview_box_container">
@@ -196,6 +234,7 @@
       </div>
     </div>
     <div class="code">
+      <button class="copy_button">Copy CSS</button>
       <code class="code_content"><pre></pre></code>
     </div>
 
@@ -205,7 +244,11 @@
       const handlesX = document.querySelectorAll(".handle_x");
       const handlesY = document.querySelectorAll(".handle_y");
       const previewBoxes = document.querySelectorAll(".preview_box");
+      const uploadButton = document.querySelector(".upload_button");
+      const copyButton = document.querySelector(".copy_button");
       const codeContentPre = document.querySelector(".code_content pre");
+
+      const placeholderImageSource = "url('<image>')";
 
       const slicesX = [...handlesX].map(() => 0);
       const slicesY = [...handlesY].map(() => 0);
@@ -219,6 +262,26 @@
         resetSlices();
         resizeBoardImage();
       }
+
+      uploadButton.addEventListener("change", () => {
+        const file = uploadButton.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.addEventListener(
+          "load",
+          () => (boardImage.src = reader.result),
+          { once: true }
+        );
+        reader.readAsDataURL(file);
+      });
+
+      copyButton.addEventListener("click", () => {
+        navigator.clipboard.writeText(
+          Object.entries(cssGenerator()(placeholderImageSource))
+            .map(([key, value]) => `${kebabCase(key)}: ${value};`)
+            .join("\n")
+        );
+      });
 
       bindSliceDrag(handlesX[0], (x, y) => (slicesX[0] = x));
       bindSliceDrag(handlesX[1], (x, y) => (slicesX[1] = x));
@@ -344,7 +407,7 @@
         const borderImageSource = `url('${imageURL}')`;
 
         renderPreview(css(borderImageSource));
-        renderCode(css("url('<image>')"));
+        renderCode(css(placeholderImageSource));
       }
 
       function cssGenerator() {
