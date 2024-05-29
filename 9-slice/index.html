@@ -249,6 +249,7 @@
       const copyButton = document.querySelector(".copy_button");
       const codeContentPre = document.querySelector(".code_content pre");
 
+      const originalCopyButtonText = copyButton.textContent;
       const placeholderImageSource = "url('<image>')";
 
       const slicesX = [...handlesX].map(() => 0);
@@ -277,11 +278,19 @@
       });
 
       copyButton.addEventListener("click", () => {
-        navigator.clipboard.writeText(
-          Object.entries(cssGenerator()(placeholderImageSource))
-            .map(([key, value]) => `${kebabCase(key)}: ${value};`)
-            .join("\n")
-        );
+        navigator.clipboard
+          .writeText(
+            Object.entries(cssGenerator()(placeholderImageSource))
+              .map(([key, value]) => `${kebabCase(key)}: ${value};`)
+              .join("\n")
+          )
+          .then(() => {
+            copyButton.textContent = "Copied";
+          })
+          .catch(() => {
+            copyButton.textContent = "Unable to copy";
+            copyButton.disabled = false;
+          });
       });
 
       bindSliceDrag(handlesX[0], (x, y) => (slicesX[0] = x));
@@ -409,6 +418,7 @@
 
         renderPreview(css(borderImageSource));
         renderCode(css(placeholderImageSource));
+        copyButton.textContent = originalCopyButtonText;
       }
 
       function cssGenerator() {
