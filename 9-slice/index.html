@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-  <head></head>
+  <title>9-slice CSS generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter&family=Nanum+Gothic+Coding&display=swap"
     rel="stylesheet"
   />
   <style>
@@ -34,7 +34,7 @@
       }
       body {
         height: auto;
-        grid-template-rows: 2fr 1fr 1fr;
+        grid-template-rows: min-content min-content min-content;
         grid-template-columns: 1fr;
         grid-template-areas:
           "editor"
@@ -51,6 +51,10 @@
     }
     .preview {
       grid-area: preview;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: start;
+      align-content: start;
       background: #1a2531;
       overflow: hidden;
       user-select: none;
@@ -58,6 +62,7 @@
     .code {
       grid-area: code;
       background: #1a2531;
+      overflow: hidden;
     }
 
     .board_container {
@@ -139,6 +144,31 @@
       height: 100%;
       box-sizing: border-box;
       overflow: hidden;
+      color: #fff;
+      text-shadow: 0.08em 0.08em 0.04em #000;
+    }
+
+    .preview_box_container:nth-child(1),
+    .preview_box_container:nth-child(2) {
+      height: 15em;
+    }
+    .preview_box_container:nth-child(1),
+    .preview_box_container:nth-child(3) {
+      width: 15em;
+    }
+
+    .code_content {
+      display: block;
+      margin: 1em;
+      padding: 1em;
+      border-radius: 1em;
+      box-shadow: 0 1em 1em #0002 inset;
+      background: #141f2b;
+      font-family: "Nanum Gothic Coding", monospace;
+    }
+    .code_content pre {
+      margin: 0;
+      white-space: pre-wrap;
     }
   </style>
   <body>
@@ -158,8 +188,16 @@
       <div class="preview_box_container">
         <div class="preview_box">Preview</div>
       </div>
+      <div class="preview_box_container">
+        <div class="preview_box">Preview</div>
+      </div>
+      <div class="preview_box_container">
+        <div class="preview_box">Preview</div>
+      </div>
     </div>
-    <div class="code">Code</div>
+    <div class="code">
+      <code class="code_content"><pre></pre></code>
+    </div>
 
     <script>
       const boardContainer = document.querySelector(".board_container");
@@ -167,11 +205,10 @@
       const handlesX = document.querySelectorAll(".handle_x");
       const handlesY = document.querySelectorAll(".handle_y");
       const previewBoxes = document.querySelectorAll(".preview_box");
+      const codeContentPre = document.querySelector(".code_content pre");
 
-      let sliceLeftX = 0;
-      let sliceRightX = 0;
-      let sliceTopY = 0;
-      let sliceBottomY = 0;
+      const slicesX = [...handlesX].map(() => 0);
+      const slicesY = [...handlesY].map(() => 0);
 
       window.addEventListener("resize", resizeBoardImage);
       boardImage.addEventListener("load", () => {
@@ -183,10 +220,10 @@
         resizeBoardImage();
       }
 
-      bindSliceDrag(handlesX[0], (x, y) => (sliceLeftX = x));
-      bindSliceDrag(handlesX[1], (x, y) => (sliceRightX = x));
-      bindSliceDrag(handlesY[0], (x, y) => (sliceTopY = y));
-      bindSliceDrag(handlesY[1], (x, y) => (sliceBottomY = y));
+      bindSliceDrag(handlesX[0], (x, y) => (slicesX[0] = x));
+      bindSliceDrag(handlesX[1], (x, y) => (slicesX[1] = x));
+      bindSliceDrag(handlesY[0], (x, y) => (slicesY[0] = y));
+      bindSliceDrag(handlesY[1], (x, y) => (slicesY[1] = y));
 
       function bindSliceDrag(handle, callback) {
         let dragState = null;
@@ -228,7 +265,7 @@
 
           callback(x, y);
           renderSlices();
-          renderPreview();
+          recalculateResult();
         };
 
         const release = (event) => {
@@ -249,36 +286,32 @@
 
         const srcURL = new URL(boardImage.src);
         if (srcURL.pathname.split("/").pop() === "example.png") {
-          sliceLeftX = 8;
-          sliceRightX = boardImage.naturalWidth - 11;
-          sliceTopY = 8;
-          sliceBottomY = boardImage.naturalHeight - 11;
+          slicesX[0] = 8;
+          slicesX[1] = boardImage.naturalWidth - 11;
+          slicesY[0] = 8;
+          slicesY[1] = boardImage.naturalHeight - 11;
         } else {
-          sliceLeftX = Math.ceil(boardImage.naturalWidth / 3);
-          sliceRightX = Math.floor(boardImage.naturalWidth * (2 / 3));
-          sliceTopY = Math.ceil(boardImage.naturalHeight / 3);
-          sliceBottomY = Math.floor(boardImage.naturalHeight * (2 / 3));
+          slicesX[0] = Math.ceil(boardImage.naturalWidth / 3);
+          slicesX[1] = Math.floor(boardImage.naturalWidth * (2 / 3));
+          slicesY[0] = Math.ceil(boardImage.naturalHeight / 3);
+          slicesY[1] = Math.floor(boardImage.naturalHeight * (2 / 3));
         }
 
         renderSlices();
-        renderPreview();
+        recalculateResult();
       }
 
       function renderSlices() {
         if (!boardImage.complete) return;
 
-        handlesX[0].style.left =
-          sliceLeftX * (boardImage.clientWidth / boardImage.naturalWidth) +
-          "px";
-        handlesX[1].style.left =
-          sliceRightX * (boardImage.clientWidth / boardImage.naturalWidth) +
-          "px";
-        handlesY[0].style.top =
-          sliceTopY * (boardImage.clientHeight / boardImage.naturalHeight) +
-          "px";
-        handlesY[1].style.top =
-          sliceBottomY * (boardImage.clientHeight / boardImage.naturalHeight) +
-          "px";
+        for (let i = 0; i < 2; i++) {
+          handlesX[i].style.left =
+            slicesX[i] * (boardImage.clientWidth / boardImage.naturalWidth) +
+            "px";
+          handlesY[i].style.top =
+            slicesY[i] * (boardImage.clientHeight / boardImage.naturalHeight) +
+            "px";
+        }
       }
 
       function resizeBoardImage() {
@@ -304,51 +337,92 @@
         renderSlices();
       }
 
-      function renderPreview() {
+      function recalculateResult() {
+        const css = cssGenerator();
+
         const imageURL = boardImage.src;
         const borderImageSource = `url('${imageURL}')`;
+
+        renderPreview(css(borderImageSource));
+        renderCode(css("url('<image>')"));
+      }
+
+      function cssGenerator() {
+        const [sliceLeftX, sliceRightX] = slicesX.toSorted(ascendingNumbers);
+        const [sliceTopY, sliceBottomY] = slicesY.toSorted(ascendingNumbers);
+
         const sliceInsets = [
           sliceTopY,
           boardImage.naturalWidth - sliceRightX,
           boardImage.naturalHeight - sliceBottomY,
           sliceLeftX,
         ];
-        for (const box of previewBoxes) {
-          box.style.borderImage = [
-            borderImageSource,
+
+        const backgroundSizeFactorX =
+          boardImage.naturalWidth / (sliceRightX - sliceLeftX);
+        const backgroundSizeFactorY =
+          boardImage.naturalHeight / (sliceBottomY - sliceTopY);
+
+        // algebra somehow produced this formula
+        const backgroundPositionTermX =
+          sliceLeftX / (boardImage.naturalWidth - sliceRightX + sliceLeftX);
+        const backgroundPositionTermY =
+          sliceTopY / (boardImage.naturalHeight - sliceBottomY + sliceTopY);
+
+        return (imageSource) => ({
+          borderImage: [
+            imageSource,
             ...sliceInsets,
             "/",
             ...sliceInsets.map((inset) => inset + "px"),
-          ].join(" ");
-          box.style.padding = sliceInsets
-            .map((inset) => inset + "px")
-            .join(" ");
-
-          const backgroundSizeFactorX =
-            boardImage.naturalWidth / (sliceRightX - sliceLeftX);
-          const backgroundSizeFactorY =
-            boardImage.naturalHeight / (sliceBottomY - sliceTopY);
-
-          // algebra somehow produced this formula
-          const backgroundPositionTermX =
-            sliceLeftX / (boardImage.naturalWidth - sliceRightX + sliceLeftX);
-          const backgroundPositionTermY =
-            sliceTopY / (boardImage.naturalHeight - sliceBottomY + sliceTopY);
-
-          box.style.background = [
-            borderImageSource,
-            backgroundPositionTermX * 100 + "%",
-            backgroundPositionTermY * 100 + "%",
+          ].join(" "),
+          padding: sliceInsets.map((inset) => inset + "px").join(" "),
+          background: [
+            imageSource,
+            cssPercentage(backgroundPositionTermX),
+            cssPercentage(backgroundPositionTermY),
             "/",
-            backgroundSizeFactorX * 100 + "%",
-            backgroundSizeFactorY * 100 + "%",
+            cssPercentage(backgroundSizeFactorX),
+            cssPercentage(backgroundSizeFactorY),
+            "border-box",
+            "content-box",
             "no-repeat",
-          ].join(" ");
+          ].join(" "),
+        });
+      }
+
+      function renderPreview(css) {
+        for (const box of previewBoxes) {
+          Object.assign(box.style, css);
         }
+      }
+
+      function renderCode(css) {
+        codeContentPre.textContent = [
+          "div {",
+          ...Object.entries(css).map(
+            ([key, value]) => `  ${kebabCase(key)}: ${value};`
+          ),
+          "}",
+        ].join("\n");
       }
 
       function clampRound(x, min, max) {
         return Math.round(Math.min(max, Math.max(min, x)));
+      }
+
+      function cssPercentage(fraction) {
+        return Math.round(fraction * 100e2) / 1e2 + "%";
+      }
+
+      function kebabCase(camelCase) {
+        return camelCase.replaceAll(/([a-z])([A-Z])/g, (_, a, b) =>
+          `${a}-${b}`.toLocaleLowerCase()
+        );
+      }
+
+      function ascendingNumbers(a, b) {
+        return a - b;
       }
     </script>
   </body>
