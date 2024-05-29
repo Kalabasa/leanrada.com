@@ -208,6 +208,16 @@
       margin: 0;
       white-space: pre-wrap;
     }
+
+    .css_mute {
+      opacity: 0.4;
+    }
+    .css_property {
+      color: #f14ef7;
+    }
+    .css_value {
+      color: #a9db4c;
+    }
   </style>
   <body>
     <div class="editor">
@@ -250,7 +260,7 @@
       const codeContentPre = document.querySelector(".code_content pre");
 
       const originalCopyButtonText = copyButton.textContent;
-      const placeholderImageSource = "url('<image>')";
+      const placeholderImageSource = "url(&lt;image&gt;)";
 
       const slicesX = [...handlesX].map(() => 0);
       const slicesY = [...handlesY].map(() => 0);
@@ -472,12 +482,14 @@
       }
 
       function renderCode(css) {
-        codeContentPre.textContent = [
-          "div {",
+        codeContentPre.innerHTML = [
+          '<span class="css_mute">div {</span>',
           ...Object.entries(css).map(
-            ([key, value]) => `  ${kebabCase(key)}: ${value};`
+            ([key, value]) =>
+              `<span class="css_property">${kebabCase(key)}</span>:` +
+              ` <span class="css_value">${value}</span>;`
           ),
-          "}",
+          '<span class="css_mute">}</span>',
         ].join("\n");
       }
 
