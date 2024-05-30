@@ -95,8 +95,7 @@
     .upload_button {
       margin: 0 auto;
       padding: 1rem;
-      font: inherit;
-      font-weight: bold;
+      font-size: 0;
       text-align-last: center;
     }
 
@@ -151,6 +150,20 @@
       padding: 0 5mm;
     }
 
+    .file_drop_zone {
+      font-size: 2rem;
+      font-weight: bold;
+      visibility: hidden;
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      background: #1a2531dd;
+    }
+    .file_drop_zone.active {
+      visibility: visible;
+    }
+
     .preview_grid {
       display: flex;
       flex-wrap: wrap;
@@ -182,28 +195,6 @@
     .preview_box_container:nth-child(1),
     .preview_box_container:nth-child(3) {
       width: 15rem;
-    }
-
-    .upload_button::file-selector-button,
-    .copy_button {
-      font: inherit;
-      font-weight: bold;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      padding: 0 1rem;
-      height: 2rem;
-      border-radius: 1rem;
-      border: none;
-      background: #00b9a1;
-      color: #ffffff;
-    }
-    .upload_button::file-selector-button:hover,
-    .copy_button:hover {
-      background: #0392ca;
-    }
-    .upload_button::file-selector-button:active,
-    .copy_button:active {
-      background: #0373a0;
     }
 
     .copy_button {
@@ -238,6 +229,32 @@
     .css_placeholder {
       color: #24ffe2;
     }
+
+    .upload_button::file-selector-button,
+    .copy_button {
+      font: inherit;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      padding: 0 1rem;
+      height: 2rem;
+      border-radius: 1rem;
+      border: none;
+      background: #939fa3;
+      color: #ffffff;
+    }
+    .upload_button:not(:disabled)::file-selector-button,
+    .copy_button:not(:disabled) {
+      background: #0392ca;
+    }
+    .upload_button:not(:disabled):hover::file-selector-button,
+    .copy_button:not(:disabled):hover {
+      background: #1ca0d4;
+    }
+    .upload_button:not(:disabled):active::file-selector-button,
+    .copy_button:not(:disabled):active {
+      background: #0373a0;
+    }
   </style>
   <body>
     <div class="editor">
@@ -252,6 +269,7 @@
           <div class="handle handle_x"></div>
         </div>
       </div>
+      <div class="file_drop_zone">Drop me an image! :v</div>
     </div>
     <div class="code">
       <h2 class="section_title">CSS</h2>
@@ -280,6 +298,7 @@
       const boardImage = document.querySelector(".board_image");
       const handlesX = document.querySelectorAll(".handle_x");
       const handlesY = document.querySelectorAll(".handle_y");
+      const fileDropZone = document.querySelector(".file_drop_zone");
       const previewBoxes = document.querySelectorAll(".preview_box");
       const uploadButton = document.querySelector(".upload_button");
       const copyButton = document.querySelector(".copy_button");
@@ -306,13 +325,32 @@
       uploadButton.addEventListener("change", () => {
         const file = uploadButton.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.addEventListener(
-          "load",
-          () => (boardImage.src = reader.result),
-          { once: true }
-        );
-        reader.readAsDataURL(file);
+        loadFile(file);
+      });
+
+      window.addEventListener("drop", (event) => {
+        event.preventDefault();
+        fileDropZone.classList.remove("active");
+
+        let file = null;
+        if (event.dataTransfer.items) {
+          if (event.dataTransfer.items[0].kind !== "file") return;
+          file = event.dataTransfer.items[0].getAsFile();
+        } else {
+          file = event.dataTransfer.files[0];
+        }
+
+        loadFile(file);
+      });
+
+      window.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        fileDropZone.classList.add("active");
+      });
+
+      window.addEventListener("dragleave", (event) => {
+        if (event.relatedTarget !== null) return;
+        fileDropZone.classList.remove("active");
       });
 
       copyButton.addEventListener("click", () => {
@@ -330,6 +368,16 @@
             copyButton.disabled = false;
           });
       });
+
+      function loadFile(file) {
+        const reader = new FileReader();
+        reader.addEventListener(
+          "load",
+          () => (boardImage.src = reader.result),
+          { once: true }
+        );
+        reader.readAsDataURL(file);
+      }
 
       bindSliceDrag(handlesX[0], (x, y) => (slicesX[0] = x));
       bindSliceDrag(handlesX[1], (x, y) => (slicesX[1] = x));
