@@ -20,11 +20,11 @@
     }
     body {
       display: grid;
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: min-content 1fr;
       grid-template-columns: 2fr 1fr;
       grid-template-areas:
-        "editor preview"
-        "editor code";
+        "editor code"
+        "editor preview";
       width: 100%;
       height: 100%;
       margin: 0;
@@ -39,8 +39,8 @@
         grid-template-columns: 1fr;
         grid-template-areas:
           "editor"
-          "preview"
-          "code";
+          "code"
+          "preview";
       }
     }
     .editor {
@@ -52,10 +52,6 @@
     }
     .preview {
       grid-area: preview;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: start;
-      align-content: start;
       background: #1a2531;
       overflow: hidden;
       user-select: none;
@@ -68,8 +64,17 @@
 
     .title {
       font-size: 1.8rem;
-      margin: 0 auto;
-      padding: 1rem 1rem 0;
+      margin: 1rem auto 0;
+      border-image: url("title_frame.png") 18 / 18px;
+      padding: 18px;
+      background: url("title_frame.png") 50% 50% / 166.67% 166.67% border-box
+        content-box no-repeat;
+    }
+
+    .section_title {
+      display: block;
+      font-size: 1.2rem;
+      margin: 1rem;
     }
 
     .board_container {
@@ -146,6 +151,13 @@
       padding: 0 5mm;
     }
 
+    .preview_grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: start;
+      align-content: start;
+    }
+
     .preview_box_container {
       display: inline-block;
       padding: 1rem;
@@ -178,7 +190,6 @@
       font-weight: bold;
       text-transform: uppercase;
       font-size: 0.8rem;
-      margin: 1rem 1rem 0;
       padding: 0 1rem;
       height: 2rem;
       border-radius: 1rem;
@@ -193,6 +204,12 @@
     .upload_button::file-selector-button:active,
     .copy_button:active {
       background: #0373a0;
+    }
+
+    .copy_button {
+      display: block;
+      width: calc(100% - 2rem);
+      margin: 1rem 1rem 0;
     }
 
     .code_content {
@@ -236,20 +253,26 @@
         </div>
       </div>
     </div>
-    <div class="preview">
-      <div class="preview_box_container">
-        <div class="preview_box">Preview</div>
-      </div>
-      <div class="preview_box_container">
-        <div class="preview_box">Preview</div>
-      </div>
-      <div class="preview_box_container">
-        <div class="preview_box">Preview</div>
-      </div>
-    </div>
     <div class="code">
+      <h2 class="section_title">CSS</h2>
       <button class="copy_button">Copy CSS</button>
       <code class="code_content"><pre></pre></code>
+    </div>
+    <div class="preview">
+      <h2 class="section_title">Preview</h2>
+      <div class="preview_grid">
+        <div class="preview_box_container">
+          <div class="preview_box">
+            Quiet winds slice through serene landscapes in bounded moments.
+          </div>
+        </div>
+        <div class="preview_box_container">
+          <div class="preview_box">Slice of life</div>
+        </div>
+        <div class="preview_box_container">
+          <div class="preview_box">Contours of change</div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -453,10 +476,19 @@
           boardImage.naturalHeight / (sliceBottomY - sliceTopY);
 
         // algebra somehow produced this formula
-        const backgroundPositionTermX =
-          sliceLeftX / (boardImage.naturalWidth - sliceRightX + sliceLeftX);
-        const backgroundPositionTermY =
-          sliceTopY / (boardImage.naturalHeight - sliceBottomY + sliceTopY);
+        const backgroundPositionX =
+          sliceLeftX / (boardImage.naturalWidth - (sliceRightX - sliceLeftX));
+        const backgroundPositionY =
+          sliceTopY / (boardImage.naturalHeight - (sliceBottomY - sliceTopY));
+
+        console.log({
+          naturalWidth: boardImage.naturalWidth,
+          naturalHeight: boardImage.naturalHeight,
+          sliceLeftX,
+          sliceRightX,
+          sliceTopY,
+          sliceBottomY,
+        });
 
         return (imageSource) => ({
           borderImage: [
@@ -468,12 +500,12 @@
           padding: sliceInsets.map((inset) => inset + "px").join(" "),
           background: [
             imageSource,
-            cssPercentage(backgroundPositionTermX),
-            cssPercentage(backgroundPositionTermY),
+            cssPercentage(backgroundPositionX),
+            cssPercentage(backgroundPositionY),
             "/",
             cssPercentage(backgroundSizeFactorX),
             cssPercentage(backgroundSizeFactorY),
-            "border-box",
+            "content-box",
             "content-box",
             "no-repeat",
           ].join(" "),
