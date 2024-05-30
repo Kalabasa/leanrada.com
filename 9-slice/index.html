@@ -20,27 +20,29 @@
     }
     body {
       display: grid;
-      grid-template-rows: 1fr 1fr;
+      grid-template-rows: min-content 1fr min-content;
       grid-template-columns: 2fr 1fr;
       grid-template-areas:
+        "editor code"
         "editor preview"
-        "editor code";
+        "editor about";
       width: 100%;
       height: 100%;
       margin: 0;
     }
     @media (max-width: 240mm) {
       .editor {
-        min-height: 60vh;
+        min-height: 95svh;
       }
       body {
         height: auto;
-        grid-template-rows: min-content min-content min-content;
+        grid-template-rows: min-content min-content min-content min-content;
         grid-template-columns: 1fr;
         grid-template-areas:
           "editor"
+          "code"
           "preview"
-          "code";
+          "about";
       }
     }
     .editor {
@@ -52,24 +54,37 @@
     }
     .preview {
       grid-area: preview;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: start;
-      align-content: start;
       background: #1a2531;
       overflow: hidden;
       user-select: none;
+      padding: 1rem;
     }
     .code {
       grid-area: code;
       background: #1a2531;
       overflow: hidden;
+      padding: 1rem;
+    }
+    .about {
+      grid-area: about;
+      background: #1a2531;
+      overflow: hidden;
+      padding: 1rem;
     }
 
     .title {
       font-size: 1.8rem;
-      margin: 0 auto;
-      padding: 1rem 1rem 0;
+      margin: 1rem auto 0;
+      border-image: url("title_frame.png") 18 / 18px;
+      padding: 18px;
+      background: url("title_frame.png") 50% 50% / 166.67% 166.67% border-box
+        content-box no-repeat;
+    }
+
+    .section_title {
+      display: block;
+      font-size: 1.2rem;
+      margin: 0;
     }
 
     .board_container {
@@ -90,8 +105,7 @@
     .upload_button {
       margin: 0 auto;
       padding: 1rem;
-      font: inherit;
-      font-weight: bold;
+      font-size: 0;
       text-align-last: center;
     }
 
@@ -115,15 +129,17 @@
       background: #24ffe2;
       opacity: 0;
     }
-    .handle:hover::after {
-      opacity: 0.1;
-    }
     .active_handle.handle::after {
       opacity: 0.2;
       cursor: grabbing;
     }
     :root:has(.active_handle) {
       cursor: grabbing !important;
+    }
+    @media (hover: hover) {
+      .handle:hover::after {
+        opacity: 0.1;
+      }
     }
 
     .handle_x {
@@ -146,6 +162,28 @@
       padding: 0 5mm;
     }
 
+    .file_drop_zone {
+      font-size: 2rem;
+      font-weight: bold;
+      visibility: hidden;
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      background: #1a2531dd;
+    }
+    .file_drop_zone.active {
+      visibility: visible;
+    }
+
+    .preview_grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: start;
+      align-content: start;
+      margin: 1rem 0;
+    }
+
     .preview_box_container {
       display: inline-block;
       padding: 1rem;
@@ -163,6 +201,10 @@
       text-shadow: 0.08rem 0.08rem 0.04rem #000;
     }
 
+    .preview_box_container {
+      width: 5rem;
+      height: 5rem;
+    }
     .preview_box_container:nth-child(1),
     .preview_box_container:nth-child(2) {
       height: 15rem;
@@ -172,32 +214,15 @@
       width: 15rem;
     }
 
-    .upload_button::file-selector-button,
     .copy_button {
-      font: inherit;
-      font-weight: bold;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      margin: 1rem 1rem 0;
-      padding: 0 1rem;
-      height: 2rem;
-      border-radius: 1rem;
-      border: none;
-      background: #00b9a1;
-      color: #ffffff;
-    }
-    .upload_button::file-selector-button:hover,
-    .copy_button:hover {
-      background: #0392ca;
-    }
-    .upload_button::file-selector-button:active,
-    .copy_button:active {
-      background: #0373a0;
+      display: block;
+      width: 100%;
+      margin: 1rem 0;
     }
 
     .code_content {
       display: block;
-      margin: 1rem;
+      margin: 1rem 0;
       padding: 1rem;
       border-radius: 1rem;
       box-shadow: 0 1rem 1rem #0002 inset;
@@ -221,6 +246,47 @@
     .css_placeholder {
       color: #24ffe2;
     }
+
+    .tip_text {
+      font-style: italic;
+    }
+
+    .text {
+      font-size: 0.9rem;
+      margin: 0;
+      line-height: 1.3rem;
+      opacity: 0.85;
+    }
+
+    .upload_button::file-selector-button,
+    .copy_button {
+      font: inherit;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      padding: 0 1rem;
+      height: 2rem;
+      border-radius: 1rem;
+      border: none;
+      background: #939fa3;
+      color: #ffffff;
+    }
+    .upload_button:not(:disabled)::file-selector-button,
+    .copy_button:not(:disabled) {
+      background: #0392ca;
+    }
+    .upload_button:not(:disabled):hover::file-selector-button,
+    .copy_button:not(:disabled):hover {
+      background: #1ca0d4;
+    }
+    .upload_button:not(:disabled):active::file-selector-button,
+    .copy_button:not(:disabled):active {
+      background: #0373a0;
+    }
+
+    a {
+      color: #0392ca;
+    }
   </style>
   <body>
     <div class="editor">
@@ -235,21 +301,49 @@
           <div class="handle handle_x"></div>
         </div>
       </div>
-    </div>
-    <div class="preview">
-      <div class="preview_box_container">
-        <div class="preview_box">Preview</div>
-      </div>
-      <div class="preview_box_container">
-        <div class="preview_box">Preview</div>
-      </div>
-      <div class="preview_box_container">
-        <div class="preview_box">Preview</div>
-      </div>
+      <div class="file_drop_zone">Drop me an image! :v</div>
     </div>
     <div class="code">
-      <button class="copy_button">Copy CSS</button>
+      <h2 class="section_title">CSS</h2>
       <code class="code_content"><pre></pre></code>
+      <button class="copy_button">Copy CSS</button>
+      <p class="text tip_text">
+        <strong>Tip:</strong> Try the
+        <a
+          href="https://developer.mozilla.org/en-US/docs/Web/CSS/border-image-repeat"
+          target="_blank"
+          >border-image-repeat</a
+        >
+        property!
+      </p>
+    </div>
+    <div class="preview">
+      <h2 class="section_title">Preview</h2>
+      <div class="preview_grid">
+        <div class="preview_box_container">
+          <div class="preview_box" contenteditable="true">
+            Quiet winds slice through serene landscapes in bounded moments.
+          </div>
+        </div>
+        <div class="preview_box_container">
+          <div class="preview_box" contenteditable="true">Slice of life</div>
+        </div>
+        <div class="preview_box_container">
+          <div class="preview_box" contenteditable="true">
+            Contours of change
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="about">
+      <p class="text">
+        <strong>About this tool:</strong> This web app generates CSS code for
+        resizing images using the
+        <a href="https://en.wikipedia.org/wiki/9-slice_scaling" target="_blank"
+          >9-slice technique</a
+        >, also known as ‘Scale 9’ or 9-patch &mdash; preserving the appearance
+        of edge and corner areas of an image during resizing.
+      </p>
     </div>
 
     <script>
@@ -257,6 +351,7 @@
       const boardImage = document.querySelector(".board_image");
       const handlesX = document.querySelectorAll(".handle_x");
       const handlesY = document.querySelectorAll(".handle_y");
+      const fileDropZone = document.querySelector(".file_drop_zone");
       const previewBoxes = document.querySelectorAll(".preview_box");
       const uploadButton = document.querySelector(".upload_button");
       const copyButton = document.querySelector(".copy_button");
@@ -283,13 +378,32 @@
       uploadButton.addEventListener("change", () => {
         const file = uploadButton.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.addEventListener(
-          "load",
-          () => (boardImage.src = reader.result),
-          { once: true }
-        );
-        reader.readAsDataURL(file);
+        loadFile(file);
+      });
+
+      window.addEventListener("drop", (event) => {
+        event.preventDefault();
+        fileDropZone.classList.remove("active");
+
+        let file = null;
+        if (event.dataTransfer.items) {
+          if (event.dataTransfer.items[0].kind !== "file") return;
+          file = event.dataTransfer.items[0].getAsFile();
+        } else {
+          file = event.dataTransfer.files[0];
+        }
+
+        loadFile(file);
+      });
+
+      window.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        fileDropZone.classList.add("active");
+      });
+
+      window.addEventListener("dragleave", (event) => {
+        if (event.relatedTarget !== null) return;
+        fileDropZone.classList.remove("active");
       });
 
       copyButton.addEventListener("click", () => {
@@ -307,6 +421,16 @@
             copyButton.disabled = false;
           });
       });
+
+      function loadFile(file) {
+        const reader = new FileReader();
+        reader.addEventListener(
+          "load",
+          () => (boardImage.src = reader.result),
+          { once: true }
+        );
+        reader.readAsDataURL(file);
+      }
 
       bindSliceDrag(handlesX[0], (x, y) => (slicesX[0] = x));
       bindSliceDrag(handlesX[1], (x, y) => (slicesX[1] = x));
@@ -379,10 +503,15 @@
           slicesY[0] = 8;
           slicesY[1] = boardImage.naturalHeight - 11;
         } else {
-          slicesX[0] = Math.ceil(boardImage.naturalWidth / 3);
-          slicesX[1] = Math.floor(boardImage.naturalWidth * (2 / 3));
-          slicesY[0] = Math.ceil(boardImage.naturalHeight / 3);
-          slicesY[1] = Math.floor(boardImage.naturalHeight * (2 / 3));
+          const defaultSliceThickness = Math.min(
+            30,
+            Math.floor(boardImage.naturalWidth / 3),
+            Math.floor(boardImage.naturalHeight / 3)
+          );
+          slicesX[0] = defaultSliceThickness;
+          slicesX[1] = boardImage.naturalWidth - defaultSliceThickness;
+          slicesY[0] = defaultSliceThickness;
+          slicesY[1] = boardImage.naturalHeight - defaultSliceThickness;
         }
 
         renderSlices();
@@ -453,10 +582,10 @@
           boardImage.naturalHeight / (sliceBottomY - sliceTopY);
 
         // algebra somehow produced this formula
-        const backgroundPositionTermX =
-          sliceLeftX / (boardImage.naturalWidth - sliceRightX + sliceLeftX);
-        const backgroundPositionTermY =
-          sliceTopY / (boardImage.naturalHeight - sliceBottomY + sliceTopY);
+        const backgroundPositionX =
+          sliceLeftX / (boardImage.naturalWidth - (sliceRightX - sliceLeftX));
+        const backgroundPositionY =
+          sliceTopY / (boardImage.naturalHeight - (sliceBottomY - sliceTopY));
 
         return (imageSource) => ({
           borderImage: [
@@ -468,12 +597,12 @@
           padding: sliceInsets.map((inset) => inset + "px").join(" "),
           background: [
             imageSource,
-            cssPercentage(backgroundPositionTermX),
-            cssPercentage(backgroundPositionTermY),
+            cssPercentage(backgroundPositionX),
+            cssPercentage(backgroundPositionY),
             "/",
             cssPercentage(backgroundSizeFactorX),
             cssPercentage(backgroundSizeFactorY),
-            "border-box",
+            "content-box",
             "content-box",
             "no-repeat",
           ].join(" "),
