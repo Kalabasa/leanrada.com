@@ -20,27 +20,29 @@
     }
     body {
       display: grid;
-      grid-template-rows: min-content 1fr;
+      grid-template-rows: min-content 1fr min-content;
       grid-template-columns: 2fr 1fr;
       grid-template-areas:
         "editor code"
-        "editor preview";
+        "editor preview"
+        "editor about";
       width: 100%;
       height: 100%;
       margin: 0;
     }
     @media (max-width: 240mm) {
       .editor {
-        min-height: 60vh;
+        min-height: 95svh;
       }
       body {
         height: auto;
-        grid-template-rows: min-content min-content min-content;
+        grid-template-rows: min-content min-content min-content min-content;
         grid-template-columns: 1fr;
         grid-template-areas:
           "editor"
           "code"
-          "preview";
+          "preview"
+          "about";
       }
     }
     .editor {
@@ -55,11 +57,19 @@
       background: #1a2531;
       overflow: hidden;
       user-select: none;
+      padding: 1rem;
     }
     .code {
       grid-area: code;
       background: #1a2531;
       overflow: hidden;
+      padding: 1rem;
+    }
+    .about {
+      grid-area: about;
+      background: #1a2531;
+      overflow: hidden;
+      padding: 1rem;
     }
 
     .title {
@@ -74,7 +84,7 @@
     .section_title {
       display: block;
       font-size: 1.2rem;
-      margin: 1rem 1rem 0;
+      margin: 0;
     }
 
     .board_container {
@@ -119,15 +129,17 @@
       background: #24ffe2;
       opacity: 0;
     }
-    .handle:hover::after {
-      opacity: 0.1;
-    }
     .active_handle.handle::after {
       opacity: 0.2;
       cursor: grabbing;
     }
     :root:has(.active_handle) {
       cursor: grabbing !important;
+    }
+    @media (hover: hover) {
+      .handle:hover::after {
+        opacity: 0.1;
+      }
     }
 
     .handle_x {
@@ -169,6 +181,7 @@
       flex-wrap: wrap;
       align-items: start;
       align-content: start;
+      margin: 1rem 0;
     }
 
     .preview_box_container {
@@ -203,13 +216,13 @@
 
     .copy_button {
       display: block;
-      width: calc(100% - 2rem);
-      margin: 1rem 1rem 0;
+      width: 100%;
+      margin: 1rem 0;
     }
 
     .code_content {
       display: block;
-      margin: 1rem;
+      margin: 1rem 0;
       padding: 1rem;
       border-radius: 1rem;
       box-shadow: 0 1rem 1rem #0002 inset;
@@ -232,6 +245,13 @@
     }
     .css_placeholder {
       color: #24ffe2;
+    }
+
+    .about_text {
+      font-size: 0.95rem;
+      margin: 0;
+      line-height: 1.3rem;
+      opacity: 0.8;
     }
 
     .upload_button::file-selector-button,
@@ -259,6 +279,10 @@
     .copy_button:not(:disabled):active {
       background: #0373a0;
     }
+
+    a {
+      color: #0392ca;
+    }
   </style>
   <body>
     <div class="editor">
@@ -277,24 +301,36 @@
     </div>
     <div class="code">
       <h2 class="section_title">CSS</h2>
-      <button class="copy_button">Copy CSS</button>
       <code class="code_content"><pre></pre></code>
+      <button class="copy_button">Copy CSS</button>
     </div>
     <div class="preview">
       <h2 class="section_title">Preview</h2>
       <div class="preview_grid">
         <div class="preview_box_container">
-          <div class="preview_box">
+          <div class="preview_box" contenteditable="true">
             Quiet winds slice through serene landscapes in bounded moments.
           </div>
         </div>
         <div class="preview_box_container">
-          <div class="preview_box">Slice of life</div>
+          <div class="preview_box" contenteditable="true">Slice of life</div>
         </div>
         <div class="preview_box_container">
-          <div class="preview_box">Contours of change</div>
+          <div class="preview_box" contenteditable="true">
+            Contours of change
+          </div>
         </div>
       </div>
+    </div>
+    <div class="about">
+      <p class="about_text">
+        <strong>About this tool:</strong> This web app generates CSS code for
+        resizing images using the
+        <a href="https://en.wikipedia.org/wiki/9-slice_scaling" target="_blank"
+          >9-slice technique</a
+        >, also known as ‘Scale 9’ or 9-patch &mdash; preserving the appearance
+        of edge and corner areas of an image during resizing.
+      </p>
     </div>
 
     <script>
