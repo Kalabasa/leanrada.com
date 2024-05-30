@@ -188,6 +188,10 @@
       text-shadow: 0.08rem 0.08rem 0.04rem #000;
     }
 
+    .preview_box_container {
+      width: 5rem;
+      height: 5rem;
+    }
     .preview_box_container:nth-child(1),
     .preview_box_container:nth-child(2) {
       height: 15rem;
@@ -450,10 +454,15 @@
           slicesY[0] = 8;
           slicesY[1] = boardImage.naturalHeight - 11;
         } else {
-          slicesX[0] = Math.ceil(boardImage.naturalWidth / 3);
-          slicesX[1] = Math.floor(boardImage.naturalWidth * (2 / 3));
-          slicesY[0] = Math.ceil(boardImage.naturalHeight / 3);
-          slicesY[1] = Math.floor(boardImage.naturalHeight * (2 / 3));
+          const defaultSliceThickness = Math.min(
+            30,
+            Math.floor(boardImage.naturalWidth / 3),
+            Math.floor(boardImage.naturalHeight / 3)
+          );
+          slicesX[0] = defaultSliceThickness;
+          slicesX[1] = boardImage.naturalWidth - defaultSliceThickness;
+          slicesY[0] = defaultSliceThickness;
+          slicesY[1] = boardImage.naturalHeight - defaultSliceThickness;
         }
 
         renderSlices();
