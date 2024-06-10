@@ -27,8 +27,8 @@
         src="${attrs.src}"
         spec="${attrs.spec || defaultResponsiveImageSpec()}"
         loading="lazy"
-        width="${await imgWidthAttr(attrs.src)}"
-        height="${await imgHeightAttr(attrs.src)}"
+        width="${attrs.width || await imgWidthAttr(attrs.src)}"
+        height="${attrs.height || await imgHeightAttr(attrs.src)}"
         style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isImg(attrs.src)) {
@@ -37,8 +37,8 @@
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
         loading="lazy"
-        width="${await imgWidthAttr(attrs.src)}"
-        height="${await imgHeightAttr(attrs.src)}"
+        width="${attrs.width || await imgWidthAttr(attrs.src)}"
+        height="${attrs.height || await imgHeightAttr(attrs.src)}"
         style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isVideo(attrs.src)) {
@@ -84,12 +84,7 @@
   }
 
   function defaultResponsiveImageSpec() {
-    switch (attrs.type) {
-      case "bleed":
-        return "100% [800) 80% [1750) 1400";
-      default:
-        return "100% [664) 664";
-    }
+    return "100% [664) 664";
   }
 
   async function isWide(src) {
@@ -103,9 +98,7 @@
   async function imgWidthAttr(src) {
     if (!prod) return "";
     return (await isWide(src))
-      ? attrs.type === "bleed"
-        ? "400%"
-        : "100%"
+      ? "100%"
       : "";
   }
 

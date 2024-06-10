@@ -1,4 +1,6 @@
-<div :class="'blog-media blog-media-' + (attrs.type ?? 'default') + ' ' + (attrs.class ?? '')">
+<div
+  :class="'blog-media blog-media-' + (attrs.type ?? 'default') + ' ' + (attrs.class ?? '')"
+>
   <script render>
     if (attrs.type === "windowed") {
       yield html`<window-decor title="${attrs.caption}">${renderMediaElementArray()}</window-decor>`;
@@ -22,11 +24,21 @@
 
   async function* renderMediaElement() {
     yield html`<responsive-media
-        class="blog-media-element ${attrs.mediaClass ?? ""}"
-        alt="${attrs.alt ?? ""}"
-        src="${attrs.src}"
-        spec="${attrs.spec}"
-      />`;
+      class="blog-media-element ${attrs.mediaClass ?? ""}"
+      alt="${attrs.alt ?? ""}"
+      src="${attrs.src}"
+      spec="${attrs.spec || defaultResponsiveImageSpec()}"
+      width="${await imgWidthAttr(attrs.src)}"
+    />`;
+  }
+
+  function defaultResponsiveImageSpec() {
+    return attrs.type === "bleed" ? "100% [800) 80% [1750) 1400" : "";
+  }
+
+  async function imgWidthAttr(src) {
+    if (!prod) return "";
+    return attrs.type === "bleed" ? "400%" : "";
   }
 </script>
 
