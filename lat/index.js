@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import arg from "arg";
-import path from "node:path";
 import {
   deployProjectsToCloudflarePages,
   deployProjectsToDir,
@@ -9,6 +8,7 @@ import {
 import { runDevServer } from "./dev.js";
 import { colorInfo } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
+import { getPath } from "./util/paths.js";
 
 const args = arg({
   "--yes": Boolean,
@@ -49,7 +49,7 @@ function deploy(targetProjectDirs) {
     process.exit(1);
   }
 
-  const wwwDir = path.resolve("www");
+  const wwwDir = getPath("www");
   if (args["--cf-prod"]) {
     const wwwProdDir = `${wwwDir}/cf-prod`;
     deployProjectsToCloudflarePages({
