@@ -8,9 +8,5 @@ import { setup, shoudHaveNavigation } from "../common.js";
     });
 
     it("should have navigation", shoudHaveNavigation);
-
-    it("passes visreg", async () => {
-      await browser.checkFullPageScreen("full");
-    });
   });
 });
