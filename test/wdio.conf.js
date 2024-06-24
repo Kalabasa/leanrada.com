@@ -1,4 +1,7 @@
+import path from "node:path";
 import { devServer } from "./common.js";
+
+const dirname = path.dirname(new URL(import.meta.url).pathname);
 
 export const config = {
   //
@@ -106,7 +109,15 @@ export const config = {
   // your test setup with almost no effort. Unlike plugins, they don't add new
   // commands. Instead, they hook themselves up into the test process.
   services: [
-    "visual",
+    [
+      "visual",
+      {
+        baselineFolder: path.join(dirname, "baseline"),
+        formatImageName: "{tag}-{logName}-{width}x{height}",
+        screenshotPath: path.join(dirname, "tmp"),
+        savePerInstance: true,
+      },
+    ],
     [
       "static-server",
       {
