@@ -1,14 +1,16 @@
 import { $, browser, expect } from "@wdio/globals";
 import { setup, shoudHaveNavigation } from "../common.js";
 
-describe("/", () => {
-  beforeEach(async () => {
-    await setup(browser, "/");
-  });
+["desktop", "mobile"].forEach((platform) => {
+  describe(`/ (${platform})`, () => {
+    beforeEach(async () => {
+      await setup(browser, platform, "/");
+    });
 
-  it("should have navigation", shoudHaveNavigation);
+    it("should have navigation", shoudHaveNavigation);
 
-  it("passes visreg", async () => {
-    await browser.checkFullPageScreen("full");
+    it("passes visreg", async () => {
+      await browser.checkFullPageScreen("full");
+    });
   });
 });

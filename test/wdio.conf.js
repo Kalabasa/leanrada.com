@@ -56,9 +56,6 @@ export const config = {
     {
       browserName: "chrome",
     },
-    {
-      browserName: "firefox",
-    },
   ],
 
   //
@@ -113,9 +110,10 @@ export const config = {
       "visual",
       {
         baselineFolder: path.join(dirname, "baseline"),
-        formatImageName: "{tag}-{logName}-{width}x{height}",
+        formatImageName: "{tag}-{browserName}-{width}x{height}",
         screenshotPath: path.join(dirname, "tmp"),
-        savePerInstance: true,
+        savePerInstance: false,
+        fullPageScrollTimeout: 400,
       },
     ],
     [
