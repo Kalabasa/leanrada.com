@@ -12,19 +12,24 @@
   const priorAspectRatio = 2 / 3;
 
   async function* renderMediaElement() {
-    const [widthAttr, heightAttr] = await widthHeightAttrs(
-      attrs.src,
-      attrs.width,
-      attrs.height
-    );
+    const {
+      width: widthAttrValue,
+      height: heightAttrValue,
+      placeholder,
+    } = await widthHeightAttrs(attrs.src, attrs.width, attrs.height);
+
+    const widthAttr = widthAttrValue ? `width=${widthAttrValue}` : "";
+    const heightAttr = heightAttrValue ? `height=${heightAttrValue}` : "";
+    const dataPlaceholderAttr = placeholder ? `data-placeholder` : "";
 
     if (isExternal(attrs.src)) {
       yield html`<img
         class="${attrs.class}"
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
-        width="${widthAttr}"
-        height="${heightAttr}"
+        ${widthAttr}
+        ${heightAttr}
+        ${dataPlaceholderAttr}
         loading="lazy"
       />`;
     } else if (isResizeableImg(attrs.src)) {
@@ -34,8 +39,9 @@
         src="${attrs.src}"
         spec="${attrs.spec || defaultResponsiveImageSpec()}"
         loading="lazy"
-        width="${widthAttr}"
-        height="${heightAttr}"
+        ${widthAttr}
+        ${heightAttr}
+        ${dataPlaceholderAttr}
         style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
     } else if (isImg(attrs.src)) {
@@ -44,8 +50,9 @@
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
         loading="lazy"
-        width="${widthAttr}"
-        height="${heightAttr}"
+        ${widthAttr}
+        ${heightAttr}
+        ${dataPlaceholderAttr}
         style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
     } else if (isVideo(attrs.src)) {
@@ -56,8 +63,9 @@
       yield html`<video
         class="${attrs.class}"
         src="${attrs.src}"
-        width="${widthAttr}"
-        height="${heightAttr}"
+        ${widthAttr}
+        ${heightAttr}
+        ${dataPlaceholderAttr}
         muted
         autoplay
         loop
@@ -98,13 +106,15 @@
 
   async function widthHeightAttrs(src, widthAttr, heightAttr) {
     if (isExternal(src) || !isImg(src) || widthAttr || heightAttr) {
-      return [widthAttr, heightAttr];
+      return { width: widthAttr, height: heightAttr, placeholder: false };
     } else {
       const { width, height } = await getImageAnalysis(
         path.join(__outputDir, src)
       );
       const isWide = width > height * priorAspectRatio;
-      return isWide ? ["100%", ""] : ["", `${height}px`];
+      return isWide
+        ? { width: "100%", placeholder: true }
+        : { height: `${height}px`, placeholder: true };
     }
   }
 
@@ -131,8 +141,10 @@
     function watchImage(img, intervalID) {
       if (img.naturalWidth > 0 || img.naturalHeight) {
         img.style.objectPosition = null;
-        img.style.width = null;
-        img.style.height = null;
+        if (img.hasAttribute("data-placeholder")) {
+          img.removeAttribute("width");
+          img.removeAttribute("height");
+        }
 
         if (intervalID != undefined) clearInterval(intervalID);
         return false;
