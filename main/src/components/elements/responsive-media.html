@@ -17,6 +17,8 @@
         class="${attrs.class}"
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
+        width="${attrs.width}"
+        height="${attrs.height}"
         loading="lazy"
       />`;
     } else if (isResizeableImg(attrs.src)) {
@@ -26,9 +28,9 @@
         src="${attrs.src}"
         spec="${attrs.spec || defaultResponsiveImageSpec()}"
         loading="lazy"
-        width="${attrs.width || (await imgWidthAttr(attrs.src))}"
-        height="${attrs.height || (await imgHeightAttr(attrs.src))}"
-        style="${await imgStyle(attrs.src)}"
+        width="${attrs.width}"
+        height="${attrs.height}"
+        style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
     } else if (isImg(attrs.src)) {
       yield html`<img
@@ -36,9 +38,9 @@
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
         loading="lazy"
-        width="${attrs.width || (await imgWidthAttr(attrs.src))}"
-        height="${attrs.height || (await imgHeightAttr(attrs.src))}"
-        style="${await imgStyle(attrs.src)}"
+        width="${attrs.width}"
+        height="${attrs.height}"
+        style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
     } else if (isVideo(attrs.src)) {
       // todo: video placeholders
@@ -48,6 +50,8 @@
       yield html`<video
         class="${attrs.class}"
         src="${attrs.src}"
+        width="${attrs.width}"
+        height="${attrs.height}"
         muted
         autoplay
         loop
@@ -86,36 +90,55 @@
     return "100% [664) 664";
   }
 
-  async function isWide(src) {
-    const {
-      metadata: { width, height },
-    } = await getImageAnalysis(path.join(__outputDir, src));
-
-    return width > height * priorAspectRatio;
-  }
-
-  async function imgWidthAttr(src) {
-    if (!prod) return "";
-    return (await isWide(src)) ? "100%" : "";
-  }
-
-  async function imgHeightAttr(src) {
-    if (!prod) return "";
-    return (await isWide(src)) ? "" : "100%";
-  }
-
-  async function imgStyle(src) {
-    if (!prod) return "";
-
+  async function imgStyle(src, widthAttr, heightAttr) {
     const {
       metadata: { width, height },
       stats: { dominant },
     } = await getImageAnalysis(path.join(__outputDir, src));
 
+    let sizeCss = "";
+    if (!widthAttr && !heightAttr) {
+      const isWide = width > height * priorAspectRatio;
+      sizeCss = isWide ? `width: 100%` : `height: ${height}px`;
+    }
+
     const { r, g, b } = dominant;
     const bg =
       "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 
-    return `aspect-ratio: ${width / height}; background: ${bg}`;
+    return `${sizeCss}; aspect-ratio: ${width / height}; background: ${bg}`;
   }
+</script>
+
+<script client defer>
+  (() => {
+    const images = document.querySelectorAll("img[spec]");
+
+    for (const img of images) {
+      if (watchImage(img)) {
+        const intervalID = setInterval(() => watchImage(img, intervalID), 200);
+      }
+      img.addEventListener("load", onLoadImage);
+    }
+
+    function watchImage(img, intervalID) {
+      if (img.naturalWidth > 0 || img.naturalHeight) {
+        img.style.objectPosition = null;
+        img.style.width = null;
+        img.style.height = null;
+
+        if (intervalID != undefined) clearInterval(intervalID);
+        return false;
+      } else {
+        if (!img.style.objectPosition) {
+          img.style.objectPosition = "100vw";
+        }
+        return true;
+      }
+    }
+
+    function onLoadImage(event) {
+      event.currentTarget.style.background = null;
+    }
+  })();
 </script>

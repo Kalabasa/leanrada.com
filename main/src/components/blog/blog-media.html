@@ -30,7 +30,7 @@
       alt="${attrs.alt ?? ""}"
       src="${attrs.src}"
       spec="${attrs.spec || defaultResponsiveImageSpec()}"
-      width="${await imgWidthAttr(attrs.src)}"
+      width="${imgWidthAttr(attrs.src)}"
     />`;
   }
 
@@ -38,8 +38,7 @@
     return attrs.type === "bleed" ? "100% [800) 80% [1750) 1400" : "";
   }
 
-  async function imgWidthAttr(src) {
-    if (!prod) return "";
+  function imgWidthAttr(src) {
     return attrs.type === "bleed" ? "400%" : "";
   }
 </script>
@@ -54,12 +53,14 @@
   .blog-media-bleed {
     margin: min(36px, 5vw, 90px) 0;
     max-height: 80vh;
+    max-height: 80svh;
   }
 
   .blog-media-element {
     display: inline-block;
     max-width: 100%;
     max-height: 80vh;
+    max-height: 80svh;
     border-radius: 18px;
     box-sizing: border-box;
   }
@@ -80,38 +81,3 @@
     font-size: 15px;
   }
 </style>
-
-<script client defer>
-  (() => {
-    const blogMediaElementImages = document.querySelectorAll(
-      "img.blog-media-element"
-    );
-
-    for (const img of blogMediaElementImages) {
-      if (watchImage(img)) {
-        const intervalID = setInterval(() => watchImage(img, intervalID), 200);
-      }
-      img.addEventListener("load", onLoadImage);
-    }
-
-    function watchImage(img, intervalID) {
-      if (img.naturalWidth > 0 || img.naturalHeight) {
-        img.style.objectPosition = null;
-        img.removeAttribute("width");
-        img.removeAttribute("height");
-
-        if (intervalID != undefined) clearInterval(intervalID);
-        return false;
-      } else {
-        if (!img.style.objectPosition) {
-          img.style.objectPosition = "100vw";
-        }
-        return true;
-      }
-    }
-
-    function onLoadImage(event) {
-      event.currentTarget.style.background = null;
-    }
-  })();
-</script>
