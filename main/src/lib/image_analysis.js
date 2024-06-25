@@ -56,7 +56,9 @@ async function getImageAnalysis(imageFilePath) {
 }
 
 function installCache() {
-  let writeQueue = Promise.resolve();
+  let writeQueueHead = fs.promises.mkdir(path.dirname(cacheFile), {
+    recursive: true,
+  });
   return new Proxy(Object.create(null), {
     get(_, key) {
       if (!installCache.memory) loadCacheIntoMemory();
@@ -66,13 +68,11 @@ function installCache() {
       if (!installCache.memory) loadCacheIntoMemory();
       installCache.memory[key] = value;
 
-      writeQueue = writeQueue
-        .then(() =>
-          fs.promises.mkdir(path.dirname(cacheFile), { recursive: true })
-        )
-        .then(() =>
-          fs.promises.writeFile(cacheFile, JSON.stringify(installCache.memory))
-        );
+      const latestJob = writeQueueHead;
+      writeQueueHead = writeQueueHead.then(() => {
+        if (writeQueueHead !== latestJob) return; // stale
+        fs.promises.writeFile(cacheFile, JSON.stringify(installCache.memory));
+      });
 
       return true;
     },
