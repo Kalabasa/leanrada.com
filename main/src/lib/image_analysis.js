@@ -16,13 +16,16 @@ async function getImageAnalysis(imageFilePath) {
   cache = cache ?? (await installCache());
 
   if (!fs.existsSync(imageFilePath)) {
-    throw new Error("Image src does not exist: " + imageFilePath);
+    throw new Error("Image does not exist: " + imageFilePath);
   }
 
   const stat = fs.statSync(imageFilePath);
 
   const cachedValue = cache[imageFilePath];
-  if (cachedValue && cachedValue.time >= stat.mtime.getTime()) {
+  if (
+    cachedValue &&
+    cachedValue.time >= Math.floor(stat.mtime.getTime() / 1e3)
+  ) {
     return cachedValue.data;
   }
 
@@ -41,12 +44,14 @@ async function getImageAnalysis(imageFilePath) {
     },
     stats: {
       dominant: stats.dominant,
-    }
+    },
   };
+
   cache[imageFilePath] = {
     data,
-    time: Date.now(),
+    time: Math.floor(Date.now() / 1e3),
   };
+
   return data;
 }
 
