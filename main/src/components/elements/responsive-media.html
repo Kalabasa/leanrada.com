@@ -16,29 +16,30 @@
       width: widthAttrValue,
       height: heightAttrValue,
       placeholder,
-    } = await widthHeightAttrs(attrs.src, attrs.width, attrs.height);
+    } = await widthHeightAttrs(
+      attrs.src,
+      attrs.width,
+      attrs.height,
+      attrs.placeholderRatio ? parseFloat(attrs.placeholderRatio) : undefined
+    );
 
-    const widthAttr = widthAttrValue ? `width=${widthAttrValue}` : "";
-    const heightAttr = heightAttrValue ? `height=${heightAttrValue}` : "";
+    const widthAttr = widthAttrValue ? `width="${widthAttrValue}"` : "";
+    const heightAttr = heightAttrValue ? `height="${heightAttrValue}"` : "";
     const dataPlaceholderAttr = placeholder ? `data-placeholder` : "";
 
     if (isExternal(attrs.src)) {
       yield html`<img
-        class="${attrs.class}"
-        alt="${attrs.alt ?? ""}"
-        src="${attrs.src}"
+        loading="lazy"
+        {...attrs}
         ${widthAttr}
         ${heightAttr}
         ${dataPlaceholderAttr}
-        loading="lazy"
       />`;
     } else if (isResizeableImg(attrs.src)) {
       yield html`<responsive-img
-        class="${attrs.class}"
-        alt="${attrs.alt ?? ""}"
-        src="${attrs.src}"
-        spec="${attrs.spec || defaultResponsiveImageSpec()}"
+        spec="${defaultResponsiveImageSpec()}"
         loading="lazy"
+        {...attrs}
         ${widthAttr}
         ${heightAttr}
         ${dataPlaceholderAttr}
@@ -46,10 +47,8 @@
       />`;
     } else if (isImg(attrs.src)) {
       yield html`<img
-        class="${attrs.class}"
-        alt="${attrs.alt ?? ""}"
-        src="${attrs.src}"
         loading="lazy"
+        {...attrs}
         ${widthAttr}
         ${heightAttr}
         ${dataPlaceholderAttr}
@@ -61,8 +60,7 @@
       // todo: <responsive-video> component
       // todo: lazy-load
       yield html`<video
-        class="${attrs.class}"
-        src="${attrs.src}"
+        {...attrs}
         ${widthAttr}
         ${heightAttr}
         ${dataPlaceholderAttr}
@@ -104,14 +102,21 @@
     return "100% [664) 664";
   }
 
-  async function widthHeightAttrs(src, widthAttr, heightAttr) {
+  async function widthHeightAttrs(
+    src,
+    widthAttr = undefined,
+    heightAttr = undefined,
+    placeholderRatio = undefined
+  ) {
     if (isExternal(src) || !isImg(src) || widthAttr || heightAttr) {
       return { width: widthAttr, height: heightAttr, placeholder: false };
     } else {
       const { width, height } = await getImageAnalysis(
         path.join(__outputDir, src)
       );
-      const isWide = width > height * priorAspectRatio;
+      const isWide = placeholderRatio != undefined
+        ? width > height * placeholderRatio
+        : width > height * priorAspectRatio;
       return isWide
         ? { width: "100%", placeholder: true }
         : { height: `${height}px`, placeholder: true };
@@ -129,7 +134,7 @@
 
 <script client defer>
   (() => {
-    const images = document.querySelectorAll("img[spec]");
+    const images = document.querySelectorAll("img[spec],img[data-placeholder]");
 
     for (const img of images) {
       if (watchImage(img)) {
@@ -144,6 +149,7 @@
         if (img.hasAttribute("data-placeholder")) {
           img.removeAttribute("width");
           img.removeAttribute("height");
+          img.removeAttribute("data-placeholder");
         }
 
         if (intervalID != undefined) clearInterval(intervalID);

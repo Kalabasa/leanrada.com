@@ -25,21 +25,24 @@
   }
 
   async function* renderMediaElement() {
+    const spec = defaultResponsiveImageSpec();
+    const specAttr = spec ? `spec="${spec}"` : "";
+    const width = defaultWidth();
+    const widthAttr = width ? `width="${width}"` : "";
     yield html`<responsive-media
+      ${specAttr}
+      ${widthAttr}
+      {...attrs}
       class="blog-media-element ${attrs.mediaClass ?? ""}"
-      alt="${attrs.alt ?? ""}"
-      src="${attrs.src}"
-      spec="${attrs.spec || defaultResponsiveImageSpec()}"
-      width="${imgWidthAttr(attrs.src)}"
     />`;
   }
 
   function defaultResponsiveImageSpec() {
-    return attrs.type === "bleed" ? "100% [800) 80% [1750) 1400" : "";
+    return attrs.type === "bleed" ? "100% [800) 80% [1750) 1400" : null;
   }
 
-  function imgWidthAttr(src) {
-    return attrs.type === "bleed" ? "400%" : "";
+  function defaultWidth() {
+    return attrs.type === "bleed" ? "400%" : null;
   }
 </script>
 
