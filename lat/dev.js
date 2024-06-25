@@ -18,12 +18,17 @@ export function runDevServer(port) {
     ];
     app.get(route, (req, res) => {
       const reqPath = normalizeReqPath(req.path);
-      console.log(colorInfo(req.method), req.path);
+      if (req.method !== "HEAD") {
+        console.log(colorInfo(req.method), req.path);
+      }
       res.sendFile(
         path.resolve(
           project.rootDir,
           project.webFilesDir ?? project.devWebFilesDir ?? "",
-          path.relative(path.resolve("/", project.sitePathPrefix), decodeURIComponent(reqPath))
+          path.relative(
+            path.resolve("/", project.sitePathPrefix),
+            decodeURIComponent(reqPath)
+          )
         )
       );
     });
