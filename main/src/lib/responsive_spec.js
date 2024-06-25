@@ -1,3 +1,5 @@
+const intermediateStepSize = 800;
+
 /**
  * @param {Rule} rule
  */
