@@ -91,10 +91,9 @@
   }
 
   async function imgStyle(src, widthAttr, heightAttr) {
-    const {
-      metadata: { width, height },
-      stats: { dominant },
-    } = await getImageAnalysis(path.join(__outputDir, src));
+    const { width, height, dominant } = await getImageAnalysis(
+      path.join(__outputDir, src)
+    );
 
     let sizeCss = "";
     if (!widthAttr && !heightAttr) {
@@ -102,11 +101,11 @@
       sizeCss = isWide ? `width: 100%` : `height: ${height}px`;
     }
 
-    const { r, g, b } = dominant;
-    const bg =
-      "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
-
-    return `${sizeCss}; aspect-ratio: ${width / height}; background: ${bg}`;
+    return (
+      `${sizeCss};` +
+      `aspect-ratio: ${width / height};` +
+      `background: ${dominant}`
+    );
   }
 </script>
 

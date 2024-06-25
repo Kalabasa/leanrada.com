@@ -34,13 +34,13 @@ async function getImageAnalysis(imageFilePath) {
   ]);
 
   const data = {
-    metadata: {
-      width: metadata.width,
-      height: metadata.height,
-    },
-    stats: {
-      dominant: stats.dominant,
-    },
+    width: metadata.width,
+    height: metadata.height,
+    dominant:
+      "#" +
+      [stats.dominant.r, stats.dominant.g, stats.dominant.b]
+        .map((v) => v.toString(16).padStart(2, "0"))
+        .join(""),
   };
 
   cache[cacheKey] = {
@@ -64,11 +64,10 @@ function installCache() {
       if (!installCache.memory) loadCacheIntoMemory();
       installCache.memory[key] = value;
 
-      const latestJob = writeQueueHead;
-      writeQueueHead = writeQueueHead.then(() => {
+      const latestJob = (writeQueueHead = writeQueueHead.then(() => {
         if (writeQueueHead !== latestJob) return; // stale
         fs.promises.writeFile(cacheFile, JSON.stringify(installCache.memory));
-      });
+      }));
 
       return true;
     },
