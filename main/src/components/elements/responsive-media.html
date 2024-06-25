@@ -1,11 +1,10 @@
 <script render>
-  yield* renderMediaElement();
+  yield * renderMediaElement();
 </script>
 
 <script static>
-  const fs = require("node:fs");
   const path = require("node:path");
-  const sharp = require("sharp");
+  const { getImageAnalysis } = require("../../lib/image_analysis.js");
 
   const prod = process.env.NODE_ENV === "production";
 
@@ -27,8 +26,8 @@
         src="${attrs.src}"
         spec="${attrs.spec || defaultResponsiveImageSpec()}"
         loading="lazy"
-        width="${attrs.width || await imgWidthAttr(attrs.src)}"
-        height="${attrs.height || await imgHeightAttr(attrs.src)}"
+        width="${attrs.width || (await imgWidthAttr(attrs.src))}"
+        height="${attrs.height || (await imgHeightAttr(attrs.src))}"
         style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isImg(attrs.src)) {
@@ -37,8 +36,8 @@
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
         loading="lazy"
-        width="${attrs.width || await imgWidthAttr(attrs.src)}"
-        height="${attrs.height || await imgHeightAttr(attrs.src)}"
+        width="${attrs.width || (await imgWidthAttr(attrs.src))}"
+        height="${attrs.height || (await imgHeightAttr(attrs.src))}"
         style="${await imgStyle(attrs.src)}"
       />`;
     } else if (isVideo(attrs.src)) {
@@ -90,16 +89,14 @@
   async function isWide(src) {
     const {
       metadata: { width, height },
-    } = await imgData(src);
+    } = await getImageAnalysis(path.join(__outputDir, src));
 
     return width > height * priorAspectRatio;
   }
 
   async function imgWidthAttr(src) {
     if (!prod) return "";
-    return (await isWide(src))
-      ? "100%"
-      : "";
+    return (await isWide(src)) ? "100%" : "";
   }
 
   async function imgHeightAttr(src) {
@@ -113,33 +110,12 @@
     const {
       metadata: { width, height },
       stats: { dominant },
-    } = await imgData(src);
+    } = await getImageAnalysis(path.join(__outputDir, src));
 
     const { r, g, b } = dominant;
     const bg =
       "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
 
     return `aspect-ratio: ${width / height}; background: ${bg}`;
-  }
-
-  const cache = {};
-  async function imgData(src) {
-    if (!cache[src]) {
-      const srcFilePath = path.join(__outputDir, src);
-      if (!fs.existsSync(srcFilePath)) {
-        throw new Error("Blog-media image src does not exist: " + srcFilePath);
-      }
-
-      console.log("Analyzing img:", srcFilePath);
-      const image = await fs.promises.readFile(srcFilePath);
-      const sharpObj = sharp(image);
-      const [metadata, stats] = await Promise.all([
-        sharpObj.metadata(),
-        sharpObj.stats(),
-      ]);
-
-      cache[src] = { metadata, stats };
-    }
-    return cache[src];
   }
 </script>
