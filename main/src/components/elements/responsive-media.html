@@ -12,13 +12,19 @@
   const priorAspectRatio = 2 / 3;
 
   async function* renderMediaElement() {
+    const [widthAttr, heightAttr] = await widthHeightAttrs(
+      attrs.src,
+      attrs.width,
+      attrs.height
+    );
+
     if (isExternal(attrs.src)) {
       yield html`<img
         class="${attrs.class}"
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
-        width="${attrs.width}"
-        height="${attrs.height}"
+        width="${widthAttr}"
+        height="${heightAttr}"
         loading="lazy"
       />`;
     } else if (isResizeableImg(attrs.src)) {
@@ -28,8 +34,8 @@
         src="${attrs.src}"
         spec="${attrs.spec || defaultResponsiveImageSpec()}"
         loading="lazy"
-        width="${attrs.width}"
-        height="${attrs.height}"
+        width="${widthAttr}"
+        height="${heightAttr}"
         style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
     } else if (isImg(attrs.src)) {
@@ -38,8 +44,8 @@
         alt="${attrs.alt ?? ""}"
         src="${attrs.src}"
         loading="lazy"
-        width="${attrs.width}"
-        height="${attrs.height}"
+        width="${widthAttr}"
+        height="${heightAttr}"
         style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
     } else if (isVideo(attrs.src)) {
@@ -50,8 +56,8 @@
       yield html`<video
         class="${attrs.class}"
         src="${attrs.src}"
-        width="${attrs.width}"
-        height="${attrs.height}"
+        width="${widthAttr}"
+        height="${heightAttr}"
         muted
         autoplay
         loop
@@ -90,22 +96,24 @@
     return "100% [664) 664";
   }
 
+  async function widthHeightAttrs(src, widthAttr, heightAttr) {
+    if (isVideo(src) || widthAttr || heightAttr) {
+      return [widthAttr, heightAttr];
+    } else {
+      const { width, height } = await getImageAnalysis(
+        path.join(__outputDir, src)
+      );
+      const isWide = width > height * priorAspectRatio;
+      return isWide ? ["100%", ""] : ["", `${height}px`];
+    }
+  }
+
   async function imgStyle(src, widthAttr, heightAttr) {
     const { width, height, dominant } = await getImageAnalysis(
       path.join(__outputDir, src)
     );
 
-    let sizeCss = "";
-    if (!widthAttr && !heightAttr) {
-      const isWide = width > height * priorAspectRatio;
-      sizeCss = isWide ? `width: 100%` : `height: ${height}px`;
-    }
-
-    return (
-      `${sizeCss};` +
-      `aspect-ratio: ${width / height};` +
-      `background: ${dominant}`
-    );
+    return `aspect-ratio: ${width / height};` + `background: ${dominant}`;
   }
 </script>
 
