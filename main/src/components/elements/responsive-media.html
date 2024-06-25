@@ -113,12 +113,16 @@
       return { width: widthAttr, height: heightAttr, placeholder: false };
     } else {
       const { width, height } = await getImageAnalysis(
-        path.join(__outputDir, src)
+        path.join(__outputDir, src),
+        src
       );
-      const isWide = placeholderRatio != undefined
-        ? width > height * placeholderRatio
-        : width > height * priorAspectRatio;
-      return isWide
+
+      const isWide =
+        placeholderRatio != undefined
+          ? width > height * placeholderRatio
+          : width > height * priorAspectRatio;
+
+          return isWide
         ? { width: "100%", placeholder: true }
         : { height: `${height}px`, placeholder: true };
     }
@@ -126,7 +130,8 @@
 
   async function imgStyle(src, widthAttr, heightAttr) {
     const { width, height, dominant } = await getImageAnalysis(
-      path.join(__outputDir, src)
+      path.join(__outputDir, src),
+      src
     );
 
     return `aspect-ratio: ${width / height};` + `background: ${dominant}`;

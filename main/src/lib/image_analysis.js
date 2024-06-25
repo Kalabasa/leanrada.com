@@ -2,18 +2,16 @@ const fs = require("node:fs");
 const path = require("node:path");
 const sharp = require("sharp");
 
-const outputDir = path.resolve(__dirname, "..", "..", "out");
-const cacheFile = path.resolve(outputDir, "cache", "image_analysis.json");
+const projectDir = path.resolve(__dirname, "..", "..");
+const cacheFile = path.resolve(projectDir, "build", "cache", "image_analysis.json");
 
 let cache = null;
-async function getImageAnalysis(imageFilePath) {
+async function getImageAnalysis(imageFilePath, cacheKey = imageFilePath) {
   cache = cache ?? (await installCache());
 
   if (!fs.existsSync(imageFilePath)) {
     throw new Error("Image does not exist: " + imageFilePath);
   }
-
-  const cacheKey = path.relative(outputDir, imageFilePath);
 
   const stat = fs.statSync(imageFilePath);
 
