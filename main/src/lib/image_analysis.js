@@ -2,14 +2,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const sharp = require("sharp");
 
-const cacheFile = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "out",
-  "cache",
-  "image_analysis.json"
-);
+const outputDir = path.resolve(__dirname, "..", "..", "out");
+const cacheFile = path.resolve(outputDir, "cache", "image_analysis.json");
 
 let cache = null;
 async function getImageAnalysis(imageFilePath) {
@@ -19,9 +13,11 @@ async function getImageAnalysis(imageFilePath) {
     throw new Error("Image does not exist: " + imageFilePath);
   }
 
+  const cacheKey = path.relative(outputDir, imageFilePath);
+
   const stat = fs.statSync(imageFilePath);
 
-  const cachedValue = cache[imageFilePath];
+  const cachedValue = cache[cacheKey];
   if (
     cachedValue &&
     cachedValue.time >= Math.floor(stat.mtime.getTime() / 1e3)
@@ -29,7 +25,7 @@ async function getImageAnalysis(imageFilePath) {
     return cachedValue.data;
   }
 
-  console.log("Analyzing img:", imageFilePath);
+  console.log("Analyzing image:", cacheKey);
   const image = await fs.promises.readFile(imageFilePath);
   const sharpObj = sharp(image);
   const [metadata, stats] = await Promise.all([
@@ -47,7 +43,7 @@ async function getImageAnalysis(imageFilePath) {
     },
   };
 
-  cache[imageFilePath] = {
+  cache[cacheKey] = {
     data,
     time: Math.floor(Date.now() / 1e3),
   };
