@@ -170,5 +170,5 @@ function splitRule(rule, breakpoint, exactLowSize) {
 
 module.exports = {
   toMediaQuery,
-  getRules: getResponsiveRules,
+  getResponsiveRules,
 }
