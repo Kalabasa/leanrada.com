@@ -8,7 +8,11 @@
   const path = require("node:path");
   const process = require("node:process");
   const sharp = require("sharp");
-  const { getResponsiveRules, toMediaQuery } = require("../../lib/responsive_spec.js");
+  const {
+    getResponsiveRules,
+    toMediaQuery,
+  } = require("../../lib/responsive_spec.js");
+  const { getImageAnalysis } = require("../../lib/image_analysis.js");
 
   const prod = process.env.NODE_ENV === "production";
 
@@ -26,11 +30,12 @@
     }
 
     const image = await fs.promises.readFile(srcFilePath);
-    const imageWidth = await sharp(image)
-      .metadata()
-      .then((d) => d.width);
+    const { width: imageWidth } = await getImageAnalysis(srcFilePath, src);
 
-    const rules = getResponsiveRules(spec, Math.min(imageWidth, globalMaxImageSize));
+    const rules = getResponsiveRules(
+      spec,
+      Math.min(imageWidth, globalMaxImageSize)
+    );
 
     const srcset = [];
     const sizes = [];
