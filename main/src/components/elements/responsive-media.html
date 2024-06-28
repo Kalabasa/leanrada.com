@@ -27,6 +27,14 @@
     const heightAttr = heightAttrValue ? `height="${heightAttrValue}"` : "";
     const dataPlaceholderAttr = placeholder ? `data-placeholder` : "";
 
+      // todo: video placeholders
+      // todo: aspect-ratio
+      // todo: <responsive-video> component
+      // todo: lazy-load
+    const commonVideoAttrs = `muted autoplay loop playsinline
+      aria-label="${attrs.alt ?? ""}"
+      ${attrs.playbackRate ? 'onloadstart="this.playbackRate = ' + attrs.playbackRate + '"' : ""}`;
+
     if (isExternal(attrs.src)) {
       yield html`<img
         loading="lazy"
@@ -37,7 +45,7 @@
       />`;
     } else if (isResizeableImg(attrs.src)) {
       yield html`<responsive-img
-        spec="${defaultResponsiveImageSpec()}"
+        spec="${defaultResponsiveSpec()}"
         loading="lazy"
         {...attrs}
         ${widthAttr}
@@ -54,27 +62,33 @@
         ${dataPlaceholderAttr}
         style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
-    } else if (isVideo(attrs.src)) {
+    } else if (isResizeableVideo(attrs.src)) {
       // todo: video placeholders
       // todo: aspect-ratio
       // todo: <responsive-video> component
       // todo: lazy-load
-      yield html`<video
+      yield html`<responsive-video
+        spec="${defaultResponsiveSpec()}"
+        loading="lazy"
         {...attrs}
         ${widthAttr}
         ${heightAttr}
         ${dataPlaceholderAttr}
-        muted
-        autoplay
-        loop
-        playsinline
-        aria-label="${attrs.alt ?? ""}"
-        ${attrs.playbackRate
-          ? 'onloadstart="this.playbackRate = ' + attrs.playbackRate + '"'
-          : ""}
+        ${commonVideoAttrs}
       >
         Video: ${attrs.alt} | Source: ${attrs.src}
-      </video>`;
+      </responsive-video>`;
+    } else if (isVideo(attrs.src)) {
+      yield html`<video
+        loading="lazy"
+        {...attrs}
+        ${widthAttr}
+        ${heightAttr}
+        ${dataPlaceholderAttr}
+        ${commonVideoAttrs}
+      >
+        Video: ${attrs.alt} | Source: ${attrs.src}
+      </responsive-video>`;
     } else {
       throw new Error("invalid media src: " + attrs.src);
     }
@@ -90,6 +104,11 @@
     return ext === ".png" || ext === ".jpg" || ext === ".gif";
   }
 
+  function isResizeableVideo(src) {
+    const resizeSuffix = src.substring(src.length - 11, src.length - 4);
+    return isVideo(src) && resizeSuffix === ".resize";
+  }
+
   function isVideo(src) {
     const ext = src.substring(src.length - 4);
     return ext === ".mp4";
@@ -99,7 +118,7 @@
     return /^(\w+:)?\/\/.*$/.test(src.trim());
   }
 
-  function defaultResponsiveImageSpec() {
+  function defaultResponsiveSpec() {
     return "100% [664) 664";
   }
 
@@ -122,7 +141,7 @@
           ? width > height * placeholderRatio
           : width > height * priorAspectRatio;
 
-          return isWide
+      return isWide
         ? { width: "100%", placeholder: true }
         : { height: `${height}px`, placeholder: true };
     }

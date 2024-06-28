@@ -22,13 +22,15 @@ function toMediaQuery(rule, omitLow) {
 
 /**
  * @param {string} spec format: "size (breakpoint) size (breakpoint) ..."
- * @param {number} maxSize Maximum image width
+ * @param {number} stepSize Intermediate step size for relative sizes
+ * @param {number} maxSize Maximum width
  * @typedef {{ low: number, lowInclusive: boolean, high: number, highInclusive: boolean, size: { value: number, relative: boolean } }} Rule
  * @returns {Array<Rule>} an object representing each given size, with surrounding breakpoints
  */
-function getResponsiveRules(spec, maxSize) {
+function getResponsiveRules(spec, stepSize, maxSize) {
   const rules = parseSpec(spec);
-  evaluateRelativeSizes(rules, maxSize);
+  pruneMax(rules, maxSize);
+  evaluateRelativeSizes(rules, stepSize, maxSize);
   mergeRules(rules);
   return rules;
 }
@@ -89,23 +91,40 @@ function parseSpec(spec) {
 }
 
 /**
+ * Prune rules that exceed maxSize
+ * @param {Rule[]} rules
+ */
+function pruneMax(rules, maxSize) {
+  while (rules.length > 0) {
+    const rule = rules[rules.length - 1];
+
+    if (rule.low < maxSize || (rule.lowInclusive && rule.low <= maxSize)) {
+      rule.high = Infinity;
+      rule.highInclusive = false;
+      break;
+    }
+
+    rules.pop();
+  }
+}
+
+/**
  * Give relative sizes exact values based on screen size
  * @param {Rule[]} rules
  */
-function evaluateRelativeSizes(rules, maxSize) {
-  const intermediateStepSize = 800;
+function evaluateRelativeSizes(rules, stepSize, maxSize) {
 
   for (let i = rules.length - 1; i >= 0; i--) {
     const rule = rules[i];
 
     if (!rule.size.relative) continue;
 
-    // subdivide rule if it can fit more intermediate steps based on intermediateStepSize
+    // subdivide rule if it can fit more intermediate steps based on stepSize
     const subrules = [rule];
 
     const high = Math.min(rule.high, maxSize / rule.size.value);
     const span = high - rule.low;
-    const steps = Math.ceil(span / intermediateStepSize);
+    const steps = Math.ceil(span / stepSize);
     for (let step = 0; step < steps - 1; step++) {
       const t = (step + 1) / steps;
       const breakpoint = Math.round(rule.low + t * (high - rule.low));
@@ -173,4 +192,4 @@ function splitRule(rule, breakpoint, exactLowSize) {
 module.exports = {
   toMediaQuery,
   getResponsiveRules,
-}
+};

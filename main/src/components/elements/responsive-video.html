@@ -1,0 +1,155 @@
+<script render>
+  const sources = await generateVideos(attrs.src, attrs.spec);
+  return html`<video {...attrs}>
+    ${sources.map(source => (
+      html`<source
+        src="${source.src}"
+        ${source.media ? 'media="' + source.media + '"' : ''}
+      />`)
+    )}
+    <slot/>
+  </video>`;
+</script>
+
+<script static>
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const process = require("node:process");
+  const ffmpeg = require("fluent-ffmpeg");
+  const {
+    getResponsiveRules,
+    toMediaQuery,
+  } = require("../../lib/responsive_spec.js");
+
+  const prod = process.env.NODE_ENV === "production";
+
+  const globalMaxVideoSize = 1200;
+
+  async function generateVideos(src, spec) {
+    if (!prod) return [];
+
+    const srcFilePath = path.join(__outputDir, src);
+    if (!fs.existsSync(srcFilePath)) {
+      throw new Error(
+        `Responsive video does not exist. src:'${src}'. Expected filePath:'${srcFilePath}'`
+      );
+    }
+
+    try {
+      const metadata = await getVideoMetadata(srcFilePath, src);
+
+      const rules = getResponsiveRules(
+        spec,
+        1200,
+        Math.min(metadata.width, globalMaxVideoSize)
+      );
+
+      const sources = [];
+
+      for (const rule of rules) {
+        const resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
+        sources.push({
+          src: resizedVideoSrc,
+          media: toMediaQuery(rule, sources.length > 0) || undefined,
+        });
+        // no await. generate videos in the background
+        generateVideo(rule.size.value, metadata, src, resizedVideoSrc);
+      }
+
+      return sources;
+    } catch (error) {
+      console.warn("Error generating videos: ", srcFilePath, error.message);
+      return [];
+    }
+  }
+
+  async function generateVideo(width, metadata, src, resizedVideoSrc) {
+    const srcFilePath = path.join(__outputDir, src);
+    const outPath = path.join(__outputDir, resizedVideoSrc);
+
+    if (fs.existsSync(outPath)) {
+      const outStats = fs.statSync(outPath);
+      if (outStats.isFile()) {
+        const srcStats = fs.statSync(srcFilePath);
+        if (outStats.mtimeMs >= srcStats.mtimeMs) return;
+      }
+    }
+
+    const size = metadata.size * (width / metadata.width) ** 2;
+    const sizePerTime = size / metadata.duration;
+    // Constant Rate Factor. A lower value is a higher quality.
+    const crf = Math.round(
+      clamp(map(sizePerTime, 15_000, 30_000, 21, 23), 23, 21)
+    );
+
+    await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
+
+    console.log("Resizing", src, "→", resizedVideoSrc, `(crf:${crf})`);
+    ffmpeg(srcFilePath)
+      .output(outPath)
+      .size(`${width}x?`)
+      .videoCodec("libx264")
+      .noAudio() // for now
+      .outputOptions([
+        "-pix_fmt yuv420p",
+        "-profile:v baseline",
+        "-level 3",
+        `-crf ${crf}`,
+      ])
+      .run();
+  }
+
+  async function getVideoMetadata(videoFilePath, cacheKey) {
+    return new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(videoFilePath, function (err, metadata) {
+        if (err) {
+          return reject(err);
+        }
+
+        const { size, duration } = metadata.format;
+
+        if (metadata.width && metadata.height) {
+          return resolve({
+            size,
+            duration,
+            width: metadata.width,
+            height: metadata.height,
+          });
+        }
+
+        const videoStream = metadata.streams.find(
+          (s) => s.codec_type === "video"
+        );
+
+        if (!videoStream) {
+          return reject(null);
+        }
+
+        if (videoStream.width && videoStream.height) {
+          return resolve({
+            size,
+            duration,
+            width: videoStream.width,
+            height: videoStream.height,
+          });
+        }
+
+        return reject(null);
+      });
+    });
+  }
+
+  function getResizedVideoSrc(src, width) {
+    const ext = path.extname(src);
+    const baseName = path.basename(src, ext);
+    return path.join(path.dirname(src), `${baseName}_${width}.generated${ext}`);
+  }
+
+  function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
+  }
+
+  function map(v, a, b, c, d) {
+    return c + (d - c) * ((v - a) / (b - a));
+  }
+</script>
