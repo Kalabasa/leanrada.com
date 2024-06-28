@@ -112,7 +112,6 @@ export const config = {
         baselineFolder: path.join(dirname, "baseline"),
         formatImageName: "{tag}-{browserName}-{width}x{height}",
         autoSaveBaseline: true,
-        savePerInstance: false,
         screenshotPath: path.join(dirname, "tmp"),
         fullPageScrollTimeout: 400,
       },
