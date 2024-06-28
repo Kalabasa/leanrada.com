@@ -1,5 +1,6 @@
 <div
   :class="'blog-media blog-media-' + (attrs.type ?? 'default') + ' ' + (attrs.class ?? '')"
+  :style="getStyle()"
 >
   <script render>
     if (attrs.type === "windowed") {
@@ -14,7 +15,18 @@
 </div>
 
 <script static>
-  const prod = process.env.NODE_ENV === "production";
+  const path = require("node:path");
+  const { isExternal } = require("../../lib/is_external.js");
+  const { getImageAnalysis, isImg } = require("../../lib/image_analysis.js");
+
+  // server can't know client’s viewport, so we assume this
+  const priorScreenAspectRatio = 2 / 3;
+
+  async function getStyle() {
+    if (attrs.type !== "bleed") return null;
+    const maxVW = await getMaxViewportWidthPercentage(attrs.src);
+    return `--blog-media-max-width: ${maxVW}vw`;
+  }
 
   async function renderMediaElementArray() {
     const array = [];
@@ -25,7 +37,7 @@
   }
 
   async function* renderMediaElement() {
-    const spec = defaultResponsiveImageSpec();
+    const spec = await defaultResponsiveImageSpec();
     const specAttr = spec ? `spec="${spec}"` : "";
     const width = defaultWidth();
     const widthAttr = width ? `width="${width}"` : "";
@@ -37,12 +49,39 @@
     />`;
   }
 
-  function defaultResponsiveImageSpec() {
-    return attrs.type === "bleed" ? "100% [800) 80% [1750) 1400" : null;
+  async function defaultResponsiveImageSpec() {
+    if (attrs.type !== "bleed") return null;
+    const smallBreakpoint = 800;
+    const largeBreakpoint = 1750;
+    const maxVW = Math.max(
+      Math.round((smallBreakpoint / largeBreakpoint) * 100),
+      await getMaxViewportWidthPercentage(attrs.src)
+    );
+    const maxImgWidth = Math.floor(largeBreakpoint * (maxVW / 100));
+    return `100% [${smallBreakpoint}) ${maxVW}% [${largeBreakpoint}) ${maxImgWidth}`;
   }
 
   function defaultWidth() {
     return attrs.type === "bleed" ? "400%" : null;
+  }
+
+  async function getMaxViewportWidthPercentage(src) {
+    const aspectRatio = await getAspectRatio(attrs.src);
+    return Math.min(
+      Math.round((aspectRatio / priorScreenAspectRatio) * 40),
+      70
+    );
+  }
+
+  async function getAspectRatio(src) {
+    if (!isExternal(src) && isImg(src)) {
+      const { width, height } = await getImageAnalysis(
+        path.join(__outputDir, src),
+        src
+      );
+      return width / height;
+    }
+    return 1;
   }
 </script>
 
@@ -68,13 +107,12 @@
   .blog-media-bleed .blog-media-element {
     position: relative;
     left: 50%;
-    max-width: max(min(100vw, 800px), 80vw);
+    max-width: max(min(100vw, 800px), var(--blog-media-max-width, 50vw));
     max-height: unset;
     transform: translateX(-50%);
   }
   .blog-media-windowed .blog-media-element {
     display: block;
-    width: 100%;
     border-radius: 0;
   }
 

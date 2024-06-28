@@ -1,5 +1,5 @@
 function isExternal(href) {
-  return href?.match(/^(\w+:)?\/\//);
+  return href.trim()?.match(/^(\w+:)?\/\//);
 }
 
 module.exports = { isExternal };

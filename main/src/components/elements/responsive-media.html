@@ -4,12 +4,13 @@
 
 <script static>
   const path = require("node:path");
-  const { getImageAnalysis } = require("../../lib/image_analysis.js");
+  const { isExternal } = require("../../lib/is_external.js");
+  const { getImageAnalysis, isImg } = require("../../lib/image_analysis.js");
 
   const prod = process.env.NODE_ENV === "production";
 
   // server can't know client’s viewport, so we assume this
-  const priorAspectRatio = 2 / 3;
+  const priorScreenAspectRatio = 2 / 3;
 
   async function* renderMediaElement() {
     const {
@@ -38,7 +39,7 @@
     ]
       .filter((a) => a)
       .join(" ");
-    
+
     if (isExternal(attrs.src)) {
       yield html`<img
         loading="lazy"
@@ -55,7 +56,9 @@
         ${widthAttr}
         ${heightAttr}
         ${dataPlaceholderAttr}
-        style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
+        style="${(attrs.style ?? "") +
+        ";" +
+        (await imgStyle(attrs.src, attrs.width, attrs.height))}"
       />`;
     } else if (isImg(attrs.src)) {
       yield html`<img
@@ -64,21 +67,13 @@
         ${widthAttr}
         ${heightAttr}
         ${dataPlaceholderAttr}
-        style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
+        style="${(attrs.style ?? "") +
+        ";" +
+        (await imgStyle(attrs.src, attrs.width, attrs.height))}"
       />`;
-    } else if (isResizeableVideo(attrs.src)) {
+    } else if (isVideo(attrs.src)) {
       yield html`<responsive-video
         spec="${defaultResponsiveSpec()}"
-        {...attrs}
-        ${widthAttr}
-        ${heightAttr}
-        ${dataPlaceholderAttr}
-        ${commonVideoAttrs}
-      >
-        Video: ${attrs.alt} | Source: ${attrs.src}
-      </responsive-video>`;
-    } else if (isVideo(attrs.src)) {
-      yield html`<video
         {...attrs}
         ${widthAttr}
         ${heightAttr}
@@ -97,23 +92,9 @@
     return ext === ".png" || ext === ".jpg";
   }
 
-  function isImg(src) {
-    const ext = src.substring(src.length - 4);
-    return ext === ".png" || ext === ".jpg" || ext === ".gif";
-  }
-
-  function isResizeableVideo(src) {
-    const resizeSuffix = src.substring(src.length - 11, src.length - 4);
-    return isVideo(src) && resizeSuffix === ".resize";
-  }
-
   function isVideo(src) {
     const ext = src.substring(src.length - 4);
     return ext === ".mp4";
-  }
-
-  function isExternal(src) {
-    return /^(\w+:)?\/\/.*$/.test(src.trim());
   }
 
   function defaultResponsiveSpec() {
@@ -134,14 +115,12 @@
         src
       );
 
-      const isWide =
-        placeholderRatio != undefined
-          ? width > height * placeholderRatio
-          : width > height * priorAspectRatio;
+      const containerRatio = placeholderRatio ?? priorScreenAspectRatio;
 
-      return isWide
-        ? { width: "100%", placeholder: true }
-        : { height: `${height}px`, placeholder: true };
+      return {
+        width: Math.min(width / height / containerRatio, 1) * 100 + "%",
+        placeholder: true,
+      };
     }
   }
 

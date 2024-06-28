@@ -16,7 +16,7 @@
 
   const prod = process.env.NODE_ENV === "production";
 
-  const globalMaxImageSize = 1400;
+  const globalMaxImageSize = 1600;
 
   async function generateImages(src, spec) {
     if (!prod) return {};
@@ -31,19 +31,25 @@
     const image = await fs.promises.readFile(srcFilePath);
     const { width: imageWidth } = await getImageAnalysis(srcFilePath, src);
 
-    const rules = getResponsiveRules(spec, 800, imageWidth, globalMaxImageSize);
+    const rules = getResponsiveRules(spec, 800, globalMaxImageSize);
 
     const srcset = [];
     const sizes = [];
 
     for (const rule of rules) {
-      const resizedImageSrc = getResizedImageSrc(src, rule.size.value);
+      let resizedImageSrc;
+      if (rule.size.value > imageWidth) {
+        resizedImageSrc = src; // no use enlarging source image
+      } else {
+        resizedImageSrc = getResizedImageSrc(src, rule.size.value);
+        // no await. generate in the background
+        generateImage(image, rule.size.value, src, resizedImageSrc);
+      }
+
       srcset.push(`${resizedImageSrc} ${rule.size.value}w`);
       sizes.push(
         `${toMediaQuery(rule, sizes.length > 0)} ${rule.size.value}px`
       );
-      // no await. generate images in the background
-      generateImage(image, rule.size.value, src, resizedImageSrc);
     }
 
     return {
@@ -66,9 +72,10 @@
 
     const sharpObj = sharp(image);
     const metadata = await sharpObj.metadata();
+
     const size = metadata.size * (width / metadata.width) ** 2;
     const quality = Math.round(
-      clamp(map(size, 20_000, 400_000, 90, 70), 70, 90)
+      clamp(map(size, 20_000, 400_000, 90, 75), 75, 90)
     );
 
     if (metadata.format === "jpeg") {

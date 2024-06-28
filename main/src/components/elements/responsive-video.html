@@ -39,23 +39,24 @@
     try {
       const metadata = await getVideoMetadata(srcFilePath, src);
 
-      const rules = getResponsiveRules(
-        spec,
-        800,
-        metadata.width,
-        globalMaxVideoSize
-      );
+      const rules = getResponsiveRules(spec, 1000, globalMaxVideoSize);
 
       const sources = [];
 
       for (const rule of rules) {
-        const resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
+        let resizedVideoSrc;
+        if (rule.size.value > metadata.width) {
+          resizedVideoSrc = src; // no use enlarging source video
+        } else {
+          resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
+          // no await. generate in the background
+          generateVideo(rule.size.value, metadata, src, resizedVideoSrc);
+        }
+
         sources.push({
           src: resizedVideoSrc,
           media: toMediaQuery(rule, sources.length > 0) || undefined,
         });
-        // no await. generate videos in the background
-        generateVideo(rule.size.value, metadata, src, resizedVideoSrc);
       }
 
       return sources;
@@ -81,7 +82,7 @@
     const sizePerTime = size / metadata.duration;
     // Constant Rate Factor. A lower value is a higher quality.
     const crf = Math.round(
-      clamp(map(sizePerTime, 100_000, 200_000, 22, 26), 22, 26)
+      clamp(map(sizePerTime, 100_000, 200_000, 20, 24), 20, 24)
     );
 
     await fs.promises.mkdir(path.dirname(outPath), { recursive: true });

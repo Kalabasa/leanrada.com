@@ -3,7 +3,12 @@ const path = require("node:path");
 const sharp = require("sharp");
 
 const projectDir = path.resolve(__dirname, "..", "..");
-const cacheFile = path.resolve(projectDir, "build", "cache", "image_analysis.json");
+const cacheFile = path.resolve(
+  projectDir,
+  "build",
+  "cache",
+  "image_analysis.json"
+);
 
 let cache = null;
 async function getImageAnalysis(imageFilePath, cacheKey = imageFilePath) {
@@ -85,6 +90,12 @@ function loadCacheIntoMemory() {
   }
 }
 
+function isImg(src) {
+  const ext = src.substring(src.length - 4);
+  return ext === ".png" || ext === ".jpg" || ext === ".gif";
+}
+
 module.exports = {
   getImageAnalysis,
+  isImg,
 };

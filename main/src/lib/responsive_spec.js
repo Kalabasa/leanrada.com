@@ -23,16 +23,15 @@ function toMediaQuery(rule, omitLow) {
 /**
  * @param {string} spec format: "size (breakpoint) size (breakpoint) ..."
  * @param {number} stepSize Intermediate step size for relative sizes
- * @param {number} mediaWidth Media's intrinsic width
  * @param {number} maxSize Maximum container width
  * @typedef {{ low: number, lowInclusive: boolean, high: number, highInclusive: boolean, size: { value: number, relative: boolean } }} Rule
  * @returns {Array<Rule>} an object representing each given size, with surrounding breakpoints
  */
-function getResponsiveRules(spec, stepSize, mediaWidth, maxSize) {
+function getResponsiveRules(spec, stepSize, maxSize) {
   const rules = parseSpec(spec);
   pruneMax(rules, maxSize);
-  evaluateRelativeSizes(rules, stepSize, mediaWidth, maxSize);
-  mergeRules(rules);
+  evaluateRelativeSizes(rules, stepSize, maxSize);
+  mergeRules(rules, stepSize);
   return rules;
 }
 
@@ -99,7 +98,15 @@ function pruneMax(rules, maxSize) {
   while (rules.length > 0) {
     const rule = rules[rules.length - 1];
 
-    if (rule.low < maxSize || (rule.lowInclusive && rule.low <= maxSize)) {
+    let relativeFactor = 1;
+    if (rule.size.relative) {
+      relativeFactor = 1 / rule.size.value;
+    }
+
+    if (
+      rule.low < maxSize * relativeFactor ||
+      (rule.lowInclusive && rule.low <= maxSize * relativeFactor)
+    ) {
       rule.high = Infinity;
       rule.highInclusive = false;
       break;
@@ -113,7 +120,7 @@ function pruneMax(rules, maxSize) {
  * Give relative sizes exact values based on screen size
  * @param {Rule[]} rules
  */
-function evaluateRelativeSizes(rules, stepSize, mediaWidth, maxSize) {
+function evaluateRelativeSizes(rules, stepSize, maxSize) {
   for (let i = rules.length - 1; i >= 0; i--) {
     const rule = rules[i];
 
@@ -122,9 +129,9 @@ function evaluateRelativeSizes(rules, stepSize, mediaWidth, maxSize) {
     // subdivide rule if it can fit more intermediate steps based on stepSize
     const subrules = [rule];
 
-    const high = Math.min(rule.high, mediaWidth, maxSize * rule.size.value);
+    const high = Math.min(rule.high, maxSize / rule.size.value);
     const span = high - rule.low;
-    const steps = Math.ceil(span / stepSize);
+    const steps = Math.ceil((span * rule.size.value) / stepSize);
     for (let step = 0; step < steps - 1; step++) {
       const t = (step + 1) / steps;
       const breakpoint = Math.round(rule.low + t * (high - rule.low));
@@ -137,11 +144,7 @@ function evaluateRelativeSizes(rules, stepSize, mediaWidth, maxSize) {
 
     subrules[subrules.length - 1].size = {
       value: Math.round(
-        Math.min(
-          mediaWidth,
-          rule.size.value * rule.high,
-          rule.size.value * maxSize
-        )
+        Math.min(rule.size.value * rule.high, maxSize)
       ),
       relative: false,
     };
@@ -155,12 +158,14 @@ function evaluateRelativeSizes(rules, stepSize, mediaWidth, maxSize) {
  *
  * @param {Rule[]} rules with no relative values
  */
-function mergeRules(rules) {
+function mergeRules(rules, stepSize) {
+  const threshold = 1300 / (1300 + stepSize);
+
   let lastRule = rules[rules.length - 1];
   for (let i = rules.length - 2; i >= 0; i--) {
     const rule = rules[i];
     if (
-      hasSimilarSizes(rule, lastRule) &&
+      hasSimilarSizes(rule, lastRule, threshold) &&
       rule.high === lastRule.low &&
       (rule.highInclusive || lastRule.lowInclusive)
     ) {
@@ -177,11 +182,11 @@ function mergeRules(rules) {
  * @param {Rule} rule1 with no relative value
  * @param {Rule} rule2 with no relative value
  */
-function hasSimilarSizes(rule1, rule2) {
+function hasSimilarSizes(rule1, rule2, threshold) {
   return (
     Math.min(rule1.size.value, rule2.size.value) /
       Math.max(rule1.size.value, rule2.size.value) >
-    0.75
+    threshold
   );
 }
 
