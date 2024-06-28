@@ -22,7 +22,7 @@ if (!noBuild) {
     { stdio: 'inherit' }
   );
   childProcess.execSync(
-    "npm run build-dev -p /notes/",
+    "npm run build-prod -p /notes/",
     { stdio: 'inherit' }
   );
 }
@@ -64,7 +64,7 @@ async function main() {
       const title = pName.text();
       if (!title) throw new Error("Missing title!");
 
-      const media = uMedia.attr("src") || uMedia.children("source[src]").first().attr("src");
+      const media = uMedia.attr("src") || uMedia.attr("data-src") || uMedia.children("source[src]").first().attr("src");
 
       const date = dtPublished.text();
       if (!date) console.error("No date for page:", title);
