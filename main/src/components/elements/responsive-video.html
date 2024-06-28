@@ -1,6 +1,7 @@
 <script render>
-  const sources = await generateVideos(attrs.src, attrs.spec);
-  return html`<video {...attrs}>
+  const {src, spec,...videoAttrs} = attrs;
+  const sources = await generateVideos(src, spec);
+  return html`<video ${spreadAttrs(videoAttrs)}>
     ${sources.map(source => (
       html`<source
         src="${source.src}"
@@ -23,7 +24,7 @@
 
   const prod = process.env.NODE_ENV === "production";
 
-  const globalMaxVideoSize = 1200;
+  const globalMaxVideoSize = 1280;
 
   async function generateVideos(src, spec) {
     if (!prod) return [];
@@ -40,8 +41,9 @@
 
       const rules = getResponsiveRules(
         spec,
-        1200,
-        Math.min(metadata.width, globalMaxVideoSize)
+        800,
+        metadata.width,
+        globalMaxVideoSize
       );
 
       const sources = [];
@@ -79,7 +81,7 @@
     const sizePerTime = size / metadata.duration;
     // Constant Rate Factor. A lower value is a higher quality.
     const crf = Math.round(
-      clamp(map(sizePerTime, 15_000, 30_000, 21, 23), 23, 21)
+      clamp(map(sizePerTime, 100_000, 200_000, 22, 26), 22, 26)
     );
 
     await fs.promises.mkdir(path.dirname(outPath), { recursive: true });

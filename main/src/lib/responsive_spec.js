@@ -23,14 +23,15 @@ function toMediaQuery(rule, omitLow) {
 /**
  * @param {string} spec format: "size (breakpoint) size (breakpoint) ..."
  * @param {number} stepSize Intermediate step size for relative sizes
- * @param {number} maxSize Maximum width
+ * @param {number} mediaWidth Media's intrinsic width
+ * @param {number} maxSize Maximum container width
  * @typedef {{ low: number, lowInclusive: boolean, high: number, highInclusive: boolean, size: { value: number, relative: boolean } }} Rule
  * @returns {Array<Rule>} an object representing each given size, with surrounding breakpoints
  */
-function getResponsiveRules(spec, stepSize, maxSize) {
+function getResponsiveRules(spec, stepSize, mediaWidth, maxSize) {
   const rules = parseSpec(spec);
   pruneMax(rules, maxSize);
-  evaluateRelativeSizes(rules, stepSize, maxSize);
+  evaluateRelativeSizes(rules, stepSize, mediaWidth, maxSize);
   mergeRules(rules);
   return rules;
 }
@@ -112,8 +113,7 @@ function pruneMax(rules, maxSize) {
  * Give relative sizes exact values based on screen size
  * @param {Rule[]} rules
  */
-function evaluateRelativeSizes(rules, stepSize, maxSize) {
-
+function evaluateRelativeSizes(rules, stepSize, mediaWidth, maxSize) {
   for (let i = rules.length - 1; i >= 0; i--) {
     const rule = rules[i];
 
@@ -122,7 +122,7 @@ function evaluateRelativeSizes(rules, stepSize, maxSize) {
     // subdivide rule if it can fit more intermediate steps based on stepSize
     const subrules = [rule];
 
-    const high = Math.min(rule.high, maxSize / rule.size.value);
+    const high = Math.min(rule.high, mediaWidth, maxSize * rule.size.value);
     const span = high - rule.low;
     const steps = Math.ceil(span / stepSize);
     for (let step = 0; step < steps - 1; step++) {
@@ -136,7 +136,13 @@ function evaluateRelativeSizes(rules, stepSize, maxSize) {
     }
 
     subrules[subrules.length - 1].size = {
-      value: Math.round(rule.size.value * high),
+      value: Math.round(
+        Math.min(
+          mediaWidth,
+          rule.size.value * rule.high,
+          rule.size.value * maxSize
+        )
+      ),
       relative: false,
     };
 
@@ -145,7 +151,7 @@ function evaluateRelativeSizes(rules, stepSize, maxSize) {
 }
 
 /**
- * Merge adjacent rules with same size.
+ * Merge adjacent rules with similar sizes.
  *
  * @param {Rule[]} rules with no relative values
  */
@@ -154,16 +160,29 @@ function mergeRules(rules) {
   for (let i = rules.length - 2; i >= 0; i--) {
     const rule = rules[i];
     if (
-      rule.size.value === lastRule.size.value &&
+      hasSimilarSizes(rule, lastRule) &&
       rule.high === lastRule.low &&
       (rule.highInclusive || lastRule.lowInclusive)
     ) {
       rules.splice(i + 1, 1);
+      rule.size = lastRule.size;
       rule.high = lastRule.high;
       rule.highInclusive = lastRule.highInclusive;
     }
     lastRule = rule;
   }
+}
+
+/**
+ * @param {Rule} rule1 with no relative value
+ * @param {Rule} rule2 with no relative value
+ */
+function hasSimilarSizes(rule1, rule2) {
+  return (
+    Math.min(rule1.size.value, rule2.size.value) /
+      Math.max(rule1.size.value, rule2.size.value) >
+    0.75
+  );
 }
 
 /**

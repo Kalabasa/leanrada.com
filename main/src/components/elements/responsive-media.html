@@ -27,14 +27,18 @@
     const heightAttr = heightAttrValue ? `height="${heightAttrValue}"` : "";
     const dataPlaceholderAttr = placeholder ? `data-placeholder` : "";
 
-      // todo: video placeholders
-      // todo: aspect-ratio
-      // todo: <responsive-video> component
-      // todo: lazy-load
-    const commonVideoAttrs = `muted autoplay loop playsinline
-      aria-label="${attrs.alt ?? ""}"
-      ${attrs.playbackRate ? 'onloadstart="this.playbackRate = ' + attrs.playbackRate + '"' : ""}`;
-
+    // todo: video placeholders
+    // todo: aspect-ratio
+    // todo: lazy-load
+    const commonVideoAttrs = [
+      `muted autoplay loop playsinline`,
+      attrs.alt && `aria-label="${attrs.alt}"`,
+      attrs.playbackRate &&
+        `onloadstart="this.playbackRate=${attrs.playbackRate}"`,
+    ]
+      .filter((a) => a)
+      .join(" ");
+    
     if (isExternal(attrs.src)) {
       yield html`<img
         loading="lazy"
@@ -63,13 +67,8 @@
         style="${await imgStyle(attrs.src, attrs.width, attrs.height)}"
       />`;
     } else if (isResizeableVideo(attrs.src)) {
-      // todo: video placeholders
-      // todo: aspect-ratio
-      // todo: <responsive-video> component
-      // todo: lazy-load
       yield html`<responsive-video
         spec="${defaultResponsiveSpec()}"
-        loading="lazy"
         {...attrs}
         ${widthAttr}
         ${heightAttr}
@@ -80,7 +79,6 @@
       </responsive-video>`;
     } else if (isVideo(attrs.src)) {
       yield html`<video
-        loading="lazy"
         {...attrs}
         ${widthAttr}
         ${heightAttr}
