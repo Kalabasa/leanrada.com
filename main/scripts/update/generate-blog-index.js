@@ -61,7 +61,7 @@ async function main() {
       const pCategory = hEntry.find(".tag-row .p-category");
       const eContent = hEntry.find(".e-content").first();
 
-      const title = pName.text();
+      const title = pName.text().trim();
       if (!title) throw new Error("Missing title!");
 
       const media = uMedia.attr("src") || uMedia.attr("data-src") || uMedia.children("source[src]").first().attr("src");
