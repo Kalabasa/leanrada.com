@@ -44,14 +44,9 @@
       const sources = [];
 
       for (const rule of rules) {
-        let resizedVideoSrc;
-        if (rule.size.value > metadata.width) {
-          resizedVideoSrc = src; // no use enlarging source video
-        } else {
-          resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
-          // no await. generate in the background
-          generateVideo(rule.size.value, metadata, src, resizedVideoSrc);
-        }
+        const resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
+        // no await. generate in the background
+        generateVideo(rule.size.value, metadata, src, resizedVideoSrc);
 
         sources.push({
           src: resizedVideoSrc,
