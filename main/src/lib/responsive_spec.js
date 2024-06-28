@@ -1,5 +1,3 @@
-const intermediateStepSize = 800;
-
 /**
  * @param {Rule} rule
  */
@@ -95,6 +93,8 @@ function parseSpec(spec) {
  * @param {Rule[]} rules
  */
 function evaluateRelativeSizes(rules, maxSize) {
+  const intermediateStepSize = 800;
+
   for (let i = rules.length - 1; i >= 0; i--) {
     const rule = rules[i];
 
