@@ -102,7 +102,15 @@
       ])
       .run();
 
-    return outPath;
+    // sanity check
+    const outputMetadata = getVideoMetadata(outPath, null);
+    if (outputMetadata.size > metadata.size) {
+      console.warning(
+        "Resized video bigger than source video!",
+        src,
+        resizedVideoSrc
+      );
+    }
   }
 
   async function getVideoMetadata(videoFilePath, cacheKey) {
