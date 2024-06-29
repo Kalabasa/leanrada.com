@@ -25,6 +25,8 @@
   const prod = process.env.NODE_ENV === "production";
 
   const globalMaxVideoSize = 1280;
+  const mebibytes = 2 ** 20;
+  const maxFileSize = 25 * mebibytes;
 
   async function generateVideos(src, spec) {
     if (!prod) return [];
@@ -46,7 +48,12 @@
       for (const rule of rules) {
         const resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
         // no await. generate in the background
-        generateVideo(rule.size.value, metadata, src, resizedVideoSrc);
+        generateVideo(
+          Math.min(metadata.width, rule.size.value),
+          metadata,
+          src,
+          resizedVideoSrc
+        );
 
         sources.push({
           src: resizedVideoSrc,
@@ -74,10 +81,9 @@
     }
 
     const size = metadata.size * (width / metadata.width) ** 2;
-    const sizePerTime = size / metadata.duration;
     // Constant Rate Factor. A lower value is a higher quality.
     const crf = Math.round(
-      clamp(map(sizePerTime, 100_000, 200_000, 20, 24), 20, 24)
+      clamp(map(size, 0.6 * mebibytes, maxFileSize, 20, 40), 20, 40)
     );
 
     await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
@@ -95,6 +101,8 @@
         `-crf ${crf}`,
       ])
       .run();
+
+    return outPath;
   }
 
   async function getVideoMetadata(videoFilePath, cacheKey) {
