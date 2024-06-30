@@ -13,20 +13,26 @@
 </script>
 
 <script static>
+  const { tmpdir } = require("node:os");
   const fs = require("node:fs");
   const path = require("node:path");
   const process = require("node:process");
   const ffmpeg = require("fluent-ffmpeg");
+  const lockfile = require("proper-lockfile");
   const {
     getResponsiveRules,
     toMediaQuery,
   } = require("../../lib/responsive_spec.js");
+  const { isOutputStale } = require("../../lib/is_output_stale.js");
 
   const prod = process.env.NODE_ENV === "production";
 
   const globalMaxVideoSize = 1280;
   const mebibytes = 2 ** 20;
   const maxFileSize = 25 * mebibytes;
+
+  const tempDir = path.join(tmpdir(), "leanrada.com");
+  const lockfilePath = path.join(tempDir, "responsive-video.lock");
 
   async function generateVideos(src, spec) {
     if (!prod) return [];
@@ -40,20 +46,41 @@
 
     try {
       const metadata = await getVideoMetadata(srcFilePath, src);
-
       const rules = getResponsiveRules(spec, 1000, globalMaxVideoSize);
-
       const sources = [];
 
       for (const rule of rules) {
-        const resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
-        // no await. generate in the background
-        generateVideo(
-          Math.min(metadata.width, rule.size.value),
-          metadata,
-          src,
-          resizedVideoSrc
-        );
+        const shouldResize =
+          rule.size.value < metadata.width &&
+          metadata.bitRate / 1024 > /* kb/s */ 1000;
+
+        let resizedVideoSrc;
+        if (shouldResize) {
+          resizedVideoSrc = getResizedVideoSrc(src, rule.size.value);
+        } else {
+          resizedVideoSrc = src;
+        }
+
+        const srcFilePath = path.join(__rootDir, src);
+        const outPath = path.join(__outputDir, resizedVideoSrc);
+        if (isOutputStale(srcFilePath, outPath)) {
+          if (shouldResize) {
+            await generateVideo(
+              Math.min(metadata.width, rule.size.value),
+              metadata,
+              srcFilePath,
+              outPath
+            );
+          } else {
+            console.log(
+              "Copying",
+              path.relative(__rootDir, srcFilePath),
+              "→",
+              path.relative(__outputDir, outPath)
+            );
+            await fs.promises.copyFile(srcFilePath, outPath);
+          }
+        }
 
         sources.push({
           src: resizedVideoSrc,
@@ -63,54 +90,60 @@
 
       return sources;
     } catch (error) {
-      console.warn("Error generating videos: ", srcFilePath, error.message);
+      console.warn("Error generating videos:", srcFilePath, error.message);
       return [];
     }
   }
 
-  async function generateVideo(width, metadata, src, resizedVideoSrc) {
-    const srcFilePath = path.join(__rootDir, src);
-    const outPath = path.join(__outputDir, resizedVideoSrc);
-
-    if (fs.existsSync(outPath)) {
-      const outStats = fs.statSync(outPath);
-      if (outStats.isFile()) {
-        const srcStats = fs.statSync(srcFilePath);
-        if (outStats.mtimeMs >= srcStats.mtimeMs) return;
-      }
-    }
-
-    const size = metadata.size * (width / metadata.width) ** 2;
-    // Constant Rate Factor. A lower value is a higher quality.
-    const crf = Math.round(
-      clamp(map(size, 0.6 * mebibytes, maxFileSize, 20, 40), 20, 40)
-    );
+  async function generateVideo(width, metadata, srcFilePath, outPath) {
+    const crf = 24;
 
     await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
 
-    console.log("Resizing", src, "→", resizedVideoSrc, `(crf:${crf})`);
-    ffmpeg(srcFilePath)
-      .output(outPath)
-      .size(`${width}x?`)
-      .videoCodec("libx264")
-      .noAudio() // for now
-      .outputOptions([
-        "-pix_fmt yuv420p",
-        "-profile:v baseline",
-        "-level 3",
-        `-crf ${crf}`,
-      ])
-      .run();
+    // lockfile prevents ffmpeg from gobbling up system resources
+    await fs.promises
+      .mkdir(tempDir, { recursive: true })
+      .then(() => lockfile.lock(tempDir, { lockfilePath }))
+      .then(async (release) => {
+        console.log(
+          "Resizing",
+          path.relative(__rootDir, srcFilePath),
+          "→",
+          path.relative(__outputDir, outPath),
+          `(crf:${crf})`
+        );
+        await new Promise((resolve) => {
+          ffmpeg(srcFilePath)
+            .output(outPath)
+            .size(`${width}x?`)
+            .videoCodec("libx264")
+            .noAudio() // for now
+            .outputOptions([
+              "-pix_fmt yuv420p",
+              "-profile:v baseline",
+              "-level 3",
+              `-crf ${crf}`,
+            ])
+            .on("end", resolve)
+            .run();
+        });
 
-    // sanity check
-    const outputMetadata = getVideoMetadata(outPath, null);
-    if (outputMetadata.size > metadata.size) {
-      console.warning(
-        "Resized video bigger than source video!",
-        src,
-        resizedVideoSrc
-      );
-    }
+        // sanity check
+        const outputMetadata = await getVideoMetadata(outPath, null);
+        if (outputMetadata.size > metadata.size + 1024) {
+          const numberFormat = new Intl.NumberFormat();
+          console.warn(
+            "Warning: Resized video significantly bigger than source video!",
+            numberFormat.format(outputMetadata.size),
+            "bytes >",
+            numberFormat.format(metadata.size),
+            "src:",
+            path.relative(__rootDir, srcFilePath)
+          );
+        }
+
+        return release();
+      });
   }
 
   async function getVideoMetadata(videoFilePath, cacheKey) {
@@ -120,37 +153,35 @@
           return reject(err);
         }
 
-        const { size, duration } = metadata.format;
-
-        if (metadata.width && metadata.height) {
-          return resolve({
-            size,
-            duration,
-            width: metadata.width,
-            height: metadata.height,
-          });
-        }
-
-        const videoStream = metadata.streams.find(
-          (s) => s.codec_type === "video"
-        );
-
-        if (!videoStream) {
+        const dimensions = getMetadataDimensions(metadata);
+        if (!dimensions) {
           return reject(null);
         }
 
-        if (videoStream.width && videoStream.height) {
-          return resolve({
-            size,
-            duration,
-            width: videoStream.width,
-            height: videoStream.height,
-          });
-        }
+        const { size, duration, bit_rate: bitRate } = metadata.format;
+        const common = { size, duration, bitRate };
 
-        return reject(null);
+        return resolve({ ...common, ...dimensions });
       });
     });
+  }
+
+  function getMetadataDimensions(metadata) {
+    if (metadata.width && metadata.height) {
+      return { width: metadata.width, height: metadata.height };
+    }
+
+    const videoStream = metadata.streams.find((s) => s.codec_type === "video");
+
+    if (!videoStream) {
+      return null;
+    }
+
+    if (videoStream.width && videoStream.height) {
+      return { width: videoStream.width, height: videoStream.height };
+    }
+
+    return null;
   }
 
   function getResizedVideoSrc(src, width) {
@@ -160,11 +191,10 @@
     return path.join("/gen", `${prefix}_${baseName}_${width}.generated${ext}`);
   }
 
-  function clamp(v, min, max) {
-    return Math.min(max, Math.max(min, v));
-  }
-
-  function map(v, a, b, c, d) {
-    return c + (d - c) * ((v - a) / (b - a));
+  function clampMap(v, a, b, c, d) {
+    const min = Math.min(c, d);
+    const max = Math.max(c, d);
+    const mappedValue = c + (d - c) * ((v - a) / (b - a));
+    return Math.min(max, Math.max(min, mappedValue));
   }
 </script>

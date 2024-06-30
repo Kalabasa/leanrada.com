@@ -12,6 +12,7 @@
     getResponsiveRules,
     toMediaQuery,
   } = require("../../lib/responsive_spec.js");
+  const { isOutputStale } = require("../../lib/is_output_stale.js");
   const { getImageAnalysis } = require("../../lib/image_analysis.js");
 
   const prod = process.env.NODE_ENV === "production";
@@ -38,12 +39,16 @@
 
     for (const rule of rules) {
       let resizedImageSrc;
-      if (rule.size.value > imageWidth) {
+      if (rule.size.value >= imageWidth) {
         resizedImageSrc = src; // no use enlarging source image
       } else {
         resizedImageSrc = getResizedImageSrc(src, rule.size.value);
-        // no await. generate in the background
-        generateImage(image, rule.size.value, src, resizedImageSrc);
+        const srcFilePath = path.join(__rootDir, src);
+        const outPath = path.join(__outputDir, resizedImageSrc);
+        if (isOutputStale(srcFilePath, outPath)) {
+          // no await. generate in the background
+          generateImage(image, rule.size.value, srcFilePath, outPath);
+        }
       }
 
       srcset.push(`${resizedImageSrc} ${rule.size.value}w`);
@@ -58,25 +63,12 @@
     };
   }
 
-  async function generateImage(image, width, src, resizedImageSrc) {
-    const srcFilePath = path.join(__rootDir, src);
-    const outPath = path.join(__outputDir, resizedImageSrc);
-
-    if (fs.existsSync(outPath)) {
-      const outStats = fs.statSync(outPath);
-      if (outStats.isFile()) {
-        const srcStats = fs.statSync(srcFilePath);
-        if (outStats.mtimeMs >= srcStats.mtimeMs) return;
-      }
-    }
-
+  async function generateImage(image, width, srcFilePath, outPath) {
     const sharpObj = sharp(image);
     const metadata = await sharpObj.metadata();
 
     const size = metadata.size * (width / metadata.width) ** 2;
-    const quality = Math.round(
-      clamp(map(size, 20_000, 400_000, 90, 75), 75, 90)
-    );
+    const quality = Math.round(clampMap(size, 20_000, 400_000, 90, 75));
 
     if (metadata.format === "jpeg") {
       sharpObj.jpeg({ mozjpeg: true, quality });
@@ -84,7 +76,13 @@
       sharpObj.png({ quality });
     }
 
-    console.log("Resizing", src, "→", resizedImageSrc, `(q:${quality})`);
+    console.log(
+      "Resizing",
+      path.relative(__rootDir, srcFilePath),
+      "→",
+      path.relative(__outputDir, outPath),
+      `(q:${quality})`
+    );
     await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
     await sharpObj.resize(width).toFile(outPath);
   }
@@ -96,11 +94,10 @@
     return path.join("/gen", `${prefix}_${baseName}_${width}.generated${ext}`);
   }
 
-  function clamp(v, min, max) {
-    return Math.min(max, Math.max(min, v));
-  }
-
-  function map(v, a, b, c, d) {
-    return c + (d - c) * ((v - a) / (b - a));
+  function clampMap(v, a, b, c, d) {
+    const min = Math.min(c, d);
+    const max = Math.max(c, d);
+    const mappedValue = c + (d - c) * ((v - a) / (b - a));
+    return Math.min(max, Math.max(min, mappedValue));
   }
 </script>
