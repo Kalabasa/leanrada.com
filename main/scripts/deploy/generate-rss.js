@@ -11,17 +11,21 @@ console.log(projectRoot);
 const domain = "leanrada.com";
 
 const siteSrc = path.resolve(projectRoot, "src", "site");
-const outRoot = process.env.DEPLOY_DIR ?? path.resolve(projectRoot, "out", "site");
+const outRoot =
+  process.env.DEPLOY_DIR ?? path.resolve(projectRoot, "out", "site");
 const blogSrcDir = path.resolve(siteSrc, "notes");
 const dryRun = process.argv.includes("--dry-run");
 
 main();
 
 async function main() {
-  const combinedIndexFile = path.resolve(blogSrcDir, "index.generated.combined.json");
+  const combinedIndexFile = path.resolve(
+    blogSrcDir,
+    "index.generated.combined.json"
+  );
   const combinedIndex = JSON.parse(await fs.readFile(combinedIndexFile));
 
-  const index = combinedIndex.filter(item => item.public);
+  const index = combinedIndex.filter((item) => item.public);
   index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const feed = new RSS({
@@ -33,7 +37,7 @@ async function main() {
   for (const item of index) {
     const pageFile = path.resolve(outRoot, "./" + item.href, "index.html");
 
-    if (!(await fs.stat(pageFile).catch(e => null))) {
+    if (!(await fs.stat(pageFile).catch((e) => null))) {
       console.error("Error: Missing ", pageFile);
       continue;
     }
@@ -51,7 +55,9 @@ async function main() {
     }
 
     // Remove extra meta elements
-    chContent.find(".content-header, .blog-header, .blog-post-info, .tag-row").remove();
+    chContent
+      .find(".content-header, .blog-header, .blog-post-info, .tag-row")
+      .remove();
 
     // Replace interactives
     const chInteractives = chContent.find("[data-rss='interactive']");
@@ -59,11 +65,14 @@ async function main() {
     chInteractives.each((i, el) => {
       const chEl = ch(el);
       const label = chEl.attr("alt") ?? chEl.attr("aria-label") ?? "";
-      chEl.replaceWith(`<pre>Interactive content: <a href="${url}">Visit the website to play with interactive content!</a>\nAlternative text: ${label}</pre>`);
+      chEl.replaceWith(
+        `<pre>Interactive content: <a href="${url}">Visit the website to play with interactive content!</a>\nAlternative text: ${label}</pre>`
+      );
     });
 
     // Remove empty elements
-    chContent.find("p:not(:has(*))")
+    chContent
+      .find("p:not(:has(*))")
       .filter((i, el) => ch(el).text().trim().length === 0)
       .remove();
 
@@ -90,8 +99,21 @@ async function main() {
     });
     const newRoot = ch("<div></div>");
     chContent.contents().each((i, el) => {
-      const isBlock = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "ol", "ul", "pre", "img", "video", "details"]
-        .includes(el.name);
+      const isBlock = [
+        "p",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "ol",
+        "ul",
+        "pre",
+        "img",
+        "video",
+        "details",
+      ].includes(el.name);
       if (isBlock) newRoot.append("\n");
       newRoot.append(el);
       if (isBlock) newRoot.append("\n");
@@ -100,13 +122,13 @@ async function main() {
 
     // Remove extra attributes
     chContent.find("*").each((i, el) => {
-      ch(el)
-        .removeAttr("class")
-        .removeAttr("style");
+      ch(el).removeAttr("class").removeAttr("style");
     });
 
     if (hasInteractive) {
-      chContent.prepend(`<p><em>For RSS readers: This article contains interactive content available on the <a href="${url}">original post on ${domain}</a>.</em></p>\n`);
+      chContent.prepend(
+        `<p><em>For RSS readers: This article contains interactive content available on the <a href="${url}">original post on ${domain}</a>.</em></p>\n`
+      );
     }
 
     // Update URLs
@@ -138,9 +160,31 @@ async function main() {
   let feedXML = feed.xml({ indent: true });
 
   const lastBuildDateStart = feedXML.indexOf("<lastBuildDate>");
-  const lastBuildDateEnd = feedXML.indexOf("</lastBuildDate>", lastBuildDateStart);
-  feedXML = feedXML.slice(0, lastBuildDateStart)
-    + feedXML.slice(lastBuildDateEnd + "</lastBuildDate>".length);
+  const lastBuildDateEnd = feedXML.indexOf(
+    "</lastBuildDate>",
+    lastBuildDateStart
+  );
+  feedXML =
+    feedXML.slice(0, lastBuildDateStart) +
+    feedXML.slice(lastBuildDateEnd + "</lastBuildDate>".length);
+
+  // Fix date format (the `rss` library does it bad)
+  let nextScan = 0;
+  while (true) {
+    const pubDateStart = feedXML.indexOf("<pubDate>", nextScan);
+    const pubDateEnd = feedXML.indexOf("</pubDate>", pubDateStart);
+    if (pubDateStart < 0 || pubDateEnd < 0) break;
+
+    const pubDateValueStart = pubDateStart + "<pubDate>".length;
+    nextScan = pubDateEnd + "</pubDate>".length;
+
+    const pubDate = feedXML.slice(pubDateValueStart, pubDateEnd);
+    const formattedDate = formatDate(new Date(Date.parse(pubDate)));
+    feedXML =
+      feedXML.slice(0, pubDateValueStart) +
+      formattedDate +
+      feedXML.slice(pubDateEnd);
+  }
 
   if (!dryRun) {
     const outFile = path.resolve(outRoot, "rss.xml");
@@ -154,4 +198,29 @@ function makeURL(domain, page, href) {
   if (/^(.+):\/\//.test(href)) return href;
   const urlPath = path.resolve("/", page, href);
   return `https://${domain}${urlPath}?ref=rss`;
+}
+
+function formatDate(date) {
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const dayName = days[date.getDay()];
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${dayName}, ${day} ${month} ${year} 00:00:00 GMT`;
 }
