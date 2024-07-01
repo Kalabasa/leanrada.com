@@ -82,7 +82,7 @@ function generateCommands({
         console.error(
           colorError("Missing webFilesDir:") +
             " " +
-            path.relative(cwd(), webFilesDir)
+            path.relative(process.cwd(), webFilesDir)
         );
         invalidState = true;
         continue;
