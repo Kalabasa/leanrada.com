@@ -77,18 +77,6 @@ function generateCommands({
       targetProject.sitePathPrefix
     );
 
-    if (targetProject.webFilesDir) {
-      if (!fs.existsSync(webFilesDir)) {
-        console.error(
-          colorError("Missing webFilesDir:") +
-            " " +
-            path.relative(process.cwd(), webFilesDir)
-        );
-        invalidState = true;
-        continue;
-      }
-    }
-
     commands.push(`cd ${rootDir}`);
 
     if (targetProject.buildCommand) {
