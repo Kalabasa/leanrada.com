@@ -14,7 +14,7 @@ fi
 
 # Build project
 npm install
-npm run clean
+npm run clean-lite
 npm run build-prod
 
 # Generate source-controlled generated files
