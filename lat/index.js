@@ -8,7 +8,7 @@ import {
 import { runDevServer } from "./dev.js";
 import { colorInfo } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
-import { getPath } from "./util/paths.js";
+import { getPath, getTopDir } from "./util/paths.js";
 
 const args = arg({
   "--yes": Boolean,
@@ -33,6 +33,7 @@ if (!subcommandFunction) {
   process.exit(1);
 }
 
+process.chdir(getTopDir());
 subcommandFunction(args._.slice(1));
 
 function dev() {

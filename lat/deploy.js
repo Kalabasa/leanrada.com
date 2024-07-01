@@ -108,7 +108,7 @@ function generateCommands({
             .startsWith("..")
       )
       .map((project) => ` --exclude '${project.sitePathPrefix}'`)
-      .join(" ");
+      .join("");
 
     if (targetProject.webFilesDir) {
       commands.push(
@@ -217,6 +217,7 @@ export async function deployProjectsToCloudflarePages({
     });
 
     process.chdir(workingDir);
+    exe(`pwd`);
     exe(`git add .`);
 
     let hasDiff = false;
