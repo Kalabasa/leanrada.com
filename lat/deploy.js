@@ -107,7 +107,8 @@ function generateCommands({
             )
             .startsWith("..")
       )
-      .map((project) => ` --exclude '${project.sitePathPrefix}'`);
+      .map((project) => ` --exclude '${project.sitePathPrefix}'`)
+      .join(" ");
 
     if (targetProject.webFilesDir) {
       commands.push(
