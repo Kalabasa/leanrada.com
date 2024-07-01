@@ -93,7 +93,9 @@ function generateCommands({
 
     if (targetProject.buildCommand) {
       const deployDir = normalizeDirPath(projectDeployDir);
-      commands.push(targetProject.buildCommand.replaceAll("$deployDir", deployDir));
+      commands.push(
+        targetProject.buildCommand.replaceAll("$deployDir", deployDir)
+      );
     }
 
     const excludes = allProjects
@@ -274,6 +276,7 @@ function rsyncArgs({ dryRun }) {
   return (
     " --checksum --del --progress --recursive" +
     " --exclude lathala.json" +
+    " --exclude .git" +
     (dryRun ? " --dry-run" : "")
   );
 }
