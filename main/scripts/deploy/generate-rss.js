@@ -11,8 +11,7 @@ console.log(projectRoot);
 const domain = "leanrada.com";
 
 const siteSrc = path.resolve(projectRoot, "src", "site");
-const outRoot =
-  process.env.DEPLOY_DIR ?? path.resolve(projectRoot, "out", "site");
+const outRoot = path.resolve(projectRoot, "out", "site");
 const blogSrcDir = path.resolve(siteSrc, "notes");
 const dryRun = process.argv.includes("--dry-run");
 

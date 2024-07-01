@@ -10,7 +10,7 @@ const projectRoot = process.cwd();
 console.log(projectRoot);
 
 const siteSrc = path.resolve(projectRoot, "src", "site");
-const siteOut = process.env.DEPLOY_DIR ?? path.resolve(projectRoot, "out", "site");
+const siteOut = path.resolve(projectRoot, "out", "site");
 const blogSrcDir = path.resolve(siteSrc, "notes");
 const blogOutDir = path.resolve(siteOut, "notes");
 const dryRun = process.argv.includes("--dry-run");
