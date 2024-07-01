@@ -50,7 +50,7 @@ function deploy(targetProjectDirs) {
   }
 
   const wwwDir = getPath("www");
-  if (args["--cf-prod"]) {
+  if (args["--cf-prod"] || args["--prod"]) {
     const wwwProdDir = `${wwwDir}/cf-prod`;
     deployProjectsToCloudflarePages({
       targetProjectDirs,
@@ -59,7 +59,7 @@ function deploy(targetProjectDirs) {
       dryRun: args["--dry-run"],
       noConfirm: args["--yes"],
     });
-  } else if (args["--gh-prod"] || args["--prod"]) {
+  } else if (args["--gh-prod"]) {
     const wwwProdDir = `${wwwDir}/gh-prod`;
     deployProjectsToGithubPages({
       targetProjectDirs,
