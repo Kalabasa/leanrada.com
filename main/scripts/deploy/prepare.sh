@@ -17,7 +17,7 @@ export DEPLOY_DIR="$@"
 # Build project
 npm install
 cd $DEPLOY_DIR
-npm --prefix $PROJECT_DIR run clean-ci
+npm run --prefix $PROJECT_DIR clean-ci
 cd $PROJECT_DIR
 npm run build-prod -- -o $DEPLOY_DIR
 
