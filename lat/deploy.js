@@ -156,7 +156,7 @@ export async function deployProjectsToGithubPages({
     });
 
     process.chdir(workingDir);
-    exe(`git add .`);
+    exe(`git add -f .`);
 
     let hasDiff = false;
     try {
@@ -217,7 +217,6 @@ export async function deployProjectsToCloudflarePages({
     });
 
     process.chdir(workingDir);
-    exe(`pwd`);
     exe(`git add -f .`);
 
     let hasDiff = false;
