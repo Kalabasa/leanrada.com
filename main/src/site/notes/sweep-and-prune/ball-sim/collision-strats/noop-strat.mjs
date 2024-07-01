@@ -1,3 +1,0 @@
-export class NoopStrat {
-  step() { }
-}
