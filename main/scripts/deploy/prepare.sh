@@ -16,9 +16,7 @@ export DEPLOY_DIR="$@"
 
 # Build project
 npm install
-cd $DEPLOY_DIR
-npm run --prefix $PROJECT_DIR clean-ci
-cd $PROJECT_DIR
+npm run clean-ci
 npm run build-prod -- -o $DEPLOY_DIR
 
 # Generate source-controlled generated files
