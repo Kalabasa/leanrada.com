@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-cd "$(dirname "$0")"/../..
+PROJECT_DIR="$(dirname "$0")"/../..
+cd $PROJECT_DIR
 pwd
 
 if [[ `git status --porcelain .` ]]; then
@@ -15,7 +16,9 @@ export DEPLOY_DIR="$@"
 
 # Build project
 npm install
-npm run clean-ci
+cd $DEPLOY_DIR
+npm --prefix $PROJECT_DIR run clean-ci
+cd $PROJECT_DIR
 npm run build-prod -- -o $DEPLOY_DIR
 
 # Generate source-controlled generated files
