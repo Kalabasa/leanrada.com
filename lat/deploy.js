@@ -218,7 +218,7 @@ export async function deployProjectsToCloudflarePages({
 
     process.chdir(workingDir);
     exe(`pwd`);
-    exe(`git add .`);
+    exe(`git add -f .`);
 
     let hasDiff = false;
     try {
