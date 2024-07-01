@@ -109,7 +109,7 @@ function generateCommands({
             )
             .startsWith("..")
       )
-      .map((project) => ` --exclude '${project.sitePathPrefix}'`)
+      .map((project) => ` --exclude '/${project.sitePathPrefix}'`)
       .join("");
 
     if (targetProject.webFilesDir) {
@@ -276,7 +276,7 @@ function rsyncArgs({ dryRun }) {
   return (
     " --checksum --del --progress --recursive" +
     " --exclude lathala.json" +
-    " --exclude .git" +
+    " --exclude /.git" +
     (dryRun ? " --dry-run" : "")
   );
 }
