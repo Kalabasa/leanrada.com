@@ -5,21 +5,37 @@
   const save = params.get("save");
 
   if (save) {
-    // static mode
+    // static mode, attributes will be populated later
     document.write(`
-      <div id='${id}'>
-        <b>${value}</b>
-        <a href="demos/edit/field.html?id=${id}&value=${value}#${id}">
+      <div id='{id}'>
+        <b>{value}</b>
+        <a href="demos/edit/field.html?id={id}&value={value}#{id}">
           edit
         </a>
       </div>`);
   } else {
-    // edit mode
+    // edit mode, attributes will be populated later
     document.write(`
-      <form id='${id}' action='demos/edit/field.html#${id}'>
-        <input hidden name='id' value='${id}'>
-        <input name='value' value='${value}'>
+      <form id='{id}' action='demos/edit/field.html#{id}'>
+        <input hidden name='id' value='{id}'>
+        <input name='value' value='{value}'>
         <button name="save" value="save">save</button>
       </form>`);
+  }
+</script>
+<script>
+  const { previousElementSibling } = document.currentScript;
+
+  // populate attributes via DOM, not raw HTML string templates, to avoid XSS
+  previousElementSibling.id = id;
+  if (save) {
+    const div = previousElementSibling;
+    div.children[0].textContent = value;
+    div.children[1].href = `demos/edit/field.html?id=${id}&value=${value}#${id}`;
+  } else {
+    const form = previousElementSibling;
+    form.action = `demos/edit/field.html#${id}`;
+    form.elements.id.value = id;
+    form.elements.value.value = value;
   }
 </script>

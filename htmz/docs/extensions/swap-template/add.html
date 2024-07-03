@@ -1,15 +1,24 @@
 <script>
-    const item = new URL(location).searchParams.get("item");
-    const id = Date.now().toString(16); 
-    document.write(`
+  const item = new URL(location).searchParams.get("item");
+  const id = Date.now().toString(16);
+  document.write(`
     <template>
-        <li id="item${id}">            
-            ${item}    
-            <a href="delete.html?item=${id}#item${id}" target="htmz">[x]</a>
-        </li>
-        <li id="add" class="new">
-            <slot name="children"></slot>
-        </li>
+      <li id="item{id}">            
+        <span>{item}</span>
+        <a href="delete.html?item={id}#item{id}" target="htmz">[x]</a>
+      </li>
+      <li id="add" class="new">
+      <slot name="children"></slot>
+      </li>
     </template>
   `);
-  </script>
+</script>
+<script>
+  const { previousElementSibling } = document.currentScript;
+
+  // populate attributes via DOM, not raw HTML string templates, to avoid XSS
+  const li = previousElementSibling.content.children[0];
+  li.id = id;
+  li.children[0].textContent = item;
+  li.children[1].href = `delete.html?item=${id}#item${id}`
+</script>
