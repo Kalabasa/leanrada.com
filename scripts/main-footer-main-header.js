@@ -1,22 +1,36 @@
 
-  // subtle smooth scroll
   (() => {
-    let top = 0;
+    let scrollToTopValue = 0;
 
     const topBtn = document.querySelector(".main-footer-top-btn");
     topBtn.addEventListener("click", (event) => {
       event.preventDefault();
-      top = 200;
-      loop();
+      scrollToTopValue = 200;
+      animateScrollToTop();
     });
 
-    function loop() {
-      top *= 0.6;
-      window.scrollTo(0, top);
-      if (top < 1) {
+    // subtle smooth scroll
+    function animateScrollToTop() {
+      scrollToTopValue *= 0.6;
+      window.scrollTo(0, scrollToTopValue);
+      if (scrollToTopValue < 1) {
         window.scrollTo(0, 0);
       } else {
-        requestAnimationFrame(loop);
+        requestAnimationFrame(animateScrollToTop);
+      }
+    }
+
+    if (window.screen) {
+      const bestViewed = document.querySelector(".main-footer-best-viewed");
+      updateBestViewed();
+      window.screen.addEventListener("change", () => updateBestViewed());
+
+      function updateBestViewed() {
+        if (window.screen.width > 0 && window.screen.height > 0) {
+          const w = window.screen.width * window.devicePixelRatio;
+          const h = window.screen.height * window.devicePixelRatio;
+          bestViewed.textContent = `This site is best viewed on a ${w}x${h} screen!`;
+        }
       }
     }
   })();
