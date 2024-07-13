@@ -7,8 +7,9 @@ export class SwitchSim {
   // distance of spring from switch hinge
   springDistance = 1.25; // cm
   springNaturalLength = 0.75; // cm
-  springConstant = 4;
-  mass = 0.2;
+  springConstant = 6;
+  mass = 0.1;
+  restitution = 0.12;
 
   /**
    * 0.0: off
@@ -39,10 +40,10 @@ export class SwitchSim {
 
     if (this.switchPosition < 0) {
       this.switchPosition = 0;
-      this.switchAngularVelocity = Math.max(0, this.switchAngularVelocity);
+      this.switchAngularVelocity = Math.abs(this.switchAngularVelocity * this.restitution);
     } else if (this.switchPosition > 1) {
       this.switchPosition = 1;
-      this.switchAngularVelocity = Math.min(0, this.switchAngularVelocity);
+      this.switchAngularVelocity = -Math.abs(this.switchAngularVelocity * this.restitution);
     }
   }
 
