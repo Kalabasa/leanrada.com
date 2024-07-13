@@ -61,7 +61,6 @@ export const createBaseElement = (() => {
 
         obj.promise = new Promise((resolve) => {
           const observer = new MutationObserver(() => {
-            console.log(this, "mutation");
             obj.element = this.querySelector(selector);
             if (obj.element) {
               resolve(obj.element);
