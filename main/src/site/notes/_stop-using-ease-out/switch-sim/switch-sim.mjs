@@ -7,9 +7,9 @@ export class SwitchSim {
   // distance of spring from switch hinge
   springDistance = 1.25; // cm
   springNaturalLength = 0.75; // cm
-  springConstant = 6;
-  mass = 0.1;
-  restitution = 0.12;
+  springConstant = 9;
+  mass = 20;
+  baseRestitution = 0.8;
 
   /**
    * 0.0: off
@@ -34,16 +34,13 @@ export class SwitchSim {
   presserValue = 0;
 
   update(dt) {
-    const netTorque = -this.presserTorque - this.switchSpringTorque;
-    this.switchAngularVelocity += netTorque / this.mass;
-    this.switchPosition += this.switchAngularVelocity * dt;
-
-    if (this.switchPosition < 0) {
-      this.switchPosition = 0;
-      this.switchAngularVelocity = Math.abs(this.switchAngularVelocity * this.restitution);
-    } else if (this.switchPosition > 1) {
-      this.switchPosition = 1;
-      this.switchAngularVelocity = -Math.abs(this.switchAngularVelocity * this.restitution);
+    // fixed timestep
+    const step = 0.1e-3;
+    let total = dt;
+    while (total > 0) {
+      this.switchAngularVelocity += this.netAngularAcceleration;
+      this.switchPosition += this.switchAngularVelocity * Math.min(step, total);
+      total -= step;
     }
   }
 
@@ -91,11 +88,6 @@ export class SwitchSim {
     return this.tangentialSpringForce * this.pinLength;
   }
 
-  // Force needed to overcome switch force (signed)
-  get switchPressForce() {
-    return this.switchSpringTorque / this.switchArmLength;
-  }
-
   get presser() {
     return {
       yOffset: Math.min(0, this.presserValue - 1) * this.switchArmLength,
@@ -104,25 +96,64 @@ export class SwitchSim {
 
   get presserForce() {
     if (this.presserValue < 1) return 0;
-    return this.presserValue - 1;
+    return (this.presserValue - 1) * (this.presserSide === "off" ? -1 : 1);
   }
 
   get presserNormalForce() {
-    if (
-      (this.switchPosition - 0.5) * (this.presserSide === "on" ? -1 : 1) >=
-        0.5 &&
-      this.presserForce > 0
-    ) {
-      return this.presserForce;
-    }
-    return Math.min(this.presserForce, Math.abs(this.tangentialSpringForce));
+    const netForce = this.netTorque / this.switchArmLength;
+    const remaining = -netForce - this.presserForce;
+    return Math.abs(this.presserForce) > 0 &&
+      Math.sign(remaining) !== Math.sign(this.presserForce)
+      ? remaining
+      : 0;
   }
 
   get presserTorque() {
-    return (
-      this.presserForce *
-      this.switchArmLength *
-      (this.presserSide === "off" ? -1 : 1)
-    );
+    return this.presserForce * this.switchArmLength;
+  }
+
+  get netTorque() {
+    return -this.presserTorque - this.switchSpringTorque + this.caseTorque;
+  }
+
+  // torque applied by the switch's case
+  get caseTorque() {
+    const endPosition = this.switchPosition < 0.5 ? 0 : 1;
+
+    let damping = 0;
+    let spring = 0;
+    if (
+      this.switchPosition < 0 ||
+      this.switchPosition > 1 ||
+      Math.abs(endPosition - this.switchPosition) < 1e-2
+    ) {
+      if (
+        Math.sign(this.switchAngularVelocity) ===
+        Math.sign(this.switchPosition - 0.5)
+      ) {
+        damping =
+          -0.3 *
+          (1 - this.restitution) *
+          (this.switchAngularVelocity * this.mass);
+      }
+
+      const rawSpring =
+        800 * (1 - this.restitution) * (endPosition - this.switchPosition);
+      if (Math.sign(rawSpring) !== Math.sign(this.switchPosition - 0.5)) {
+        spring = rawSpring;
+      }
+    }
+
+    return damping + spring;
+  }
+
+  // very rough model
+  // restitution becomes inelastic because the presser is squishy
+  get restitution() {
+    return this.baseRestitution / (1 + Math.abs(this.presserForce) * 8);
+  }
+
+  get netAngularAcceleration() {
+    return this.netTorque / this.mass;
   }
 }

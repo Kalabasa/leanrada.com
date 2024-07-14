@@ -5,7 +5,17 @@
   alt="interactive simulation of a mechanical switch"
 >
   <div class="switch-sim-render"><canvas /></div>
-  <div class="switch-sim-graph"><canvas /></div>
+  <slot name="before-graph"></slot>
+  <div class="switch-sim-graph">
+    <canvas></canvas>
+    <div>
+      <span class="switch-sim-legend-position"></span>
+      Switch position over time
+      <span class="switch-sim-legend-force"></span>
+      Switch reaction force over time
+    </div>
+  </div>
+  <slot name="default"></slot>
 </switch-sim-client>
 
 <style>
@@ -16,15 +26,28 @@
   }
   .switch-sim-graph {
     display: none;
+    text-align: center;
   }
   .switch-sim-graph canvas {
     width: 100%;
     aspect-ratio: 2 / 1;
     border-radius: 12px;
-    background-color: white;
   }
   .switch-sim-with-graph .switch-sim-graph {
     display: block;
+  }
+  .switch-sim-legend-position,
+  .switch-sim-legend-force {
+    display: inline-block;
+    width: 2ch;
+    height: 4px;
+    border: solid 4px #fff;
+  }
+  .switch-sim-legend-position {
+    background: #f00;
+  }
+  .switch-sim-legend-force {
+    background: #00f;
   }
 </style>
 
@@ -46,7 +69,7 @@
 
         this.showGraph = this.hasAttribute("show-graph");
         this.graphData = [];
-        this.graphDone = true;
+        this.graphDoneTime = null;
 
         this.asyncRenderCanvas = this.asyncQuerySelector(
           ".switch-sim-render canvas"
@@ -74,6 +97,9 @@
       init() {
         this.hasInit = true;
         this.sim = new SwitchSim();
+
+        const style = getComputedStyle(this);
+        this.font = `${style.fontSize} ${style.fontFamily}`;
       }
 
       startLoop() {
@@ -95,24 +121,30 @@
         this.renderSim();
 
         if (this.showGraph) {
-          if (this.sim.switchPosition === 0 || this.sim.switchPosition === 1) {
-            this.graphDone = true;
-          }
           if (
-            this.graphDone &&
-            this.sim.switchPosition < 0.5 === (this.sim.presserSide === "on") &&
-            Math.abs(
-              this.sim.switchPosition - (this.sim.presserSide === "on" ? 0 : 1)
-            ) > 0.05
+            this.graphDoneTime == null &&
+            Math.abs(this.sim.switchAngularVelocity) < 2 &&
+            this.sim.switchPosition > 0.5 === (this.sim.presserSide === "off")
+          ) {
+            this.graphDoneTime = now;
+          }
+
+          if (
+            this.graphDoneTime != null &&
+            this.sim.switchPosition > 0.5 === (this.sim.presserSide === "on") &&
+            Math.abs(this.sim.presserForce) > 0
           ) {
             this.graphData = [];
+            this.graphDoneTime = null;
           }
-          if (!this.graphDone) {
+
+          if (this.graphDoneTime == null || this.graphDoneTime + 100 > now) {
             this.graphData.push({
               position: this.sim.switchPosition,
-              force: this.sim.presserNormalForce,
+              force: Math.abs(this.sim.presserNormalForce),
             });
           }
+
           this.renderGraph();
         }
 
@@ -134,10 +166,6 @@
         this.sim.presserSide = side;
         this.sim.presserValue = value;
       };
-      /**
-       * @param {SwitchSim} sim
-       * @param {HTMLCanvasElement} canvas
-       */
 
       renderSim() {
         const canvas = this.asyncRenderCanvas.element;
@@ -159,7 +187,8 @@
             2,
         };
 
-        cc.fillStyle = "#349";
+        cc.font = this.font;
+        cc.fillStyle = "#237";
         cc.strokeStyle = "#fff";
         cc.lineCap = "round";
         cc.lineJoin = "round";
@@ -275,7 +304,8 @@
 
         // presser
         const presserRadius = 0.5 * cm;
-        const presserHeight = presserRadius / (1 + this.sim.presserNormalForce);
+        const presserHeight =
+          presserRadius / (1 + Math.abs(this.sim.presserNormalForce));
         const pressedPad = this.sim.presserSide === "on" ? pad1End : pad2End;
         cc.beginPath();
         cc.moveTo(pressedPad.x - presserRadius, 0);
@@ -303,8 +333,14 @@
         // case
         cc.strokeStyle = "#fff4";
         cc.beginPath();
-        cc.moveTo(hinge.x - (this.sim.switchArmLength + 1) * cm, hinge.y);
-        cc.lineTo(hinge.x + (this.sim.switchArmLength + 1) * cm, hinge.y);
+        cc.moveTo(
+          hinge.x - (this.sim.switchArmLength + 1) * cm,
+          hinge.y - padThickness * 0.5
+        );
+        cc.lineTo(
+          hinge.x + (this.sim.switchArmLength + 1) * cm,
+          hinge.y - padThickness * 0.5
+        );
         cc.stroke();
 
         // spring force
@@ -323,17 +359,9 @@
           const pinDirDiv = Math.hypot(pinDir.x, pinDir.y);
           pinDir.x /= pinDirDiv;
           pinDir.y /= pinDirDiv;
-          cc.strokeStyle = "#f00";
-          cc.lineWidth = 4;
-          strokeArrow(
-            cc,
-            pinEnd.x,
-            pinEnd.y,
-            pinEnd.x + springDir.x * this.sim.springForce * unit,
-            pinEnd.y + springDir.y * this.sim.springForce * unit,
-            unit / 8
-          );
-          cc.strokeStyle = "#f00";
+
+          // connecting line
+          cc.strokeStyle = "#f6f";
           cc.lineWidth = 2;
           cc.beginPath();
           cc.moveTo(
@@ -345,60 +373,64 @@
             pinEnd.y + pinDir.x * this.sim.tangentialSpringForce * unit
           );
           cc.stroke();
-          cc.strokeStyle = "#ff0";
+
           cc.lineWidth = 4;
-          strokeArrow(
+          drawForceLine(
+            cc,
+            pinEnd.x,
+            pinEnd.y,
+            pinEnd.x + springDir.x * this.sim.springForce * unit,
+            pinEnd.y + springDir.y * this.sim.springForce * unit,
+            unit / 8,
+            "#f57",
+            "Spring force",
+          );
+          drawForceLine(
             cc,
             pinEnd.x,
             pinEnd.y,
             pinEnd.x - pinDir.y * this.sim.tangentialSpringForce * unit,
             pinEnd.y + pinDir.x * this.sim.tangentialSpringForce * unit,
-            unit / 8
+            unit / 8,
+            "#f6f",
+            "Tangential spring force",
           );
         }
 
         // presser force
         if (
-          this.visibleForces.has("all") ||
-          this.visibleForces.has("presser")
+          (this.visibleForces.has("all") ||
+            this.visibleForces.has("presser")) &&
+          Math.abs(this.sim.presserForce) > 0
         ) {
-          const sideFactor = this.sim.presserSide === "off" ? -1 : 1;
-          cc.strokeStyle = "#0ff";
-          cc.lineWidth = 4;
-          strokeArrow(
+          drawForceLine(
             cc,
             pressedPad.x,
             pressedPad.y,
             pressedPad.x -
-              Math.cos(pressedPad.angle) *
-                sideFactor *
-                this.sim.presserForce *
-                unit,
+              Math.cos(pressedPad.angle) * this.sim.presserForce * unit,
             pressedPad.y +
-              Math.sin(pressedPad.angle) *
-                sideFactor *
-                this.sim.presserForce *
-                unit,
-            unit / 8
+              Math.sin(pressedPad.angle) * this.sim.presserForce * unit,
+            unit / 8,
+            "#0ff",
+            "Press force"
           );
+
           // presser normal force
-          cc.strokeStyle = "#ff0";
-          strokeArrow(
-            cc,
-            pressedPad.x,
-            pressedPad.y,
-            pressedPad.x -
-              Math.cos(pressedPad.angle) *
-                sideFactor *
-                -this.sim.presserNormalForce *
-                unit,
-            pressedPad.y +
-              Math.sin(pressedPad.angle) *
-                sideFactor *
-                -this.sim.presserNormalForce *
-                unit,
-            unit / 8
-          );
+          if (Math.abs(this.sim.presserNormalForce) > 0) {
+            drawForceLine(
+              cc,
+              pressedPad.x,
+              pressedPad.y,
+              pressedPad.x -
+                Math.cos(pressedPad.angle) * this.sim.presserNormalForce * unit,
+              pressedPad.y +
+                Math.sin(pressedPad.angle) * this.sim.presserNormalForce * unit,
+              unit / 8,
+              "#ff0",
+              "Reaction force"
+            );
+          }
         }
       }
 
@@ -413,28 +445,51 @@
         cc.fillStyle = "#fff";
         cc.lineCap = "round";
         cc.lineJoin = "round";
-        cc.lineWidth = 2;
+        cc.lineWidth = 4;
         cc.fillRect(0, 0, canvas.width, canvas.height);
 
-        const maxValue = Math.max(
-          this.graphData.flatMap(({ position, force }) => [position, force])
-        );
+        const xMax = Math.max(40, this.graphData.length);
+        const maxForce = 1;
 
+        // force graph
+        cc.strokeStyle = "#00f";
+        cc.beginPath();
         for (let i = 0; i < this.graphData.length; i++) {
-          const point = this.graphData[i];
-          const nx = i / this.graphData.length;
-          const ny = point.position / maxValue;
-          cc.strokeStyle = "#f00";
-          cc.ellipse(
-            canvas.width * nx,
-            canvas.height * ny,
-            4,
-            4,
-            0,
-            0,
-            Math.PI * 2
-          );
+          const nx = i / xMax;
+          const ny = 1 - this.graphData[i].force / maxForce;
+          if (i === 0) {
+            cc.moveTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          } else {
+            cc.lineTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          }
         }
+        cc.stroke();
+
+        // position graph
+        cc.strokeStyle = "#f00";
+        cc.beginPath();
+        for (let i = 0; i < this.graphData.length; i++) {
+          const nx = i / xMax;
+          const ny = 1 - this.graphData[i].position;
+          if (i === 0) {
+            cc.moveTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          } else {
+            cc.lineTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          }
+        }
+        cc.stroke();
       }
     }
   );
@@ -442,7 +497,11 @@
   /**
    * @param {CanvasRenderingContext2D} cc
    */
-  function strokeArrow(cc, x, y, x2, y2, headSize) {
+  function drawForceLine(cc, x, y, x2, y2, headSize, color, text = null) {
+    cc.save();
+    cc.strokeStyle = color;
+    cc.lineWidth = 4;
+
     const dx = x2 - x;
     const dy = y2 - y;
     const d = Math.hypot(dx, dy) + 1e-12;
@@ -462,6 +521,15 @@
       y2 + (-nx * 0.5 - ny) * headSize
     );
     cc.stroke();
+
+    if (text) {
+      const textToLeft = x2 < x;
+      cc.fillStyle = color;
+      cc.textAlign = textToLeft ? "right" : "left";
+      cc.fillText(text, x2 + (textToLeft ? -10 : 10), y2);
+    }
+
+    cc.restore();
   }
 
   function lerp(a, b, t) {
