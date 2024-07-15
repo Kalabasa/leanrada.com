@@ -1,0 +1,484 @@
+
+  import { BaseElement } from "/lib/base_element.mjs";
+  import { SwitchSim } from "/notes/stop-using-ease-out/switch-sim/switch-sim.mjs";
+
+  customElements.define(
+    "switch-sim-client",
+    class SwitchSimClient extends BaseElement {
+      constructor() {
+        super();
+
+        const showForcesAttr = this.getAttribute("show-forces") ?? "";
+        this.visibleForces = new Set(showForcesAttr.split(","));
+
+        const timescaleAttr = this.getAttribute("timescale") ?? "1";
+        this.timescale = Number.parseFloat(timescaleAttr);
+
+        this.showGraph = this.hasAttribute("show-graph");
+        this.graphData = [];
+        this.graphDoneTime = null;
+
+        this.asyncRenderCanvas = this.asyncQuerySelector(
+          ".switch-sim-render canvas"
+        );
+
+        this.asyncGraphCanvas = this.showGraph
+          ? this.asyncQuerySelector(".switch-sim-graph canvas")
+          : null;
+
+        this.visibilityListener({
+          show: async () => {
+            if (!this.hasInit) this.init();
+            this.startLoop();
+          },
+          hide: async () => {
+            this.stopLoop();
+          },
+        });
+
+        this.asyncRenderCanvas.promise.then((canvas) => {
+          this.aliveListener(canvas, "pointermove", this.onPointerMove);
+        });
+      }
+
+      init() {
+        this.hasInit = true;
+        this.sim = new SwitchSim();
+
+        const style = getComputedStyle(this);
+        this.font = `${style.fontSize} ${style.fontFamily}`;
+      }
+
+      startLoop() {
+        if (!this.hasInit) return;
+
+        this.looping = true;
+        this.loop(Date.now());
+      }
+
+      stopLoop() {
+        this.looping = false;
+      }
+
+      loop(lastTime) {
+        if (!this.looping) return;
+
+        const now = Date.now();
+        this.sim.update(this.timescale * ((now - lastTime) / 1000));
+        this.renderSim();
+
+        if (this.showGraph) {
+          if (
+            this.graphDoneTime == null &&
+            Math.abs(this.sim.switchAngularVelocity) < 2 &&
+            this.sim.switchPosition > 0.5 === (this.sim.presserSide === "off")
+          ) {
+            this.graphDoneTime = now;
+          }
+
+          if (
+            this.graphDoneTime != null &&
+            this.sim.switchPosition > 0.5 === (this.sim.presserSide === "on") &&
+            Math.abs(this.sim.presserForce) > 0
+          ) {
+            this.graphData = [];
+            this.graphDoneTime = null;
+          }
+
+          if (this.graphDoneTime == null || this.graphDoneTime + 100 > now) {
+            this.graphData.push({
+              position: this.sim.switchPosition,
+              force: Math.abs(this.sim.presserNormalForce),
+            });
+          }
+
+          this.renderGraph();
+        }
+
+        requestAnimationFrame(() => this.loop(now));
+      }
+
+      onPointerMove = (event) => {
+        if (!this.hasInit) return;
+
+        const canvas = this.asyncRenderCanvas.element;
+        if (!canvas) return;
+
+        const side = event.offsetX > canvas.offsetWidth * 0.5 ? "on" : "off";
+        const x =
+          Math.abs(event.offsetX - canvas.offsetWidth * 0.5) /
+          (canvas.offsetWidth * 0.5);
+        const y = event.offsetY / canvas.offsetHeight;
+        const value = x + Math.min(x * 8, y * 2);
+        this.sim.presserSide = side;
+        this.sim.presserValue = value;
+      };
+
+      renderSim() {
+        const canvas = this.asyncRenderCanvas.element;
+        if (!canvas) return;
+
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        const drawSize = Math.min(canvas.width, canvas.height);
+        const unit = drawSize / 6;
+        const cm = unit;
+
+        const cc = canvas.getContext("2d");
+
+        const hinge = {
+          x: canvas.width / 2,
+          y:
+            (canvas.height +
+              (this.sim.switchArmLength - this.sim.springDistance) * cm) /
+            2,
+        };
+
+        cc.font = this.font;
+        cc.fillStyle = "#237";
+        cc.strokeStyle = "#fff";
+        cc.lineCap = "round";
+        cc.lineJoin = "round";
+        cc.lineWidth = 1;
+        cc.fillRect(0, 0, canvas.width, canvas.height);
+
+        // hinge
+        cc.beginPath();
+        cc.ellipse(
+          hinge.x,
+          hinge.y,
+          unit * 0.02,
+          unit * 0.02,
+          0,
+          0,
+          Math.PI * 2
+        );
+        cc.stroke();
+
+        // pads
+        const padAngleOffset = Math.PI * 0.7;
+        const padAngularThickness = 0.8;
+        const padThickness =
+          this.sim.switchArmLength *
+          cm *
+          Math.sin(padAngleOffset - padAngularThickness) *
+          0.3;
+        const pad1Angle = this.sim.switchAngle + padAngleOffset;
+        const pad2Angle = this.sim.switchAngle - padAngleOffset;
+        const pad1End = {
+          angle: pad1Angle,
+          x: hinge.x + this.sim.switchArmLength * cm * Math.sin(pad1Angle),
+          y: hinge.y + this.sim.switchArmLength * cm * Math.cos(pad1Angle),
+        };
+        const pad2End = {
+          angle: pad2Angle,
+          x: hinge.x + this.sim.switchArmLength * cm * Math.sin(pad2Angle),
+          y: hinge.y + this.sim.switchArmLength * cm * Math.cos(pad2Angle),
+        };
+        cc.beginPath();
+        cc.moveTo(
+          hinge.x - padThickness * Math.sin(this.sim.switchAngle),
+          hinge.y - padThickness * Math.cos(this.sim.switchAngle)
+        );
+        cc.arc(
+          hinge.x,
+          hinge.y,
+          this.sim.switchArmLength * cm,
+          Math.PI / 2 - pad1Angle,
+          Math.PI / 2 - pad1Angle + padAngularThickness
+        );
+        cc.arc(
+          hinge.x,
+          hinge.y,
+          this.sim.switchArmLength * cm,
+          Math.PI / 2 - pad2Angle - padAngularThickness,
+          Math.PI / 2 - pad2Angle
+        );
+        cc.lineTo(
+          hinge.x - padThickness * Math.sin(this.sim.switchAngle),
+          hinge.y - padThickness * Math.cos(this.sim.switchAngle)
+        );
+        cc.stroke();
+
+        // pin
+        const pinEnd = {
+          x: hinge.x + this.sim.pin.x * cm,
+          y: hinge.y + this.sim.pin.y * cm,
+        };
+        cc.beginPath();
+        cc.moveTo(hinge.x, hinge.y);
+        cc.lineTo(pinEnd.x, pinEnd.y);
+        cc.stroke();
+
+        // spring base
+        const springBase = {
+          x: hinge.x,
+          y: hinge.y + this.sim.springDistance * cm,
+        };
+        cc.beginPath();
+        cc.ellipse(
+          springBase.x,
+          springBase.y,
+          unit * 0.02,
+          unit * 0.02,
+          0,
+          0,
+          Math.PI * 2
+        );
+        cc.stroke();
+
+        // spring
+        cc.beginPath();
+        cc.moveTo(springBase.x, springBase.y);
+        const coils = Math.ceil(this.sim.springNaturalLength * 15) + 1;
+        for (let i = 0; i < coils; i++) {
+          const t = lerp(i / coils, 0.5, 0.5);
+          const x = lerp(springBase.x, pinEnd.x, t);
+          const y = lerp(springBase.y, pinEnd.y, t);
+          const coilAngle = Math.PI * (1 + (i % 2));
+          cc.ellipse(
+            x,
+            y,
+            cm / 8,
+            cm / 12,
+            this.sim.switchAngle,
+            coilAngle - Math.PI * 0.25,
+            coilAngle + Math.PI * 0.5
+          );
+        }
+        cc.lineTo(pinEnd.x, pinEnd.y);
+        cc.stroke();
+
+        // presser
+        const presserRadius = 0.5 * cm;
+        const presserHeight =
+          presserRadius / (1 + Math.abs(this.sim.presserNormalForce));
+        const pressedPad = this.sim.presserSide === "on" ? pad1End : pad2End;
+        cc.beginPath();
+        cc.moveTo(pressedPad.x - presserRadius, 0);
+        cc.lineTo(
+          pressedPad.x - presserRadius,
+          pressedPad.y + this.sim.presser.yOffset * cm - presserHeight
+        );
+        cc.ellipse(
+          pressedPad.x,
+          pressedPad.y + this.sim.presser.yOffset * cm - presserHeight,
+          presserRadius,
+          presserHeight,
+          0,
+          Math.PI,
+          Math.PI * 2,
+          true
+        );
+        cc.lineTo(
+          pressedPad.x + presserRadius,
+          pressedPad.y + this.sim.presser.yOffset * cm - presserHeight
+        );
+        cc.lineTo(pressedPad.x + presserRadius, 0);
+        cc.stroke();
+
+        // case
+        cc.strokeStyle = "#fff4";
+        cc.beginPath();
+        cc.moveTo(
+          hinge.x - (this.sim.switchArmLength + 1) * cm,
+          hinge.y - padThickness * 0.5
+        );
+        cc.lineTo(
+          hinge.x + (this.sim.switchArmLength + 1) * cm,
+          hinge.y - padThickness * 0.5
+        );
+        cc.stroke();
+
+        // spring force
+        if (this.visibleForces.has("all") || this.visibleForces.has("spring")) {
+          const springDir = {
+            x: pinEnd.x - springBase.x,
+            y: pinEnd.y - springBase.y,
+          };
+          const springDirDiv = Math.hypot(springDir.x, springDir.y);
+          springDir.x /= springDirDiv;
+          springDir.y /= springDirDiv;
+          const pinDir = {
+            x: pinEnd.x - hinge.x,
+            y: pinEnd.y - hinge.y,
+          };
+          const pinDirDiv = Math.hypot(pinDir.x, pinDir.y);
+          pinDir.x /= pinDirDiv;
+          pinDir.y /= pinDirDiv;
+
+          // connecting line
+          cc.strokeStyle = "#f6f";
+          cc.lineWidth = 2;
+          cc.beginPath();
+          cc.moveTo(
+            pinEnd.x + springDir.x * this.sim.springForce * unit,
+            pinEnd.y + springDir.y * this.sim.springForce * unit
+          );
+          cc.lineTo(
+            pinEnd.x - pinDir.y * this.sim.tangentialSpringForce * unit,
+            pinEnd.y + pinDir.x * this.sim.tangentialSpringForce * unit
+          );
+          cc.stroke();
+
+          cc.lineWidth = 4;
+          drawForceLine(
+            cc,
+            pinEnd.x,
+            pinEnd.y,
+            pinEnd.x + springDir.x * this.sim.springForce * unit,
+            pinEnd.y + springDir.y * this.sim.springForce * unit,
+            unit / 8,
+            "#f57",
+            "Spring force",
+          );
+          drawForceLine(
+            cc,
+            pinEnd.x,
+            pinEnd.y,
+            pinEnd.x - pinDir.y * this.sim.tangentialSpringForce * unit,
+            pinEnd.y + pinDir.x * this.sim.tangentialSpringForce * unit,
+            unit / 8,
+            "#f6f",
+            "Tangential spring force",
+          );
+        }
+
+        // presser force
+        if (
+          (this.visibleForces.has("all") ||
+            this.visibleForces.has("presser")) &&
+          Math.abs(this.sim.presserForce) > 0
+        ) {
+          drawForceLine(
+            cc,
+            pressedPad.x,
+            pressedPad.y,
+            pressedPad.x -
+              Math.cos(pressedPad.angle) * this.sim.presserForce * unit,
+            pressedPad.y +
+              Math.sin(pressedPad.angle) * this.sim.presserForce * unit,
+            unit / 8,
+            "#0ff",
+            "Press force"
+          );
+
+          // presser normal force
+          if (Math.abs(this.sim.presserNormalForce) > 0) {
+            drawForceLine(
+              cc,
+              pressedPad.x,
+              pressedPad.y,
+              pressedPad.x -
+                Math.cos(pressedPad.angle) * this.sim.presserNormalForce * unit,
+              pressedPad.y +
+                Math.sin(pressedPad.angle) * this.sim.presserNormalForce * unit,
+              unit / 8,
+              "#ff0",
+              "Reaction force"
+            );
+          }
+        }
+      }
+
+      renderGraph() {
+        const canvas = this.asyncGraphCanvas.element;
+        if (!canvas) return;
+
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        const cc = canvas.getContext("2d");
+        cc.fillStyle = "#fff";
+        cc.lineCap = "round";
+        cc.lineJoin = "round";
+        cc.lineWidth = 4;
+        cc.fillRect(0, 0, canvas.width, canvas.height);
+
+        const xMax = Math.max(40, this.graphData.length);
+        const maxForce = 1;
+
+        // force graph
+        cc.strokeStyle = "#00f";
+        cc.beginPath();
+        for (let i = 0; i < this.graphData.length; i++) {
+          const nx = i / xMax;
+          const ny = 1 - this.graphData[i].force / maxForce;
+          if (i === 0) {
+            cc.moveTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          } else {
+            cc.lineTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          }
+        }
+        cc.stroke();
+
+        // position graph
+        cc.strokeStyle = "#f00";
+        cc.beginPath();
+        for (let i = 0; i < this.graphData.length; i++) {
+          const nx = i / xMax;
+          const ny = 1 - this.graphData[i].position;
+          if (i === 0) {
+            cc.moveTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          } else {
+            cc.lineTo(
+              12 + (canvas.width - 24) * nx,
+              12 + (canvas.height - 24) * ny
+            );
+          }
+        }
+        cc.stroke();
+      }
+    }
+  );
+
+  /**
+   * @param {CanvasRenderingContext2D} cc
+   */
+  function drawForceLine(cc, x, y, x2, y2, headSize, color, text = null) {
+    cc.save();
+    cc.strokeStyle = color;
+    cc.lineWidth = 4;
+
+    const dx = x2 - x;
+    const dy = y2 - y;
+    const d = Math.hypot(dx, dy) + 1e-12;
+    const nx = dx / d;
+    const ny = dy / d;
+    headSize = Math.min(d / 2, headSize);
+    cc.beginPath();
+    cc.moveTo(x, y);
+    cc.lineTo(x2, y2);
+    cc.lineTo(
+      x2 + (-ny * 0.5 - nx) * headSize,
+      y2 + (nx * 0.5 - ny) * headSize
+    );
+    cc.moveTo(x2, y2);
+    cc.lineTo(
+      x2 + (ny * 0.5 - nx) * headSize,
+      y2 + (-nx * 0.5 - ny) * headSize
+    );
+    cc.stroke();
+
+    if (text) {
+      const textToLeft = x2 < x;
+      cc.fillStyle = color;
+      cc.textAlign = textToLeft ? "right" : "left";
+      cc.fillText(text, x2 + (textToLeft ? -10 : 10), y2);
+    }
+
+    cc.restore();
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }

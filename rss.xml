@@ -7,6 +7,200 @@
         
         <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
         <item>
+            <title><![CDATA[Stop using ease-out in your UIs!]]></title>
+            <description><![CDATA[<p><em>For RSS readers: This article contains interactive content available on the <a href="https://leanrada.com/notes/stop-using-ease-out?ref=rss">original post on leanrada.com</a>.</em></p>
+
+<p>Before anything, let me present you with a set of controls with no context.</p>
+<table>
+              <tbody>
+                <tr>
+                  <td>
+                    <button>Press me</button>
+                  </td>
+                  <td>
+                    <button>Press me</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox">
+                  </td>
+                  <td>
+                    <input type="checkbox">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+<p><strong>Stop using ease-out, or ease-in-out, or whatever-out, in every UI animation!</strong></p>
+
+<p>There is a lot of propaganda on the internet against ease-in, saying that it's “unnatural”, “unusual”, or that it's “of the devil”. Some say that it's both “sluggish” and “abrupt”. Many pointing to ease-out as the safe, smooth, satisfying messiah of animation (including its safer kin, ease-in-out). There are even published ‘best practices’ which can be summed up to <a target="_blank" href="https://web.dev/articles/the-basics-of-easing">“just use ease-out”</a>. This post is here to set things straight — in a nonlinear fashion.</p>
+
+<p>So, why not ease-out? And what to use instead?</p>
+
+<h2 id="reason-1-its-overused">Reason #1. It’s overused</h2>
+
+<p>Let’s get the weakest point out of the way. Ease out is boring because it’s everywhere. Because it’s part of the browser default <code>ease</code> function (which is a combination of a fast ease-in with a slow ease-out). </p>
+
+<p>It’s like how corners are getting rounder and rounder on the web simply because it's easy and built-in.</p>
+
+<img loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/figma-ease-out.gif?ref=rss" caption="Source: Figma">
+<span>Source: Figma</span>
+<p>Is the public missing out on better web animations (and better corners) because of the ubiquity of these practices? Yes.</p>
+
+<h2 id="reason-2-its-unrealistic">Reason #2. It’s unrealistic</h2>
+
+<p>How about a study in skeuomorphism?</p>
+
+<p>Imagine a mechanical toggle switch. Something like the following video:</p>
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/l-G_uejx0Rs?si=g-RJXjgqsY8euukl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>
+<p>Now here’s an interactive physics simulation of the same spring-based toggle switch:</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/stop-using-ease-out?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: interactive simulation of a mechanical switch</pre>
+
+<p><span><em>Drag your pointer horizontally and vertically across the simulation window to control the appendage that toggles the switch.</em></span></p>
+
+<p>This is a physics-based simulation with simulated forces, torques, and constraints. Let’s slow the simulation down and show some force lines for a better look.</p>
+
+<pre>Interactive content: <a href="https://leanrada.com/notes/stop-using-ease-out?ref=rss">Visit the website to play with interactive content!</a>
+Alternative text: interactive simulation of a mechanical switch</pre>
+
+<p>Play around with the simulation!</p>
+
+<p>Here’s what a typical motion looks like:</p>
+
+<img srcset="/notes/stop-using-ease-out/typical.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/typical.png?ref=rss" caption="Typical output graph of the above simulation">
+<span>Typical output graph of the above simulation</span>
+<p>Notice the <span>position curve (red)</span>. <small>We'll get to the force curve later.</small> Does the position curve look anything familiar? Compare that with some standard easing functions:</p>
+
+<img srcset="/notes/stop-using-ease-out/standard-easing.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/standard-easing.png?ref=rss" caption="Common easing functions. Source: MDN">
+<span>Common easing functions. Source: MDN</span>
+<p><strong>The toggle switch’s position curve follows the ease-in curve!</strong> A slow start, gradually building up momentum, then finally stopping to a satisfying ‘click’!</p>
+
+<p>Contrary to “best practice”, the natural motion of a toggle switch does not follow an ease-out nor an ease-in-out curve! I’ll go further and say that ease-out is unnatural for any kind of UI control that represents a tactile interaction.</p>
+
+<p>Like buttons. In the real world, buttons (the ones that are nice to press anyway) have some kind of buckling mechanism when pressed. Similar to the toggle switch example above, there’s a buildup, a fall, and a final ‘click’ into place.</p>
+
+<video muted="" autoplay="" loop="" playsinline="" caption="A button. In the real world." data-src="/notes/stop-using-ease-out/button.mp4">
+                <source src="https://leanrada.com/notes/stop-using-ease-out/button.mp4?ref=rss">
+
+                Video: | Source: /notes/stop-using-ease-out/button.mp4
+
+              </video>
+<span>A button. In the real world.</span>
+<p>Best practice says that the sharp stop is unnatural and should be avoided. But that well-defined resolution is part of what makes switches and buttons feel good. Just imagine a button that dampens the motion the more you press it. It’ll feel squishy and mushy. You know what else slows down the further you go? Ease-out!</p>
+
+<p>And yet, thousands of UIs still use ease out for UI controls!</p>
+
+<video muted="" autoplay="" loop="" playsinline="" caption="Ease out everywhere. One of these is a skeuomorphic rocker switch, ironically." data-src="/notes/stop-using-ease-out/examples.mp4">
+                <source src="https://leanrada.com/notes/stop-using-ease-out/examples.mp4?ref=rss">
+
+                Video: | Source: /notes/stop-using-ease-out/examples.mp4
+
+              </video>
+<span>Ease out everywhere. One of these is a skeuomorphic rocker switch, ironically.</span>
+<p>Has abstract UI design gone too far?</p>
+
+<h3 id="counterexamples">Counterexamples</h3>
+
+<p>Of course, not all UI animations need ease in, such as macro interactions, card movement, scrolling, expand/collapse, or any object that ‘animate themselves’ as opposed to raw manipulation.</p>
+
+<video muted="" autoplay="" loop="" playsinline="" caption="Source: Material Design" data-src="/notes/stop-using-ease-out/material-pager.mp4">
+                <source src="https://leanrada.com/notes/stop-using-ease-out/material-pager.mp4?ref=rss">
+
+                Video: | Source: /notes/stop-using-ease-out/material-pager.mp4
+
+              </video>
+<span>Source: Material Design</span>
+<p>Unlike switches and buttons, these things don’t have a frame or housing that can immediately stop them when they ‘bottom out’. So they have to decelerate naturally.</p>
+
+<p>In the end, it depends. But as a general rule? Ease-in for tactile things.</p>
+
+<h2 id="reason-3-ease-in-is-more-satisfying">Reason #3. Ease-in is more satisfying</h2>
+
+<img srcset="/notes/stop-using-ease-out/typical.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/typical.png?ref=rss" caption="The graph again. This time focus on the force curve.">
+<span>The graph again. This time focus on the force curve.</span>
+<p>If you’re a mechanical keyboard enthusiast, you might’ve recognised the general landmarks in the <span>force curve (blue)</span> above. That ‘tactile bump’ and subsequent drop in force is a big part of what provides the satisfying feedback that mechanical keys are known for (and coincidentally, produces the ease-in motion).</p>
+
+<img srcset="/notes/stop-using-ease-out/cherry.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/cherry.png?ref=rss" caption="Force curve of a tactile keyboard switch. Source: deskthority.net">
+<span>Force curve of a tactile keyboard switch. Source: deskthority.net</span>
+<p>But <em>why</em> is it satisfying?</p>
+
+<p><audio controls="" src="/notes/stop-using-ease-out/vsauce.mp3"></audio></p>
+
+<p>I present my sub-thesis:</p>
+<blockquote>
+              <p><strong>The sequence of tension and release is intrinsically satisfying.</strong>
+                <cite>me</cite>
+              </p>
+            </blockquote>
+<p>I will now present supporting evidence with xkcd-style graphs.</p>
+
+<h3 id="a-popping-bubble-wraps">A. Popping bubble wraps</h3>
+
+<p><span><strong>Disclaimer:</strong> We are getting into subjective and pseudoscience territory.</span></p>
+
+<img srcset="/notes/stop-using-ease-out/bubble-wrap.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/bubble-wrap.png?ref=rss" caption="Estimated force curve of popping a bubble in a bubble wrap.">
+<span>Estimated force curve of popping a bubble in a bubble wrap.</span>
+<p>Popping bubble wraps is a satisfying sensation. Popping a bubble in a bubble wrap follows the familiar buildup, release, and resolution pattern that is associated with ease-in.</p>
+
+<p><small><a target="_blank" href="https://xkcd.com/2458/">Relevant xkcd.</a></small></p>
+
+<h3 id="b-scratching-an-itch">B. Scratching an itch</h3>
+
+<img srcset="/notes/stop-using-ease-out/itch.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/itch.png?ref=rss" caption="Estimated discomfort experienced during an itch’s lifetime.">
+<span>Estimated discomfort experienced during an itch’s lifetime.</span>
+<p>While the act of scratching by itself is mildly pleasurable, when paired with an itchy skin, it becomes a satisfying experience.</p>
+
+<h3 id="c-music-theory">C. Music theory</h3>
+
+<p>🚧 This section is WIP, something about dissonance and consonance 🚧</p>
+
+<h3 id="d-arousal-jag-theory">D. Arousal jag theory</h3>
+<blockquote>
+              <p>The abrupt fall from elevated levels of arousal to a lower, more appropriate level is thought to produce a pleasurable response.
+                <cite>APA Dictionary of Psychology, <a target="_blank" href="https://dictionary.apa.org/arousal-jag">‘arousal jag’</a></cite>
+              </p>
+            </blockquote>
+<p>This theory was introduced by a psychologist named Daniel E. Berlyne in 1970. The idea is that an increase in tension followed by a sharp decrease produces a satisfying feeling. This framework works well for ease-in’s case in the context of the force curve, or more directly, with ease-in’s initial slow buildup followed by its abrupt resolution.</p>
+
+<p>If you’re looking for the psychology behind microinteractions, well, that’s one of them.</p>
+
+<h3 id="e-the-three-act-structure">E. The Three-Act Structure</h3>
+
+<img srcset="/notes/stop-using-ease-out/3act.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/stop-using-ease-out/3act.png?ref=rss" caption="The three-act structure with a tension graph.">
+<span>The three-act structure with a tension graph.</span>
+<p>In storytelling or filmmaking, the <a target="_blank" href="https://tvtropes.org/pmwiki/pmwiki.php/Main/ThreeActStructure">three-act structure</a> is a model for analysing or creating good stories. It mirrors the tension-resolution sequence in a grander scale. And with bigger scope comes the potential for a higher level of satisfaction — <em>catharsis</em>. Great stories that use the three-act structure always leave you in a state of catharsis.</p>
+
+<p>Is it possible to have micro-catharses in UI animations?</p>
+<hr>
+<p>All of these patterns of satisfaction reflect ease-in’s slow buildup and sudden resolution. While there are other kinds of satisfying phenomenon, like <a target="_blank" href="https://youtu.be/3clqk2U3T9Y">sand slicing</a> which has nothing to do with any of this; tension and release is a way to induce the positive effect.</p>
+
+<p>There must be a balance to the proportion of tension and release, else the negative effects of the tension may overcome the positive effects of release, or the tension too light that the release is too shallow. A bubble wrap that is really hard to pop would be quite annoying, and a grand story that ends prematurely would be disappointing. The easing curve must be manually finetuned depending on the purpose. For buttons and toggles, keep it shorter than a bubble wrap pop.</p>
+
+<p><span>🫰 <strong>Snap!</strong> Try snapping your fingers. Did you do it? If so, you just made an ease-in motion. <a target="_blank" href="https://www.youtube.com/watch?v=4DHQ4mKSZXU">Don’t believe me?</a> When people say they want <em>snappy</em> animations, what do they really want?</span></p>
+
+<h2 id="tips">Tips</h2>
+
+<ul>
+              <li>Use a custom curve appropriate to the size of the element. Don’t use the default ease-in because it’s likely to feel too slow for most use cases. In CSS, there’s <a target="_blank" href="https://cubic-bezier.com/"><code>cubic-bezier()</code></a> for example.</li>
+              <li>Use a duration appropriate to the curve, the size of the element, and the scale of the movement.</li>
+              <li>Partially start the animation on pointer press, not on release.<ul>
+                  <li>For mouse users, there’s already an initial ‘actuation force’ required to trigger the mouse button. In these cases, the initial velocity shouldn’t be zero (the easing curve shouldn’t start at a horizontal slope). For touchscreens, there’s no such actuation force.</li>
+                </ul>
+              </li>
+            </ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Don’t use ease-out in everything! Try ease-in! Or try a combination of both with varying weights! Just try anything at all. Tweak your curves as often as you tweak your paddings.
+            </p>
+]]></description>
+            <link>https://leanrada.com/notes/stop-using-ease-out?ref=rss</link>
+            <guid isPermaLink="true">https://leanrada.com/notes/stop-using-ease-out?ref=rss</guid>
+            <pubDate>Mon, 15 Jul 2024 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title><![CDATA[Creating a halftone effect with CSS]]></title>
             <description><![CDATA[<p><em>For RSS readers: This article contains interactive content available on the <a href="https://leanrada.com/notes/pure-css-halftone?ref=rss">original post on leanrada.com</a>.</em></p>
 
@@ -2845,7 +3039,7 @@ Sorted pairwise
 <p>👉 See the Pen <a target="_blank" href="https://codepen.io/kalabasa/pen/MWzmPXb">Pure CSS Volley Game</a> on CodePen!</p>
 
 <video muted="" autoplay="" loop="" playsinline="" aria-label="video of CSS volley ball video game" media-class="u-media" alt="video of CSS volley ball video game" data-src="/notes/pure-css-volley-ball-game/video.web.mp4">
-
+                <source src="https://leanrada.com/notes/pure-css-volley-ball-game/video.web.mp4?ref=rss">
 
                 Video: video of CSS volley ball video game | Source: /notes/pure-css-volley-ball-game/video.web.mp4
 

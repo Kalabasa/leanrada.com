@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="syndication" href="https://www.reddit.com/r/IndieDev/comments/14nu6zf/i_made_a_potentialfield_based_algorithm_for/">
-  <title>Dynamic patrol behaviour with Markov chains · leanrada.com</title>
+  <title>Stop using ease-out in your UIs! · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -171,6 +170,39 @@
   }
 </style>
   <style>
+  .switch-sim-render canvas {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+    touch-action: pinch-zoom;
+  }
+  .switch-sim-graph {
+    display: none;
+    text-align: center;
+  }
+  .switch-sim-graph canvas {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    border-radius: 12px;
+  }
+  .switch-sim-with-graph .switch-sim-graph {
+    display: block;
+  }
+  .switch-sim-legend-position,
+  .switch-sim-legend-force {
+    display: inline-block;
+    width: 2ch;
+    height: 4px;
+    border: solid 4px #fff;
+  }
+  .switch-sim-legend-position {
+    background: #f00;
+  }
+  .switch-sim-legend-force {
+    background: #00f;
+  }
+</style>
+  <style>
   .blog-media {
     position: relative;
     text-align: center;
@@ -204,20 +236,6 @@
   .blog-media-caption {
     display: block;
     font-size: 15px;
-  }
-</style>
-  <style>
-  dynamic-patrol-demo-client {
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-    display: inline-block;
-    width: 400px;
-    width: min(100vw, 70vh);
-    aspect-ratio: 1;
-    border-radius: 12px;
-    background: #cdd;
-    overflow: hidden;
   }
 </style>
   <style>
@@ -1036,20 +1054,6 @@
   }
 </style>
   <style>
-  .tag-component {
-    display: inline-block;
-    padding: 0 3px;
-    height: 16px;
-    line-height: 16px;
-    font-family: var(--default-font);
-    font-size: 12px;
-    font-weight: bold;
-    background: #ccc;
-    color: #444;
-    border-radius: 3px;
-  }
-</style>
-  <style>
   .card-grid-item {
     display: block;
     text-decoration: none;
@@ -1292,6 +1296,20 @@
   }
 </style>
   <style>
+  .tag-component {
+    display: inline-block;
+    padding: 0 3px;
+    height: 16px;
+    line-height: 16px;
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
+    background: #ccc;
+    color: #444;
+    border-radius: 3px;
+  }
+</style>
+  <style>
   .btn,
   .btn:visited {
     padding: 6px 12px;
@@ -1353,53 +1371,89 @@
   }
 </style>
   <style>
-  .small-diagram-row {
-    margin: -36px 0;
-    display: flex;
-    gap: 12px;
+  .demo-table {
+    margin: 48px 0;
+    text-align: center;
   }
-  .small-diagram-row * {
-    flex: 1 1 50%;
+
+  .demo-button {
+    color: #fff;
+    font-weight: bold;
+    margin: 12px 12px 20px;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: #490;
+    box-shadow: 0 8px 0 #060;
+    cursor: pointer;
+    transition: all 55ms;
+    transition-property: transform, box-shadow;
   }
-  .small-diagram-row-solo {
-    margin-left: 25%;
-    margin-right: 25%;
+  .demo-button:hover,
+  .demo-button:focus-visible {
+    transform: translateY(1px);
+    box-shadow: 0 7px 0 #060;
   }
-  @media (max-width: 600px) {
-    .small-diagram-row {
-      margin-left: 0;
-      margin-right: 0;
-      flex-direction: column;
-    }
+  .demo-button:active {
+    transform: translateY(7px);
+    box-shadow: 0 1px 0 #060;
+  }
+
+  .demo-toggle {
+    position: relative;
+    appearance: none;
+    margin: 12px;
+    width: 48px;
+    height: 24px;
+    border-radius: 12px;
+    background: #789;
+    box-shadow: 0 0 0 2px #9ab inset;
+    cursor: pointer;
+    transition: all 85ms;
+    transition-property: background, box-shadow;
+  }
+  .demo-toggle:checked {
+    background: #4c4;
+    box-shadow: 0 0 0 2px #290 inset;
+  }
+  .demo-toggle:after {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 2px #ddd inset;
+    position: absolute;
+    top: 0;
+    transition: transform 85ms;
+  }
+  .demo-toggle:active::after {
+    transform: translateX(2px);
+  }
+  .demo-toggle:checked::after {
+    transform: translateX(24px);
+  }
+  .demo-toggle:checked:active::after {
+    transform: translateX(22px);
+  }
+
+  .ease-out,
+  .ease-out::after {
+    transition-timing-function: cubic-bezier(0.1, 0.5, 0.3, 0.7);
+  }
+  .ease-in,
+  .ease-in::after {
+    transition-timing-function: cubic-bezier(0.5, 0.1, 0.7, 0.3);
   }
 </style>
-  <style>
-        /* couldn't style the table without breaking markdown. quik hax */
-        .probability-table th:nth-child(n + 3):not(:has(strong))::before,
-        .probability-table td:nth-child(n + 3):not(:has(strong))::before,
-        .probability-table th:nth-child(n + 3) strong::before,
-        .probability-table td:nth-child(n + 3) strong::before {
-          content: "➡ ";
-          color: inherit;
-        }
-        .probability-table tr th:nth-child(3),
-        .probability-table tr td:nth-child(3) strong {
-          color: #f88;
-        }
-        .probability-table tr th:nth-child(4),
-        .probability-table tr td:nth-child(4) strong {
-          color: #8ff;
-        }
-      </style>
   <script async="" src="/scripts/cursor.js"></script>
 </head>
 
 
-
 <body>
 
-  <span hidden="" class="p-name">Dynamic patrol behaviour with Markov chains</span>
-
+  <span hidden="" class="p-name">Stop using ease-out in your UIs!</span>
   <div class="page-wrapper">
     <header class="main-header">
       <div class="main-header-bar">
@@ -1419,277 +1473,228 @@
 
         <div class="content e-content">
 
+          <div class="blog-header">
+            <div class="text-with-bg blog-header-title p-name" style="--text-with-bg-color: var(--bg-clr)">
+              <h1 class="text-with-bg-span blog-header-title-inner">
+                Stop using ease-out in your UIs!
+              </h1>
+            </div>
+            <img srcset="/gen/_notes_stop_using_ease_out_hero_800.generated.jpg 800w,/notes/stop-using-ease-out/hero.jpg 1600w" sizes="not (min-width:800px) 800px, 1600px" spec="100% [800) 80%" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.7789072426937738;background: #284848" class="blog-header-hero u-media" src="/notes/stop-using-ease-out/hero.jpg" alt="">
+            <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
+              <path></path>
+            </svg>
+          </div>
+          <div class="blog-post-info ">
+            <span class="dt-published">15 Jul 2024</span> · 10 min read
+          </div>
+          <!-- textlint-disable -->
+          <div class="tag-row">tags:
+            <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span>
+            <span class="tag-component p-category" title="essay" style="background: #eeeeee; color: #4a4a4a">essay</span>
+          </div>
+          <!-- textlint-enable -->
           <!-- prettier-ignore -->
           <div class="markdown">
-            <p>
-            <div class="blog-header">
-              <div class="text-with-bg blog-header-title p-name" style="--text-with-bg-color: var(--bg-clr)">
-                <h1 class="text-with-bg-span blog-header-title-inner">
-                  Dynamic patrol behaviour with Markov chains
-                </h1>
-              </div>
-              <img srcset="/gen/_notes_dynamic_patrol_stealth_games_hero_800.generated.jpg 800w,/gen/_notes_dynamic_patrol_stealth_games_hero_1600.generated.jpg 1600w" sizes="not (min-width:800px) 800px, 1600px" spec="100% [800) 80%" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.328125;background: #a8a8a8" class="blog-header-hero u-media" src="/notes/dynamic-patrol-stealth-games/hero.jpg" alt="">
-              <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
-                <path></path>
-              </svg>
-            </div>
-            </p>
-            <p>
-            <div class="blog-post-info ">
-              <span class="dt-published">1 Jul 2023</span> · 9 min read
-            </div>
-            </p>
-            <div class="tag-row">tags:
-              <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span>
-              <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
-            </div>
+            <p>Before anything, let me present you with a set of controls with no context.</p>
+            <table class="demo-table">
+              <tbody>
+                <tr>
+                  <td>
+                    <button class="demo-button ease-in">Press me</button>
+                  </td>
+                  <td>
+                    <button class="demo-button ease-out">Press me</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" class="demo-toggle ease-out">
+                  </td>
+                  <td>
+                    <input type="checkbox" class="demo-toggle ease-in">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-            <p>Hi, this post is about a game AI algorithm for stealth games.</p>
-            <p>But first, here’s a preview demo! Full demo at the end of this post. In between, I’ll explain the background, the process, and the results!</p>
-            <p><dynamic-patrol-demo-client tabindex="0" data-rss="interactive" alt="interactive demo of the dynamic patrol algorithm" map="
-        ###################
-        #....#....#.......#
-        #....#....#.......#
-        #....#....#.......#
-        ##.####.###.......#
-        #.................#
-        #.................#
-        ##.####.###.......#
-        #...#....#####..###
-        #...#....#####..###
-        #...#...G#####..###
-        ##########.......##
-        ##########.......##
-        ##########.......##
-        ##########.......##
-        ###################
-      "></dynamic-patrol-demo-client></p>
-            <h2 id="background">Background</h2>
-            <p>I enjoy stealth games. However, I felt like the genre has become formulaic. Nowadays, we have standardised light, shadow, and noise mechanics. We almost always get discrete levels of alertness where on one end NPCs have wallhacks while on the other, NPCs have amnesia.</p>
+            <p><strong>Stop using ease-out, or ease-in-out, or whatever-out, in every UI animation!</strong></p>
+            <p>There is a lot of propaganda on the internet against ease-in, saying that it's “unnatural”, “unusual”, or that it's “of the devil”. Some say that it's both “sluggish” and “abrupt”. Many pointing to ease-out as the safe, smooth, satisfying messiah of animation (including its safer kin, ease-in-out). There are even published ‘best practices’ which can be summed up to <a target="_blank" class="text-link " href="https://web.dev/articles/the-basics-of-easing">“just use ease-out”</a>. This post is here to set things straight — in a nonlinear fashion.</p>
+            <p>So, why not ease-out? And what to use instead?</p>
+            <h2 id="reason-1-its-overused">Reason #1. It’s overused</h2>
+            <p>Let’s get the weakest point out of the way. Ease out is boring because it’s everywhere. Because it’s part of the browser default <code>ease</code> function (which is a combination of a fast ease-in with a slow ease-out). </p>
+            <p>It’s like how corners are getting rounder and rounder on the web simply because it's easy and built-in.</p>
             <p>
             <div class="blog-media blog-media-default ">
-              <img srcset="/gen/_notes_dynamic_patrol_stealth_games_sc_664.generated.jpg 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.6;background: #080808" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/sc.jpg" alt="Screenshot of Splinter Cell" caption="Screenshot of Splinter Cell: Chaos Theory from mobygames.com. This game is good."><span class="blog-media-caption">Screenshot of Splinter Cell: Chaos Theory from mobygames.com. This game is good.</span>
+              <img loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.7777777777777777;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/figma-ease-out.gif" caption="Source: Figma"><span class="blog-media-caption">Source: Figma</span>
             </div>
             </p>
-            <p>The most immersion-breaking moment for me was when you get spotted, the subsequent investigation consists solely of staring at the ground where you were last seen. Like when you get spotted at an entrance to a room, guards will just stare at the doorway. <em>Why not check inside the room?</em></p>
-            <p><span class="box-note ">Yeah, I know, game designers don’t deem smart game AI “fun”. But an easy predictable game is no fun! Whatever, I just wanted to share this prototype.</span></p>
-            <p>What was lacking in stealth game AI is inference - the ability to infer that when a target enters a room, then they subsequently must be inside the room.</p>
-            <h2 id="a-room-and-a-hallway">A room and a hallway</h2>
-            <p>As an example, here are a room and a hallway with a doorway in between, modelled as a <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Graph">graph</a>:</p>
-            <div class="small-diagram-row small-diagram-row-solo">
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_room-graph_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9669117647058824;background: #986868" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/room-graph.png" alt="Node graph representing a room node, a doorway node, and hallway nodes">
-              </div>
+            <p>Is the public missing out on better web animations (and better corners) because of the ubiquity of these practices? Yes.</p>
+            <h2 id="reason-2-its-unrealistic">Reason #2. It’s unrealistic</h2>
+            <p>How about a study in skeuomorphism?</p>
+            <p>Imagine a mechanical toggle switch. Something like the following video:</p>
+            <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/l-G_uejx0Rs?si=g-RJXjgqsY8euukl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>
+
+            <p>Now here’s an interactive physics simulation of the same spring-based toggle switch:</p>
+            <div><switch-sim-client class="switch-sim " data-rss="interactive" alt="interactive simulation of a mechanical switch">
+                <div class="switch-sim-render"><canvas></canvas></div>
+
+                <div class="switch-sim-graph">
+                  <canvas></canvas>
+                  <div>
+                    <span class="switch-sim-legend-position"></span>
+                    Switch position over time
+                    <span class="switch-sim-legend-force"></span>
+                    Switch reaction force over time
+                  </div>
+                </div>
+
+              </switch-sim-client></div>
+
+            <p><span class="box-note "><em>Drag your pointer horizontally and vertically across the simulation window to control the appendage that toggles the switch.</em></span></p>
+            <p>This is a physics-based simulation with simulated forces, torques, and constraints. Let’s slow the simulation down and show some force lines for a better look.</p>
+            <div>
+              <switch-sim-client class="switch-sim  switch-sim-with-graph " data-rss="interactive" alt="interactive simulation of a mechanical switch" show-forces="all" show-graph="" timescale="0.1">
+                <div class="switch-sim-render"><canvas></canvas></div>
+                <p slot="before-graph">Graphing the angular position of the switch and the reaction force that resists your press (i.e. the normal force) over time in real time, gives us…</p>
+                <div class="switch-sim-graph">
+                  <canvas></canvas>
+                  <div>
+                    <span class="switch-sim-legend-position"></span>
+                    Switch position over time
+                    <span class="switch-sim-legend-force"></span>
+                    Switch reaction force over time
+                  </div>
+                </div>
+
+
+
+              </switch-sim-client>
             </div>
 
-            <p>If we assign a number to each node representing the probability that the target (the player) is there, we can start making inferences of where the target could be at later times.</p>
-            <p>Let’s say the target was just seen in room <em>R</em>. At that exact moment, there is complete certainty that the target is there, so node <em>R</em> will be assigned a probability of <strong>1.0</strong>.</p>
-            <div class="small-diagram-row small-diagram-row-solo">
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_room-graph-r1_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9705882352941176;background: #e8e8e8" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/room-graph-r1.png" alt="Node graph representing the room node with 1.0, the doorway node with 0.0, and hallway nodes with 0.0">
-              </div>
+            <p>Play around with the simulation!</p>
+            <p>Here’s what a typical motion looks like:</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/stop-using-ease-out/typical.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 2;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/typical.png" caption="Typical output graph of the above simulation"><span class="blog-media-caption">Typical output graph of the above simulation</span>
             </div>
-
-            <p>After that moment however, the certainty fades. Because the target could have exited the room next, or maybe they stayed.</p>
-            <p>The graph is recalculated to reflect this uncertainty by distributing the probability value of <strong>1.0</strong> from node <em>R</em> to each possible choice of node - <em>D</em> (exit) and <em>R</em> (stay). We don’t know the likeliness of either happening so we can just assume equal chances, giving them <strong>0.5</strong> each.</p>
-            <div class="small-diagram-row small-diagram-row-solo">
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_room-graph-r1d1_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9705882352941176;background: #e8e8e8" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/room-graph-r1d1.png" alt="Node graph representing the room node with 0.5, the doorway node with 0.5, and hallway nodes with 0.0">
-              </div>
+            </p>
+            <p>Notice the <span style="color:#f77">position curve (red)</span>. <small>We'll get to the force curve later.</small> Does the position curve look anything familiar? Compare that with some standard easing functions:</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/stop-using-ease-out/standard-easing.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.96;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/standard-easing.png" caption="Common easing functions. Source: MDN"><span class="blog-media-caption">Common easing functions. Source: MDN</span>
             </div>
+            </p>
+            <p><strong>The toggle switch’s position curve follows the ease-in curve!</strong> A slow start, gradually building up momentum, then finally stopping to a satisfying ‘click’!</p>
+            <p>Contrary to “best practice”, the natural motion of a toggle switch does not follow an ease-out nor an ease-in-out curve! I’ll go further and say that ease-out is unnatural for any kind of UI control that represents a tactile interaction.</p>
+            <p>Like buttons. In the real world, buttons (the ones that are nice to press anyway) have some kind of buckling mechanism when pressed. Similar to the toggle switch example above, there’s a buildup, a fall, and a final ‘click’ into place.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <video muted="" autoplay="" loop="" playsinline="" class="blog-media-element " caption="A button. In the real world." data-src="/notes/stop-using-ease-out/button.mp4">
+                <source src="/notes/stop-using-ease-out/button.mp4">
 
-            <p>Now there is 50% probability that the target is in the room, and 50% in the doorway. This process is repeated for each node over time to calculate the target’s potential location at any given moment.</p>
-            <p>Let’s do another iteration. The next one is a bit tricky, but it’s all calculated the same. We just need to calculate the distribution from each node <em>in parallel</em>, like so:</p>
-            <div class="small-diagram-row">
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_room-graph-r1d1t_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9705882352941176;background: #e8e8e8" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/room-graph-r1d1t.png" alt="Node graph representing the distribution from previous state" caption="Split the probabilities per node to each possible choice (including staying)."><span class="blog-media-caption">Split the probabilities per node to each possible choice (including staying).</span>
-              </div>
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_room-graph-r5d5h2_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9705882352941176;background: #e8e8e8" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/room-graph-r5d5h2.png" alt="Node graph representing the room node with 0.42, the doorway node with 0.42, and the hallway node H1 directly next to the doorway with 0.16" caption="Then sum up the values that arrived in each node."><span class="blog-media-caption">Then sum up the values that arrived in each node.</span>
-              </div>
+                Video: | Source: /notes/stop-using-ease-out/button.mp4
+
+              </video><span class="blog-media-caption">A button. In the real world.</span>
             </div>
+            </p>
+            <p>Best practice says that the sharp stop is unnatural and should be avoided. But that well-defined resolution is part of what makes switches and buttons feel good. Just imagine a button that dampens the motion the more you press it. It’ll feel squishy and mushy. You know what else slows down the further you go? Ease-out!</p>
+            <p>And yet, thousands of UIs still use ease out for UI controls!</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <video muted="" autoplay="" loop="" playsinline="" class="blog-media-element " caption="Ease out everywhere. One of these is a skeuomorphic rocker switch, ironically." data-src="/notes/stop-using-ease-out/examples.mp4">
+                <source src="/notes/stop-using-ease-out/examples.mp4">
 
-            <p><strong>Explanation of above:</strong> The <strong>0.5</strong> at <em>R</em> is split into two, giving <strong>0.5 / 2 = 0.25</strong> each to <em>R</em> and <em>D</em>. Meanwhile, the <strong>0.5</strong> at <em>D</em> is split into three, giving <strong>0.5 / 3 ≈ 0.16</strong> each to <em>R</em>, <em>D</em>, and <em>H1</em>. Then node values are added together in a separate step after the split.</p>
-            <p>After some time, we will get a picture of where the target is likely to be and a smarter game AI can utilise this to send guards on a more realistic investigation route.</p>
-            <p>Another iteration and we get this:</p>
-            <div class="small-diagram-row small-diagram-row-solo">
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_room-graph-final_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9688073394495413;background: #e8e8e8" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/room-graph-final.png" alt="Node graph representing the room node with 0.35, the doorway node with 0.39, hallway nodes H0 and H2 with 0.04, and H1 with 0.18" caption="The state after some time"><span class="blog-media-caption">The state after some time</span>
-              </div>
+                Video: | Source: /notes/stop-using-ease-out/examples.mp4
+
+              </video><span class="blog-media-caption">Ease out everywhere. One of these is a skeuomorphic rocker switch, ironically.</span>
             </div>
+            </p>
+            <p>Has abstract UI design gone too far?</p>
+            <h3 id="counterexamples">Counterexamples</h3>
+            <p>Of course, not all UI animations need ease in, such as macro interactions, card movement, scrolling, expand/collapse, or any object that ‘animate themselves’ as opposed to raw manipulation.</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <video muted="" autoplay="" loop="" playsinline="" class="blog-media-element " caption="Source: Material Design" data-src="/notes/stop-using-ease-out/material-pager.mp4">
+                <source src="/notes/stop-using-ease-out/material-pager.mp4">
 
-            <p>What I’ve just described is some generalisation of a <strong><a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Markov_chain">Markov chain</a></strong>. Well, it’s not exactly accurate to call it that since the Markov chain is just one part of the algorithm. You’ll see why in the next section.</p>
-            <p><span class="box-note "><strong>Disclaimer:</strong> I wasn’t thinking about Markov chains while developing this algorithm. The first version back in 2013 was based on crude counting and was more like a potential field. (Btw, it was in <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Adobe_Flash">Flash</a>.) The Markov chain concept that I learned (2023) helped me make the calculations more accurate and the numbers more realistic.</span></p>
-            <h2 id="observer-effect">Observer effect</h2>
-            <p>Suppose a guard did come to investigate the nearest highest probability node (the doorway <em>D</em>). Coming from the south, the guard just saw the doorway and the immediate hallway in their field of vision - There are two possibilities: Either <strong>(1)</strong> they saw nothing, or <strong>(2)</strong> they saw <em>the target</em>.</p>
-            <p>In case <strong>(1)</strong> where the guard saw nothing, we need to update the seen nodes according to the guard’s a posteriori observation.</p>
-            <div class="small-diagram-row small-diagram-row-solo">
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_observe-none_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9705882352941176;background: #e8e8e8" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/observe-none.png" alt="Node graph with observed nodes having 0.0" caption="After observation"><span class="blog-media-caption">After observation</span>
-              </div>
+                Video: | Source: /notes/stop-using-ease-out/material-pager.mp4
+
+              </video><span class="blog-media-caption">Source: Material Design</span>
             </div>
-
-            <p>The nodes that were seen having no target at their locations are forced to a probability of <strong>0.0</strong>, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to a total of <strong>1.0</strong> (This is an invariant in any case).</p>
-            <p>To illustrate, here’s a table that details each intermediate step:</p>
-            <div class="probability-table">
-
-              <div class="markdown-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Node</th>
-                      <th>Prior<br>probabilities</th>
-                      <th>Values after<br>observation</th>
-                      <th>Final values<br>after rescaling</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>R</td>
-                      <td>0.35</td>
-                      <td>0.35</td>
-                      <td><strong>0.9</strong></td>
-                    </tr>
-                    <tr>
-                      <td>D</td>
-                      <td>0.39</td>
-                      <td><strong>0</strong></td>
-                      <td>0</td>
-                    </tr>
-                    <tr>
-                      <td>H0</td>
-                      <td>0.04</td>
-                      <td>0.04</td>
-                      <td><strong>0.1</strong></td>
-                    </tr>
-                    <tr>
-                      <td>H1</td>
-                      <td>0.18</td>
-                      <td><strong>0</strong></td>
-                      <td>0</td>
-                    </tr>
-                    <tr>
-                      <td>H2</td>
-                      <td>0.04</td>
-                      <td><strong>0</strong></td>
-                      <td>0</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+            </p>
+            <p>Unlike switches and buttons, these things don’t have a frame or housing that can immediately stop them when they ‘bottom out’. So they have to decelerate naturally.</p>
+            <p>In the end, it depends. But as a general rule? Ease-in for tactile things.</p>
+            <h2 id="reason-3-ease-in-is-more-satisfying">Reason #3. Ease-in is more satisfying</h2>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/stop-using-ease-out/typical.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 2;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/typical.png" caption="The graph again. This time focus on the force curve."><span class="blog-media-caption">The graph again. This time focus on the force curve.</span>
             </div>
-
-
-
-            <p>After updating the probabilities, the state of the graph tells us that the target is around 90% likely to be in the room <em>R</em> and 10% in the far hallway <em>H0</em>.</p>
-            <p>The game AI can simply send the guard to the highest node based on the updated probabilities (this case, the room <em>R</em>). It can do this again and again, which will result in a seemingly organic and responsive searching behaviour from the AI guard. No predefined patrol routes needed.</p>
-            <p><span class="box-note ">Another way to go about this is to keep track of probabilities in the form of rational numbers - separately tracking the numerators and the denominators. You only need to store the numerator per node, while there is one global denominator, which is the sum of all the numerators. This is what I did for my demo implementation.</span></p>
+            </p>
+            <p>If you’re a mechanical keyboard enthusiast, you might’ve recognised the general landmarks in the <span style="color:#68f">force curve (blue)</span> above. That ‘tactile bump’ and subsequent drop in force is a big part of what provides the satisfying feedback that mechanical keys are known for (and coincidentally, produces the ease-in motion).</p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/stop-using-ease-out/cherry.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.5092592592592593;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/cherry.png" caption="Force curve of a tactile keyboard switch. Source: deskthority.net"><span class="blog-media-caption">Force curve of a tactile keyboard switch. Source: deskthority.net</span>
+            </div>
+            </p>
+            <p>But <em>why</em> is it satisfying?</p>
+            <p><audio controls="" src="/notes/stop-using-ease-out/vsauce.mp3"></audio></p>
+            <p>I present my sub-thesis:</p>
+            <blockquote>
+              <p><strong>The sequence of tension and release is intrinsically satisfying.</strong>
+                <cite>me</cite>
+              </p>
+            </blockquote>
+            <p>I will now present supporting evidence with xkcd-style graphs.</p>
+            <h3 id="a-popping-bubble-wraps">A. Popping bubble wraps</h3>
+            <p><span class="box-note "><strong>Disclaimer:</strong> We are getting into subjective and pseudoscience territory.</span></p>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/stop-using-ease-out/bubble-wrap.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 2;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/bubble-wrap.png" caption="Estimated force curve of popping a bubble in a bubble wrap."><span class="blog-media-caption">Estimated force curve of popping a bubble in a bubble wrap.</span>
+            </div>
+            </p>
+            <p>Popping bubble wraps is a satisfying sensation. Popping a bubble in a bubble wrap follows the familiar buildup, release, and resolution pattern that is associated with ease-in.</p>
+            <p><small><a target="_blank" class="text-link " href="https://xkcd.com/2458/">Relevant xkcd.</a></small></p>
+            <h3 id="b-scratching-an-itch">B. Scratching an itch</h3>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/stop-using-ease-out/itch.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 2;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/itch.png" caption="Estimated discomfort experienced during an itch’s lifetime."><span class="blog-media-caption">Estimated discomfort experienced during an itch’s lifetime.</span>
+            </div>
+            </p>
+            <p>While the act of scratching by itself is mildly pleasurable, when paired with an itchy skin, it becomes a satisfying experience.</p>
+            <h3 id="c-music-theory">C. Music theory</h3>
+            <p>🚧 This section is WIP, something about dissonance and consonance 🚧</p>
+            <h3 id="d-arousal-jag-theory">D. Arousal jag theory</h3>
+            <blockquote>
+              <p>The abrupt fall from elevated levels of arousal to a lower, more appropriate level is thought to produce a pleasurable response.
+                <cite>APA Dictionary of Psychology, <a target="_blank" class="text-link " href="https://dictionary.apa.org/arousal-jag">‘arousal jag’</a></cite>
+              </p>
+            </blockquote>
+            <p>This theory was introduced by a psychologist named Daniel E. Berlyne in 1970. The idea is that an increase in tension followed by a sharp decrease produces a satisfying feeling. This framework works well for ease-in’s case in the context of the force curve, or more directly, with ease-in’s initial slow buildup followed by its abrupt resolution.</p>
+            <p>If you’re looking for the psychology behind microinteractions, well, that’s one of them.</p>
+            <h3 id="e-the-three-act-structure">E. The Three-Act Structure</h3>
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img srcset="/notes/stop-using-ease-out/3act.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 2;background: #f8f8f8" class="blog-media-element " src="/notes/stop-using-ease-out/3act.png" caption="The three-act structure with a tension graph."><span class="blog-media-caption">The three-act structure with a tension graph.</span>
+            </div>
+            </p>
+            <p>In storytelling or filmmaking, the <a target="_blank" class="text-link " href="https://tvtropes.org/pmwiki/pmwiki.php/Main/ThreeActStructure">three-act structure</a> is a model for analysing or creating good stories. It mirrors the tension-resolution sequence in a grander scale. And with bigger scope comes the potential for a higher level of satisfaction — <em>catharsis</em>. Great stories that use the three-act structure always leave you in a state of catharsis.</p>
+            <p>Is it possible to have micro-catharses in UI animations?</p>
             <hr>
-            <p>In case <strong>(2)</strong> where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned <strong>1.0</strong> while <em>the rest of the nodes in the whole graph</em> are cleared back to <strong>0.0</strong>. The target can only be in one place at at a time!</p>
-            <div class="small-diagram-row small-diagram-row-solo">
-              <div class="blog-media blog-media-default ">
-                <img srcset="/gen/_notes_dynamic_patrol_stealth_games_observe-target_300.generated.png 300w" sizes=" 300px" spec="300" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 0.9705882352941176;background: #e8e8e8" class="blog-media-element " src="/notes/dynamic-patrol-stealth-games/observe-target.png" alt="Node graph with observed target in node having 1.0" caption="After observation of target"><span class="blog-media-caption">After observation of target</span>
-              </div>
-            </div>
-
-            <p>It stays that way as long as the guard can see the target. When the guard loses sight of the target again, we just continue the Markov inference and the probability values will spread again like a wave. The cycle of chasing, investigation, and hiding continues.</p>
-            <span class="box-note ">
-              Similar to quantum mechanics, an act of observation collapses the superposition. There seems to be an underlying mathematical truth that spans across Markov chains, quantum mechanics, Bayesian networks, and video game mechanics. :P
-            </span>
-
-            <p>It’s best to just see it in action. Play with the demo in the following section.</p>
-            <h2 id="demo">Demo</h2>
-            <p>I implemented this algorithm in JavaScript so you can play with it right here. In this implementation, the world is a 2D grid where each tile is a node in the Markov graph.</p>
-            <p>Click a tile to command the target (the green character <img src="demo/target.png" alt="">) to move. A blue fog will indicate the probabilities of each tile.</p>
-            <p>Have fun playing hide and seek!</p>
-            <p><dynamic-patrol-demo-client tabindex="0" data-rss="interactive" alt="interactive demo of the dynamic patrol algorithm" map="
-        ....................
-        ....................
-        .T##########.#####..
-        ..#........#..#..#..
-        ..#........#..#..#..
-        ...........#..#..#..
-        ..#........#####.#..
-        ..#..............#..
-        ..################..
-        .G#........#........
-        ###........#.....#..
-        ..#######.########..
-        ..#....#.........#..
-        ..#....#.........#..
-        ..#.........###..#..
-        ..#....#.........#..
-        ..#....#.........#..
-        ..##.#############..
-        ....................
-        ....................
-      "></dynamic-patrol-demo-client></p>
-            <p><span class="box-note "><strong>Tip:</strong> Press <code>P</code> to toggle visibility of the probability field. Press <code>N</code> to toggle numbers between none, percentage, and log-scale. (Keyboard only)</span></p>
-            <h2 id="conclusions">Conclusions</h2>
+            <p>All of these patterns of satisfaction reflect ease-in’s slow buildup and sudden resolution. While there are other kinds of satisfying phenomenon, like <a target="_blank" class="text-link " href="https://youtu.be/3clqk2U3T9Y">sand slicing</a> which has nothing to do with any of this; tension and release is a way to induce the positive effect.</p>
+            <p>There must be a balance to the proportion of tension and release, else the negative effects of the tension may overcome the positive effects of release, or the tension too light that the release is too shallow. A bubble wrap that is really hard to pop would be quite annoying, and a grand story that ends prematurely would be disappointing. The easing curve must be manually finetuned depending on the purpose. For buttons and toggles, keep it shorter than a bubble wrap pop.</p>
+            <p><span class="box-note ">🫰 <strong>Snap!</strong> Try snapping your fingers. Did you do it? If so, you just made an ease-in motion. <a target="_blank" class="text-link " href="https://www.youtube.com/watch?v=4DHQ4mKSZXU">Don’t believe me?</a> When people say they want <em>snappy</em> animations, what do they really want?</span></p>
+            <h2 id="tips">Tips</h2>
             <ul>
-              <li>Emergent behaviours can be described:<ul>
-                  <li>Chasing: Upon losing vision, the guard starts chasing in the direction where you ran away (without the guard actually seeing where you are).</li>
-                  <li>Searching: As the chase continues, the path begins branching, and the probability dilutes. The guard gradually transitions from chasing behaviour to a searching behaviour.</li>
-                  <li>Patrolling: As the probability distribution approaches equilibrium, the guard devolves into a plain patrol.</li>
-                  <li>There is a spectrum from chasing to patrolling.</li>
-                </ul>
-              </li>
-              <li>The probability spreading process can be drastically sped-up by implementing Markov chain transitions using matrix multiplication with a transition matrix.<ul>
-                  <li>Matrix multiplication is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Embarrassingly_parallel">embarrasingly parallel</a>.</li>
-                </ul>
-              </li>
-              <li>The search route quality can be improved significantly. Currently it just sets the tile with the highest potential as the destination with an A* pathfinder, resetting the process whenever the tile becomes invalid.<ul>
-                  <li>One improvement might involve incorporating the potential field as weights in the pathfinding algorithm itself to generate a more efficient and sweeping route.</li>
+              <li>Use a custom curve appropriate to the size of the element. Don’t use the default ease-in because it’s likely to feel too slow for most use cases. In CSS, there’s <a target="_blank" class="text-link " href="https://cubic-bezier.com/"><code>cubic-bezier()</code></a> for example.</li>
+              <li>Use a duration appropriate to the curve, the size of the element, and the scale of the movement.</li>
+              <li>Partially start the animation on pointer press, not on release.<ul>
+                  <li>For mouse users, there’s already an initial ‘actuation force’ required to trigger the mouse button. In these cases, the initial velocity shouldn’t be zero (the easing curve shouldn’t start at a horizontal slope). For touchscreens, there’s no such actuation force.</li>
                 </ul>
               </li>
             </ul>
-            <p>Sadly, the name <a target="_blank" class="text-link " href="https://github.com/mxgmn/WaveFunctionCollapse">“Wave Function Collapse”</a> has already been claimed by a different video game algorithm, so I can’t give this one a cool quantum name anymore.</p>
-            <hr>
-            <p><strong>Bonus demo! 2 guards.</strong></p>
-            <p><dynamic-patrol-demo-client tabindex="0" data-rss="interactive" alt="interactive demo of the dynamic patrol algorithm" map="
-        .................#..
-        .T...............#..
-        ..#..####..#######..
-        ..#.....#...........
-        ..#.....#...........
-        ..#..#..#######..###
-        ...G.#..#........#..
-        .....#..#........#..
-        ######..####..####..
-        ..#........#........
-        ..#.G......#........
-        ..#..#######..####..
-        ..............#.....
-        ..............#.....
-        ######..#######..###
-        ..#.....#........#..
-        ..#.....#........#..
-        ..#..#..####..#..#..
-        .....#........#.....
-        .....#........#.....
-      "></dynamic-patrol-demo-client></p>
-            <p>Special thanks:</p>
-            <ul>
-              <li><img src="demo/target.png" alt=""> Ally Gator as “The Target”</li>
-              <li><img src="demo/guard.png" alt=""> Metal Head as “Guard 1”</li>
-              <li><img src="demo/guard.png" alt=""> Rust Bucket as “Guard 2”</li>
-              <li><a target="_blank" class="text-link " href="https://bitbucket.org/umbraprojekt/mrpas">bitbucket/umbraprojekt/mrpas</a> for guards’ vision <img src="demo/guard.png" alt="">🪧<img src="demo/guard.png" alt=""></li>
-              <li><a target="_blank" class="text-link " href="https://github.com/qiao/PathFinding.js">github/qiao/PathFinding.js</a> for giving directions 🧭</li>
-            </ul>
-            <p><strong>Update:</strong> Related stuff I found:</p>
-            <ul>
-              <li><a target="_blank" class="text-link " href="https://youtu.be/eFP0_rkjwlY?t=842">Predicting Pac-Man ghosts with Markov chains [YouTube]</a>
-                <ul>
-                  <li>As mentioned above, I had a crude counting-based solution before, but the concept of Markov chains made it more accurate. This video is where I got the idea of applying Markov chains to a grid.</li>
-                </ul>
-              </li>
-              <li><a target="_blank" class="text-link " href="https://ojs.aaai.org/index.php/AIIDE/article/download/7425/7308/10903">Dynamic Guard Patrol in Stealth Games [academic, PDF]</a>
-                <ul>
-                  <li>Accompanying video: <a target="_blank" class="text-link " href="https://youtu.be/9FyaMM7l2EU">YouTube</a></li>
-                  <li>I found this after writing this post. The paper uses a similar potential field idea, but only tracks <em>staleness</em>. It behaves similarly to the Markov chain’s equilibrium state, but it cannot produce chasing behaviours.</li>
-                </ul>
-              </li>
-            </ul>
+            <h2 id="conclusion">Conclusion</h2>
+            <p>Don’t use ease-out in everything! Try ease-in! Or try a combination of both with varying weights! Just try anything at all. Tweak your curves as often as you tweak your paddings.
+            </p>
 
           </div>
 
@@ -1742,14 +1747,14 @@
             <div class="card-carousel-container">
               <div class="card-carousel blog-suggestions-carousel">
 
-                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/2023-review/">
+                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-tictactoe-ai/">
                   <div class="card-grid-image-container">
-                    <img srcset="/notes/placeholder.png 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.6058823529411765;background: #c89878" class="card-grid-image" src="/notes/placeholder.png" alt="">
+                    <img srcset="/gen/_notes_pure_css_tictactoe_ai_hero_546.generated.jpg 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #080808" class="card-grid-image" src="/notes/pure-css-tictactoe-ai/hero.jpg" alt="">
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
                       <div class="card-grid-title-content">
-                        <div class="card-grid-title">2023 in review</div>
+                        <div class="card-grid-title">Pure CSS tic-tac-toe with game AI</div>
                         <div class="card-grid-posttitle"></div>
                       </div>
                     </div>
@@ -1764,9 +1769,9 @@
                     </div>
                     <div class="card-grid-description">
 
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
 
-
-                      <span class="card-grid-action card-grid-story" aria-label="Read post - 2023 in review">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Pure CSS tic-tac-toe with game AI">Read post</span>
                     </div>
                   </div>
                 </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-volley-ball-game/">
@@ -1801,14 +1806,14 @@
                       <span class="card-grid-action card-grid-story" aria-label="Read post - Volley ball game in pure CSS">Read post</span>
                     </div>
                   </div>
-                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune/">
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/debug-css-boxes-bookmarklet/">
                   <div class="card-grid-image-container">
-                    <img srcset="/gen/_notes_sweep_and_prune_hero_546.generated.jpg 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #78e8e8" class="card-grid-image" src="/notes/sweep-and-prune/hero.jpg" alt="">
+                    <img srcset="/gen/_notes_debug_css_boxes_bookmarklet_example_546.generated.png 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #f8f8f8" class="card-grid-image" src="/notes/debug-css-boxes-bookmarklet/example.png" alt="">
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
                       <div class="card-grid-title-content">
-                        <div class="card-grid-title">Sort, sweep, and prune: Collision detection algorithms</div>
+                        <div class="card-grid-title">Debug CSS boxes with this bookmarklet</div>
                         <div class="card-grid-posttitle"></div>
                       </div>
                     </div>
@@ -1823,19 +1828,19 @@
                     </div>
                     <div class="card-grid-description">
 
-                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
 
-                      <span class="card-grid-action card-grid-story" aria-label="Read post - Sort, sweep, and prune: Collision detection algorithms">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Debug CSS boxes with this bookmarklet">Read post</span>
                     </div>
                   </div>
-                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/sweep-and-prune-2/">
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/simple-image-recognition-vanilla-js/">
                   <div class="card-grid-image-container">
-                    <img srcset="/gen/_notes_sweep_and_prune_2_hero_546.generated.jpg 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #e87878" class="card-grid-image" src="/notes/sweep-and-prune-2/hero.jpg" alt="">
+                    <img srcset="/gen/_notes_simple_image_recognition_vanilla_js_hero_546.generated.png 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #48c8d8" class="card-grid-image" src="/notes/simple-image-recognition-vanilla-js/hero.png" alt="">
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
                       <div class="card-grid-title-content">
-                        <div class="card-grid-title">Sort, sweep, and prune: Part&nbsp;2</div>
+                        <div class="card-grid-title">Simple image recognition with vanilla JavaScript</div>
                         <div class="card-grid-posttitle"></div>
                       </div>
                     </div>
@@ -1850,9 +1855,9 @@
                     </div>
                     <div class="card-grid-description">
 
-                      <span class="tag-component p-category" title="algorithm" style="background: #6bfbfa; color: #097d7c">algo</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
+                      <span class="tag-component p-category" style="background: #f0de91; color: #725f15">js</span>
 
-                      <span class="card-grid-action card-grid-story" aria-label="Read post - Sort, sweep, and prune: Part&nbsp;2">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Simple image recognition with vanilla JavaScript">Read post</span>
                     </div>
                   </div>
                 </a>
@@ -1949,8 +1954,8 @@
 
 
   <script type="module" async="" defer="" src="/scripts/reactions.js"></script>
-  <script type="module" async="" defer="" src="/scripts/dynamic-patrol-demo.js"></script>
   <script defer="" src="/scripts/responsive-media.js"></script>
+  <script type="module" async="" defer="" src="/scripts/switch-sim.js"></script>
   <script defer="" src="/scripts/blog-header.js"></script>
   <script type="module" async="" defer="" src="/scripts/nebula.js"></script>
   <script defer="" src="/scripts/main-footer-main-header.js"></script>
