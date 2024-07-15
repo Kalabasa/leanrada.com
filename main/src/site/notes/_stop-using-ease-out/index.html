@@ -1,8 +1,8 @@
 <html lang="en">
-  <page-title title="Stop using ease-out in UIs!" />
+  <page-title title="Stop using ease-out in your UIs!" />
   <blog-page path-group="/notes/">
     <blog-header
-      title="Stop using ease-out in UIs!"
+      title="Stop using ease-out in your UIs!"
       :heroimgsrc="url('hero.jpg')"
     />
     <blog-post-info date="01 Jan 1970" hidden />
@@ -83,7 +83,7 @@
         :src="url('typical.png')"
         caption="Typical output graph of the above simulation" />
     
-      Notice the (red) position curve. <small>We'll get to the force curve later.</small> Does the position curve look anything familiar? Compare with some standard easing functions:
+      Notice the <span style="color:#f77">position curve (red)</span>. <small>We'll get to the force curve later.</small> Does the position curve look anything familiar? Compare that with some standard easing functions:
 
       <blog-media
         :src="url('standard-easing.png')"
@@ -100,8 +100,6 @@
         caption="A button. In the real world." />
 
       Best practice says that the sharp stop is unnatural and should be avoided. But that well-defined resolution is part of what makes switches and buttons feel good. Just imagine a button that dampens the motion the more you press it. It’ll feel squishy and mushy. You know what else slows down the further you go? Ease-out!
-
-      <box-note>**Snap!** Try snapping your fingers. Did you do it? You just made an ease-in motion. [Don’t believe me?](https://www.youtube.com/watch?v=4DHQ4mKSZXU) When people say they want *snappy* animations, what do they really want?</box-note>
 
       And yet, thousands of UIs still use ease out for UI controls!
 
@@ -129,7 +127,7 @@
         :src="url('typical.png')"
         caption="The graph again. This time focus on the force curve." />
     
-      If you’re a mechanical keyboard enthusiast, you might’ve recognised the general landmarks in the force curve above. That ‘tactile bump’ and subsequent drop in force is a big part of what provides the satisfying feedback that mechanical keys are known for (and coincidentally, produces the ease-in motion).
+      If you’re a mechanical keyboard enthusiast, you might’ve recognised the general landmarks in the <span style="color:#68f">force curve (blue)</span> above. That ‘tactile bump’ and subsequent drop in force is a big part of what provides the satisfying feedback that mechanical keys are known for (and coincidentally, produces the ease-in motion).
 
       <blog-media
         :src="url('cherry.png')"
@@ -137,7 +135,7 @@
 
       But *why* is it satisfying?
 
-      <box-note>**Disclaimer:** This is getting into subjective and pseudoscience territory.</box-note>
+      <audio controls :src="url('vsauce.mp3')"></audio>
 
       I present my sub-thesis:
       
@@ -147,6 +145,8 @@
       I will now present supporting evidence with xkcd-style graphs.
 
       ### A. Popping bubble wraps
+
+      <box-note>**Disclaimer:** We are getting into subjective and pseudoscience territory.</box-note>
 
       <blog-media
         :src="url('bubble-wrap.png')"
@@ -189,18 +189,21 @@
 
       ---
 
-      All of these patterns of satisfaction reflect ease-in’s slow buildup and sudden resolution. While there are other kinds of satisfying phenomenon, like [sand slicing](https://youtu.be/3clqk2U3T9Y) which has nothing to do with any of this; tension and release is a good way to induce the positive effect.
+      All of these patterns of satisfaction reflect ease-in’s slow buildup and sudden resolution. While there are other kinds of satisfying phenomenon, like [sand slicing](https://youtu.be/3clqk2U3T9Y) which has nothing to do with any of this; tension and release is a way to induce the positive effect.
 
-      Now, this could be taken the wrong way. Does *‘the longer the tension, the sweeter the release’* mean that we should make ease-in’s slow start even slower to make it better? No, there is a balance, and it’s relative to the scale of the thing. A bubble wrap that is really hard to pop would be quite annoying, and a grand story that ends quickly would be disappointing. For buttons and toggles, keep it bubble wrap popping short. 
+      There must be a balance to the proportion of tension and release, else the negative effects of the tension may overcome the positive effects of release, or the tension too light that the release is too shallow. A bubble wrap that is really hard to pop would be quite annoying, and a grand story that ends quickly would be disappointing. The easing curve must be manually finetuned depending on the purpose. For buttons and toggles, keep it shorter than a bubble wrap pop.
+
+      <box-note>🫰 **Snap!** Try snapping your fingers. Did you do it? If so, you just made an ease-in motion. [Don’t believe me?](https://www.youtube.com/watch?v=4DHQ4mKSZXU) When people say they want *snappy* animations, what do they really want?</box-note>
 
       ## Conclusion
 
-      Don’t use ease-out in everything! Try ease-in!
+      Don’t use ease-out in everything! Try ease-in! Or try a combination of both with varying weights!
 
-      ### Tips
+      ## Tips
 
-      * Use a custom curve. Don’t use the default ease-in because it’s likely to feel too slow for most use cases. In CSS, there’s `bezier-curve()` for custom curves.
+      * Use a custom curve. Don’t use the default ease-in because it’s likely to feel too slow for most use cases. In CSS, there’s [`cubic-bezier()`](https://cubic-bezier.com/) for example.
       * Partially start the animation on pointer press, not on release.
+      * For mouse users, there’s already an initial ‘actuation force’ required to trigger the mouse button. In these cases, the animation velocity shouldn’t start from zero (the easing curve shouldn’t start at a horizontal slope). For touchscreens, there’s no such actuation force.
     </markdown>
   </blog-page>
 </html>
