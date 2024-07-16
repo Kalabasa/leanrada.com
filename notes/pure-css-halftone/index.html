@@ -1977,8 +1977,8 @@
             <h2 id="screen-and-threshold">Screen and threshold</h2>
             <p>Dot size and bleed can be emulated in one go using two simple image processing operations, <strong>screen</strong> and <strong>threshold</strong>.</p>
             <p>The first step is to <em>screen</em> the source image (in this case, the gradient) with a <em>blurry dot matrix pattern</em>.</p>
-            <p><strong>Screen</strong> is an operation that mixes the pixels of the source image and the overlay image using some kind of an inverted multiplication formula. Essentially, it <em>lightens lighter areas multiplicatively</em>.</p>
-            <p>Because the dots are blurry (i.e. having feathered edges), the screen operation gives us smaller-looking dots in lighter areas on the original image and denser dots in darker areas.</p>
+            <p><a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Blend_modes#Screen"><strong>Screen</strong></a> is an operation that mixes the pixels of the source image and the overlay image using some kind of an inverted multiplication formula. Essentially, it <em>lightens lighter areas multiplicatively</em>.</p>
+            <p>Because the dots are blurry (i.e. having feathered edges), the screen operation gives us smaller-looking dots in lighter areas on the original image and denser dots in darker areas — exactly what we want in halftone.</p>
             <div class="multiplication">
               <div class="multiplication-pattern-behind"></div>
               <div class="multiplication-source"></div>
@@ -1990,7 +1990,7 @@
             <p>The blurry dot pattern is generated using a <code>radial-gradient</code> as a repeated <code>background-image</code>, like this:</p>
             <pre class="code-block "><code class="code-block-code"><span class="token property">background-image</span><span class="token punctuation">:</span> <span class="token function">radial-gradient</span><span class="token punctuation">(</span>14px at 50% 50%<span class="token punctuation">,</span> black<span class="token punctuation">,</span> white<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token property">background-size</span><span class="token punctuation">:</span> 20px 20px<span class="token punctuation">;</span></code></pre>
-            <p>The next step is to <strong>threshold</strong> the resulting image. That is, convert the image into pure black &amp; pure white pixels. Dark pixels become fully black, and light pixels become white — according to some defined threshold between light vs dark.</p>
+            <p>The next step is to <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Thresholding_(image_processing)"><strong>threshold</strong></a> the resulting image. That is, convert the image into pure black &amp; pure white pixels. Dark pixels become fully black, and light pixels become white — according to some defined <em>threshold</em> between light vs dark.</p>
             <p>This creates the signature black-ink-matrix-on-white-paper look.</p>
             <div class="thresholding">
               <div class="thresholding-before"></div>
@@ -2082,13 +2082,13 @@
 </span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">&gt;</span></span></code></pre>
             <p><span class="box-note ">A minor point, but the demo above actually uses two separate overlay divs instead of a single div. This is to achieve better dot staggering.</span></p>
             <h2 id="variations">Variations</h2>
-            <p>Notice anything wrong with the last image above? There’s a weird magenta pattern on that flower petal. In fact, there are more magenta dots than expected!</p>
+            <p>Notice anything wrong with the last image above? There’s an unexpected pattern on the magenta in that flower petal. It should be a neat grid matrix, not this weird smiley face pattern or whatever it is. Even worse, the amount of ink is not correctly in proportion to the original image’s colour — There are more magenta dots than expected!</p>
             <p>
             <div class="blog-media blog-media-default ">
               <img srcset="/notes/pure-css-halftone/too-many-magenta.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1;background: #f8f8f8" class="blog-media-element " src="/notes/pure-css-halftone/too-many-magenta.png" alt="too many magenta dots (zoomed-in)">
             </div>
             </p>
-            <p>Apparently, the black dots were turning into the coloured ones. I think the problem was that: <strong><span class="colored-item">coloured source image</span> ⊕ black dot pattern = <span class="colored-item">coloured dots</span></strong>! <em>The symbol ⊕ represents the screen-threshold operation.</em> In other words, colour is contagious!</p>
+            <p>Apparently, the black dots were turning into the coloured ones. I think the problem was that: <strong><span class="colored-item">coloured source image</span> ⊕ black dot pattern = <span class="colored-item">coloured dots</span></strong>, <em>where the symbol ⊕ represents the screen-threshold operation.</em> In other words, colour is contagious!</p>
             <p>What I did to fix this was separate the K layer (black) from CMY, and have it use its own greyscale copy of the source image. <strong>greyscale source image ⊕ black dot pattern = black dots</strong>.</p>
             <p>Here’s a vivid example where you can toggle the ‘separate-K’ version for comparison purposes:</p>
             <p>
@@ -2117,8 +2117,8 @@
               Rotation
               <input type="range" min="0" max="360" value="0" step="0.1" oninput="onInputHalftoneDemoRotation(event)">
             </label></p>
-            <p>There are more ways to go about this with different qualities and levels of realism and complexity. For example, dithering.</p>
-            <p>I think the single-div solution is actually fine as long as you tweak the source image to be more readable under the filter.</p>
+            <p>There are more ways to go about this with different qualities and levels of realism and complexity. Like dithering.</p>
+            <p>I think the initial single-div solution is actually fine as long as you tweak the source image to be more readable under the filter.</p>
             <h2 id="gallery">Gallery</h2>
             <p>To finish with, here are a more demos!</p>
             <p>
