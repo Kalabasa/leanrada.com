@@ -46,9 +46,9 @@
 
       The first step is to *screen* the source image (in this case, the gradient) with a *blurry dot matrix pattern*.
       
-      **Screen** is an operation that mixes the pixels of the source image and the overlay image using some kind of an inverted multiplication formula. Essentially, it *lightens lighter areas multiplicatively*.
+      [**Screen**](https://en.wikipedia.org/wiki/Blend_modes#Screen) is an operation that mixes the pixels of the source image and the overlay image using some kind of an inverted multiplication formula. Essentially, it *lightens lighter areas multiplicatively*.
       
-      Because the dots are blurry (i.e. having feathered edges), the screen operation gives us smaller-looking dots in lighter areas on the original image and denser dots in darker areas.
+      Because the dots are blurry (i.e. having feathered edges), the screen operation gives us smaller-looking dots in lighter areas on the original image and denser dots in darker areas &mdash; exactly what we want in halftone.
 
       <div class="multiplication">
         <div class="multiplication-pattern-behind"></div>
@@ -107,7 +107,7 @@ background-image: radial-gradient(14px at 50% 50%, black, white);
 background-size: 20px 20px;
 " />
 
-      The next step is to **threshold** the resulting image. That is, convert the image into pure black & pure white pixels. Dark pixels become fully black, and light pixels become white &mdash; according to some defined threshold between light vs dark.
+      The next step is to [**threshold**](https://en.wikipedia.org/wiki/Thresholding_(image_processing)) the resulting image. That is, convert the image into pure black & pure white pixels. Dark pixels become fully black, and light pixels become white &mdash; according to some defined _threshold_ between light vs dark.
 
       This creates the signature black-ink-matrix-on-white-paper look.
 
@@ -277,11 +277,11 @@ background:
 
       ## Variations
 
-      Notice anything wrong with the last image above? There’s a weird magenta pattern on that flower petal. In fact, there are more magenta dots than expected!
+      Notice anything wrong with the last image above? There’s an unexpected pattern on the magenta in that flower petal. It should be a neat grid matrix, not this weird smiley face pattern or whatever it is. Even worse, the amount of ink is not correctly in proportion to the original image’s colour &mdash; There are more magenta dots than expected!
 
       <blog-media :src="url('too-many-magenta.png')" alt="too many magenta dots (zoomed-in)" />
 
-      Apparently, the black dots were turning into the coloured ones. I think the problem was that: **<span class="colored-item">coloured source image</span> ⊕ black dot pattern = <span class="colored-item">coloured dots</span>**! *The symbol ⊕ represents the screen-threshold operation.* In other words, colour is contagious!
+      Apparently, the black dots were turning into the coloured ones. I think the problem was that: **<span class="colored-item">coloured source image</span> ⊕ black dot pattern = <span class="colored-item">coloured dots</span>**, *where the symbol ⊕ represents the screen-threshold operation.* In other words, colour is contagious!
       
       <style>
         .colored-item {
@@ -295,9 +295,9 @@ background:
 
       <halftone-demo :mediasrc="url('eye.jpg')" size="7" bleed="0.35" can-disable can-separate-k can-resize can-change-bleed can-rotate />
 
-      There are more ways to go about this with different qualities and levels of realism and complexity. For example, dithering.
+      There are more ways to go about this with different qualities and levels of realism and complexity. Like dithering.
       
-      I think the single-div solution is actually fine as long as you tweak the source image to be more readable under the filter.
+      I think the initial single-div solution is actually fine as long as you tweak the source image to be more readable under the filter.
 
       ## Gallery
 
