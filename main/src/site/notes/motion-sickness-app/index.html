@@ -1,0 +1,146 @@
+<html lang="en">
+  <page-title title="I made an app to fix my motion sickness" />
+  <blog-page path-group="/notes/">
+    <blog-header
+      title="I made an app to fix my motion sickness"
+      :heroimgsrc="url('template.jpg')"
+    />
+    <blog-post-info date="01 Jan 1970" hidden />
+    <!-- textlint-disable -->
+    <tag-row>
+      <tag>android</tag>
+    </tag-row>
+    <!-- textlint-enable -->
+    <!-- prettier-ignore -->
+    <markdown>
+      Last May, Apple announced a new feature called **Vehicle Motion Cues** for their iOS devices. It’s an overlay that can help reduce motion sickness while riding a vehicle.
+
+      I have really bad motion sickness, and riding cars, buses, and trains makes me nauseous. This feature would have been a nice relief for me, but as it stands, I use Android.
+
+      Instead of buying a Malus fruit device, I took the matter into my own programmer hands. I created an alternative app for Android.
+      
+      <box-note>To be sure, I checked the patents. Apple does have one regarding a certain motion sickness solution, but it’s specifically for head-mounted displays, not handheld devices. I figured it’s because there is prior art for handheld devices, such as [**KineStop** for Android by Urbandroid](https://play.google.com/store/apps/details?id=com.urbandroid.kinestop&pcampaignid=web_share).</box-note>
+
+      My app is called **EasyQueasy**, and it’s (supposed to be) open source. I might try to get it on F-Droid someday. <small>Probably not Google Play since Google suspended my developer account due to “inactivity”.</small> I made this for myself so I haven’t really sorted out the distribution part. [GitHub repo here anyway](https://github.com/Kalabasa/EasyQueasy).
+
+      (demo video)
+
+      ## How does it work?
+
+      There are two facets to this inquiry:
+      1. How does it help with motion sickness?
+      2. How does the app work behind the scenes?
+
+      Let’s go over them sequentially.
+
+      ## How to unsick motion
+
+      [**Motion sickness**](https://en.wikipedia.org/wiki/Motion_sickness) happens when your brain receives conflicting motion cues from your senses. Motion cues come from the **vestibular system** (“sense of balance”, inner ears) and the **visual system** (eyes).
+
+      When you’re in a moving car, your eyes mostly see the stationary interiors of the car but your inner ears feel the movement. The signal of being stationary and the signal of being in motion does not make _sense_ in the central processing system somewhere in the brain _(which decides that the solution to this particular situation is to vomit)_.
+
+      (viz w/o screen)
+
+      <box-note>Side note: The inverse happens in virtual reality when you move or rotate your character &mdash; your eyes recognise motion but your inner ears (your physical body) feel no motion, causing sickness. As I mentioned, I have really bad motion sickness, and both car movement and VR movement are almost unbearable to me.</box-note>
+
+      To reduce motion sickness, we need to match the visual input with the vestibular input. Unfortunately, there’s no hardware that can override the inner ears’ sense of motion just yet. But we can semi-hijack the visual system via age-old hardware called screens.
+
+      By displaying movement on-screen that matches the actual movement of the body, motion sickness can be thus reduced!
+
+      (viz w/ screen w/o internals)
+
+      ## Behind the screens
+
+      Almost every smartphone has an **accelerometer** in them. It’s a hardware module that measures _acceleration_ in real time.
+
+      Coincidentally, the inner ears also sense the same particular aspect of motion, _acceleration_. That’s why it can detect up or down (the planet’s gravity is an ever-present acceleration towards “down”), functioning as a “sense of balance”, and detect relative motion at the same time.
+
+      So, smartphones have “inner ear” hardware. By reading off of this sensor, we can generate the correct visuals.
+
+      (viz w/ screen w/ accelerometer)
+
+      <box-note>
+        <p>The other Android app, KineStop, appear to use the phone’s magnetic sensor (compass) in addition to the accelerometer. So, it also knows about your absolute orientation in the world. It’s more effective in turning motions, but not so much for bumpy rides.</p>
+        <p>There are definitely multiple ways to solve the problem, but I find that the purely acceleration-based solution is sufficient for me.</p>
+      </box-note>
+
+      ## Dead reckoning
+
+      The accelerometer provides acceleration data, but what we actually need to draw dots on the screen is **position**.
+      
+      Recall in calculus or physics that the integral of acceleration is the _velocity_ and the integral of velocity is _position_. There are two layers of integration before we can draw dots on the screen.
+
+      `acceleration → velocity → position`
+
+      What the app does is simply [**numerical integration**](http://lampx.tugraz.at/~hadley/physikm/apps/a2x.en.php). It keeps track of an estimated velocity and an estimated position in memory. Then, on every tick, it adds the current acceleration vector to the velocity vector, and add the velocity to the position.
+
+      The calculated position vector provides an estimate of the phone’s current position! Finally, we can draw dots!
+      
+      To provide the correct sensation of movement, the dots must appear stable relative to the earth. That means they will move in the opposite way as the body moves. We simply negate the calculated position vector to achieve this effect.
+
+      <code-block :code="`\
+// pseudocode
+onEveryFrame() {
+  velocity += accelerometer.getAcceleration()
+  position += velocity
+  drawDots(offset = -position)
+}`" />
+
+      (viz w/ screen w/ accelerometer w/ position integration)
+
+      ## Error correction
+
+      (todo)
+
+      (viz w/ screen w/ accelerometer w/ position integration w/ noise)
+
+      (todo)
+
+      <code-block :code="`\
+// Example: With a low-pass filter
+onEveryFrame() {
+  // low-pass filter
+  smoothAcceleration +=
+    (accelerometer.getAcceleration() - smoothAcceleration) * 0.60
+
+  // position integration
+  velocity += smoothAcceleration
+  position += velocity
+
+  drawDots(offset = -position)
+}`" />
+
+      (todo)
+
+      <code-block :code="`\
+// Example: With velocity dampening
+onEveryFrame() {
+  // position integration
+  velocity += accelerometer.getAcceleration()
+  position += velocity
+
+  // dampen
+  velocity *= 0.80
+
+  drawDots(offset = -position)
+}`" />
+
+      (viz w/ screen w/ accelerometer w/ position integration w/ noise w/ error correction)
+
+      And that is basically how EasyQueasy works. And presumably iOS does it similarly as well.
+
+      ## EasyQueasy features
+
+      EasyQueasy’s features and advantages over the current iOS solution are:
+      * Configurable speed and other parameters.
+      * It’s 3D! Because movement in the real-world is three-dimensional!
+      * Option to activate the overlay from any screen via quick gesture shortcuts.
+
+      ### Gallery
+
+      (many screenshots here)
+    </markdown>
+  </blog-page>
+</html>
+
+<style></style>
