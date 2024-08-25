@@ -72,11 +72,11 @@
 
       `acceleration → velocity → position`
 
-      What the app does is simply [**numerical integration**](http://lampx.tugraz.at/~hadley/physikm/apps/a2x.en.php). It keeps track of an estimated velocity and an estimated position in memory. Then, on every tick, it adds the current acceleration vector to the velocity vector, and add the velocity to the position.
+      What the app does is [**numerical integration**](http://lampx.tugraz.at/~hadley/physikm/apps/a2x.en.php). It keeps track of an estimated velocity and an estimated position in memory. Then, on every tick, it adds the current acceleration vector to the velocity vector, and add the velocity to the position. Note: all vectors here are in 3D. 
 
       The calculated position vector provides an estimate of the phone’s current position! Finally, we can draw dots!
       
-      To provide the correct sensation of movement, the dots must appear stable relative to the earth. That means they will move in the opposite way as the body moves. We simply negate the calculated position vector to achieve this effect.
+      To provide the correct sensation of movement, the dots must appear stable relative to the origin, that is, the earth. Negating the calculated position vector achieves this effect.
 
       <code-block :code="`\
 // pseudocode
@@ -90,11 +90,11 @@ onEveryFrame() {
 
       ## Error correction
 
-      (todo)
+      The accelerometer signal is very **noisy**. While that is workable for many applications, when we’re doing position integration the errors really add up, and simple dead reckoning is way off.
 
       (viz w/ screen w/ accelerometer w/ position integration w/ noise)
 
-      (todo)
+      Standard signal processing techniques can be applied to deal with noise, like a low-pass filter.
 
       <code-block :code="`\
 // Example: With a low-pass filter
@@ -110,7 +110,7 @@ onEveryFrame() {
   drawDots(offset = -position)
 }`" />
 
-      (todo)
+      But a simpler solution like dampening the velocity over time is plenty sufficient.
 
       <code-block :code="`\
 // Example: With velocity dampening
