@@ -162,6 +162,7 @@ async function getData(env: Env): Promise<StoredData> {
 function checkGetRequest(getRequest: any): asserts getRequest is GetRequest {
   if (!Number.isInteger(getRequest.page))
     throw new TypeError("getRequest.page is not an integer");
+  if (getRequest.page < 0) throw new TypeError("getRequest.page is negative");
 }
 
 function checkSubmitRequest(

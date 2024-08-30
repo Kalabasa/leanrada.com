@@ -2,7 +2,12 @@
   <page-title title="Guestbook" />
   <script render>
     // prettier-ignore
-    return html`<head><${"script"}>window.GUESTBOOK_API="${GUESTBOOK_API}"</${"script"}></head>`;
+    return html`<head>
+      <${"script"}>
+        window.GUESTBOOK_API="${GUESTBOOK_API}";
+        window.GUESTBOOK_CACHE=${renderCacheJSON()};
+      </${"script"}>
+    </head>`;
   </script>
   <page>
     <content-header title="Guestbook" />
@@ -162,11 +167,39 @@
 </style>
 
 <script static>
+  const { createGuestbookCard } = require("./guestbook-card.js");
+  const cache = require("./cache.json");
+
   const prod = process.env.NODE_ENV === "production";
   const GUESTBOOK_API =
     process.env.GUESTBOOK_API ??
     (prod ? "https://guestbook.leanrada.com/api" : "http://127.0.0.1:8787/api");
   const SCHEMA_VERSION = "v2";
+
+  function renderCacheJSON() {
+    let limit = 20;
+    let json = "[";
+    for (let i = 0; cache.pages[i]?.empty === false; i++) {
+      const pageData = cache.pages[i].data;
+      for (const message of pageData) {
+        json += renderMessageJSON(message) + ",";
+        if (--limit <= 0) break;
+      }
+    }
+    return json + "]";
+  }
+
+  function renderMessageJSON(message) {
+    return JSON.stringify({
+      text: message.text,
+      name: message.name,
+      stamps: message.stamps,
+      fontIndex: message.fontIndex,
+      bgStyleIndex: message.bgStyleIndex,
+      bgRGB: message.bgRGB,
+      fgRGB: message.fgRGB,
+    });
+  }
 </script>
 
 <script client async defer>
@@ -301,13 +334,23 @@
       const messagesList = document.querySelector(".messages-list");
 
       let currentPage = 0;
-      let loading = loadPage(currentPage);
+      let loadQueue = initFromCache().then(() => loadPage(currentPage));
+
+      async function initFromCache() {
+        const cache = window.GUESTBOOK_CACHE ?? null;
+        if (cache?.length > 0) {
+          for (const message of cache) {
+            messagesList.appendChild(await renderMessage(message));
+          }
+        }
+      }
 
       async function loadPage(page) {
         const response = await fetch(GUESTBOOK_API + "?page=" + page);
         if (!response.ok) throw new Error();
         const data = await response.json();
         if (!data || data.length === 0) return 0;
+        if (page === 0) messagesList.replaceChildren();
         for (const message of data) {
           messagesList.appendChild(await renderMessage(message));
         }
