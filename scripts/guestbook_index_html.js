@@ -130,13 +130,23 @@
       const messagesList = document.querySelector(".messages-list");
 
       let currentPage = 0;
-      let loading = loadPage(currentPage);
+      let loadQueue = initFromCache().then(() => loadPage(currentPage));
+
+      async function initFromCache() {
+        const cache = window.GUESTBOOK_CACHE ?? null;
+        if (cache?.length > 0) {
+          for (const message of cache) {
+            messagesList.appendChild(await renderMessage(message));
+          }
+        }
+      }
 
       async function loadPage(page) {
         const response = await fetch(GUESTBOOK_API + "?page=" + page);
         if (!response.ok) throw new Error();
         const data = await response.json();
         if (!data || data.length === 0) return 0;
+        if (page === 0) messagesList.replaceChildren();
         for (const message of data) {
           messagesList.appendChild(await renderMessage(message));
         }

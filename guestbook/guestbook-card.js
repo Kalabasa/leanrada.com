@@ -1,13 +1,15 @@
 (function (factory) {
-  if (typeof module === 'object') {
+  if (typeof module === "object") {
     // node
     module.exports = factory();
   } else {
     // browser
     window.GUESTBOOK_CARD = factory();
   }
-}(function () {
-  const BG_COLORS = [0xffccdd, 0xffffcc, 0xddffcc, 0xccffff, 0xddccff, 0xffffff];
+})(function () {
+  const BG_COLORS = [
+    0xffccdd, 0xffffcc, 0xddffcc, 0xccffff, 0xddccff, 0xffffff,
+  ];
   const FG_COLORS = [0xcc0000, 0xaa6600, 0x00aa00, 0x0066ff, 0x000000];
   const STAMPS = "💾,🔖,🕶,🧬,📌,🎃,🎀,👾,🐚,🔱,➰".split(",");
 
@@ -22,11 +24,52 @@
     };
   }
 
-  function createGuestbookCard(data) {
-    const card = document.createElement("guestbook-card-client");
-    card.setAttribute("disabled", "");
-    card.setAttribute("data", JSON.stringify(data));
-    return card;
+  function createGuestbookCard(data, html = concat) {
+    if (typeof module === "object") {
+      // node
+      const dataStr = encodeHtmlAttribute(JSON.stringify(data));
+      return html`<guestbook-card-client
+        disabled
+        data="${dataStr}"
+      ></guestbook-card-client>`;
+    } else {
+      // web
+      const card = document.createElement("guestbook-card-client");
+      card.setAttribute("disabled", "");
+      card.setAttribute("data", JSON.stringify(data));
+      return card;
+    }
+  }
+
+  function concat(strings, ...values) {
+    let result = "";
+    strings.forEach((string, i) => {
+      result += string + (values[i] || "");
+    });
+    return result;
+  }
+
+  function encodeHtmlAttribute(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    return String(value).replace(/[&<>"']/g, (match) => {
+      switch (match) {
+        case "&":
+          return "&amp;";
+        case "<":
+          return "&lt;";
+        case ">":
+          return "&gt;";
+        case '"':
+          return "&quot;";
+        case "'":
+          return "&#39;";
+        default:
+          return match;
+      }
+    });
   }
 
   function getCSS({
@@ -72,7 +115,9 @@
   }
 
   function formatStyle(styleObj) {
-    return Object.entries(styleObj).map(([key, value]) => `${key}:${value}`).join(";");
+    return Object.entries(styleObj)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(";");
   }
 
   function rgbToCSS(rgb) {
@@ -80,6 +125,12 @@
   }
 
   return {
-    BG_COLORS, FG_COLORS, STAMPS, getDefaults, getCSS, getStampContent, createGuestbookCard
+    BG_COLORS,
+    FG_COLORS,
+    STAMPS,
+    getDefaults,
+    getCSS,
+    getStampContent,
+    createGuestbookCard,
   };
-}));
+});

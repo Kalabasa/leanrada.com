@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <title>Guestbook · leanrada.com</title>
-  <script>window.GUESTBOOK_API="https://guestbook.leanrada.com/api"</script>
+
+  <script>
+        window.GUESTBOOK_API="https://guestbook.leanrada.com/api";
+        window.GUESTBOOK_CACHE=[{"text":"Hi, I can read the entire article on my Feed reader, but if I try to open it with my browser (wanted to see the video of the motion sickness blog), the link takes me to a 404 not found page. Please fix. Ok. Thanks. Bye.","name":"segfault","stamps":[{"typeIndex":"2","x":"63","y":"63"}],"fontIndex":0,"bgStyleIndex":3,"bgRGB":16777164,"fgRGB":0},{"text":"Thoroughly enjoyed your article!","name":"Chembe","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"asdasd","name":"","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"cool site! ❤️","name":"cat","stamps":[],"fontIndex":2,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":13369344},{"text":"Checked out your post on collision algorithms today and got instantly hooked on your blog. It’s really inspiring—thank you! Hope you have a great day!","name":"Kendrick","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"you're a true inspiration, from the comfiest web dev i've seen on the small web to the insanely thoughtful keeb write ups. bitwise combos are 2 gud !!! Us finger independent musicians/typists gotta stick together","name":"eristocrates","stamps":[],"fontIndex":0,"bgStyleIndex":3,"bgRGB":16764125,"fgRGB":0},{"text":"Nice website & articles 👏","name":"Max","stamps":[{"typeIndex":"1","x":"1","y":"54"}],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"Thanks for your explanation of collision detection algorithms and awesome interactive visualizations. It helps me a lot! <3","name":"Hash","stamps":[{"typeIndex":"6","x":"1","y":"59"}],"fontIndex":0,"bgStyleIndex":3,"bgRGB":16777164,"fgRGB":0},{"text":"GJ! 💪\r\n@vangogih","name":"","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"great!","name":"","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"Awesome stuff! Good seeing how the written format still holds some advantages over the more popular video format nowadays. Interactive demonstrations ftw!","name":"Diego","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"Very interesting and detailed article! Thanks and keep doing!","name":"optiklab","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"website is amazing!! You're incredibly talented and I can't wait to see more","name":"adarnael","stamps":[{"typeIndex":"5","x":"64","y":"29"}],"fontIndex":2,"bgStyleIndex":3,"bgRGB":16777164,"fgRGB":26367},{"text":"Interesting website, funny guy. Love your artworks, keep going.🐱‍💻","name":"","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"I like the 'Sort, sweep, and prune', and the interactive part is pretty great! ","name":"Jack Wu","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"cool!","name":"","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"i love your writing, i love your interactive demos, i love your great explanations. keep up the good work!","name":"parsley","stamps":[{"typeIndex":"2","x":"11","y":"57"}],"fontIndex":2,"bgStyleIndex":0,"bgRGB":14535935,"fgRGB":0},{"text":"this site loads fast on a 2G network, good job ","name":"anon","stamps":[],"fontIndex":2,"bgStyleIndex":2,"bgRGB":16777164,"fgRGB":11167232},{"text":"okay this was really cool, informative, and you made me laugh with how you wrote this up. keep up the good work!!","name":"console jockey case","stamps":[],"fontIndex":0,"bgStyleIndex":0,"bgRGB":16777215,"fgRGB":0},{"text":"this is so cool, i love guestbooks. i read up on collision detection and look forward to implementing it in my projects! thanks","name":"ben","stamps":[],"fontIndex":2,"bgStyleIndex":2,"bgRGB":14535935,"fgRGB":0},];
+      </script>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -46,6 +50,7 @@
     background: var(--gbc-background-image, none)
       var(--gbc-background-color, white);
     color: var(--gbc-color, black);
+    text-shadow: 0 0 1px var(--gbc-color, black);
     font-family: var(--gbc-font, sans-serif);
     font-size: 1rem;
     font-weight: bold;
@@ -54,6 +59,19 @@
     width: 384px;
     height: 192px;
     box-sizing: border-box;
+    border-radius: 3px;
+    overflow: hidden;
+    filter: contrast(0.8);
+  }
+  guestbook-card-client::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/noise.png"); /* todo: encapsulate noise.png */
+    opacity: 0.08;
+    mix-blend-mode: hard-light;
+    filter: blur(0.5px);
+    pointer-events: none;
   }
   .guestbook-card-body {
     flex: 1 1 auto;
@@ -69,6 +87,7 @@
     border: none;
     font: inherit;
     color: inherit;
+    text-shadow: inherit;
   }
   .guestbook-card-body::placeholder,
   .guestbook-card-name::placeholder {
@@ -536,66 +555,81 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: calc(min(90px, 5vmax));
+    gap: 30px;
     overflow: hidden;
+    transform: skewY(12deg);
   }
-  .messages-list > *:nth-child(2n) {
-    transform-origin: -50vmin -50vmin;
+  .messages-list > :nth-child(3n) {
+    --gbli-rotate: 3deg;
   }
-  .messages-list > *:nth-child(2n + 1) {
-    transform-origin: calc(50% + 50vmin) calc(50% + 50vmin);
+  .messages-list > :nth-child(3n + 1) {
+    --gbli-rotate: -3deg;
   }
-  .messages-list > *:nth-child(3n) {
-    transform: rotate(3deg);
-    transform-origin: -50vmin calc(50% + 50vmin);
+  .messages-list > :nth-child(3n + 2) {
+    --gbli-rotate: 2deg;
   }
-  .messages-list > *:nth-child(3n + 1) {
-    transform: rotate(-3deg);
-    transform-origin: calc(50% + 50vmin) -50vmin;
+  .messages-list > :nth-child(4n) {
+    --gbli-rotate: -2deg;
   }
-  .messages-list > *:nth-child(3n + 2) {
-    transform: rotate(2deg);
-    transform-origin: 50% 50%;
+  .messages-list > :nth-child(5n) {
+    --gbli-rotate: 1deg;
   }
-  .messages-list > *:nth-child(4n) {
-    transform: rotate(-2deg);
+  .messages-list > :nth-child(6n) {
+    --gbli-rotate: 2deg;
   }
-  .messages-list > *:nth-child(5n) {
-    transform: rotate(1deg);
+  .messages-list > :nth-child(7n) {
+    --gbli-rotate: -1deg;
   }
-  .messages-list > *:nth-child(6n) {
-    transform: rotate(2deg);
+  .messages-list > :nth-child(8n) {
+    --gbli-rotate: -2deg;
   }
-  .messages-list > *:nth-child(7n) {
-    transform: rotate(-1deg);
+  .messages-list > :nth-child(2n) {
+    --gbli-margin-y: 3;
   }
-  .messages-list > *:nth-child(8n) {
-    transform: rotate(-2deg);
+  .messages-list > :nth-child(3n) {
+    --gbli-margin-y: -4;
   }
-  .messages-list > *:nth-child(4n + 1) {
-    margin-left: calc(max(0px, 15vmin - 80px));
-    margin-right: calc(max(0px, 15vmin - 80px));
+  .messages-list > :nth-child(5n + 2) {
+    --gbli-margin-y: 6;
   }
-  .messages-list > *:nth-child(2n) {
-    margin-left: calc(max(0px, 5vmin - 80px));
+  .messages-list > :nth-child(5n + 4) {
+    --gbli-margin-y: -7;
   }
-  .messages-list > *:nth-child(2n + 1) {
-    margin-right: calc(max(0px, 5vmin - 80px));
+  .messages-list > :nth-child(2n + 1) {
+    --gbli-margin-x: 3;
   }
-  .messages-list > *:nth-child(3n + 2) {
-    margin-left: calc(max(0px, 10vmin - 80px));
+  .messages-list > :nth-child(3n) {
+    --gbli-margin-x: 6;
   }
-  .messages-list > *:nth-child(3n + 1) {
-    margin-top: calc(max(0px, 5vmin - 80px));
+  .messages-list > :nth-child(4n + 2) {
+    --gbli-margin-x: 7;
   }
-  .messages-list > *:nth-child(5n - 2) {
-    margin-bottom: calc(max(0px, 5vmin - 80px));
+  .messages-list > :nth-child(5n) {
+    --gbli-margin-x: 9;
   }
-  .messages-list > *:nth-child(11n - 4) {
-    margin-left: calc(max(0px, 20vmin - 80px));
+  .messages-list > :nth-child(6n + 3) {
+    --gbli-margin-x: 11;
   }
-  .messages-list > *:nth-child(7n - 4) {
-    margin-right: calc(max(0px, 20vmin - 80px));
+  .messages-list > :nth-child(7n) {
+    --gbli-margin-x: 12;
+  }
+  .messages-list > :nth-child(8n + 6) {
+    --gbli-margin-x: 16;
+  }
+  .messages-list > :nth-child(9n) {
+    --gbli-margin-x: 22;
+  }
+  .messages-list > * {
+    margin: calc(max(0px, var(--gbli-margin-y, 0) * 1vmin - 80px))
+      calc(max(0px, var(--gbli-margin-x, 0) * 1vmin - 80px))
+      calc(max(0px, var(--gbli-margin-y, 0) * -1vmin - 80px));
+    transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
+  }
+  .messages-list > :first-child {
+    margin-inline-start: calc(max(0px, 50% - 384px));
+  }
+  .messages-list > :last-child {
+    margin-inline-end: calc(max(0px, 50% - 384px));
   }
 </style>
   <script async="" src="/scripts/cursor.js"></script>
@@ -873,13 +907,23 @@
       const messagesList = document.querySelector(".messages-list");
 
       let currentPage = 0;
-      let loading = loadPage(currentPage);
+      let loadQueue = initFromCache().then(() => loadPage(currentPage));
+
+      async function initFromCache() {
+        const cache = window.GUESTBOOK_CACHE ?? null;
+        if (cache?.length > 0) {
+          for (const message of cache) {
+            messagesList.appendChild(await renderMessage(message));
+          }
+        }
+      }
 
       async function loadPage(page) {
         const response = await fetch(GUESTBOOK_API + "?page=" + page);
         if (!response.ok) throw new Error();
         const data = await response.json();
         if (!data || data.length === 0) return 0;
+        if (page === 0) messagesList.replaceChildren();
         for (const message of data) {
           messagesList.appendChild(await renderMessage(message));
         }
