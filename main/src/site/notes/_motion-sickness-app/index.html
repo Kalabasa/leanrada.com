@@ -3,8 +3,9 @@
   <blog-page path-group="/notes/">
     <blog-header
       title="I made an app to fix my motion sickness"
-      :heroimgsrc="url('template.jpg')"
+      :heroimgsrc="url('hero.png')"
     />
+    <blog-post-info date="2 Sep 2024" read-mins="8" />
     <!-- textlint-disable -->
     <tag-row>
       <tag>android</tag>
@@ -12,8 +13,6 @@
     <!-- textlint-enable -->
     <!-- prettier-ignore -->
     <markdown>
-      <box-note>🚧 Woops, didn’t mean to publish this draft. This post is under construction!</box-note>
-
       Last May, Apple announced a new feature called **Vehicle Motion Cues** for their iOS devices. It’s an overlay that can help reduce motion sickness while riding a vehicle.
 
       I have really bad motion sickness, and riding cars, buses, and trains makes me nauseous. This feature would have been a nice relief for me, but as it stands, I use Android.
@@ -22,9 +21,17 @@
       
       <box-note>To be sure, I checked the patents. Apple does have one regarding a certain motion sickness solution, but it’s specifically for head-mounted displays, not handheld devices. I figured it’s because there is prior art for handheld devices, such as [**KineStop** for Android by Urbandroid](https://play.google.com/store/apps/details?id=com.urbandroid.kinestop&pcampaignid=web_share).</box-note>
 
-      My app is called **EasyQueasy**, and it’s (supposed to be) open source. I might try to get it on F-Droid someday. <small>Probably not Google Play since Google suspended my developer account due to “inactivity”.</small> I made this for myself so I haven’t really sorted out the distribution part. [GitHub repo here anyway](https://github.com/Kalabasa/EasyQueasy).
+      My app is called **EasyQueasy**. What it does is display onscreen vestibular signals that try to help prevent motion sickness. This functions as an overlay that is displayed on top of whatever you’re doing, browsing the web or watching videos.
 
-      (demo video)
+      <blog-media
+        alt="demo video showing the app running in a moving train"
+        :src="url('./demo.mp4')" />
+
+      The app is open source. I might try to get it on F-Droid someday. <small>Probably not Google Play since Google suspended my developer account due to “inactivity”.</small>
+      
+      I made this for myself so I haven’t really sorted out distribution. [GitHub repo is here anyway](https://github.com/Kalabasa/EasyQueasy).
+
+      <box-note>Side note: Apologies to the RSS readers of this blog and `segfault`. I accidentally published this post in the RSS feed, but not on the site, which lead to an incomplete draft post and a 404 error.</box-note>
 
       ## How does it work?
 
@@ -38,9 +45,15 @@
 
       [**Motion sickness**](https://en.wikipedia.org/wiki/Motion_sickness) happens when your brain receives conflicting motion cues from your senses. Motion cues come from the **vestibular system** (“sense of balance”, inner ears) and the **visual system** (eyes).
 
+      <blog-media
+        caption="The system diagram"
+        :src="url('./1.png')" />
+
       When you’re in a moving car, your eyes mostly see the stationary interiors of the car but your inner ears feel the movement. The signal of being stationary and the signal of being in motion does not make _sense_ in the central processing system somewhere in the brain _(which decides that the solution to this particular situation is to vomit)_.
 
-      (viz w/o screen)
+      <blog-media
+        caption="There’s a bug in the central processing module that triggers an unexpected response to conflicting signals."
+        :src="url('./2.png')" />
 
       <box-note>Side note: The inverse happens in virtual reality when you move or rotate your character &mdash; your eyes recognise motion but your inner ears (your physical body) feel no motion, causing sickness. As I mentioned, I have really bad motion sickness, and both car movement and VR movement are almost unbearable to me.</box-note>
 
@@ -48,7 +61,9 @@
 
       By displaying movement on-screen that matches the actual movement of the body, motion sickness can be thus reduced!
 
-      (viz w/ screen w/o internals)
+      <blog-media
+        caption="The workaround is to hijack one of the sources to produce a ‘correct’ signal. In this case, we add an override to the visual input."
+        :src="url('./3.png')" />
 
       ## Behind the screens
 
@@ -58,7 +73,9 @@
 
       So, smartphones have “inner ear” hardware. By reading off of this sensor, we can generate the correct visuals.
 
-      (viz w/ screen w/ accelerometer)
+      <blog-media
+        caption="The visual layer is just an adapter to same acceleration data used by the other source. By converting motion data to visual data, we can be sure that the signals match! This is the final solution."
+        :src="url('./4.png')" />
 
       <box-note>
         <p>The other Android app, KineStop, appear to use the phone’s magnetic sensor (compass) in addition to the accelerometer. So, it also knows about your absolute orientation in the world. It’s more effective in turning motions, but not so much for bumpy rides.</p>
@@ -87,13 +104,9 @@ onEveryFrame() {
   drawDots(offset = -position)
 }`" />
 
-      (viz w/ screen w/ accelerometer w/ position integration)
-
       ## Error correction
 
       The accelerometer signal is very **noisy**. While that is workable for many applications, when we’re doing position integration the errors really add up, and simple dead reckoning is way off.
-
-      (viz w/ screen w/ accelerometer w/ position integration w/ noise)
 
       Standard signal processing techniques can be applied to deal with noise, like a low-pass filter.
 
@@ -126,8 +139,6 @@ onEveryFrame() {
   drawDots(offset = -position)
 }`" />
 
-      (viz w/ screen w/ accelerometer w/ position integration w/ noise w/ error correction)
-
       And that is basically how EasyQueasy works. And presumably iOS does it similarly as well.
 
       ## EasyQueasy features
@@ -139,7 +150,26 @@ onEveryFrame() {
 
       ### Gallery
 
-      (many screenshots here)
+      <blog-media
+        alt="Screenshot of EasyQueasy features"
+        :src="url('./ss1.png')" />
+
+      <blog-media
+        alt="Screenshot of EasyQueasy features"
+        :src="url('./ss2.png')" />
+
+      <blog-media
+        alt="Screenshot of EasyQueasy features"
+        :src="url('./ss3.png')" />
+
+      <blog-media
+        alt="Screenshot of EasyQueasy features"
+        :src="url('./ss5.png')" />
+
+      <blog-media
+        alt="Screenshot of EasyQueasy features"
+        :src="url('./ss6.png')" />
+
     </markdown>
   </blog-page>
 </html>
