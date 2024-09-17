@@ -31,7 +31,9 @@
       </div>
     </form>
 
-    <div class="messages-list"></div>
+    <div class="messages-section">
+      <div class="messages-list"></div>
+    </div>
   </page>
 </html>
 
@@ -96,17 +98,55 @@
   .submit-button {
     margin-left: auto;
   }
+  .messages-section {
+    min-height: 200vh;
+    min-height: 200svh;
+    animation: messages-fade-in 0.6s;
+  }
+  .messages-section.loading {
+    visibility: hidden;
+  }
   .messages-list {
-    min-height: 100vh;
-    min-height: 100svh;
-    padding: 120px 20px;
+    padding: 120px 40px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 30px;
-    overflow: hidden;
+    overflow: clip;
     transform: skewY(12deg);
   }
+  .messages-list > * {
+    margin: calc(max(0px, var(--gbli-margin-y, 0) * 1vmin - 80px))
+      calc(max(0px, var(--gbli-margin-x, 0) * 1vmin - 80px))
+      calc(max(0px, var(--gbli-margin-y, 0) * -1vmin - 80px));
+    transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
+    animation: message-scroll 1ms cubic-bezier(0, 0.8, 0.2, 1) both;
+    animation-timeline: view(block 40% -5%);
+  }
+  .messages-list > :first-child {
+    margin-inline-start: calc(max(0px, 50% - 384px));
+  }
+  .messages-list > :last-child {
+    margin-inline-end: calc(max(0px, 50% - 384px));
+  }
+
+  @keyframes messages-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes message-scroll {
+    from {
+      transform: skewY(-12deg) rotate(calc(var(--gbli-rotate, 0deg) * 5))
+        translateY(100%);
+    }
+    to {
+      /* same as original value */
+      transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
+    }
+  }
+
   .messages-list > :nth-child(3n) {
     --gbli-rotate: 3deg;
   }
@@ -167,18 +207,6 @@
   .messages-list > :nth-child(9n) {
     --gbli-margin-x: 22;
   }
-  .messages-list > * {
-    margin: calc(max(0px, var(--gbli-margin-y, 0) * 1vmin - 80px))
-      calc(max(0px, var(--gbli-margin-x, 0) * 1vmin - 80px))
-      calc(max(0px, var(--gbli-margin-y, 0) * -1vmin - 80px));
-    transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
-  }
-  .messages-list > :first-child {
-    margin-inline-start: calc(max(0px, 50% - 384px));
-  }
-  .messages-list > :last-child {
-    margin-inline-end: calc(max(0px, 50% - 384px));
-  }
 </style>
 
 <script static>
@@ -192,7 +220,7 @@
   const SCHEMA_VERSION = "v2";
 
   function renderCacheJSON() {
-    let limit = 20;
+    let limit = 50;
     let json = "[";
     for (let i = 0; cache.pages[i]?.empty === false; i++) {
       const pageData = cache.pages[i].data;
@@ -346,10 +374,15 @@
     }
 
     async function initMessagesList() {
+      const messagesSection = document.querySelector(".messages-section");
       const messagesList = document.querySelector(".messages-list");
 
+      messagesSection.classList.add("loading");
+
       let currentPage = 0;
-      let loadQueue = initFromCache().then(() => loadPage(currentPage));
+      let loadQueue = initFromCache()
+        .then(() => loadPage(currentPage))
+        .finally(() => void messagesSection.classList.remove("loading"));
 
       async function initFromCache() {
         const cache = window.GUESTBOOK_CACHE ?? null;
