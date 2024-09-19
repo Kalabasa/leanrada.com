@@ -127,10 +127,15 @@
     }
 
     async function initMessagesList() {
+      const messagesSection = document.querySelector(".messages-section");
       const messagesList = document.querySelector(".messages-list");
 
+      messagesSection.classList.add("loading");
+
       let currentPage = 0;
-      let loadQueue = initFromCache().then(() => loadPage(currentPage));
+      let loadQueue = initFromCache()
+        .then(() => loadPage(currentPage))
+        .finally(() => void messagesSection.classList.remove("loading"));
 
       async function initFromCache() {
         const cache = window.GUESTBOOK_CACHE ?? null;
