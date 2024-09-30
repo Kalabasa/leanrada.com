@@ -1,11 +1,12 @@
 import { render } from "./lib/htm-preact.js";
 import { html } from "./components/html.js";
 import { AppPanel } from "./app/panel.js";
-import { Logo } from "./app/logo.js";
+import { AppLogo } from "./app/logo.js";
+import { TransliterationForm } from "./transliteration/form.js";
 
 export function Index() {
   return html`
-    <style>
+    <style id=${Index.name}>
       .app {
         background: var(--color-bg-darker);
       }
@@ -49,12 +50,14 @@ export function Index() {
     </style>
     <div class="app appDesktopLayout">
       <div class="appLogo">
-        <${Logo} />
+        <${AppLogo} />
       </div>
       <nav class="appMenu">menu</nav>
       <main class="appCanvas">canvas</main>
       <aside class="appInputPanelArea">
-        <${AppPanel} title=${html`<h2>Text</h2>`}>text<//>
+        <${AppPanel} title=${html`<h2>Text</h2>`}>
+          <${TransliterationForm} />
+        <//>
       </aside>
       <aside class="appStylePanelArea">
         <${AppPanel} title=${html`<h2>Style</h2>`}>style<//>

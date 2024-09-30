@@ -2,7 +2,7 @@ import { html } from "../components/html.js";
 
 export function AppPanel({ title, children }) {
   return html`
-    <style>
+    <style id=${AppPanel.name}>
       .appPanelContainer {
         display: flex;
         flex-direction: column;

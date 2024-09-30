@@ -28,10 +28,10 @@ export function Loader({ promise, render }) {
 
   switch (state.status) {
     case "loading":
-      return html`<h1>Loading...</h1>`;
+      return html`<span>Loading...</span>`;
     default:
     case "error":
-      return html`<h1>Error loading content :(</h1>`;
+      return html`<span>Error loading content :(</span>`;
     case "loaded":
       return html`<${state.component} />`;
   }

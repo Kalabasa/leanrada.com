@@ -1,7 +1,7 @@
 import { render, useLayoutEffect, useState } from "../lib/htm-preact.js";
 
-export function Style({ children }) {
-  const id = useId();
+export function Style({ id, children }) {
+  const realID = id ?? useId();
 
   useLayoutEffect(() => {
     {

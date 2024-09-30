@@ -1,8 +1,8 @@
 import { html } from "../components/html.js";
 
-export function Logo() {
+export function AppLogo() {
   return html`
-    <style>
+    <style id=${AppLogo.name}>
       .logo > h1 {
         margin: 0;
         padding: 0.2em;
