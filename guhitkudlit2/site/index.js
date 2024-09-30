@@ -14,7 +14,7 @@ export function Index() {
         grid-template-columns: repeat(3, 1fr);
         grid-template-areas:
           "canvas canvas canvas"
-          "input style action";
+          "input style file";
         grid-gap: var(--size-m);
         padding: var(--size-m) var(--size-m) 0;
         height: 100vh;
@@ -72,8 +72,8 @@ export function Index() {
       .appStylePanelArea {
         grid-area: style;
       }
-      .appActionPanelArea {
-        grid-area: action;
+      .appFilePanelArea {
+        grid-area: file;
       }
     </style>
     <div class="app appDesktopLayout">
@@ -91,7 +91,7 @@ export function Index() {
       <aside class="appStylePanelArea">
         <${AppPanel} title=${html`<h2>Style</h2>`}>style<//>
       </aside>
-      <aside class="appActionPanelArea">
+      <aside class="appFilePanelArea">
         <${AppPanel} title=${html`<h2>File</h2>`}>file<//>
       </aside>
     </div>
