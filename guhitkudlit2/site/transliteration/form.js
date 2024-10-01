@@ -2,6 +2,8 @@ import { html } from "../components/html.js";
 import { Input } from "../components/input.js";
 import { useState } from "../lib/htm-preact.js";
 import { LabelText } from "../typography/text.js";
+import { syllabicate } from "./syllabicate.js";
+import { convertToUnicode } from "./unicode.mjs";
 
 export function TransliterationForm() {
   const [syllabication, setSyllabication] = useState("");
@@ -9,8 +11,10 @@ export function TransliterationForm() {
 
   const onInput = (event) => {
     const input = event.currentTarget.value;
-    setSyllabication("syl(" + input + ")");
-    setBaybayin("bay(" + input + ")");
+    const inputSyllabicaton = syllabicate(input);
+    const inputBaybayin = convertToUnicode(inputSyllabicaton);
+    setSyllabication(inputSyllabicaton.join(" · "));
+    setBaybayin(inputBaybayin);
   };
 
   return html`
@@ -37,7 +41,7 @@ export function TransliterationForm() {
       </label>
       <label class="transliterationFormRow">
         <${LabelText} tagName="div">Syllabication<//>
-        <${Output} value=${syllabication} placeholder="ka·la·ba·sa" />
+        <${Output} value=${syllabication} placeholder="ka · la · ba · sa" />
       </label>
       <label class="transliterationFormRow">
         <${LabelText} tagName="div">Baybayin<//>
