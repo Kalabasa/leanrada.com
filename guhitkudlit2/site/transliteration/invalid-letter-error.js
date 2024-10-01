@@ -11,8 +11,8 @@ export class InvalidLetterError extends Error {
       .toUpperCase();
   }
 
-  generateLetterExamples() {
-    return generateLetterExamples(this.letters);
+  generateLetterExamplesHTML() {
+    return generateLetterExamplesHTML(this.letters);
   }
 }
 
@@ -49,7 +49,7 @@ const letterExamples = {
   ],
 };
 
-function generateLetterExamples(letters) {
+function generateLetterExamplesHTML(letters) {
   return Array.from(new Set(letters))
     .flatMap((l) =>
       letterExamples[l].map(

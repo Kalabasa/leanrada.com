@@ -3,11 +3,11 @@ import { InvalidLetterError } from "./invalid-letter-error.js";
 /**
  * Transliterates the given `phrase` from the specified `language` into Baybayin.
  *
- * It returns an Array of Baybayin characters, encoded in Latin.
+ * It returns an Array of Baybayin characters, romanized in Latin.
  *   For example, 'ᜃ' is 'ka', 'ᜃᜒ' is 'ki', and 'ᜃᜓ' is 'ku'. The letters 'e' and 'o' are not used.
  *
  * Example,
- *   baybayin("oo at hindi") => ["u", "u", "a", "t", "hi", "n", "di"]
+ *   syllabicate("oo at hindi") => ["u", "u", "a", "t", "hi", "n", "di"]
  *
  * There are options to modify `how` it transliterates: {
  *   simple?: boolean = If true, it will not handle special cases for specific words.
