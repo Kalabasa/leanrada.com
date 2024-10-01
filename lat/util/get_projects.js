@@ -7,9 +7,12 @@ const require = createRequire(import.meta.url);
 
 /**
  * @type {{
- *  webFilesDir: string,
- *  sitePathPrefix: string,
+ *  name: string,
  *  rootDir: string,
+ *  webFilesDir: string | undefined,
+ *  devWebFilesDir: string  | undefined,
+ *  excludePattern: string | undefined,
+ *  sitePathPrefix: string,
  *  prepareCommand: string,
  * }} Project
  * @returns {Project[]}

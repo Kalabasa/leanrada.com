@@ -3,12 +3,7 @@ import childProcess from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
-import {
-  colorError,
-  colorInfo,
-  colorPrompt,
-  colorQuote,
-} from "./util/colors.js";
+import { colorInfo, colorPrompt, colorQuote } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
 import { getPath, getTopDir, normalizeDirPath } from "./util/paths.js";
 
@@ -44,7 +39,11 @@ export async function deployProjectsToDir({
 
   // Run deplyoment script
   try {
-    fs.mkdirSync(deployDir, { recursive: true });
+    for (const targetProject of targetProjects) {
+      fs.mkdirSync(path.resolve(deployDir, targetProject.sitePathPrefix), {
+        recursive: true,
+      });
+    }
     exe(script);
   } catch (e) {
     if (e instanceof Error && e.pid) {
@@ -86,18 +85,23 @@ function generateCommands({
       );
     }
 
-    const excludes = allProjects
-      .filter(
-        (otherProject) =>
-          targetProject !== otherProject &&
-          !path
-            .relative(
-              projectDeployDir,
-              path.resolve(deployDir, otherProject.sitePathPrefix)
-            )
-            .startsWith("..")
-      )
-      .map((project) => ` --exclude '/${project.sitePathPrefix}'`)
+    const excludes = [
+      ...allProjects
+        .filter(
+          (otherProject) =>
+            targetProject !== otherProject &&
+            !path
+              .relative(
+                projectDeployDir,
+                path.resolve(deployDir, otherProject.sitePathPrefix)
+              )
+              .startsWith("..")
+        )
+        .map((project) => "/" + project.sitePathPrefix),
+      targetProject.excludePattern,
+    ]
+      .filter((path) => path)
+      .map((path) => ` --exclude '${path}'`)
       .join("");
 
     if (targetProject.webFilesDir) {
