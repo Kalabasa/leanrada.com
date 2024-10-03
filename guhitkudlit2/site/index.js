@@ -3,8 +3,10 @@ import { html } from "./components/html.js";
 import { AppPanel } from "./app/panel.js";
 import { AppLogo } from "./app/logo.js";
 import { createTransliterationForm } from "./transliteration/form.js";
+import { createCanvas } from "./canvas/canvas.js";
 
 const { TransliterationForm } = createTransliterationForm();
+const { Canvas } = createCanvas();
 
 export function Index() {
   const panelColumnWidth = "minmax(300px, 500px)";
@@ -15,7 +17,7 @@ export function Index() {
       }
       .appDesktopLayout {
         display: grid;
-        grid-template-rows: 1fr min-content;
+        grid-template-rows: minmax(0, 1fr) min-content;
         grid-template-columns: ${panelColumnWidth} ${panelColumnWidth} 1fr ${panelColumnWidth};
         grid-template-areas:
           "canvas canvas canvas canvas"
@@ -42,6 +44,7 @@ export function Index() {
       }
       .appCanvas {
         grid-area: canvas;
+        padding: var(--size-l);
       }
       .appInputPanelArea {
         grid-area: input;
@@ -58,7 +61,7 @@ export function Index() {
         <${AppLogo} />
       </div>
       <nav class="appMenu">menu</nav>
-      <main class="appCanvas">canvas</main>
+      <main class="appCanvas"><${Canvas} /></main>
       <aside class="appInputPanelArea">
         <${AppPanel} title=${html`<h2>Text</h2>`}>
           <${TransliterationForm} />
