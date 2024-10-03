@@ -2,7 +2,9 @@ import { render } from "./lib/htm-preact.js";
 import { html } from "./components/html.js";
 import { AppPanel } from "./app/panel.js";
 import { AppLogo } from "./app/logo.js";
-import { TransliterationForm } from "./transliteration/form.js";
+import { createTransliterationForm } from "./transliteration/form.js";
+
+const { TransliterationForm } = createTransliterationForm();
 
 export function Index() {
   return html`

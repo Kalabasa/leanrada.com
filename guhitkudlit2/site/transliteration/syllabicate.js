@@ -17,6 +17,8 @@ import { InvalidLetterError } from "./invalid-letter-error.js";
  *   simple?: boolean,
  *   separateRa?: boolean,
  * }} [how={}]
+ * 
+ * @returns {string[]}
  */
 export function syllabicate(phrase, how = {}) {
   phrase = phrase

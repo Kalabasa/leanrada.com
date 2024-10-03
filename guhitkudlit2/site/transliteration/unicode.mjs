@@ -64,6 +64,9 @@ const map = {
   y: "ᜌ᜕",
 };
 
+/**
+ * @param {Array<keyof map>} romanizedBaybayinUnits
+ */
 export function convertToUnicode(romanizedBaybayinUnits) {
   return romanizedBaybayinUnits.map((unit) => map[unit]).join("");
 }
