@@ -7,6 +7,7 @@ import { createTransliterationForm } from "./transliteration/form.js";
 const { TransliterationForm } = createTransliterationForm();
 
 export function Index() {
+  const panelColumnWidth = "minmax(300px, 500px)";
   return html`
     <style id=${Index.name}>
       .app {
@@ -14,11 +15,11 @@ export function Index() {
       }
       .appDesktopLayout {
         display: grid;
-        grid-template-rows: 1fr 1fr;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: 1fr min-content;
+        grid-template-columns: ${panelColumnWidth} ${panelColumnWidth} 1fr ${panelColumnWidth};
         grid-template-areas:
-          "canvas canvas canvas"
-          "input style file";
+          "canvas canvas canvas canvas"
+          "input style - file";
         grid-gap: var(--size-m);
         padding: var(--size-m) var(--size-m) 0;
         height: 100vh;
@@ -30,11 +31,13 @@ export function Index() {
         left: calc(var(--size-s) * -1);
         top: calc(var(--size-s) * -1);
         justify-self: start;
+        align-self: start;
         z-index: 1;
       }
       .appMenu {
         grid-area: canvas;
         justify-self: end;
+        align-self: start;
         z-index: 2;
       }
       .appCanvas {

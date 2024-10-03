@@ -108,6 +108,7 @@ function Output({ value, placeholder }) {
     <style id=${TransliterationForm.name + Output.name}>
       .transliterationFormOutput {
         font-size: var(--font-size-l);
+        word-break: break-all;
       }
       .transliterationFormOutputPlaceholder {
         opacity: var(--opacity-placeholder);
