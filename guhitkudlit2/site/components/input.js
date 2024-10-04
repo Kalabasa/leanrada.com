@@ -1,7 +1,7 @@
 import { classes } from "../util/classes.js";
 import { html } from "./html.js";
 
-export function Input({ className, ...props }) {
+export function Input({ class: className, ...props }) {
   return html`
     <style id=${Input.name}>
       .input {

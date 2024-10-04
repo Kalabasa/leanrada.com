@@ -83,20 +83,20 @@ export function TransliterationForm({ syllabication, baybayin, onInput }) {
     </style>
     <form class="transliterationForm">
       <label class="transliterationFormRow">
-        <${LabelText} tagName="div">Tagalog word<//>
+        <${LabelText} tag="div">Tagalog word<//>
         <${Input}
-          className="transliterationFormInput"
+          class="transliterationFormInput"
           type="text"
           placeholder="kalabasa"
           onInput=${onInput}
         />
       </label>
       <label class="transliterationFormRow">
-        <${LabelText} tagName="div">Syllabication<//>
+        <${LabelText} tag="div">Syllabication<//>
         <${Output} value=${syllabication} placeholder="ka · la · ba · sa" />
       </label>
       <label class="transliterationFormRow">
-        <${LabelText} tagName="div">Baybayin<//>
+        <${LabelText} tag="div">Baybayin<//>
         <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" />
       </label>
     </form>

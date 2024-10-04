@@ -1,6 +1,6 @@
 import { html } from "../components/html.js";
 
-export function LabelText({ tagName = "span", children }) {
+export function LabelText({ tag = "span", children }) {
   return html`
     <style id=${LabelText.name}>
       .labelText {
@@ -9,6 +9,6 @@ export function LabelText({ tagName = "span", children }) {
         font-size: var(--font-size-s);
       }
     </style>
-    <${tagName} class="labelText">${children}<//>
+    <${tag} class="labelText">${children}<//>
   `;
 }
