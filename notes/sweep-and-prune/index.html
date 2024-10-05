@@ -368,6 +368,14 @@
   }
 </style>
   <style>
+  .blog-text-link-domain-icon {
+    display: inline-block;
+    vertical-align: super;
+    font-size: 75%;
+    line-height: 1em;
+  }
+</style>
+  <style>
   .tag-row {
     font-family: var(--default-font);
     font-size: 12px;
@@ -1621,16 +1629,16 @@
             <p>Sweep-and-prune is my go-to algorithm when I want to quickly implement collision detection for a game. I think it’s an awesome and elegant algorithm, so I wrote a post about it.</p>
             <p>This post is lengthy with many examples and explanations, thus split into two parts. You can jump to specific bits using this special springboard:</p>
             <ul>
-              <li><strong>Part 1:</strong> <a target="_self" class="text-link " href="/notes/sweep-and-prune/">Simplified version</a>
+              <li><strong>Part 1:</strong> <a target="_self" class="text-link " href="/notes/sweep-and-prune/">Simplified version<span class="blog-text-link-domain-icon"></span></a>
                 <ul>
-                  <li>🔍 <a target="_self" class="text-link " href="/notes/sweep-and-prune/#comparisons">Visual comparison</a></li>
-                  <li>📝 <a target="_self" class="text-link " href="/notes/sweep-and-prune/#code1">Code</a></li>
+                  <li>🔍 <a target="_self" class="text-link " href="/notes/sweep-and-prune/#comparisons">Visual comparison<span class="blog-text-link-domain-icon"></span></a></li>
+                  <li>📝 <a target="_self" class="text-link " href="/notes/sweep-and-prune/#code1">Code<span class="blog-text-link-domain-icon"></span></a></li>
                 </ul>
               </li>
-              <li><strong>Part 2:</strong> <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Sophisticated versions</a>
+              <li><strong>Part 2:</strong> <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Sophisticated versions<span class="blog-text-link-domain-icon"></span></a>
                 <ul>
-                  <li>🔍 <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/#comparisons">Visual comparison</a></li>
-                  <li>📝 <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/#final-code">Final code</a></li>
+                  <li>🔍 <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/#comparisons">Visual comparison<span class="blog-text-link-domain-icon"></span></a></li>
+                  <li>📝 <a target="_self" class="text-link " href="/notes/sweep-and-prune-2/#final-code">Final code<span class="blog-text-link-domain-icon"></span></a></li>
                 </ul>
               </li>
             </ul>
@@ -1643,13 +1651,13 @@
               <img loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #6888f8" class="blog-media-element " alt="video of mario with goombas bumping into each other" src="/notes/sweep-and-prune/mario.gif" caption="Goombas colliding"><span class="blog-media-caption">Goombas colliding</span>
             </div>
             </p>
-            <p>Some of these mechanics include: preventing characters from passing through each other, <a target="_blank" class="text-link " href="https://youtu.be/Ky69PjyHCqg">goombas</a> turning around when bumping into another, big cells eating smaller cells in <a target="_blank" class="text-link " href="https://agar.io/">agar.io</a>, or just about any game physics. All of these need some kind of collision detection.</p>
+            <p>Some of these mechanics include: preventing characters from passing through each other, <a target="_blank" class="text-link " href="https://youtu.be/Ky69PjyHCqg">goombas<span class="blog-text-link-domain-icon">🡵</span></a> turning around when bumping into another, big cells eating smaller cells in <a target="_blank" class="text-link " href="https://agar.io/">agar.io<span class="blog-text-link-domain-icon">🡵</span></a>, or just about any game physics. All of these need some kind of collision detection.</p>
             <p>
             <div class="blog-media blog-media-default ">
               <img loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #f8f8f8" class="blog-media-element " alt="video of agar.io with cells eating smaller cells" src="/notes/sweep-and-prune/agario.gif" caption="Cells consuming smaller cells on contact"><span class="blog-media-caption">Cells consuming smaller cells on contact</span>
             </div>
             </p>
-            <p>Here I’ll cover several related approaches, starting with the simplest and building up to the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Sweep_and_prune"><strong>sweep-and-prune</strong></a> algorithm. I won’t cover other approaches, such as space partitioning or spatial tree subdivision.</p>
+            <p>Here I’ll cover several related approaches, starting with the simplest and building up to the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Sweep_and_prune"><strong>sweep-and-prune</strong><span class="blog-text-link-domain-icon">🡵</span></a> algorithm. I won’t cover other approaches, such as space partitioning or spatial tree subdivision.</p>
             <p>Balls.</p>
             <p>I’ll use this <strong>rigid-body ball simulation</strong> as a recurring example to demonstrate the algorithms throughout the post:</p>
             <div class="demo-row">
@@ -1683,7 +1691,7 @@
 
             <p>And it works. But if we had more than just a handful of balls we would start seeing performance issues.</p>
             <h2 id="performance-or-lack-thereof">Performance, or lack thereof</h2>
-            <p>This naive algorithm runs in <em><strong>O(n<sup>2</sup>)</strong></em> time in <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Big_O_notation">Big O terms</a>. That is, for an input of <em>n</em> balls, the algorithm’s running time grows proportionally to the <em>square</em> of the input <em>n</em>. That’s a lot! 📈</p>
+            <p>This naive algorithm runs in <em><strong>O(n<sup>2</sup>)</strong></em> time in <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Big_O_notation">Big O terms<span class="blog-text-link-domain-icon">🡵</span></a>. That is, for an input of <em>n</em> balls, the algorithm’s running time grows proportionally to the <em>square</em> of the input <em>n</em>. That’s a lot! 📈</p>
             <p>This is because for <em>n</em> balls, there are around <em>(n&nbsp;*&nbsp;(n-1))/2</em> pairs to test, or <em>0.5n<sup>2</sup>&nbsp;-&nbsp;0.5n</em>. For example, if n = 5 there would be a total of 10 pairs. For n = 10, there would be 45 pairs. For n = 15, 105 pairs (!). And so on… Using Big O notation, we can simplify this information into a compact expression <em>“O(n<sup>2</sup>)”</em></p>
             <p>To (painfully) demonstrate how the performance scales badly for bigger inputs, here’s a simulation with n&nbsp;=&nbsp;20:</p>
             <div class="demo-row">
@@ -1703,7 +1711,7 @@
 
             <h2 id="prologue-improving-the-solution">Prologue: Improving the solution</h2>
             <p>Usually when optimising algorithms, you wanna find <strong>redundant or unnecessary work</strong>. Then find a way to consolidate that redundancy. (That sounded corporate-ish.)</p>
-            <p>A good place to start would be the <code>intersects()</code> function since it is called for every candidate pair. If we take the <a target="_blank" class="text-link " href="https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html">typical object intersection test</a> to be its implementation, we get a bunch of these <strong>inequality checks</strong>:</p>
+            <p>A good place to start would be the <code>intersects()</code> function since it is called for every candidate pair. If we take the <a target="_blank" class="text-link " href="https://gdbooks.gitbooks.io/3dcollisions/content/Chapter2/static_aabb_aabb.html">typical object intersection test<span class="blog-text-link-domain-icon">🡵</span></a> to be its implementation, we get a bunch of these <strong>inequality checks</strong>:</p>
             <pre class="code-block "><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">intersects</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token comment">// compare objects' bounds to see if they overlap</span>
   <span class="token keyword">return</span> object1<span class="token punctuation">.</span>left <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>right
@@ -1711,7 +1719,7 @@
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>top <span class="token operator">&lt;</span> object2<span class="token punctuation">.</span>bottom
       <span class="token operator">&amp;&amp;</span> object1<span class="token punctuation">.</span>bottom <span class="token operator">&gt;</span> object2<span class="token punctuation">.</span>top<span class="token punctuation">;</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>In the above code, the <code>intersects()</code> function checks if two objects intersect by comparing their opposing bounds for each direction. (Refer to <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb">this MDN article</a> for a better explanation.)</p>
+            <p>In the above code, the <code>intersects()</code> function checks if two objects intersect by comparing their opposing bounds for each direction. (Refer to <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#aabb_vs._aabb">this MDN article<span class="blog-text-link-domain-icon">🡵</span></a> for a better explanation.)</p>
             <p>We can break the test down to its constituent checks:</p>
             <ol>
               <li><code>object1.left &lt; object2.right</code></li>
@@ -1720,9 +1728,9 @@
               <li><code>object1.bottom &gt; object2.top</code></li>
             </ol>
             <p>Each check is solely concerned with one particular axis in a specific direction.</p>
-            <p>Here’s the key thing: Due to the <code>&amp;&amp;</code> operator’s <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation</a>, if any one of these checks turns out to be false, then the overall test will immediately evaluate to false.</p>
+            <p>Here’s the key thing: Due to the <code>&amp;&amp;</code> operator’s <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Short-circuit_evaluation">short-circuit evaluation<span class="blog-text-link-domain-icon">🡵</span></a>, if any one of these checks turns out to be false, then the overall test will immediately evaluate to false.</p>
             <p>Our goal then is to generalise the case where at least <em>one</em> of these checks is false across many tests as possible.</p>
-            <p><span class="box-note ">It’s the same idea as the <a target="_blank" class="text-link " href="https://personal.math.vt.edu/mrlugo/sat.html">separating axis theorem</a>, which implies that two objects can’t be colliding if there’s at least one axis where their shadows don’t overlap.</span></p>
+            <p><span class="box-note ">It’s the same idea as the <a target="_blank" class="text-link " href="https://personal.math.vt.edu/mrlugo/sat.html">separating axis theorem<span class="blog-text-link-domain-icon">🡵</span></a>, which implies that two objects can’t be colliding if there’s at least one axis where their shadows don’t overlap.</span></p>
             <p>Let’s say we focus only on the second check - <code>object1.right &gt; object2.left</code>. Don’t worry about the rest of the checks. As hinted above, optimising in just one axis can still make a big difference later, so we’ll focus on this single check for now.</p>
             <p>
             <div class="blog-media blog-media-default ">
@@ -1743,7 +1751,7 @@
             <pre class="code-block "><code class="code-block-code"><span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">B</span> <span class="token comment">// returns false</span>
 <span class="token constant">B</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span>
 <span class="token constant">A</span> <span class="token operator">&gt;</span> <span class="token constant">C</span> <span class="token comment">// returns false</span></code></pre>
-            <p>Voilà. Due to the <a target="_blank" class="text-link " href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong></a>, realise that we don’t need to run the <strong>third test</strong>! <em>If we know that <code>A&nbsp;&gt;&nbsp;B</code> and <code>B&nbsp;&gt;&nbsp;C</code> are both <code>false</code>, then we would know that <code>A&nbsp;&gt;&nbsp;C</code> is <code>false</code> as well.</em></p>
+            <p>Voilà. Due to the <a target="_blank" class="text-link " href="https://www.mathwords.com/t/transitive_property_inequalities.htm"><strong>transitive property of inequality</strong><span class="blog-text-link-domain-icon">🡵</span></a>, realise that we don’t need to run the <strong>third test</strong>! <em>If we know that <code>A&nbsp;&gt;&nbsp;B</code> and <code>B&nbsp;&gt;&nbsp;C</code> are both <code>false</code>, then we would know that <code>A&nbsp;&gt;&nbsp;C</code> is <code>false</code> as well.</em></p>
             <blockquote>
               <p>“If <i>a ≤ b</i> and <i>b ≤ c</i>, then <i>a ≤ c</i>.”
                 <cite>the transitive property of inequality</cite>
@@ -1889,7 +1897,7 @@
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
             <p>Adding those together we get <em><strong>O(n&nbsp;log&nbsp;n&nbsp;+&nbsp;m)</strong></em>.</p>
-            <p>This is a super good improvement over the naive approach’s <em>O(n<sup>2</sup>)</em>, because <strong>[1]</strong> <em>n&nbsp;log&nbsp;n</em> is <a target="_blank" class="text-link " href="https://bigocheatsheet.com/">much smaller</a> than <em>n<sup>2</sup></em> and <strong>[2]</strong> it is partially output-based - depending on the number of overlaps, it does not process more than necessary.</p>
+            <p>This is a super good improvement over the naive approach’s <em>O(n<sup>2</sup>)</em>, because <strong>[1]</strong> <em>n&nbsp;log&nbsp;n</em> is <a target="_blank" class="text-link " href="https://bigocheatsheet.com/">much smaller<span class="blog-text-link-domain-icon">🡵</span></a> than <em>n<sup>2</sup></em> and <strong>[2]</strong> it is partially output-based - depending on the number of overlaps, it does not process more than necessary.</p>
             <a target="_blank" class="text-link " href="https://www.bigocheatsheet.com">
               <div class="blog-media blog-media-default ">
                 <img loading="lazy" class="blog-media-element " src="https://www.bigocheatsheet.com/img/big-o-complexity-chart.png" caption="bigocheatsheet.com"><span class="blog-media-caption">bigocheatsheet.com</span>
@@ -1916,7 +1924,7 @@
             <p>(Not shown: the cost of sorting. Let’s just say the intersection test is sufficiently expensive.)</p>
             <p>Aaand that concludes the first part. Those two lines of code definitely were the MVPs.</p>
             <p>How will it compare to the more advanced versions?</p>
-            <p><a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Continued in part 2.</a>
+            <p><a target="_self" class="text-link " href="/notes/sweep-and-prune-2/">Continued in part 2.<span class="blog-text-link-domain-icon"></span></a>
             </p>
 
           </div>

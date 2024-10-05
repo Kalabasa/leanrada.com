@@ -353,6 +353,14 @@
   }
 </style>
   <style>
+  .blog-text-link-domain-icon {
+    display: inline-block;
+    vertical-align: super;
+    font-size: 75%;
+    line-height: 1em;
+  }
+</style>
+  <style>
   .tag-row {
     font-family: var(--default-font);
     font-size: 12px;
@@ -1591,10 +1599,10 @@
 
             <!--  textlint-enable  -->
 
-            <p>This post explains how <a target="_blank" class="text-link " href="https://portabl.ink"><strong>portabl.ink</strong></a> works. Portablink is a tool that creates self-contained compressed web pages in a single link. Check <a target="_self" class="text-link " href="/wares/portabl.ink/">portablink project page</a> for more info.</p>
+            <p>This post explains how <a target="_blank" class="text-link " href="https://portabl.ink"><strong>portabl.ink</strong><span class="blog-text-link-domain-icon">🡵</span></a> works. Portablink is a tool that creates self-contained compressed web pages in a single link. Check <a target="_self" class="text-link " href="/wares/portabl.ink/">portablink project page<span class="blog-text-link-domain-icon"></span></a> for more info.</p>
             <p>tl;dr: It uses <strong>data URLs</strong> containing <strong>compressed data</strong> which is bundled with its own <strong>decompression instructions</strong>.</p>
             <h2 id="data-urls">Data URLs</h2>
-            <p>In case you aren’t familiar with <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Data_URI_scheme"><strong>data URLs</strong></a>, they are URLs whose contents are in the URL itself. They all start with <code>data:</code>. Here, let me show you with this <em>interactive</em> mock browser:</p>
+            <p>In case you aren’t familiar with <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Data_URI_scheme"><strong>data URLs</strong><span class="blog-text-link-domain-icon">🡵</span></a>, they are URLs whose contents are in the URL itself. They all start with <code>data:</code>. Here, let me show you with this <em>interactive</em> mock browser:</p>
             <div class="window-decor">
 
               <div class="browser" data-rss="interactive" alt="browser demo">
@@ -1648,11 +1656,11 @@ B: <span class="token tag"><span class="token tag"><span class="token punctuatio
             <h3 id="1-fetchdatabase64fvtfb5sweh">1. fetch(`data:;base64,fVTfb5swEH...`)</h3>
             <p>The first thing you’ll notice is the huge chunk of base64-encoded data wrapped in a <code>fetch()</code> call.</p>
             <p>The encoded data is the compressed HTML which has been prepared by a complementary compression script. Since compressed data is binary, it has been encoded in a text-friendly format for it to be a valid URL. Base64, an encoding that’s native to the web, was used for this purpose.</p>
-            <p>To decode the base64 data, instead of using the standard <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/atob"><code>atob()</code></a> function, <code>fetch()</code> was used. <code>fetch</code> sees the <code>;base64</code> flag in that data URL and decodes it natively. </p>
+            <p>To decode the base64 data, instead of using the standard <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/atob"><code>atob()</code><span class="blog-text-link-domain-icon">🡵</span></a> function, <code>fetch()</code> was used. <code>fetch</code> sees the <code>;base64</code> flag in that data URL and decodes it natively. </p>
             <p>While it accomplishes the same thing as <code>atob</code>, <code>fetch</code> is slightly better, because:</p>
             <ol>
               <li><code>fetch()</code> outputs a stream, the format needed for decompression later.</li>
-              <li>Code size. We’re optimising for the total URL length. The <code>atob</code> method requires <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem">extra massaging for Unicode</a>.</li>
+              <li>Code size. We’re optimising for the total URL length. The <code>atob</code> method requires <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem">extra massaging for Unicode<span class="blog-text-link-domain-icon">🡵</span></a>.</li>
             </ol>
             <p>Here’s a quick length comparison. A is fetch. B is atob. Below is a character ruler with markings.</p>
             <pre class="code-block "><code class="code-block-code"><span class="token constant">A</span><span class="token operator">:</span> fetch<span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,dVo=</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">a</span><span class="token operator">=&gt;</span>a<span class="token punctuation">.</span>body<span class="token punctuation">)</span>
@@ -1674,7 +1682,7 @@ B: <span class="token tag"><span class="token tag"><span class="token punctuatio
 <span class="token prefix unchanged"> </span>   compressedHtml<span class="token punctuation">.</span>body
 <span class="token prefix unchanged"> </span> <span class="token punctuation">)</span></span></code></pre>
             <h3 id="2-bodypipethroughnew-decompressionstream">2. body.pipeThrough(new DecompressionStream(...))</h3>
-            <p>Next thing to note is the <code>DecompressionStream</code> class. This is from the new <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Compression_Streams_API"><strong>Compression Streams API</strong></a> which allows browser native compression and decompression. This saves a lot of decompression code from being bundled with the URL.</p>
+            <p>Next thing to note is the <code>DecompressionStream</code> class. This is from the new <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Compression_Streams_API"><strong>Compression Streams API</strong><span class="blog-text-link-domain-icon">🡵</span></a> which allows browser native compression and decompression. This saves a lot of decompression code from being bundled with the URL.</p>
             <p>As of writing, this API can only consume streams. That’s why the code required streams.</p>
             <p>Continuing. The <code>body</code> stream containing the compressed data is piped through the decompressor, which results in the uncompressed, original HTML string - in a <em>stream</em>.</p>
             <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">fetch</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68Oy...</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
@@ -1687,7 +1695,7 @@ B: <span class="token tag"><span class="token tag"><span class="token punctuatio
             <p><code>deflate-raw</code> is the compression algorithm. The same algorithm must be specified for both compression and decompression.</p>
             <p>To convert the decompressed stream to a usable <em>string</em>, we can use...</p>
             <h3 id="3-new-responsestreamtext">3. new Response(stream).text()</h3>
-            <p>We can abuse the native <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Response="><strong>Response</strong></a> class’s <code>text()</code> function to convert the stream into a string.</p>
+            <p>We can abuse the native <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/API/Response="><strong>Response</strong><span class="blog-text-link-domain-icon">🡵</span></a> class’s <code>text()</code> function to convert the stream into a string.</p>
             <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-javascript"><span class="token prefix unchanged"> </span> <span class="token function">fetch</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">data:;base64,fVTfb5swEH7PX+HxUIFiEpJu0pRgpK0P68Oy...</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span>
 <span class="token prefix unchanged"> </span> <span class="token punctuation">.</span><span class="token function">then</span><span class="token punctuation">(</span><span class="token parameter">compressedHtml</span> <span class="token operator">=&gt;</span>
 </span><span class="token inserted-sign inserted language-javascript"><span class="token prefix inserted">+</span>   <span class="token comment">/* a Response wrapper will be used to decode into text */</span>
@@ -1743,12 +1751,12 @@ B: <span class="token tag"><span class="token tag"><span class="token punctuatio
 
 
             <p><span class="box-note ">Note: If your input is not compressible enough, the overhead of bundling the decompression code might not be worth it. The tool may decide to use plain text, whichever is smaller.</span></p>
-            <p>Check out the full-fledged tool at <a target="_blank" class="text-link " href="https://portabl.ink"><strong>portabl.ink</strong></a>! It’s got a WYSIWYG editor, pretty pages, and more!</p>
+            <p>Check out the full-fledged tool at <a target="_blank" class="text-link " href="https://portabl.ink"><strong>portabl.ink</strong><span class="blog-text-link-domain-icon">🡵</span></a>! It’s got a WYSIWYG editor, pretty pages, and more!</p>
             <h2 id="conclusion">Conclusion</h2>
-            <p>Portablink was a fun weekend project (actually about a week). I learned about new Web APIs and some <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Code_golf">code golfing</a> techniques. I launched a “product”!</p>
+            <p>Portablink was a fun weekend project (actually about a week). I learned about new Web APIs and some <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Code_golf">code golfing<span class="blog-text-link-domain-icon">🡵</span></a> techniques. I launched a “product”!</p>
             <p>Potential improvement(s):</p>
             <ul>
-              <li>Use <a target="_blank" class="text-link " href="https://github.com/kevinAlbs/Base122">Base122</a> for more compression. We’re not restricted to ASCII anymore. We can use a larger range of characters than base64. This adds a significant amount of decoder code though.</li>
+              <li>Use <a target="_blank" class="text-link " href="https://github.com/kevinAlbs/Base122">Base122<span class="blog-text-link-domain-icon">🡵</span></a> for more compression. We’re not restricted to ASCII anymore. We can use a larger range of characters than base64. This adds a significant amount of decoder code though.</li>
               <li>Better authoring experience.</li>
             </ul>
             <p>Limitation(s):</p>

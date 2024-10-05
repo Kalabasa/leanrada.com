@@ -369,6 +369,14 @@
   }
 </style>
   <style>
+  .blog-text-link-domain-icon {
+    display: inline-block;
+    vertical-align: super;
+    font-size: 75%;
+    line-height: 1em;
+  }
+</style>
+  <style>
   .tag-row {
     font-family: var(--default-font);
     font-size: 12px;
@@ -1621,7 +1629,7 @@
               <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
             </div>
 
-            <p>In the <a target="_self" class="text-link " href="/notes/sweep-and-prune/">first part</a>, we figured that sorting lets us exploit the transitive property of inequality to optimise the number of pairwise tests.</p>
+            <p>In the <a target="_self" class="text-link " href="/notes/sweep-and-prune/">first part<span class="blog-text-link-domain-icon"></span></a>, we figured that sorting lets us exploit the transitive property of inequality to optimise the number of pairwise tests.</p>
             <p>We ended up with - let’s call it a <strong>“simplified version”</strong>, of the full sweep-and-prune algorithm.</p>
             <p>This part explores the more sophisticated versions of sweep-and-prune.</p>
             <p>
@@ -1731,7 +1739,7 @@
     <span class="token function">collide</span><span class="token punctuation">(</span>object1<span class="token punctuation">,</span> object2<span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
-            <p>While the above formula works for most games, a more precise and time-consuming check could be done at this level since most candidates have already been pruned. Our ball example would work better with the following circle intersection test using the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance formula</a>:</p>
+            <p>While the above formula works for most games, a more precise and time-consuming check could be done at this level since most candidates have already been pruned. Our ball example would work better with the following circle intersection test using the <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean distance formula<span class="blog-text-link-domain-icon">🡵</span></a>:</p>
             <pre class="code-block "><code class="code-block-code"><span class="token function-variable function">onOverlapX</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">object1<span class="token punctuation">,</span> object2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token comment">// compute circle-to-circle intersection</span>
   <span class="token keyword">const</span> distance <span class="token operator">=</span> <span class="token function">sqrt</span><span class="token punctuation">(</span>
@@ -1753,7 +1761,7 @@
             <p>Notice that it behaves very similarly to the simplified version. It limits tests to x-overlapping pairs.</p>
             <p><span class="box-note ">The sweep-and-prune algorithm is also known as sort-and-sweep.</span></p>
             <h3 id="note-for-higher-dimensions">Note for higher dimensions</h3>
-            <p>There is a variant which performs the <strong>sweep for each axis</strong>, not just <em>x</em>. For example in 3D, it maintains three <em>separate</em> sorted lists of edges for x, y, and z. Indeed, this is how the full sweep-and-prune implementation works as described in the <a target="_blank" class="text-link " href="https://ecommons.cornell.edu/handle/1813/7115">original paper by D. Baraff</a>. Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.</p>
+            <p>There is a variant which performs the <strong>sweep for each axis</strong>, not just <em>x</em>. For example in 3D, it maintains three <em>separate</em> sorted lists of edges for x, y, and z. Indeed, this is how the full sweep-and-prune implementation works as described in the <a target="_blank" class="text-link " href="https://ecommons.cornell.edu/handle/1813/7115">original paper by D. Baraff<span class="blog-text-link-domain-icon">🡵</span></a>. Object pairs are flagged for overlaps separately per dimension. Pairs flagged in all dimensions would be considered intersecting.</p>
             <p>This is the advantage the full sweep-and-prune has over the simplified “sorted pairwise” version. It can prune in multiple dimensions!</p>
             <div class="demo-row">
               <sap-demo-client class="" data-rss="interactive" alt="demo of the collision detection algorithm using 'sap-swap-2d' strategy" balls="6" strategy="sap-swap-2d" skip-interval="2" decorations="checks:#4c8"></sap-demo-client>
@@ -1806,7 +1814,7 @@
             <h2 id="small-detail-big-improvement">Small detail, big improvement</h2>
             <p>Again, let’s ask the question: Where is redundant work being done here?</p>
             <p>Let’s look at the sort step, which is the bottleneck of the algorithm according to the analysis.</p>
-            <p>The following is a visualisation of the sorting of the edges array, using an optimised <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Quicksort">quicksort</a> (n&nbsp;log&nbsp;n):</p>
+            <p>The following is a visualisation of the sorting of the edges array, using an optimised <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Quicksort">quicksort<span class="blog-text-link-domain-icon">🡵</span></a> (n&nbsp;log&nbsp;n):</p>
             <div class="demo-row">
               <sap-demo-client class="" data-rss="interactive" alt="demo of the collision detection algorithm using 'sap-quicksort' strategy" balls="[[50,350,50],[100,300,30],[150,200,40],[450,350,35],[500,300,30],[550,300,40]]" strategy="sap-quicksort" skip-interval="3" decorations="edges:array:#f00:#0ff"></sap-demo-client>
               <div class="demo-caption">
@@ -1816,7 +1824,7 @@
 
             <p>You can see that most of the time, the sort does nothing at all! The list is almost always <strong>already sorted from the previous frame</strong>.</p>
             <p>Even when it becomes unsorted, it usually just takes a couple of swaps to be sorted again. There won’t be more than a few object boundaries changing places in one time step.</p>
-            <p>Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with the special quality of being <em>nearly-sorted</em>. And one great choice for sorting nearly-sorted lists is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Insertion_sort"><strong>insertion sort</strong></a>!</p>
+            <p>Fortunately, the subject of sorting algorithms is well-researched. We’re dealing with the special quality of being <em>nearly-sorted</em>. And one great choice for sorting nearly-sorted lists is <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Insertion_sort"><strong>insertion sort</strong><span class="blog-text-link-domain-icon">🡵</span></a>!</p>
             <pre class="code-block "><code class="code-block-code"><span class="token keyword">function</span> <span class="token function">insertionSort</span><span class="token punctuation">(</span><span class="token parameter">edges</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
   <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> edges<span class="token punctuation">.</span>length<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> j <span class="token operator">=</span> i <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> j <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">;</span> j<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
