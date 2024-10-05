@@ -1,27 +1,20 @@
 import { html } from "../components/html.js";
-import { makeAutoObservable } from "../lib/mobx.js";
+import { observer } from "../util/observer.js";
 import { NodeEditor } from "./node-editor.js";
 
-export function createGlyphed() {
+export function createGlyphed({ nodes }) {
   const width = 800;
   const height = 800;
 
-  /** @type {import("./node-editor.js").Node[]} */
-  const nodes = [
-    makeAutoObservable({
-      x: 200,
-      y: 200,
-      controlX: 250,
-      controlY: 200,
-      width: 50,
-    }),
-  ];
-
   return () =>
-    html`<${Glyphed} width=${width} height=${height} nodes=${nodes} />`;
+    html`<${Glyphed}
+      width=${width}
+      height=${height}
+      nodeEditors=${html`<${NodeEditors} nodes=${nodes} />`}
+    />`;
 }
 
-export function Glyphed({ width, height, nodes }) {
+export function Glyphed({ width, height, nodeEditors }) {
   return html` <style id=${Glyphed.name}>
       .glyphed {
         position: relative;
@@ -33,9 +26,9 @@ export function Glyphed({ width, height, nodes }) {
         box-shadow: var(--shadow-l);
       }
     </style>
-    <div class="glyphed" style=${{ width, height }}>
-      ${nodes.map((node) => NodeEditor({ node }))}
-    </div>`;
+    <div class="glyphed" style=${{ width, height }}>${nodeEditors}</div>`;
 }
 
-
+const NodeEditors = observer(({ nodes }) =>
+  nodes.map((node, index) => html`<${NodeEditor} key=${index} node=${node} />`)
+);

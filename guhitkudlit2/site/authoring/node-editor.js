@@ -107,6 +107,7 @@ export function NodeEditor({ node }) {
           blue calc(50% + 1px),
           transparent calc(50% + 1px)
         ) / 100% 50%;
+        pointer-events: none;
       }
       .nodeEditorNodeHandle {
         border: solid 1px blue;
@@ -133,7 +134,6 @@ export function NodeEditor({ node }) {
         top: -0.15cm;
         width: 0.3cm;
         height: 0.3cm;
-        pointer-events: all;
         cursor: grab;
       }
     </style>
