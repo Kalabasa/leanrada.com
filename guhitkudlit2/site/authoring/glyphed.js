@@ -1,10 +1,28 @@
 import { html } from "../components/html.js";
+import { action } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 import { NodeEditor } from "./node-editor.js";
 
-export function createGlyphed({ nodes }) {
+export function createGlyphed({ nodes, selectOnlyNode }) {
   const width = 800;
   const height = 800;
+
+  const onGrabNode = action((node) => {
+    if (!node.selected) {
+      selectOnlyNode(node);
+    }
+  });
+
+  const NodeEditors = observer(({ nodes }) =>
+    nodes.map(
+      (node) =>
+        html`<${NodeEditor}
+          key=${node.id}
+          node=${node}
+          onGrabNode=${onGrabNode}
+        />`
+    )
+  );
 
   return () =>
     html`<${Glyphed}
@@ -28,7 +46,3 @@ export function Glyphed({ width, height, nodeEditors }) {
     </style>
     <div class="glyphed" style=${{ width, height }}>${nodeEditors}</div>`;
 }
-
-const NodeEditors = observer(({ nodes }) =>
-  nodes.map((node, index) => html`<${NodeEditor} key=${index} node=${node} />`)
-);

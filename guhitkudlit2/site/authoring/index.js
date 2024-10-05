@@ -2,24 +2,19 @@ import { render } from "../lib/htm-preact.js";
 import { html } from "../components/html.js";
 import { AppLogo } from "../app/logo.js";
 import { createGlyphed } from "./glyphed.js";
-import { makeAutoObservable, observable } from "../lib/mobx.js";
+import { action, observable } from "../lib/mobx.js";
+import { createToolbar } from "./toolbar.js";
 
 /** @type {import("./node-editor.js").Node[]} */
-const nodes = observable.array([]);
+const nodes = observable.array([], { deep: false });
 
-function addNode() {
-  nodes.push(
-    makeAutoObservable({
-      x: 100,
-      y: 100,
-      controlX: 150,
-      controlY: 100,
-      width: 100,
-    })
-  );
-}
+const selectOnlyNode = action((node) => {
+  nodes.forEach((node) => (node.selected = false));
+  node.selected = true;
+});
 
-const Glyphed = createGlyphed({ nodes });
+const Toolbar = createToolbar({ nodes });
+const Glyphed = createGlyphed({ nodes, selectOnlyNode });
 
 export function Authoring() {
   return html`
@@ -64,7 +59,7 @@ export function Authoring() {
         <${Glyphed} />
       </main>
       <aside class="authoringTools">
-        <button onClick=${addNode}>Add node</button>
+        <${Toolbar} />
       </aside>
     </div>
   `;

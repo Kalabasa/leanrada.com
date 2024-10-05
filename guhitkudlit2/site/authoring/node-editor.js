@@ -14,7 +14,7 @@ import { observer } from "../util/observer.js";
  * }} Node
  */
 
-export function NodeEditor({ node }) {
+export function NodeEditor({ node, onGrabNode }) {
   const nodeRef = useRef();
 
   const computedAngle = useMemo(
@@ -57,6 +57,12 @@ export function NodeEditor({ node }) {
     grabbedWidth && setGrabbedWidth(false);
   };
 
+  const onMouseDown = (event, setGrabbed) => {
+    if (event.button !== 0) return;
+    setGrabbed(true);
+    onGrabNode(node);
+  };
+
   const onGrabMouseMove = useCallback(
     (event) => {
       if (!nodeRef.current) return;
@@ -96,29 +102,32 @@ export function NodeEditor({ node }) {
 
   return html`
     <style id=${NodeEditor.name}>
+      .nodeEditorHighlighted {
+        --node-editor-color: magenta;
+      }
       .nodeEditorArea {
         position: absolute;
-        border: solid 1px blue;
+        border: solid 1px var(--node-editor-color, blue);
         border-radius: 50%;
         background: linear-gradient(
-          to right,
-          transparent 50%,
-          blue 50%,
-          blue calc(50% + 1px),
-          transparent calc(50% + 1px)
-        ) / 100% 50%;
+            to right,
+            transparent 50%,
+            var(--node-editor-color, blue) 50%,
+            var(--node-editor-color, blue) calc(50% + 1px),
+            transparent calc(50% + 1px)
+          ) / 100% 50%;
         pointer-events: none;
       }
       .nodeEditorNodeHandle {
-        border: solid 1px blue;
+        border: solid 1px var(--node-editor-color, blue);
         background: white;
       }
       .nodeEditorControlHandle {
         border-radius: 50%;
-        background: blue;
+        background: var(--node-editor-color, blue);
       }
       .nodeEditorWidthHandle {
-        border: solid 1px blue;
+        border: solid 1px var(--node-editor-color, blue);
         border-radius: 50%;
         background: white;
       }
@@ -143,25 +152,29 @@ export function NodeEditor({ node }) {
       getAngle=${() => computedAngle.get()}
       getWidth=${() => node.width}
       getHeight=${() => computedHeight.get()}
+      getHighlighted=${() => node.selected}
     />
     <${Handle}
       ref=${nodeRef}
       class="nodeEditorNodeHandle"
       getX=${() => node.x}
       getY=${() => node.y}
-      onMouseDown=${() => setGrabbedNode(true)}
+      getHighlighted=${() => node.selected}
+      onMouseDown=${(event) => onMouseDown(event, setGrabbedNode)}
     />
     <${Handle}
       class="nodeEditorControlHandle"
       getX=${() => node.controlX}
       getY=${() => node.controlY}
-      onMouseDown=${() => setGrabbedControl(true)}
+      getHighlighted=${() => node.selected}
+      onMouseDown=${(event) => onMouseDown(event, setGrabbedControl)}
     />
     <${Handle}
       class="nodeEditorWidthHandle"
       getX=${() => computedWidthHandlePos.get().x}
       getY=${() => computedWidthHandlePos.get().y}
-      onMouseDown=${() => setGrabbedWidth(true)}
+      getHighlighted=${() => node.selected}
+      onMouseDown=${(event) => onMouseDown(event, setGrabbedWidth)}
     />
     ${(grabbedNode || grabbedControl || grabbedWidth) &&
     html`
@@ -174,27 +187,36 @@ export function NodeEditor({ node }) {
   `;
 }
 
-const Area = observer(({ getX, getY, getAngle, getWidth, getHeight }) => {
-  const transform = `translate(${getX()}px, ${getY()}px) translate(-50%, -50%) rotate(${getAngle()}rad)`;
-  return html`
-    <div
-      class="nodeEditorArea"
-      style=${{
-        transform: transform,
-        width: getWidth() + "px",
-        height: getHeight() + "px",
-      }}
-    ></div>
-  `;
-});
+const Area = observer(
+  ({ getX, getY, getAngle, getWidth, getHeight, getHighlighted }) => {
+    const transform = `translate(${getX()}px, ${getY()}px) translate(-50%, -50%) rotate(${getAngle()}rad)`;
+    return html`
+      <div
+        class=${classes(
+          "nodeEditorArea",
+          getHighlighted() && "nodeEditorHighlighted"
+        )}
+        style=${{
+          transform: transform,
+          width: getWidth() + "px",
+          height: getHeight() + "px",
+        }}
+      ></div>
+    `;
+  }
+);
 
 const Handle = observer(
-  ({ ref, class: className, getX, getY, onMouseDown }) => {
+  ({ ref, class: className, getX, getY, getHighlighted, onMouseDown }) => {
     const transform = `translate(${getX()}px, ${getY()}px)`;
     return html`
       <div
         ref=${ref}
-        class=${classes("nodeEditorHandle", className)}
+        class=${classes(
+          "nodeEditorHandle",
+          getHighlighted() && "nodeEditorHighlighted",
+          className
+        )}
         style=${{ transform }}
         onMouseDown=${onMouseDown}
       ></div>
