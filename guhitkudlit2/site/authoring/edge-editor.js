@@ -19,6 +19,7 @@ export function EdgeEditor({ edge, onClickEdge }) {
     <style id=${EdgeEditor.name}>
       .edgeEditorHighlighted {
         --edge-editor-color: magenta;
+        z-index: 1;
       }
       .edgeEditorEdgeHandle {
         border: solid 1px var(--edge-editor-color, blue);
@@ -27,7 +28,7 @@ export function EdgeEditor({ edge, onClickEdge }) {
       .edgeEditorLine {
         position: absolute;
         stroke: var(--edge-editor-color, blue);
-        stroke-width: 1px;w
+        stroke-width: 1px;
         pointer-events: none;
       }
       .edgeEditorHandle {
@@ -36,6 +37,7 @@ export function EdgeEditor({ edge, onClickEdge }) {
         top: -0.15cm;
         width: 0.3cm;
         height: 0.3cm;
+        cursor: pointer;
       }
     </style>
     <${Line}

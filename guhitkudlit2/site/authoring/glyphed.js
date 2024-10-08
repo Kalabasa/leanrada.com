@@ -25,7 +25,6 @@ export function createGlyphed({ nodes, edges, selectItems }) {
 
   const onClickEdge = action((edge, event) => {
     selectItems([edge.id], edges, event.shiftKey);
-
   });
 
   const EdgeEditors = observer(({ edges }) =>
@@ -56,8 +55,27 @@ export function Glyphed({ width, height, edgeEditors, nodeEditors }) {
           linear-gradient(to bottom, #eee 1px, transparent 1px);
         background-color: white;
         background-size: 1cm 1cm;
-        background-position: center center;
+        background-position: calc(50% + 0.5cm) calc(50% + 0.5cm);
         box-shadow: var(--shadow-l);
+      }
+      .glyphed::before {
+        content: "";
+        position: absolute;
+        background-image: linear-gradient(
+            to right,
+            transparent 50%,
+            #ccc 50%,
+            #ccc calc(50% + 1px),
+            transparent calc(50% + 1px)
+          ),
+          linear-gradient(
+            to bottom,
+            transparent 50%,
+            #ccc 50%,
+            #ccc calc(50% + 1px),
+            transparent calc(50% + 1px)
+          );
+        inset: 0;
       }
     </style>
     <div class="glyphed" style=${{ width, height }}>

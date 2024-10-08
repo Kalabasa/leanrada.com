@@ -104,6 +104,7 @@ export function NodeEditor({ node, onGrabNode }) {
     <style id=${NodeEditor.name}>
       .nodeEditorHighlighted {
         --node-editor-color: magenta;
+        z-index: 2;
       }
       .nodeEditorArea {
         position: absolute;
