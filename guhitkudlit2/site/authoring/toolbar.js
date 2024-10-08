@@ -1,10 +1,10 @@
 import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
-import { useMemo, useRef } from "../lib/htm-preact.js";
-import { action, makeAutoObservable } from "../lib/mobx.js";
+import { useMemo } from "../lib/htm-preact.js";
+import { action } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 
-export function createToolbar({ nodes }) {
+export function createToolbar({ nodes, edges, createNode, createEdge }) {
   const addNode = action(() => {
     let x = 100;
     let y = 100;
@@ -12,78 +12,48 @@ export function createToolbar({ nodes }) {
       x += 25;
       y += 25;
     }
-
-    let id = 0;
-    while (nodes.some((node) => node.id === id)) {
-      id++;
-    }
-
-    nodes.push(
-      makeAutoObservable({
-        id,
-        x,
-        y,
-        controlX: x + 50,
-        controlY: y,
-        width: 100,
-        selected: false,
-      })
-    );
-    assertIDs(nodes);
+    nodes.push(createNode(x, y));
   });
 
   const deleteSelectedNodes = action(() => {
     nodes.replace(nodes.filter((node) => !node.selected));
-    assertIDs(nodes);
   });
 
-  const deselectAllNodes = action(() => {
+  const deselectAll = action(() => {
     nodes.forEach((node) => (node.selected = false));
+    edges.forEach((edge) => (edge.selected = false));
+  });
+
+  const connectNodes = action(() => {
+    const selectedNodes = nodes.filter((node) => node.selected);
+    if (selectedNodes.length !== 2) {
+      alert("Select exactly 2 nodes to connect");
+      return;
+    }
+    edges.push(createEdge(...selectedNodes));
   });
 
   return () =>
     html`<${Toolbar}
       nodes=${nodes}
+      edges=${edges}
+      onClickDeselect=${deselectAll}
       onClickAddNode=${addNode}
       onClickDeleteNode=${deleteSelectedNodes}
-      onClickDeselect=${deselectAllNodes}
+      onClickConnect=${connectNodes}
+      onClickDeleteEdge=${console.log}
     />`;
-}
-
-function assertIDs(nodes) {
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      if (nodes[i].id === nodes[j].id) {
-        console.error("Debug info:", nodes[i], nodes[j]);
-        throw new Error(`Duplicate IDs at indices ${i} and ${j}!`);
-      }
-    }
-  }
 }
 
 export function Toolbar({
   nodes,
+  edges,
+  onClickDeselect,
   onClickAddNode,
   onClickDeleteNode,
-  onClickDeselect,
+  onClickConnect,
+  onClickDeleteEdge,
 }) {
-  const onChangeSelect = useMemo(
-    () =>
-      action((values) => {
-        const selectedIDs = Array.from(event.currentTarget.selectedOptions).map(
-          (option) => Number(option.value)
-        );
-
-        nodes.forEach((node) => {
-          const selected = selectedIDs.includes(node.id);
-          if (node.selected !== selected) {
-            node.selected = selected;
-          }
-        });
-      }),
-    [nodes]
-  );
-
   return html`
     <style id=${Toolbar.name}>
       .authoringToolbar {
@@ -102,27 +72,62 @@ export function Toolbar({
       <${Button} onClick=${onClickDeselect}>Deselect all<//>
       <${Button} onClick=${onClickAddNode}>Add node<//>
       <${Button} onClick=${onClickDeleteNode}>Delete node(s)<//>
-      <${Input}
-        class="authoringToolbarList"
-        tag="select"
-        multiple
-        value=${nodes
-          .map((node) => (node.selected ? String(node.id) : null))
-          .filter((id) => id !== null)}
-        onChange=${onChangeSelect}
-      >
-        <${NodeOptions} nodes=${nodes} />
-      <//>
+      <${ItemSelector} items=${nodes} OptionComponent=${NodeOption} />
+      <${Button} onClick=${onClickConnect}>Connect nodes<//>
+      <${Button} onClick=${onClickDeleteEdge}>Delete edge(s)<//>
+      <${ItemSelector} items=${edges} OptionComponent=${EdgeOption} />
     </div>
   `;
 }
 
-const NodeOptions = observer(({ nodes }) =>
-  nodes.map((node) => html`<${NodeOption} key=${node.id} node=${node} />`)
-);
+/**
+ * @param {object} props
+ * @param {Array<{ id, selected: boolean }>} props.items
+ */
+const ItemSelector = observer(({ items, OptionComponent }) => {
+  const onChangeSelect = action((event) => {
+    const selectedIDs = Array.from(event.currentTarget.selectedOptions).map(
+      (option) => Number(option.value)
+    );
+    items.forEach((item) => {
+      const selected = selectedIDs.includes(item.id);
+      if (item.selected !== selected) {
+        item.selected = selected;
+      }
+    });
+  });
 
+  return html`
+    <${Input}
+      class="authoringToolbarList"
+      tag="select"
+      multiple
+      onChange=${onChangeSelect}
+    >
+      ${items.map(
+        (item) => html`<${OptionComponent} key=${item.id} item=${item} />`
+      )}
+    <//>
+  `;
+});
+
+/**
+ * @param {object} props
+ * @param {import("./node-editor.js").Node[]} props.item
+ */
 const NodeOption = observer(
-  ({ node }) => html`<option value=${node.id}>
-    ${node.id} ${node.selected && "(selected)"}
+  ({ item }) => html`<option value=${item.id}>
+    ${selectionIndicator(item.selected)}Node${item.id}
   </option>`
 );
+
+const EdgeOption = observer(
+  ({ item }) => html`<option value=${item.id}>
+    ${selectionIndicator(item.selected)}Edge${item.id}
+    [${item.nodes.map((node) => node.id).join("-")}]
+  </option>`
+);
+
+function selectionIndicator(selected) {
+  return selected ? "*" : "";
+}

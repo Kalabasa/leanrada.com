@@ -2,18 +2,50 @@ import { render } from "../lib/htm-preact.js";
 import { html } from "../components/html.js";
 import { AppLogo } from "../app/logo.js";
 import { createGlyphed } from "./glyphed.js";
-import { action, observable } from "../lib/mobx.js";
+import { action, makeAutoObservable, observable } from "../lib/mobx.js";
 import { createToolbar } from "./toolbar.js";
+import { nonNull } from "../util/preconditions.js";
 
 /** @type {import("./node-editor.js").Node[]} */
 const nodes = observable.array([], { deep: false });
+const edges = observable.array([], { deep: false });
+
+const createNode = (x, y) => {
+  let id = 0;
+  while (nodes.some((node) => node.id === id)) {
+    id++;
+  }
+
+  return makeAutoObservable({
+    id,
+    x,
+    y,
+    controlX: x + 50,
+    controlY: y,
+    width: 100,
+    selected: false,
+  });
+};
+
+const createEdge = (node1, node2) => {
+  let id = 0;
+  while (edges.some((edge) => edge.id === id)) {
+    id++;
+  }
+
+  return makeAutoObservable({
+    id,
+    nodes: [nonNull(node1), nonNull(node2)],
+    selected: false,
+  });
+};
 
 const selectOnlyNode = action((node) => {
   nodes.forEach((node) => (node.selected = false));
   node.selected = true;
 });
 
-const Toolbar = createToolbar({ nodes });
+const Toolbar = createToolbar({ nodes, edges, createNode, createEdge });
 const Glyphed = createGlyphed({ nodes, selectOnlyNode });
 
 export function Authoring() {
