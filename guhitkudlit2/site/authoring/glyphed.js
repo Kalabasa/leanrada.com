@@ -7,8 +7,10 @@ export function createGlyphed({ nodes, selectOnlyNode }) {
   const width = 800;
   const height = 800;
 
-  const onGrabNode = action((node) => {
-    if (!node.selected) {
+  const onGrabNode = action((node, event) => {
+    if (event.shiftKey) {
+      node.selected = !node.selected;
+    } else {
       selectOnlyNode(node);
     }
   });

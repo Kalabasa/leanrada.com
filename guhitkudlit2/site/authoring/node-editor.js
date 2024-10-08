@@ -60,7 +60,7 @@ export function NodeEditor({ node, onGrabNode }) {
   const onMouseDown = (event, setGrabbed) => {
     if (event.button !== 0) return;
     setGrabbed(true);
-    onGrabNode(node);
+    onGrabNode(node, event);
   };
 
   const onGrabMouseMove = useCallback(
