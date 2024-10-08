@@ -1,5 +1,5 @@
 import { html } from "../components/html.js";
-import { Input } from "../components/input.js";
+import { Input } from "../components/form.js";
 import { observable, reaction, runInAction } from "../lib/mobx.js";
 import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";

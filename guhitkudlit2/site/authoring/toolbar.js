@@ -1,3 +1,4 @@
+import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
 import { useMemo, useRef } from "../lib/htm-preact.js";
 import { action, makeAutoObservable } from "../lib/mobx.js";
@@ -84,11 +85,26 @@ export function Toolbar({
   );
 
   return html`
-    <div>
-      <button onClick=${onClickAddNode}>Add node</button>
-      <button onClick=${onClickDeleteNode}>Delete node</button>
-      <button onClick=${onClickDeselect}>Deselect</button>
-      <select
+    <style id=${Toolbar.name}>
+      .authoringToolbar {
+        min-width: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--size-xs);
+      }
+      .authoringToolbarList {
+        min-height: 200px;
+        overflow: auto;
+      }
+    </style>
+    <div class="authoringToolbar">
+      <${Button} onClick=${onClickDeselect}>Deselect all<//>
+      <${Button} onClick=${onClickAddNode}>Add node<//>
+      <${Button} onClick=${onClickDeleteNode}>Delete node(s)<//>
+      <${Input}
+        class="authoringToolbarList"
+        tag="select"
         multiple
         value=${nodes
           .map((node) => (node.selected ? String(node.id) : null))
@@ -96,7 +112,7 @@ export function Toolbar({
         onChange=${onChangeSelect}
       >
         <${NodeOptions} nodes=${nodes} />
-      </select>
+      <//>
     </div>
   `;
 }
