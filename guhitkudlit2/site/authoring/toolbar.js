@@ -1,10 +1,15 @@
 import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
-import { useMemo } from "../lib/htm-preact.js";
 import { action } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 
-export function createToolbar({ nodes, edges, createNode, createEdge }) {
+export function createToolbar({
+  nodes,
+  edges,
+  createNode,
+  createEdge,
+  selectItems,
+}) {
   const addNode = action(() => {
     let x = 100;
     let y = 100;
@@ -33,6 +38,10 @@ export function createToolbar({ nodes, edges, createNode, createEdge }) {
     edges.push(createEdge(...selectedNodes));
   });
 
+  const deleteSelectedEdges = action(() => {
+    edges.replace(edges.filter((edge) => !edge.selected));
+  });
+
   return () =>
     html`<${Toolbar}
       nodes=${nodes}
@@ -41,7 +50,8 @@ export function createToolbar({ nodes, edges, createNode, createEdge }) {
       onClickAddNode=${addNode}
       onClickDeleteNode=${deleteSelectedNodes}
       onClickConnect=${connectNodes}
-      onClickDeleteEdge=${console.log}
+      onClickDeleteEdge=${deleteSelectedEdges}
+      selectItems=${selectItems}
     />`;
 }
 
@@ -53,6 +63,7 @@ export function Toolbar({
   onClickDeleteNode,
   onClickConnect,
   onClickDeleteEdge,
+  selectItems,
 }) {
   return html`
     <style id=${Toolbar.name}>
@@ -72,10 +83,18 @@ export function Toolbar({
       <${Button} onClick=${onClickDeselect}>Deselect all<//>
       <${Button} onClick=${onClickAddNode}>Add node<//>
       <${Button} onClick=${onClickDeleteNode}>Delete node(s)<//>
-      <${ItemSelector} items=${nodes} OptionComponent=${NodeOption} />
+      <${ItemSelector}
+        items=${nodes}
+        selectItems=${selectItems}
+        OptionComponent=${NodeOption}
+      />
       <${Button} onClick=${onClickConnect}>Connect nodes<//>
       <${Button} onClick=${onClickDeleteEdge}>Delete edge(s)<//>
-      <${ItemSelector} items=${edges} OptionComponent=${EdgeOption} />
+      <${ItemSelector}
+        items=${edges}
+        selectItems=${selectItems}
+        OptionComponent=${EdgeOption}
+      />
     </div>
   `;
 }
@@ -84,17 +103,12 @@ export function Toolbar({
  * @param {object} props
  * @param {Array<{ id, selected: boolean }>} props.items
  */
-const ItemSelector = observer(({ items, OptionComponent }) => {
+const ItemSelector = observer(({ items, selectItems, OptionComponent }) => {
   const onChangeSelect = action((event) => {
     const selectedIDs = Array.from(event.currentTarget.selectedOptions).map(
       (option) => Number(option.value)
     );
-    items.forEach((item) => {
-      const selected = selectedIDs.includes(item.id);
-      if (item.selected !== selected) {
-        item.selected = selected;
-      }
-    });
+    selectItems(selectedIDs, items, false);
   });
 
   return html`

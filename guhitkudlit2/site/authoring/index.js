@@ -40,13 +40,29 @@ const createEdge = (node1, node2) => {
   });
 };
 
-const selectOnlyNode = action((node) => {
-  nodes.forEach((node) => (node.selected = false));
-  node.selected = true;
+const selectItems = action((ids, inCollection, additive) => {
+  if (!additive) {
+    edges.forEach((edge) => (edge.selected = false));
+    nodes.forEach((node) => (node.selected = false));
+  }
+  inCollection.forEach((item) => {
+    const selected = ids.includes(item.id);
+    if (additive) {
+      item.selected = item.selected !== selected;
+    } else if (item.selected !== selected) {
+      item.selected = selected;
+    }
+  });
 });
 
-const Toolbar = createToolbar({ nodes, edges, createNode, createEdge });
-const Glyphed = createGlyphed({ nodes, selectOnlyNode });
+const Toolbar = createToolbar({
+  nodes,
+  edges,
+  createNode,
+  createEdge,
+  selectItems,
+});
+const Glyphed = createGlyphed({ nodes, edges, selectItems });
 
 export function Authoring() {
   return html`
