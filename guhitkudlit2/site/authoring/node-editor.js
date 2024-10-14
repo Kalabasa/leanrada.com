@@ -6,6 +6,7 @@ import { observer } from "../util/observer.js";
 
 /**
  * @typedef {{
+ *  id: number,
  *  x: number,
  *  y: number,
  *  controlX: number,

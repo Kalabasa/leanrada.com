@@ -3,7 +3,6 @@ import { html } from "../components/html.js";
 import { AppLogo } from "../app/logo.js";
 import { createGlyphed } from "./glyphed.js";
 import {
-  autorun,
   makeAutoObservable,
   observable,
   runInAction,
@@ -30,36 +29,19 @@ const appState = makeAutoObservable({
 
 const {
   addGlyph,
+  deleteGlyph,
   selectGlyph,
   addNode,
   connectNodes,
   deleteSelected,
   selectItems,
   deselectAll,
-} = createActions({ appState, createGlyph });
+} = createActions({ appState, createGlyph, createNode, createEdge });
 
-function createGlyph(name = "a", nodes = [], edges = []) {
-  return makeAutoObservable({
-    name,
-    nodes: observable.array(nodes, { deep: false }),
-    edges: observable.array(edges, { deep: false }),
-  });
-}
-
-function loadAppData() {
+function init() {
   const appData = loadAppDataFromStorage();
   if (appData) {
-    runInAction(() => {
-      appState.glyphs.replace(
-        appData.glyphs.map((glyph) =>
-          createGlyph(
-            glyph.name,
-            glyph.nodes.map((node) => makeAutoObservable(node)),
-            glyph.edges.map((edge) => makeAutoObservable(edge))
-          )
-        )
-      );
-    });
+    applyAppDataFromObject(appData);
   }
 }
 
@@ -67,20 +49,42 @@ function saveAppData() {
   saveAppDataToStorage({ glyphs: appState.glyphs });
 }
 
-function importAppData() {
-  prompt("Enter code");
+async function importGlyphs() {
+  try {
+    const json = await uploadFileAsString();
+    if (json) {
+      applyAppDataFromObject({ glyphs: JSON.parse(json) });
+    } else {
+      throw new Error("No data");
+    }
+  } catch (e) {
+    alert(e);
+  }
 }
 
-function exportAppData() {
-  alert("Code:");
+function exportGlyphs() {
+  const glyphs = appState.glyphs.map((glyph) => ({
+    name: glyph.name,
+    nodes: glyph.nodes.map(({ id, x, y, controlX, controlY, width }) => ({
+      id,
+      x,
+      y,
+      controlX,
+      controlY,
+      width,
+    })),
+    edges: glyph.edges.map(({ nodes }) => ({ nodes })),
+  }));
+  downloadString(JSON.stringify(glyphs), "text/json", "export.json");
 }
 
 const Toolbar = createToolbar({
   appState,
   saveAppData,
-  importAppData,
-  exportAppData,
+  importGlyphs,
+  exportGlyphs,
   addGlyph,
+  deleteGlyph,
   selectGlyph,
   addNode,
   connectNodes,
@@ -139,5 +143,82 @@ export function Authoring() {
   `;
 }
 
-loadAppData();
+init();
 render(html`<${Authoring} />`, document.body);
+
+function createGlyph(name = "a", nodes = [], edges = []) {
+  return makeAutoObservable({
+    name,
+    nodes: observable.array(nodes, { deep: false }),
+    edges: observable.array(edges, { deep: false }),
+  });
+}
+
+function createNode({ id, x, y, controlX, controlY, width }) {
+  return makeAutoObservable({
+    id,
+    x,
+    y,
+    controlX: controlX,
+    controlY: controlY,
+    width: width,
+    selected: false,
+  });
+}
+
+function createEdge(id, selectedIDs) {
+  return makeAutoObservable({
+    id,
+    nodes: selectedIDs,
+    selected: false,
+  });
+}
+
+function applyAppDataFromObject(appData) {
+  runInAction(() => {
+    appState.glyphs.replace(
+      appData.glyphs.map((glyph) =>
+        createGlyph(
+          glyph.name,
+          glyph.nodes.map((node) => createNode(node)),
+          glyph.edges.map((edge, i) => createEdge(i, edge.nodes))
+        )
+      )
+    );
+  });
+}
+
+function uploadFileAsString() {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) {
+        reject("No file selected");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file);
+    };
+
+    input.click();
+  });
+}
+
+function downloadString(text, fileType, fileName) {
+  const blob = new Blob([text], { type: fileType });
+  const a = document.createElement("a");
+  a.download = fileName;
+  a.href = URL.createObjectURL(blob);
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => void URL.revokeObjectURL(a.href), 1500);
+}

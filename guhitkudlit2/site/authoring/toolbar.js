@@ -1,6 +1,7 @@
 import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
 import { Spacer } from "../components/spacer.js";
+import { useState } from "../lib/htm-preact.js";
 import { action } from "../lib/mobx.js";
 import { convertToUnicode } from "../transliteration/unicode.mjs";
 import { LabelText } from "../typography/text.js";
@@ -9,9 +10,10 @@ import { observer } from "../util/observer.js";
 export function createToolbar({
   appState,
   saveAppData,
-  importAppData,
-  exportAppData,
+  importGlyphs,
+  exportGlyphs,
   addGlyph,
+  deleteGlyph,
   selectGlyph,
   addNode,
   connectNodes,
@@ -19,6 +21,10 @@ export function createToolbar({
   selectItems,
   deselectAll,
 }) {
+  const onClickAddGlyph = () => {
+    selectGlyph(addGlyph());
+  };
+
   const onSelectGlyph = (event) => {
     selectGlyph(event.currentTarget.value);
   };
@@ -27,6 +33,10 @@ export function createToolbar({
     if (event.currentTarget.value.length === 1) {
       appState.selectedGlyph.name = event.currentTarget.value.toLowerCase();
     }
+  };
+
+  const onConfirmDeleteGlyph = () => {
+    deleteGlyph(appState.selectedGlyph);
   };
 
   const NodeSelector = observer((props) => {
@@ -56,12 +66,13 @@ export function createToolbar({
       html`<${Toolbar}
         glyphs=${[...appState.glyphs]}
         onClickSave=${saveAppData}
-        onClickImport${importAppData}
-        onClickExport=${exportAppData}
-        onClickAddGlyph=${addGlyph}
+        onClickImport=${importGlyphs}
+        onClickExport=${exportGlyphs}
+        onClickAddGlyph=${onClickAddGlyph}
         onSelectGlyph=${onSelectGlyph}
         selectedGlyphName=${appState.selectedGlyph?.name || null}
         onChangeGlyphName=${onChangeGlyphName}
+        onConfirmDeleteGlyph=${onConfirmDeleteGlyph}
         enableGlyphEditing=${appState.selectedGlyph != null}
         onClickDeselect=${deselectAll}
         onClickDeleteSelected=${deleteSelected}
@@ -83,6 +94,7 @@ export function Toolbar({
   onSelectGlyph,
   selectedGlyphName,
   onChangeGlyphName,
+  onConfirmDeleteGlyph,
   onClickDeselect,
   onClickDeleteSelected,
   onClickAddNode,
@@ -91,6 +103,17 @@ export function Toolbar({
   EdgeSelector,
 }) {
   const enableGlyphEditing = selectedGlyphName != null;
+
+  const [glyphNameToDelete, setGlyphNameToDelete] = useState(null);
+  const onClickDeleteGlyph = () => {
+    if (glyphNameToDelete === selectedGlyphName) {
+      onConfirmDeleteGlyph();
+      setGlyphNameToDelete(null);
+    } else {
+      setGlyphNameToDelete(selectedGlyphName);
+    }
+  };
+
   return html`
     <style id=${Toolbar.name}>
       .authoringToolbar {
@@ -106,6 +129,7 @@ export function Toolbar({
       .authoringToolbarList {
         min-height: 8lh;
         overflow: auto;
+        box-sizing: border-box;
       }
     </style>
     <div class="authoringToolbar">
@@ -154,6 +178,15 @@ export function Toolbar({
         Connect nodes
       <//>
       <${EdgeSelector} disabled=${!enableGlyphEditing} />
+      <${Button}
+        variant="danger"
+        onClick=${onClickDeleteGlyph}
+        disabled=${!enableGlyphEditing}
+      >
+        ${glyphNameToDelete === selectedGlyphName
+          ? "Confirm delete"
+          : "Delete glyph"}
+      <//>
     </div>
   `;
 }
@@ -211,8 +244,7 @@ const NodeOption = observer(
  */
 const EdgeOption = observer(
   ({ item }) => html`<option value=${item.id}>
-    ${selectionIndicator(item.selected)}Edge${item.id}
-    [${item.nodes.join("-")}]
+    ${selectionIndicator(item.selected)}Edge${item.id} [${item.nodes.join("-")}]
   </option>`
 );
 

@@ -14,6 +14,7 @@ export function Input({ class: className, tag = "input", ...props }) {
         border: solid 2px var(--color-fg-secondary);
         border-radius: var(--size-xs);
         padding: var(--size-xs);
+        box-sizing: border-box;
       }
       .formInput::placeholder {
         opacity: var(--opacity-placeholder);
@@ -28,7 +29,7 @@ export function Input({ class: className, tag = "input", ...props }) {
         width: 100%;
       }
       .formInputDropdown::after {
-        content: '';
+        content: "";
         position: absolute;
         top: 50%;
         right: 10px;
@@ -43,7 +44,7 @@ export function Input({ class: className, tag = "input", ...props }) {
       }
     </style>
     <${Wrapper}>
-      <${tag} class=${classes("formInput", className)} ...${props} ></${tag}>
+      <${tag} class=${classes("formInput", className)} ...${props} />
     <//>
   `;
 }
@@ -79,7 +80,21 @@ export function Button({ class: className, tag = "button", ...props }) {
       .formButton:disabled {
         opacity: var(--opacity-secondary);
       }
+      .formButtonDangerVariant {
+        background: var(--color-danger);
+      }
     </style>
-    <${tag} class=${classes("formButton", className)} ...${props}></${tag}>
+    <${tag}
+      class=${classes("formButton", getVariantClass(props.variant), className)}
+      ...${props}
+    />
   `;
+}
+
+function getVariantClass(variant) {
+  switch (variant) {
+    case "danger":
+      return "formButtonDangerVariant";
+  }
+  return null;
 }

@@ -7,6 +7,7 @@ export function LabelText({ tag = "span", children }) {
         text-transform: uppercase;
         font-weight: bold;
         font-size: var(--font-size-s);
+        line-height: var(--font-size-s);
       }
     </style>
     <${tag} class="labelText">${children}<//>

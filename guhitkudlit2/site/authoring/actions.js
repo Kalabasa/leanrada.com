@@ -1,14 +1,31 @@
-import { action, makeAutoObservable } from "../lib/mobx.js";
+import { action } from "../lib/mobx.js";
 
-export function createActions({ appState, createGlyph }) {
+export function createActions({ appState, createGlyph, createNode, createEdge }) {
   const addGlyph = action(() => {
-    appState.glyphs.push(createGlyph());
+    const glyph = createGlyph();
+    appState.glyphs.push(glyph);
+    return glyph;
   });
 
-  const selectGlyph = action((name) => {
-    appState.selectedGlyph = appState.glyphs.find(
-      (glyph) => glyph.name === name
-    );
+  const deleteGlyph = action((glyph) => {
+    appState.glyphs.replace(appState.glyphs.filter((g) => g !== glyph));
+    if (appState.selectedGlyph === glyph) {
+      deselectAll();
+      appState.selectedGlyph = null;
+    }
+  });
+
+  const selectGlyph = action((glyphOrName) => {
+    deselectAll();
+    if (typeof glyphOrName === "string") {
+      appState.selectedGlyph = appState.glyphs.find(
+        (glyph) => glyph.name === glyphOrName
+      );
+    } else {
+      appState.selectedGlyph = appState.glyphs.find(
+        (glyph) => glyph === glyphOrName
+      );
+    }
   });
 
   const addNode = action(() => {
@@ -28,15 +45,7 @@ export function createActions({ appState, createGlyph }) {
     }
 
     nodes.push(
-      makeAutoObservable({
-        id,
-        x,
-        y,
-        controlX: x + 50,
-        controlY: y,
-        width: 100,
-        selected: false,
-      })
+      createNode({ id, x, y, controlX: x + 50, controlY: y, width: 100 })
     );
   });
 
@@ -70,13 +79,7 @@ export function createActions({ appState, createGlyph }) {
       id++;
     }
 
-    edges.push(
-      makeAutoObservable({
-        id,
-        nodes: selectedIDs,
-        selected: false,
-      })
-    );
+    edges.push(createEdge(id, selectedIDs));
   });
 
   const deleteSelected = action(() => {
@@ -113,6 +116,7 @@ export function createActions({ appState, createGlyph }) {
 
   return {
     addGlyph,
+    deleteGlyph,
     selectGlyph,
     addNode,
     connectNodes,
