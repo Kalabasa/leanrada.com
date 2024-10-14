@@ -2,6 +2,12 @@ import { classes } from "../util/classes.js";
 import { html } from "./html.js";
 
 export function Input({ class: className, tag = "input", ...props }) {
+  let Wrapper = ({ children }) => children;
+  if (tag === "select" && !props.multiple) {
+    Wrapper = ({ children }) =>
+      html`<div class="formInputDropdown">${children}</div>`;
+  }
+
   return html`
     <style id=${Input.name}>
       .formInput {
@@ -15,8 +21,30 @@ export function Input({ class: className, tag = "input", ...props }) {
       .formInput:disabled {
         border-color: var(--color-bg-darker);
       }
+      .formInputDropdown {
+        position: relative;
+      }
+      .formInputDropdown * {
+        width: 100%;
+      }
+      .formInputDropdown::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 5px solid var(--color-fg-secondary);
+        pointer-events: none;
+      }
+      .formInputDropdown:has(select:disabled)::after {
+        border-color: var(--color-bg-darker);
+      }
     </style>
-    <${tag} class=${classes("formInput", className)} ...${props} ></${tag}>
+    <${Wrapper}>
+      <${tag} class=${classes("formInput", className)} ...${props} ></${tag}>
+    <//>
   `;
 }
 

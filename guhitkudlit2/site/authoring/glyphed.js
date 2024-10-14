@@ -4,12 +4,12 @@ import { observer } from "../util/observer.js";
 import { EdgeEditor } from "./edge-editor.js";
 import { NodeEditor } from "./node-editor.js";
 
-export function createGlyphed({ nodes, edges, selectItems }) {
+export function createGlyphed({ appState, selectItems }) {
   const width = 800;
   const height = 800;
 
   const onGrabNode = action((node, event) => {
-    selectItems([node.id], nodes, event.shiftKey);
+    selectItems([node.id], appState.selectedGlyph.nodes, event.shiftKey);
   });
 
   const NodeEditors = observer(({ nodes }) =>
@@ -23,8 +23,11 @@ export function createGlyphed({ nodes, edges, selectItems }) {
     )
   );
 
+  const getNode = (id) =>
+    appState.selectedGlyph.nodes.find((node) => node.id === id);
+
   const onClickEdge = action((edge, event) => {
-    selectItems([edge.id], edges, event.shiftKey);
+    selectItems([edge.id], appState.selectedGlyph.edges, event.shiftKey);
   });
 
   const EdgeEditors = observer(({ edges }) =>
@@ -33,18 +36,25 @@ export function createGlyphed({ nodes, edges, selectItems }) {
         html`<${EdgeEditor}
           key=${edge.id}
           edge=${edge}
+          getNode=${getNode}
           onClickEdge=${onClickEdge}
         />`
     )
   );
 
-  return () =>
-    html`<${Glyphed}
-      width=${width}
-      height=${height}
-      edgeEditors=${html`<${EdgeEditors} edges=${edges} />`}
-      nodeEditors=${html`<${NodeEditors} nodes=${nodes} />`}
-    />`;
+  return observer(
+    () =>
+      html`<${Glyphed}
+        width=${width}
+        height=${height}
+        edgeEditors=${html`<${EdgeEditors}
+          edges=${appState.selectedGlyph?.edges ?? []}
+        />`}
+        nodeEditors=${html`<${NodeEditors}
+          nodes=${appState.selectedGlyph?.nodes ?? []}
+        />`}
+      />`
+  );
 }
 
 export function Glyphed({ width, height, edgeEditors, nodeEditors }) {

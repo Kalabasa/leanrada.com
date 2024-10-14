@@ -1,70 +1,96 @@
 import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
+import { Spacer } from "../components/spacer.js";
 import { action } from "../lib/mobx.js";
+import { convertToUnicode } from "../transliteration/unicode.mjs";
+import { LabelText } from "../typography/text.js";
 import { observer } from "../util/observer.js";
 
 export function createToolbar({
-  nodes,
-  edges,
-  createNode,
-  createEdge,
+  appState,
+  saveAppData,
+  importAppData,
+  exportAppData,
+  addGlyph,
+  selectGlyph,
+  addNode,
+  connectNodes,
+  deleteSelected,
   selectItems,
+  deselectAll,
 }) {
-  const addNode = action(() => {
-    let x = 100;
-    let y = 100;
-    while (nodes.some((node) => node.x === x && node.y === y)) {
-      x += 25;
-      y += 25;
+  const onSelectGlyph = (event) => {
+    selectGlyph(event.currentTarget.value);
+  };
+
+  const onChangeGlyphName = (event) => {
+    if (event.currentTarget.value.length === 1) {
+      appState.selectedGlyph.name = event.currentTarget.value.toLowerCase();
     }
-    nodes.push(createNode(x, y));
+  };
+
+  const NodeSelector = observer((props) => {
+    return html`
+      <${ItemSelector}
+        items=${appState.selectedGlyph?.nodes ?? []}
+        selectItems=${selectItems}
+        OptionComponent=${NodeOption}
+        ...${props}
+      />
+    `;
   });
 
-  const deleteSelectedNodes = action(() => {
-    nodes.replace(nodes.filter((node) => !node.selected));
+  const EdgeSelector = observer((props) => {
+    return html`
+      <${ItemSelector}
+        items=${appState.selectedGlyph?.edges ?? []}
+        selectItems=${selectItems}
+        OptionComponent=${EdgeOption}
+        ...${props}
+      />
+    `;
   });
 
-  const deselectAll = action(() => {
-    nodes.forEach((node) => (node.selected = false));
-    edges.forEach((edge) => (edge.selected = false));
-  });
-
-  const connectNodes = action(() => {
-    const selectedNodes = nodes.filter((node) => node.selected);
-    if (selectedNodes.length !== 2) {
-      alert("Select exactly 2 nodes to connect");
-      return;
-    }
-    edges.push(createEdge(...selectedNodes));
-  });
-
-  const deleteSelectedEdges = action(() => {
-    edges.replace(edges.filter((edge) => !edge.selected));
-  });
-
-  return () =>
-    html`<${Toolbar}
-      nodes=${nodes}
-      edges=${edges}
-      onClickDeselect=${deselectAll}
-      onClickAddNode=${addNode}
-      onClickDeleteNode=${deleteSelectedNodes}
-      onClickConnect=${connectNodes}
-      onClickDeleteEdge=${deleteSelectedEdges}
-      selectItems=${selectItems}
-    />`;
+  return observer(
+    () =>
+      html`<${Toolbar}
+        glyphs=${[...appState.glyphs]}
+        onClickSave=${saveAppData}
+        onClickImport${importAppData}
+        onClickExport=${exportAppData}
+        onClickAddGlyph=${addGlyph}
+        onSelectGlyph=${onSelectGlyph}
+        selectedGlyphName=${appState.selectedGlyph?.name || null}
+        onChangeGlyphName=${onChangeGlyphName}
+        enableGlyphEditing=${appState.selectedGlyph != null}
+        onClickDeselect=${deselectAll}
+        onClickDeleteSelected=${deleteSelected}
+        onClickAddNode=${addNode}
+        onClickConnect=${connectNodes}
+        selectItems=${selectItems}
+        NodeSelector=${NodeSelector}
+        EdgeSelector=${EdgeSelector}
+      />`
+  );
 }
 
 export function Toolbar({
-  nodes,
-  edges,
+  glyphs,
+  onClickSave,
+  onClickImport,
+  onClickExport,
+  onClickAddGlyph,
+  onSelectGlyph,
+  selectedGlyphName,
+  onChangeGlyphName,
   onClickDeselect,
+  onClickDeleteSelected,
   onClickAddNode,
-  onClickDeleteNode,
   onClickConnect,
-  onClickDeleteEdge,
-  selectItems,
+  NodeSelector,
+  EdgeSelector,
 }) {
+  const enableGlyphEditing = selectedGlyphName != null;
   return html`
     <style id=${Toolbar.name}>
       .authoringToolbar {
@@ -74,27 +100,60 @@ export function Toolbar({
         align-items: stretch;
         gap: var(--size-xs);
       }
+      .authoringToolbarGlyphNameInput {
+        text-transform: uppercase;
+      }
       .authoringToolbarList {
-        min-height: 200px;
+        min-height: 8lh;
         overflow: auto;
       }
     </style>
     <div class="authoringToolbar">
-      <${Button} onClick=${onClickDeselect}>Deselect all<//>
-      <${Button} onClick=${onClickAddNode}>Add node<//>
-      <${Button} onClick=${onClickDeleteNode}>Delete node(s)<//>
-      <${ItemSelector}
-        items=${nodes}
-        selectItems=${selectItems}
-        OptionComponent=${NodeOption}
+      <${LabelText}>File<//>
+      <${Button} onClick=${onClickSave}>Save<//>
+      <${Button} onClick=${onClickImport}>Import<//>
+      <${Button} onClick=${onClickExport}>Export<//>
+      <${Spacer} y="l" />
+      <${LabelText}>Glyph collection<//>
+      <${Button} onClick=${onClickAddGlyph}>Add glyph<//>
+      <${Input} tag="select" onChange=${onSelectGlyph}>
+        <option hidden disabled selected>Select a glyph to edit</option>
+        ${glyphs.map(
+          (glyph) => html`<${GlyphOption} key=${glyph.name} glyph=${glyph} />`
+        )}
+      <//>
+      <${Spacer} y="l" />
+      <${LabelText}>
+        Glyph
+        properties${selectedGlyphName
+          ? `: ${selectedGlyphName}${toUnicode(selectedGlyphName)}`
+          : ""}
+      <//>
+      <${Input}
+        class="authoringToolbarGlyphNameInput"
+        onChange=${onChangeGlyphName}
+        value=${selectedGlyphName}
+        placeholder="Rename"
+        maxlength="1"
+        disabled=${!enableGlyphEditing}
       />
-      <${Button} onClick=${onClickConnect}>Connect nodes<//>
-      <${Button} onClick=${onClickDeleteEdge}>Delete edge(s)<//>
-      <${ItemSelector}
-        items=${edges}
-        selectItems=${selectItems}
-        OptionComponent=${EdgeOption}
-      />
+      <${Button} onClick=${onClickDeselect} disabled=${!enableGlyphEditing}>
+        Deselect all
+      <//>
+      <${Button}
+        onClick=${onClickDeleteSelected}
+        disabled=${!enableGlyphEditing}
+      >
+        Delete selected
+      <//>
+      <${Button} onClick=${onClickAddNode} disabled=${!enableGlyphEditing}>
+        Add node
+      <//>
+      <${NodeSelector} disabled=${!enableGlyphEditing} />
+      <${Button} onClick=${onClickConnect} disabled=${!enableGlyphEditing}>
+        Connect nodes
+      <//>
+      <${EdgeSelector} disabled=${!enableGlyphEditing} />
     </div>
   `;
 }
@@ -103,27 +162,38 @@ export function Toolbar({
  * @param {object} props
  * @param {Array<{ id, selected: boolean }>} props.items
  */
-const ItemSelector = observer(({ items, selectItems, OptionComponent }) => {
-  const onChangeSelect = action((event) => {
-    const selectedIDs = Array.from(event.currentTarget.selectedOptions).map(
-      (option) => Number(option.value)
-    );
-    selectItems(selectedIDs, items, false);
-  });
+const ItemSelector = observer(
+  ({ items, selectItems, OptionComponent, ...props }) => {
+    const onChangeSelect = action((event) => {
+      const selectedIDs = Array.from(event.currentTarget.selectedOptions).map(
+        (option) => Number(option.value)
+      );
+      selectItems(selectedIDs, items, false);
+    });
 
-  return html`
-    <${Input}
-      class="authoringToolbarList"
-      tag="select"
-      multiple
-      onChange=${onChangeSelect}
-    >
-      ${items.map(
-        (item) => html`<${OptionComponent} key=${item.id} item=${item} />`
-      )}
-    <//>
-  `;
-});
+    return html`
+      <${Input}
+        class="authoringToolbarList"
+        tag="select"
+        multiple
+        onChange=${onChangeSelect}
+        ...${props}
+      >
+        ${items.map(
+          (item) => html`<${OptionComponent} key=${item.id} item=${item} />`
+        )}
+      <//>
+    `;
+  }
+);
+
+/**
+ * @param {object} props
+ * @param {import("./index.js").Glyph[]} props.glyph
+ */
+const GlyphOption = observer(
+  ({ glyph }) => html`<option value=${glyph.name}>${glyph.name}</option>`
+);
 
 /**
  * @param {object} props
@@ -135,12 +205,25 @@ const NodeOption = observer(
   </option>`
 );
 
+/**
+ * @param {object} props
+ * @param {import("./edge-editor.js").Edge[]} props.item
+ */
 const EdgeOption = observer(
   ({ item }) => html`<option value=${item.id}>
     ${selectionIndicator(item.selected)}Edge${item.id}
-    [${item.nodes.map((node) => node.id).join("-")}]
+    [${item.nodes.join("-")}]
   </option>`
 );
+
+function toUnicode(selectedGlyphName) {
+  const unicode = convertToUnicode([
+    /[aeiou]/i.exec(selectedGlyphName)
+      ? selectedGlyphName
+      : selectedGlyphName + "a",
+  ]);
+  return unicode ? "/" + unicode : "";
+}
 
 function selectionIndicator(selected) {
   return selected ? "*" : "";

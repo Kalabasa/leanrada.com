@@ -2,67 +2,93 @@ import { render } from "../lib/htm-preact.js";
 import { html } from "../components/html.js";
 import { AppLogo } from "../app/logo.js";
 import { createGlyphed } from "./glyphed.js";
-import { action, makeAutoObservable, observable } from "../lib/mobx.js";
+import {
+  autorun,
+  makeAutoObservable,
+  observable,
+  runInAction,
+} from "../lib/mobx.js";
 import { createToolbar } from "./toolbar.js";
-import { nonNull } from "../util/preconditions.js";
+import { createActions } from "./actions.js";
+import { loadAppDataFromStorage, saveAppDataToStorage } from "./storage.js";
 
-/** @type {import("./node-editor.js").Node[]} */
-const nodes = observable.array([], { deep: false });
-const edges = observable.array([], { deep: false });
-
-const createNode = (x, y) => {
-  let id = 0;
-  while (nodes.some((node) => node.id === id)) {
-    id++;
-  }
-
-  return makeAutoObservable({
-    id,
-    x,
-    y,
-    controlX: x + 50,
-    controlY: y,
-    width: 100,
-    selected: false,
-  });
-};
-
-const createEdge = (node1, node2) => {
-  let id = 0;
-  while (edges.some((edge) => edge.id === id)) {
-    id++;
-  }
-
-  return makeAutoObservable({
-    id,
-    nodes: [nonNull(node1), nonNull(node2)],
-    selected: false,
-  });
-};
-
-const selectItems = action((ids, inCollection, additive) => {
-  if (!additive) {
-    edges.forEach((edge) => (edge.selected = false));
-    nodes.forEach((node) => (node.selected = false));
-  }
-  inCollection.forEach((item) => {
-    const selected = ids.includes(item.id);
-    if (additive) {
-      item.selected = item.selected !== selected;
-    } else if (item.selected !== selected) {
-      item.selected = selected;
-    }
-  });
+/**
+ * @typedef {{
+ *  name: string;
+ *  nodes: import("./node-editor.js").Node[];
+ *  edges: import("./edge-editor.js").Edge[];
+ * }} Glyph
+ * @type {{
+ *  glyphs: Array<Glyph>,
+ *  selectedGlyph: Glyph | null,
+ * }}
+ */
+const appState = makeAutoObservable({
+  glyphs: observable.array([], { deep: false }),
+  selectedGlyph: null,
 });
+
+const {
+  addGlyph,
+  selectGlyph,
+  addNode,
+  connectNodes,
+  deleteSelected,
+  selectItems,
+  deselectAll,
+} = createActions({ appState, createGlyph });
+
+function createGlyph(name = "a", nodes = [], edges = []) {
+  return makeAutoObservable({
+    name,
+    nodes: observable.array(nodes, { deep: false }),
+    edges: observable.array(edges, { deep: false }),
+  });
+}
+
+function loadAppData() {
+  const appData = loadAppDataFromStorage();
+  if (appData) {
+    runInAction(() => {
+      appState.glyphs.replace(
+        appData.glyphs.map((glyph) =>
+          createGlyph(
+            glyph.name,
+            glyph.nodes.map((node) => makeAutoObservable(node)),
+            glyph.edges.map((edge) => makeAutoObservable(edge))
+          )
+        )
+      );
+    });
+  }
+}
+
+function saveAppData() {
+  saveAppDataToStorage({ glyphs: appState.glyphs });
+}
+
+function importAppData() {
+  prompt("Enter code");
+}
+
+function exportAppData() {
+  alert("Code:");
+}
 
 const Toolbar = createToolbar({
-  nodes,
-  edges,
-  createNode,
-  createEdge,
+  appState,
+  saveAppData,
+  importAppData,
+  exportAppData,
+  addGlyph,
+  selectGlyph,
+  addNode,
+  connectNodes,
+  deleteSelected,
   selectItems,
+  deselectAll,
 });
-const Glyphed = createGlyphed({ nodes, edges, selectItems });
+const Glyphed = createGlyphed({ appState, selectItems });
 
 export function Authoring() {
   return html`
@@ -113,4 +139,5 @@ export function Authoring() {
   `;
 }
 
+loadAppData();
 render(html`<${Authoring} />`, document.body);

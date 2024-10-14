@@ -5,11 +5,11 @@ import { observer } from "../util/observer.js";
 /**
  * @typedef {import("./node-editor.js").Node} Node
  * @typedef {{
- *  nodes: [Node, Node]
+ *  nodes: [number, number]
  * }} Edge
  */
 
-export function EdgeEditor({ edge, onClickEdge }) {
+export function EdgeEditor({ edge, getNode, onClickEdge }) {
   const onMouseDown = (event) => {
     if (event.button !== 0) return;
     onClickEdge(edge, event);
@@ -42,16 +42,16 @@ export function EdgeEditor({ edge, onClickEdge }) {
     </style>
     <${Line}
       class="edgeEditorLine"
-      getX1=${() => edge.nodes[0].x}
-      getY1=${() => edge.nodes[0].y}
-      getX2=${() => edge.nodes[1].x}
-      getY2=${() => edge.nodes[1].y}
+      getX1=${() => getNode(edge.nodes[0]).x}
+      getY1=${() => getNode(edge.nodes[0]).y}
+      getX2=${() => getNode(edge.nodes[1]).x}
+      getY2=${() => getNode(edge.nodes[1]).y}
       getHighlighted=${() => edge.selected}
     />
     <${Handle}
       class="edgeEditorEdgeHandle"
-      getX=${() => (edge.nodes[0].x + edge.nodes[1].x) / 2}
-      getY=${() => (edge.nodes[0].y + edge.nodes[1].y) / 2}
+      getX=${() => (getNode(edge.nodes[0]).x + getNode(edge.nodes[1]).x) / 2}
+      getY=${() => (getNode(edge.nodes[0]).y + getNode(edge.nodes[1]).y) / 2}
       getHighlighted=${() => edge.selected}
       onMouseDown=${onMouseDown}
     />
