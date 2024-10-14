@@ -12,14 +12,9 @@ import { createActions } from "./actions.js";
 import { loadAppDataFromStorage, saveAppDataToStorage } from "./storage.js";
 
 /**
- * @typedef {{
- *  name: string;
- *  nodes: import("./node-editor.js").Node[];
- *  edges: import("./edge-editor.js").Edge[];
- * }} Glyph
  * @type {{
- *  glyphs: Array<Glyph>,
- *  selectedGlyph: Glyph | null,
+ *  glyphs: Array<import("./glyphed.js").Glyph>,
+ *  selectedGlyph: import("./glyphed.js").Glyph | null,
  * }}
  */
 const appState = makeAutoObservable({

@@ -4,6 +4,14 @@ import { observer } from "../util/observer.js";
 import { EdgeEditor } from "./edge-editor.js";
 import { NodeEditor } from "./node-editor.js";
 
+/**
+ * @typedef {{
+ *  name: string;
+ *  nodes: import("./node-editor.js").Node[];
+ *  edges: import("./edge-editor.js").Edge[];
+ * }} Glyph
+ */
+
 export function createGlyphed({ appState, selectItems }) {
   const width = 800;
   const height = 800;

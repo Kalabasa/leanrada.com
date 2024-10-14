@@ -183,7 +183,7 @@ export function Toolbar({
         onClick=${onClickDeleteGlyph}
         disabled=${!enableGlyphEditing}
       >
-        ${glyphNameToDelete === selectedGlyphName
+        ${glyphNameToDelete && glyphNameToDelete === selectedGlyphName
           ? "Confirm delete"
           : "Delete glyph"}
       <//>
