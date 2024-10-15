@@ -167,13 +167,17 @@ export function Toolbar({
         maxlength="1"
         disabled=${!enableGlyphEditing}
       />
-      <${Button} onClick=${onClickTogglePreview} disabled=${!enableGlyphEditing}>
+      <${Button}
+        onClick=${onClickTogglePreview}
+        disabled=${!enableGlyphEditing}
+      >
         Toggle preview
       <//>
       <${Button} onClick=${onClickDeselect} disabled=${!enableGlyphEditing}>
         Deselect all
       <//>
       <${Button}
+        variant="danger"
         onClick=${onClickDeleteSelected}
         disabled=${!enableGlyphEditing}
       >
