@@ -10,16 +10,19 @@ import {
 import { createToolbar } from "./toolbar.js";
 import { createActions } from "./actions.js";
 import { loadAppDataFromStorage, saveAppDataToStorage } from "./storage.js";
+import { createGlyphPreview } from "./glyph-preview.js";
 
 /**
  * @type {{
  *  glyphs: Array<import("./glyphed.js").Glyph>,
  *  selectedGlyph: import("./glyphed.js").Glyph | null,
+ *  previewEnabled: boolean,
  * }}
  */
 const appState = makeAutoObservable({
   glyphs: observable.array([], { deep: false }),
   selectedGlyph: null,
+  previewEnabled: true,
 });
 
 const {
@@ -87,7 +90,8 @@ const Toolbar = createToolbar({
   selectItems,
   deselectAll,
 });
-const Glyphed = createGlyphed({ appState, selectItems });
+const GlyphPreview = createGlyphPreview({ appState });
+const Glyphed = createGlyphed({ appState, selectItems, GlyphPreview });
 
 export function Authoring() {
   return html`

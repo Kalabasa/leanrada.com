@@ -35,6 +35,10 @@ export function createToolbar({
     }
   };
 
+  const togglePreview = action(() => {
+    appState.previewEnabled = !appState.previewEnabled;
+  });
+
   const onConfirmDeleteGlyph = () => {
     deleteGlyph(appState.selectedGlyph);
   };
@@ -72,6 +76,7 @@ export function createToolbar({
         onSelectGlyph=${onSelectGlyph}
         selectedGlyphName=${appState.selectedGlyph?.name || null}
         onChangeGlyphName=${onChangeGlyphName}
+        onClickTogglePreview=${togglePreview}
         onConfirmDeleteGlyph=${onConfirmDeleteGlyph}
         enableGlyphEditing=${appState.selectedGlyph != null}
         onClickDeselect=${deselectAll}
@@ -94,6 +99,7 @@ export function Toolbar({
   onSelectGlyph,
   selectedGlyphName,
   onChangeGlyphName,
+  onClickTogglePreview,
   onConfirmDeleteGlyph,
   onClickDeselect,
   onClickDeleteSelected,
@@ -161,6 +167,9 @@ export function Toolbar({
         maxlength="1"
         disabled=${!enableGlyphEditing}
       />
+      <${Button} onClick=${onClickTogglePreview} disabled=${!enableGlyphEditing}>
+        Toggle preview
+      <//>
       <${Button} onClick=${onClickDeselect} disabled=${!enableGlyphEditing}>
         Deselect all
       <//>

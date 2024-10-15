@@ -12,7 +12,7 @@ import { NodeEditor } from "./node-editor.js";
  * }} Glyph
  */
 
-export function createGlyphed({ appState, selectItems }) {
+export function createGlyphed({ appState, selectItems, GlyphPreview }) {
   const width = 800;
   const height = 800;
 
@@ -55,6 +55,7 @@ export function createGlyphed({ appState, selectItems }) {
       html`<${Glyphed}
         width=${width}
         height=${height}
+        preview=${html`<${GlyphPreview} width=${width} height=${height} />`}
         edgeEditors=${html`<${EdgeEditors}
           edges=${appState.selectedGlyph?.edges ?? []}
         />`}
@@ -65,9 +66,11 @@ export function createGlyphed({ appState, selectItems }) {
   );
 }
 
-export function Glyphed({ width, height, edgeEditors, nodeEditors }) {
+export function Glyphed({ width, height, preview, edgeEditors, nodeEditors }) {
   return html` <style id=${Glyphed.name}>
       .glyphed {
+        display: grid;
+        place-content: start;
         position: relative;
         background-image: linear-gradient(to right, #eee 1px, transparent 1px),
           linear-gradient(to bottom, #eee 1px, transparent 1px);
@@ -97,6 +100,6 @@ export function Glyphed({ width, height, edgeEditors, nodeEditors }) {
       }
     </style>
     <div class="glyphed" style=${{ width, height }}>
-      ${edgeEditors}${nodeEditors}
+      ${preview}${edgeEditors}${nodeEditors}
     </div>`;
 }
