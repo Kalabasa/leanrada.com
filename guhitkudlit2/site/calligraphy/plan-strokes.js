@@ -18,7 +18,6 @@ export function* planStrokes(nodes, edges) {
   const queue = sortedEdges.map((edge) => ({
     edge,
     direction: 1,
-    angle: 0, // todo
   }));
 
   while (queue.length > 0) {
