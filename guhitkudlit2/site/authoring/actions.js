@@ -1,6 +1,11 @@
 import { action } from "../lib/mobx.js";
 
-export function createActions({ appState, createGlyph, createNode, createEdge }) {
+export function createActions({
+  appState,
+  createGlyph,
+  createNode,
+  createEdge,
+}) {
   const addGlyph = action(() => {
     const glyph = createGlyph();
     appState.glyphs.push(glyph);
@@ -62,14 +67,16 @@ export function createActions({ appState, createGlyph, createNode, createEdge })
       return;
     }
 
-    if (
-      edges.some(
-        (edge) =>
-          (edge.nodes[0] == selectedIDs[0] &&
-            edge.nodes[1] == selectedIDs[1]) ||
-          (edge.nodes[0] == selectedIDs[1] && edge.nodes[1] == selectedIDs[0])
-      )
-    ) {
+    const connectedEdges = selectedIDs.map((nodeID) =>
+      findConectedEdges(nodeID, edges)
+    );
+
+    if (connectedEdges[0].length > 1 || connectedEdges[1].length > 1) {
+      alert("Cannot create forks!");
+      return;
+    }
+
+    if (connectedEdges[0].some((edge) => connectedEdges[1].includes(edge))) {
       alert("Already connected!");
       return;
     }
@@ -124,4 +131,10 @@ export function createActions({ appState, createGlyph, createNode, createEdge })
     selectItems,
     deselectAll,
   };
+}
+
+function findConectedEdges(nodeID, edges) {
+  return edges.filter(
+    (edge) => edge.nodes[0] === nodeID || edge.nodes[1] === nodeID
+  );
 }
