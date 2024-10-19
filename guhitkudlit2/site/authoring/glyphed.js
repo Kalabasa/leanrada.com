@@ -57,9 +57,11 @@ export function createGlyphed({ appState, selectItems, GlyphPreview }) {
         height=${height}
         preview=${html`<${GlyphPreview} width=${width} height=${height} />`}
         edgeEditors=${html`<${EdgeEditors}
+          key=${"edgeEditors." + appState.selectedGlyph?.name}
           edges=${appState.selectedGlyph?.edges ?? []}
         />`}
         nodeEditors=${html`<${NodeEditors}
+          key=${"nodeEditors." + appState.selectedGlyph?.name}
           nodes=${appState.selectedGlyph?.nodes ?? []}
         />`}
       />`

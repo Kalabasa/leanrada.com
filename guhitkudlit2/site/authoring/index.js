@@ -145,7 +145,7 @@ export function Authoring() {
 init();
 render(html`<${Authoring} />`, document.body);
 
-function createGlyph(name = "a", nodes = [], edges = []) {
+function createGlyph(name = "-", nodes = [], edges = []) {
   return makeAutoObservable({
     name,
     nodes: observable.array(nodes, { deep: false }),
