@@ -11,7 +11,8 @@ export function createGlyphPreview({ appState }) {
     if (!appState.selectedGlyph) return [];
     return generatePath(
       appState.selectedGlyph.nodes,
-      appState.selectedGlyph.edges
+      appState.selectedGlyph.edges,
+      appState.trajectoryParams
     );
   });
 
@@ -35,7 +36,12 @@ const GlyphPreview = ({ width, height, strokes }) => {
     drawPreview(canvas, strokes);
   }, [canvasRef.current, width, height, strokes]);
 
-  return html`<canvas ref=${canvasRef} width=${width} height=${height} />`;
+  return html`<canvas
+    ref=${canvasRef}
+    width=${width}
+    height=${height}
+    style="pointer-events:none"
+  />`;
 };
 
 const drawPreview = debounce((canvas, strokes) => {
@@ -45,18 +51,31 @@ const drawPreview = debounce((canvas, strokes) => {
   for (const stroke of strokes) {
     drawPath(context, stroke);
   }
-}, 100);
+}, 50);
 
 function drawPath(context, stroke) {
   context.beginPath();
+  let lastAnnotatedVertex = null;
   let index = 0;
   for (const vertex of stroke.vertices) {
     const to = index === 0 ? context.moveTo : context.lineTo;
     to.call(context, vertex.x, vertex.y);
+    if (
+      !lastAnnotatedVertex ||
+      Math.hypot(
+        lastAnnotatedVertex.x - vertex.x,
+        lastAnnotatedVertex.y - vertex.y
+      ) > 20
+    ) {
+      context.fillStyle = "#0ff";
+      context.fillText(vertex.t, vertex.x, vertex.y);
+      lastAnnotatedVertex = vertex;
+    }
     index++;
   }
-  context.lineWidth = 20;
-  context.strokeStyle = "#cff";
+  context.fillStyle = null;
+  context.lineWidth = 1;
+  context.strokeStyle = "#0ff";
   context.lineJoin = "round";
   context.lineCap = "round";
   context.stroke();

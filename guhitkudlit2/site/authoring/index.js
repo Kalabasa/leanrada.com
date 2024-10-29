@@ -2,27 +2,26 @@ import { render } from "../lib/htm-preact.js";
 import { html } from "../components/html.js";
 import { AppLogo } from "../app/logo.js";
 import { createGlyphed } from "./glyphed.js";
-import {
-  makeAutoObservable,
-  observable,
-  runInAction,
-} from "../lib/mobx.js";
+import { makeAutoObservable, observable, runInAction } from "../lib/mobx.js";
 import { createToolbar } from "./toolbar.js";
 import { createActions } from "./actions.js";
 import { loadAppDataFromStorage, saveAppDataToStorage } from "./storage.js";
 import { createGlyphPreview } from "./glyph-preview.js";
+import { defaultTrajectoryParams } from "../calligraphy/generate-path.js";
 
 /**
  * @type {{
  *  glyphs: Array<import("./glyphed.js").Glyph>,
  *  selectedGlyph: import("./glyphed.js").Glyph | null,
  *  previewEnabled: boolean,
+ *  trajectoryParams: import("../calligraphy/generate-path.js").TrajectoryParams
  * }}
  */
 const appState = makeAutoObservable({
   glyphs: observable.array([], { deep: false }),
   selectedGlyph: null,
   previewEnabled: true,
+  trajectoryParams: structuredClone(defaultTrajectoryParams),
 });
 
 const {

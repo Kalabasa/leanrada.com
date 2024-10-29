@@ -102,6 +102,6 @@ export function Glyphed({ width, height, preview, edgeEditors, nodeEditors }) {
       }
     </style>
     <div class="glyphed" style=${{ width, height }}>
-      ${preview}${edgeEditors}${nodeEditors}
+      ${edgeEditors}${nodeEditors}${preview}
     </div>`;
 }

@@ -65,10 +65,13 @@ export function createToolbar({
     `;
   });
 
+  const trajectoryParams = appState.trajectoryParams;
+
   return observer(
     () =>
       html`<${Toolbar}
         glyphs=${[...appState.glyphs]}
+        trajectoryParams=${trajectoryParams}
         onClickSave=${saveAppData}
         onClickImport=${importGlyphs}
         onClickExport=${exportGlyphs}
@@ -78,12 +81,10 @@ export function createToolbar({
         onChangeGlyphName=${onChangeGlyphName}
         onClickTogglePreview=${togglePreview}
         onConfirmDeleteGlyph=${onConfirmDeleteGlyph}
-        enableGlyphEditing=${appState.selectedGlyph != null}
         onClickDeselect=${deselectAll}
         onClickDeleteSelected=${deleteSelected}
         onClickAddNode=${addNode}
         onClickConnect=${connectNodes}
-        selectItems=${selectItems}
         NodeSelector=${NodeSelector}
         EdgeSelector=${EdgeSelector}
       />`
@@ -92,6 +93,7 @@ export function createToolbar({
 
 export function Toolbar({
   glyphs,
+  trajectoryParams,
   onClickSave,
   onClickImport,
   onClickExport,
@@ -200,6 +202,58 @@ export function Toolbar({
           ? "Confirm delete"
           : "Delete glyph"}
       <//>
+      <${Spacer} y="l" />
+      <${LabelText}>Calligraphy<//>
+      <${Input}
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        onChange=${action(
+          (event) =>
+            (trajectoryParams.posErrorWeight = Number(
+              event.currentTarget.value
+            ))
+        )}
+        value=${trajectoryParams.posErrorWeight}
+      />
+      <${Input}
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        onChange=${action(
+          (event) =>
+            (trajectoryParams.velErrorWeight = Number(
+              event.currentTarget.value
+            ))
+        )}
+        value=${trajectoryParams.velErrorWeight}
+      />
+      <${Input}
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        onChange=${action(
+          (event) =>
+            (trajectoryParams.accelErrorWeight = Number(
+              event.currentTarget.value
+            ))
+        )}
+        value=${trajectoryParams.accelErrorWeight}
+      />
+      <${Input}
+        type="range"
+        min="0"
+        max="60"
+        step="1"
+        onChange=${action(
+          (event) =>
+            (trajectoryParams.lookaheadTime = Number(event.currentTarget.value))
+        )}
+        value=${trajectoryParams.lookaheadTime}
+      />
     </div>
   `;
 }

@@ -1,4 +1,6 @@
 /**
+ * @typedef {import("../authoring/node-editor.js").Node} Node
+ *
  * @typedef {{
  *  vertices: Vertex[]
  * }} Stroke
@@ -7,78 +9,226 @@
  *  x: number,
  *  y: number,
  * }} Vertex
+ *
+ * @typedef {{
+ *  posErrorWeight: number,
+ *  velErrorWeight: number,
+ *  accelErrorWeight: number,
+ *  lookaheadTime: number,
+ * }} TrajectoryParams
  */
+
+/** @type {TrajectoryParams} */
+export const defaultTrajectoryParams = Object.freeze({
+  posErrorWeight: 0.1,
+  velErrorWeight: 0.9,
+  accelErrorWeight: 0,
+  lookaheadTime: 15.0,
+});
 
 /**
  * Path is a collection of strokes.
  *
- * @param {Array<import("../authoring/node-editor.js").Node>} nodes
+ * @param {Node[]} nodes
  * @param {Array<import("../authoring/edge-editor.js").Edge>} edges
+ * @param {TrajectoryParams?} params
  * @return {Stroke[]}
  */
-export function generatePath(nodes, edges) {
+export function generatePath(nodes, edges, params = defaultTrajectoryParams) {
   const components = findComponents(nodes, edges);
   return components.map((component) => {
     const sequence = toNodeSequence(component, edges);
-    const vertices = generateStroke(Array.from(sequence));
+    const vertices = generateStroke(Array.from(sequence), params);
     return { vertices: Array.from(vertices) };
   });
 }
 
 /**
+ * @typedef {{
+ *  t: number,
+ *  pos: Vertex,
+ *  vel: Vertex,
+ *  accel: Vertex,
+ *  jerk: Vertex,
+ * }} Pen
+ */
+
+/**
  * A stroke is one contiguous painting motion.
  *
- * @param {Array<import("../authoring/node-editor.js").Node>} sequence
+ * @param {Node[]} sequence
+ * @param {TrajectoryParams} params
  * @yield {Vertex}
  */
-function* generateStroke(sequence) {
+function* generateStroke(sequence, params) {
   if (!sequence.length) {
     return;
   }
 
+  /** @type {Pen} */
   const pen = {
-    position: { x: 0, y: 0 },
-    velocity: { x: 0, y: 0 },
-    acceleration: { x: 0, y: 0 },
+    t: 0,
+    pos: { x: sequence[0].x, y: sequence[0].y },
+    vel: { x: 0, y: 0 },
+    accel: { x: 0, y: 0 },
+    jerk: { x: 0, y: 0 },
   };
 
-  // test simple trajectory generation
-  let limit = 1000;
-  pen.position.x = sequence[0].x;
-  pen.position.y = sequence[0].y;
-  let nextIndex = 1;
-  while (nextIndex < sequence.length) {
-    const nextNode = sequence[nextIndex];
+  let emergencyLimit = 10000;
 
-    const deltaX = nextNode.x - pen.position.x;
-    const deltaY = nextNode.y - pen.position.y;
+  const nodeTimes = sequence.map((_, i) => i * 10);
+  const step = 0.5;
+  while (pen.t < nodeTimes[sequence.length - 1]) {
+    optimizeTrajectory(pen, sequence, nodeTimes, params);
+    integrate(pen, step);
+    yield { ...pen.pos, t: pen.t };
 
-    pen.acceleration.x += deltaX * 0.1;
-    pen.acceleration.y += deltaY * 0.1;
-    pen.acceleration.y *= 0.4;
-    pen.acceleration.x *= 0.4;
-    pen.velocity.y *= 0.8;
-    pen.velocity.x *= 0.8;
-    integrate(pen);
-
-    yield { ...pen.position };
-
-    if (Math.hypot(deltaX, deltaY) < nextNode.width * 0.5) {
-      nextIndex++;
-    }
-
-    if (limit-- <= 0) {
-      break;
-    }
+    if (emergencyLimit-- < 0) throw new Error("Too many iterations!");
   }
 }
 
-function integrate(pen) {
-  pen.velocity.x += pen.acceleration.x;
-  pen.velocity.y += pen.acceleration.y;
-  pen.position.x += pen.velocity.x;
-  pen.position.y += pen.velocity.y;
+/**
+ * @param {Pen} pen
+ * @param {Node[]} nodes
+ * @param {number[]} nodeTimes
+ * @param {TrajectoryParams} params
+ */
+function optimizeTrajectory(pen, nodes, nodeTimes, params) {
+  const tempNode = {};
+
+  for (let i = 0; i < 1; i++) {
+    let jerkX = 0;
+    let jerkY = 0;
+    let totalWeight = 0;
+
+    const extrapolatedPen = structuredClone(pen);
+
+    const step = 1.0;
+    const maxT = Math.min(
+      pen.t + params.lookaheadTime,
+      nodeTimes[nodes.length - 1]
+    );
+    let prevNodeIndex = 0;
+
+    for (let t = extrapolatedPen.t + step; t < maxT; t += step) {
+      while (t > nodeTimes[prevNodeIndex + 1]) prevNodeIndex++;
+      if (prevNodeIndex + 1 >= nodes.length) continue;
+
+      const interpolatedNode = lerpNode(
+        nodes[prevNodeIndex],
+        nodes[prevNodeIndex + 1],
+        (t - nodeTimes[prevNodeIndex]) /
+          (nodeTimes[prevNodeIndex + 1] - nodeTimes[prevNodeIndex]),
+        tempNode
+      );
+
+      const dt = t - extrapolatedPen.t;
+
+      integrate(extrapolatedPen, dt);
+
+      const posXError =
+        (interpolatedNode.x - extrapolatedPen.pos.x) * params.posErrorWeight;
+      const posYError =
+        (interpolatedNode.y - extrapolatedPen.pos.y) * params.posErrorWeight;
+      const velXError = -extrapolatedPen.vel.x * params.velErrorWeight;
+      const velYError = -extrapolatedPen.vel.y * params.velErrorWeight;
+      const accelXError = -extrapolatedPen.accel.x * params.accelErrorWeight;
+      const accelYError = -extrapolatedPen.accel.y * params.accelErrorWeight;
+      const et = t - pen.t;
+      const sampleJerkX =
+        ((posXError * (1.5 / et) + velXError) / et + accelXError) * (0.5 / et);
+      const sampleJerkY =
+        ((posYError * (1.5 / et) + velYError) / et + accelYError) * (0.5 / et);
+
+      const weight = 1 / (1 + t - pen.t);
+
+      jerkX += weight * sampleJerkX;
+      jerkY += weight * sampleJerkY;
+      totalWeight += weight;
+    }
+
+    if (totalWeight === 0) continue;
+    jerkX /= totalWeight;
+    jerkY /= totalWeight;
+    pen.jerk.x = jerkX;
+    pen.jerk.y = jerkY;
+  }
 }
+
+/**
+ * @param {Pen} pen
+ * @param {number} [dt=1]
+ * @param {Pen} [out=pen]
+ * @returns {Pen} out
+ */
+function integrate(pen, dt = 1, out = pen) {
+  const dAccelX = pen.jerk.x * dt;
+  const dAccelY = pen.jerk.y * dt;
+  const dVelX = (pen.accel.x + dAccelX / 3) * dt;
+  const dVelY = (pen.accel.y + dAccelY / 3) * dt;
+  const dPosX = (pen.vel.x + dVelX / 2) * dt;
+  const dPosY = (pen.vel.y + dVelY / 2) * dt;
+  out.t = pen.t + dt;
+  out.accel.x = pen.accel.x + dAccelX;
+  out.accel.y = pen.accel.y + dAccelY;
+  out.vel.x = pen.vel.x + dVelX;
+  out.vel.y = pen.vel.y + dVelY;
+  out.pos.x = pen.pos.x + dPosX;
+  out.pos.y = pen.pos.y + dPosY;
+  return out;
+}
+
+/**
+ * @param {Node} node1
+ * @param {Node} node2
+ * @param {number} t
+ * @param {Node} out
+ */
+function lerpNode(node1, node2, t, out) {
+  out.x = lerp(node1.x, node2.x, t);
+  out.y = lerp(node1.y, node2.y, t);
+  out.width = lerp(node1.width, node2.width, t);
+
+  // slerp control points
+  const v1x = node1.controlX - node1.x;
+  const v1y = node1.controlY - node1.y;
+  const v2x = node2.controlX - node2.x;
+  const v2y = node2.controlY - node2.y;
+  const v1Norm = Math.hypot(v1x, v1y);
+  const v2Norm = Math.hypot(v2x, v2y);
+  const u1x = v1x / v1Norm,
+    u1y = v1y / v1Norm;
+  const u2x = v2x / v2Norm,
+    u2y = v2y / v2Norm;
+  const dot = u1x * u2x + u1y * u2y;
+  const theta = Math.acos(Math.max(-1, Math.min(1, dot)));
+  let uInterpX, uInterpY;
+  if (theta === 0) {
+    uInterpX = u1x;
+    uInterpY = u1y;
+  } else {
+    const sinTheta = Math.sin(theta);
+    const factor0 = Math.sin((1 - t) * theta) / sinTheta;
+    const factor1 = Math.sin(t * theta) / sinTheta;
+    uInterpX = factor0 * u1x + factor1 * u2x;
+    uInterpY = factor0 * u1y + factor1 * u2y;
+  }
+  const lengthInterp = (1 - t) * v1Norm + t * v2Norm;
+  out.controlX = out.x + uInterpX * lengthInterp;
+  out.controlY = out.y + uInterpY * lengthInterp;
+
+  return out;
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+//--------------------------------------------------------------------------------------------
+//
+// Graph functions
+//
+//--------------------------------------------------------------------------------------------
 
 /**
  * Find connected components
