@@ -22,8 +22,8 @@
 export const defaultTrajectoryParams = Object.freeze({
   posErrorWeight: 0.1,
   velErrorWeight: 0.9,
-  accelErrorWeight: 0,
-  lookaheadTime: 15.0,
+  accelErrorWeight: 0.9,
+  lookaheadTime: 30.0,
 });
 
 /**
@@ -270,6 +270,10 @@ export function findComponents(nodes, edges) {
 
 // sort pathGraph into a sequence such that adjacent nodes are next to each other in the sequence
 export function* toNodeSequence(pathGraph, edges) {
+  if (edges.length === 0) {
+    return;
+  }
+
   const getNodeByID = getByIDFrom(pathGraph);
   const getEdgesWithNode = getEdgesWithNodeFrom(edges);
 

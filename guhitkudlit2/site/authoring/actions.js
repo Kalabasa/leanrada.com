@@ -49,9 +49,17 @@ export function createActions({
       id++;
     }
 
-    nodes.push(
-      createNode({ id, x, y, controlX: x + 50, controlY: y, width: 100 })
-    );
+    const addedNode = createNode({
+      id,
+      x,
+      y,
+      controlX: x + 50,
+      controlY: y,
+      width: 100,
+    });
+    nodes.push(addedNode);
+    selectItems([id], nodes);
+    return addedNode;
   });
 
   const connectNodes = action(() => {
@@ -86,7 +94,9 @@ export function createActions({
       id++;
     }
 
-    edges.push(createEdge(id, selectedIDs));
+    const edge = createEdge(id, selectedIDs);
+    edges.push(edge);
+    return edge;
   });
 
   const deleteSelected = action(() => {

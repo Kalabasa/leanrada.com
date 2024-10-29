@@ -43,6 +43,17 @@ export function createToolbar({
     deleteGlyph(appState.selectedGlyph);
   };
 
+  const appendNode = action(() => {
+    const nodes = appState.selectedGlyph?.nodes;
+    const preselectedNode = nodes.find((node) => node.selected);
+    const addedNode = addNode();
+    if (preselectedNode) {
+      selectItems([preselectedNode.id, addedNode.id], nodes);
+      connectNodes();
+      selectItems([addedNode.id], nodes);
+    }
+  });
+
   const NodeSelector = observer((props) => {
     return html`
       <${ItemSelector}
@@ -84,6 +95,7 @@ export function createToolbar({
         onClickDeselect=${deselectAll}
         onClickDeleteSelected=${deleteSelected}
         onClickAddNode=${addNode}
+        onClickAppendNode=${appendNode}
         onClickConnect=${connectNodes}
         NodeSelector=${NodeSelector}
         EdgeSelector=${EdgeSelector}
@@ -106,6 +118,7 @@ export function Toolbar({
   onClickDeselect,
   onClickDeleteSelected,
   onClickAddNode,
+  onClickAppendNode,
   onClickConnect,
   NodeSelector,
   EdgeSelector,
@@ -187,6 +200,9 @@ export function Toolbar({
       <//>
       <${Button} onClick=${onClickAddNode} disabled=${!enableGlyphEditing}>
         Add node
+      <//>
+      <${Button} onClick=${onClickAppendNode} disabled=${!enableGlyphEditing}>
+        Append node
       <//>
       <${NodeSelector} disabled=${!enableGlyphEditing} />
       <${Button} onClick=${onClickConnect} disabled=${!enableGlyphEditing}>
