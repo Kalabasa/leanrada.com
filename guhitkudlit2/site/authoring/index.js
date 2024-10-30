@@ -26,6 +26,7 @@ const appState = makeAutoObservable({
 
 const {
   addGlyph,
+  duplicateGlyph,
   deleteGlyph,
   selectGlyph,
   addNode,
@@ -87,6 +88,7 @@ const Toolbar = createToolbar({
   importGlyphs,
   exportGlyphs,
   addGlyph,
+  duplicateGlyph,
   deleteGlyph,
   selectGlyph,
   addNode,

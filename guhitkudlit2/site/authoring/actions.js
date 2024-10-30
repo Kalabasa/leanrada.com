@@ -12,6 +12,14 @@ export function createActions({
     return glyph;
   });
 
+  const duplicateGlyph = action((glyph) => {
+    const dup = createGlyph();
+    dup.nodes.replace(glyph.nodes.map(node => createNode(node)));
+    dup.edges.replace(glyph.edges.map(edge => createEdge(edge.id, edge.nodes)));
+    appState.glyphs.push(dup);
+    return dup;
+  });
+
   const deleteGlyph = action((glyph) => {
     appState.glyphs.replace(appState.glyphs.filter((g) => g !== glyph));
     if (appState.selectedGlyph === glyph) {
@@ -133,6 +141,7 @@ export function createActions({
 
   return {
     addGlyph,
+    duplicateGlyph,
     deleteGlyph,
     selectGlyph,
     addNode,

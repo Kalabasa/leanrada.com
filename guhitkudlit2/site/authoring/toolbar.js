@@ -12,6 +12,7 @@ export function createToolbar({
   importGlyphs,
   exportGlyphs,
   addGlyph,
+  duplicateGlyph,
   deleteGlyph,
   selectGlyph,
   addNode,
@@ -22,6 +23,12 @@ export function createToolbar({
 }) {
   const onClickAddGlyph = () => {
     selectGlyph(addGlyph());
+  };
+
+  const onClickDuplicateGlyph = () => {
+    if (appState.selectedGlyph) {
+      selectGlyph(duplicateGlyph(appState.selectedGlyph));
+    }
   };
 
   const onSelectGlyph = (event) => {
@@ -87,6 +94,7 @@ export function createToolbar({
         onClickImport=${importGlyphs}
         onClickExport=${exportGlyphs}
         onClickAddGlyph=${onClickAddGlyph}
+        onClickDuplicateGlyph=${onClickDuplicateGlyph}
         onSelectGlyph=${onSelectGlyph}
         selectedGlyphName=${appState.selectedGlyph?.name || null}
         onChangeGlyphName=${onChangeGlyphName}
@@ -110,6 +118,7 @@ export function Toolbar({
   onClickImport,
   onClickExport,
   onClickAddGlyph,
+  onClickDuplicateGlyph,
   onSelectGlyph,
   selectedGlyphName,
   onChangeGlyphName,
@@ -189,6 +198,7 @@ export function Toolbar({
       <//>
       <${Section} open title="Glyph collection">
         <${Button} onClick=${onClickAddGlyph}>Add glyph<//>
+        <${Button} onClick=${onClickDuplicateGlyph}>Duplicate glyph<//>
         <${Input} tag="select" onChange=${onSelectGlyph}>
           <option hidden disabled selected>Select a glyph to edit</option>
           ${glyphs.map(

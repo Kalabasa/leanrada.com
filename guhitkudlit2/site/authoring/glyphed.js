@@ -77,8 +77,8 @@ export function Glyphed({ width, height, preview, edgeEditors, nodeEditors }) {
         background-image: linear-gradient(to right, #eee 1px, transparent 1px),
           linear-gradient(to bottom, #eee 1px, transparent 1px);
         background-color: white;
-        background-size: 1cm 1cm;
-        background-position: calc(50% + 0.5cm) calc(50% + 0.5cm);
+        background-size: 6.25% 6.25%;
+        background-position: 0 0;
         box-shadow: var(--shadow-l);
       }
       .glyphed::before {
@@ -86,17 +86,33 @@ export function Glyphed({ width, height, preview, edgeEditors, nodeEditors }) {
         position: absolute;
         background-image: linear-gradient(
             to right,
+            transparent 25%,
+            #ccc 25%,
+            #ccc calc(25% + 1px),
+            transparent calc(25% + 1px),
             transparent 50%,
-            #ccc 50%,
-            #ccc calc(50% + 1px),
-            transparent calc(50% + 1px)
+            #999 50%,
+            #999 calc(50% + 1px),
+            transparent calc(50% + 1px),
+            transparent 75%,
+            #ccc 75%,
+            #ccc calc(75% + 1px),
+            transparent calc(75% + 1px)
           ),
           linear-gradient(
             to bottom,
+            transparent 25%,
+            #ccf 25%,
+            #ccf calc(25% + 1px),
+            transparent calc(25% + 1px),
             transparent 50%,
-            #ccc 50%,
-            #ccc calc(50% + 1px),
-            transparent calc(50% + 1px)
+            #fcc 50%,
+            #fcc calc(50% + 1px),
+            transparent calc(50% + 1px),
+            transparent 75%,
+            #ccf 75%,
+            #ccf calc(75% + 1px),
+            transparent calc(75% + 1px)
           );
         inset: 0;
       }
