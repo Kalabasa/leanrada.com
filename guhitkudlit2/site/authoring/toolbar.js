@@ -174,6 +174,11 @@ export function Toolbar({
         overflow: auto;
         box-sizing: border-box;
       }
+      .authoringToolbarField {
+        display: flex;
+        flex-direction: column;
+        padding-top: var(--size-xs);
+      }
     </style>
     <div class="authoringToolbar">
       <${Section} title="File">
@@ -205,12 +210,6 @@ export function Toolbar({
           maxlength="1"
           disabled=${!enableGlyphEditing}
         />
-        <${Button}
-          onClick=${onClickTogglePreview}
-          disabled=${!enableGlyphEditing}
-        >
-          Toggle preview
-        <//>
         <${Button} onClick=${onClickDeselect} disabled=${!enableGlyphEditing}>
           Deselect all
         <//>
@@ -243,74 +242,92 @@ export function Toolbar({
         <//>
       <//>
       <${Section} title="Calligraphy">
-        <${LabelText}>x weight<//>
-        <${Input}
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          onInput=${action(
-            (event) =>
-              (trajectoryParams.posErrorWeight = Number(
-                event.currentTarget.value
-              ))
-          )}
-          value=${trajectoryParams.posErrorWeight}
-        />
-        <${LabelText}>x’ weight<//>
-        <${Input}
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          onInput=${action(
-            (event) =>
-              (trajectoryParams.velErrorWeight = Number(
-                event.currentTarget.value
-              ))
-          )}
-          value=${trajectoryParams.velErrorWeight}
-        />
-        <${LabelText}>x’’ weight<//>
-        <${Input}
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          onInput=${action(
-            (event) =>
-              (trajectoryParams.accelErrorWeight = Number(
-                event.currentTarget.value
-              ))
-          )}
-          value=${trajectoryParams.accelErrorWeight}
-        />
-        <${LabelText}>Lookahead<//>
-        <${Input}
-          type="range"
-          min="2"
-          max="60"
-          step="1"
-          onInput=${action(
-            (event) =>
-              (trajectoryParams.lookaheadTime = Number(
-                event.currentTarget.value
-              ))
-          )}
-          value=${trajectoryParams.lookaheadTime}
-        />
-        <${LabelText}>Iterations<//>
-        <${Input}
-          type="range"
-          min="1"
-          max="4"
-          step="1"
-          onInput=${action(
-            (event) =>
-              (trajectoryParams.iterations = Number(event.currentTarget.value))
-          )}
-          value=${trajectoryParams.iterations}
-        />
+        <${Button}
+          onClick=${onClickTogglePreview}
+          disabled=${!enableGlyphEditing}
+        >
+          Toggle preview
+        <//>
+        <label class="authoringToolbarField">
+          <${LabelText}>x weight<//>
+          <${Input}
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            onInput=${action(
+              (event) =>
+                (trajectoryParams.posErrorWeight = Number(
+                  event.currentTarget.value
+                ))
+            )}
+            value=${trajectoryParams.posErrorWeight}
+          />
+        </label>
+        <label class="authoringToolbarField">
+          <${LabelText}>x’ weight<//>
+          <${Input}
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            onInput=${action(
+              (event) =>
+                (trajectoryParams.velErrorWeight = Number(
+                  event.currentTarget.value
+                ))
+            )}
+            value=${trajectoryParams.velErrorWeight}
+          />
+        </label>
+        <label class="authoringToolbarField">
+          <${LabelText}>x’’ weight<//>
+          <${Input}
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            onInput=${action(
+              (event) =>
+                (trajectoryParams.accelErrorWeight = Number(
+                  event.currentTarget.value
+                ))
+            )}
+            value=${trajectoryParams.accelErrorWeight}
+          />
+        </label>
+        <label class="authoringToolbarField">
+          <${LabelText}>Lookahead<//>
+          <${Input}
+            type="range"
+            min="2"
+            max="60"
+            step="1"
+            onInput=${action(
+              (event) =>
+                (trajectoryParams.lookaheadTime = Number(
+                  event.currentTarget.value
+                ))
+            )}
+            value=${trajectoryParams.lookaheadTime}
+          />
+        </label>
+        <label class="authoringToolbarField">
+          <${LabelText}>Iterations<//>
+          <${Input}
+            type="range"
+            min="1"
+            max="4"
+            step="1"
+            onInput=${action(
+              (event) =>
+                (trajectoryParams.iterations = Number(
+                  event.currentTarget.value
+                ))
+            )}
+            value=${trajectoryParams.iterations}
+          />
+        </label>
       <//>
     </div>
   `;
