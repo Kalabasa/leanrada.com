@@ -15,6 +15,7 @@
  *  velErrorWeight: number,
  *  accelErrorWeight: number,
  *  lookaheadTime: number,
+ *  iterations: number,
  * }} TrajectoryParams
  */
 
@@ -24,6 +25,7 @@ export const defaultTrajectoryParams = Object.freeze({
   velErrorWeight: 0.9,
   accelErrorWeight: 0.9,
   lookaheadTime: 30.0,
+  iterations: 1,
 });
 
 /**
@@ -96,7 +98,7 @@ function* generateStroke(sequence, params) {
 function optimizeTrajectory(pen, nodes, nodeTimes, params) {
   const tempNode = {};
 
-  for (let i = 0; i < 1; i++) {
+  for (let i = 0; i < Math.min(params.iterations, 10); i++) {
     let jerkX = 0;
     let jerkY = 0;
     let totalWeight = 0;

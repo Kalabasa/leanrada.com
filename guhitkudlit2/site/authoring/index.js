@@ -125,6 +125,11 @@ export function Authoring() {
       }
       .authoringTools {
         grid-area: tools;
+        display: flex;
+        flex-direction: column;
+      }
+      .authoringToolsScroll {
+        overflow-y: auto;
       }
     </style>
     <div class="authoring authoringLayout">
@@ -135,7 +140,9 @@ export function Authoring() {
         <${Glyphed} />
       </main>
       <aside class="authoringTools">
-        <${Toolbar} />
+        <div class="authoringToolsScroll">
+          <${Toolbar} />
+        </div>
       </aside>
     </div>
   `;

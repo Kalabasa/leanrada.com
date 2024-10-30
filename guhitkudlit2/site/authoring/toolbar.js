@@ -270,6 +270,17 @@ export function Toolbar({
         )}
         value=${trajectoryParams.lookaheadTime}
       />
+      <${Input}
+        type="range"
+        min="1"
+        max="4"
+        step="1"
+        onChange=${action(
+          (event) =>
+            (trajectoryParams.iterations = Number(event.currentTarget.value))
+        )}
+        value=${trajectoryParams.iterations}
+      />
     </div>
   `;
 }

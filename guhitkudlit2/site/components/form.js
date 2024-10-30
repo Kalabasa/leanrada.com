@@ -16,6 +16,17 @@ export function Input({ class: className, tag = "input", ...props }) {
         padding: var(--size-xs);
         box-sizing: border-box;
       }
+      .formInput[type="range"] {
+        border: none;
+        accent-color: var(--color-orange);
+        background: linear-gradient(
+          to bottom,
+          transparent calc(50% - 1px),
+          var(--color-fg-secondary) calc(50% - 1px),
+          var(--color-fg-secondary) calc(50% + 1px),
+          transparent calc(50% + 1px)
+        );
+      }
       .formInput::placeholder {
         opacity: var(--opacity-placeholder);
       }
