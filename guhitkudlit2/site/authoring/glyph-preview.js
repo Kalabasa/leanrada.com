@@ -53,6 +53,8 @@ const drawPreview = debounce((canvas, strokes) => {
   }
 }, 50);
 
+const annotatePath = new URL(location).searchParams.has("annotatePath");
+
 function drawPath(context, stroke) {
   context.beginPath();
   let lastAnnotatedVertex = null;
@@ -60,22 +62,30 @@ function drawPath(context, stroke) {
   for (const vertex of stroke.vertices) {
     const to = index === 0 ? context.moveTo : context.lineTo;
     to.call(context, vertex.x, vertex.y);
-    if (
-      !lastAnnotatedVertex ||
-      Math.hypot(
-        lastAnnotatedVertex.x - vertex.x,
-        lastAnnotatedVertex.y - vertex.y
-      ) > 20
-    ) {
-      context.fillStyle = "#0ff";
-      context.fillText(vertex.t, vertex.x, vertex.y);
-      lastAnnotatedVertex = vertex;
+    if (annotatePath) {
+      if (
+        !lastAnnotatedVertex ||
+        Math.hypot(
+          lastAnnotatedVertex.x - vertex.x,
+          lastAnnotatedVertex.y - vertex.y
+        ) > 20
+      ) {
+        context.fillStyle = "#f00";
+        context.font = "bold 10px sans-serif";
+        const slope = lastAnnotatedVertex
+          ? (lastAnnotatedVertex.y - vertex.y) /
+            (lastAnnotatedVertex.x - vertex.x)
+          : 0;
+        context.textBaseline = slope < 0 ? "top" : "bottom";
+        context.fillText(vertex.t.toFixed(1), vertex.x, vertex.y);
+        lastAnnotatedVertex = vertex;
+      }
     }
     index++;
   }
   context.fillStyle = null;
-  context.lineWidth = 1;
-  context.strokeStyle = "#0ff";
+  context.lineWidth = annotatePath ? 2 : 20;
+  context.strokeStyle = annotatePath ? "#f00" : "#cff";
   context.lineJoin = "round";
   context.lineCap = "round";
   context.stroke();
