@@ -1,6 +1,8 @@
 /**
  * @typedef {import("../authoring/node-editor.js").Node} Node
  *
+ * A path is an array of Strokes.
+ * 
  * @typedef {{
  *  vertices: Vertex[]
  * }} Stroke

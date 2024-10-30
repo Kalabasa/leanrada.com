@@ -1,6 +1,5 @@
 import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
-import { Spacer } from "../components/spacer.js";
 import { useState } from "../lib/htm-preact.js";
 import { action } from "../lib/mobx.js";
 import { convertToUnicode } from "../transliteration/unicode.mjs";
@@ -139,10 +138,33 @@ export function Toolbar({
     <style id=${Toolbar.name}>
       .authoringToolbar {
         min-width: 400px;
+        box-sizing: border-box;
         display: flex;
         flex-direction: column;
         align-items: stretch;
         gap: var(--size-xs);
+      }
+      .authoringToolbarSection {
+        background: var(--color-bg);
+        box-shadow: var(--shadow-l);
+        border-radius: 4px;
+      }
+      .authoringToolbarSection > summary {
+        display: list-item;
+        list-style: inside disclosure-closed;
+        padding: var(--size-xs);
+        box-sizing: border-box;
+      }
+      .authoringToolbarSection > div {
+        padding: var(--size-s);
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-items: stretch;
+        gap: var(--size-xs);
+      }
+      .authoringToolbarSection[open] > summary {
+        list-style-type: disclosure-open;
       }
       .authoringToolbarGlyphNameInput {
         text-transform: uppercase;
@@ -154,136 +176,153 @@ export function Toolbar({
       }
     </style>
     <div class="authoringToolbar">
-      <${LabelText}>File<//>
-      <${Button} onClick=${onClickSave}>Save<//>
-      <${Button} onClick=${onClickImport}>Import<//>
-      <${Button} onClick=${onClickExport}>Export<//>
-      <${Spacer} y="l" />
-      <${LabelText}>Glyph collection<//>
-      <${Button} onClick=${onClickAddGlyph}>Add glyph<//>
-      <${Input} tag="select" onChange=${onSelectGlyph}>
-        <option hidden disabled selected>Select a glyph to edit</option>
-        ${glyphs.map(
-          (glyph) => html`<${GlyphOption} key=${glyph.name} glyph=${glyph} />`
-        )}
+      <${Section} title="File">
+        <${Button} onClick=${onClickSave}>Save<//>
+        <${Button} onClick=${onClickImport}>Import<//>
+        <${Button} onClick=${onClickExport}>Export<//>
       <//>
-      <${Spacer} y="l" />
-      <${LabelText}>
-        Glyph
-        properties${selectedGlyphName
+      <${Section} open title="Glyph collection">
+        <${Button} onClick=${onClickAddGlyph}>Add glyph<//>
+        <${Input} tag="select" onChange=${onSelectGlyph}>
+          <option hidden disabled selected>Select a glyph to edit</option>
+          ${glyphs.map(
+            (glyph) => html`<${GlyphOption} key=${glyph.name} glyph=${glyph} />`
+          )}
+        <//>
+      <//>
+      <${Section}
+        open
+        title=${"Glyph properties" +
+        (selectedGlyphName
           ? `: ${selectedGlyphName}${toUnicode(selectedGlyphName)}`
-          : ""}
-      <//>
-      <${Input}
-        class="authoringToolbarGlyphNameInput"
-        onChange=${onChangeGlyphName}
-        value=${selectedGlyphName}
-        placeholder="Rename"
-        maxlength="1"
-        disabled=${!enableGlyphEditing}
-      />
-      <${Button}
-        onClick=${onClickTogglePreview}
-        disabled=${!enableGlyphEditing}
+          : "")}
       >
-        Toggle preview
+        <${Input}
+          class="authoringToolbarGlyphNameInput"
+          onChange=${onChangeGlyphName}
+          value=${selectedGlyphName}
+          placeholder="Rename"
+          maxlength="1"
+          disabled=${!enableGlyphEditing}
+        />
+        <${Button}
+          onClick=${onClickTogglePreview}
+          disabled=${!enableGlyphEditing}
+        >
+          Toggle preview
+        <//>
+        <${Button} onClick=${onClickDeselect} disabled=${!enableGlyphEditing}>
+          Deselect all
+        <//>
+        <${Button}
+          variant="danger"
+          onClick=${onClickDeleteSelected}
+          disabled=${!enableGlyphEditing}
+        >
+          Delete selected
+        <//>
+        <${Button} onClick=${onClickAddNode} disabled=${!enableGlyphEditing}>
+          Add node
+        <//>
+        <${Button} onClick=${onClickAppendNode} disabled=${!enableGlyphEditing}>
+          Append node
+        <//>
+        <${NodeSelector} disabled=${!enableGlyphEditing} />
+        <${Button} onClick=${onClickConnect} disabled=${!enableGlyphEditing}>
+          Connect nodes
+        <//>
+        <${EdgeSelector} disabled=${!enableGlyphEditing} />
+        <${Button}
+          variant="danger"
+          onClick=${onClickDeleteGlyph}
+          disabled=${!enableGlyphEditing}
+        >
+          ${glyphNameToDelete && glyphNameToDelete === selectedGlyphName
+            ? "Confirm delete"
+            : "Delete glyph"}
+        <//>
       <//>
-      <${Button} onClick=${onClickDeselect} disabled=${!enableGlyphEditing}>
-        Deselect all
+      <${Section} title="Calligraphy">
+        <${LabelText}>x weight<//>
+        <${Input}
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          onInput=${action(
+            (event) =>
+              (trajectoryParams.posErrorWeight = Number(
+                event.currentTarget.value
+              ))
+          )}
+          value=${trajectoryParams.posErrorWeight}
+        />
+        <${LabelText}>x’ weight<//>
+        <${Input}
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          onInput=${action(
+            (event) =>
+              (trajectoryParams.velErrorWeight = Number(
+                event.currentTarget.value
+              ))
+          )}
+          value=${trajectoryParams.velErrorWeight}
+        />
+        <${LabelText}>x’’ weight<//>
+        <${Input}
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          onInput=${action(
+            (event) =>
+              (trajectoryParams.accelErrorWeight = Number(
+                event.currentTarget.value
+              ))
+          )}
+          value=${trajectoryParams.accelErrorWeight}
+        />
+        <${LabelText}>Lookahead<//>
+        <${Input}
+          type="range"
+          min="2"
+          max="60"
+          step="1"
+          onInput=${action(
+            (event) =>
+              (trajectoryParams.lookaheadTime = Number(
+                event.currentTarget.value
+              ))
+          )}
+          value=${trajectoryParams.lookaheadTime}
+        />
+        <${LabelText}>Iterations<//>
+        <${Input}
+          type="range"
+          min="1"
+          max="4"
+          step="1"
+          onInput=${action(
+            (event) =>
+              (trajectoryParams.iterations = Number(event.currentTarget.value))
+          )}
+          value=${trajectoryParams.iterations}
+        />
       <//>
-      <${Button}
-        variant="danger"
-        onClick=${onClickDeleteSelected}
-        disabled=${!enableGlyphEditing}
-      >
-        Delete selected
-      <//>
-      <${Button} onClick=${onClickAddNode} disabled=${!enableGlyphEditing}>
-        Add node
-      <//>
-      <${Button} onClick=${onClickAppendNode} disabled=${!enableGlyphEditing}>
-        Append node
-      <//>
-      <${NodeSelector} disabled=${!enableGlyphEditing} />
-      <${Button} onClick=${onClickConnect} disabled=${!enableGlyphEditing}>
-        Connect nodes
-      <//>
-      <${EdgeSelector} disabled=${!enableGlyphEditing} />
-      <${Button}
-        variant="danger"
-        onClick=${onClickDeleteGlyph}
-        disabled=${!enableGlyphEditing}
-      >
-        ${glyphNameToDelete && glyphNameToDelete === selectedGlyphName
-          ? "Confirm delete"
-          : "Delete glyph"}
-      <//>
-      <${Spacer} y="l" />
-      <${LabelText}>Calligraphy<//>
-      <${Input}
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        onChange=${action(
-          (event) =>
-            (trajectoryParams.posErrorWeight = Number(
-              event.currentTarget.value
-            ))
-        )}
-        value=${trajectoryParams.posErrorWeight}
-      />
-      <${Input}
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        onChange=${action(
-          (event) =>
-            (trajectoryParams.velErrorWeight = Number(
-              event.currentTarget.value
-            ))
-        )}
-        value=${trajectoryParams.velErrorWeight}
-      />
-      <${Input}
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        onChange=${action(
-          (event) =>
-            (trajectoryParams.accelErrorWeight = Number(
-              event.currentTarget.value
-            ))
-        )}
-        value=${trajectoryParams.accelErrorWeight}
-      />
-      <${Input}
-        type="range"
-        min="0"
-        max="60"
-        step="1"
-        onChange=${action(
-          (event) =>
-            (trajectoryParams.lookaheadTime = Number(event.currentTarget.value))
-        )}
-        value=${trajectoryParams.lookaheadTime}
-      />
-      <${Input}
-        type="range"
-        min="1"
-        max="4"
-        step="1"
-        onChange=${action(
-          (event) =>
-            (trajectoryParams.iterations = Number(event.currentTarget.value))
-        )}
-        value=${trajectoryParams.iterations}
-      />
     </div>
   `;
 }
+
+const Section = ({ title, open, children }) =>
+  html`
+    <details class="authoringToolbarSection" open=${open}>
+      <summary><${LabelText}>${title}<//></summary>
+      <div>${children}</div>
+    </details>
+  `;
 
 /**
  * @param {object} props

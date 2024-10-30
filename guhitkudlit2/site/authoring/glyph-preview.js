@@ -1,11 +1,16 @@
 import { generatePath } from "../calligraphy/generate-path.js";
+import { BasePainter } from "../calligraphy/painter.js";
 import { html } from "../components/html.js";
 import { useEffect, useRef } from "../lib/htm-preact.js";
 import { computed } from "../lib/mobx.js";
 import { debounce } from "../util/debounce.js";
 import { observer } from "../util/observer.js";
 
+const annotatePath = new URL(location).searchParams.has("annotatePath");
+
 export function createGlyphPreview({ appState }) {
+  const painter = new BasePainter();
+
   const strokes = computed(() => {
     if (!appState.previewEnabled) return [];
     if (!appState.selectedGlyph) return [];
@@ -16,17 +21,33 @@ export function createGlyphPreview({ appState }) {
     );
   });
 
+  const drawPreview = debounce((canvas, strokes) => {
+    const context = canvas.getContext("2d");
+    context.reset();
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (annotatePath) {
+      for (const stroke of strokes) {
+        drawDebugPath(context, stroke);
+      }
+    } else {
+      for (const _ of painter.drawPath(strokes, context)) {
+      }
+    }
+  }, 25);
+
   return observer(
     ({ width, height }) =>
       html`<${GlyphPreview}
         width=${width}
         height=${height}
         strokes=${strokes.get()}
+        drawPreview=${drawPreview}
       />`
   );
 }
 
-const GlyphPreview = ({ width, height, strokes }) => {
+const GlyphPreview = ({ width, height, strokes, drawPreview }) => {
   const canvasRef = useRef();
 
   useEffect(() => {
@@ -34,7 +55,7 @@ const GlyphPreview = ({ width, height, strokes }) => {
     if (!canvas) return;
 
     drawPreview(canvas, strokes);
-  }, [canvasRef.current, width, height, strokes]);
+  }, [canvasRef.current, width, height, strokes, drawPreview]);
 
   return html`<canvas
     ref=${canvasRef}
@@ -44,18 +65,7 @@ const GlyphPreview = ({ width, height, strokes }) => {
   />`;
 };
 
-const drawPreview = debounce((canvas, strokes) => {
-  const context = canvas.getContext("2d");
-  context.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (const stroke of strokes) {
-    drawPath(context, stroke);
-  }
-}, 50);
-
-const annotatePath = new URL(location).searchParams.has("annotatePath");
-
-function drawPath(context, stroke) {
+function drawDebugPath(context, stroke) {
   context.beginPath();
   let lastAnnotatedVertex = null;
   let index = 0;

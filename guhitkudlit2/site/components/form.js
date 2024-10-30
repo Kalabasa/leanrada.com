@@ -16,9 +16,15 @@ export function Input({ class: className, tag = "input", ...props }) {
         padding: var(--size-xs);
         box-sizing: border-box;
       }
+      .formInput::placeholder {
+        opacity: var(--opacity-placeholder);
+      }
+      .formInput:disabled {
+        border-color: var(--color-fg-tertiary);
+      }
       .formInput[type="range"] {
         border: none;
-        accent-color: var(--color-orange);
+        accent-color: var(--color-fg);
         background: linear-gradient(
           to bottom,
           transparent calc(50% - 1px),
@@ -26,12 +32,6 @@ export function Input({ class: className, tag = "input", ...props }) {
           var(--color-fg-secondary) calc(50% + 1px),
           transparent calc(50% + 1px)
         );
-      }
-      .formInput::placeholder {
-        opacity: var(--opacity-placeholder);
-      }
-      .formInput:disabled {
-        border-color: var(--color-bg-darker);
       }
       .formInputDropdown {
         position: relative;
@@ -51,7 +51,7 @@ export function Input({ class: className, tag = "input", ...props }) {
         pointer-events: none;
       }
       .formInputDropdown:has(select:disabled)::after {
-        border-color: var(--color-bg-darker);
+        border-color: var(--color-fg-tertiary);
       }
     </style>
     <${Wrapper}>
