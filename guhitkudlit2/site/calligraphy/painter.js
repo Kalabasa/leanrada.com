@@ -22,6 +22,8 @@ export class BasePainter {
    * @yields {void}
    */
   *drawStroke(stroke, scale, canvasContext) {
+    if (stroke.vertices.length === 0) return;
+
     const brush = {
       x: stroke.vertices[0].x,
       y: stroke.vertices[0].y,

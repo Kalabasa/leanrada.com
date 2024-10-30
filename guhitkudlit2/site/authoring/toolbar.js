@@ -29,8 +29,9 @@ export function createToolbar({
   };
 
   const onChangeGlyphName = (event) => {
-    if (event.currentTarget.value.length === 1) {
-      appState.selectedGlyph.name = event.currentTarget.value.toLowerCase();
+    const value = event.currentTarget.value;
+    if (value.length === 1 || value.toLowerCase() === "ng") {
+      appState.selectedGlyph.name = value.toLowerCase();
     }
   };
 

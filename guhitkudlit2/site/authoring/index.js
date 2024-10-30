@@ -42,8 +42,14 @@ function init() {
   }
 }
 
+const sort = "abkdeghilmnoprstuwy".split("").toSpliced(11, 0, "ng");
+
 function saveAppData() {
-  saveAppDataToStorage({ glyphs: appState.glyphs });
+  saveAppDataToStorage({
+    glyphs: appState.glyphs.sort(
+      (a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)
+    ),
+  });
 }
 
 async function importGlyphs() {
