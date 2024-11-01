@@ -24,9 +24,9 @@
 /** @type {TrajectoryParams} */
 export const defaultTrajectoryParams = Object.freeze({
   posErrorWeight: 0.1,
-  velErrorWeight: 0.9,
-  accelErrorWeight: 0.9,
-  lookaheadTime: 30.0,
+  velErrorWeight: 0.95,
+  accelErrorWeight: 1,
+  lookaheadTime: 12,
   iterations: 1,
 });
 

@@ -218,7 +218,7 @@ export function Toolbar({
           onChange=${onChangeGlyphName}
           value=${selectedGlyphName}
           placeholder="Rename"
-          maxlength="1"
+          maxlength="2"
           disabled=${!enableGlyphEditing}
         />
         <${Button} onClick=${onClickDeselect} disabled=${!enableGlyphEditing}>
