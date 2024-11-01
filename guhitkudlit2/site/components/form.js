@@ -1,12 +1,15 @@
+import { useMemo } from "../lib/htm-preact.js";
 import { classes } from "../util/classes.js";
 import { html } from "./html.js";
 
 export function Input({ class: className, tag = "input", ...props }) {
-  let Wrapper = ({ children }) => children;
-  if (tag === "select" && !props.multiple) {
-    Wrapper = ({ children }) =>
-      html`<div class="formInputDropdown">${children}</div>`;
-  }
+  const Wrapper = useMemo(() => {
+    if (tag === "select" && !props.multiple) {
+      return ({ children }) =>
+        html`<div class="formInputDropdown">${children}</div>`;
+    }
+    return ({ children }) => children;
+  }, [tag, props.multiple]);
 
   return html`
     <style id=${Input.name}>
