@@ -60,7 +60,6 @@ export function Canvas({ aspectRatio, canvasRef }) {
   `;
 }
 function fitToContainer(containerWidth, containerHeight, element, aspectRatio) {
-  console.log(containerWidth, containerHeight);
   const containerAspectRatio = containerWidth / containerHeight;
   if (aspectRatio > containerAspectRatio) {
     element.style.width = containerWidth + "px";
