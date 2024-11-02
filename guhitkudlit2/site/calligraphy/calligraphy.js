@@ -1,4 +1,5 @@
 import { reaction } from "../lib/mobx.js";
+import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
 
 const memo = Symbol("memo");
@@ -70,8 +71,4 @@ function generateGlyph(baybayinUnit, glyphMap) {
   if (!consonantGlyph) return null;
   // todo: kudlit
   return { nodes: consonantGlyph.nodes, edges: consonantGlyph.edges };
-}
-
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
