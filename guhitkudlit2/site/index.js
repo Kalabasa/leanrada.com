@@ -1,15 +1,23 @@
 import { AppLogo } from "./app/logo.js";
 import { AppPanel } from "./app/panel.js";
-import { installCalligraphy } from "./calligraphy/calligraphy.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
 import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
+import { when } from "./lib/mobx.js";
 
 const { TransliterationForm, observableBaybayinUnits } =
   createTransliterationForm();
+
 const { Canvas, canvasRef } = createCanvas();
-installCalligraphy(observableBaybayinUnits, canvasRef);
+
+when(
+  () => observableBaybayinUnits.get().length > 0,
+  async () => {
+    const { installCalligraphy } = await import("./calligraphy/calligraphy.js");
+    installCalligraphy(observableBaybayinUnits, canvasRef);
+  }
+);
 
 export function Index() {
   const panelColumnWidth = "minmax(300px, 500px)";

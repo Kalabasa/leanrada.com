@@ -48,11 +48,11 @@ export async function drawCalligraphy(
   canvasContext
 ) {
   const glyphs = baybayinUnits
-    .map((baybayinUnit) => glyphMap.get(baybayinUnit))
-    .filter((glyph) => glyph)
-    .map(({ nodes, edges }) => ({ nodes, edges }));
+    .map((baybayinUnit) => generateGlyph(baybayinUnit, glyphMap))
+    .filter((glyph) => glyph);
+  console.log(glyphs);
 
-  arrangeGlyphs(glyphs, canvasContext);
+  // arrangeGlyphs(glyphs, canvasContext);
 
   const { generatePath } = await import("./generate-path.js");
   const path = generatePath(glyphs[0].nodes, glyphs[0].edges);
@@ -61,6 +61,15 @@ export async function drawCalligraphy(
   for (const step of drawing) {
     await delay(10);
   }
+}
+
+function generateGlyph(baybayinUnit, glyphMap) {
+  const consonant =
+    baybayinUnit === "ng" ? baybayinUnit : baybayinUnit.slice(0, 1);
+  const consonantGlyph = glyphMap.get(consonant);
+  if (!consonantGlyph) return null;
+  // todo: kudlit
+  return { nodes: consonantGlyph.nodes, edges: consonantGlyph.edges };
 }
 
 function delay(ms) {

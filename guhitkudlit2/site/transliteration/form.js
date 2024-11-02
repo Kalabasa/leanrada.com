@@ -5,8 +5,8 @@ import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
 import { debounce } from "../util/debounce.js";
 import { observer } from "../util/observer.js";
-import { syllabicate } from "./syllabicate.js";
-import { convertToUnicode } from "./unicode.mjs";
+
+const memo = Symbol("memo");
 
 export function createTransliterationForm() {
   const inputText = observable.box("");
@@ -19,7 +19,8 @@ export function createTransliterationForm() {
 
   reaction(
     () => inputText.get(),
-    (inputText) => {
+    async (inputText) => {
+      const { syllabicate } = await import("./syllabicate.js");
       const output = syllabicate(inputText);
       baybayinUnits.set(output);
       prettify.set(true);
@@ -40,7 +41,7 @@ export function createTransliterationForm() {
     return html`
       <${TransliterationForm}
         syllabication=${baybayinUnits.get().join(" · ")}
-        baybayin=${convertToUnicode(unicodeFilter(baybayinUnits.get()))}
+        baybayin=${lazyConvertToUnicode(unicodeFilter(baybayinUnits.get()))}
         onInput=${onInput}
       />
     `;
@@ -50,6 +51,18 @@ export function createTransliterationForm() {
     TransliterationForm: TransliterationFormImpl,
     observableBaybayinUnits: baybayinUnits,
   };
+}
+
+function lazyConvertToUnicode(baybayinUnits) {
+  if (baybayinUnits.length === 0) return "";
+
+  if (!lazyConvertToUnicode[memo]) {
+    import("./unicode.mjs").then((imported) => {
+      lazyConvertToUnicode[memo] = imported.convertToUnicode;
+    });
+  }
+
+  return lazyConvertToUnicode[memo]?.(baybayinUnits) ?? "";
 }
 
 // Hide final kudlit or the 'n' in 'ng', looks better while typing
