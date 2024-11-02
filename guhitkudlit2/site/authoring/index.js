@@ -79,7 +79,7 @@ function exportGlyphs() {
     })),
     edges: glyph.edges.map(({ nodes }) => ({ nodes })),
   }));
-  downloadString(JSON.stringify(glyphs), "text/json", "gk_export.json");
+  downloadString("export default = " + JSON.stringify(glyphs), "text/json", "glyph-map.js");
 }
 
 const Toolbar = createToolbar({

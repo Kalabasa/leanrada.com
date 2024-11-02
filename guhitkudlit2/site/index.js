@@ -1,12 +1,15 @@
-import { render } from "./lib/htm-preact.js";
-import { html } from "./components/html.js";
-import { AppPanel } from "./app/panel.js";
 import { AppLogo } from "./app/logo.js";
-import { createTransliterationForm } from "./transliteration/form.js";
+import { AppPanel } from "./app/panel.js";
+import { installCalligraphy } from "./calligraphy/calligraphy.js";
 import { createCanvas } from "./canvas/canvas.js";
+import { html } from "./components/html.js";
+import { render } from "./lib/htm-preact.js";
+import { createTransliterationForm } from "./transliteration/form.js";
 
-const { TransliterationForm } = createTransliterationForm();
-const { Canvas } = createCanvas();
+const { TransliterationForm, observableBaybayinUnits } =
+  createTransliterationForm();
+const { Canvas, canvasRef } = createCanvas();
+installCalligraphy(observableBaybayinUnits, canvasRef);
 
 export function Index() {
   const panelColumnWidth = "minmax(300px, 500px)";
