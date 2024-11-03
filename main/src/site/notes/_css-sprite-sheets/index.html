@@ -13,13 +13,36 @@
     <!-- textlint-enable -->
     <!-- prettier-ignore -->
     <markdown>
-      Sprite sheets *on the web* is an old technique used mainly to reduce the amount of HTTP requests by bundling multiple images together into a single image file. Displaying a sub-image involves clipping the sheet in the appropriate coordinates.
+      Check out this demo first (Click it!):
+
+      <div class="specimen">
+        <label class="animate-on-click">
+          <input type="checkbox" />
+          <div class="heartbox" style="display: grid; place-content: center; width: 60px; height: 60px;">
+            <div
+              role="img"
+              alt="interactive heart animation"
+              :style="`
+                background-image: url('${url('twitter.png')}');
+                width: 100px;
+                height: 100px;
+                background-size: 2900px 100px;
+              `">
+            </div>
+          </div>
+          Heart
+        </label>
+      </div>
+
+      Yes, it’s the Twitter heart button. This heart animation was done using an old technique called [**sprite sheets**](https://en.wikipedia.org/wiki/Texture_atlas).
+
+      On the web sprite sheets are used mainly to reduce the amount of HTTP requests by bundling multiple images together into a single image file. Displaying a sub-image involves clipping the sheet in the appropriate coordinates.
 
       <blog-media
         :src="url('minecraft.png')"
         caption="Sprite sheet / texture atlas of Minecraft blocks" />
 
-      The bandwidth benefit has been largely mitigated by HTTP/2, but sprite sheets have another use: **animations!** Displaying animations is one of the primary uses of sprite sheets, besides loading performance.
+      The bandwidth benefit has been largely mitigated by HTTP/2 now, but sprite sheets have another purpose: **animations!** Displaying animations is one of the primary uses of sprite sheets, besides loading performance.
 
       <blog-media
         :src="url('animation-opaque.png')"
@@ -76,7 +99,7 @@
 
       <code-block language="css" code="
 .element {
-  background-image: url('my-sprite-sheet.png');
+  background-image: url('heart.png');
   /* size of one frame */
   width: 100px;
   height: 100px;
@@ -86,14 +109,14 @@
   background-position: -500px 0px;
 }" />
 
-      For this example, we’ll use the heart animation from Twitter.
+      This is the sprite sheet for the heart animation from Twitter:
 
       <blog-media
         :src="url('twitter.png')"
         type="bleed"
-        caption="Heart animation sprite sheet from Twitter" />
+        alt="Heart animation sprite sheet from Twitter" />
 
-      The above code produces a still image of the frame at (500,0) &mdash; the sixth frame.
+      Using this image, the code above produces a still image of the frame at (500,0) &mdash; the sixth frame.
 
       <div class="specimen">
         <figure
@@ -142,7 +165,7 @@
 
       <code-block language="diff" language-code="diff-css" code="
  .element {
-   background-image: url('my-sprite-sheet.png');
+   background-image: url('heart.png');
    /* size of one frame */
    width: 100px;
    height: 100px;
@@ -165,7 +188,7 @@
 +  }
 +}" />
 
-      <box-note>**Important: Note the `steps()` timing function in the `animation` rule above!** This is required for the transition to land exactly *on* the frames.</box-note>
+      <box-note>**Important: Note the [`steps()`](https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position) timing function in the `animation` rule above!** This is required for the transition to land exactly *on* the frames.</box-note>
 
       Voilà.
 
@@ -253,11 +276,13 @@ animation-timing-function: steps(29, jump-none);" />
           `"></figure>
       </div>
 
-      ## Why not GIF or APNG?
+      Remember, [`steps()`](https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position) is crucial!
 
-      For autoplaying stuff like spinners, you might want plain old GIFs or APNGs instead.
+      ## Why not APNG?
 
-      But we don’t have tight control over the playback with these formats. With sprite sheets, we can pause, reverse, play on cue, play on hover, change the frame rate, or make it totally interactive.
+      For autoplaying stuff like loading spinners, you might want plain old GIFs or [APNGs](https://en.wikipedia.org/wiki/APNG) instead.
+
+      But we don’t have tight control over the playback with these formats. With sprite sheets, we can pause, reverse, play on cue, play on hover, change the frame rate, or make it totally **interactive**.
 
       ## Interactivity
 
@@ -307,11 +332,38 @@ animation-timing-function: steps(29, jump-none);" />
           display: none;
         }
         .animate-on-click > input:checked + .heartbox > [role=img] {
-          animation: heartAnimation 725ms steps(29, jump-none) both;
+          animation: heartAnimation 725ms steps(29, jump-none) forwards;
         }
       </style>
 
-      Nice.
+<code-block language="diff" language-code="diff-css" code="
+ .element {
+   background-image: url('heart.png');
+   /* size of one frame */
+   width: 100px;
+   height: 100px;
+   /* size of the whole sheet */
+   background-size: 2900px 100px;
++ }
++
++.input:checked ~ .element {
+   /* animate the coordinates */
+-  animation: heartAnimation 2s steps(29, jump-none) infinite;
++  animation: heartAnimation 2s steps(29, jump-none) forwards;
+ }
+ 
+ @keyframes heartAnimation {
+   from {
+     /* first frame */
+     background-position: 0px 0px;
+   }
+   to {
+     /* last frame */
+     background-position: -2800px 0px;
+   }
+ }" />
+
+      Or use the new `:has(:checked)`.
 
       <box-note>Additionally, CSS doesn’t block the main thread. In modern browsers, the big difference between CSS animations and JS-driven animations (i.e. `requestAnimationFrame` loops) is that the JS one runs on the main thread along with event handlers and DOM operations, so if you have some heavy JS (like React rerendering the DOM), JS animations would suffer along with it.</box-note>
 
@@ -319,15 +371,17 @@ animation-timing-function: steps(29, jump-none);" />
 
       ## Why not animated SVGs?
 
-      If you have a vector format, then an animated SVG is a decent option!
+      If you have a vector format, then an [animated SVG](https://developer.mozilla.org/en-US/docs/Web/SVG/SVG_animation_with_SMIL) is a decent option!
       
       This format is kinda hard to author and integrate though &mdash; one would need both animation skills and coding skills to implement it. Some paid tools apparently exist to make it easier?
+
+      And Lottie? That 300-kilobyte library? Uh, sure, if you really need it.
 
       ## Limitations of sprite sheets
 
       * The sheet could end up as a very large image file if you’re not very careful.
-      * It’s only effective for the narrow case of frame-by-frame raster animations. Beyond that, better options may exist, such animated SVGs, the `&lt;video&gt;` tag, the `&lt;canvas&gt;` tag, etc. (But not Lottie, that 300-kilobyte library? uh, nah.)
-      * How do you support higher pixel densities? `srcset` could work, but the coordinates are another matter. But it can be solved with CSS custom properties and `calc`.
+      * It’s only effective for the narrow case of small frame-by-frame raster animations. Beyond that, better options may exist, such animated SVGs, the `&lt;video&gt;` tag, the `&lt;canvas&gt;` tag, etc.
+      * How do you support higher pixel densities? Media queries on `background-image`? `&lt;img&gt;` with `srcset` could work, but the coordinates are another matter. But it could be solved generally with CSS custom properties and `calc`.
 
       ## Gallery
 
@@ -349,7 +403,7 @@ animation-timing-function: steps(29, jump-none);" />
             frames="56"
             frame-delay="25ms" />
         </div>
-        <figcaption class="caption">Favorite icon animation</figcaption>
+        <figcaption class="caption">‘Favorite’ icon animation</figcaption>
       </figure>
 
       <figure>
@@ -430,7 +484,7 @@ animation-timing-function: steps(29, jump-none);" />
             frames="2"
             frame-delay="300ms" />
         </div>
-        <figcaption class="caption">Snail enemy sprites from my game MiniForts</figcaption>
+        <figcaption class="caption">Snail enemy sprites from my game <text-link target="_blank" href="/wares/miniforts/">MiniForts</text-link></figcaption>
       </figure>
 
       <blog-media
@@ -459,6 +513,8 @@ animation-timing-function: steps(29, jump-none);" />
 
 <style>
   .specimen {
+    position: relative;
+    z-index: 0;
     overflow: hidden;
     margin: 36px 0;
     min-height: 190px;
