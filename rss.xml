@@ -7,6 +7,239 @@
         
         <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
         <item>
+            <title><![CDATA[CSS sprite sheet animations]]></title>
+            <description><![CDATA[
+<p>Check out this demo first (Click it!):</p>
+<label>
+                <input type="checkbox">
+                <div>
+                  <div role="img" alt="interactive heart animation">
+                  </div>
+                </div>
+                Heart
+              </label>
+<p>Yes, it’s the Twitter heart button. This heart animation was done using an old technique called <a target="_blank" href="https://en.wikipedia.org/wiki/Texture_atlas"><strong>sprite sheets</strong><span>🡵</span></a>.</p>
+
+<p>On the web sprite sheets are used mainly to reduce the amount of HTTP requests by bundling multiple images together into a single image file. Displaying a sub-image involves clipping the sheet in the appropriate coordinates.</p>
+
+<img srcset="/notes/css-sprite-sheets/minecraft.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/css-sprite-sheets/minecraft.png?ref=rss" caption="Sprite sheet / texture atlas of Minecraft blocks">
+<span>Sprite sheet / texture atlas of Minecraft blocks</span>
+<p>The bandwidth benefit has been largely mitigated by HTTP/2 now, but sprite sheets have another purpose: <strong>animations!</strong> Displaying animations is one of the primary uses of sprite sheets, besides loading performance.</p>
+
+<img srcset="/notes/css-sprite-sheets/animation-opaque.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/css-sprite-sheets/animation-opaque.png?ref=rss" caption="Characters w/ animations, sprite sheet by <text-link href='https://opengameart.org/content/classic-hero-and-baddies-pack'>GrafxKid</text-link>">
+<span>Characters w/ animations, sprite sheet by <a target="_blank" href="https://opengameart.org/content/classic-hero-and-baddies-pack">GrafxKid</a></span>
+<p>It’s neat for small raster-based animations such as loading spinners, characters, icons, and micro-interactions.</p>
+
+<h2 id="how">How</h2>
+
+<p>Assumming you already have a sprite sheet image and coordinates in hand, all you need is a way to clip that image for display. There are a few ways to clip an image in CSS.</p>
+<table>
+                <thead>
+                  <tr>
+                    <th>method</th>
+                    <th>coordinates via</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>background-image</code></td>
+                    <td><code>background-position</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>overflow: hidden</code> with nested <code>&lt;img&gt;</code></td>
+                    <td><code>left</code>, <code>top</code> on the nested element</td>
+                  </tr>
+                  <tr>
+                    <td><code>clip-path</code></td>
+                    <td><code>clip-path</code>, <code>left</code>, <code>top</code></td>
+                  </tr>
+                </tbody>
+              </table>
+<p>The <code>left</code> and <code>top</code> rules can be substituted for <code>transform: translate(…)</code>.</p>
+
+<p>The <code>background-image</code> way is the most convenient since you only need one element.</p>
+
+<pre><code><span>.element</span> <span>{</span>
+  <span>background-image</span><span>:</span> <span><span>url</span><span>(</span><span>'heart.png'</span><span>)</span></span><span>;</span>
+  <span>/* size of one frame */</span>
+  <span>width</span><span>:</span> 100px<span>;</span>
+  <span>height</span><span>:</span> 100px<span>;</span>
+  <span>/* size of the whole sheet */</span>
+  <span>background-size</span><span>:</span> 2900px 100px<span>;</span>
+  <span>/* coordinates of the desired frame (negated) */</span>
+  <span>background-position</span><span>:</span> -500px 0px<span>;</span>
+<span>}</span></code></pre>
+
+<p>This is the sprite sheet for the heart animation from Twitter:</p>
+
+<img srcset="/gen/_notes_css_sprite_sheets_twitter_800.generated.png 800w,/gen/_notes_css_sprite_sheets_twitter_1600.generated.png 1600w" sizes="not (min-width:800px) 800px, 1600px" spec="100% [800) 70% [1750) 1225" loading="lazy" width="400%" src="https://leanrada.com/notes/css-sprite-sheets/twitter.png?ref=rss" type="bleed" alt="Heart animation sprite sheet from Twitter">
+
+<p>Using this image, the code above produces a still image of the frame at (500,0) — the sixth frame.</p>
+<figure role="img" alt="6th frame of the heart animation"></figure>
+<p>Removing the clipping method reveals that it’s just a part of the whole sheet (this view will be fun when it’s actually animating):</p>
+<figure role="img" alt="6th frame of the heart animation">
+                <div>
+                </div>
+              </figure>
+<p>If the sprite sheet wasn’t made to be animated, that is, if it was just a collection of multiple unrelated sub-images like the Minecraft example earlier, then the CSS rules above are all we need to know. That’s it.</p>
+
+<p>Since this sprite sheet was made to be animated, that is, it contains animation frames, more needs to be done.</p>
+
+<p>To animate this, we animate the <code>background-position</code> over each frame in the sequence, flashing each frame in quick succession.</p>
+
+<pre><code><span><span> </span><span>.element</span> <span>{</span>
+<span> </span>  <span>background-image</span><span>:</span> <span><span>url</span><span>(</span><span>'heart.png'</span><span>)</span></span><span>;</span>
+<span> </span>  <span>/* size of one frame */</span>
+<span> </span>  <span>width</span><span>:</span> 100px<span>;</span>
+<span> </span>  <span>height</span><span>:</span> 100px<span>;</span>
+<span> </span>  <span>/* size of the whole sheet */</span>
+<span> </span>  <span>background-size</span><span>:</span> 2900px 100px<span>;</span>
+</span><span><span>-</span>  <span>/* coordinates of the desired frame (negated) */</span>
+<span>-</span>  <span>background-position</span><span>:</span> -500px 0px<span>;</span>
+</span><span><span>+</span>  <span>/* animate the coordinates */</span>
+<span>+</span>  <span>animation</span><span>:</span> heartAnimation 2s <span>steps</span><span>(</span>29<span>,</span> jump-none<span>)</span> infinite<span>;</span>
+<span>+</span><span>}</span>
+<span>+</span>
+<span>+</span><span><span>@keyframes</span> heartAnimation</span> <span>{</span>
+<span>+</span>  <span>from</span> <span>{</span>
+<span>+</span>    <span>/* first frame */</span>
+<span>+</span>    <span>background-position</span><span>:</span> 0px 0px<span>;</span>
+<span>+</span>  <span>}</span>
+<span>+</span>  <span>to</span> <span>{</span>
+<span>+</span>    <span>/* last frame */</span>
+<span>+</span>    <span>background-position</span><span>:</span> -2800px 0px<span>;</span>
+<span>+</span>  <span>}</span>
+<span>+</span><span>}</span></span></code></pre>
+
+<p><span><strong>Important: Note the <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position"><code>steps()</code><span>🡵</span></a> timing function in the <code>animation</code> rule above!</strong> This is required for the transition to land exactly <em>on</em> the frames.</span></p>
+
+<p>Voilà.</p>
+<figure role="img" alt="the heart animation"></figure>
+<p>And the view without clipping:</p>
+<figure role="img" alt="the heart animation (unclipped)">
+                <div>
+                </div>
+              </figure>
+<img loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/css-sprite-sheets/zoetrope.gif?ref=rss" caption="It’s like a <text-link href='https://deniseanimation.weebly.com/zoetropes.html'>zoetrope</text-link>">
+<span>It’s like a <a target="_blank" href="https://deniseanimation.weebly.com/zoetropes.html">zoetrope</a></span>
+<p>The exact parameters for the <code>steps()</code> function are a bit fiddly and it depends on whether you loop it or reverse it, but here’s what worked for the heart animation with 29 total frames.</p>
+
+<pre><code><span>animation-timing-function</span><span>:</span> <span>steps</span><span>(</span>29<span>,</span> jump-none<span>)</span><span>;</span></code></pre>
+
+<p>Using any other timing function results in a weird smooth in-betweening movement like this:</p>
+<figure role="img" alt="janky heart animation"></figure>
+<p>Remember, <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position"><code>steps()</code><span>🡵</span></a> is crucial!</p>
+
+<h2 id="why-not-apng">Why not APNG?</h2>
+
+<p>For autoplaying stuff like loading spinners, you might want plain old GIFs or <a target="_blank" href="https://en.wikipedia.org/wiki/APNG">APNGs<span>🡵</span></a> instead.</p>
+
+<p>But we don’t have tight control over the playback with these formats. With sprite sheets, we can pause, reverse, play on cue, play on hover, change the frame rate, or make it totally <strong>interactive</strong>.</p>
+
+<h2 id="interactivity">Interactivity</h2>
+
+<p>The nice thing about this being in CSS is that we can make it interactive via selectors.</p>
+
+<p>Continuing with the heart example, we can turn it into a stylised toggle control via HTML &amp; CSS:</p>
+<label>
+                <input type="checkbox">
+                <div>
+                  <div role="img" alt="interactive heart animation">
+                  </div>
+                </div>
+                Heart
+              </label>
+<pre><code><span><span> </span><span>.element</span> <span>{</span>
+<span> </span>  <span>background-image</span><span>:</span> <span><span>url</span><span>(</span><span>'heart.png'</span><span>)</span></span><span>;</span>
+<span> </span>  <span>/* size of one frame */</span>
+<span> </span>  <span>width</span><span>:</span> 100px<span>;</span>
+<span> </span>  <span>height</span><span>:</span> 100px<span>;</span>
+<span> </span>  <span>/* size of the whole sheet */</span>
+<span> </span>  <span>background-size</span><span>:</span> 2900px 100px<span>;</span>
+</span><span><span>+</span> <span>}</span>
+<span>+</span>
+<span>+</span><span>.input:checked ~ .element</span> <span>{</span>
+</span><span><span> </span>  <span>/* animate the coordinates */</span>
+</span><span><span>-</span>  <span>animation</span><span>:</span> heartAnimation 2s <span>steps</span><span>(</span>29<span>,</span> jump-none<span>)</span> infinite<span>;</span>
+</span><span><span>+</span>  <span>animation</span><span>:</span> heartAnimation 2s <span>steps</span><span>(</span>29<span>,</span> jump-none<span>)</span> forwards<span>;</span>
+</span><span><span> </span><span>}</span>
+<span> </span>
+<span> </span><span><span>@keyframes</span> heartAnimation</span> <span>{</span>
+<span> </span>  <span>from</span> <span>{</span>
+<span> </span>    <span>/* first frame */</span>
+<span> </span>    <span>background-position</span><span>:</span> 0px 0px<span>;</span>
+<span> </span>  <span>}</span>
+<span> </span>  <span>to</span> <span>{</span>
+<span> </span>    <span>/* last frame */</span>
+<span> </span>    <span>background-position</span><span>:</span> -2800px 0px<span>;</span>
+<span> </span>  <span>}</span>
+<span> </span><span>}</span></span></code></pre>
+
+<p>Or use the new <code>:has(:checked)</code>.</p>
+
+<p><span>Additionally, CSS doesn’t block the main thread. In modern browsers, the big difference between CSS animations and JS-driven animations (i.e. <code>requestAnimationFrame</code> loops) is that the JS one runs on the main thread along with event handlers and DOM operations, so if you have some heavy JS (like React rerendering the DOM), JS animations would suffer along with it.</span></p>
+
+<p>Of course, JS could still be used, if only to <em>trigger</em> these CSS sprite animations by adding or removing CSS classes.</p>
+
+<h2 id="why-not-animated-svgs">Why not animated SVGs?</h2>
+
+<p>If you have a vector format, then an <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/SVG/SVG_animation_with_SMIL">animated SVG<span>🡵</span></a> is a decent option!</p>
+
+<p>This format is kinda hard to author and integrate though — one would need both animation skills and coding skills to implement it. Some paid tools apparently exist to make it easier?</p>
+
+<p>And Lottie? That 300-kilobyte library? Uh, sure, if you really need it.</p>
+
+<h2 id="limitations-of-sprite-sheets">Limitations of sprite sheets</h2>
+
+<ul>
+              <li>The sheet could end up as a very large image file if you’re not very careful.</li>
+              <li>It’s only effective for the narrow case of small frame-by-frame raster animations. Beyond that, better options may exist, such animated SVGs, the <code>&lt;video&gt;</code> tag, the <code>&lt;canvas&gt;</code> tag, etc.</li>
+              <li>How do you support higher pixel densities? Media queries on <code>background-image</code>? <code>&lt;img&gt;</code> with <code>srcset</code> could work, but the coordinates are another matter. But it could be solved generally with CSS custom properties and <code>calc</code>.</li>
+            </ul>
+
+<h2 id="gallery">Gallery</h2>
+<figure>
+              <div>
+                <div role="img" alt="star animation from Twitter"></div>
+              </div>
+              <figcaption>‘Favorite’ icon animation</figcaption>
+            </figure><figure>
+              <div>
+                <div role="img" alt="walking animation of a snail"></div>
+                <div role="img" alt="idle hiding animation of a snail"></div>
+                <div role="img" alt="climb animation of a snail"></div>
+                <div role="img" alt="attack animation of a snail"></div>
+                <div role="img" alt="death animation of a snail"></div>
+              </div>
+              <figcaption>Snail enemy sprites from my game <a target="_blank" href="https://leanrada.com/wares/miniforts?ref=rss">MiniForts</a></figcaption>
+            </figure>
+<video muted="" autoplay="" loop="" playsinline="" caption="I actually had to implement these hover animations via sprite sheets at work." data-src="/notes/css-sprite-sheets/work.mp4">
+                <source src="https://leanrada.com/notes/css-sprite-sheets/work.mp4?ref=rss">
+
+                Video: | Source: /notes/css-sprite-sheets/work.mp4
+
+              </video>
+<span>I actually had to implement these hover animations via sprite sheets at work.</span>
+<video muted="" autoplay="" loop="" playsinline="" media-class="u-media" caption="Behind the scenes" data-src="/notes/css-sprite-sheets/work2.mp4">
+                <source src="https://leanrada.com/notes/css-sprite-sheets/work2.mp4?ref=rss">
+
+                Video: | Source: /notes/css-sprite-sheets/work2.mp4
+
+              </video>
+<span>Behind the scenes</span><iframe height="414" scrolling="no" title="GSAP Draggable 360° sprite slider" src="https://codepen.io/jamiejefferson/embed/DgqxVe?default-tab=result&amp;theme-id=dark" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+              See the Pen <a href="https://codepen.io/jamiejefferson/pen/DgqxVe">
+                GSAP Draggable 360° sprite slider</a> by Jamie Jefferson (<a href="https://codepen.io/jamiejefferson">@jamiejefferson</a>)
+              on <a href="https://codepen.io">CodePen</a>.
+            </iframe><iframe height="333" scrolling="no" title="Steps Animation" src="https://codepen.io/simurai/embed/krWaKX?default-tab=result&amp;theme-id=dark" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+              See the Pen <a href="https://codepen.io/simurai/pen/krWaKX">
+                Steps Animation</a> by simurai (<a href="https://codepen.io/simurai">@simurai</a>)
+              on <a href="https://codepen.io">CodePen</a>.
+            </iframe>]]></description>
+            <link>https://leanrada.com/notes/css-sprite-sheets?ref=rss</link>
+            <guid isPermaLink="true">https://leanrada.com/notes/css-sprite-sheets?ref=rss</guid>
+            <pubDate>Sun, 03 Nov 2024 00:00:00 GMT</pubDate>
+        </item>
+        <item>
             <title><![CDATA[Centering a div in a div in 2020]]></title>
             <description><![CDATA[
 <p>tl;dr: use <code>place-content: center</code> on a <code>grid</code> container.</p>

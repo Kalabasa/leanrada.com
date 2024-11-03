@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>htmz story · leanrada.com</title>
+  <title>Template · leanrada.com</title>
   <script async="" src="/lib/vendor/perlin-noise-3d.min.js"></script>
   <link rel="preload" href="/fonts/space/SpaceMono-Italic.ttf" as="font" type="font/ttf" crossorigin="">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -170,42 +170,6 @@
   }
 </style>
   <style>
-  .blog-media {
-    position: relative;
-    text-align: center;
-    /* external margin because it’s expected to be in an article */
-    margin: 36px 0;
-  }
-  .blog-media-bleed {
-    margin: min(36px, 5vw, 90px) 0;
-  }
-
-  .blog-media-element {
-    display: inline-block;
-    max-width: 100%;
-    max-height: 80vh;
-    max-height: 80svh;
-    border-radius: 18px;
-    box-sizing: border-box;
-  }
-  .blog-media-bleed .blog-media-element {
-    position: relative;
-    left: 50%;
-    max-width: max(min(100vw, 800px), var(--blog-media-max-width, 50vw));
-    max-height: unset;
-    transform: translateX(-50%);
-  }
-  .blog-media-windowed .blog-media-element {
-    display: block;
-    border-radius: 0;
-  }
-
-  .blog-media-caption {
-    display: block;
-    font-size: 15px;
-  }
-</style>
-  <style>
   /**
    * Modified by Kalabasa.
    * Based on:
@@ -359,11 +323,87 @@
   }
 </style>
   <style>
+  .sprite-sheet-demo {
+    width: var(--tile-width);
+    height: var(--tile-height);
+    background-image: var(--src);
+    background-size: var(--sheet-width) var(--sheet-height);
+    background-position-x: calc(
+      -1 * var(--tile-width) * var(--tile-from-x) - var(--offset-x, 0px)
+    );
+    background-position-y: calc(
+      -1 * var(--tile-height) * var(--tile-from-y) - var(--offset-y, 0px)
+    );
+    animation: spriteSheetDemo calc(var(--frames, 1) * var(--frame-delay)) steps(var(--frames), jump-none) infinite;
+  }
+  @keyframes spriteSheetDemo {
+    from {
+      background-position-x: calc(
+        -1 * var(--tile-width) * var(--tile-from-x) - var(--offset-x, 0px)
+      );
+      background-position-y: calc(
+        -1 * var(--tile-height) * var(--tile-from-y) - var(--offset-y, 0px)
+      );
+    }
+    to {
+      background-position-x: calc(
+        -1 * var(--tile-width) * var(--tile-to-x) - var(--offset-x, 0px)
+      );
+      background-position-y: calc(
+        -1 * var(--tile-height) * var(--tile-to-y) - var(--offset-y, 0px)
+      );
+    }
+  }
+</style>
+  <style>
+  .blog-media {
+    position: relative;
+    text-align: center;
+    /* external margin because it’s expected to be in an article */
+    margin: 36px 0;
+  }
+  .blog-media-bleed {
+    margin: min(36px, 5vw, 90px) 0;
+  }
+
+  .blog-media-element {
+    display: inline-block;
+    max-width: 100%;
+    max-height: 80vh;
+    max-height: 80svh;
+    border-radius: 18px;
+    box-sizing: border-box;
+  }
+  .blog-media-bleed .blog-media-element {
+    position: relative;
+    left: 50%;
+    max-width: max(min(100vw, 800px), var(--blog-media-max-width, 50vw));
+    max-height: unset;
+    transform: translateX(-50%);
+  }
+  .blog-media-windowed .blog-media-element {
+    display: block;
+    border-radius: 0;
+  }
+
+  .blog-media-caption {
+    display: block;
+    font-size: 15px;
+  }
+</style>
+  <style>
   .blog-text-link-domain-icon {
     display: inline-block;
     vertical-align: super;
     font-size: 75%;
     line-height: 1em;
+  }
+</style>
+  <style>
+  .tag-row {
+    font-family: var(--default-font);
+    font-size: 12px;
+    font-weight: bold;
   }
 </style>
   <style>
@@ -1491,14 +1531,91 @@
     color: var(--clr0, #fff);
   }
 </style>
-  <style></style>
+  <style>
+  .specimen {
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+    margin: 36px 0;
+    min-height: 190px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px 60px;
+    flex-wrap: wrap;
+    background-color: #202283;
+    background-image: linear-gradient(#34369b 1px, transparent 1px),
+      linear-gradient(90deg, #34369b 1px, transparent 1px),
+      linear-gradient(#272992 1px, transparent 1px),
+      linear-gradient(90deg, #272992 1px, #202283 1px);
+    background-size: 96px 96px, 96px 96px, 12px 12px, 12px 12px;
+    background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+    border-radius: 12px;
+  }
+  /* hack */
+  figure > .specimen {
+    margin: 0;
+  }
+  figure:has(> .specimen) {
+    margin: 36px 0;
+  }
+</style>
+  <style>
+        .animate-on-click {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          font-family: system-ui;
+          font-size: 30px;
+          font-weight: bold;
+          color: #fff;
+        }
+        .animate-on-click:hover,
+        .animate-on-click:focus-within {
+          filter: brightness(1.2);
+        }
+        .animate-on-click:active {
+          filter: brightness(0.9);
+        }
+        .animate-on-click:has(:checked) {
+          color: #fa335b;
+        }
+        .animate-on-click > input {
+          display: none;
+        }
+        .animate-on-click > input:checked + .heartbox > [role=img] {
+          animation: heartAnimation 725ms steps(29, jump-none) forwards;
+        }
+      </style>
+  <style>
+        @keyframes heartAnimationByPosition {
+          from {
+            left: 0px;
+            top: 0px;
+          }
+          to {
+            left: -2800px;
+            top: 0px;
+          }
+        }
+      </style>
+  <style>
+        @keyframes heartAnimation {
+          from {
+            background-position: 0px 0px;
+          }
+          to {
+            background-position: -2800px 0px;
+          }
+        }
+      </style>
   <script async="" src="/scripts/cursor.js"></script>
 </head>
 
 
 <body>
 
-  <span hidden="" class="p-name">htmz story</span>
+  <span hidden="" class="p-name">Template</span>
   <div class="page-wrapper">
     <header class="main-header">
       <div class="main-header-bar">
@@ -1521,107 +1638,438 @@
           <div class="blog-header">
             <div class="text-with-bg blog-header-title p-name" style="--text-with-bg-color: var(--bg-clr)">
               <h1 class="text-with-bg-span blog-header-title-inner">
-                htmz story
+                CSS sprite sheet animations
               </h1>
             </div>
-            <img srcset="/gen/_notes_htmz_story_hero_800.generated.png 800w,/notes/htmz-story/hero.png 1600w" sizes="not (min-width:800px) 800px, 1600px" spec="100% [800) 80%" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.7783333333333333;background: #f8f8f8" class="blog-header-hero u-media" src="/notes/htmz-story/hero.png" alt="">
+            <img srcset="/gen/_notes_css_sprite_sheets_hero_800.generated.png 800w,/notes/css-sprite-sheets/hero.png 1600w" sizes="not (min-width:800px) 800px, 1600px" spec="100% [800) 80%" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.5;background: #b8c8f8" class="blog-header-hero u-media" src="/notes/css-sprite-sheets/hero.png" alt="">
             <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
               <path></path>
             </svg>
           </div>
           <div class="blog-post-info ">
-            <span class="dt-published">1 Mar 2024</span> · 7 min read
+            <span class="dt-published">3 Nov 2024</span> · 6 min read
           </div>
+          <!-- textlint-disable -->
+          <div class="tag-row">tags:
+            <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span>
+          </div>
+          <!-- textlint-enable -->
           <!-- prettier-ignore -->
           <div class="markdown">
-            <p>This post is not the usual programming post. It’s been an interesting week, I guess.</p>
-            <p>I just finished my mini side-project <a target="_blank" class="text-link " href="//leanrada.com/htmz/"><strong>htmz</strong><span class="blog-text-link-domain-icon">🡵</span></a>, a snippet / library / microframework / whatever for HTML whose main feature was that it only weighed a total of <strong>181 bytes</strong>. It almost fits inside a single ‘tweet’ (wait, the limit is now 280 not 140?).</p>
-            <p>Here is the entire framework in its final form:</p>
-            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
-document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token keyword">null</span><span class="token punctuation">)</span>
-<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
-            <p>See the <a target="_blank" class="text-link " href="//leanrada.com/htmz/">project documentation<span class="blog-text-link-domain-icon">🡵</span></a> for more info on what it does.</p>
-            <p>I <a target="_blank" class="text-link " href="https://news.ycombinator.com/item?id=39429370">posted it on Hacker News<span class="blog-text-link-domain-icon">🡵</span></a>, went to sleep because it was 3am at that point. Then the next morning it was at the top of HN!</p>
+            <p>Check out this demo first (Click it!):</p>
+            <div class="specimen">
+              <label class="animate-on-click">
+                <input type="checkbox">
+                <div class="heartbox" style="display: grid; place-content: center; width: 60px; height: 60px;">
+                  <div role="img" alt="interactive heart animation" style="
+                background-image: url('/notes/css-sprite-sheets/twitter.png');
+                width: 100px;
+                height: 100px;
+                background-size: 2900px 100px;
+              ">
+                  </div>
+                </div>
+                Heart
+              </label>
+            </div>
+
+            <p>Yes, it’s the Twitter heart button. This heart animation was done using an old technique called <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Texture_atlas"><strong>sprite sheets</strong><span class="blog-text-link-domain-icon">🡵</span></a>.</p>
+            <p>On the web sprite sheets are used mainly to reduce the amount of HTTP requests by bundling multiple images together into a single image file. Displaying a sub-image involves clipping the sheet in the appropriate coordinates.</p>
             <p>
             <div class="blog-media blog-media-default ">
-              <img srcset="/notes/htmz-story/hn.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1;background: #f8f8e8" class="blog-media-element " src="/notes/htmz-story/hn.png" alt="screenshot of HN. Stories from February 19, 2024. 1. Show HN: htmz – a low power tool for HTML (leanrada.com). 1017 points by Kalabasa 9 days ago | 242 comments">
+              <img srcset="/notes/css-sprite-sheets/minecraft.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1;background: #787878" class="blog-media-element " src="/notes/css-sprite-sheets/minecraft.png" caption="Sprite sheet / texture atlas of Minecraft blocks"><span class="blog-media-caption">Sprite sheet / texture atlas of Minecraft blocks</span>
             </div>
             </p>
-            <p>I didn’t expect this at all. But naturally I rushed to the comments section which quickly grew too numerous for me to read. They were generally positive, and acknowledged the project’s hackyness and elegance (these adjectives usually mean opposite things). It was pretty cool! The top comment in the thread sums it up.</p>
-            <p>A bunch of common themes were raised. I guess I’ll write about them in this post.</p>
-            <h2 id="why-htmz">Why htmz?</h2>
-            <p>htmz was initially inspired by <a target="_blank" class="text-link " href="https://htmx.org/">htmx<span class="blog-text-link-domain-icon">🡵</span></a>, another web library/framework. One of htmx’s main features was that it provides the capability for any element, not just the entire window, to be the target for update by an HTTP request (e.g. by clicking a link you load a partial HTML update to the page).</p>
+            <p>The bandwidth benefit has been largely mitigated by HTTP/2 now, but sprite sheets have another purpose: <strong>animations!</strong> Displaying animations is one of the primary uses of sprite sheets, besides loading performance.</p>
             <p>
             <div class="blog-media blog-media-default ">
-              <img srcset="/notes/htmz-story/htmx.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 6.741176470588235;background: #f8f8f8" class="blog-media-element " src="/notes/htmz-story/htmx.png" alt="Why should you only be able to replace the entire screen? By removing these constraints, htmx completes HTML as a hypertext.">
+              <img srcset="/notes/css-sprite-sheets/animation-opaque.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 2.397727272727273;background: #989898" class="blog-media-element " src="/notes/css-sprite-sheets/animation-opaque.png" caption="Characters w/ animations, sprite sheet by <text-link href='https://opengameart.org/content/classic-hero-and-baddies-pack'>GrafxKid</text-link>"><span class="blog-media-caption">Characters w/ animations, sprite sheet by <a target="_blank" class="text-link " href="https://opengameart.org/content/classic-hero-and-baddies-pack">GrafxKid</a></span>
             </div>
             </p>
-            <p>I wondered for a bit then remembered that we already have <strong>iframes</strong>, a native HTML way for links to update not just the entire window, but a ‘part’ of the page. Granted, iframes are limited and not as dynamic as some of htmx’s operations like appends and deletions.</p>
-            <p>So I set out to make an iframe-only solution to this class of problems. htmz initially stood for <strong>‘htmx zero’</strong> or something like that, because you need exactly zero JavaScript to be able to use iframes, while htmx stood at around 16 kB compressed (decompresses to a total of 48 kB of JavaScript!).</p>
-            <h2 id="principles">Principles</h2>
-            <p>The initial premise was that browsers already offer much of the required functionality out of the box. Unfortunately, iframes have lots of limitations and a bit of JS is needed after all. As the solution evolved, I needed to keep the amount of JS in check, otherwise I’d just reinvent existing libraries.</p>
-            <p>The main principle became “lean on existing browser functionality”. This meant, among other things:</p>
+            <p>It’s neat for small raster-based animations such as loading spinners, characters, icons, and micro-interactions.</p>
+            <div class="specimen">
+              <div class="sprite-sheet-demo" role="img" alt="walking animation of a red monster character" style="
+    --src:url(/notes/css-sprite-sheets/animation.png);
+    --sheet-width:422px;
+    --sheet-height:176px;
+    --offset-x:208px;
+    --offset-y:8px;
+    --tile-width:32px;
+    --tile-height:32px;
+    --tile-from-x:0;
+    --tile-from-y:1;
+    --tile-to-x:5;
+    --tile-to-y:1;
+    --frames:6;
+    --frame-delay:100ms
+  "></div>
+              <div class="sprite-sheet-demo" role="img" alt="walking animation of a blue monster character" style="
+    --src:url(/notes/css-sprite-sheets/animation.png);
+    --sheet-width:422px;
+    --sheet-height:176px;
+    --offset-x:208px;
+    --offset-y:102px;
+    --tile-width:32px;
+    --tile-height:32px;
+    --tile-from-x:0;
+    --tile-from-y:1;
+    --tile-to-x:5;
+    --tile-to-y:1;
+    --frames:6;
+    --frame-delay:100ms
+  "></div>
+            </div>
+
+            <h2 id="how">How</h2>
+            <p>Assumming you already have a sprite sheet image and coordinates in hand, all you need is a way to clip that image for display. There are a few ways to clip an image in CSS.</p>
+            <div class="markdown-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>method</th>
+                    <th>coordinates via</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>background-image</code></td>
+                    <td><code>background-position</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>overflow: hidden</code> with nested <code>&lt;img&gt;</code></td>
+                    <td><code>left</code>, <code>top</code> on the nested element</td>
+                  </tr>
+                  <tr>
+                    <td><code>clip-path</code></td>
+                    <td><code>clip-path</code>, <code>left</code>, <code>top</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>The <code>left</code> and <code>top</code> rules can be substituted for <code>transform: translate(…)</code>.</p>
+            <p>The <code>background-image</code> way is the most convenient since you only need one element.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token selector">.element</span> <span class="token punctuation">{</span>
+  <span class="token property">background-image</span><span class="token punctuation">:</span> <span class="token url"><span class="token function">url</span><span class="token punctuation">(</span><span class="token string url">'heart.png'</span><span class="token punctuation">)</span></span><span class="token punctuation">;</span>
+  <span class="token comment">/* size of one frame */</span>
+  <span class="token property">width</span><span class="token punctuation">:</span> 100px<span class="token punctuation">;</span>
+  <span class="token property">height</span><span class="token punctuation">:</span> 100px<span class="token punctuation">;</span>
+  <span class="token comment">/* size of the whole sheet */</span>
+  <span class="token property">background-size</span><span class="token punctuation">:</span> 2900px 100px<span class="token punctuation">;</span>
+  <span class="token comment">/* coordinates of the desired frame (negated) */</span>
+  <span class="token property">background-position</span><span class="token punctuation">:</span> -500px 0px<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+            <p>This is the sprite sheet for the heart animation from Twitter:</p>
+            <p>
+            <div class="blog-media blog-media-bleed " style="--blog-media-max-width: 70vw">
+              <img srcset="/gen/_notes_css_sprite_sheets_twitter_800.generated.png 800w,/gen/_notes_css_sprite_sheets_twitter_1600.generated.png 1600w" sizes="not (min-width:800px) 800px, 1600px" spec="100% [800) 70% [1750) 1225" loading="lazy" width="400%" style=";aspect-ratio: 29;background: #080808" class="blog-media-element " src="/notes/css-sprite-sheets/twitter.png" type="bleed" alt="Heart animation sprite sheet from Twitter">
+            </div>
+            </p>
+            <p>Using this image, the code above produces a still image of the frame at (500,0) — the sixth frame.</p>
+            <div class="specimen">
+              <figure role="img" alt="6th frame of the heart animation" style="
+            background-image: url('/notes/css-sprite-sheets/twitter.png');
+            width: 100px;
+            height: 100px;
+            background-size: 2900px 100px;
+            background-position: -500px 0px;
+          "></figure>
+            </div>
+
+            <p>Removing the clipping method reveals that it’s just a part of the whole sheet (this view will be fun when it’s actually animating):</p>
+            <div class="specimen">
+              <figure role="img" alt="6th frame of the heart animation" style="
+            width: 100px;
+            height: 100px;
+            box-shadow: 0 0 0 2px #0008, 0 0 0 50vmax #0004;
+          ">
+                <div style="
+              background-image: url('/notes/css-sprite-sheets/twitter.png');
+              background-size: 2900px 100px;
+              width: 2900px;
+              height: 100px;
+              position: relative;
+              left: -500px;
+              top: 0px;
+              z-index: -1;
+            ">
+                </div>
+              </figure>
+            </div>
+
+            <p>If the sprite sheet wasn’t made to be animated, that is, if it was just a collection of multiple unrelated sub-images like the Minecraft example earlier, then the CSS rules above are all we need to know. That’s it.</p>
+            <p>Since this sprite sheet was made to be animated, that is, it contains animation frames, more needs to be done.</p>
+            <p>To animate this, we animate the <code>background-position</code> over each frame in the sequence, flashing each frame in quick succession.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-css"><span class="token prefix unchanged"> </span><span class="token selector">.element</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">background-image</span><span class="token punctuation">:</span> <span class="token url"><span class="token function">url</span><span class="token punctuation">(</span><span class="token string url">'heart.png'</span><span class="token punctuation">)</span></span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token comment">/* size of one frame */</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">width</span><span class="token punctuation">:</span> 100px<span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">height</span><span class="token punctuation">:</span> 100px<span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token comment">/* size of the whole sheet */</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">background-size</span><span class="token punctuation">:</span> 2900px 100px<span class="token punctuation">;</span>
+</span><span class="token deleted-sign deleted language-css"><span class="token prefix deleted">-</span>  <span class="token comment">/* coordinates of the desired frame (negated) */</span>
+<span class="token prefix deleted">-</span>  <span class="token property">background-position</span><span class="token punctuation">:</span> -500px 0px<span class="token punctuation">;</span>
+</span><span class="token inserted-sign inserted language-css"><span class="token prefix inserted">+</span>  <span class="token comment">/* animate the coordinates */</span>
+<span class="token prefix inserted">+</span>  <span class="token property">animation</span><span class="token punctuation">:</span> heartAnimation 2s <span class="token function">steps</span><span class="token punctuation">(</span>29<span class="token punctuation">,</span> jump-none<span class="token punctuation">)</span> infinite<span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span><span class="token punctuation">}</span>
+<span class="token prefix inserted">+</span>
+<span class="token prefix inserted">+</span><span class="token atrule"><span class="token rule">@keyframes</span> heartAnimation</span> <span class="token punctuation">{</span>
+<span class="token prefix inserted">+</span>  <span class="token selector">from</span> <span class="token punctuation">{</span>
+<span class="token prefix inserted">+</span>    <span class="token comment">/* first frame */</span>
+<span class="token prefix inserted">+</span>    <span class="token property">background-position</span><span class="token punctuation">:</span> 0px 0px<span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>  <span class="token punctuation">}</span>
+<span class="token prefix inserted">+</span>  <span class="token selector">to</span> <span class="token punctuation">{</span>
+<span class="token prefix inserted">+</span>    <span class="token comment">/* last frame */</span>
+<span class="token prefix inserted">+</span>    <span class="token property">background-position</span><span class="token punctuation">:</span> -2800px 0px<span class="token punctuation">;</span>
+<span class="token prefix inserted">+</span>  <span class="token punctuation">}</span>
+<span class="token prefix inserted">+</span><span class="token punctuation">}</span></span></code></pre>
+            <p><span class="box-note "><strong>Important: Note the <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position"><code>steps()</code><span class="blog-text-link-domain-icon">🡵</span></a> timing function in the <code>animation</code> rule above!</strong> This is required for the transition to land exactly <em>on</em> the frames.</span></p>
+            <p>Voilà.</p>
+            <div class="specimen">
+              <figure role="img" alt="the heart animation" style="
+            background-image: url('/notes/css-sprite-sheets/twitter.png');
+            width: 100px;
+            height: 100px;
+            background-size: 2900px 100px;
+            animation: heartAnimation 2s steps(29, jump-none) infinite;
+          "></figure>
+            </div>
+
+
+            <p>And the view without clipping:</p>
+            <div class="specimen">
+              <figure role="img" alt="the heart animation (unclipped)" style="
+            width: 100px;
+            height: 100px;
+            box-shadow: 0 0 0 2px #0008, 0 0 0 50vmax #0004;
+          ">
+                <div style="
+              background-image: url('/notes/css-sprite-sheets/twitter.png');
+              background-size: 2900px 100px;
+              width: 2900px;
+              height: 100px;
+              position: relative;
+              animation: heartAnimationByPosition 2s steps(29, jump-none) infinite;
+              z-index: -1;
+            ">
+                </div>
+              </figure>
+            </div>
+
+
+            <p>
+            <div class="blog-media blog-media-default ">
+              <img loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.7772020725388602;background: #281828" class="blog-media-element " src="/notes/css-sprite-sheets/zoetrope.gif" caption="It’s like a <text-link href='https://deniseanimation.weebly.com/zoetropes.html'>zoetrope</text-link>"><span class="blog-media-caption">It’s like a <a target="_blank" class="text-link " href="https://deniseanimation.weebly.com/zoetropes.html">zoetrope</a></span>
+            </div>
+            </p>
+            <p>The exact parameters for the <code>steps()</code> function are a bit fiddly and it depends on whether you loop it or reverse it, but here’s what worked for the heart animation with 29 total frames.</p>
+            <pre class="code-block "><code class="code-block-code"><span class="token property">animation-timing-function</span><span class="token punctuation">:</span> <span class="token function">steps</span><span class="token punctuation">(</span>29<span class="token punctuation">,</span> jump-none<span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+            <p>Using any other timing function results in a weird smooth in-betweening movement like this:</p>
+            <div class="specimen">
+              <figure role="img" alt="janky heart animation" style="
+            background-image: url('/notes/css-sprite-sheets/twitter.png');
+            width: 100px;
+            height: 100px;
+            background-size: 2900px 100px;
+            animation: heartAnimation 2s ease-in-out infinite;
+          "></figure>
+            </div>
+
+            <p>Remember, <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position"><code>steps()</code><span class="blog-text-link-domain-icon">🡵</span></a> is crucial!</p>
+            <h2 id="why-not-apng">Why not APNG?</h2>
+            <p>For autoplaying stuff like loading spinners, you might want plain old GIFs or <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/APNG">APNGs<span class="blog-text-link-domain-icon">🡵</span></a> instead.</p>
+            <p>But we don’t have tight control over the playback with these formats. With sprite sheets, we can pause, reverse, play on cue, play on hover, change the frame rate, or make it totally <strong>interactive</strong>.</p>
+            <h2 id="interactivity">Interactivity</h2>
+            <p>The nice thing about this being in CSS is that we can make it interactive via selectors.</p>
+            <p>Continuing with the heart example, we can turn it into a stylised toggle control via HTML &amp; CSS:</p>
+            <div class="specimen">
+              <label class="animate-on-click">
+                <input type="checkbox">
+                <div class="heartbox" style="display: grid; place-content: center; width: 60px; height: 60px;">
+                  <div role="img" alt="interactive heart animation" style="
+                background-image: url('/notes/css-sprite-sheets/twitter.png');
+                width: 100px;
+                height: 100px;
+                background-size: 2900px 100px;
+              ">
+                  </div>
+                </div>
+                Heart
+              </label>
+            </div>
+
+
+            <pre class="code-block "><code class="code-block-code"><span class="token unchanged language-css"><span class="token prefix unchanged"> </span><span class="token selector">.element</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">background-image</span><span class="token punctuation">:</span> <span class="token url"><span class="token function">url</span><span class="token punctuation">(</span><span class="token string url">'heart.png'</span><span class="token punctuation">)</span></span><span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token comment">/* size of one frame */</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">width</span><span class="token punctuation">:</span> 100px<span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">height</span><span class="token punctuation">:</span> 100px<span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token comment">/* size of the whole sheet */</span>
+<span class="token prefix unchanged"> </span>  <span class="token property">background-size</span><span class="token punctuation">:</span> 2900px 100px<span class="token punctuation">;</span>
+</span><span class="token inserted-sign inserted language-css"><span class="token prefix inserted">+</span> <span class="token punctuation">}</span>
+<span class="token prefix inserted">+</span>
+<span class="token prefix inserted">+</span><span class="token selector">.input:checked ~ .element</span> <span class="token punctuation">{</span>
+</span><span class="token unchanged language-css"><span class="token prefix unchanged"> </span>  <span class="token comment">/* animate the coordinates */</span>
+</span><span class="token deleted-sign deleted language-css"><span class="token prefix deleted">-</span>  <span class="token property">animation</span><span class="token punctuation">:</span> heartAnimation 2s <span class="token function">steps</span><span class="token punctuation">(</span>29<span class="token punctuation">,</span> jump-none<span class="token punctuation">)</span> infinite<span class="token punctuation">;</span>
+</span><span class="token inserted-sign inserted language-css"><span class="token prefix inserted">+</span>  <span class="token property">animation</span><span class="token punctuation">:</span> heartAnimation 2s <span class="token function">steps</span><span class="token punctuation">(</span>29<span class="token punctuation">,</span> jump-none<span class="token punctuation">)</span> forwards<span class="token punctuation">;</span>
+</span><span class="token unchanged language-css"><span class="token prefix unchanged"> </span><span class="token punctuation">}</span>
+<span class="token prefix unchanged"> </span>
+<span class="token prefix unchanged"> </span><span class="token atrule"><span class="token rule">@keyframes</span> heartAnimation</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>  <span class="token selector">from</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>    <span class="token comment">/* first frame */</span>
+<span class="token prefix unchanged"> </span>    <span class="token property">background-position</span><span class="token punctuation">:</span> 0px 0px<span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token punctuation">}</span>
+<span class="token prefix unchanged"> </span>  <span class="token selector">to</span> <span class="token punctuation">{</span>
+<span class="token prefix unchanged"> </span>    <span class="token comment">/* last frame */</span>
+<span class="token prefix unchanged"> </span>    <span class="token property">background-position</span><span class="token punctuation">:</span> -2800px 0px<span class="token punctuation">;</span>
+<span class="token prefix unchanged"> </span>  <span class="token punctuation">}</span>
+<span class="token prefix unchanged"> </span><span class="token punctuation">}</span></span></code></pre>
+            <p>Or use the new <code>:has(:checked)</code>.</p>
+            <p><span class="box-note ">Additionally, CSS doesn’t block the main thread. In modern browsers, the big difference between CSS animations and JS-driven animations (i.e. <code>requestAnimationFrame</code> loops) is that the JS one runs on the main thread along with event handlers and DOM operations, so if you have some heavy JS (like React rerendering the DOM), JS animations would suffer along with it.</span></p>
+            <p>Of course, JS could still be used, if only to <em>trigger</em> these CSS sprite animations by adding or removing CSS classes.</p>
+            <h2 id="why-not-animated-svgs">Why not animated SVGs?</h2>
+            <p>If you have a vector format, then an <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/SVG/SVG_animation_with_SMIL">animated SVG<span class="blog-text-link-domain-icon">🡵</span></a> is a decent option!</p>
+            <p>This format is kinda hard to author and integrate though — one would need both animation skills and coding skills to implement it. Some paid tools apparently exist to make it easier?</p>
+            <p>And Lottie? That 300-kilobyte library? Uh, sure, if you really need it.</p>
+            <h2 id="limitations-of-sprite-sheets">Limitations of sprite sheets</h2>
             <ul>
-              <li><strong>No click handlers.</strong> Browsers can handle clicks by themselves. No need for JS to intercept and babysit every interaction.</li>
-              <li><strong>No AJAX / fetch.</strong> Browsers can fetch HTML resources by themselves. In fact, this is a primary function of a browser!</li>
-              <li><strong>No DOM parsing.</strong> Browsers can load HTML by themselves. In fact, this is a primary function…</li>
-              <li><strong>No extra attributes.</strong> Scanning for and parsing extra attributes is a lot of JS.</li>
+              <li>The sheet could end up as a very large image file if you’re not very careful.</li>
+              <li>It’s only effective for the narrow case of small frame-by-frame raster animations. Beyond that, better options may exist, such animated SVGs, the <code>&lt;video&gt;</code> tag, the <code>&lt;canvas&gt;</code> tag, etc.</li>
+              <li>How do you support higher pixel densities? Media queries on <code>background-image</code>? <code>&lt;img&gt;</code> with <code>srcset</code> could work, but the coordinates are another matter. But it could be solved generally with CSS custom properties and <code>calc</code>.</li>
             </ul>
-            <p>I ended up with minimal JS that transplants content from the iframe into the main document. That was the only thing browsers don’t do (yet).</p>
-            <p>The only exception to this rule was the <code>setTimeout</code> wrapper which is to prevent browsers from automatically scrolling to the updated content on click. (It’s optional!)</p>
-            <p>Since the solution was not zero JS anymore, htmz was backronymised as <em><b>H</b>tml with <b>T</b>argeted <b>M</b>anipulation <b>Z</b>ones</em>.</p>
-            <h2 id="was-it-a-joke">Was it a joke?</h2>
-            <p><em>(short answer: maybe)</em></p>
-            <p>Starting with the name itself, htmz sounded like a parody of the more popular htmx. I thought it was obvious that this project was just a fun hack to share.</p>
-            <p>But some people took it too seriously. I know, this is HN, where serious startups and stuff are posted daily. Or rather, this is the Internet.</p>
-            <p>I was reminded of <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/Poe%27s_law">Poe’s law<span class="blog-text-link-domain-icon">🡵</span></a>. On the other hand, the initial documentation for the project did give mixed vibes (it was a half-joke half-solution project after all). And the marketing bits were too good for the project’s own good.</p>
+            <h2 id="gallery">Gallery</h2>
+            <figure>
+              <div class="specimen">
+                <div class="sprite-sheet-demo" role="img" alt="star animation from Twitter" style="
+    --src:url(/notes/css-sprite-sheets/star.png);
+    --sheet-width:3584;
+    --sheet-height:45px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:64px;
+    --tile-height:45px;
+    --tile-from-x:0;
+    --tile-from-y:0;
+    --tile-to-x:55;
+    --tile-to-y:0;
+    --frames:56;
+    --frame-delay:25ms
+  "></div>
+              </div>
+              <figcaption class="caption">‘Favorite’ icon animation</figcaption>
+            </figure>
+
+            <figure>
+              <div class="specimen">
+                <div class="sprite-sheet-demo" role="img" alt="walking animation of a snail" style="
+    --src:url(/notes/css-sprite-sheets/snail.png);
+    --sheet-width:192px;
+    --sheet-height:192px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:32px;
+    --tile-height:32px;
+    --tile-from-x:0;
+    --tile-from-y:0;
+    --tile-to-x:0;
+    --tile-to-y:1;
+    --frames:2;
+    --frame-delay:300ms
+  "></div>
+                <div class="sprite-sheet-demo" role="img" alt="idle hiding animation of a snail" style="
+    --src:url(/notes/css-sprite-sheets/snail.png);
+    --sheet-width:192px;
+    --sheet-height:192px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:32px;
+    --tile-height:32px;
+    --tile-from-x:5;
+    --tile-from-y:0;
+    --tile-to-x:5;
+    --tile-to-y:5;
+    --frames:6;
+    --frame-delay:75ms
+  "></div>
+                <div class="sprite-sheet-demo" role="img" alt="climb animation of a snail" style="
+    --src:url(/notes/css-sprite-sheets/snail.png);
+    --sheet-width:192px;
+    --sheet-height:192px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:32px;
+    --tile-height:32px;
+    --tile-from-x:3;
+    --tile-from-y:0;
+    --tile-to-x:3;
+    --tile-to-y:1;
+    --frames:2;
+    --frame-delay:1000ms
+  "></div>
+                <div class="sprite-sheet-demo" role="img" alt="attack animation of a snail" style="
+    --src:url(/notes/css-sprite-sheets/snail.png);
+    --sheet-width:192px;
+    --sheet-height:192px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:32px;
+    --tile-height:32px;
+    --tile-from-x:1;
+    --tile-from-y:0;
+    --tile-to-x:1;
+    --tile-to-y:1;
+    --frames:2;
+    --frame-delay:800ms
+  "></div>
+                <div class="sprite-sheet-demo" role="img" alt="death animation of a snail" style="
+    --src:url(/notes/css-sprite-sheets/snail.png);
+    --sheet-width:192px;
+    --sheet-height:192px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:32px;
+    --tile-height:32px;
+    --tile-from-x:2;
+    --tile-from-y:0;
+    --tile-to-x:2;
+    --tile-to-y:1;
+    --frames:2;
+    --frame-delay:300ms
+  "></div>
+              </div>
+              <figcaption class="caption">Snail enemy sprites from my game <a target="_blank" class="text-link " href="/wares/miniforts/">MiniForts</a></figcaption>
+            </figure>
+
             <p>
             <div class="blog-media blog-media-default ">
-              <img srcset="/notes/htmz-story/logo.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1;background: #080808" class="blog-media-element " src="/notes/htmz-story/logo.png" caption="This project has a favicon while htmx.org has none. Marketing overload! But really, I just enjoy polishing the little details in projects."><span class="blog-media-caption">This project has a favicon while htmx.org has none. Marketing overload! But really, I just enjoy polishing the little details in projects.</span>
+              <video muted="" autoplay="" loop="" playsinline="" class="blog-media-element " caption="I actually had to implement these hover animations via sprite sheets at work." data-src="/notes/css-sprite-sheets/work.mp4">
+                <source src="/notes/css-sprite-sheets/work.mp4">
+
+                Video: | Source: /notes/css-sprite-sheets/work.mp4
+
+              </video><span class="blog-media-caption">I actually had to implement these hover animations via sprite sheets at work.</span>
             </div>
             </p>
-            <p>Orrr maybe I’m the only one who finds humour in a section called ‘Installing’ that, instead of telling you to install a package, tells you to simply copy a snippet. Orrr what about when ‘Extensions’ are not plugins but code you actually have to write yourself… Ha! Get it? 😂😂😂 Subversion of expectations, anyone? No? OK, fine…</p>
-            <p>In any case, I had my fun writing these aspects of the project!</p>
-            <p>I made an npm package for good measure:</p>
             <p>
             <div class="blog-media blog-media-default ">
-              <img srcset="/notes/htmz-story/npm.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 3.1587301587301586;background: #e8f8f8" class="blog-media-element " src="/notes/htmz-story/npm.png" alt="For npm enjoyers, use the following npm commands to automate the simple process of copying the snippet. For maximum npm enjoyment, this npm package contains 25 bonus dependencies!">
+              <video muted="" autoplay="" loop="" playsinline="" class="blog-media-element u-media" media-class="u-media" caption="Behind the scenes" data-src="/notes/css-sprite-sheets/work2.mp4">
+                <source src="/notes/css-sprite-sheets/work2.mp4">
+
+                Video: | Source: /notes/css-sprite-sheets/work2.mp4
+
+              </video><span class="blog-media-caption">Behind the scenes</span>
             </div>
             </p>
-            <h2 id="code-golfing">Code golfing</h2>
-            <p>Some commenters pointed out insights which led to significant reductions in the size of the snippet. Some even made pull requests, that I reviewed and merged (Am I an ‘open-source maintainer’ yet?).</p>
-            <p>My initial release started with <strong>181</strong> bytes:</p>
-            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
-document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token string">':not(*)'</span><span class="token punctuation">)</span>
-<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
-            <p>Turns out <code>':not(*)'</code> is <em>not</em> necessary as a selector fallback. <code>querySelector</code> can accept null! Down to <strong>176</strong> bytes:</p>
-            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
-document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token keyword">null</span><span class="token punctuation">)</span>
-<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span><span class="token keyword">this</span><span class="token punctuation">.</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
-            <p>Apparently, <code>this</code> is also unnecessary within inline attribute scripts when referring to the element it’s attached to. Now down to <strong>166</strong> bytes (its final form as of today):</p>
-            <pre class="code-block  code-block-wrap-char "><code class="code-block-code"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>iframe</span> <span class="token attr-name">hidden</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span>htmz</span> <span class="token special-attr"><span class="token attr-name">onload</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token value javascript language-javascript"><span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=&gt;</span>
-document<span class="token punctuation">.</span><span class="token function">querySelector</span><span class="token punctuation">(</span>contentWindow<span class="token punctuation">.</span>location<span class="token punctuation">.</span>hash<span class="token operator">||</span><span class="token keyword">null</span><span class="token punctuation">)</span>
-<span class="token operator">?.</span><span class="token function">replaceWith</span><span class="token punctuation">(</span><span class="token operator">...</span>contentDocument<span class="token punctuation">.</span>body<span class="token punctuation">.</span>childNodes<span class="token punctuation">)</span><span class="token punctuation">)</span></span><span class="token punctuation">"</span></span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>iframe</span><span class="token punctuation">&gt;</span></span></code></pre>
-            <p>That’s about 90% of the original! I’m pretty sure this could be reduced further (<code>setTimeout</code> isn’t strictly required) but I left it as it was. This code golfing diversion has been fun and I learned about HTML spec stuff that I wouldn’t normally discover in my day job as a React framework user.</p>
-            <h2 id="knowledge-sharing">Knowledge sharing</h2>
-            <p>Some commenters shared similar approaches and techniques. Some tips / workarounds on how to best utilise the snippet were thrown around. There were even discussions in the project’s Issue tracker on GitHub.</p>
-            <p><span class="box-note ">For one, the new <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-Fetch-Dest">Sec-Fetch-Dest<span class="blog-text-link-domain-icon">🡵</span></a> header that someone mentioned is pretty cool. It lets the server know if the request is for an iframe or for a new tab, etc. Pretty handy for <em>hypertext</em> servers!</span></p>
-            <p>I learned lots and, not wanting to get these learnings lost into the archives, incorporated these tips into the main documentation, into the examples/demos, and some even became real-ish <a target="_blank" class="text-link " href="//leanrada.com/htmz/extensions/">extensions<span class="blog-text-link-domain-icon">🡵</span></a>:</p>
-            <p>
-            <div class="blog-media blog-media-default ">
-              <img srcset="/notes/htmz-story/extensions.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.9589905362776026;background: #e8f8f8" class="blog-media-element " src="/notes/htmz-story/extensions.png" alt="Screenshot of the Extensions page">
-            </div>
-            </p>
-            <p>It’s a multi-way exchange. htmz and its iframe shenanigans have apparently inspired the creation of new HTML frameworks, such as <a target="_blank" class="text-link " href="https://github.com/joeldrapper/morphlex">morphlex<span class="blog-text-link-domain-icon">🡵</span></a> and <a target="_blank" class="text-link " href="https://github.com/callionica/htmf">htmf<span class="blog-text-link-domain-icon">🡵</span></a>. I also saw people taking the idea into different directions, like using <a target="_blank" class="text-link " href="https://zenn.dev/kawarimidoll/articles/33316cf9caa465">iframes to lazy-load HTML partials<span class="blog-text-link-domain-icon">🡵</span></a>. I feel happy about having inspired people! There are even some who said so via the <a target="_self" class="text-link " href="/guestbook/">guestbook<span class="blog-text-link-domain-icon"></span></a>, which was especially nice!</p>
-            <h2 id="future">Future</h2>
-            <p>I think the htmz story is done and I’m already looking forward to my next project (the 7DRL challenge). It’s still getting some mentions in blogs, podcasts, here and there, but it’s not like I’m gonna turn this into some serious full-time open-source project with versions and releases and (lack of) funds and all that jazz.</p>
-            <p>GitHub activity (stars, issues, PRs) have slowed down as well. There’s not much you can work with 166 characters, after all.</p>
-            <p>But the idea lives on; may the snippet proliferate! :D</p>
-            <p>
-            <div class="blog-media blog-media-default ">
-              <img srcset="/gen/_notes_htmz_story_stars_664.generated.png 664w" sizes=" 664px" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.4009181331293037;background: #f8f8f8" class="blog-media-element " src="/notes/htmz-story/stars.png" alt="Chart of htmz’s number of GitHub stars over time">
-            </div>
-            </p>
+            <iframe height="414" style="width: 100%;" scrolling="no" title="GSAP Draggable 360° sprite slider" src="https://codepen.io/jamiejefferson/embed/DgqxVe?default-tab=result&amp;theme-id=dark" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+              See the Pen <a href="https://codepen.io/jamiejefferson/pen/DgqxVe">
+                GSAP Draggable 360° sprite slider</a> by Jamie Jefferson (<a href="https://codepen.io/jamiejefferson">@jamiejefferson</a>)
+              on <a href="https://codepen.io">CodePen</a>.
+            </iframe>
+
+            <iframe height="333" style="width: 100%;" scrolling="no" title="Steps Animation" src="https://codepen.io/simurai/embed/krWaKX?default-tab=result&amp;theme-id=dark" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+              See the Pen <a href="https://codepen.io/simurai/pen/krWaKX">
+                Steps Animation</a> by simurai (<a href="https://codepen.io/simurai">@simurai</a>)
+              on <a href="https://codepen.io">CodePen</a>.
+            </iframe>
 
           </div>
 
@@ -1674,14 +2122,14 @@ document<span class="token punctuation">.</span><span class="token function">que
             <div class="card-carousel-container">
               <div class="card-carousel blog-suggestions-carousel">
 
-                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/ai-art-not-generative-art/">
+                <a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-tictactoe-ai/">
                   <div class="card-grid-image-container">
-                    <img srcset="/notes/placeholder.png 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.6058823529411765;background: #c89878" class="card-grid-image" src="/notes/placeholder.png" alt="">
+                    <img srcset="/gen/_notes_pure_css_tictactoe_ai_hero_546.generated.jpg 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #080808" class="card-grid-image" src="/notes/pure-css-tictactoe-ai/hero.jpg" alt="">
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
                       <div class="card-grid-title-content">
-                        <div class="card-grid-title">AI art is not generative art</div>
+                        <div class="card-grid-title">Pure CSS tic-tac-toe with game AI</div>
                         <div class="card-grid-posttitle"></div>
                       </div>
                     </div>
@@ -1696,19 +2144,24 @@ document<span class="token punctuation">.</span><span class="token function">que
                     </div>
                     <div class="card-grid-description">
 
-                      <span class="tag-component p-category" title="essay" style="background: #eeeeee; color: #4a4a4a">essay</span>
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span>
 
-                      <span class="card-grid-action card-grid-story" aria-label="Read post - AI art is not generative art">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Pure CSS tic-tac-toe with game AI">Read post</span>
                     </div>
                   </div>
-                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-halftone/">
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/pure-css-volley-ball-game/">
                   <div class="card-grid-image-container">
-                    <img srcset="/gen/_notes_pure_css_halftone_hero_546.generated.jpg 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 2.5;background: #f8f8e8" class="card-grid-image" src="/notes/pure-css-halftone/hero.jpg" alt="">
+                    <video muted="" autoplay="" loop="" playsinline="" class="card-grid-image" alt="" loading="lazy" data-src="/notes/pure-css-volley-ball-game/video.web.mp4">
+                      <source src="/notes/pure-css-volley-ball-game/video.web.mp4">
+
+                      Video: | Source: /notes/pure-css-volley-ball-game/video.web.mp4
+
+                    </video>
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
                       <div class="card-grid-title-content">
-                        <div class="card-grid-title">Creating a halftone effect with CSS</div>
+                        <div class="card-grid-title">Volley ball game in pure CSS</div>
                         <div class="card-grid-posttitle"></div>
                       </div>
                     </div>
@@ -1723,19 +2176,19 @@ document<span class="token punctuation">.</span><span class="token function">que
                     </div>
                     <div class="card-grid-description">
 
-                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span>
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" style="background: #b7eaa6; color: #336920">games</span> <span class="tag-component p-category" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
 
-                      <span class="card-grid-action card-grid-story" aria-label="Read post - Creating a halftone effect with CSS">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Volley ball game in pure CSS">Read post</span>
                     </div>
                   </div>
-                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/stop-using-ease-out/">
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/debug-css-boxes-bookmarklet/">
                   <div class="card-grid-image-container">
-                    <img srcset="/gen/_notes_stop_using_ease_out_hero_546.generated.jpg 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.7789072426937738;background: #284848" class="card-grid-image" src="/notes/stop-using-ease-out/hero.jpg" alt="">
+                    <img srcset="/gen/_notes_debug_css_boxes_bookmarklet_example_546.generated.png 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #f8f8f8" class="card-grid-image" src="/notes/debug-css-boxes-bookmarklet/example.png" alt="">
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
                       <div class="card-grid-title-content">
-                        <div class="card-grid-title">Stop using ease-out in your UIs!</div>
+                        <div class="card-grid-title">Debug CSS boxes with this bookmarklet</div>
                         <div class="card-grid-posttitle"></div>
                       </div>
                     </div>
@@ -1750,19 +2203,19 @@ document<span class="token punctuation">.</span><span class="token function">que
                     </div>
                     <div class="card-grid-description">
 
-                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" title="essay" style="background: #eeeeee; color: #4a4a4a">essay</span>
+                      <span class="tag-component p-category" style="background: #817db5; color: #302e47">css</span> <span class="tag-component p-category" title="micropost" style="background: #cccccc; color: #444444">µpost</span>
 
-                      <span class="card-grid-action card-grid-story" aria-label="Read post - Stop using ease-out in your UIs!">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Debug CSS boxes with this bookmarklet">Read post</span>
                     </div>
                   </div>
-                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/motion-sickness-app/">
+                </a><a class="card-grid-item card-grid-thumbalign-center card-grid-item-expanded" href="/notes/simple-image-recognition-vanilla-js/">
                   <div class="card-grid-image-container">
-                    <img srcset="/gen/_notes_motion_sickness_app_hero_546.generated.png 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.6666666666666667;background: #f8f8a8" class="card-grid-image" src="/notes/motion-sickness-app/hero.png" alt="">
+                    <img srcset="/gen/_notes_simple_image_recognition_vanilla_js_hero_546.generated.png 546w" sizes=" 546px" spec="546" loading="lazy" width="100%" data-placeholder="" style=";aspect-ratio: 1.3333333333333333;background: #48c8d8" class="card-grid-image" src="/notes/simple-image-recognition-vanilla-js/hero.png" alt="">
                   </div>
                   <div class="card-grid-title-wrap">
                     <div class="card-grid-title-bar">
                       <div class="card-grid-title-content">
-                        <div class="card-grid-title">I made an app to fix my motion sickness</div>
+                        <div class="card-grid-title">Simple image recognition with vanilla JavaScript</div>
                         <div class="card-grid-posttitle"></div>
                       </div>
                     </div>
@@ -1777,9 +2230,9 @@ document<span class="token punctuation">.</span><span class="token function">que
                     </div>
                     <div class="card-grid-description">
 
-                      <span class="tag-component p-category" style="background: #84d39e; color: #265936">android</span>
+                      <span class="tag-component p-category" style="background: #f0de91; color: #725f15">js</span>
 
-                      <span class="card-grid-action card-grid-story" aria-label="Read post - I made an app to fix my motion sickness">Read post</span>
+                      <span class="card-grid-action card-grid-story" aria-label="Read post - Simple image recognition with vanilla JavaScript">Read post</span>
                     </div>
                   </div>
                 </a>
