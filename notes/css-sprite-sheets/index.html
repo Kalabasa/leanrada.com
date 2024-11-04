@@ -336,6 +336,12 @@
     );
     animation: spriteSheetDemo calc(var(--frames, 1) * var(--frame-delay)) steps(var(--frames), jump-none) infinite;
   }
+  @supports (animation-timeline: scroll(block root)) {
+    .sprite-sheet-demo-scroll {
+      animation: spriteSheetDemo 1ms steps(var(--frames), jump-none) var(--scroll-iterations);
+      animation-timeline: scroll(block root);
+    }
+  }
   @keyframes spriteSheetDemo {
     from {
       background-position-x: calc(
@@ -1552,6 +1558,11 @@
     background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
     border-radius: 12px;
   }
+  @media (max-width: 600px) {
+    .vertical-on-narrow-screen {
+      flex-direction: column;
+    }
+  }
   /* hack */
   figure > .specimen {
     margin: 0;
@@ -1688,7 +1699,7 @@
             </p>
             <p>It’s neat for small raster-based animations such as loading spinners, characters, icons, and micro-interactions.</p>
             <div class="specimen">
-              <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="walking animation of a red monster character" style="
+              <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="walking animation of a red monster character" style="
     --src:url(/notes/css-sprite-sheets/animation.png);
     --sheet-width:422px;
     --sheet-height:176px;
@@ -1701,9 +1712,10 @@
     --tile-to-x:5;
     --tile-to-y:1;
     --frames:6;
-    --frame-delay:100ms
+    --frame-delay:100ms;
+    --scroll-iterations:0;
   "></div>
-              <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="walking animation of a blue monster character" style="
+              <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="walking animation of a blue monster character" style="
     --src:url(/notes/css-sprite-sheets/animation.png);
     --sheet-width:422px;
     --sheet-height:176px;
@@ -1716,7 +1728,8 @@
     --tile-to-x:5;
     --tile-to-y:1;
     --frames:6;
-    --frame-delay:100ms
+    --frame-delay:100ms;
+    --scroll-iterations:0;
   "></div>
             </div>
 
@@ -1877,7 +1890,64 @@
             <p>Remember, <a target="_blank" class="text-link " href="https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position"><code>steps()</code><span class="blog-text-link-domain-icon">🡵</span></a> is crucial!</p>
             <h2 id="why-not-apng">Why not APNG?</h2>
             <p>For autoplaying stuff like loading spinners, you might want plain old GIFs or <a target="_blank" class="text-link " href="https://en.wikipedia.org/wiki/APNG">APNGs<span class="blog-text-link-domain-icon">🡵</span></a> instead.</p>
-            <p>But we don’t have tight control over the playback with these formats. With sprite sheets, we can pause, reverse, play on cue, play on hover, change the frame rate, or make it totally <strong>interactive</strong>.</p>
+            <p>But we don’t have tight control over the playback with these formats.</p>
+            <p>With sprite sheets, we can pause, reverse, play on hover, change the frame rate…</p>
+            <p>…make it <strong>scroll-driven</strong>,</p>
+            <figure>
+              <div class="specimen vertical-on-narrow-screen">
+                <div data-rss="interactive" class="sprite-sheet-demo  sprite-sheet-demo-scroll" role="img" alt="spinning globe" style="
+    --src:url(/notes/css-sprite-sheets/globe.png);
+    --sheet-width:438px;
+    --sheet-height:73px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:73px;
+    --tile-height:73px;
+    --tile-from-x:0;
+    --tile-from-y:0;
+    --tile-to-x:5;
+    --tile-to-y:0;
+    --frames:6;
+    --frame-delay:0;
+    --scroll-iterations:200;
+  "></div>
+                <div data-rss="interactive" class="sprite-sheet-demo  sprite-sheet-demo-scroll" role="img" alt="spinning moon" style="
+    --src:url(/notes/css-sprite-sheets/moon.png);
+    --sheet-width:3000px;
+    --sheet-height:148px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:200px;
+    --tile-height:148px;
+    --tile-from-x:0;
+    --tile-from-y:0;
+    --tile-to-x:14;
+    --tile-to-y:0;
+    --frames:15 ;
+    --frame-delay:0;
+    --scroll-iterations:15;
+  "></div>
+                <div data-rss="interactive" class="sprite-sheet-demo  sprite-sheet-demo-scroll" role="img" alt="spinning globe" style="
+    --src:url(/notes/css-sprite-sheets/globe.png);
+    --sheet-width:438px;
+    --sheet-height:73px;
+    --offset-x:0px;
+    --offset-y:0px;
+    --tile-width:73px;
+    --tile-height:73px;
+    --tile-from-x:0;
+    --tile-from-y:0;
+    --tile-to-x:5;
+    --tile-to-y:0;
+    --frames:6;
+    --frame-delay:0;
+    --scroll-iterations:200;
+  "></div>
+              </div>
+              <figcaption class="caption">Note: Scroll-driven animations are experimental. No Firefox support atm.</figcaption>
+            </figure>
+
+            <p>… or make it <strong>interactive</strong>!</p>
             <h2 id="interactivity">Interactivity</h2>
             <p>The nice thing about this being in CSS is that we can make it interactive via selectors.</p>
             <p>Continuing with the heart example, we can turn it into a stylised toggle control via HTML &amp; CSS:</p>
@@ -1939,7 +2009,7 @@
             <h2 id="gallery">Gallery</h2>
             <figure>
               <div class="specimen">
-                <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="star animation from Twitter" style="
+                <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="star animation from Twitter" style="
     --src:url(/notes/css-sprite-sheets/star.png);
     --sheet-width:3584;
     --sheet-height:45px;
@@ -1952,7 +2022,8 @@
     --tile-to-x:55;
     --tile-to-y:0;
     --frames:56;
-    --frame-delay:25ms
+    --frame-delay:25ms;
+    --scroll-iterations:0;
   "></div>
               </div>
               <figcaption class="caption">‘Favorite’ icon animation</figcaption>
@@ -1960,7 +2031,7 @@
 
             <figure>
               <div class="specimen">
-                <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="walking animation of a snail" style="
+                <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="walking animation of a snail" style="
     --src:url(/notes/css-sprite-sheets/snail.png);
     --sheet-width:192px;
     --sheet-height:192px;
@@ -1973,9 +2044,10 @@
     --tile-to-x:0;
     --tile-to-y:1;
     --frames:2;
-    --frame-delay:300ms
+    --frame-delay:300ms;
+    --scroll-iterations:0;
   "></div>
-                <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="idle hiding animation of a snail" style="
+                <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="idle hiding animation of a snail" style="
     --src:url(/notes/css-sprite-sheets/snail.png);
     --sheet-width:192px;
     --sheet-height:192px;
@@ -1988,9 +2060,10 @@
     --tile-to-x:5;
     --tile-to-y:5;
     --frames:6;
-    --frame-delay:75ms
+    --frame-delay:75ms;
+    --scroll-iterations:0;
   "></div>
-                <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="climb animation of a snail" style="
+                <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="climb animation of a snail" style="
     --src:url(/notes/css-sprite-sheets/snail.png);
     --sheet-width:192px;
     --sheet-height:192px;
@@ -2003,9 +2076,10 @@
     --tile-to-x:3;
     --tile-to-y:1;
     --frames:2;
-    --frame-delay:1000ms
+    --frame-delay:1000ms;
+    --scroll-iterations:0;
   "></div>
-                <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="attack animation of a snail" style="
+                <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="attack animation of a snail" style="
     --src:url(/notes/css-sprite-sheets/snail.png);
     --sheet-width:192px;
     --sheet-height:192px;
@@ -2018,9 +2092,10 @@
     --tile-to-x:1;
     --tile-to-y:1;
     --frames:2;
-    --frame-delay:800ms
+    --frame-delay:800ms;
+    --scroll-iterations:0;
   "></div>
-                <div data-rss="interactive" class="sprite-sheet-demo" role="img" alt="death animation of a snail" style="
+                <div data-rss="interactive" class="sprite-sheet-demo " role="img" alt="death animation of a snail" style="
     --src:url(/notes/css-sprite-sheets/snail.png);
     --sheet-width:192px;
     --sheet-height:192px;
@@ -2033,7 +2108,8 @@
     --tile-to-x:2;
     --tile-to-y:1;
     --frames:2;
-    --frame-delay:300ms
+    --frame-delay:300ms;
+    --scroll-iterations:0;
   "></div>
               </div>
               <figcaption class="caption">Snail enemy sprites from my game <a target="_blank" class="text-link " href="/wares/miniforts/">MiniForts</a></figcaption>
