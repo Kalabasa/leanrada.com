@@ -1,6 +1,6 @@
 <div
   data-rss="interactive"
-  class="sprite-sheet-demo"
+  :class="'sprite-sheet-demo ' + (attrs.scroll ? ' sprite-sheet-demo-scroll' : '')"
   role="img"
   :alt="attrs.alt"
   :style="`
@@ -16,7 +16,8 @@
     --tile-to-x:${attrs.tileToX};
     --tile-to-y:${attrs.tileToY};
     --frames:${attrs.frames};
-    --frame-delay:${attrs.frameDelay}
+    --frame-delay:${attrs.frameDelay ?? 0};
+    --scroll-iterations:${attrs.scrollIterations ?? 0};
   `"
 ></div>
 
@@ -33,6 +34,12 @@
       -1 * var(--tile-height) * var(--tile-from-y) - var(--offset-y, 0px)
     );
     animation: spriteSheetDemo calc(var(--frames, 1) * var(--frame-delay)) steps(var(--frames), jump-none) infinite;
+  }
+  @supports (animation-timeline: scroll(block root)) {
+    .sprite-sheet-demo-scroll {
+      animation: spriteSheetDemo 1ms steps(var(--frames), jump-none) var(--scroll-iterations);
+      animation-timeline: scroll(block root);
+    }
   }
   @keyframes spriteSheetDemo {
     from {
