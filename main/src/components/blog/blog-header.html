@@ -6,10 +6,12 @@
     color="var(--bg-clr)"
   >
     <script render>
-      let delay = 200;
-      for (const segment of attrs.title.split(" ")) {
+      const segments = attrs.title.split(" ");
+      for (let i = 0; i < segments.length; i++) {
+        const t = (i + 1) / segments.length;
+        const delay = t ** 3 * 600;
+        const segment = segments[i];
         yield html` <span class="blog-header-title-segment" style="animation-delay:${delay}ms">${segment}</span> `;
-        delay += 50;
       }
     </script>
   </text-with-bg>
@@ -67,14 +69,14 @@
     width: calc(min(50%, 120vw - 600px));
     height: 400px;
     float: right;
-    shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
+    shape-outside: polygon(100% 0%, 30% 25%, 0% 100%, 100% 100%, 100% 0%);
   }
 
   .blog-header-title-segment {
     display: inline-block;
-    line-height: 36px;
+    line-height: 40px;
     overflow: hidden;
-    animation: blog-header-title-segment-reveal 0.2s var(--ease) backwards;
+    animation: blog-header-title-segment-reveal 0.4s var(--ease) backwards;
   }
   /* `text-shadow` because using `transform` would mess with decoration calculations */
   @keyframes blog-header-title-segment-reveal {
@@ -97,7 +99,7 @@
     background: gray;
     overflow: hidden;
     z-index: -1;
-    animation: blog-header-hero-reveal 1.5s var(--ease) backwards;
+    animation: blog-header-hero-reveal 1.7s var(--ease) backwards;
   }
   @keyframes blog-header-hero-reveal {
     0% {
@@ -107,31 +109,45 @@
     }
     30%,
     40% {
-      transform: translate(1px, 0);
       clip-path: inset(
         var(--blog-header-hero-animation-point-1-y) 0 0 0 round 18px
       );
     }
-    32% {
-      transform: translateX(-1px);
-    }
     60%,
     70% {
-      transform: translate(0, -1px);
       clip-path: inset(
         var(--blog-header-hero-animation-point-2-y) 0 0 0 round 18px
       );
     }
-    62% {
-      transform: translateY(1px);
-    }
     90%,
     100% {
-      transform: translate(0, 0);
       clip-path: inset(0 0 0 0 round 18px);
     }
+    30% {
+      transform: translateX(2px);
+    }
+    32% {
+      transform: translateX(-1px);
+    }
+    36% {
+      transform: translateX(1px);
+    }
+    60%,
+    90% {
+      transform: translate(0, 0);
+    }
+    62%,
     92% {
+      transform: translateY(-1px);
+    }
+    66%,
+    96% {
       transform: translateY(1px);
+    }
+    40%,
+    70%,
+    100% {
+      transform: translateY(0px);
     }
   }
 
