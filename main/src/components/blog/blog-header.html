@@ -5,14 +5,22 @@
     inner-class="blog-header-title-inner"
     color="var(--bg-clr)"
   >
-    {attrs.title}
+    <script render>
+      let delay = 200;
+      for (const segment of attrs.title.split(" ")) {
+        yield html` <span class="blog-header-title-segment" style="animation-delay:${delay}ms">${segment}</span> `;
+        delay += 50;
+      }
+    </script>
   </text-with-bg>
-  <responsive-media
-    class="blog-header-hero u-media"
-    :src="attrs.heroimgsrc"
-    alt=""
-    spec="100% [800) 80%"
-  />
+  <div class="blog-header-hero-box">
+    <responsive-media
+      class="blog-header-hero u-media"
+      :src="attrs.heroimgsrc"
+      alt=""
+      spec="100% [800) 80%"
+    />
+  </div>
   <svg xmlns="http://www.w3.org/2000/svg" class="blog-header-decor">
     <path />
   </svg>
@@ -28,6 +36,8 @@
     width: max(800px, 60vw);
     transform: translateX(-50%);
     box-sizing: border-box;
+    --blog-header-hero-animation-point-1-y: 50%;
+    --blog-header-hero-animation-point-2-y: 0%;
   }
   @media (max-width: 600px) {
     .blog-header {
@@ -46,6 +56,7 @@
     z-index: 2;
   }
   .blog-header-title-inner {
+    line-height: 72px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
@@ -59,15 +70,75 @@
     shape-outside: polygon(100% 0%, 20% 30%, 0% 100%, 100% 100%, 100% 0%);
   }
 
-  .blog-header-hero {
+  .blog-header-title-segment {
+    display: inline-block;
+    line-height: 36px;
+    overflow: hidden;
+    animation: blog-header-title-segment-reveal 0.2s var(--ease) backwards;
+  }
+  /* `text-shadow` because using `transform` would mess with decoration calculations */
+  @keyframes blog-header-title-segment-reveal {
+    from {
+      text-shadow: 0 1lh var(--text-clr);
+      color: transparent;
+    }
+    to {
+      text-shadow: 0 0 var(--text-clr);
+      color: transparent;
+    }
+  }
+
+  .blog-header-hero-box {
     position: absolute;
     inset: 1px;
     width: 100%;
     height: 100%;
-    object-fit: cover;
     border-radius: 18px;
     background: gray;
+    overflow: hidden;
     z-index: -1;
+    animation: blog-header-hero-reveal 1.5s var(--ease) backwards;
+  }
+  @keyframes blog-header-hero-reveal {
+    0% {
+      clip-path: inset(
+        var(--blog-header-hero-animation-point-1-y) 100% 0 0 round 18px
+      );
+    }
+    30%,
+    40% {
+      transform: translate(1px, 0);
+      clip-path: inset(
+        var(--blog-header-hero-animation-point-1-y) 0 0 0 round 18px
+      );
+    }
+    32% {
+      transform: translateX(-1px);
+    }
+    60%,
+    70% {
+      transform: translate(0, -1px);
+      clip-path: inset(
+        var(--blog-header-hero-animation-point-2-y) 0 0 0 round 18px
+      );
+    }
+    62% {
+      transform: translateY(1px);
+    }
+    90%,
+    100% {
+      transform: translate(0, 0);
+      clip-path: inset(0 0 0 0 round 18px);
+    }
+    92% {
+      transform: translateY(1px);
+    }
+  }
+
+  .blog-header-hero {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .blog-header-decor {
@@ -87,6 +158,12 @@
     }
     .blog-header-title {
       font-size: clamp(24px, 20px + 2vw, 36px);
+    }
+  }
+
+  @media (prefers-reduced-motion) {
+    .blog-header * {
+      animation: none !important;
     }
   }
 </style>
@@ -116,17 +193,25 @@
       const parent = header.getBoundingClientRect();
       const heroRect = hero.getBoundingClientRect();
 
+      const lineBoxHeight = Number.parseInt(
+        getComputedStyle(titleInner).lineHeight
+      );
+
       const range = document.createRange();
       range.selectNode(titleInner);
-      const rects = [...range.getClientRects()];
+      const rects = [...range.getClientRects()].filter((rect) => {
+        // only need line boxes (not individual segments)
+        return rect.height >= lineBoxHeight;
+      });
 
       const offsetLeft = -parent.left;
       const offsetTop = -parent.top;
       decor.setAttribute("width", Math.floor(heroRect.width));
       decor.setAttribute("height", Math.floor(heroRect.height));
 
+      const heroAnimationPoints = [];
       const pathCommands = [];
-      // Find intersections between title rects, find and decorate the corners
+      // Find intersections between title line box rects, find and decorate the corners
       // O(n^2), but n is ~3, so total of ~9 iterations, is fine
       for (let i = 0; i < rects.length; i++) {
         const r1 = rects[i];
@@ -160,6 +245,10 @@
 
           // Bottom right corner
           if (r1.bottom > r2.bottom + radius && r1.right < r2.right - radius) {
+            heroAnimationPoints.push({
+              x: offsetLeft + r1.right - 1,
+              y: offsetTop + r2.bottom - 1,
+            });
             pathCommands.push(
               drawInnerCorner(
                 offsetLeft + r1.right - 1,
@@ -172,6 +261,10 @@
             r1.bottom < r2.bottom - radius &&
             r1.right > r2.right + radius
           ) {
+            heroAnimationPoints.push({
+              x: offsetLeft + r2.right - 1,
+              y: offsetTop + r1.bottom - 1,
+            });
             pathCommands.push(
               drawInnerCorner(
                 offsetLeft + r2.right - 1,
@@ -197,6 +290,10 @@
         }
         // Left edge
         if (r1.left <= heroRect.left && r1.right > heroRect.left) {
+          heroAnimationPoints.push({
+            x: offsetLeft + heroRect.left - 1,
+            y: offsetTop + r1.bottom - 1,
+          });
           pathCommands.push(
             drawInnerCorner(
               offsetLeft + heroRect.left - 1,
@@ -209,6 +306,22 @@
       }
 
       decorPath.setAttribute("d", pathCommands.join(" "));
+
+      if (heroAnimationPoints.length > 0) {
+        const point1 = heroAnimationPoints[heroAnimationPoints.length - 1];
+        header.style.setProperty(
+          "--blog-header-hero-animation-point-1-y",
+          point1.y + "px"
+        );
+
+        if (heroAnimationPoints.length > 1) {
+          const point2 = heroAnimationPoints[heroAnimationPoints.length - 2];
+          header.style.setProperty(
+            "--blog-header-hero-animation-point-2-y",
+            point2.y + "px"
+          );
+        }
+      }
     }
 
     function rectsIntersect(r1, r2) {
