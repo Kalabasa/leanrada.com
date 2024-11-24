@@ -23,17 +23,25 @@
       const parent = header.getBoundingClientRect();
       const heroRect = hero.getBoundingClientRect();
 
+      const lineBoxHeight = Number.parseInt(
+        getComputedStyle(titleInner).lineHeight
+      );
+
       const range = document.createRange();
       range.selectNode(titleInner);
-      const rects = [...range.getClientRects()];
+      const rects = [...range.getClientRects()].filter((rect) => {
+        // only need line boxes (not individual segments)
+        return rect.height >= lineBoxHeight;
+      });
 
       const offsetLeft = -parent.left;
       const offsetTop = -parent.top;
       decor.setAttribute("width", Math.floor(heroRect.width));
       decor.setAttribute("height", Math.floor(heroRect.height));
 
+      const heroAnimationPoints = [];
       const pathCommands = [];
-      // Find intersections between title rects, find and decorate the corners
+      // Find intersections between title line box rects, find and decorate the corners
       // O(n^2), but n is ~3, so total of ~9 iterations, is fine
       for (let i = 0; i < rects.length; i++) {
         const r1 = rects[i];
@@ -67,6 +75,10 @@
 
           // Bottom right corner
           if (r1.bottom > r2.bottom + radius && r1.right < r2.right - radius) {
+            heroAnimationPoints.push({
+              x: offsetLeft + r1.right - 1,
+              y: offsetTop + r2.bottom - 1,
+            });
             pathCommands.push(
               drawInnerCorner(
                 offsetLeft + r1.right - 1,
@@ -79,6 +91,10 @@
             r1.bottom < r2.bottom - radius &&
             r1.right > r2.right + radius
           ) {
+            heroAnimationPoints.push({
+              x: offsetLeft + r2.right - 1,
+              y: offsetTop + r1.bottom - 1,
+            });
             pathCommands.push(
               drawInnerCorner(
                 offsetLeft + r2.right - 1,
@@ -104,6 +120,10 @@
         }
         // Left edge
         if (r1.left <= heroRect.left && r1.right > heroRect.left) {
+          heroAnimationPoints.push({
+            x: offsetLeft + heroRect.left - 1,
+            y: offsetTop + r1.bottom - 1,
+          });
           pathCommands.push(
             drawInnerCorner(
               offsetLeft + heroRect.left - 1,
@@ -116,6 +136,22 @@
       }
 
       decorPath.setAttribute("d", pathCommands.join(" "));
+
+      if (heroAnimationPoints.length > 0) {
+        const point1 = heroAnimationPoints[heroAnimationPoints.length - 1];
+        header.style.setProperty(
+          "--blog-header-hero-animation-point-1-y",
+          point1.y + "px"
+        );
+
+        if (heroAnimationPoints.length > 1) {
+          const point2 = heroAnimationPoints[heroAnimationPoints.length - 2];
+          header.style.setProperty(
+            "--blog-header-hero-animation-point-2-y",
+            point2.y + "px"
+          );
+        }
+      }
     }
 
     function rectsIntersect(r1, r2) {
