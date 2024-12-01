@@ -1,5 +1,5 @@
 
-        import pack from "https://portabl.ink/pack.js";
+        import pack from "https://kalabasa.github.io/portabl.ink/pack.js";
 
         const htmlTextArea = document.getElementById("demoHTML");
         const urlTextArea = document.getElementById("demoURL");
