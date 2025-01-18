@@ -13,9 +13,6 @@ customElements.define(
     }
 
     connectedCallback() {
-      const html = (strings, ...values) =>
-        String.raw({ raw: strings }, ...values);
-
       const isSelected = (href) =>
         href === "/"
           ? location.pathname === "/"
@@ -144,6 +141,193 @@ customElements.define(
     });
   }
 );
+
+customElements.define(
+  "site-footer",
+  class SiteFooter extends HTMLElement {
+    constructor() {
+      super();
+    }
+
+    connectedCallback() {
+      const geekringNumber = 288;
+
+      this.innerHTML = html`<footer>
+        <div>
+          <p>
+            <a href="/">Home</a> · <a href="/notes/">Notes</a> ·
+            <a href="/about/">About</a> · <a href="/wares/">Software</a> ·
+            <a href="/art/">Art</a> ·
+            <a href="/music/">Music</a>
+          </p>
+          <p>
+            <img
+              class="lg-icon pixelated"
+              alt=""
+              src="/icons/laptop_user.png"
+              loading="lazy"
+              style="vertical-align: top"
+            />
+            <span style="display: inline-block">
+              ·
+              <a href="/guestbook/">Sign the guestbook!</a>
+              <br />
+              · Drop a
+              <a
+                href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;mail%40leanrada.com"
+                target="_blank"
+              >
+                mail＠leanrada·com
+              </a>
+              <br />
+            </span>
+          </p>
+          <p class="site-footer-best-viewed">
+            This site is best viewed with a cup of hot chocolate.
+          </p>
+          <p>
+            (C) 2015-${new Date().getFullYear()} Lean Rada.
+            <a href="https://github.com/Kalabasa/kalabasa.github.io"> Source</a
+            >.
+          </p>
+        </div>
+        <div>
+          <h2>On the web</h2>
+          <a
+            class="no-text-decoration"
+            href="https://mastodon.social/@Kalabasa"
+            rel="me"
+          >
+            <img
+              class="md-icon pixelated invert-on-hover"
+              alt="Mastodon"
+              src="/icons/mastodon.png"
+              loading="lazy"
+            />
+          </a>
+          <a class="no-text-decoration" href="https://codepen.io/kalabasa">
+            <img
+              class="md-icon pixelated invert-on-hover"
+              alt="CodePen"
+              src="/icons/codepen.png"
+              loading="lazy"
+            />
+          </a>
+          <a
+            class="no-text-decoration"
+            href="https://github.com/Kalabasa"
+            rel="me"
+          >
+            <img
+              class="md-icon pixelated invert-on-hover"
+              alt="GitHub"
+              src="/icons/github.png"
+              loading="lazy"
+            />
+          </a>
+          <h2>Webrings</h2>
+          <p>
+            <img
+              class="sm-icon pixelated"
+              alt=""
+              src="/icons/planet.png"
+              loading="lazy"
+            />
+            <a href="http://geekring.net/">geekring.net</a>
+            [<a
+              href="http://geekring.net/site/${geekringNumber}/previous"
+              aria-label="Previous site"
+              >←</a
+            >
+            <a
+              href="http://geekring.net/site/${geekringNumber}/random"
+              aria-label="Random site"
+              >⁙</a
+            >
+            <a
+              href="http://geekring.net/site/${geekringNumber}/next"
+              aria-label="Next site"
+              >→</a
+            >
+            <a
+              href="http://geekring.net/site/${geekringNumber}/frameset"
+              aria-label="Frameset browsing"
+              >▣</a
+            >]
+          </p>
+          <p>
+            <img
+              class="sm-icon pixelated"
+              alt=""
+              src="/icons/planet.png"
+              loading="lazy"
+            />
+            <a href="https://cs.sjoy.lol/">CSS JOY</a>
+            [<a
+              href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com"
+              aria-label="Previous site"
+              >←</a
+            >
+            <a
+              href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com"
+              aria-label="Random site"
+              >⁙</a
+            >
+            <a
+              href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com"
+              aria-label="Next site"
+              >→</a
+            >]
+          </p>
+        </div>
+        <nebula-animation
+          palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591"
+          width="40"
+          height="10"
+        ></nebula-animation>
+        <a href="#top" aria-label="Back to top">^</a>
+      </footer>`;
+
+      let scrollToTopValue = 0;
+
+      const topBtn = this.querySelector("a[href='#top']");
+      topBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        scrollToTopValue = 200;
+        animateScrollToTop();
+      });
+
+      // subtle smooth scroll
+      function animateScrollToTop() {
+        scrollToTopValue *= 0.6;
+        window.scrollTo(0, scrollToTopValue);
+        if (scrollToTopValue < 1) {
+          window.scrollTo(0, 0);
+        } else {
+          requestAnimationFrame(animateScrollToTop);
+        }
+      }
+
+      if (window.screen) {
+        const bestViewed = this.querySelector(".site-footer-best-viewed");
+        updateBestViewed();
+        window.screen.addEventListener("change", () => updateBestViewed());
+
+        function updateBestViewed() {
+          if (window.screen.width > 0 && window.screen.height > 0) {
+            const w = window.screen.width * window.devicePixelRatio;
+            const h = window.screen.height * window.devicePixelRatio;
+            bestViewed.textContent = `This site is best viewed on a ${w}x${h} screen!`;
+          }
+        }
+      }
+    }
+  }
+);
+
+function html(strings, ...values) {
+  return String.raw({ raw: strings }, ...values);
+}
 
 function debounce(fn, ms = 0) {
   let recentlyFired = false;
