@@ -150,6 +150,8 @@ customElements.define(
     }
 
     connectedCallback() {
+      import("/components/nebula-animation/nebula-animation.js");
+
       const geekringNumber = 288;
 
       this.innerHTML = html`<footer>
