@@ -189,7 +189,11 @@ customElements.define(
           </p>
           <p>
             (C) 2015-${new Date().getFullYear()} Lean Rada.
-            <a href="https://github.com/Kalabasa/kalabasa.github.io"> Source</a
+            <a
+              href="https://github.com/Kalabasa/leanrada.com"
+              target="_blank"
+            >
+              Source</a
             >.
           </p>
         </div>
@@ -198,6 +202,7 @@ customElements.define(
           <a
             class="no-text-decoration"
             href="https://mastodon.social/@Kalabasa"
+            target="_blank"
             rel="me"
           >
             <img
@@ -207,7 +212,11 @@ customElements.define(
               loading="lazy"
             />
           </a>
-          <a class="no-text-decoration" href="https://codepen.io/kalabasa">
+          <a
+            class="no-text-decoration"
+            href="https://codepen.io/kalabasa"
+            target="_blank"
+          >
             <img
               class="md-icon pixelated invert-on-hover"
               alt="CodePen"
@@ -218,6 +227,7 @@ customElements.define(
           <a
             class="no-text-decoration"
             href="https://github.com/Kalabasa"
+            target="_blank"
             rel="me"
           >
             <img
@@ -235,24 +245,28 @@ customElements.define(
               src="/icons/planet.png"
               loading="lazy"
             />
-            <a href="http://geekring.net/">geekring.net</a>
+            <a href="http://geekring.net/" target="_blank">geekring.net</a>
             [<a
               href="http://geekring.net/site/${geekringNumber}/previous"
+              target="_blank"
               aria-label="Previous site"
               >←</a
             >
             <a
               href="http://geekring.net/site/${geekringNumber}/random"
+              target="_blank"
               aria-label="Random site"
               >⁙</a
             >
             <a
               href="http://geekring.net/site/${geekringNumber}/next"
+              target="_blank"
               aria-label="Next site"
               >→</a
             >
             <a
               href="http://geekring.net/site/${geekringNumber}/frameset"
+              target="_blank"
               aria-label="Frameset browsing"
               >▣</a
             >]
@@ -267,16 +281,19 @@ customElements.define(
             <a href="https://cs.sjoy.lol/">CSS JOY</a>
             [<a
               href="https://webri.ng/webring/cssjoy/previous?via=https%3A%2F%2Fleanrada.com"
+              target="_blank"
               aria-label="Previous site"
               >←</a
             >
             <a
               href="https://webri.ng/webring/cssjoy/random?via=https%3A%2F%2Fleanrada.com"
+              target="_blank"
               aria-label="Random site"
               >⁙</a
             >
             <a
               href="https://webri.ng/webring/cssjoy/next?via=https%3A%2F%2Fleanrada.com"
+              target="_blank"
               aria-label="Next site"
               >→</a
             >]
