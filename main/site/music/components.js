@@ -164,7 +164,7 @@ class SongCard extends HTMLElement {
   #maybeRenderTag() {
     const tag = this.getAttribute("tag");
     if (!tag) return "";
-    return html`<tag-chip>${tag}</tag-chip>`;
+    return html`<tag-chip title="${tag}"></tag-chip>`;
   }
 }
 
