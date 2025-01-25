@@ -163,7 +163,13 @@ customElements.define(
       }
 
       this.innerHTML = html`
-        <style>
+        <canvas style="filter: contrast(1.5)"></canvas>
+        <div></div>
+      `;
+
+      appendStyle(
+        this.tagName,
+        html`<style>
           nebula-animation {
             position: relative;
           }
@@ -195,10 +201,8 @@ customElements.define(
               background-position-y: 100px;
             }
           }
-        </style>
-        <canvas style="filter: contrast(1.5)"></canvas>
-        <div></div>
-      `;
+        </style>`
+      );
 
       this.#canvas = this.querySelector("canvas");
 

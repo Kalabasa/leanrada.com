@@ -184,15 +184,10 @@ customElements.define(
               <br />
             </span>
           </p>
-          <p>
-            This site is best viewed with a cup of hot chocolate.
-          </p>
+          <p>This site is best viewed with a cup of hot chocolate.</p>
           <p>
             (C) 2015-${new Date().getFullYear()} Lean Rada.
-            <a
-              href="https://github.com/Kalabasa/leanrada.com"
-              target="_blank"
-            >
+            <a href="https://github.com/Kalabasa/leanrada.com" target="_blank">
               Source</a
             >.
           </p>
@@ -332,6 +327,16 @@ customElements.define(
 
 function html(strings, ...values) {
   return String.raw({ raw: strings }, ...values);
+}
+
+const appendedStyles = new Set();
+function appendStyle(id, htmlCode) {
+  if (appendedStyles.has(id)) return;
+  const styleElement = document.createElement("style");
+  styleElement.innerText = htmlCode
+    .slice("<style>".length, -"</style>".length)
+    .replace(/\s+/g, " ");
+  document.head.appendChild(styleElement);
 }
 
 function debounce(fn, ms = 0) {
