@@ -184,7 +184,7 @@ customElements.define(
               <br />
             </span>
           </p>
-          <p class="site-footer-best-viewed">
+          <p>
             This site is best viewed with a cup of hot chocolate.
           </p>
           <p>
@@ -324,20 +324,6 @@ customElements.define(
           window.scrollTo(0, 0);
         } else {
           requestAnimationFrame(animateScrollToTop);
-        }
-      }
-
-      if (window.screen) {
-        const bestViewed = this.querySelector(".site-footer-best-viewed");
-        updateBestViewed();
-        window.screen.addEventListener("change", () => updateBestViewed());
-
-        function updateBestViewed() {
-          if (window.screen.width > 0 && window.screen.height > 0) {
-            const w = window.screen.width * window.devicePixelRatio;
-            const h = window.screen.height * window.devicePixelRatio;
-            bestViewed.textContent = `This site is best viewed on a ${w}x${h} screen!`;
-          }
         }
       }
     }
