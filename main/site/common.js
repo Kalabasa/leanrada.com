@@ -302,12 +302,9 @@ customElements.define(
         <a href="#top" aria-label="Back to top">^</a>
       </footer>`;
 
-      let scrollToTopValue = 0;
-
       const topBtn = this.querySelector("a[href='#top']");
       topBtn.addEventListener("click", (event) => {
         event.preventDefault();
-        scrollToTopValue = 200;
         this.#animateScrollToTop();
       });
 
@@ -319,13 +316,13 @@ customElements.define(
       }
     }
 
-    #animateScrollToTop() {
-      scrollToTopValue *= 0.6;
-      window.scrollTo(0, scrollToTopValue);
-      if (scrollToTopValue < 1) {
+    #animateScrollToTop(currentY = Math.min(800, window.scrollY)) {
+      currentY *= 0.6;
+      window.scrollTo(0, currentY);
+      if (currentY < 1) {
         window.scrollTo(0, 0);
       } else {
-        requestAnimationFrame(this.#animateScrollToTop);
+        requestAnimationFrame(() => this.#animateScrollToTop(currentY));
       }
     }
 
