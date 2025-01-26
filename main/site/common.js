@@ -308,18 +308,38 @@ customElements.define(
       topBtn.addEventListener("click", (event) => {
         event.preventDefault();
         scrollToTopValue = 200;
-        animateScrollToTop();
+        this.#animateScrollToTop();
       });
 
-      // subtle smooth scroll
-      function animateScrollToTop() {
-        scrollToTopValue *= 0.6;
-        window.scrollTo(0, scrollToTopValue);
-        if (scrollToTopValue < 1) {
-          window.scrollTo(0, 0);
-        } else {
-          requestAnimationFrame(animateScrollToTop);
-        }
+      if (this.parentElement === document.body) {
+        this.#updatePosition();
+        window.addEventListener("resize", () => {
+          this.#updatePosition();
+        });
+      }
+    }
+
+    #animateScrollToTop() {
+      scrollToTopValue *= 0.6;
+      window.scrollTo(0, scrollToTopValue);
+      if (scrollToTopValue < 1) {
+        window.scrollTo(0, 0);
+      } else {
+        requestAnimationFrame(this.#animateScrollToTop);
+      }
+    }
+
+    // why not flex? I wanted <body> to be as vanilla as possible
+    #updatePosition() {
+      const originalTop =
+        this.offsetTop - (this.style.top ? Number.parseInt(this.style.top) : 0);
+      const goodTop = window.innerHeight - this.offsetHeight - originalTop;
+      if (goodTop > 0) {
+        this.style.position = "relative";
+        this.style.top = goodTop + "px";
+      } else {
+        this.style.removeProperty("position");
+        this.style.removeProperty("bottom");
       }
     }
   }
