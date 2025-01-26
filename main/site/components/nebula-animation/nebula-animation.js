@@ -19,8 +19,6 @@ customElements.define(
     #mouseCell = null;
 
     #lastT = 0;
-    #startT = 0;
-    #loopStartT = 0;
 
     #isVisible = false;
 
@@ -117,7 +115,6 @@ customElements.define(
 
       if (!this.#noise) {
         this.#noise = initNoise();
-        this.#startT = this.#getT();
       }
 
       const canvas = this.#canvas;
@@ -140,7 +137,6 @@ customElements.define(
     }
 
     #startLoop() {
-      this.#loopStartT = this.#lastT = this.#getT();
       this.#loop();
     }
 
@@ -199,6 +195,12 @@ customElements.define(
           @keyframes nebula-noise-y {
             to {
               background-position-y: 100px;
+            }
+          }
+          @media (prefers-reduced-motion) {
+            nebula-animation > canvas,
+            nebula-animation > div {
+              display: none;
             }
           }
         </style>`
