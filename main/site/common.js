@@ -295,7 +295,6 @@ customElements.define(
           </p>
         </div>
         <nebula-animation
-        mouse
           palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591"
           width="40"
           height="10"
