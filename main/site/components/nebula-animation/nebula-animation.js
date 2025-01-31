@@ -1,5 +1,8 @@
-import { perlinNoise3d } from "/lib/vendor/perlin-noise-3d.min.js";
-import { mousePosition } from "/lib/mouse_position.mjs";
+const loadPerlinNoise3d = () =>
+  import("/lib/vendor/perlin-noise-3d.min.js").then((m) => m.perlinNoise3d);
+
+const getMousePosition = () =>
+  import("/lib/mouse_position.mjs").then((m) => m.mousePosition);
 
 customElements.define(
   "nebula-animation",
@@ -52,21 +55,26 @@ customElements.define(
       const halfGridWidth = gridWidth / 2;
       const halfGridHeight = gridHeight / 2;
 
+      if (!noise) {
+        return;
+      }
+
       this.#mouseCell = null;
       if (this.#useMouse) {
-        const { x, y } = mousePosition;
-        const bounds = canvas.getBoundingClientRect();
-        if (
-          bounds.left < x &&
-          x < bounds.right &&
-          bounds.top < y &&
-          y < bounds.bottom
-        ) {
-          this.#mouseCell = {
-            x: (x - bounds.x) / cellWidth,
-            y: (y - bounds.y) / cellHeight,
-          };
-        }
+        getMousePosition().then(({ x, y }) => {
+          const bounds = canvas.getBoundingClientRect();
+          if (
+            bounds.left < x &&
+            x < bounds.right &&
+            bounds.top < y &&
+            y < bounds.bottom
+          ) {
+            this.#mouseCell = {
+              x: (x - bounds.x) / cellWidth,
+              y: (y - bounds.y) / cellHeight,
+            };
+          }
+        });
       }
 
       const paletteLength = palette.length;
@@ -114,7 +122,9 @@ customElements.define(
       }
 
       if (!this.#noise) {
-        this.#noise = initNoise();
+        getNoise().then((noise) => {
+          this.#noise = noise;
+        });
       }
 
       const canvas = this.#canvas;
@@ -141,7 +151,7 @@ customElements.define(
     }
 
     connectedCallback() {
-      this.#useMouse = this.getAttribute("mouse") != null;
+      this.#useMouse = this.hasAttribute("mouse");
 
       const gridWidth = this.getAttribute("width");
       if (gridWidth) {
@@ -224,11 +234,16 @@ customElements.define(
   }
 );
 
-function initNoise() {
-  const noise = new perlinNoise3d();
-  noise.perlin_octaves = 1; // ?? defaults
-  noise.perlin_amp_falloff = 1;
-  return noise;
+let cachedNoisePromise = null;
+function getNoise() {
+  if (cachedNoisePromise) return cachedNoisePromise;
+  return (cachedNoisePromise = (async () => {
+    const perlinNoise3d = await loadPerlinNoise3d();
+    const noise = new perlinNoise3d();
+    noise.perlin_octaves = 1; // ?? defaults
+    noise.perlin_amp_falloff = 1;
+    return noise;
+  })());
 }
 
 function sigmoid(x) {
