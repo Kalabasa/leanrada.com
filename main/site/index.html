@@ -34,7 +34,11 @@
           renderCircleText(13, 9, "Welcome to my site!");
         </script>
       </div>
-      <img class="home-circle-icon" src="/icons/yay_sheet.png" alt="" />
+      <img
+        class="home-circle-icon pixelated"
+        src="/icons/yay_sheet.png"
+        alt=""
+      />
     </div>
 
     <span class="intro-text">
@@ -76,11 +80,18 @@
       <span class="intro-line"> Nice to meet you. </span>
       <br />
       <span class="intro-line">
-        Please, <great-time-trigger>have a great time.</great-time-trigger>
+        Please,
+        <span class="great-time-trigger" onclick="haveAGreatTime(event)"
+          >have a great time.</span
+        >
       </span>
     </span>
   </div>
 </section>
+
+<div class="great-time-counter">
+  you now have <span id="great-time-num">0</span> great time(s)
+</div>
 
 <site-footer></site-footer>
 
@@ -181,7 +192,6 @@
     height: 5vh;
     object-fit: cover;
     object-position: 0 0;
-    image-rendering: pixelated;
     filter: invert(1);
   }
 
@@ -304,136 +314,32 @@
     }
   }
 
-  .section {
-    max-width: 1200px;
-    margin: 0 auto max(10vmin, 150px);
-    padding: 0 60px;
+  .great-time-trigger {
+    text-decoration: underline;
+    cursor: pointer;
+    user-select: none;
+  }
+  .great-time-counter {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    right: 0;
     font-size: 15px;
-    text-align: center;
+    background-color: var(--bg-clr);
+    pointer-events: none;
+    transform-origin: bottom right;
+    animation: great-time-counter-appear 0.6s both;
+    z-index: 200;
   }
-  .section:last-child {
-    margin-bottom: 150px;
+  .great-time-counter.flash {
+    background-color: #fff;
   }
-  .section > p {
-    margin: 30px 0;
-    line-height: 2;
-  }
-  .section-title {
-    margin: 0 0 36px;
-    font-family: var(--display-font);
-    font-size: 21px;
-    font-style: italic;
-    font-weight: bold;
-  }
-  @media (max-width: 800px) {
-    .section {
-      padding: 0 18px;
-    }
-  }
-  .start-from-top .section {
-    animation: section-appear 0.2s 1s backwards;
-  }
-  @keyframes section-appear {
+
+  @keyframes great-time-counter-appear {
     from {
       opacity: 0;
+      transform: scale(4);
     }
-  }
-
-  .about-section {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 60px;
-    z-index: 0;
-  }
-  .about-subsection {
-    flex: 1 1 50%;
-    max-width: 520px;
-    text-align: start;
-  }
-  .magnetic-field {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 100vw;
-    height: 90%;
-    transform: translate(-50%, -50%);
-    z-index: -1;
-  }
-
-  .cursor-section {
-    display: none;
-  }
-  @media (any-hover: hover) {
-    .cursor-section {
-      display: revert;
-    }
-  }
-
-  .projects-section {
-    max-width: unset;
-    overflow: hidden;
-  }
-  .projects-section .section-title {
-    margin-bottom: 60px;
-  }
-  .more-projects {
-    display: inline-block;
-    margin-top: 30px;
-    font-weight: bold;
-  }
-  .more-projects::after {
-    content: "→";
-    display: inline-block;
-  }
-
-  .more-notes {
-    display: inline-block;
-    margin-top: 30px;
-    font-weight: bold;
-  }
-  .more-notes::after {
-    content: "→";
-    display: inline-block;
-  }
-
-  .misc-section {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 36px;
-  }
-  .misc-subsection {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1 1 50%;
-    min-height: 195px;
-    max-width: 390px;
-    text-align: center;
-  }
-  @media (max-width: 462px) {
-    .misc-section {
-      gap: 18px;
-    }
-    .misc-subsection {
-      min-height: 130px;
-    }
-  }
-  .more-misc {
-    display: inline-block;
-    font-weight: bold;
-    text-align: center;
-  }
-  .more-misc::after {
-    content: "→";
-    display: inline-block;
-  }
-  .hit-counter-subsection {
-    font-size: 36px;
   }
 </style>
 
@@ -441,6 +347,8 @@
   window.addEventListener("load", () => {
     const yayIcon = document.querySelector(".home-circle-icon");
     const sayLean = new Audio("/lean.mp3");
+    const greatTimeContainer = document.querySelector(".great-time-counter");
+    const greatTimeNum = document.getElementById("great-time-num");
     document.body.classList.toggle("start-from-top", window.scrollY < 100);
 
     let sayTime = 0;
@@ -453,7 +361,8 @@
     });
 
     function animateYay() {
-      const t = ((Date.now() - (sayTime + 400)) / (sayLean.duration * 1000)) * 1.5;
+      const t =
+        ((Date.now() - (sayTime + 400)) / (sayLean.duration * 1000)) * 1.5;
 
       if (t >= 1) {
         yayIcon.style.objectPosition = null;
@@ -474,5 +383,20 @@
       sayTime = Date.now();
       animateYay();
     });
+
+    let greatTimes = 0;
+    window.haveAGreatTime = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      greatTimes++;
+      greatTimeNum.innerText = greatTimes;
+      if (greatTimes === 1) {
+        greatTimeContainer.style.display = "block";
+      } else {
+        greatTimeContainer.classList.add("flash");
+        setTimeout(() => greatTimeContainer.classList.remove("flash"), 34);
+      }
+    };
   });
 </script>
