@@ -41,6 +41,7 @@ customElements.define(
 
       const passive = { passive: true };
       window.addEventListener("scroll", debounce(this.#onScroll), passive);
+      window.addEventListener("wheel", debounce(this.#onWheel), passive);
       window.addEventListener(
         "mousemove",
         debounce(this.#onMouseMove, 100),
@@ -50,7 +51,8 @@ customElements.define(
       window.addEventListener("touchmove", this.#onWindowTouchMove, passive);
       this.addEventListener("touchstart", this.#onTouchStart, passive);
 
-      if (this.getAttribute("prehide")) {
+      if (this.hasAttribute("prehide")) {
+        // todo: fix
         this.#currentY = this.#currentYTarget = -this.offsetHeight;
         this.#updateDOM();
       }
@@ -71,6 +73,32 @@ customElements.define(
       this.#updateDOM();
 
       this.#lastScrollY = window.scrollY;
+    };
+
+    #onWheel = (event) => {
+      const scrollY = window.scrollY;
+      setTimeout(() => {
+        if (window.scrollY !== scrollY) return;
+
+        let dy = 0;
+        switch (event.deltaMode) {
+          case WheelEvent.DOM_DELTA_PIXEL:
+            dy = event.deltaY;
+          case WheelEvent.DOM_DELTA_LINE:
+            dy = event.deltaY * 20;
+          case WheelEvent.DOM_DELTA_PAGE:
+            dy = event.deltaY * window.innerHeight;
+        }
+
+        this.#currentYTarget = this.#currentY - event.deltaY;
+        if (this.#currentYTarget > 0) {
+          this.#currentYTarget = 0;
+        } else if (this.#currentYTarget < -this.offsetHeight) {
+          this.#currentYTarget = -this.offsetHeight;
+        }
+
+        this.#updateDOM();
+      }, 100);
     };
 
     #onMouseMove = (event) => {
