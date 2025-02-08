@@ -196,8 +196,8 @@
             trailY
           );
           const fade = trailThickness * 0.05;
-          context.fillStyle.addColorStop(fade / 2, "#54f8c100");
-          context.fillStyle.addColorStop(fade, "#54f8c1ff");
+          context.fillStyle.addColorStop(fade / 2, "#ffffff00");
+          context.fillStyle.addColorStop(fade, "#ffffffff");
           context.fill();
         }
 

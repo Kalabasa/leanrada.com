@@ -13,15 +13,29 @@
         appendStyle(
           this.tagName,
           html`<style>
+            bump-tally {
+              height: auto;
+              text-align: center;
+            }
             bump-tally span {
               display: inline-block;
               margin: 0 1.5px;
               padding: 0 6px;
+              height: 54px;
+              box-sizing: border-box;
               border: solid 1px var(--text2-clr);
               border-radius: 6px;
               font-family: var(--display-font);
               font-size: 36px;
               font-weight: bold;
+            }
+            @container (max-width: 220px) {
+              bump-tally span {
+                margin: 0 1px;
+                padding: 0 1px;
+                height: 27px;
+                font-size: 18px;
+              }
             }
           </style>`
         );
