@@ -14,6 +14,7 @@
           this.tagName,
           html`<style>
             bump-tally span {
+              display: inline-block;
               margin: 0 1.5px;
               padding: 0 6px;
               border: solid 1px var(--text2-clr);
