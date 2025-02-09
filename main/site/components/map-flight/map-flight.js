@@ -139,10 +139,13 @@
             flight.origin.y - flight.target.y
           );
 
-          const size = Math.min(
-            8,
-            (flight.target.t - now) * 0.01,
-            (now - flight.origin.t) * 0.01
+          const size = Math.max(
+            0,
+            Math.min(
+              8,
+              (flight.target.t - now) * 0.01,
+              (now - flight.origin.t) * 0.01
+            )
           );
 
           if (now < flight.target.t) {
@@ -175,8 +178,8 @@
           );
           const trailX = lerp(flight.origin.x, flight.target.x, trailT);
           const trailY = lerp(flight.origin.y, flight.target.y, trailT);
-          const trailStartX = x - Math.sin(angle) * (size + 2);
-          const trailStartY = y + Math.cos(angle) * (size + 2);
+          const trailStartX = x - Math.sin(angle) * (size + 6);
+          const trailStartY = y + Math.cos(angle) * (size + 6);
           context.beginPath();
           context.moveTo(
             trailStartX + Math.cos(angle) * trailThickness,
@@ -189,15 +192,7 @@
           context.lineTo(trailX, trailY);
           context.closePath();
 
-          context.fillStyle = context.createLinearGradient(
-            x,
-            y,
-            trailX,
-            trailY
-          );
-          const fade = trailThickness * 0.05;
-          context.fillStyle.addColorStop(fade / 2, "#ffffff00");
-          context.fillStyle.addColorStop(fade, "#ffffffff");
+          context.fillStyle = "#fff";
           context.fill();
         }
 
