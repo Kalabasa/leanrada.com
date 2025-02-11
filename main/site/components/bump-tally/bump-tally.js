@@ -29,7 +29,15 @@
               font-size: 36px;
               font-weight: bold;
             }
-            @container (max-width: 220px) {
+            @container (max-width: 240px) {
+              bump-tally span {
+                margin: 0 1px;
+                padding: 0 1px;
+                height: 40px;
+                font-size: 27px;
+              }
+            }
+            @container (max-width: 150px) {
               bump-tally span {
                 margin: 0 1px;
                 padding: 0 1px;
