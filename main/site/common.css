@@ -55,6 +55,7 @@
   --text-clr: #fff;
   --text2-clr: #999;
 
+  --card-border-radius: 18px;
   --ease: cubic-bezier(0.8, 0, 1, 1);
 }
 
@@ -405,6 +406,46 @@ site-footer {
  *
 /* ----------------------------------------------------------------------------- */
 
+bump-tally {
+  /* placeholder */
+  min-height: 54px;
+}
+
+gh-contribs {
+  /* placeholder */
+  min-height: 198px;
+}
+
+nebula-animation {
+  /* placeholder */
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: /*
+    */ radial-gradient(
+        circle closest-corner at 15% 20%,
+        #4d4aff,
+        transparent
+      ),
+      radial-gradient(circle closest-corner at 90% 85%, #e79907, transparent),
+      radial-gradient(circle closest-corner at 80% 60%, #4d4aff, transparent),
+      radial-gradient(circle closest-corner at 20% 40%, #e79907, transparent);
+    mix-blend-mode: overlay;
+  }
+}
+
+fixed-grid {
+  @supports (x: attr(x string)) {
+    --cols: attr(cols type(<number>), 1);
+    --gap: attr(gap type(<number>), 1);
+  }
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+  gap: calc(var(--gap, 1) * 6px);
+}
+
 content-header {
   display: block;
   font-family: var(--default-font);
@@ -513,7 +554,7 @@ card-box {
   container-type: size;
   display: block;
   padding: 18px;
-  border-radius: 12px;
+  border-radius: var(--card-border-radius);
   border: solid 1px var(--card-clr);
   box-sizing: border-box;
 }
@@ -521,19 +562,9 @@ card-box {
 box-note {
   display: block;
   padding: 12px 18px;
-  border-radius: 12px;
+  border-radius: var(--card-border-radius);
   border: solid 2px var(--clr0-dark);
   box-sizing: border-box;
-}
-
-bump-tally {
-  /* placeholder */
-  min-height: 54px;
-}
-
-gh-contribs {
-  /* placeholder */
-  min-height: 198px;
 }
 
 notes-list {
@@ -576,5 +607,132 @@ notes-list {
   a:hover time,
   a:focus-visible time {
     color: var(--text-clr);
+  }
+}
+
+feature-card {
+  display: grid;
+  grid-template-columns: minmax(min-content, 7fr) 3fr;
+  grid-template-rows: 192px 72px min-content;
+  grid-template-areas:
+    "img img"
+    "title imgtail"
+    "desc desc";
+  padding: 12px 0 0;
+  text-align: start;
+  color: var(--text-clr);
+
+  a,
+  a:visited {
+    display: grid;
+    grid: subgrid / subgrid;
+    grid-area: 1 / 1 / -1 / -1;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  img {
+    grid-area: img / img / imgtail / imgtail;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--card-border-radius);
+    object-fit: cover;
+    object-position: top;
+    overflow: hidden;
+    filter: contrast(0.8);
+    transition: filter 0.1s ease-out, object-position 0.2s var(--ease);
+  }
+  a::after {
+    grid-area: img / img / imgtail / imgtail;
+    content: "";
+    background-color: var(--clr0);
+    mix-blend-mode: darken;
+    transition: background-color 1s;
+  }
+
+  hgroup {
+    position: relative;
+    grid-area: title;
+    justify-self: start;
+    align-self: end;
+    background: var(--bg-clr);
+    border-top-right-radius: var(--card-border-radius);
+    padding: 12px 24px 0 0;
+    z-index: 1;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 100%;
+      width: var(--card-border-radius);
+      height: 36px;
+      border-bottom-left-radius: var(--card-border-radius);
+      box-shadow: 0 var(--card-border-radius) 0 var(--bg-clr);
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      left: 100%;
+      bottom: 0;
+      width: 36px;
+      height: var(--card-border-radius);
+      border-bottom-left-radius: var(--card-border-radius);
+      box-shadow: calc(-1 * var(--card-border-radius)) 0 0 var(--bg-clr);
+    }
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--display-font);
+    font-size: 18px;
+    font-style: italic;
+    font-weight: bold;
+  }
+
+  hgroup em {
+    display: block;
+    margin-top: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    font-style: italic;
+    color: var(--text2-clr);
+  }
+
+  p {
+    grid-area: desc;
+    margin: 18px 0;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  @media (hover: hover) {
+    &,
+    hgroup,
+    p {
+      transition: 0.2s var(--ease);
+      transition-property: margin, padding;
+    }
+    &:hover {
+      padding: 0 0 12px;
+      margin: 0 -24px 0;
+      padding-bottom: 12px;
+    }
+    &:hover a::after {
+      background-color: #fff;
+      transition: background-color 2s;
+    }
+    &:hover img {
+      filter: contrast(1);
+      object-position: center;
+      transition: filter 1s ease, object-position 3s ease;
+    }
+    &:hover hgroup {
+      padding: 24px;
+    }
+    &:hover p {
+      margin-left: 24px;
+      margin-right: 24px;
+    }
   }
 }

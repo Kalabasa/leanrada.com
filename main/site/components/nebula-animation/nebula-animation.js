@@ -179,17 +179,30 @@
           html`<style>
             nebula-animation {
               position: relative;
+
+              &::before {
+                opacity: 0;
+                transition: opacity 2s ease-in;
+              }
             }
             nebula-animation > canvas {
               width: 100%;
               height: 100%;
+              opacity: 1;
+              animation: nebula-element-fade 2s linear;
+            }
+            @keyframes nebula-element-fade {
+              from {
+                opacity: 0;
+              }
             }
             nebula-animation > div {
               position: absolute;
               inset: 0;
               background: url("/components/nebula-animation/noise.png");
               opacity: 0.1;
-              animation: nebula-noise-x 0.16s steps(2, jump-start) infinite,
+              animation: nebula-element-fade 0.5s linear,
+                nebula-noise-x 0.16s steps(2, jump-start) infinite,
                 nebula-noise-y 0.48s steps(3, jump-start) infinite;
             }
             @supports (mix-blend-mode: overlay) {

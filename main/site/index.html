@@ -410,6 +410,108 @@
     grid-template-columns: repeat(auto-fit, minmax(min(480px, 50vw), 1fr));
     gap: 48px;
   }
+
+  lab-item {
+    position: relative;
+    width: 100%;
+    /* aspect ratio trick*/
+    padding-bottom: 100%;
+
+    a {
+      position: absolute;
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      text-decoration: none;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    img,
+    video {
+      position: absolute;
+      inset: 0;
+      /* we still need width/height */
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    & a:focus-visible img,
+    & a:focus-visible video,
+    &:hover img,
+    &:hover video {
+      filter: invert(1) contrast(0.6);
+    }
+
+    span {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      inset: 0;
+      padding: 24px 18px 0;
+      font-size: 15px;
+      font-style: italic;
+      font-weight: bold;
+      line-height: 1.6;
+      text-align: center;
+      visibility: hidden;
+      color: #fff;
+      z-index: 0;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--clr0-dark);
+        opacity: 0.7;
+        z-index: -1;
+      }
+    }
+    & a:focus-visible span,
+    &:hover span {
+      visibility: visible;
+    }
+
+    /* require double tap to open on mobile */
+    @media (hover: none) {
+      a {
+        pointer-events: none;
+      }
+      /* :hover is a hack to select the last touched item */
+      &:hover {
+        a {
+          animation: disable-pointer-events 0.2s forwards;
+        }
+        span::after {
+          content: "↗";
+          position: absolute;
+          right: 18px;
+          top: 18px;
+          width: 18px;
+          height: 18px;
+          line-height: 16px;
+          font-family: var(--display-font);
+          font-size: 24px;
+          font-style: normal;
+          font-weight: bold;
+          background: #fff;
+          color: var(--clr0-dark);
+        }
+      }
+    }
+  }
+  @keyframes disable-pointer-events {
+    0%,
+    99% {
+      pointer-events: none;
+    }
+    100% {
+      pointer-events: all;
+    }
+  }
 </style>
 
 <div class="great-time-counter">
@@ -419,27 +521,47 @@
 <section class="section bento-section">
   <a href="/notes/">
     <card-box>
-      <img class="pixelated lg-icon" src="/icons/glasses.png" alt="" />
+      <img
+        class="pixelated lg-icon"
+        src="/icons/glasses.png"
+        alt=""
+        loading="lazy"
+      />
       <span data-property="noteCount">10 notes</span>
     </card-box>
   </a>
   <a href="/wares/">
     <card-box>
-      <img class="pixelated lg-icon" src="/icons/pot.png" alt="" />
+      <img
+        class="pixelated lg-icon"
+        src="/icons/pot.png"
+        alt=""
+        loading="lazy"
+      />
       <span data-property="projectCount">10 projects</span>
     </card-box>
   </a>
   <card-box class="bento-tall">
     <div class="icon-and-text-line">
-      <img class="invert pixelated md-icon" src="/icons/github.png" alt="" />
+      <img
+        class="invert pixelated md-icon"
+        src="/icons/github.png"
+        alt=""
+        loading="lazy"
+      />
       github<br />heatmap
     </div>
+    <script data-lazy-src="/components/gh-contribs/gh-contribs.js" defer></script>
     <gh-contribs></gh-contribs>
-    <script src="/components/gh-contribs/gh-contribs.js" defer></script>
   </card-box>
   <a href="/art/">
     <card-box>
-      <img class="pixelated lg-icon" src="/icons/art.png" alt="" />
+      <img
+        class="pixelated lg-icon"
+        src="/icons/art.png"
+        alt=""
+        loading="lazy"
+      />
       my art
     </card-box>
   </a>
@@ -453,13 +575,18 @@
     <p>i use <a href="https://manjaro.org/" target="_blank">manjaro</a> btw.</p>
   </card-box>
   <card-box class="bento-tall bento-map">
+    <script data-lazy-src="/components/map-flight/map-flight.js" defer></script>
     <map-flight bgsrc="/components/map-flight/mnl.png" origin></map-flight>
     i'm from the Philippines
-    <script src="/components/map-flight/map-flight.js" defer></script>
   </card-box>
   <a href="/music/">
     <card-box>
-      <img class="pixelated lg-icon" src="/icons/sound.png" alt="" />
+      <img
+        class="pixelated lg-icon"
+        src="/icons/sound.png"
+        alt=""
+        loading="lazy"
+      />
       my music
     </card-box>
   </a>
@@ -472,19 +599,24 @@
   </card-box>
   <card-box>
     <span class="right-now">
+      <script data-lazy-src="/components/right-now/right-now.js" defer></script>
       <right-now></right-now>
-      <script src="/components/right-now/right-now.js" defer></script>
     </span>
   </card-box>
   <card-box>
     <div>hit counter</div>
+    <script data-lazy-src="/components/bump-tally/bump-tally.js" defer></script>
     <bump-tally data-property="hits">71513</bump-tally>
-    <script src="/components/bump-tally/bump-tally.js" defer></script>
   </card-box>
   <!-- <card-box> (spotify card) </card-box> -->
   <a href="/misc/">
     <card-box>
-      <img class="pixelated lg-icon" src="/icons/person.png" alt="" />
+      <img
+        class="pixelated lg-icon"
+        src="/icons/person.png"
+        alt=""
+        loading="lazy"
+      />
       misc
     </card-box>
   </a>
@@ -492,6 +624,12 @@
 
 <div class="lg-column-section content-columns">
   <section>
+    <img
+      class="pixelated lg-icon"
+      src="/icons/person.png"
+      alt=""
+      loading="lazy"
+    />
     <h2>About me</h2>
     <p>My name is Lean Rada.</p>
     <p>I want to build good things.</p>
@@ -507,6 +645,12 @@
     <p>More <a href="/about/">about me</a>.</p>
   </section>
   <section>
+    <img
+      class="pixelated lg-icon"
+      src="/icons/glasses.png"
+      alt=""
+      loading="lazy"
+    />
     <h2>Latest notes</h2>
     <notes-list data-property="latestNotesList">
       <ul>
@@ -549,12 +693,113 @@
     </p>
   </section>
   <section>
+    <img class="pixelated lg-icon" src="/icons/pot.png" alt="" loading="lazy" />
     <h2>Some things I've built</h2>
-    (WIP)
+    <fixed-grid>
+      <feature-card>
+        <a href="/wares/wikawik/">
+          <img src="/wares/wikawik/media/wikawik.jpg" loading="lazy" />
+          <hgroup>
+            <h1>Wikawik</h1>
+            <em>2020 · Interactive language map</em>
+          </hgroup>
+          <p>
+            A webapp that shows the diversity of languages in the Philippines.
+            Learn about the local languages. Listen to local songs and other
+            media. Made in vanilla JS with D3.js. Passion project.
+          </p>
+        </a>
+      </feature-card>
+      <feature-card>
+        <a href="/wares/hypertangram/">
+          <img src="/wares/hypertangram/media/ht-thumb.png" loading="lazy" />
+          <hgroup>
+            <h1>Hypertangram</h1>
+            <em>2018 · Geometric puzzle game</em>
+          </hgroup>
+          <p>
+            A puzzle game about fitting shapes together. Just like tangram, but
+            the pieces are resizable! Runs on Android. Supports multi-touch
+            interactions for rotating and resizing! Hobby project.
+          </p>
+        </a>
+      </feature-card>
+      <feature-card>
+        <a href="/wares/dimensions/">
+          <img src="/wares/dimensions/media/dimensions_0.jpg" loading="lazy" />
+          <hgroup>
+            <h1>Dimensions</h1>
+            <em>2019 · Augmented reality generative art</em>
+          </hgroup>
+          <p>
+            Generative art with extra dimensions. Web-based, uses Vue.js for the
+            generator and a three.js-based mobile webapp for the AR experience.
+            Made for a workplace event.
+          </p>
+        </a>
+      </feature-card>
+    </fixed-grid>
   </section>
   <section>
+    <img
+      class="pixelated lg-icon"
+      src="/icons/science.png"
+      alt=""
+      loading="lazy"
+    />
     <h2>From the lab</h2>
-    (WIP)
+    <fixed-grid style="--cols: 2; --gap: 4">
+      <lab-item>
+        <a href="https://leanrada.com/guhit-kudlit/" target="_blank">
+          <video
+            autoplay
+            muted
+            loop
+            src="/labs/baybayin.mp4"
+            loading="lazy"
+          ></video>
+          <span>Baybayin calligraphy generator</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://kalabasa.github.io/genuary_2023/09/" target="_blank">
+          <img src="/labs/wc-sim-9.png" loading="lazy" />
+          <span>Flowers in simulated watercolour [GPU heavy!]</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://codepen.io/kalabasa/pen/OJLQEWY" target="_blank">
+          <video
+            autoplay
+            muted
+            loop
+            src="/labs/3d-hamburger.opt.mp4"
+            loading="lazy"
+          ></video>
+          <span>3D hamburger menu animation</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://codepen.io/kalabasa/pen/oVMOZK" target="_blank">
+          <img src="/labs/pure-css-ai-tic-tac-toe.png" loading="lazy" />
+          <span>
+            Tic-tac-toe AI written in pure CSS. Can you beat a stylesheet?
+          </span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://kalabasa.github.io/genuary_2022/04/" target="_blank">
+          <img src="/labs/floridablanca.png" loading="lazy" />
+          <span>Floridablanca - flow art generator</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://kalabasa.github.io/genuary_2023/28/" target="_blank">
+          <img src="/labs/poetry-gen.png" loading="lazy" />
+          <span>Poetry generator</span>
+        </a>
+      </lab-item>
+    </fixed-grid>
   </section>
 </div>
 

@@ -178,7 +178,9 @@ customElements.define(
     }
 
     connectedCallback() {
-      import("/components/nebula-animation/nebula-animation.js");
+      setTimeout(() => {
+        import("/components/nebula-animation/nebula-animation.js");
+      }, 1_500);
 
       const geekringNumber = 288;
 
@@ -374,15 +376,21 @@ function html(strings, ...values) {
   return String.raw({ raw: strings }, ...values);
 }
 
-const appendedStyles = new Set();
-function appendStyle(id, htmlCode) {
-  if (appendedStyles.has(id)) return;
-  const styleElement = document.createElement("style");
-  styleElement.innerText = htmlCode
-    .slice("<style>".length, -"</style>".length)
-    .replace(/\s+/g, " ");
-  document.head.appendChild(styleElement);
-}
+const appendStyle = (() => {
+  const appendedStyles = new Set();
+
+  return (id, htmlCode) => {
+    if (appendedStyles.has(id)) return;
+    appendedStyles.add(id);
+
+    const styleElement = document.createElement("style");
+    styleElement.innerText = htmlCode
+      .slice("<style>".length, -"</style>".length)
+      .replace(/\s+/g, " ");
+    document.head.appendChild(styleElement);
+
+  };
+})();
 
 function debounce(fn, ms = 0) {
   let recentlyFired = false;
@@ -397,3 +405,9 @@ function debounce(fn, ms = 0) {
     return fn(...args);
   };
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  for (const lazyScript of document.querySelectorAll("script[data-lazy-src]")) {
+    console.log(lazyScript);
+  }
+});

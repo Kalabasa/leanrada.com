@@ -38,7 +38,7 @@
         const isOrigin = this.hasAttribute("origin");
 
         this.innerHTML = html`<div>
-          <img alt="map" src="${this.getAttribute("bgsrc")}" />
+          <img alt="map" src="${this.getAttribute("bgsrc")}" loading="lazy" />
           <canvas></canvas>
         </div>`;
 
