@@ -10,7 +10,7 @@ class SongCard extends HTMLElement {
 
     this.innerHTML = html`
       <button class="song-card-play" aria-label="Play / Pause"></button>
-      <audio src="${src}" controls></audio>
+      <audio src="${src}" controls preload="metadata"></audio>
       <div class="song-card-title">${title} ${this.#maybeRenderTag()}</div>
       <div class="song-card-description">${description}</div>
     `;

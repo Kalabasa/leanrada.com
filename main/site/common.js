@@ -384,11 +384,11 @@ const appendStyle = (() => {
     appendedStyles.add(id);
 
     const styleElement = document.createElement("style");
-    styleElement.innerText = htmlCode
-      .slice("<style>".length, -"</style>".length)
-      .replace(/\s+/g, " ");
+    const cssCode = htmlCode.slice("<style>".length, -"</style>".length);
+    const indent = cssCode.match(/^\n?([ \t]*)/)[1];
+    console.log(id, `<${indent}>`);
+    styleElement.textContent = cssCode.replaceAll(indent, "");
     document.head.appendChild(styleElement);
-
   };
 })();
 
@@ -407,7 +407,25 @@ function debounce(fn, ms = 0) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  for (const lazyScript of document.querySelectorAll("script[data-lazy-src]")) {
-    console.log(lazyScript);
+  setupLazyScripts();
+
+  function setupLazyScripts() {
+    const selector = "script[data-lazy-src]";
+
+    const intersectionObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          for (const script of entry.target.querySelectorAll(selector)) {
+            console.log("loading lazy script", script, script.dataset.lazySrc);
+            script.src = script.dataset.lazySrc;
+          }
+          intersectionObserver.unobserve(entry.target);
+        }
+      }
+    });
+
+    for (const script of document.querySelectorAll(selector)) {
+      intersectionObserver.observe(script.parentElement);
+    }
   }
 });
