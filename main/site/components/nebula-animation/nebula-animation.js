@@ -60,9 +60,9 @@
           return;
         }
 
-        this.#mouseCell = null;
         if (this.#useMouse) {
           getMousePosition().then(({ x, y }) => {
+            this.#mouseCell = null;
             const bounds = canvas.getBoundingClientRect();
             if (
               bounds.left < x &&

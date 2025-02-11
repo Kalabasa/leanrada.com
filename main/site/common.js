@@ -178,11 +178,15 @@ customElements.define(
     }
 
     connectedCallback() {
-      setTimeout(() => {
-        import("/components/nebula-animation/nebula-animation.js");
-      }, 1_500);
-
       const geekringNumber = 288;
+
+      const nobg = this.hasAttribute("nobg");
+
+      if (!nobg) {
+        setTimeout(() => {
+          import("/components/nebula-animation/nebula-animation.js");
+        }, 1_500);
+      }
 
       this.innerHTML = html`<footer>
         <div>
@@ -324,11 +328,13 @@ customElements.define(
             >]
           </p>
         </div>
-        <nebula-animation
-          palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591"
-          width="40"
-          height="10"
-        ></nebula-animation>
+        ${nobg
+          ? ""
+          : html`<nebula-animation
+              palette="#0ad591 #ff2b75 #ffb833 #0ad591 #0ad591 #4d4aff #0ad591"
+              width="40"
+              height="10"
+            ></nebula-animation>`}
         <a href="#top" aria-label="Back to top">^</a>
       </footer>`;
 
@@ -386,7 +392,6 @@ const appendStyle = (() => {
     const styleElement = document.createElement("style");
     const cssCode = htmlCode.slice("<style>".length, -"</style>".length);
     const indent = cssCode.match(/^\n?([ \t]*)/)[1];
-    console.log(id, `<${indent}>`);
     styleElement.textContent = cssCode.replaceAll(indent, "");
     document.head.appendChild(styleElement);
   };
@@ -416,7 +421,7 @@ document.addEventListener("DOMContentLoaded", () => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           for (const script of entry.target.querySelectorAll(selector)) {
-            console.log("loading lazy script", script, script.dataset.lazySrc);
+            script.type = "module";
             script.src = script.dataset.lazySrc;
           }
           intersectionObserver.unobserve(entry.target);
