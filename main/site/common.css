@@ -123,11 +123,11 @@ img {
 }
 
 .md-column-section {
-  max-width: 600px;
+  max-width: 1200px;
 }
 
 .lg-column-section {
-  max-width: 1200px;
+  max-width: 1800px;
 }
 
 .sm-icon {
@@ -457,7 +457,22 @@ fixed-grid {
     --gap: attr(gap type(<number>), 1);
   }
   display: grid;
+  justify-content: center;
   grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+  gap: calc(var(--gap, 1) * 6px);
+}
+
+auto-grid {
+  @supports (x: attr(x string)) {
+    --colwidth: attr(colwidth type(<length>), 300px);
+    --gap: attr(gap type(<number>), 1);
+  }
+  display: grid;
+  justify-content: center;
+  grid-template-columns: repeat(
+    auto-fit,
+    calc(min(var(--colwidth), 100%))
+  );
   gap: calc(var(--gap, 1) * 6px);
 }
 
@@ -652,7 +667,7 @@ feature-card {
     height: 100%;
     border-radius: var(--card-border-radius);
     object-fit: cover;
-    object-position: top;
+    object-position: center;
     overflow: hidden;
     filter: contrast(0.8);
     transition: filter 0.1s ease-out, object-position 0.2s var(--ease);
@@ -739,8 +754,8 @@ feature-card {
     }
     &:hover img {
       filter: contrast(1);
-      object-position: center;
-      transition: filter 1s ease, object-position 3s ease;
+      object-position: 50% 67%;
+      transition: filter 1s ease, object-position 1s ease;
     }
     &:hover hgroup {
       padding: 24px;
