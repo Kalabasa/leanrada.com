@@ -392,7 +392,8 @@ const appendStyle = (() => {
     const styleElement = document.createElement("style");
     const cssCode = htmlCode.slice("<style>".length, -"</style>".length);
     const indent = cssCode.match(/^\n?([ \t]*)/)[1];
-    styleElement.textContent = cssCode.replaceAll(indent, "");
+    styleElement.textContent =
+      "@layer component {\n" + cssCode.replaceAll(indent, "") + "\n}";
     document.head.appendChild(styleElement);
   };
 })();
