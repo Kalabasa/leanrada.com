@@ -2,7 +2,7 @@ const fs = require("fs");
 const cheerio = require("cheerio");
 const marked = require("marked");
 
-const markdownIndent = 6; // Adjust this to match the common leading spaces inside markdown blocks
+const markdownIndent = 6;
 
 function convertToWebComponents(inputHtml) {
   const input = cheerio.load(inputHtml, {
@@ -10,10 +10,8 @@ function convertToWebComponents(inputHtml) {
     decodeEntities: false,
   });
 
-  // Extract page title
   const title = input("page-title").attr("title") ?? "Untitled";
 
-  // Create base structure
   let newHtml = `\
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -37,16 +35,28 @@ function convertToWebComponents(inputHtml) {
   });
   const main = output("main");
 
-  // Convert markdown to HTML
   const markdownContent = input("markdown").html() ?? "";
   const trimmedMarkdown = markdownContent.replace(
     new RegExp(`^ {${markdownIndent}}`, "gm"),
     ""
-  ); // Remove fixed leading spaces
+  );
   const convertedMarkdown = marked.parse(trimmedMarkdown);
   main.append(convertedMarkdown);
 
-  // Convert <blog-media> content
+  output("a").each((i, el) => {
+    const tag = output(el);
+    if (!tag.attr("target")) {
+      const href = tag.attr("href");
+      if (
+        href.startsWith("http:") ||
+        href.startsWith("https:") ||
+        href.startsWith("//")
+      ) {
+        tag.attr("target", "_blank");
+      }
+    }
+  });
+
   output("blog-media").each((i, el) => {
     const tag = output(el);
     const src =
@@ -78,7 +88,6 @@ function convertToWebComponents(inputHtml) {
     tag.replaceWith(out);
   });
 
-  // Convert <project-info-card>
   output("project-info-card").each((i, el) => {
     const tag = output(el);
     let card = `<project-info-card><strong>Project details</strong>`;
@@ -99,7 +108,6 @@ function convertToWebComponents(inputHtml) {
   return output.html().replace(/<\/?(html|head|body)>/g, "");
 }
 
-// Read and convert file
 const inputFile = fs.existsSync("index.original.html")
   ? "index.original.html"
   : "index.html";
