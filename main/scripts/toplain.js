@@ -74,7 +74,7 @@ function convertToWebComponents(inputHtml) {
     } else if (src.endsWith(".mp4")) {
       out = `<video autoplay muted loop playsinline aria-label="${alt}" src="${src}" loading="lazy"></video>`;
     } else {
-      throw new Error("unsupported media src");
+      throw new Error(`Unsupported media src: '${src}'`);
     }
 
     if (tag.attr("type") === "windowed") {
