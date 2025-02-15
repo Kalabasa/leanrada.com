@@ -29,13 +29,13 @@
               }
 
               /**
-            * THEME
-            * Modified by Kalabasa.
-            * Based on:
-            * a11y-dark theme for JavaScript, CSS, and HTML
-            * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
-            * @author ericwbailey
-            */
+               * THEME
+               * Modified by Kalabasa.
+               * Based on:
+               * a11y-dark theme for JavaScript, CSS, and HTML
+               * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/hemes/prism-okaidia.css
+               * @author ericwbailey
+               */
 
               .token.inserted:not(.prefix) {
                 background: #00b6a71c;
