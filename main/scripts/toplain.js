@@ -1,6 +1,7 @@
 const fs = require("fs");
 const cheerio = require("cheerio");
 const marked = require("marked");
+const path = require("path");
 
 const markdownIndent = 6;
 
@@ -108,6 +109,11 @@ function convertToWebComponents(inputHtml) {
   return output.html().replace(/<\/?(html|head|body)>/g, "");
 }
 
+const dir = process.argv[2];
+if (dir) {
+  console.log("Directory", path.relative(process.cwd(), path.resolve(dir)));
+  process.chdir(dir);
+}
 const inputFile = fs.existsSync("index.original.html")
   ? "index.original.html"
   : "index.html";
