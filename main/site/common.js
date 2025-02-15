@@ -414,6 +414,7 @@ function debounce(fn, ms = 0) {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupLazyScripts();
+  setupAutoLoadComponents();
 
   function setupLazyScripts() {
     const selector = "script[data-lazy-src]";
@@ -432,6 +433,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (const script of document.querySelectorAll(selector)) {
       intersectionObserver.observe(script.parentElement);
+    }
+  }
+
+  function setupAutoLoadComponents() {
+    const components = [["code-block", "/components/code-block/code-block.js"]];
+
+    for (const [tagName, src] of components) {
+      if (document.body.querySelector(tagName)) {
+        import(src);
+      }
     }
   }
 });

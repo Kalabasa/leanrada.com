@@ -3,7 +3,7 @@ const cheerio = require("cheerio");
 const marked = require("marked");
 const path = require("path");
 
-const markdownIndent = 6;
+const indentPattern = new RegExp(`^ {0,6}`, "gm");
 
 function convertToWebComponents(inputHtml) {
   const input = cheerio.load(inputHtml, {
@@ -36,12 +36,13 @@ function convertToWebComponents(inputHtml) {
   });
   const main = output("main");
 
-  const markdownContent = input("markdown").html() ?? "";
-  const trimmedMarkdown = markdownContent.replace(
-    new RegExp(`^ {${markdownIndent}}`, "gm"),
-    ""
-  );
-  const convertedMarkdown = marked.parse(trimmedMarkdown);
+  const markdown = input("markdown");
+  markdown.contents().each((i, node) => {
+    if (node.type === "text") {
+      node.data = node.data.replace(indentPattern, "");
+    }
+  });
+  const convertedMarkdown = marked.parse(markdown.html());
   main.append(convertedMarkdown);
 
   output("a").each((i, el) => {
@@ -107,6 +108,18 @@ function convertToWebComponents(inputHtml) {
 
     card += `</dl></project-info-card>`;
     tag.replaceWith(card);
+  });
+
+  output("code-block").each((i, el) => {
+    const tag = output(el);
+    let codeBlock = `<code-block language=${tag.attr("language")}><pre><code>`;
+    codeBlock += tag.attr("code").replace(/^\n|\n$/g, "");
+    codeBlock += `</code></pre></code-block>`;
+    if (tag.parent().is("p")) {
+      tag.parent().replaceWith(codeBlock);
+    } else {
+      tag.replaceWith(codeBlock);
+    }
   });
 
   return output.html().replace(/<\/?(html|head|body)>/g, "");
