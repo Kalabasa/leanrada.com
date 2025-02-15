@@ -1,0 +1,86 @@
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
+
+<title>Dimensions - Part 2: Augmented reality</title>
+
+<site-header></site-header>
+
+<main class="prose"><h1 id="dimensions">Dimensions</h1>
+<video autoplay="" muted="" loop="" playsinline="" aria-label="Video demo" src="../media/dimensions_3.mp4" loading="lazy"></video>
+
+<h2 id="part-2-augmented-reality">Part 2. Augmented reality</h2>
+<p>The idea of including augmented reality into the art piece was wholly inspired by <a href="https://github.com/jeromeetienne/AR.js" target="_blank"><strong>AR.js</strong></a>, an awesome project that brings fast and easy augmented reality to the web.</p>
+<iframe width="512" height="288" src="https://www.youtube-nocookie.com/embed/0MtvjFg7tik" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+
+<p>The AR.js demo looked really cool and smooth. I didn’t end up using that library though.</p>
+<p>With augmented reality, the art piece became an art experience. The planned user flow for the experience went like this:</p>
+<ol>
+<li>User sees the piece and notices the <strong>QR code</strong>.</li>
+<li>User whips out phone to <strong>scan</strong> the QR code.</li>
+<li>Phone is directed to the <strong>app</strong>.</li>
+<li>App opens the phone’s camera to <strong>track</strong> the piece in 3D space.</li>
+<li>App superimposes virtual art on the physical art, <em>augmenting reality</em>. ✨</li>
+</ol>
+<p>Implementing object tracking (step 4) proved to be difficult. AR.js and others required special <strong>markers</strong> in order to track the 3D scene.</p>
+<p>The prints were already finalized, so I couldn’t add AR markers on it by then. Plus, the piece already had a QR code slapped on it. Adding any more tags would’ve ruined it.</p>
+<p>I looked around for alternatives like <strong>Tracking.js</strong>, <strong>OpenCV</strong>, and even <strong>TensorFlow</strong>, but ultimately implemented my own <strong>image recognition</strong> algorithm.</p>
+<hr>
+<h2 id="recognizing-the-piece">Recognizing the piece</h2>
+<p>For this project, I applied a simple image recognition algorithm to determine when the piece has been aligned in front of the camera. <a href="https://en.wikipedia.org/wiki/Computer_vision#Recognition" target="_blank"><strong>Image recognition</strong></a> is a computer vision problem of determining whether an image contains some specific object or not.</p>
+<figure><video autoplay="" muted="" loop="" playsinline="" aria-label="Demo video" src="../media/dimensions_imagerec.mp4" loading="lazy"></video><figcaption>The app recognizes when the target piece has been aligned.</figcaption></figure>
+
+<p>There exists many solutions to this problem, ranging from simple histogram matching to convolutional neural networks. These days everyone just uses neural networks and deep learning if possible.</p>
+<p>These technologies power some apps like face filters, but are also used for things like mass camera surveillance.</p>
+<p>In my case however, I’ve simplified the problem to determining whether any of the three specific art pieces is in the center frame in the user’s camera, or not. No position tracking.</p>
+<p>This reduced the problem to a yes/no problem.</p>
+<p>Consequently, the algorithm was relatively simple. It’s just a color normalization step and a straightforward “feature matching” of the target images.</p>
+<p><box-note>I wrote about the algorithm in greater detail in another <a href="/notes/simple-image-recognition-vanilla-js/">post</a>!</box-note></p>
+<p>Once it gets a match the <strong>augmented reality</strong> experience starts rolling in.</p>
+<hr>
+<h2 id="augmenting-reality">Augmenting reality</h2>
+<p>The vision for the augmented reality part was that the tiles in the piece would come alive, burst out of the piece, and start drawing lines in the air.</p>
+<img alt="AR notes" src="../media/dimensions_arnotes.jpg" loading="lazy"></img>
+
+<p>It was basically going to be a particle system.</p>
+<p>This was rendered using <a href="https://threejs.org/" target="_blank"><strong>three.js</strong></a>. I’ve used three.js before and it was great, with easy-to-learn APIs and good examples.</p>
+<p>I was quickly able to sketch out virtual objects in space as a prototype.</p>
+<video autoplay="" muted="" loop="" playsinline="" aria-label="Prototype video" src="../media/dimensions_ar1.mp4" loading="lazy"></video>
+
+<p>This was made by overlaying a transparent three.js <code>&amp;lt;canvas&amp;gt;</code> onto the <code>&amp;lt;video&amp;gt;</code> that’s streaming the camera feed.</p>
+<p>A three.js extension called <code>DeviceOrientationControls</code> provides synchronization between the device’s orientation and the virtual camera.</p>
+<p>One caveat though is that only the orientation can be tracked. Tracking displacement across space wasn’t possible yet, so virtual objects would appear to follow the device when it moves.</p>
+<p>The experience was designed around this limitation by keeping the objects at constant distance to the user, subtly hinting that there’s no need to move or walk, only looking around.</p>
+<p><small class="small-block">There was a bug on iOS Safari with orientation tracking, which apparently was just introduced July 2019, one month before the event. Sadly some iPhone users did not get the full experience.</small></p>
+<p>Modeling the tiles as 3D objects were simply extrusions of the tiles’ 2D shape paths, made very easy using three.js’s <code>ExtrudeGeometry</code>.</p>
+<p>The “paint” trails were made using an old unmaintained library called <a href="https://github.com/mkkellogg/TrailRendererJS" target="_blank"><strong>TrailRendererJS</strong></a>, which surprisingly still works, although it bugs out when the virtual camera isn’t at the origin.</p>
+<img alt="TrailRenderer example" src="../media/dimensions_trailex.png" loading="lazy"></img>
+
+<p>The floating tiles’ movement behavior were guided by a smooth triangle wave function:</p>
+<figure><img alt="smooth triangle wave function" src="../media/dimensions_trianglewave2.png" loading="lazy"></img><figcaption>y = arccos(0.95 sin(x))</figcaption></figure>
+
+<p>This triangle wave path was wrapped around a virtual cylinder around the user’s position.</p>
+<p>With each floating tile following a variant of this path, the result was an organized chaos of criss-crossing particles orbiting the user.</p>
+<video autoplay="" muted="" loop="" playsinline="" aria-label="Demo video" src="../media/dimensions_trail.mp4" loading="lazy"></video>
+
+<p>One interesting experiment was when the trails were allowed to go on indefinitely. The trails would eventually paint the whole scene, producing a nice pattern.</p>
+<figure><img alt="" src="../media/dimensions_trailart.png" loading="lazy"></img><figcaption>Trail art</figcaption></figure>
+
+<p>When it finally exhibited, I mostly watched from the sidelines, taking notes on how people interacted. It’s like live testing on prod.</p>
+<p>There were some UX issues that had to be fixed. It wasn’t as seamless as I’ve hoped, and explicit instructions on how to use it were needed.</p>
+<p>It went smoothly for the most part, after a few hotfixes. Seeing people react to it was great! ⭐️</p>
+<p>The iOS bug was never fixed. 🤖</p>
+<video autoplay="" muted="" loop="" playsinline="" aria-label="Reaction video" src="../media/dimensions_2.mp4" loading="lazy"></video>
+
+<p>You can give it a try right on this page!</p>
+<p>Simply open this page on a desktop, and then point your phone camera to the following image, assuming your camera app has a QR code scanning feature.</p>
+<figure><prose-bleed><img alt="" src="../media/dimensions_finalset.jpg" loading="lazy"></img></prose-bleed><figcaption>Go to kalabasa.github.io/dimensions/ on phone if QR doesn’t work.</figcaption></figure>
+
+<p>It has been a really fun and challenging project! ⭐
+    </p>
+</hr></hr></main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>

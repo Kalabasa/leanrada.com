@@ -92,10 +92,13 @@ function convertToWebComponents(inputHtml) {
   output("project-info-card").each((i, el) => {
     const tag = output(el);
     let card = `<project-info-card><strong>Project details</strong>`;
-    card += `<a href="${tag.attr("href")}" target="_blank">${tag.attr(
-      "button"
-    )}</a><dl>`;
 
+    const button = tag.attr("button");
+    if (button) {
+      card += `<a href="${tag.attr("href")}" target="_blank">${button}</a>`;
+    }
+
+    card += `<dl>`;
     ["released", "status", "role", "platform", "tech"].forEach((attr) => {
       if (tag.attr(attr)) {
         card += `<dt>${attr}</dt><dd>${tag.attr(attr)}</dd>`;
@@ -109,17 +112,45 @@ function convertToWebComponents(inputHtml) {
   return output.html().replace(/<\/?(html|head|body)>/g, "");
 }
 
-const dir = process.argv[2];
-if (dir) {
-  console.log("Directory", path.relative(process.cwd(), path.resolve(dir)));
-  process.chdir(dir);
+const input = process.argv[2];
+let inputFile;
+if (input) {
+  if (input.endsWith(".html")) {
+    inputFile = path.basename(input);
+    console.log(
+      "Working directory",
+      path.relative(process.cwd(), path.dirname(input))
+    );
+    process.chdir(path.dirname(input));
+  } else {
+    if (input) {
+      console.log(
+        "Working directory",
+        path.relative(process.cwd(), path.resolve(input))
+      );
+      process.chdir(input);
+    }
+    inputFile = fs.existsSync("index.original.html")
+      ? "index.original.html"
+      : "index.html";
+  }
 }
-const inputFile = fs.existsSync("index.original.html")
-  ? "index.original.html"
-  : "index.html";
+
 console.log("Reading", inputFile);
 const inputString = fs.readFileSync(inputFile, "utf8");
-fs.writeFileSync("index.original.html", inputString);
+
+const copyFile = inputFile.endsWith(".original.html")
+  ? inputFile
+  : path.basename(inputFile, ".html") + ".original.html";
+console.log("Copying", inputFile, "→", copyFile);
+fs.writeFileSync(copyFile, inputString);
+
 const convertedHtml = convertToWebComponents(inputString);
-fs.writeFileSync("index.html", convertedHtml, "utf8");
-console.log("Conversion complete!");
+
+const outputFile = inputFile.endsWith(".original.html")
+  ? path.basename(inputFile, ".original.html") + ".html"
+  : inputFile;
+console.log("Writing result", outputFile);
+fs.writeFileSync(outputFile, convertedHtml, "utf8");
+
+console.log("Done!");
