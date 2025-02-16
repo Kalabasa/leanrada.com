@@ -77,14 +77,22 @@ function convertToWebComponents(inputHtml) {
       throw new Error(`Unsupported media src: '${src}'`);
     }
 
-    if (tag.attr("type") === "windowed") {
+    const type = tag.attr("type");
+    if (type === "windowed") {
+      if (caption) {
+        out = `${out}<figcaption>${caption}</figcaption>`;
+      }
       out = `<window-decor>${out}</window-decor>`;
-    } else if (tag.attr("type") === "bleed") {
-      out = `<prose-bleed>${out}</prose-bleed>`;
-    }
-
-    if (caption) {
-      out = `<figure>${out}<figcaption>${caption}</figcaption></figure>`;
+      if (caption) {
+        out = `<figure>${out}</figure>`;
+      }
+    } else {
+      if (type === "bleed") {
+        out = `<prose-bleed>${out}</prose-bleed>`;
+      }
+      if (caption) {
+        out = `<figure>${out}<figcaption>${caption}</figcaption></figure>`;
+      }
     }
 
     tag.replaceWith(out);
