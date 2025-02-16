@@ -1,77 +1,46 @@
-<html lang="en">
-  <page-title title="Pong AI" />
-  <blog-page path-group="/wares/">
-    <!-- prettier-ignore -->
-    <markdown>
-      # Pong AI
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
 
-      <blog-media
-        alt="screenshot"
-        :src="url('media/pongai1.png')" />
-      
-      ## Neural networks & genetic algorithms
+<title>Pong AI</title>
 
-      [Neural nets](https://en.wikipedia.org/wiki/Neural_network) have been around since the 1950s/60s. This Pong AI experiment was done back in 2014, around the time when a revival in neural networks was accelerating, that later brought about the deep learning, modern artificial intelligence that we associate with the term "AI" nowadays.
+<site-header></site-header>
 
-      The Pong AI here, hovewer, has nothing to do with that deep stuff. I was largely unaware of those new developments in AI back then. This one is a very simple implementation of a 3-layer [feedforward neural network](https://en.wikipedia.org/wiki/Feedforward_neural_network).
-      
-      The inputs of the network are ball position, heading, paddle position, etc. and the outputs directly control the paddle.
+<main class="prose"><h1 id="pong-ai">Pong AI</h1>
+<img alt="screenshot" src="media/pongai1.png" loading="lazy"></img>
 
-      <blog-media
-        alt="network visualization"
-        :src="url('media/net.png')"
-        caption="Visualization of the network. Sorry about the pixelation (it was a product of that time)." />
-      
-      Instead of the usual [backpropagation](https://en.wikipedia.org/wiki/Backpropagation), the learning method I used here was a [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm). It’s an evolutionary algorithm that mimics natural selection, reproduction, and mutation to optimize the neural network’s weights. This was how the Pong "AI" learned.
+<h2 id="neural-networks--genetic-algorithms">Neural networks &amp; genetic algorithms</h2>
+<p><a href="https://en.wikipedia.org/wiki/Neural_network" target="_blank">Neural nets</a> have been around since the 1950s/60s. This Pong AI experiment was done back in 2014, around the time when a revival in neural networks was accelerating, that later brought about the deep learning, modern artificial intelligence that we associate with the term &quot;AI&quot; nowadays.</p>
+<p>The Pong AI here, hovewer, has nothing to do with that deep stuff. I was largely unaware of those new developments in AI back then. This one is a very simple implementation of a 3-layer <a href="https://en.wikipedia.org/wiki/Feedforward_neural_network" target="_blank">feedforward neural network</a>.</p>
+<p>The inputs of the network are ball position, heading, paddle position, etc. and the outputs directly control the paddle.</p>
+<figure><img alt="network visualization" src="media/net.png" loading="lazy"></img><figcaption>Visualization of the network. Sorry about the pixelation (it was a product of that time).</figcaption></figure>
 
-      To illustrate the learning process, let’s look at how the AI performs in different stages of learnedness.
+<p>Instead of the usual <a href="https://en.wikipedia.org/wiki/Backpropagation" target="_blank">backpropagation</a>, the learning method I used here was a <a href="https://en.wikipedia.org/wiki/Genetic_algorithm" target="_blank">genetic algorithm</a>. It’s an evolutionary algorithm that mimics natural selection, reproduction, and mutation to optimize the neural network’s weights. This was how the Pong &quot;AI&quot; learned.</p>
+<p>To illustrate the learning process, let’s look at how the AI performs in different stages of learnedness.</p>
+<p>Here’s an early-generation AI:</p>
+<p><box-note><em>Note: The AI controls the left paddle. Ignore the right one; it’s just an automated paddle.</em></box-note></p>
+<figure><video autoplay="" muted="" loop="" playsinline="" aria-label="video of a generation 2 AI" src="media/gen2.mp4" loading="lazy"></video><figcaption>Generation 2</figcaption></figure>
 
-      Here’s an early-generation AI:
+<p>As you can see, at this stage, its behaviour is still random with little to no awareness of the ball.</p>
+<p>Sometimes it gets lucky and catches the ball, surviving another volley! This behaviour is rewarded by higher chances of reproduction. The longest surviving AIs in that generation reproduce more to populate the next generation.</p>
+<figure><video autoplay="" muted="" loop="" playsinline="" aria-label="video of a generation 19 AI" src="media/gen19.mp4" loading="lazy"></video><figcaption>Generation 19</figcaption></figure>
 
-      <box-note>_Note: The AI controls the left paddle. Ignore the right one; it’s just an automated paddle._</box-note>
+<p>After a few generations, good behaviour emerges while bad behaviour dies out due to natural selection. We can see in generation 19 above that it has evolved a behaviour where it tries to follow the ball.</p>
+<p>Now, Pong is a very simple game. If you just follow the ball constantly, you won’t lose. At about 20 generations the AI has mastered this strategy and is surviving significantly longer. One can conclude that ball-following is the perfect strategy.</p>
+<p>Or is it? 🤔</p>
+<p>What if the ball was faster than the paddle? Then the paddle wouldn’t be able to keep up and the ball-following strategy will fail.</p>
+<p>And that’s exactly what I did. I sped up the ball beyond the paddle’s max speed. Here’s how the AI adapted:</p>
+<figure><video autoplay="" muted="" loop="" playsinline="" aria-label="video of a generation 54 AI" src="media/gen54s.mp4" loading="lazy"></video><figcaption>Generation 54 with faster ball</figcaption></figure>
 
-      <blog-media
-        alt="video of a generation 2 AI"
-        :src="url('media/gen2.mp4')"
-        caption="Generation 2" />
+<p>At generation 54, with a faster ball, the AI has learned to <em>predict</em> the ball!</p>
+<p>It also seems to reposition itself near the middle after every volley as if getting ready for the next shot.</p>
+<p>This was a pretty cool result! I hadn’t expected this, especially considering how limited / noisy inputs were (in my human eyes, at least).</p>
+<p>Beyond the ball-predicting strategy, I wasn’t able to discover any more breakthroughs with the AI’s behaviour. I mean, ball prediction is pretty much the true perfect strategy, regardless of ball speed. At this point I was satisfied with the experiment and moved on to something else.</p>
+<p>Bonus video! Very fast ball, generation 700+:</p>
+<video autoplay="" muted="" loop="" playsinline="" aria-label="video with very fast ball" src="media/bv.mp4" loading="lazy"></video>
+</main>
 
-      As you can see, at this stage, its behaviour is still random with little to no awareness of the ball.
-      
-      Sometimes it gets lucky and catches the ball, surviving another volley! This behaviour is rewarded by higher chances of reproduction. The longest surviving AIs in that generation reproduce more to populate the next generation.
-      
-      <blog-media
-        alt="video of a generation 19 AI"
-        :src="url('media/gen19.mp4')"
-        caption="Generation 19" />
-    
-      After a few generations, good behaviour emerges while bad behaviour dies out due to natural selection. We can see in generation 19 above that it has evolved a behaviour where it tries to follow the ball.
+<article-footer></article-footer>
 
-      Now, Pong is a very simple game. If you just follow the ball constantly, you won’t lose. At about 20 generations the AI has mastered this strategy and is surviving significantly longer. One can conclude that ball-following is the perfect strategy.
-
-      Or is it? 🤔
-
-      What if the ball was faster than the paddle? Then the paddle wouldn’t be able to keep up and the ball-following strategy will fail.
-      
-      And that’s exactly what I did. I sped up the ball beyond the paddle’s max speed. Here’s how the AI adapted:
-
-      <blog-media
-        alt="video of a generation 54 AI"
-        :src="url('media/gen54s.mp4')"
-        caption="Generation 54 with faster ball" />
-
-      At generation 54, with a faster ball, the AI has learned to *predict* the ball!
-      
-      It also seems to reposition itself near the middle after every volley as if getting ready for the next shot.
-      
-      This was a pretty cool result! I hadn’t expected this, especially considering how limited / noisy inputs were (in my human eyes, at least).
-
-      Beyond the ball-predicting strategy, I wasn’t able to discover any more breakthroughs with the AI’s behaviour. I mean, ball prediction is pretty much the true perfect strategy, regardless of ball speed. At this point I was satisfied with the experiment and moved on to something else.
-
-      Bonus video! Very fast ball, generation 700+:
-
-      <blog-media
-        alt="video with very fast ball"
-        :src="url('media/bv.mp4')" />
-    </markdown>
-  </blog-page>
-</html>
+<site-footer></site-footer>
