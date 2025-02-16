@@ -15,6 +15,10 @@
               padding: 0 18px; /* bleed for scroll */
               overflow-x: auto;
 
+              pre {
+                margin: 0;
+              }
+
               code {
                 display: inline-block;
                 padding: 18px;

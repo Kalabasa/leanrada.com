@@ -45,7 +45,7 @@ function convertToWebComponents(inputHtml) {
   const convertedMarkdown = marked.parse(markdown.html());
   main.append(convertedMarkdown);
 
-  output("a").each((i, el) => {
+  output("a,text-link").each((i, el) => {
     const tag = output(el);
     if (!tag.attr("target")) {
       const href = tag.attr("href");
@@ -113,7 +113,8 @@ function convertToWebComponents(inputHtml) {
   output("code-block").each((i, el) => {
     const tag = output(el);
     let codeBlock = `<code-block language=${tag.attr("language")}><pre><code>`;
-    codeBlock += tag.attr("code").replace(/^\n|\n$/g, "");
+    const code = tag.attr("code") ?? eval(tag.attr(":code"));
+    codeBlock += code.replace(/^\n|\n$/g, "");
     codeBlock += `</code></pre></code-block>`;
     if (tag.parent().is("p")) {
       tag.parent().replaceWith(codeBlock);
