@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="commons/jquery-1.9.0.min.js"></script>
+<script>
+$(function(){
+	var subjects = [
+		{
+						name: 'ABC123',
+						day: 0,
+						time: 26,
+						duration: 4
+					},{
+						name: 'ABC123',
+						day: 2,
+						time: 26,
+						duration: 4
+					},{
+						name: 'ABC123',
+						day: 3,
+						time: 26,
+						duration: 4
+					},{
+						name: 'CMSC 127 LAB1A',
+						day: 3,
+						time: 20,
+						duration: 6
+					},{
+						name: 'CMSC 127 LEC',
+						day: 3,
+						time: 28,
+						duration: 4
+					},{
+						name: 'CMSC 131 LAB1B',
+						day: 4,
+						time: 20,
+						duration: 6
+					},{
+						name: 'CMSC 131 LEC',
+						day: 3,
+						time: 28,
+						duration: 4
+					},{
+						name: 'CS00',
+						day: 0,
+						time: 14,
+						duration: 6
+					},{
+						name: 'CS11',
+						day: 1,
+						time: 20,
+						duration: 3
+					},{
+						name: 'CS11',
+						day: 4,
+						time: 20,
+						duration: 3
+					},{
+						name: 'HI 192',
+						day: 5,
+						time: 27,
+						duration: 6
+					},{
+						name: 'HISTORY 1',
+						day: 1,
+						time: 17,
+						duration: 3
+					},{
+						name: 'HISTORY 1',
+						day: 4,
+						time: 17,
+						duration: 3
+					},{
+						name: 'MATH 120',
+						day: 2,
+						time: 14,
+						duration: 6
+					},{
+						name: 'PE 2 ARNIS',
+						day: 1,
+						time: 20,
+						duration: 6
+					},{
+						name: 'STAT 130 LAB1B',
+						day: 4,
+						time: 27,
+						duration: 6
+					},{
+						name: 'STAT 130 LEC1',
+						day: 4,
+						time: 34,
+						duration: 4
+					},{
+						name: 'STS',
+						day: 5,
+						time: 20,
+						duration: 6
+					},	];
+	
+	if(!subjects.length){
+		return;
+	}
+
+	var canvas = $("canvas")[0];
+	var cw = canvas.width-1;
+	var ch = canvas.height-1;
+	var w = cw/6;
+	var h = ch/48;
+	
+	var ctx = canvas.getContext("2d");
+	ctx.clearRect(0,0,cw,ch);
+	ctx.textBaseline = "top";
+	ctx.font = "10px Arial";
+
+	// Draw grid
+	var skip = 6;
+	ctx.fillStyle = "#CCCCCC";
+	ctx.strokeStyle = "#EEEEEE";
+	for(i=0; i<48; i++){
+		var y = i*h + 0.5;
+		var j = i-2;
+
+		if(Math.floor(j/skip) == j/skip && j<48){
+			var label = formatTime(i);
+			ctx.fillText(label, 5, y);
+			ctx.fillText(label, cw-w+5, y);
+			ctx.beginPath();
+			ctx.moveTo(0.5, y);
+			ctx.lineTo(cw + 0.5, y);
+			ctx.stroke();
+		}
+	}
+
+	ctx.fillStyle = "#888888";
+	for(i=0; i<6; i++){
+		var x = i*w;
+		ctx.fillText(formatDay(i), x+10, 5);
+	}
+
+	// Draw cells
+	var columnCount = [0,1,0,1,0,1];
+	ctx.font = "10px Verdana";
+	for(i=0; i<subjects.length; i++){
+		var subject = subjects[i];
+		var day = subject.day;
+		var time = subject.time;
+		var duration = subject.duration;
+		
+		var x = day*w + 0.5;
+		var y = time*h + 0.5;
+
+		var rh = duration*h;
+		var rw = w;
+
+		ctx.fillStyle = (columnCount[day]++ % 2) == 0 ? "#E8EFFF" : "#E8ECEF";
+		ctx.fillRect(x, y, rw, rh);
+		
+		ctx.fillStyle = "#000000";
+		ctx.fillText(subject.name, x+2, y + rh/2 - 12);
+		ctx.fillStyle = "#444444";
+		ctx.fillText(formatTime(time) + "-" + formatTime(time+duration), x+2, y + rh/2);
+	}
+
+	// Draw borders
+	ctx.beginPath();
+	ctx.strokeStyle = "#CCCCCC";
+	ctx.moveTo(0.5,0.5);
+	ctx.lineTo(cw,0.5);
+	ctx.moveTo(0.5,ch + 0.5);
+	ctx.lineTo(cw,ch + 0.5);
+	ctx.stroke();
+});
+
+function formatTime(time){
+	time = time/2;
+	var ap = "a";
+	if(time >= 12){
+		ap = "p";
+		if(time > 12){
+			time -= 12;
+		}
+	}
+	var hours = Math.floor(time);
+	var minutes = Math.floor((time - hours)*60);
+	return (hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ap;
+}
+
+function formatDay(number){
+	switch(number){
+		case 0:	return "Monday";
+		case 1:	return "Tuesday";
+		case 2:	return "Wednesday";
+		case 3:	return "Thursday";
+		case 4:	return "Friday";
+		case 5:	return "Saturday";
+	}
+	return "Sunday";
+}
+</script>
+</head>
+<body class='spad'>
+<h1>Hello, User</h1><h2>Classes</h2>
+		<div class='content'>
+			<table class='table'>
+				<tr>
+					<th rowspan=2>Subject</th>
+					<th rowspan=2>Section</th>
+					<th rowspan=2>Day</th>
+					<th rowspan=2>Time</th>
+					<th rowspan=2>Class Size</th>
+					<th colspan=3>Grade Complete</th>
+				</tr>
+				<tr>
+					<th>Exam 1</th>
+					<th>Exam 2</th>
+					<th>Exam Final</th>
+				</tr><tr>
+				<td>ABC123</td>
+				<td>MWHEGX</td>
+				<td>Mon Wed Thu</td>
+				<td>01:00p - 03:00p</td>
+				<td>13</td><td><img src='img/cross.png' alt='Incomplete' title='There is at least one grade missing.'/></td>
+				<td><img src='img/check.png' alt='Complete' title='The grades in here are complete.'/></td>
+				<td><img src='img/check.png' alt='Complete' title='The grades in here are complete.'/></td>
+			</tr><tr>
+				<td>CMSC 127 LAB1A</td>
+				<td>HCD1</td>
+				<td>Thu</td>
+				<td>10:00a - 01:00p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>CMSC 127 LEC</td>
+				<td>HEZG</td>
+				<td>Thu</td>
+				<td>02:00p - 04:00p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>CMSC 131 LAB1B</td>
+				<td>FCD</td>
+				<td>Fri</td>
+				<td>10:00a - 01:00p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>CMSC 131 LEC</td>
+				<td>HEZG</td>
+				<td>Thu</td>
+				<td>02:00p - 04:00p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>CS00</td>
+				<td>MAB</td>
+				<td>Mon</td>
+				<td>07:00a - 10:00a</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>CS11</td>
+				<td>TFC</td>
+				<td>Tue Fri</td>
+				<td>10:00a - 11:30a</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>HI 192</td>
+				<td>SEYIX</td>
+				<td>Sat</td>
+				<td>01:30p - 04:30p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>HISTORY 1</td>
+				<td>TFB2</td>
+				<td>Tue Fri</td>
+				<td>08:30a - 10:00a</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>MATH 120</td>
+				<td>WAB</td>
+				<td>Wed</td>
+				<td>07:00a - 10:00a</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>PE 2 ARNIS</td>
+				<td>TCD</td>
+				<td>Tue</td>
+				<td>10:00a - 01:00p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>STAT 130 LAB1B</td>
+				<td>FEYIX2</td>
+				<td>Fri</td>
+				<td>01:30p - 04:30p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>STAT 130 LEC1</td>
+				<td>FIZJ</td>
+				<td>Fri</td>
+				<td>05:00p - 07:00p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr><tr>
+				<td>STS</td>
+				<td>SCD</td>
+				<td>Sat</td>
+				<td>10:00a - 01:00p</td>
+				<td>0</td><td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr></table>
+		</div>
+		
+		<h2>Schedule</h2>
+		<div class='content'>
+			<canvas id='canvas' width='601px' height='601px'>
+				Sorry, your browser does not support canvas (HTML5)
+			</canvas>
+		</div></body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css" />
+
+<script type="text/javascript" src="commons/jquery-1.9.0.min.js"></script>
+<script>
+$(function(){
+	var userClasses = [
+	{subject:'ABC123',section:'MWHEGX'},{subject:'CMSC 127 LAB1A',section:'HCD1'},{subject:'CMSC 127 LEC',section:'HEZG'},{subject:'CMSC 131 LAB1B',section:'FCD'},{subject:'CMSC 131 LEC',section:'HEZG'},{subject:'CS00',section:'MAB'},{subject:'CS11',section:'TFC'},{subject:'HI 192',section:'SEYIX'},{subject:'HISTORY 1',section:'TFB2'},{subject:'MATH 120',section:'WAB'},{subject:'PE 2 ARNIS',section:'TCD'},{subject:'STAT 130 LAB1B',section:'FEYIX2'},{subject:'STAT 130 LEC1',section:'FIZJ'},{subject:'STS',section:'SCD'},	];
+	// initial
+	$(".subjectSelection").each(function(){
+		updateSectionSelection(this);
+	});
+	// on change
+	$(".subjectSelection").change(function(){
+		updateSectionSelection(this);
+	});
+	function updateSectionSelection(selectElement){
+		var subj;
+		$("option:selected", selectElement).each(function () {
+			subj = $(this).text();
+		});
+		
+		var sections = [];
+		for(k in userClasses){
+			var clas = userClasses[k];
+			if(clas["subject"] == subj){
+				sections.push(clas["section"]);
+			}
+		}
+		
+		var sectSelect =
+			$(selectElement)/*select*/
+			.parent()/*td*/
+			.parent()/*tr*/
+			.next()/*tr (section row)*/
+			.find("select")/*select (section selection)*/
+		sectSelect.children().remove();
+		var sect;
+		for(k in sections){
+			sect = sections[k];
+			sectSelect.append(
+				"<option value='"+sect+"'>"+sect+"</option>"
+			);
+		}
+	}
+});
+</script></head>
+<body class='spad'>
+<form action = "compute-grades.php" method = "post">
+	<h2>Edit Grades</h2>
+				<div class='content'><table>
+			<tr>
+				<td>Subject</td>
+				<td><select autofocus class='subjectSelection' name='subject'><option value='ABC123'>ABC123</option><option value='CMSC 127 LAB1A'>CMSC 127 LAB1A</option><option value='CMSC 127 LEC'>CMSC 127 LEC</option><option value='CMSC 131 LAB1B'>CMSC 131 LAB1B</option><option value='CMSC 131 LEC'>CMSC 131 LEC</option><option value='CS00'>CS00</option><option value='CS11'>CS11</option><option value='HI 192'>HI 192</option><option value='HISTORY 1'>HISTORY 1</option><option value='MATH 120'>MATH 120</option><option value='PE 2 ARNIS'>PE 2 ARNIS</option><option value='STAT 130 LAB1B'>STAT 130 LAB1B</option><option value='STAT 130 LEC1'>STAT 130 LEC1</option><option value='STS'>STS</option></select></td>
+			</tr>
+			<tr>
+				<td>Section</td>
+				<td><select class='sectionSelection' name='section'></select></td>
+			</tr><tr>
+						<td>
+						<input class='button' type = 'submit' value = 'Go'/>
+						</td>
+					</tr>
+				</table></div><h2>Classes</h2>
+			<div class='content'>
+				<table class='table'>
+					<tr>
+						<th rowspan=2>Subject</th>
+						<th rowspan=2>Section</th>
+						<th colspan=3>Grade Complete</th>
+					</tr>
+					<tr>
+						<th>Exam 1</th>
+						<th>Exam 2</th>
+						<th>Exam Final</th>
+					</tr><tr>
+						<td>ABC123</td>
+						<td>MWHEGX</td>
+						<td><img src='img/cross.png' alt='Incomplete' title='There is at least one grade missing.'/></td>
+						<td><img src='img/check.png' alt='Complete' title='The grades in here are complete.'/></td>
+						<td><img src='img/check.png' alt='Complete' title='The grades in here are complete.'/></td>
+					</tr><tr>
+						<td>CMSC 127 LAB1A</td>
+						<td>HCD1</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>CMSC 127 LEC</td>
+						<td>HEZG</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>CMSC 131 LAB1B</td>
+						<td>FCD</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>CMSC 131 LEC</td>
+						<td>HEZG</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>CS00</td>
+						<td>MAB</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>CS11</td>
+						<td>TFC</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>HI 192</td>
+						<td>SEYIX</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>HISTORY 1</td>
+						<td>TFB2</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>MATH 120</td>
+						<td>WAB</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>PE 2 ARNIS</td>
+						<td>TCD</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>STAT 130 LAB1B</td>
+						<td>FEYIX2</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>STAT 130 LEC1</td>
+						<td>FIZJ</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr><tr>
+						<td>STS</td>
+						<td>SCD</td>
+						<td>-</td>
+						<td>-</td>
+						<td>-</td>
+					</tr></table></div>	
+</form>
+</body>
+</html>
