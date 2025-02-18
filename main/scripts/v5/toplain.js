@@ -71,6 +71,36 @@ function convertToWebComponents(inputHtml) {
     main.before(out + "\n\n");
   });
 
+  input("tag-row").each((i, el) => {
+    const tagRow = input(el);
+
+    tagRow.contents().each((i, node) => {
+      if (node.type === "text") {
+        input(node).remove();
+      } else if (node.tagName === "tag") {
+        const tag = input(node);
+        tag.replaceWith(`\n  <tag-chip title="${tag.text()}"></tag-chip>`);
+      }
+    });
+    tagRow.append("\n");
+
+    main.before(tagRow);
+    main.before("\n\n");
+  });
+
+  input("code-block").each((i, el) => {
+    const tag = input(el);
+    const language = tag.attr("language");
+    const languageAttr = language ? ` language=${language}` : "";
+    let codeBlock = `<code-block${languageAttr}><pre><code>`;
+    const code = tag.attr("code") ?? eval(tag.attr(":code"));
+    // escape newlines to prevent markdown from breaking empty lines
+    // will unescape later
+    codeBlock += code.replace(/^\n|\n$/g, "").replace(/\n/g, "&NewLine;");
+    codeBlock += `</code></pre></code-block>`;
+    tag.replaceWith(codeBlock);
+  });
+
   markdown.contents().each((i, node) => {
     if (node.type === "text") {
       node.data = node.data.replace(indentPattern, "");
@@ -154,16 +184,11 @@ function convertToWebComponents(inputHtml) {
 
   output("code-block").each((i, el) => {
     const tag = output(el);
-    const language = tag.attr("language");
-    const languageAttr = language ? ` language=${language}` : "";
-    let codeBlock = `<code-block${languageAttr}><pre><code>`;
-    const code = tag.attr("code") ?? eval(tag.attr(":code"));
-    codeBlock += code.replace(/^\n|\n$/g, "");
-    codeBlock += `</code></pre></code-block>`;
+    // unescape newlines
+    tag.html(tag.html().replace(/&NewLine;/g, "\n"));
+
     if (tag.parent().is("p")) {
-      tag.parent().replaceWith(codeBlock);
-    } else {
-      tag.replaceWith(codeBlock);
+      tag.parent().replaceWith(tag);
     }
   });
 

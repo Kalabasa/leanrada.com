@@ -17,6 +17,10 @@
   · 8 min read
 </blog-post-info>
 
+<tag-row>
+  <tag-chip title="android"></tag-chip>
+</tag-row>
+
 <main class="prose"><p>Last May, Apple announced a new feature called <strong>Vehicle Motion Cues</strong> for their iOS devices. It’s an overlay that can help reduce motion sickness while riding a vehicle.</p>
 <p>I have really bad motion sickness, and riding cars, buses, and trains makes me nauseous. This feature would have been a nice relief for me, but as it stands, I use Android.</p>
 <p>Instead of buying a Malus fruit device, I took the matter into my own programmer hands. I created an alternative app for Android.</p>
@@ -73,26 +77,30 @@ onEveryFrame() {
 <h2 id="error-correction">Error correction</h2>
 <p>The accelerometer signal is very <strong>noisy</strong>. While that is workable for many applications, when we’re doing position integration the errors really add up, and simple dead reckoning is way off.</p>
 <p>Standard signal processing techniques can be applied to deal with noise, like a low-pass filter.</p>
-<p>&lt;code-block :code=&quot;`<br>// Example: With a low-pass filter
+<code-block><pre><code>// Example: With a low-pass filter
 onEveryFrame() {
   // low-pass filter
   smoothAcceleration +=
-    (accelerometer.getAcceleration() - smoothAcceleration) * 0.60</br></p>
-<p>  // position integration
+    (accelerometer.getAcceleration() - smoothAcceleration) * 0.60
+
+  // position integration
   velocity += smoothAcceleration
-  position += velocity</p>
-<p>  drawDots(offset = -position)
-}`&quot;/&gt;</p>
+  position += velocity
+
+  drawDots(offset = -position)
+}</code></pre></code-block>
 <p>But a simpler solution like dampening the velocity over time is plenty sufficient.</p>
-<p>&lt;code-block :code=&quot;`<br>// Example: With velocity dampening
+<code-block><pre><code>// Example: With velocity dampening
 onEveryFrame() {
   // position integration
   velocity += accelerometer.getAcceleration()
-  position += velocity</br></p>
-<p>  // dampen
-  velocity *= 0.80</p>
-<p>  drawDots(offset = -position)
-}`&quot;/&gt;</p>
+  position += velocity
+
+  // dampen
+  velocity *= 0.80
+
+  drawDots(offset = -position)
+}</code></pre></code-block>
 <p>And that is basically how EasyQueasy works. And presumably iOS does it similarly as well.</p>
 <h2 id="easyqueasy-features">EasyQueasy features</h2>
 <p>EasyQueasy’s features and advantages over the current iOS solution are:</p>
