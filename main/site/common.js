@@ -437,7 +437,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupAutoLoadComponents() {
-    const components = [["code-block", "/components/code-block/code-block.js"]];
+    const components = [
+      ["blog-header", "/components/blog-header/blog-header.js"],
+      ["code-block", "/components/code-block/code-block.js"],
+    ];
 
     for (const [tagName, src] of components) {
       if (document.body.querySelector(tagName)) {
@@ -446,3 +449,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 });
+
+autoLoadGlobalComponents();
+
+function autoLoadGlobalComponents() {
+  if (location.pathname.startsWith("/notes/")) {
+    import("/components/blog-header/blog-header.js");
+  }
+}

@@ -37,6 +37,40 @@ function convertToWebComponents(inputHtml) {
   const main = output("main");
 
   const markdown = input("markdown");
+
+  input("blog-header").each((i, el) => {
+    const tag = input(el);
+    const title = tag.attr("title");
+    const heroimgsrc =
+      tag.attr("heroimgsrc")?.replace("{url('", "").replace("')}", "") ??
+      tag.attr(":heroimgsrc")?.replace("url('", "").replace("')", "") ??
+      "";
+    let out = `<blog-header>\n`;
+    out += `  <h1>${title}</h1>\n`;
+    out += `  <img src="${heroimgsrc}" alt="" loading="lazy" />\n`;
+    out += `</blog-header>`;
+    tag.remove();
+    main.before(out + "\n\n");
+  });
+
+  input("blog-post-info").each((i, el) => {
+    const tag = input(el);
+    const hidden = tag.attr("hidden");
+    const date = tag.attr("date");
+    const readMins = tag.attr("read-mins");
+
+    let out = `<blog-post-info${hidden ? " hidden" : ""}>\n`;
+    const dateDate = new Date(date);
+    const yyyy = dateDate.getFullYear();
+    const mm = (dateDate.getMonth() + 1).toString().padStart(2, "0");
+    const dd = dateDate.getDate().toString().padStart(2, "0");
+    out += `  <time datetime="${yyyy}-${mm}-${dd}">${date}</time>\n`;
+    out += `  · ${readMins} min read\n`;
+    out += `</blog-post-info>`;
+    tag.remove();
+    main.before(out + "\n\n");
+  });
+
   markdown.contents().each((i, node) => {
     if (node.type === "text") {
       node.data = node.data.replace(indentPattern, "");
@@ -120,7 +154,9 @@ function convertToWebComponents(inputHtml) {
 
   output("code-block").each((i, el) => {
     const tag = output(el);
-    let codeBlock = `<code-block language=${tag.attr("language")}><pre><code>`;
+    const language = tag.attr("language");
+    const languageAttr = language ? ` language=${language}` : "";
+    let codeBlock = `<code-block${languageAttr}><pre><code>`;
     const code = tag.attr("code") ?? eval(tag.attr(":code"));
     codeBlock += code.replace(/^\n|\n$/g, "");
     codeBlock += `</code></pre></code-block>`;
