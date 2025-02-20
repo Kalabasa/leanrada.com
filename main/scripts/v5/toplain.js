@@ -38,6 +38,20 @@ function convertToWebComponents(inputHtml) {
 
   const markdown = input("markdown");
 
+  input("content-header").each((i, el) => {
+    const tag = input(el);
+    const title = tag.attr("title");
+    const subtitle = tag.attr("subtitle");
+    let out = `<content-header>\n`;
+    out += `  <h1>${title}</h1>\n`;
+    if (subtitle) {
+      out += `  <div>${subtitle}</div>\n`;
+    }
+    out += `</content-header>`;
+    tag.remove();
+    main.before(out + "\n\n");
+  });
+
   input("blog-header").each((i, el) => {
     const tag = input(el);
     const title = tag.attr("title");
