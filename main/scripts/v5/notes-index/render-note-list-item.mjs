@@ -1,8 +1,10 @@
-export function renderNoteListItem(item) {
+import { formatDate } from "./format-date.mjs";
+
+export function renderNoteListItem(item, dateStyle = undefined) {
   const tags = item.tags
     .map((tag) => `<tag-chip title="${tag}"></tag-chip>`)
     .join("\n    ");
-  const formattedDate = item.date;
+  const formattedDate = formatDate(item.date, dateStyle);
   return `
 <li>
   <a href="${item.href}">

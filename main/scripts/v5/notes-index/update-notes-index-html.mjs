@@ -25,18 +25,24 @@ export async function updateNotesIndexHTML(combinedIndex, notesIndexHTML) {
     element(element) {
       let innerContent = "";
 
+      let year = -1;
+
       for (const item of index) {
-        // if (attrs.yearHeadings) {
-        //   const itemYear = new Date(item.date).getFullYear();
-        //   if (year !== itemYear) {
-        //     year = itemYear;
-        //     yield`<h3 class="blog-list-heading">${formatYearHeading(year)}</h3>`;
-        //   }
-        // }
-        innerContent += renderNoteListItem(item).replaceAll("\n", "\n  " + ulIndent);
+        const itemYear = new Date(item.date).getFullYear();
+        if (year !== itemYear) {
+          if (year >= 0) {
+            innerContent += `\n${ulIndent}</ul>`;
+          }
+          year = itemYear;
+          innerContent += `<h3>${year}</h3>\n${ulIndent}<ul>`;
+        }
+        innerContent += renderNoteListItem(item, "no-year").replaceAll(
+          "\n",
+          "\n  " + ulIndent
+        );
       }
 
-      innerContent = `\n${ulIndent}<ul>${innerContent}\n${ulIndent}</ul>\n${ulIndent}`;
+      innerContent = `${innerContent}\n${ulIndent}</ul>\n${ulIndent}`;
 
       element.setInnerContent(innerContent, { html: true });
       element.setAttribute(
