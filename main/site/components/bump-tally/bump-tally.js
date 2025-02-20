@@ -14,6 +14,8 @@
           this.tagName,
           html`<style>
             bump-tally {
+              container-type: inline-size;
+              width: 100%;
               height: auto;
               text-align: center;
             }
