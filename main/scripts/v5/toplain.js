@@ -105,13 +105,19 @@ function convertToWebComponents(inputHtml) {
   input("code-block").each((i, el) => {
     const tag = input(el);
     const language = tag.attr("language");
-    const languageAttr = language ? ` language=${language}` : "";
-    let codeBlock = `<code-block${languageAttr}><pre><code>`;
+    const languageCode = tag.attr("language-code");
+    const attrs =
+      (language ? ` language=${language}` : "") +
+      (languageCode ? ` languagecode=${languageCode}` : "");
+    let codeBlock = `<code-block${attrs}><pre><code><![CDATA[`;
     const code = tag.attr("code") ?? eval(tag.attr(":code"));
-    // escape newlines to prevent markdown from breaking empty lines
+    // escape to prevent markdown from breaking
     // will unescape later
-    codeBlock += code.replace(/^\n|\n$/g, "").replace(/\n/g, "&NewLine;");
-    codeBlock += `</code></pre></code-block>`;
+    codeBlock += code
+      .replaceAll("<", "&lt;")
+      .replace(/^\n|\n$/g, "")
+      .replace(/\n/g, "&NewLine;");
+    codeBlock += `]]></code></pre></code-block>`;
     tag.replaceWith(codeBlock);
   });
 
@@ -198,8 +204,14 @@ function convertToWebComponents(inputHtml) {
 
   output("code-block").each((i, el) => {
     const tag = output(el);
-    // unescape newlines
-    tag.html(tag.html().replace(/&NewLine;/g, "\n"));
+    // unescape
+    tag.html(
+      tag
+        .html()
+        .replace(/(?<=<code>)<!\[CDATA\[/, "")
+        .replace(/\]\]>(?=<\/code>)/, "")
+        .replace(/&NewLine;/g, "\n")
+    );
 
     if (tag.parent().is("p")) {
       tag.parent().replaceWith(tag);
