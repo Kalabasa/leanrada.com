@@ -19,6 +19,8 @@ export async function updateNotesIndexHTML(combinedIndex, notesIndexHTML) {
       .concat(index);
   }
 
+  index.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   const rewriter = new HTMLRewriter();
 
   rewriter.on("#notes", {

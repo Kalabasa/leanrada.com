@@ -21,7 +21,9 @@ export async function updateIndexHTMLNotes(combinedIndex, indexHTML) {
       .concat(index);
   }
 
-  index = index.slice(0, 4);
+  index = index
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 4);
 
   const rewriter = new HTMLRewriter();
 
