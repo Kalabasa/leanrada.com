@@ -1,0 +1,80 @@
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
+
+<title>getDuolingoStreak()</title>
+
+<site-header></site-header>
+
+<content-header>
+  <h1>getDuolingoStreak()</h1>
+</content-header>
+
+<blog-post-info>
+  <time datetime="2024-02-07">07 Feb 2024</time>
+  · 2 min read
+</blog-post-info>
+
+<tag-row>
+  <tag-chip title="js"></tag-chip>
+  <tag-chip title="µpost"></tag-chip>
+</tag-row>
+
+<main class="prose"><p>How to fetch your Duolingo streak using an unconfirmed API on duolingo.com:</p>
+<code-block language="js"><pre><code>function getDuolingoStreak(username) {
+  const res = await fetch(
+    `https://www.duolingo.com/2017-06-30/users?username=${username}&fields=streak,streakData%7BcurrentStreak,previousStreak%7D%7D`
+  );
+  const data = await res.json();
+  const userData = data.users[0];
+  // I didn't know which of these fields matter, so I just get the max of them.
+  const streak = Math.max(
+    userData?.streak ?? 0,
+    userData?.streakData?.currentStreak?.length ?? 0,
+    userData?.streakData?.previousStreak?.length ?? 0
+  );
+  return streak;
+}</code></pre></code-block>
+<card class="streak-card">
+        <div class="big-number">
+          365<!--
+          --><img class="streak-icon" alt="" src="/misc/streak.png" loading="lazy"></img>
+        </div>
+        <div>This card is live ;)<br>That’s my current max streak.</div>
+      </card>
+
+<p>I can then render this data into a card like that. I put one of these cards in the <a href="/misc/">/misc/</a> section.</p>
+<p>Let’s look at the API itself. <code>www.duolingo.com/2017-06-30</code> seems to be the API prefix, which is a bit weird. What is <code>2017-06-30</code>? <a href="https://en.wikipedia.org/wiki/Portal:Current_events/2017_June_30" target="_blank">What happened on that date?</a> Maybe the Duolingo team used <a href="https://calver.org/" target="_blank">a date-based versioning</a> at the time?</p>
+<p>In any case, big thanks to the Duolingo team for keeping this apparently-6-year-old public API alive and accessible.</p>
+<p>The query parameters for the <code>/users</code> endpoint are interesting. It’s similar to <a href="https://graphql.org/" target="_blank">GraphQL</a> where you can specify exactly which fields you want in the response. You can even specify specific sub-fields within objects, using some kind of a DSL in the <code>fields</code> parameter.</p>
+<p>The <code>fields</code> parameter in the above query, when decoded, is <code><script render="">'fields=streak,streakDate{currentStreak,previousStreak}}'</script></code>. Fields are comma-delimited and objects are enclosed in braces. This could actually be GraphQL! There is an extra closing brace at the end which seems necessary for the request to be successful.</p>
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
+
+<style>
+  .streak-card {
+    margin: 36px;
+    display: inline-block;
+    text-align: center;
+  }
+  @media (min-width: 600px) {
+    .streak-card {
+      float: right;
+    }
+  }
+
+  .big-number {
+    margin: 18px;
+    font-size: 48px;
+    font-family: var(--display-font);
+    font-weight: bold;
+  }
+  .streak-icon {
+    width: 32px;
+    image-rendering: pixelated;
+  }
+</style>
