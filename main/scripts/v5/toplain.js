@@ -69,7 +69,7 @@ function convertToWebComponents(inputHtml) {
 
   input("blog-post-info").each((i, el) => {
     const tag = input(el);
-    const hidden = tag.attr("hidden");
+    const hidden = tag.attr("hidden") != null;
     const date = tag.attr("date");
     const readMins = tag.attr("read-mins");
 
@@ -129,10 +129,17 @@ function convertToWebComponents(inputHtml) {
   const convertedMarkdown = marked.parse(markdown.html());
   main.append(convertedMarkdown);
 
-  output("a,text-link").each((i, el) => {
+  output('a,btn[tag="aa"],text-link').each((i, el) => {
     const tag = output(el);
+
+    if (el.tagName === "btn") {
+      tag.addClass("button");
+      tag.removeAttr("tag");
+    }
+
     if (!tag.attr("target")) {
       const href = tag.attr("href");
+      console.log(href);
       if (
         href.startsWith("http:") ||
         href.startsWith("https:") ||
@@ -141,6 +148,8 @@ function convertToWebComponents(inputHtml) {
         tag.attr("target", "_blank");
       }
     }
+
+    el.tagName = "a";
   });
 
   output("blog-media").each((i, el) => {
