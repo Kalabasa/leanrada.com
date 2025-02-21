@@ -1,0 +1,608 @@
+(() => {
+  const HOME_ROW_RIGHT = ["", "⌃", "⌥", "⌘", "⇧", ""];
+  const BASE_LAYER = [
+    // Left hand
+    ["Esc", "⌃[", "⌃]", "⌃⇧Tab", "⌃Tab", ""],
+    ["?", "q", "w", "f", "p", "b"],
+    ["Tab", "a", "r", "s", "t", "g"],
+    ["+", "z", "x", "c", "d", "v"],
+    ["⌃", "L(s)", "❖", "␣", "◆"],
+    // Right hand
+    ["L(e)", "Wksp←", "Wksp↑", "Wksp↓", "Wksp→", "⌫"],
+    ["j", "l", "u", "y", "=", "'"],
+    ["m", "n", "e", "i", "o", "↵"],
+    ["k", "h", ".", ",", "/", "-"],
+    ["◆", "␣", "L(n)", "L(#)", "L(f)"],
+  ];
+
+  const DATA = Object.create(null);
+  DATA.BASE_LAYER = BASE_LAYER;
+  DATA.SHIFT_LAYER = [
+    // Left hand
+    ["Esc", "~", "@", "#", "%", ""],
+    ["!", "Q", "W", "F", "P", "B"],
+    ["Tab", "A", "R", "S", "T", "G"],
+    ["", "Z", "X", "C", "D", "V"],
+    ["", "", "", "⇧", ""],
+    // Right hand
+    ["", "^", "&", "|", "\\", "⌫"],
+    ["J", "L", "U", "Y", "_", '"'],
+    ["M", "N", "E", "I", "O", "↵"],
+    ["K", "H", ":", ";", "*", ""],
+    ["", "␣", "", "", ""],
+  ];
+  const HOME_ROW_LAYER_LEFT = [
+    ["", "", "", "", "", ""],
+    ["", "", "", "", "", ""],
+    [...HOME_ROW_RIGHT].reverse(),
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+  ];
+  const HOME_ROW_LAYER_RIGHT = [
+    ["", "", "", "", "", ""],
+    ["", "", "", "", "", ""],
+    HOME_ROW_RIGHT,
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+  ];
+  DATA.HOME_ROW_LAYER = [
+    // Left hand
+    ...HOME_ROW_LAYER_LEFT,
+    // Right hand
+    ...HOME_ROW_LAYER_RIGHT,
+  ].map((row, i) =>
+    row.map(
+      (key, j) => (key && BASE_LAYER[i][j] + "/" + key) || BASE_LAYER[i][j]
+    )
+  );
+  DATA.SYMBOL_LAYER = [
+    // Left hand
+    ["", "", "", "", "", ""],
+    ["`", "\\", "$", "{", "}", ""],
+    ["<", "=", "-", "(", ")", ">"],
+    ["", "", "", "[", "]", ""],
+    ["", "L(s)", "", "", ""],
+    // Right hand
+    ...HOME_ROW_LAYER_RIGHT,
+  ];
+  DATA.NAVIGATION_LAYER = [
+    // Left hand
+    ...HOME_ROW_LAYER_LEFT,
+    // Right hand
+    ["", "", "", "⇧Tab", "Tab", "⌫"],
+    ["W⌫", "W←", "WSel", "", "W→", ""],
+    ["⌦", "←", "↑", "↓", "→", "↵"],
+    ["", "Home", "PgUp", "PgDn", "End", ""],
+    ["", "", "L(n)", "", ""],
+  ];
+  DATA.NUMBER_LAYER = [
+    // Left hand
+    ...HOME_ROW_LAYER_LEFT,
+    // Right hand
+    ["", "", "", "*", "/", "⌫"],
+    ["", "", "7", "8", "9", "-"],
+    ["", "0", "4", "5", "6", "↵"],
+    ["", "+", "1", "2", "3", "."],
+    ["", "", "", "L(#)", ""],
+  ];
+  DATA.FUNCTION_LAYER = [
+    // Left hand
+    ["", "QWERTY", "", "", "", ""],
+    ["", "", "Linux", "", "macOS", ""],
+    [...HOME_ROW_RIGHT].reverse(),
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+    // Right hand
+    ["", "", "🔉-", "🔊+", "🔅-", "🔆+"],
+    ["", "", "⏮️", "⏯️", "PrtScr", "⏭️"],
+    ["", "🔇", "FB0", "FB1", "FB2", "FB3"],
+    ["", "", "", "", "", ""],
+    ["", "", "", "", "L(f)"],
+  ];
+  DATA.EMOJI_LAYER = [
+    // Left hand
+    ["Cancel", "", "", "", "", ""],
+    ["", "😭", "👋", "🥺", "🎉", ""],
+    ["", "😂", "😃", "🙂", "🤔", ""],
+    ["", "", "", "", "", ""],
+    ["", "", "", "", ""],
+    // Right hand
+    ["L(e)", "‘", "’", "“", "”", "❌"],
+    ["", "👈", "☝", "👇", "👉", "👍"],
+    ["", "←", "↑", "↓", "→", "✔"],
+    ["", "⬅", "⬆", "⬇", "➡", "✅"],
+    ["", "", "", "", ""],
+  ];
+  DATA.QWERTY_LAYER = [
+    // Left hand
+    ["Esc", "1", "2", "3", "4", "5"],
+    ["`", "Q", "W", "E", "R", "T"],
+    ["Tab", "A", "S", "D", "F", "G"],
+    ["⇧", "Z", "X", "C", "V", "B"],
+    ["⌃", "⌥", "❖", "␣", ""],
+    // Right hand
+    ["6", "7", "8", "9", "0", "⌫"],
+    ["Y", "U", "I", "O", "P", "-"],
+    ["H", "J", "K", "L", "↑", "↵"],
+    ["N", "M", ".", "←", "↓", "→"],
+    ["Cancel", "␣", "◆", "", "Chat"],
+  ];
+
+  customElements.define(
+    "lily-58",
+    class Lily58 extends HTMLElement {
+      constructor() {
+        super();
+
+        const oledLeft = this.getAttribute("oled-left");
+        const oledRight = this.getAttribute("oled-right");
+        const focusRects =
+          this.hasAttribute("focus-rects") &&
+          JSON.parse("[" + this.getAttribute("focus-rects") + "]");
+        const layer =
+          this.hasAttribute("layer") && JSON.parse(this.getAttribute("layer"));
+        const layerButton =
+          this.hasAttribute("layer-button") &&
+          this.getAttribute("layer-button").split(",").map(Number);
+
+        const keyDataKey = this.getAttribute("keydatakey");
+        const keys = DATA[keyDataKey];
+
+        const leftSlotHTML = Array.from(this.querySelectorAll('[slot="left"]'))
+          .map((e) => e.outerHTML)
+          .join("");
+        const rightSlotHTML = Array.from(
+          this.querySelectorAll('[slot="right"]')
+        )
+          .map((e) => e.outerHTML)
+          .join("");
+        const defaultSlotHTML = Array.from(
+          this.querySelectorAll(":not([slot])")
+        )
+          .map((e) => e.outerHTML)
+          .join("");
+
+        this.innerHTML = html`
+          <div class="lily58-half-container">
+            <div
+              class="lily58-half lily58-left-half ${halfClass(0)}"
+              aria-hidden="true"
+            >
+              <div class="lily58-grid">
+                ${kbd(0, 0, "lily58-accent")} ${kbd(0, 1)} ${kbd(0, 2)}
+                ${kbd(0, 3)} ${kbd(0, 4)} ${kbd(0, 5)} ${kbd(1, 0)} ${kbd(1, 1)}
+                ${kbd(1, 2)} ${kbd(1, 3)} ${kbd(1, 4)} ${kbd(1, 5)}
+                ${kbd(2, 0, "lily58-shade")} ${kbd(2, 1)} ${kbd(2, 2)}
+                ${kbd(2, 3)} ${kbd(2, 4)} ${kbd(2, 5)} ${kbd(3, 0)} ${kbd(3, 1)}
+                ${kbd(3, 2)} ${kbd(3, 3)} ${kbd(3, 4)} ${kbd(3, 5)}
+              </div>
+              ${kbd(4, 0, "lily58-x0 lily58-shade")}
+              ${kbd(4, 1, "lily58-x1 lily58-shade")}
+              ${kbd(4, 2, "lily58-x2 lily58-shade")}
+              ${kbd(4, 3, "lily58-x3 lily58-shade")}
+              ${kbd(4, 4, "lily58-x4 lily58-shade")}
+              <div class="lily58-oled">${renderLeftOLED()}</div>
+            </div>
+            ${leftSlotHTML}
+          </div>
+          <div class="lily58-half-container">
+            <div
+              class="lily58-half lily58-right-half ${halfClass(1)}"
+              aria-hidden="true"
+            >
+              <div class="lily58-grid">
+                ${kbd(5, 0)} ${kbd(5, 1)} ${kbd(5, 2)} ${kbd(5, 3)} ${kbd(5, 4)}
+                ${kbd(5, 5, "lily58-shade")} ${kbd(6, 0)} ${kbd(6, 1)}
+                ${kbd(6, 2)} ${kbd(6, 3)} ${kbd(6, 4)} ${kbd(6, 5)} ${kbd(7, 0)}
+                ${kbd(7, 1)} ${kbd(7, 2)} ${kbd(7, 3)} ${kbd(7, 4)}
+                ${kbd(7, 5, "lily58-accent")} ${kbd(8, 0)} ${kbd(8, 1)}
+                ${kbd(8, 2)} ${kbd(8, 3)} ${kbd(8, 4)} ${kbd(8, 5)}
+              </div>
+              ${kbd(9, 0, "lily58-x0 lily58-shade")}
+              ${kbd(9, 1, "lily58-x1 lily58-shade")}
+              ${kbd(9, 2, "lily58-x2 lily58-shade")}
+              ${kbd(9, 3, "lily58-x3 lily58-shade")}
+              ${kbd(9, 4, "lily58-x4 lily58-shade")}
+              <div class="lily58-oled">${renderRightOLED()}</div>
+            </div>
+            ${rightSlotHTML}
+          </div>
+          ${defaultSlotHTML}
+        `;
+
+        const layerButtons = this.querySelectorAll(".lily58-layer-button");
+
+        if (!layerButtons.length) {
+          this.classList.add("lily58-no-layers");
+        } else {
+          let currentLayer = 0;
+          this.classList.add("lily58-on-layer" + currentLayer);
+          const toggleLayer = () => {
+            this.classList.remove("lily58-on-layer" + currentLayer);
+            currentLayer = 1 - currentLayer;
+            this.classList.add("lily58-on-layer" + currentLayer);
+          };
+          for (const layerButton of layerButtons) {
+            layerButton.addEventListener("click", toggleLayer);
+          }
+        }
+
+        appendStyle(
+          this.tagName,
+          html`<style>
+            lily-58 {
+              display: flex;
+              justify-content: center;
+              flex-wrap: wrap;
+              column-gap: calc(30px + 6vw);
+              row-gap: 30px;
+              font-family: var(--default-font, monospace);
+              font-size: 15px;
+              /* bleed */
+              position: relative;
+              min-width: 100vw;
+              left: calc(50% - 50vw);
+            }
+            lily-58 kbd {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              border-radius: 6px;
+              width: 40px;
+              height: 40px;
+              line-height: 1;
+              background: white;
+              color: black;
+            }
+            kbd.lily58-accent {
+              background: #72cbe9;
+            }
+            kbd.lily58-shade {
+              background: #bed4e5;
+            }
+            .lily58-no-layers kbd.lily58-nofocus,
+            .lily58-on-layer0 kbd.lily58-nofocus,
+            kbd:empty,
+            .lily58-on-layer0 kbd:has(.lily58-layer0:empty),
+            .lily58-on-layer1 kbd:has(.lily58-layer1:empty) {
+              background: #787d80;
+              color: #0006;
+            }
+            .lily58-half-container {
+              display: inline-block;
+            }
+            .lily58-half {
+              position: relative;
+              width: 316px;
+              height: 243px;
+              filter: drop-shadow(0 4px 0 #4c5858);
+            }
+            .lily58-half-unfocused {
+              opacity: 0.6;
+              /* height: 0;
+              overflow: none;
+              visibility: hidden; */
+            }
+            .lily58-left-half .lily58-grid > kbd:nth-child(6n + 1),
+            .lily58-right-half .lily58-grid > kbd:nth-child(6n) {
+              position: relative;
+              top: 10px;
+            }
+            .lily58-left-half .lily58-grid > kbd:nth-child(6n + 2),
+            .lily58-right-half .lily58-grid > kbd:nth-child(6n + 5) {
+              position: relative;
+              top: 8px;
+            }
+            .lily58-left-half .lily58-grid > kbd:nth-child(6n + 3),
+            .lily58-right-half .lily58-grid > kbd:nth-child(6n + 4) {
+              position: relative;
+              top: 2px;
+            }
+            .lily58-left-half .lily58-grid > kbd:nth-child(6n + 5),
+            .lily58-right-half .lily58-grid > kbd:nth-child(6n + 2) {
+              position: relative;
+              top: 2px;
+            }
+            .lily58-left-half .lily58-grid > kbd:nth-child(6n),
+            .lily58-right-half .lily58-grid > kbd:nth-child(6n + 1) {
+              position: relative;
+              top: 4px;
+            }
+            .lily58-grid {
+              display: grid;
+              gap: 6px;
+              grid-template-columns: repeat(6, min-content);
+              grid-template-rows: repeat(4, min-content);
+            }
+            .lily58-right-half .lily58-grid {
+              position: relative;
+              left: 46px;
+            }
+            .lily58-left-half .lily58-x0 {
+              position: absolute;
+              left: 113px;
+              top: 186px;
+            }
+            .lily58-left-half .lily58-x1 {
+              position: absolute;
+              left: 159px;
+              top: 186px;
+            }
+            .lily58-left-half .lily58-x2 {
+              position: absolute;
+              left: 205px;
+              top: 186px;
+            }
+            .lily58-left-half .lily58-x3 {
+              position: absolute;
+              left: 264px;
+              top: 180px;
+              transform: rotate(30deg);
+              height: 60px;
+            }
+            .lily58-left-half .lily58-x4 {
+              position: absolute;
+              left: 276px;
+              top: 117px;
+            }
+            .lily58-right-half .lily58-x4 {
+              position: absolute;
+              right: 113px;
+              top: 186px;
+            }
+            .lily58-right-half .lily58-x3 {
+              position: absolute;
+              right: 159px;
+              top: 186px;
+            }
+            .lily58-right-half .lily58-x2 {
+              position: absolute;
+              right: 205px;
+              top: 186px;
+            }
+            .lily58-right-half .lily58-x1 {
+              position: absolute;
+              right: 264px;
+              top: 180px;
+              transform: rotate(-30deg);
+              height: 60px;
+            }
+            .lily58-right-half .lily58-x0 {
+              position: absolute;
+              right: 276px;
+              top: 117px;
+            }
+            .lily58-oled {
+              position: absolute;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              width: 40px;
+              height: 85px;
+              background: black;
+              border: solid 1px #222;
+            }
+            .lily58-no-layers .lily58-oled:has(img),
+            .lily58-on-layer0 .lily58-oled:has(img) {
+              border-image: linear-gradient(
+                  0,
+                  #222,
+                  #233 30%,
+                  #566,
+                  #233 70%,
+                  #222
+                )
+                1;
+            }
+            .lily58-oled > img {
+              width: 24px;
+              height: 24px;
+              object-fit: contain;
+              image-rendering: pixelated;
+              filter: drop-shadow(0 0 8px #cff5) drop-shadow(-4px 2px 1px #cff2)
+                drop-shadow(4px -2px 1px #cff2);
+            }
+            .lily58-left-half .lily58-oled {
+              left: 278px;
+              top: 5px;
+            }
+            .lily58-right-half .lily58-oled {
+              right: 278px;
+              top: 5px;
+            }
+            .lily58-layer-button {
+              position: relative;
+              padding: 0;
+              width: 100%;
+              height: 100%;
+              box-sizing: border-box;
+              border: double 4px #0f0;
+              border-radius: inherit;
+              color: #0f0;
+              background: #000c;
+              font: inherit;
+              line-height: inherit;
+              cursor: pointer;
+            }
+            .lily58-layer-button:hover {
+              background: #000a;
+            }
+            .lily58-layer1 .lily58-layer-button {
+              filter: invert(1);
+              background: #fffc;
+            }
+            .lily58-layer1 .lily58-layer-button:hover {
+              background: #fffa;
+            }
+            /* larger touch target */
+            .lily58-layer-button::after {
+              content: "";
+              position: absolute;
+              inset: -5mm;
+            }
+            .lily58-layer0,
+            .lily58-layer1,
+            .lily58-text-size {
+              display: inherit;
+              justify-content: inherit;
+              align-items: inherit;
+              border-radius: inherit;
+              width: 100%;
+              height: 100%;
+              line-height: inherit;
+            }
+            .lily58-layer1 {
+              display: none;
+            }
+            .lily58-on-layer1 .lily58-layer1 {
+              display: inherit;
+            }
+            .lily58-on-layer1 .lily58-layer0 {
+              display: none;
+            }
+          </style>`
+        );
+
+        function halfClass(half) {
+          if (focusRects) {
+            // check if a focusRect intersects this half
+            const [hx, hy, hw, hh] =
+              half <= 0 ? /* left */ [0, 0, 6, 5] : /* right */ [0, 5, 6, 5];
+            const intersects = focusRects.some(
+              ([x, y, w, h]) =>
+                x <= hx + hw && x + w >= hx && y <= hy + hh && y + h >= hy
+            );
+            if (!intersects) return "lily58-half-unfocused";
+          }
+          return "";
+        }
+
+        function kbd(row, col, className = "") {
+          // prettier-ignore
+          return html`<kbd class="${className} ${kbdClass(row, col)}">${kbdContent(row, col)}</kbd>`;
+        }
+
+        // renders kbd class
+        function kbdClass(row, col) {
+          if (focusRects) {
+            return isFocused(row, col) ? "lily58-focus" : "lily58-nofocus";
+          }
+          return "";
+        }
+
+        function isFocused(row, col) {
+          return (
+            !focusRects ||
+            focusRects.some(
+              ([x, y, w, h]) =>
+                col >= x && col < x + w && row >= y && row < y + h
+            )
+          );
+        }
+
+        // renders kbd content
+        function kbdContent(row, col) {
+          const value = keys[row][col];
+          const content = renderContent(value, row, col);
+
+          if (layer) {
+            const layerValue = layer[row][col];
+            const layerContent = renderContent(layerValue, row, col);
+            // prettier-ignore
+            return html`<div class="lily58-layer0">${renderTextSize(value, content)}</div>
+        <div class="lily58-layer1">${renderTextSize(layerValue, layerContent)}</div>`;
+          } else {
+            return renderTextSize(value, content);
+          }
+        }
+
+        function renderContent(value, row, col) {
+          const text = value.replace(
+            /[\u00A0-\u9999<>\&]/g,
+            (i) => "&#" + i.charCodeAt(0) + ";"
+          );
+
+          let content = text;
+          if (layerButton && layerButton[0] === row && layerButton[1] === col) {
+            content = html`<button class="lily58-layer-button">
+              ${content}
+            </button>`;
+          }
+
+          return content;
+        }
+
+        function renderTextSize(value, content) {
+          const length = Intl.Segmenter
+            ? [...new Intl.Segmenter().segment(value)].length
+            : [...value].length;
+
+          const maxLengthForFullSizedText = 2;
+
+          if (length <= maxLengthForFullSizedText) {
+            return html`${content}`;
+          } else {
+            const size =
+              50 + Math.floor(50 / (1 + length - maxLengthForFullSizedText));
+            const weightRule = length > 3 ? "font-weight:bold;" : "";
+
+            return html`<span
+              class="lily58-text-size"
+              style="font-size:${size}%;${weightRule}"
+            >
+              ${content}
+            </span>`;
+          }
+        }
+
+        function renderLeftOLED() {
+          if (!oledLeft) return "";
+          return html`<img alt="" class="lily58-layer0" src="${oledLeft}" />`;
+        }
+
+        function renderRightOLED() {
+          if (!oledRight) return "";
+          return html`<img alt="" class="lily58-layer0" src="${oledRight}" />`;
+        }
+
+        function altText() {
+          const leftKeymap = renderAltKeymap(keys.slice(0, 5), 0);
+          const rightKeymap = renderAltKeymap(keys.slice(5, 10), 5);
+          const wwith = focusRects ? " with highlighted keys" : "";
+          return (
+            `Lily58 keyboard layout diagram${wwith}` +
+            "\n  Left hand:\n" +
+            leftKeymap +
+            "\n  Right hand:\n" +
+            rightKeymap
+          );
+        }
+
+        function renderAltKeymap(keys, rowOffset) {
+          // prettier-ignore
+          return keys
+      .map((rowKeys, row) =>
+        "    " + rowKeys.map((key, col) =>
+          renderAltKey(key, row + rowOffset, col)
+        ).join("")
+      ).join("\n");
+        }
+
+        function renderAltKey(key, row, col) {
+          const content = centerAltKey(key);
+          if (focusRects && isFocused(row, col)) {
+            return `〘${content}〙`;
+          }
+          return `〔${content}〕`;
+        }
+
+        function centerAltKey(label) {
+          const maxLength = 4;
+          return (
+            "".padStart(Math.floor((maxLength - label.length) / 2), " ") + label
+          ).padEnd(maxLength, " ");
+        }
+      }
+    }
+  );
+})();
