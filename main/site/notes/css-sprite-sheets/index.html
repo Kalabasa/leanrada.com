@@ -1,0 +1,392 @@
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
+<script defer src="./sprite-sheet-demo.js"></script>
+
+<title>CSS sprite sheet animations</title>
+
+<site-header></site-header>
+
+<blog-header>
+  <h1>CSS sprite sheet animations</h1>
+  <img src="hero.png" alt="" loading="lazy"></img>
+</blog-header>
+
+<blog-post-info>
+  <time datetime="2024-11-03">03 Nov 2024</time>
+  · 6 min read
+</blog-post-info>
+
+<tag-row>
+  <tag-chip title="css"></tag-chip>
+</tag-row>
+
+<main class="prose"><p>Check out this demo first (Click it!):</p>
+<div class="specimen">
+        <label class="animate-on-click">
+          <input type="checkbox"></input>
+          <div class="heartbox" style="display: grid; place-content: center; width: 60px; height: 60px;">
+            <div role="img" alt="interactive heart animation" style="
+                background-image: url('twitter.png');
+                width: 100px;
+                height: 100px;
+                background-size: 2900px 100px;
+              ">
+            </div>
+          </div>
+          Heart
+        </label>
+      </div>
+
+<p>Yes, it’s the Twitter heart button. This heart animation was done using an old technique called <a href="https://en.wikipedia.org/wiki/Texture_atlas" target="_blank"><strong>sprite sheets</strong></a>.</p>
+<div style="display: flex; justify-content: center;">
+        <sprite-sheet-demo src="clover.png" alt="spinning clover" sheet-width="1300px" sheet-height="62px" offset-x="0px" offset-y="0px" tile-width="100px" tile-height="62px" tile-from-x="0" tile-from-y="0" tile-to-x="12" tile-to-y="0" frames="13" scroll="true" scroll-iterations="20"></sprite-sheet-demo>
+        <sprite-sheet-demo src="clover.png" alt="spinning clover" sheet-width="1300px" sheet-height="62px" offset-x="0px" offset-y="0px" tile-width="100px" tile-height="62px" tile-from-x="0" tile-from-y="0" tile-to-x="12" tile-to-y="0" frames="13" scroll="true" scroll-iterations="20"></sprite-sheet-demo>
+        <sprite-sheet-demo src="clover.png" alt="spinning clover" sheet-width="1300px" sheet-height="62px" offset-x="0px" offset-y="0px" tile-width="100px" tile-height="62px" tile-from-x="0" tile-from-y="0" tile-to-x="12" tile-to-y="0" frames="13" scroll="true" scroll-iterations="20"></sprite-sheet-demo>
+      </div>
+
+<p>On the web sprite sheets are used mainly to reduce the amount of HTTP requests by bundling multiple images together into a single image file. Displaying a sub-image involves clipping the sheet in the appropriate coordinates.</p>
+<figure><img alt="" src="minecraft.png" loading="lazy"></img><figcaption>Sprite sheet / texture atlas of Minecraft blocks</figcaption></figure>
+
+<p>The bandwidth benefit has been largely mitigated by HTTP/2 now, but sprite sheets have another purpose: <strong>animations!</strong> Displaying animations is one of the primary uses of sprite sheets, besides loading performance.</p>
+<figure><img alt="" src="animation-opaque.png" loading="lazy"></img><figcaption>Characters w/ animations, sprite sheet by <text-link href="https://opengameart.org/content/classic-hero-and-baddies-pack">GrafxKid</text-link></figcaption></figure>
+
+<p>It’s neat for small raster-based animations such as loading spinners, characters, icons, and micro-interactions.</p>
+<div class="specimen">
+        <sprite-sheet-demo src="animation.png" alt="walking animation of a red monster character" sheet-width="422px" sheet-height="176px" offset-x="208px" offset-y="8px" tile-width="32px" tile-height="32px" tile-from-x="0" tile-from-y="1" tile-to-x="5" tile-to-y="1" frames="6" frame-delay="100ms"></sprite-sheet-demo>
+        <sprite-sheet-demo src="animation.png" alt="walking animation of a blue monster character" sheet-width="422px" sheet-height="176px" offset-x="208px" offset-y="102px" tile-width="32px" tile-height="32px" tile-from-x="0" tile-from-y="1" tile-to-x="5" tile-to-y="1" frames="6" frame-delay="100ms"></sprite-sheet-demo>
+      </div>
+
+<h2 id="how">How</h2>
+<p>Assumming you already have a sprite sheet image and coordinates in hand, all you need is a way to clip that image for display. There are a few ways to clip an image in CSS.</p>
+<prose-table>
+<table>
+<thead>
+<tr>
+<th>method</th>
+<th>coordinates via</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>background-image</code></td>
+<td><code>background-position</code></td>
+</tr>
+<tr>
+<td><code>overflow: hidden</code> with nested <code>&lt;img&gt;</code></td>
+<td><code>left</code>, <code>top</code> on the nested element</td>
+</tr>
+<tr>
+<td><code>clip-path</code></td>
+<td><code>clip-path</code>, <code>left</code>, <code>top</code></td>
+</tr>
+</tbody></table>
+</prose-table>
+<p>The <code>left</code> and <code>top</code> rules can be substituted for <code>transform: translate(&hellip;)</code>.</p>
+<p>The <code>background-image</code> way is the most convenient since you only need one element.</p>
+<code-block language="css"><pre><code>.element {
+  background-image: url('heart.png');
+  /* size of one frame */
+  width: 100px;
+  height: 100px;
+  /* size of the whole sheet */
+  background-size: 2900px 100px;
+  /* coordinates of the desired frame (negated) */
+  background-position: -500px 0px;
+}</code></pre></code-block>
+<p>This is the sprite sheet for the heart animation from Twitter:</p>
+<prose-bleed><img alt="Heart animation sprite sheet from Twitter" src="twitter.png" loading="lazy"></img></prose-bleed>
+
+<p>Using this image, the code above produces a still image of the frame at (500,0) &mdash; the sixth frame.</p>
+<div class="specimen">
+        <figure role="img" alt="6th frame of the heart animation" style="
+            background-image: url('twitter.png');
+            width: 100px;
+            height: 100px;
+            background-size: 2900px 100px;
+            background-position: -500px 0px;
+          "></figure>
+      </div>
+
+<p>Removing the clipping method reveals that it’s just a part of the whole sheet (this view will be fun when it’s actually animating):</p>
+<div class="specimen">
+        <figure role="img" alt="6th frame of the heart animation" style="
+            width: 100px;
+            height: 100px;
+            box-shadow: 0 0 0 2px #0008, 0 0 0 50vmax #0004;
+          ">
+          <div style="
+              background-image: url('twitter.png');
+              background-size: 2900px 100px;
+              width: 2900px;
+              height: 100px;
+              position: relative;
+              left: -500px;
+              top: 0px;
+              z-index: -1;
+            ">
+          </div>
+        </figure>
+      </div>
+
+<p>If the sprite sheet wasn’t made to be animated, that is, if it was just a collection of multiple unrelated sub-images like the Minecraft example earlier, then the CSS rules above are all we need to know. That’s it.</p>
+<p>Since this sprite sheet was made to be animated, that is, it contains animation frames, more needs to be done.</p>
+<p>To animate this, we animate the <code>background-position</code> over each frame in the sequence, flashing each frame in quick succession.</p>
+<code-block language="diff" languagecode="diff-css"><pre><code> .element {
+   background-image: url('heart.png');
+   /* size of one frame */
+   width: 100px;
+   height: 100px;
+   /* size of the whole sheet */
+   background-size: 2900px 100px;
+-  /* coordinates of the desired frame (negated) */
+-  background-position: -500px 0px;
++  /* animate the coordinates */
++  animation: heartAnimation 2s steps(29, jump-none) infinite;
++}
++
++@keyframes heartAnimation {
++  from {
++    /* first frame */
++    background-position: 0px 0px;
++  }
++  to {
++    /* last frame */
++    background-position: -2800px 0px;
++  }
++}</code></pre></code-block>
+<p><box-note><strong>Important: Note the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position" target="_blank"><code>steps()</code></a> timing function in the <code>animation</code> rule above!</strong> This is required for the transition to land exactly <em>on</em> the frames.</box-note></p>
+<p>Voilà.</p>
+<div class="specimen">
+        <figure role="img" alt="the heart animation" style="
+            background-image: url('twitter.png');
+            width: 100px;
+            height: 100px;
+            background-size: 2900px 100px;
+            animation: heartAnimation 2s steps(29, jump-none) infinite;
+          "></figure>
+      </div>
+<style>
+        @keyframes heartAnimation {
+          from {
+            background-position: 0px 0px;
+          }
+          to {
+            background-position: -2800px 0px;
+          }
+        }
+      </style>
+
+<p>And the view without clipping:</p>
+<div class="specimen">
+        <figure role="img" alt="the heart animation (unclipped)" style="
+            width: 100px;
+            height: 100px;
+            box-shadow: 0 0 0 2px #0008, 0 0 0 50vmax #0004;
+          ">
+          <div style="
+              background-image: url('twitter.png');
+              background-size: 2900px 100px;
+              width: 2900px;
+              height: 100px;
+              position: relative;
+              animation: heartAnimationByPosition 2s steps(29, jump-none) infinite;
+              z-index: -1;
+            ">
+          </div>
+        </figure>
+      </div>
+<style>
+        @keyframes heartAnimationByPosition {
+          from {
+            left: 0px;
+            top: 0px;
+          }
+          to {
+            left: -2800px;
+            top: 0px;
+          }
+        }
+      </style>
+
+<figure><img alt="" src="zoetrope.gif" loading="lazy"></img><figcaption>It’s like a <text-link href="https://deniseanimation.weebly.com/zoetropes.html">zoetrope</text-link></figcaption></figure>
+
+<p>The exact parameters for the <code>steps()</code> function are a bit fiddly and it depends on whether you loop it or reverse it, but here’s what worked for the heart animation with 29 total frames.</p>
+<code-block language="css"><pre><code>animation-timing-function: steps(29, jump-none);</code></pre></code-block>
+<p>Using any other timing function results in a weird smooth in-betweening movement like this:</p>
+<div class="specimen">
+        <figure role="img" alt="janky heart animation" style="
+            background-image: url('twitter.png');
+            width: 100px;
+            height: 100px;
+            background-size: 2900px 100px;
+            animation: heartAnimation 2s ease-in-out infinite;
+          "></figure>
+      </div>
+
+<p>Remember, <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#stepsinteger_step-position" target="_blank"><code>steps()</code></a> is crucial!</p>
+<h2 id="why-not-apng">Why not APNG?</h2>
+<p>For autoplaying stuff like loading spinners, you might want plain old GIFs or <a href="https://en.wikipedia.org/wiki/APNG" target="_blank">APNGs</a> instead.</p>
+<p>But we don’t have tight control over the playback with these formats.</p>
+<p>With sprite sheets, we can pause, reverse, play on hover, change the frame rate&hellip;</p>
+<p>&hellip;make it <strong>scroll-driven</strong>,</p>
+<figure>
+        <div class="specimen vertical-on-narrow-screen">
+          <sprite-sheet-demo src="globe.png" alt="spinning globe" sheet-width="438px" sheet-height="73px" offset-x="0px" offset-y="0px" tile-width="73px" tile-height="73px" tile-from-x="0" tile-from-y="0" tile-to-x="5" tile-to-y="0" frames="6" scroll="true" scroll-iterations="200"></sprite-sheet-demo>
+          <sprite-sheet-demo src="moon.png" alt="spinning moon" sheet-width="3000px" sheet-height="148px" offset-x="0px" offset-y="0px" tile-width="200px" tile-height="148px" tile-from-x="0" tile-from-y="0" tile-to-x="14" tile-to-y="0" frames="15 " scroll="true" scroll-iterations="15"></sprite-sheet-demo>
+          <sprite-sheet-demo src="globe.png" alt="spinning globe" sheet-width="438px" sheet-height="73px" offset-x="0px" offset-y="0px" tile-width="73px" tile-height="73px" tile-from-x="0" tile-from-y="0" tile-to-x="5" tile-to-y="0" frames="6" scroll="true" scroll-iterations="200"></sprite-sheet-demo>
+        </div>
+        <figcaption class="caption">Note: Scroll-driven animations are experimental. No Firefox support atm.</figcaption>
+      </figure>
+
+<p>&hellip; or make it <strong>interactive</strong>!</p>
+<h2 id="interactivity">Interactivity</h2>
+<p>The nice thing about this being in CSS is that we can make it interactive via selectors.</p>
+<p>Continuing with the heart example, we can turn it into a stylised toggle control via HTML & CSS:</p>
+<div class="specimen">
+        <label class="animate-on-click">
+          <input type="checkbox"></input>
+          <div class="heartbox" style="display: grid; place-content: center; width: 60px; height: 60px;">
+            <div role="img" alt="interactive heart animation" style="
+                background-image: url('twitter.png');
+                width: 100px;
+                height: 100px;
+                background-size: 2900px 100px;
+              ">
+            </div>
+          </div>
+          Heart
+        </label>
+      </div>
+<style>
+        .animate-on-click {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          font-family: system-ui;
+          font-size: 30px;
+          font-weight: bold;
+          color: #fff;
+        }
+        .animate-on-click:hover,
+        .animate-on-click:focus-within {
+          filter: brightness(1.2);
+        }
+        .animate-on-click:active {
+          filter: brightness(0.9);
+        }
+        .animate-on-click:has(:checked) {
+          color: #fa335b;
+        }
+        .animate-on-click > input {
+          display: none;
+        }
+        .animate-on-click > input:checked + .heartbox > [role=img] {
+          animation: heartAnimation 725ms steps(29, jump-none) forwards;
+        }
+      </style>
+
+<code-block language="diff" languagecode="diff-css"><pre><code> .element {
+   background-image: url('heart.png');
+   /* size of one frame */
+   width: 100px;
+   height: 100px;
+   /* size of the whole sheet */
+   background-size: 2900px 100px;
++ }
++
++.input:checked ~ .element {
+   /* animate the coordinates */
+-  animation: heartAnimation 2s steps(29, jump-none) infinite;
++  animation: heartAnimation 2s steps(29, jump-none) forwards;
+ }
+ 
+ @keyframes heartAnimation {
+   from {
+     /* first frame */
+     background-position: 0px 0px;
+   }
+   to {
+     /* last frame */
+     background-position: -2800px 0px;
+   }
+ }</code></pre></code-block>
+<p>Or use the new <code>:has(:checked)</code>.</p>
+<p><box-note>Additionally, CSS doesn’t block the main thread. In modern browsers, the big difference between CSS animations and JS-driven animations (i.e. <code>requestAnimationFrame</code> loops) is that the JS one runs on the main thread along with event handlers and DOM operations, so if you have some heavy JS (like React rerendering the DOM), JS animations would suffer along with it.</box-note></p>
+<p>Of course, JS could still be used, if only to <em>trigger</em> these CSS sprite animations by adding or removing CSS classes.</p>
+<h2 id="why-not-animated-svgs">Why not animated SVGs?</h2>
+<p>If you have a vector format, then an <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/SVG_animation_with_SMIL" target="_blank">animated SVG</a> is a decent option!</p>
+<p>This format is kinda hard to author and integrate though &mdash; one would need both animation skills and coding skills to implement it. Some paid tools apparently exist to make it easier?</p>
+<p>And Lottie? That 300-kilobyte library? Uh, sure, if you really need it.</p>
+<h2 id="limitations-of-sprite-sheets">Limitations of sprite sheets</h2>
+<ul>
+<li>The sheet could end up as a very large image file if you’re not very careful.</li>
+<li>It’s only effective for the narrow case of small frame-by-frame raster animations. Beyond that, better options may exist, such animated SVGs, the <code>&lt;video&gt;</code> tag, the <code>&lt;canvas&gt;</code> tag, etc.</li>
+<li>How do you support higher pixel densities? Media queries on <code>background-image</code>? <code>&lt;img&gt;</code> with <code>srcset</code> could work, but the coordinates are another matter. But it could be solved generally with CSS custom properties and <code>calc</code>.</li>
+</ul>
+<h2 id="gallery">Gallery</h2>
+<figure>
+        <div class="specimen">
+          <sprite-sheet-demo src="star.png" alt="star animation from Twitter" sheet-width="3584" sheet-height="45px" offset-x="0px" offset-y="0px" tile-width="64px" tile-height="45px" tile-from-x="0" tile-from-y="0" tile-to-x="55" tile-to-y="0" frames="56" frame-delay="25ms"></sprite-sheet-demo>
+        </div>
+        <figcaption class="caption">‘Favorite’ icon animation</figcaption>
+      </figure>
+
+<figure>
+        <div class="specimen">
+          <sprite-sheet-demo src="snail.png" alt="walking animation of a snail" sheet-width="192px" sheet-height="192px" offset-x="0px" offset-y="0px" tile-width="32px" tile-height="32px" tile-from-x="0" tile-from-y="0" tile-to-x="0" tile-to-y="1" frames="2" frame-delay="300ms"></sprite-sheet-demo>
+          <sprite-sheet-demo src="snail.png" alt="idle hiding animation of a snail" sheet-width="192px" sheet-height="192px" offset-x="0px" offset-y="0px" tile-width="32px" tile-height="32px" tile-from-x="5" tile-from-y="0" tile-to-x="5" tile-to-y="5" frames="6" frame-delay="75ms"></sprite-sheet-demo>
+          <sprite-sheet-demo src="snail.png" alt="climb animation of a snail" sheet-width="192px" sheet-height="192px" offset-x="0px" offset-y="0px" tile-width="32px" tile-height="32px" tile-from-x="3" tile-from-y="0" tile-to-x="3" tile-to-y="1" frames="2" frame-delay="1000ms"></sprite-sheet-demo>
+          <sprite-sheet-demo src="snail.png" alt="attack animation of a snail" sheet-width="192px" sheet-height="192px" offset-x="0px" offset-y="0px" tile-width="32px" tile-height="32px" tile-from-x="1" tile-from-y="0" tile-to-x="1" tile-to-y="1" frames="2" frame-delay="800ms"></sprite-sheet-demo>
+          <sprite-sheet-demo src="snail.png" alt="death animation of a snail" sheet-width="192px" sheet-height="192px" offset-x="0px" offset-y="0px" tile-width="32px" tile-height="32px" tile-from-x="2" tile-from-y="0" tile-to-x="2" tile-to-y="1" frames="2" frame-delay="300ms"></sprite-sheet-demo>
+        </div>
+        <figcaption class="caption">Snail enemy sprites from my game <text-link target="_blank" href="/wares/miniforts/">MiniForts</text-link></figcaption>
+      </figure>
+
+<figure><video autoplay="" muted="" loop="" playsinline="" aria-label="" src="work.mp4" loading="lazy"></video><figcaption>I actually had to implement these hover animations via sprite sheets at work.</figcaption></figure>
+
+<figure><video autoplay="" muted="" loop="" playsinline="" aria-label="" src="work2.mp4" loading="lazy"></video><figcaption>Behind the scenes</figcaption></figure>
+
+<iframe height="414" style="width: 100%;" scrolling="no" title="GSAP Draggable 360° sprite slider" src="https://codepen.io/jamiejefferson/embed/DgqxVe?default-tab=result&theme-id=dark" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+        See the Pen <a href="https://codepen.io/jamiejefferson/pen/DgqxVe" target="_blank">
+        GSAP Draggable 360° sprite slider</a> by Jamie Jefferson (<a href="https://codepen.io/jamiejefferson" target="_blank">@jamiejefferson</a>)
+        on <a href="https://codepen.io" target="_blank">CodePen</a>.
+      </iframe>
+
+<iframe height="333" style="width: 100%;" scrolling="no" title="Steps Animation" src="https://codepen.io/simurai/embed/krWaKX?default-tab=result&theme-id=dark" frameborder="no" loading="lazy" allowtransparency="true" allowfullscreen="true">
+        See the Pen <a href="https://codepen.io/simurai/pen/krWaKX" target="_blank">
+        Steps Animation</a> by simurai (<a href="https://codepen.io/simurai" target="_blank">@simurai</a>)
+        on <a href="https://codepen.io" target="_blank">CodePen</a>.
+      </iframe>
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
+
+<style>
+  .specimen {
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+    min-height: 190px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px 60px;
+    flex-wrap: wrap;
+    background-color: #202283;
+    background-image: linear-gradient(#34369b 1px, transparent 1px),
+      linear-gradient(90deg, #34369b 1px, transparent 1px),
+      linear-gradient(#272992 1px, transparent 1px),
+      linear-gradient(90deg, #272992 1px, #202283 1px);
+    background-size: 96px 96px, 96px 96px, 12px 12px, 12px 12px;
+    background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+    border-radius: 12px;
+  }
+  @media (max-width: 600px) {
+    .vertical-on-narrow-screen {
+      flex-direction: column;
+    }
+  }
+</style>
