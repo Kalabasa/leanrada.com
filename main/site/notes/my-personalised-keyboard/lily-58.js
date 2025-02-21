@@ -140,7 +140,7 @@
           this.hasAttribute("focus-rects") &&
           JSON.parse("[" + this.getAttribute("focus-rects") + "]");
         const layer =
-          this.hasAttribute("layer") && JSON.parse(this.getAttribute("layer"));
+          this.hasAttribute("layerkeydatakey") && DATA[this.getAttribute("layerkeydatakey")];
         const layerButton =
           this.hasAttribute("layer-button") &&
           this.getAttribute("layer-button").split(",").map(Number);
