@@ -38,7 +38,6 @@ customElements.define(
       this.modelTickId = null;
 
       this.hasInit = false;
-      this.isVisible = false;
 
       this.tabIndex = 0;
       this.dataset.rss = "interactive";
@@ -73,15 +72,13 @@ customElements.define(
       const observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
           if (entry.target !== this) continue;
-          if (!this.isVisible && entry.isIntersecting) {
-            this.isVisible = true;
+          if (entry.isIntersecting) {
             if (!this.hasInit) this.init();
             this.pixi.start();
             this.modelTickId = setInterval(this.update, 50);
-          } else if (this.isVisible && !entry.isIntersecting) {
+          } else if (!entry.isIntersecting) {
             clearInterval(this.modelTickId);
             this.pixi.stop();
-            this.isVisible = false;
           }
         }
       });

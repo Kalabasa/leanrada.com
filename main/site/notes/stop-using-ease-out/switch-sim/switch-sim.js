@@ -94,12 +94,10 @@ customElements.define(
       const observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
           if (entry.target !== this) continue;
-          if (!this.isVisible && entry.isIntersecting) {
-            this.isVisible = true;
+          if (entry.isIntersecting) {
             if (!this.hasInit) this.init();
             this.startLoop();
-          } else if (this.isVisible && !entry.isIntersecting) {
-            this.isVisible = false;
+          } else if (!entry.isIntersecting) {
             this.stopLoop();
           }
         }
