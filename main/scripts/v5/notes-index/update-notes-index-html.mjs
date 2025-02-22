@@ -36,7 +36,7 @@ export async function updateNotesIndexHTML(combinedIndex, notesIndexHTML) {
             innerContent += `\n${ulIndent}</ul>`;
           }
           year = itemYear;
-          innerContent += `<h3>${year}</h3>\n${ulIndent}<ul>`;
+          innerContent += `\n${ulIndent}<h3>${year}</h3>\n${ulIndent}<ul>`;
         }
         innerContent += renderNoteListItem(item, "no-year").replaceAll(
           "\n",

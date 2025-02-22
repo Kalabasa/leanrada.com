@@ -440,6 +440,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const components = [
       ["blog-header", "/components/blog-header/blog-header.js"],
       ["code-block", "/components/code-block/code-block.js"],
+      [
+        "feature-card-carousel",
+        "/components/feature-card-carousel/feature-card-carousel.js",
+      ],
     ];
 
     for (const [tagName, src] of components) {

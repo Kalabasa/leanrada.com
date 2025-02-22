@@ -760,6 +760,29 @@
     }
   }
 
+  feature-card-carousel {
+    position: relative;
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: start;
+    /* gap: 60px; */
+    --feature-card-carousel-inline-padding: calc(max(30px, 50svw - 879px));
+    padding: 12px var(--feature-card-carousel-inline-padding) 0;
+    scrollbar-width: none;
+    overflow: auto;
+
+    feature-card {
+      width: calc(min(546px, 100svw - 90px));
+      margin-left: 60px;
+      @media (max-width: 900px) {
+        margin-left: 30px;
+      }
+      &:first-of-type {
+        margin-left: 0;
+      }
+    }
+  }
+
   feature-card {
     display: grid;
     grid-template-columns: minmax(min-content, 7fr) 3fr;
@@ -786,6 +809,7 @@
       grid-area: img / img / imgtail / imgtail;
       width: 100%;
       height: 100%;
+      max-width: unset;
       border-radius: var(--card-border-radius);
       object-fit: cover;
       object-position: center;
@@ -859,31 +883,35 @@
 
     @media (hover: hover) {
       &,
-      hgroup,
-      p {
+      hgroup {
         transition: 0.2s var(--ease);
         transition-property: margin, padding;
       }
+      a::after,
+      img,
+      video {
+        transition: filter 1s ease, object-position 1s ease, background-color 2s,
+          margin 0.2s var(--ease), width 0.2s var(--ease);
+      }
       &:hover {
         padding: 0 0 12px;
-        margin: 0 -24px 0;
+
         padding-bottom: 12px;
-      }
-      &:hover a::after {
-        background-color: #fff;
-        transition: background-color 2s;
-      }
-      &:hover img {
-        filter: contrast(1);
-        object-position: 50% 67%;
-        transition: filter 1s ease, object-position 1s ease;
-      }
-      &:hover hgroup {
-        padding: 24px;
-      }
-      &:hover p {
-        margin-left: 24px;
-        margin-right: 24px;
+        a::after {
+          margin: 0 -12px 0;
+          background-color: #fff;
+        }
+        img,
+        video {
+          margin: 0 -12px 0;
+          width: calc(100% + 24px);
+          filter: contrast(1);
+          object-position: 50% 67%;
+        }
+        hgroup {
+          padding: 12px 24px;
+          margin: 0 -12px 0;
+        }
       }
     }
   }
