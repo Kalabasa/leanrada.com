@@ -139,7 +139,6 @@ function convertToWebComponents(inputHtml) {
 
     if (!tag.attr("target")) {
       const href = tag.attr("href");
-      console.log(href);
       if (
         href.startsWith("http:") ||
         href.startsWith("https:") ||
