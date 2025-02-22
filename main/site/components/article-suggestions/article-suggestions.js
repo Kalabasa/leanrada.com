@@ -1,4 +1,5 @@
 import("/components/feature-card-carousel/feature-card-carousel.js");
+import { renderFeatureCard } from "../feature-card/render-feature-card.js";
 
 customElements.define(
   "article-suggestions",
@@ -9,7 +10,6 @@ customElements.define(
       const placeholder = renderFeatureCard({
         attrs: `class="article-suggestions-placeholder"`,
         href: "#",
-        media: "/notes/placeholder.png",
         title: "▮▮▮▮▮▮▮▮▮▮▮▮",
         description:
           "▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮",
@@ -64,7 +64,7 @@ customElements.define(
       const fragment = document.createElement("template");
       for (const suggestion of suggestions) {
         fragment.innerHTML += renderFeatureCard({
-          media: suggestion.meta.media ?? "/notes/placeholder.png",
+          media: suggestion.meta.media,
           href: suggestion.meta.href,
           title: suggestion.meta.title,
           description:
@@ -96,31 +96,6 @@ customElements.define(
     }
   }
 );
-
-function renderFeatureCard({ attrs = "", href, media, title, description }) {
-  const mediaElement = media.endsWith(".mp4")
-    ? html`<video
-        muted
-        autoplay
-        loop
-        playsinline
-        src="${media}"
-        loading="lazy"
-      ></video>`
-    : html`<img src="${media}" loading="lazy" />`;
-
-  return html`
-    <feature-card ${attrs}>
-      <a href="${href}">
-        ${mediaElement}
-        <hgroup>
-          <h1>${title}</h1>
-        </hgroup>
-        <p>${description}</p>
-      </a>
-    </feature-card>
-  `;
-}
 
 function renderReason(reason) {
   switch (reason) {
