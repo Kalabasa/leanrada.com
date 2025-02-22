@@ -49,7 +49,7 @@ function renderMediaElement({ media, title }) {
 }
 
 function randomFF(seed) {
-  return Math.floor(125 + ((seed * 6394) % 67))
+  return Math.floor(128 + ((seed * 6394) % 67))
     .toString(16)
     .padStart(2, "0");
 }
