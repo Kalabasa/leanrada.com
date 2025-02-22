@@ -1,20 +1,19 @@
-export function populateSuggestions(
+export function populateSuggestions({
   suggestionsIndex,
   references,
-  backReferences,
   maxSmartSuggestions,
-  maxSuggestions
-) {
+  maxSuggestions,
+}) {
   for (let i = 0; i < suggestionsIndex.length; i++) {
     const item = suggestionsIndex[i];
 
     // suggest references
-    const refs = [
-      ...(references.get(item.href) ?? []),
-      ...(backReferences.get(item.href) ?? []),
-    ];
-
-    item.suggestions = refs.filter(unique).slice(0, maxSmartSuggestions);
+    const refs = Array.from(references.get(item.href) ?? []);
+    item.suggestions = refs
+      .filter((otherHref) => otherHref !== item.href)
+      .map((href) => ({ href, reason: "ref" }))
+      .filter(uniqueHref)
+      .slice(0, maxSmartSuggestions);
 
     // suggest by tag
     if (item.suggestions < maxSmartSuggestions) {
@@ -22,18 +21,14 @@ export function populateSuggestions(
         .filter((other) => other !== item)
         .map((other) => ({
           href: other.href,
-          score: other.tags.reduce(
-            (score, otherTag) =>
-              item.tags.includes(otherTag) ? score + 1 : score,
-            0
-          ),
+          score: computeScore(other, item),
         }))
         .filter((other) => other.score > 0)
         .sort((a, b) => b.score - a.score)
-        .map((other) => other.href);
+        .map((other) => ({ href: other.href, reason: "tag" }));
       item.suggestions = item.suggestions
         .concat(cotagged)
-        .filter(unique)
+        .filter(uniqueHref)
         .slice(0, maxSmartSuggestions);
     }
 
@@ -44,15 +39,28 @@ export function populateSuggestions(
       j = (j + 1) % suggestionsIndex.length
     ) {
       const other = suggestionsIndex[j];
-      if (!item.suggestions.includes(other.href)) {
-        item.suggestions.push(other.href);
+      if (item.suggestions.every((s) => s.href !== other.href)) {
+        item.suggestions.push({ href: other.href, reason: "next" });
       }
     }
-
-    console.log("suggestions for", item.href, item.suggestions);
   }
 }
 
-function unique(value, index, array) {
-  return array.indexOf(value) === index;
+function computeScore(a, b) {
+  const tagScore = a.tags.reduce(
+    (score, aTag) => (b.tags.includes(aTag) ? score + 1 : score),
+    0
+  );
+
+  if (tagScore <= 0) return 0;
+
+  const aTime = new Date(a.date).getTime();
+  const bTime = new Date(b.date).getTime();
+  const dateScore = 1e9 / (1e9 + Math.abs(aTime - bTime));
+
+  return tagScore + dateScore;
+}
+
+function uniqueHref(value, index, array) {
+  return array.findIndex((item) => item.href === value.href) === index;
 }

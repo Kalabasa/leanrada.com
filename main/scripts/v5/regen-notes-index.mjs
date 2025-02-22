@@ -21,7 +21,6 @@ async function main() {
   const subPages = glob.sync(path.resolve(notesDir, "*", "index.html"));
 
   const references = new Map();
-  const backReferences = new Map();
 
   // build index from parsed pages
   const index = (
@@ -41,7 +40,13 @@ async function main() {
           const title = ch("title").text();
           if (!title) throw new Error("Missing title!");
 
-          const media = ch("blog-header img, blog-header video").attr("src");
+          const firstMedia = ch(
+            "blog-header img, blog-header video, main img, main video"
+          ).attr("src");
+          const media =
+            firstMedia && !firstMedia.startsWith("/")
+              ? path.join(href, firstMedia)
+              : undefined;
 
           const date = ch("blog-post-info time").attr("datetime");
           if (!date) {
@@ -69,7 +74,7 @@ async function main() {
             if (href === otherHref) continue;
 
             multimapAdd(references, href, otherHref);
-            multimapAdd(backReferences, otherHref, href);
+            multimapAdd(references, otherHref, href);
           }
 
           return {
@@ -95,20 +100,34 @@ async function main() {
   const combinedIndex = index.concat(staticIndex);
 
   // populate suggestions
-  const maxSuggestions = 4;
-  const maxSmartSuggestions = maxSuggestions - 1;
   const suggestionsIndex = index
     .filter((item) => item.public)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  populateSuggestions(
+  populateSuggestions({
     suggestionsIndex,
     references,
-    backReferences,
-    maxSmartSuggestions,
-    maxSuggestions
-  );
+    maxSmartSuggestions: 3,
+    maxSuggestions: 4,
+  });
 
   console.log(combinedIndex.length, "total notes indexed");
+  const combinedIndexJsonPath = path.resolve(
+    notesDir,
+    "index.generated.combined.json"
+  );
+  if (!dryRun) {
+    console.log("Writing", path.relative(process.cwd(), combinedIndexJsonPath));
+    await fs.writeFile(
+      combinedIndexJsonPath,
+      JSON.stringify(
+        combinedIndex.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        ),
+        undefined,
+        "\t"
+      )
+    );
+  }
 
   const notesIndexHTMLPath = path.resolve(notesDir, "index.html");
   const notesIndexHTML = await fs.readFile(notesIndexHTMLPath);

@@ -1,15 +1,15 @@
+import("/components/article-reactions/article-reactions.js");
+
 customElements.define(
   "article-footer",
   class ArticleFooter extends HTMLElement {
     constructor() {
       super();
 
-      const suggestions = "";
-
       this.innerHTML = html`
         ${renderSig()}
         <article-reactions></article-reactions>
-        ${maybeRenderRss(this)} ${suggestions}
+        ${maybeRenderRss(this)} ${maybeRenderSuggestions()}
       `;
 
       appendStyle(
@@ -51,7 +51,7 @@ customElements.define(
               }
             }
 
-            aside.rss-link {
+            .rss-link {
               margin: 60px auto 0;
               width: 100%;
               text-align: center;
@@ -141,4 +141,10 @@ function maybeRenderRss(parent) {
       </div>
     </aside>
   `;
+}
+
+function maybeRenderSuggestions() {
+  if (!window.location.pathname.startsWith("/notes/")) return "";
+  import("/components/article-suggestions/article-suggestions.js");
+  return html`<article-suggestions></article-suggestions>`;
 }
