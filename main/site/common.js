@@ -349,6 +349,9 @@ customElements.define(
         window.addEventListener("resize", () => {
           this.#updatePosition();
         });
+        new ResizeObserver(() => {
+          this.#updatePosition();
+        }).observe(document.body);
       }
     }
 
@@ -372,7 +375,7 @@ customElements.define(
         this.style.top = goodTop + "px";
       } else {
         this.style.removeProperty("position");
-        this.style.removeProperty("bottom");
+        this.style.removeProperty("top");
       }
     }
   }
@@ -444,11 +447,32 @@ document.addEventListener("DOMContentLoaded", () => {
         "feature-card-carousel",
         "/components/feature-card-carousel/feature-card-carousel.js",
       ],
+      ["article-footer", "/components/article-footer/article-footer.js"],
     ];
 
-    for (const [tagName, src] of components) {
-      if (document.body.querySelector(tagName)) {
-        import(src);
+    const intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            for (let i = components.length - 1; i >= 0; i--) {
+              const [tagName, src] = components[i];
+              if (entry.target.tagName.toLowerCase() === tagName) {
+                import(src);
+                components.splice(i, 1);
+              }
+            }
+            intersectionObserver.unobserve(entry.target);
+          }
+        }
+      },
+      {
+        rootMargin: Math.round(window.innerHeight / 2) + "px",
+      }
+    );
+
+    for (const [tagName] of components) {
+      for (const element of document.querySelectorAll(tagName)) {
+        intersectionObserver.observe(element);
       }
     }
   }
