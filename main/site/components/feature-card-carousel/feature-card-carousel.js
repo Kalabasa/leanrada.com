@@ -163,11 +163,11 @@ customElements.define(
         nextButton.classList.toggle(
           "card-carousel-btn-visible",
           lastCard.offsetLeft + lastCard.offsetWidth - updatedScrollLeft >
-            this.offsetWidth + 300
+            this.offsetWidth + 60
         );
         prevButton.classList.toggle(
           "card-carousel-btn-visible",
-          firstCard.offsetLeft - updatedScrollLeft < -300
+          firstCard.offsetLeft - updatedScrollLeft < -6
         );
       };
 
