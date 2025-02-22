@@ -416,38 +416,19 @@ function debounce(fn, ms = 0) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  setupLazyScripts();
   setupAutoLoadComponents();
-
-  function setupLazyScripts() {
-    const selector = "script[data-lazy-src]";
-
-    const intersectionObserver = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          for (const script of entry.target.querySelectorAll(selector)) {
-            script.type = "module";
-            script.src = script.dataset.lazySrc;
-          }
-          intersectionObserver.unobserve(entry.target);
-        }
-      }
-    });
-
-    for (const script of document.querySelectorAll(selector)) {
-      intersectionObserver.observe(script.parentElement);
-    }
-  }
 
   function setupAutoLoadComponents() {
     const components = [
-      ["blog-header", "/components/blog-header/blog-header.js"],
-      ["code-block", "/components/code-block/code-block.js"],
-      [
-        "feature-card-carousel",
-        "/components/feature-card-carousel/feature-card-carousel.js",
-      ],
-      ["article-footer", "/components/article-footer/article-footer.js"],
+      ["nebula-animation"],
+      ["blog-header"],
+      ["code-block"],
+      ["feature-card-carousel"],
+      ["article-footer"],
+      ["gh-contribs"],
+      ["map-flight"],
+      ["right-now"],
+      ["bump-tally"],
     ];
 
     const intersectionObserver = new IntersectionObserver(
@@ -457,7 +438,7 @@ document.addEventListener("DOMContentLoaded", () => {
             for (let i = components.length - 1; i >= 0; i--) {
               const [tagName, src] = components[i];
               if (entry.target.tagName.toLowerCase() === tagName) {
-                import(src);
+                import(src ?? `/components/${tagName}/${tagName}.js`);
                 components.splice(i, 1);
               }
             }
