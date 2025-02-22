@@ -129,27 +129,33 @@ function convertToWebComponents(inputHtml) {
   const convertedMarkdown = marked.parse(markdown.html());
   main.append(convertedMarkdown);
 
-  output('a,btn[tag="aa"],text-link').each((i, el) => {
-    const tag = output(el);
+  output('a,btn[tag="aa"],text-link').each(
+    trace((i, el) => {
+      const tag = output(el);
 
-    if (el.tagName === "btn") {
-      tag.addClass("button");
-      tag.removeAttr("tag");
-    }
-
-    if (!tag.attr("target")) {
-      const href = tag.attr("href");
-      if (
-        href.startsWith("http:") ||
-        href.startsWith("https:") ||
-        href.startsWith("//")
-      ) {
-        tag.attr("target", "_blank");
+      if (el.tagName === "a" && !tag.attr("href")) {
+        return;
       }
-    }
 
-    el.tagName = "a";
-  });
+      if (el.tagName === "btn") {
+        tag.addClass("button");
+        tag.removeAttr("tag");
+      }
+
+      if (!tag.attr("target")) {
+        const href = tag.attr("href");
+        if (
+          href.startsWith("http:") ||
+          href.startsWith("https:") ||
+          href.startsWith("//")
+        ) {
+          tag.attr("target", "_blank");
+        }
+      }
+
+      el.tagName = "a";
+    })
+  );
 
   output("blog-media").each((i, el) => {
     const tag = output(el);
@@ -251,6 +257,17 @@ if (input) {
       ? "index.original.html"
       : "index.html";
   }
+}
+
+function trace(eachCallback) {
+  return (i, el) => {
+    try {
+      return eachCallback(i, el);
+    } catch (e) {
+      console.error(i, el);
+      throw e;
+    }
+  };
 }
 
 console.log("Reading", inputFile);
