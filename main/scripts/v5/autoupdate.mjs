@@ -9,6 +9,7 @@ import { rewrite } from "./rewrite/rewrite.mjs";
 import { readWares } from "./wares/read-wares.mjs";
 import { populateSuggestions } from "./notes/populate-suggestions.mjs";
 import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
+import { fetchStackOverflowReputation } from "./misc/fetch-so-rep.js";
 
 process.chdir(path.resolve(import.meta.dirname, "..", ".."));
 const projectRoot = process.cwd();
@@ -20,12 +21,18 @@ if (path.basename(projectRoot) !== "main") {
 const siteDir = path.resolve(projectRoot, "site");
 const dryRun = process.argv.includes("--dry-run");
 
-const options = parseOptionArgs(["notes", "wares", "hits", "gh-contribs"]);
+const options = parseOptionArgs([
+  "notes",
+  "wares",
+  "hits",
+  "gh-contribs",
+  "so-rep",
+]);
 main();
 
 async function main() {
   console.group("Loading data...");
-  const [notes, wares, hits, ghContribs] = await Promise.all([
+  const [notes, wares, hits, ghContribs, soRep] = await Promise.all([
     optional("notes", async () => {
       const { notes, noteReferences } = await readNotes(siteDir);
       populateSuggestions({
@@ -40,6 +47,9 @@ async function main() {
     optional("hits", () => fetchHits().catch(fallback("hits"))),
     optional("gh-contribs", () =>
       fetchGitHubContribs().catch(fallback("gh-contribs"))
+    ),
+    optional("so-rep", () =>
+      fetchStackOverflowReputation().catch(fallback("so-rep"))
     ),
   ]);
   console.groupEnd();
@@ -56,6 +66,10 @@ async function main() {
     notes,
     wares,
     hits,
+  });
+  await updateMiscIndexHTML({
+    hits,
+    soRep,
   });
   await updateNotesIndexJson({ notes });
   await updateNotesIndexHTML({ notes });
@@ -105,7 +119,7 @@ function parseOptionArgs(options) {
 }
 
 async function updateIndexHTML({ notes, wares, hits }) {
-  if (!notes || !wares || !hits) return;
+  if (!notes && !wares && !hits) return;
 
   const notesListIndent = 2;
   const latestNotes = notes?.slice(0, 4);
@@ -138,6 +152,19 @@ async function updateIndexHTML({ notes, wares, hits }) {
           },
         });
       }
+    },
+    dryRun,
+  });
+}
+
+async function updateMiscIndexHTML({ hits, soRep }) {
+  if (!hits && !soRep) return;
+
+  await rewrite({
+    htmlFilePath: path.resolve(siteDir, "misc", "index.html"),
+    data: {
+      hits,
+      soRep,
     },
     dryRun,
   });

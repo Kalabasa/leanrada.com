@@ -31,7 +31,10 @@ export async function rewrite({
       this.newContent = String(data[key]);
       element.onEndTag((endTag) => {
         this.replacing = false;
-        if (this.textBuffer !== this.newContent) {
+        if (this.textBuffer === this.newContent) {
+          endTag.before(this.textBuffer);
+        } else {
+          endTag.before(this.newContent);
           endTag.before(`<!--${dateString()}-->`, { html: true });
         }
       });
@@ -39,18 +42,8 @@ export async function rewrite({
 
     text(text) {
       if (!this.replacing) return;
-
       this.textBuffer += text.text;
-
-      if (text.lastInTextNode) {
-        if (this.textBuffer !== this.newContent) {
-          text.replace(this.newContent);
-        } else {
-          text.replace(this.textBuffer);
-        }
-      } else {
-        text.remove();
-      }
+      text.remove();
     },
 
     comments(comment) {
