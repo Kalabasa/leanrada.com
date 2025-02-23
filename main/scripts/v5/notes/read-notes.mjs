@@ -3,7 +3,9 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import * as cheerio from "cheerio";
 
+// returns notes and statically defined items in descending date order
 export async function readNotes(siteDir) {
+  console.log("Reading notes...");
   const pages = glob.sync(path.resolve(siteDir, "notes", "*", "index.html"));
   const noteReferences = new Map();
 
@@ -75,7 +77,20 @@ export async function readNotes(siteDir) {
     })
   );
 
-  return { notes, noteReferences };
+  const staticIndex = JSON.parse(
+    await fs.readFile(path.resolve(siteDir, "notes", "index.static.json"))
+  );
+  const combinedNotes = notes
+    .concat(staticIndex)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  console.log(
+    "Notes:",
+    combinedNotes.length,
+    "References:",
+    noteReferences.size
+  );
+  return { notes: combinedNotes, noteReferences };
 }
 
 function multimapAdd(map, key, value) {

@@ -1,14 +1,14 @@
 export function populateSuggestions({
-  suggestionsIndex,
-  references,
+  notes,
+  noteReferences,
   maxSmartSuggestions,
   maxSuggestions,
 }) {
-  for (let i = 0; i < suggestionsIndex.length; i++) {
-    const item = suggestionsIndex[i];
+  for (let i = 0; i < notes.length; i++) {
+    const item = notes[i];
 
     // suggest references
-    const refs = Array.from(references.get(item.href) ?? []);
+    const refs = Array.from(noteReferences.get(item.href) ?? []);
     item.suggestions = refs
       .filter((otherHref) => otherHref !== item.href)
       .map((href) => ({ href, reason: "ref" }))
@@ -17,7 +17,7 @@ export function populateSuggestions({
 
     // suggest by tag
     if (item.suggestions < maxSmartSuggestions) {
-      const cotagged = suggestionsIndex
+      const cotagged = notes
         .filter((other) => other !== item)
         .map((other) => ({
           href: other.href,
@@ -34,11 +34,11 @@ export function populateSuggestions({
 
     // suggest notes in sequence
     for (
-      let j = (i + 1) % suggestionsIndex.length;
+      let j = (i + 1) % notes.length;
       item.suggestions.length < maxSuggestions && j !== i;
-      j = (j + 1) % suggestionsIndex.length
+      j = (j + 1) % notes.length
     ) {
-      const other = suggestionsIndex[j];
+      const other = notes[j];
       if (item.suggestions.every((s) => s.href !== other.href)) {
         item.suggestions.push({ href: other.href, reason: "next" });
       }

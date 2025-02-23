@@ -1,6 +1,6 @@
 import { HTMLRewriter } from "@miniflare/html-rewriter";
-import path from "node:path";
 import fs from "node:fs/promises";
+import path from "node:path";
 import { dateString } from "../format/format.mjs";
 
 /**
@@ -67,10 +67,11 @@ export async function rewrite({
   const rewrittenHTML = await rewriter
     .transform(new Response(sourceHTML))
     .text();
+  const relativePath = path.relative(process.cwd(), resolvedPath);
   if (dryRun) {
-    console.log("Not rewriting:", path.relative(process.cwd(), resolvedPath));
+    console.log("Not rewriting:", relativePath);
   } else {
-    console.log("Rewriting:", path.relative(process.cwd(), resolvedPath));
+    console.log("Rewriting:", relativePath);
     await fs.writeFile(resolvedPath, rewrittenHTML);
   }
 }
