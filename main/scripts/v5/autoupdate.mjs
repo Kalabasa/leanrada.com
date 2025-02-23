@@ -11,6 +11,7 @@ import { renderNoteListItem } from "./notes/render-note-list-item.mjs";
 import { rewrite } from "./rewrite/rewrite.mjs";
 import { updateRSS } from "./rss/update-rss.js";
 import { readWares } from "./wares/read-wares.mjs";
+import { tryWrite } from "./util/try-write.mjs";
 
 process.chdir(path.resolve(import.meta.dirname, "..", ".."));
 const projectRoot = process.cwd();
@@ -179,7 +180,7 @@ async function updateMiscIndexHTML({ hits, soRep }) {
 
 async function updateNotesIndexJson({ notes }) {
   if (!notes) return;
-  await updateJSON(
+  await writeJSON(
     path.resolve(siteDir, "notes", "index.generated.combined.json"),
     notes
   );
@@ -243,18 +244,17 @@ async function updateNotesIndexHTML({ notes }) {
 
 async function updateComponentsGhContribsJson({ ghContribs }) {
   if (!ghContribs) return;
-  await updateJSON(
+  await writeJSON(
     path.resolve(siteDir, "components", "gh-contribs", "gh-contribs.json"),
     ghContribs
   );
 }
 
-async function updateJSON(filePath, data) {
-  const relativePath = path.relative(process.cwd(), filePath);
-  if (dryRun) {
-    console.log("Not writing:", relativePath);
-  } else {
-    console.log("Writing:", relativePath);
-    await fs.writeFile(filePath, JSON.stringify(data, undefined, "\t"));
-  }
+async function writeJSON(filePath, data) {
+  await tryWrite({
+    filePath,
+    text: JSON.stringify(data, undefined, "\t"),
+    verb: "writing",
+    dryRun,
+  });
 }

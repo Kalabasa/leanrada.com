@@ -2,6 +2,7 @@ import { HTMLRewriter } from "@miniflare/html-rewriter";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { dateString } from "../format/format.mjs";
+import { tryWrite } from "../util/try-write.mjs";
 
 /**
  * @param {Object} opts
@@ -56,16 +57,15 @@ export async function rewrite({
 
   await setup(rewriter);
 
-  const resolvedPath = path.resolve(htmlFilePath);
-  const sourceHTML = await fs.readFile(resolvedPath);
+  const sourceHTML = await fs.readFile(htmlFilePath);
   const rewrittenHTML = await rewriter
     .transform(new Response(sourceHTML))
     .text();
-  const relativePath = path.relative(process.cwd(), resolvedPath);
-  if (dryRun) {
-    console.log("Not rewriting:", relativePath);
-  } else {
-    console.log("Rewriting:", relativePath);
-    await fs.writeFile(resolvedPath, rewrittenHTML);
-  }
+  await tryWrite({
+    filePath: htmlFilePath,
+    origText: sourceHTML,
+    text: rewrittenHTML,
+    verb: "rewriting",
+    dryRun,
+  });
 }
