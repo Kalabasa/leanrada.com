@@ -154,3 +154,59 @@ async function updateNotesIndexJson({ notes }) {
     );
   }
 }
+
+async function updateNotesIndexHTML({ notes }) {
+  if (!notes) return;
+
+  const notesListIndent = 1;
+
+  let list = notes.filter((item) => item.public);
+  if (process.env.NODE_ENV === "development") {
+    list = notes
+      .filter((item) => !item.public)
+      .map((item) => ({
+        ...item,
+        date: String(new Date().getFullYear() + 1),
+        tags: ["✎hidden", ...item.tags],
+      }))
+      .concat(list);
+  }
+
+  list.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  await rewrite({
+    htmlFilePath: path.resolve(siteDir, "notes", "index.html"),
+    setup(rewriter) {
+      rewriter.on("notes-list#notes", {
+        element(element) {
+          let innerHTML = "";
+          let year = -1;
+
+          for (const item of list) {
+            const itemYear = new Date(item.date).getFullYear();
+            if (year !== itemYear) {
+              if (year >= 0) {
+                innerHTML += `\n${indent(notesListIndent + 1)}</ul>`;
+              }
+              year = itemYear;
+              innerHTML +=
+                `\n${indent(notesListIndent + 1)}<h3>${year}</h3>` +
+                `\n${indent(notesListIndent + 1)}<ul>`;
+            }
+            innerHTML += reindent(
+              renderNoteListItem(item, "no-year"),
+              notesListIndent + 2
+            );
+          }
+
+          innerHTML +=
+            `\n${indent(notesListIndent + 1)}</ul>` +
+            `\n${indent(notesListIndent)}`;
+          element.setInnerContent(innerHTML, { html: true });
+          element.setAttribute("data-rewritten", dateString());
+        },
+      });
+    },
+    dryRun,
+  });
+}
