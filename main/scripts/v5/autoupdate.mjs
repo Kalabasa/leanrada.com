@@ -172,23 +172,10 @@ async function updateMiscIndexHTML({ hits, soRep }) {
 
 async function updateNotesIndexJson({ notes }) {
   if (!notes) return;
-
-  const notesIndexJsonPath = path.resolve(
-    siteDir,
-    "notes",
-    "index.generated.combined.json"
+  await updateJSON(
+    path.resolve(siteDir, "notes", "index.generated.combined.json"),
+    notes
   );
-
-  const relativePath = path.relative(process.cwd(), notesIndexJsonPath);
-  if (dryRun) {
-    console.log("Not writing", relativePath);
-  } else {
-    console.log("Writing", relativePath);
-    await fs.writeFile(
-      notesIndexJsonPath,
-      JSON.stringify(notes, undefined, "\t")
-    );
-  }
 }
 
 async function updateNotesIndexHTML({ notes }) {
@@ -249,22 +236,18 @@ async function updateNotesIndexHTML({ notes }) {
 
 async function updateComponentsGhContribsJson({ ghContribs }) {
   if (!ghContribs) return;
-
-  const ghContribsJsonPath = path.resolve(
-    siteDir,
-    "components",
-    "gh-contribs",
-    "gh-contribs.json"
+  await updateJSON(
+    path.resolve(siteDir, "components", "gh-contribs", "gh-contribs.json"),
+    ghContribs
   );
+}
 
-  const relativePath = path.relative(process.cwd(), ghContribsJsonPath);
+async function updateJSON(path, data) {
+  const relativePath = path.relative(process.cwd(), path);
   if (dryRun) {
     console.log("Not writing", relativePath);
   } else {
     console.log("Writing", relativePath);
-    await fs.writeFile(
-      ghContribsJsonPath,
-      JSON.stringify(ghContribs, undefined, "\t")
-    );
+    await fs.writeFile(path, JSON.stringify(data, undefined, "\t"));
   }
 }
