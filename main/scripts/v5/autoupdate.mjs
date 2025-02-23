@@ -8,6 +8,7 @@ import { renderNoteListItem } from "./notes/render-note-list-item.mjs";
 import { rewrite } from "./rewrite/rewrite.mjs";
 import { readWares } from "./wares/read-wares.mjs";
 import { populateSuggestions } from "./notes/populate-suggestions.mjs";
+import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
 
 process.chdir(path.resolve(import.meta.dirname, "..", ".."));
 const projectRoot = process.cwd();
@@ -19,12 +20,12 @@ if (path.basename(projectRoot) !== "main") {
 const siteDir = path.resolve(projectRoot, "site");
 const dryRun = process.argv.includes("--dry-run");
 
-const options = parseOptionArgs();
+const options = parseOptionArgs(["notes", "wares", "hits", "gh-contribs"]);
 main();
 
 async function main() {
   console.group("Loading data...");
-  const [notes, wares, hits] = await Promise.all([
+  const [notes, wares, hits, ghContribs] = await Promise.all([
     optional("notes", async () => {
       const { notes, noteReferences } = await readNotes(siteDir);
       populateSuggestions({
@@ -37,6 +38,9 @@ async function main() {
     }),
     optional("wares", () => readWares(siteDir)),
     optional("hits", () => fetchHits().catch(fallback("hits"))),
+    optional("gh-contribs", () =>
+      fetchGitHubContribs().catch(fallback("gh-contribs"))
+    ),
   ]);
   console.groupEnd();
 
@@ -44,6 +48,7 @@ async function main() {
     notes: notes?.length,
     wares: wares?.length,
     hits,
+    ghContribs: ghContribs?.flat().length,
   });
 
   console.group("Updating files...");
@@ -54,7 +59,10 @@ async function main() {
   });
   await updateNotesIndexJson({ notes });
   await updateNotesIndexHTML({ notes });
+  await updateComponentsGhContribsJson({ ghContribs });
   console.groupEnd();
+
+  console.log("Done!");
 }
 
 function optional(name, getter) {
@@ -69,8 +77,7 @@ function fallback(name) {
   };
 }
 
-function parseOptionArgs() {
-  const options = ["notes", "wares", "hits"];
+function parseOptionArgs(options) {
   const optionArgs = options
     .map((name) => {
       const no = process.argv.includes(`--no-${name}`);
@@ -98,6 +105,8 @@ function parseOptionArgs() {
 }
 
 async function updateIndexHTML({ notes, wares, hits }) {
+  if (!notes || !wares || !hits) return;
+
   const notesListIndent = 2;
   const latestNotes = notes?.slice(0, 4);
 
@@ -209,4 +218,26 @@ async function updateNotesIndexHTML({ notes }) {
     },
     dryRun,
   });
+}
+
+async function updateComponentsGhContribsJson({ ghContribs }) {
+  if (!ghContribs) return;
+
+  const ghContribsJsonPath = path.resolve(
+    siteDir,
+    "components",
+    "gh-contribs",
+    "gh-contribs.json"
+  );
+
+  const relativePath = path.relative(process.cwd(), ghContribsJsonPath);
+  if (dryRun) {
+    console.log("Not writing", relativePath);
+  } else {
+    console.log("Writing", relativePath);
+    await fs.writeFile(
+      ghContribsJsonPath,
+      JSON.stringify(ghContribs, undefined, "\t")
+    );
+  }
 }
