@@ -2,14 +2,15 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { dateString, indent, reindent } from "./format/format.mjs";
+import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
 import { fetchHits } from "./misc/fetch-hits.mjs";
+import { fetchStackOverflowReputation } from "./misc/fetch-so-rep.js";
+import { populateSuggestions } from "./notes/populate-suggestions.mjs";
 import { readNotes } from "./notes/read-notes.mjs";
 import { renderNoteListItem } from "./notes/render-note-list-item.mjs";
 import { rewrite } from "./rewrite/rewrite.mjs";
+import { updateRSS } from "./rss/update-rss.js";
 import { readWares } from "./wares/read-wares.mjs";
-import { populateSuggestions } from "./notes/populate-suggestions.mjs";
-import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
-import { fetchStackOverflowReputation } from "./misc/fetch-so-rep.js";
 
 process.chdir(path.resolve(import.meta.dirname, "..", ".."));
 const projectRoot = process.cwd();
@@ -62,6 +63,8 @@ async function main() {
     soRep,
   });
 
+  const rssFilePath = path.resolve(siteDir, "rss.xml");
+
   console.group("Updating files...");
   await Promise.all([
     updateIndexHTML({
@@ -76,6 +79,7 @@ async function main() {
     updateNotesIndexJson({ notes }),
     updateNotesIndexHTML({ notes }),
     updateComponentsGhContribsJson({ ghContribs }),
+    updateRSS({ rssFilePath, notes, dryRun }),
   ]);
   console.groupEnd();
 
@@ -248,9 +252,9 @@ async function updateComponentsGhContribsJson({ ghContribs }) {
 async function updateJSON(filePath, data) {
   const relativePath = path.relative(process.cwd(), filePath);
   if (dryRun) {
-    console.log("Not writing", relativePath);
+    console.log("Not writing:", relativePath);
   } else {
-    console.log("Writing", relativePath);
+    console.log("Writing:", relativePath);
     await fs.writeFile(filePath, JSON.stringify(data, undefined, "\t"));
   }
 }
