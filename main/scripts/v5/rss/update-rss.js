@@ -42,13 +42,35 @@ async function rewriteRSS({ rss, notes, siteDir }) {
     if (matchEntry.length > 0) continue;
 
     const itemXML = await renderItem({ note, url, componentNames, siteDir });
-    console.log(itemXML);
+
+    // Find a place to insert the new item
+    const date = new Date(note.date);
+    const deltas = ch("item")
+      .toArray()
+      .map((el) => {
+        const cel = ch(el);
+        const otherTime = Date.parse(cel.find("pubDate").text());
+        const delta = date.getTime() - otherTime;
+        return { el, delta };
+      })
+      .sort((a, b) => Math.abs(a.delta) - Math.abs(b.delta));
+
+    if (deltas.length === 0) {
+      ch("channel").append(itemXML);
+    } else {
+      const nearest = deltas[0];
+      if (nearest.delta > 0) {
+        ch(nearest.el).before(itemXML);
+      } else {
+        ch(nearest.el).after(itemXML);
+      }
+    }
   }
+
   return ch.xml();
 }
 
 async function renderItem({ note, url, componentNames, siteDir }) {
-  console.log("renderItem", url.href);
   const ch = cheerio.load(
     await fs.readFile(
       path.resolve(siteDir, path.relative("/", note.href), "index.html")
