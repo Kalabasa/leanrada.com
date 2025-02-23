@@ -22,7 +22,9 @@ export async function rewrite({
     element(element) {
       this.replacing = false;
       const key = element.getAttribute("data-rewrite");
-      if (!data.hasOwnProperty(key)) return;
+      if (!data.hasOwnProperty(key) || data[key] == undefined) {
+        return;
+      }
 
       this.replacing = true;
       this.textBuffer = "";
@@ -72,5 +74,3 @@ export async function rewrite({
     await fs.writeFile(resolvedPath, rewrittenHTML);
   }
 }
-
-
