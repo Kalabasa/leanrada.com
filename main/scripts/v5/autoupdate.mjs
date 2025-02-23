@@ -80,7 +80,7 @@ async function main() {
     updateNotesIndexJson({ notes }),
     updateNotesIndexHTML({ notes }),
     updateComponentsGhContribsJson({ ghContribs }),
-    updateRSS({ rssFilePath, notes, dryRun }),
+    updateRSS({ rssFilePath, notes, siteDir, dryRun }),
   ]);
   console.groupEnd();
 
