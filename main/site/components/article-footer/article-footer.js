@@ -8,8 +8,11 @@ customElements.define(
 
       this.innerHTML = html`
         ${renderSig()}
-        <article-reactions></article-reactions>
-        ${maybeRenderRss(this)} ${maybeRenderSuggestions()}
+        <div>
+          <article-reactions></article-reactions>
+          ${maybeRenderRss(this)}
+        </div>
+        ${maybeRenderSuggestions()}
       `;
 
       appendStyle(
@@ -18,13 +21,12 @@ customElements.define(
           article-footer {
             display: block;
             margin: auto;
-            padding: 0 0 60px;
             width: 100%;
             box-sizing: border-box;
 
             blockquote {
+              margin: 60px auto;
               position: relative;
-              margin: 0 auto 60px;
               padding: 0 18px;
               width: 100%;
               max-width: 700px;
@@ -51,11 +53,35 @@ customElements.define(
               }
             }
 
-            .rss-link {
-              margin: 60px auto 0;
+            blockquote + div {
+              display: flex;
+              flex-wrap: wrap;
+              align-items: stretch;
+              gap: 24px;
+              margin: 60px auto;
+              padding: 0 18px;
               width: 100%;
-              max-width: 700px;
+              max-width: 900px;
+              box-sizing: border-box;
+
+              > * {
+                flex: 1 1 350px;
+              }
+            }
+
+            .rss-link {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
               text-align: center;
+              border: solid 1px var(--card-clr);
+              border-radius: 6px;
+              padding: 18px;
+
+              p {
+                margin: 0 auto 18px;
+              }
 
               .rss-link-combo {
                 display: flex;
@@ -80,14 +106,8 @@ customElements.define(
               }
             }
 
-            article-reactions {
-              margin: 60px auto;
-              max-width: 700px;
-              box-sizing: border-box;
-            }
-
             article-suggestions {
-              margin: 120px auto 60px;
+              margin: 120px auto;
             }
           }
         </style>`
