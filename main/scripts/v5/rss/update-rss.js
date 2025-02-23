@@ -189,13 +189,14 @@ async function renderItem({ note, url, componentNames, siteDir }) {
   const description = content.html();
 
   return `
-<item>
-  <title><![CDATA[${note.title}]]></title>
-  <link><![CDATA[${url}]]></link>
-  <guid isPermaLink="true"><![CDATA[${url}]]></guid>
-  <pubDate>${formatDate(new Date(note.date))}</pubDate>
-  <description><![CDATA[${description}]]></description>
-</item>`;
+      <item>
+        <title><![CDATA[${note.title}]]></title>
+        <link><![CDATA[${url}]]></link>
+        <guid isPermaLink="true"><![CDATA[${url}]]></guid>
+        <pubDate>${formatDate(new Date(note.date))}</pubDate>
+        <description><![CDATA[${description}]]></description>
+      </item>
+`;
 }
 
 function renderBase() {
