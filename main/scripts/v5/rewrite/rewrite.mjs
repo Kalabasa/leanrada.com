@@ -34,8 +34,9 @@ export async function rewrite({
         if (this.textBuffer === this.newContent) {
           endTag.before(this.textBuffer);
         } else {
-          endTag.before(this.newContent);
-          endTag.before(`<!--${dateString()}-->`, { html: true });
+          endTag
+            .before(this.newContent)
+            .before(`<!--${dateString()}-->`, { html: true });
         }
       });
     },

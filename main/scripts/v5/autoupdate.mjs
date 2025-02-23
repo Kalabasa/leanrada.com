@@ -59,6 +59,7 @@ async function main() {
     wares: wares?.length,
     hits,
     ghContribs: ghContribs?.flat().length,
+    soRep,
   });
 
   console.group("Updating files...");
