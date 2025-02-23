@@ -54,6 +54,7 @@ customElements.define(
             .rss-link {
               margin: 60px auto 0;
               width: 100%;
+              max-width: 700px;
               text-align: center;
 
               .rss-link-combo {
@@ -77,6 +78,16 @@ customElements.define(
                 border-top-left-radius: 0;
                 border-bottom-left-radius: 0;
               }
+            }
+
+            article-reactions {
+              margin: 60px auto;
+              max-width: 700px;
+              box-sizing: border-box;
+            }
+
+            article-suggestions {
+              margin: 120px auto 60px;
             }
           }
         </style>`

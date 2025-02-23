@@ -28,7 +28,7 @@ customElements.define(
         this.tagName,
         html`<style>
           article-suggestions {
-            margin: 120px auto 0;
+            display: block;
             width: 100%;
             box-sizing: border-box;
 

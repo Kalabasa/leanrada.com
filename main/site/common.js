@@ -1,3 +1,39 @@
+const preloadLink = document.createElement("link");
+preloadLink.rel = "preload";
+preloadLink.href = "/fonts/space/SpaceMono-Italic.ttf";
+preloadLink.as = "font";
+preloadLink.type = "font/ttf";
+preloadLink.crossOrigin = "anonymous";
+document.head.appendChild(preloadLink);
+
+const iconLink = document.createElement("link");
+iconLink.rel = "icon";
+iconLink.type = "image/png";
+iconLink.href = "/favicon.png";
+document.head.appendChild(iconLink);
+
+const webmentionLink = document.createElement("link");
+webmentionLink.rel = "webmention";
+webmentionLink.href = "https://webmention.io/leanrada.com/webmention";
+document.head.appendChild(webmentionLink);
+
+const alternateLink = document.createElement("link");
+alternateLink.rel = "alternate";
+alternateLink.type = "application/rss+xml";
+alternateLink.title = "leanrada.com notes";
+alternateLink.href = "/rss.xml";
+document.head.appendChild(alternateLink);
+
+const meta = document.createElement("meta");
+meta.name = "color-scheme";
+meta.content = "only dark";
+document.head.appendChild(meta);
+
+const script = document.createElement("script");
+script.async = true;
+script.src = "https://leanrada.com/analytics/analytics.js";
+document.head.appendChild(script);
+
 customElements.define(
   "site-header",
   class SiteHeader extends HTMLElement {
