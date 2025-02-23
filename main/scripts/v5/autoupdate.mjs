@@ -62,18 +62,20 @@ async function main() {
   });
 
   console.group("Updating files...");
-  await updateIndexHTML({
-    notes,
-    wares,
-    hits,
-  });
-  await updateMiscIndexHTML({
-    hits,
-    soRep,
-  });
-  await updateNotesIndexJson({ notes });
-  await updateNotesIndexHTML({ notes });
-  await updateComponentsGhContribsJson({ ghContribs });
+  await Promise.all([
+    updateIndexHTML({
+      notes,
+      wares,
+      hits,
+    }),
+    updateMiscIndexHTML({
+      hits,
+      soRep,
+    }),
+    updateNotesIndexJson({ notes }),
+    updateNotesIndexHTML({ notes }),
+    updateComponentsGhContribsJson({ ghContribs }),
+  ]);
   console.groupEnd();
 
   console.log("Done!");
@@ -242,12 +244,12 @@ async function updateComponentsGhContribsJson({ ghContribs }) {
   );
 }
 
-async function updateJSON(path, data) {
-  const relativePath = path.relative(process.cwd(), path);
+async function updateJSON(filePath, data) {
+  const relativePath = path.relative(process.cwd(), filePath);
   if (dryRun) {
     console.log("Not writing", relativePath);
   } else {
     console.log("Writing", relativePath);
-    await fs.writeFile(path, JSON.stringify(data, undefined, "\t"));
+    await fs.writeFile(filePath, JSON.stringify(data, undefined, "\t"));
   }
 }
