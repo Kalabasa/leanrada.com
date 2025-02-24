@@ -255,8 +255,9 @@ globalThis.customElements?.define(
     }
 
     updateStyle(style) {
-      this.cardStyle = { ...this.cardStyle, ...style };
-      return getCSS(style);
+      const newStyle = { ...this.cardStyle, ...style };
+      this.cardStyle = newStyle;
+      return getCSS(newStyle);
     }
   }
 );
