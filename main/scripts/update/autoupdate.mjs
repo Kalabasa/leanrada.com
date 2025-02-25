@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import fs from "node:fs/promises";
 import path from "node:path";
 import { dateString, indent, reindent } from "./format/format.mjs";
 import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
