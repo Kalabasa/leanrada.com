@@ -17,10 +17,7 @@ git worktree add -f update origin/src
 cd update/main
 
 # Update
-node scripts/update/update-reputation.js
-node scripts/update/update-hits.js
-node scripts/update/update-gh-contribs.js
-node scripts/update/update-streak.js
+node scripts/update/autoupdate.mjs
 
 # Commit updates
 git add .
@@ -29,7 +26,7 @@ if ! git diff-index --cached --quiet HEAD; then
   git config extensions.worktreeConfig true
   git config --worktree user.email "Kalabasa@users.noreply.github.com"
   git config --worktree user.name "Kalabasa"
-  git commit -m "Automated regular data update."
+  git commit -m "Autoupdate."
   git push origin HEAD:src
 else
   echo >&2 "No updates to commit"
