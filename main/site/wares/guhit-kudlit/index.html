@@ -1,0 +1,128 @@
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
+
+<title>GuhitKudlit</title>
+
+<site-header></site-header>
+
+<main class="prose"><h1 id="guhitkudlit">GuhitKudlit</h1>
+<img alt="preview" src="pakita.png" loading="lazy"></img>
+
+<h2 id="baybayin-calligraphy-generator">Baybayin calligraphy generator</h2>
+<p><a href="https://leanrada.com/guhit-kudlit/" target="_blank">GuhitKudlit</a> is a webapp that generates <em>baybayin</em> calligraphy.</p>
+<p><a href="https://en.wikipedia.org/wiki/Baybayin" target="_blank">Baybayin</a> is an ancient writing system used in the Philippines, mostly for the Tagalog language. I’ve always been fascinated by Philippine languages, and this project was just another fruit of that curiosity.</p>
+<project-info-card><strong>Project details</strong><a href="https://leanrada.com/guhit-kudlit/" target="_blank">Open the app</a><dl><dt>released</dt><dd>2023</dd><dt>role</dt><dd>creator</dd><dt>platform</dt><dd>Web</dd><dt>tech</dt><dd>JS</dd></dl></project-info-card>
+
+<figure><img alt="Generated baybayin calligraphy of the word ‘guhit’" src="guhit.png" loading="lazy"></img><figcaption>Output of GuhitKudlit for the word ‘guhit’</figcaption></figure>
+
+<p>The name comes from <em>‘guhit’</em> meaning line or drawing, and <em>‘kudlit’</em> meaning tick or small mark.</p>
+<p>You see, baybayin is an <a href="https://en.wikipedia.org/wiki/Abugida" target="_blank">abugida</a> and in baybayin, the <em>kudlit</em> is used to signify the vowel of a character.</p>
+<figure><img alt="chart of baybayin characters" src="baybayin-chart.png" loading="lazy"></img><figcaption>Chart of baybayin characters from Wikimedia</figcaption></figure>
+
+<p>The program is divided into two functions: <strong>transliteration</strong> and <strong>calligraphy</strong>. The transliteration process converts ASCII input to baybayin glyphs, and the calligraphy function draws those glyphs onto the canvas using the <a href="https://p5js.org/" target="_blank">p5.js library</a>.</p>
+<h2 id="transliteration">Transliteration</h2>
+<p>The transliteration algorithm that converts ASCII text to baybayin glyphs is quite simple (or should I say, simplistic?). It processes the input letter-by-letter, and produces output one syllable at a time.</p>
+<video autoplay="" muted="" loop="" playsinline="" aria-label="video of transliteration" src="transliteration.mp4" loading="lazy"></video>
+
+<p>This works great for Tagalog words, not so much for English which has arbitrary rules on syllables &amp; pronunciation. Thus, the converter was only intended to primarily work in Tagalog.</p>
+<p>For example, Tagalog doesn’t have a letter for the “j” sound (Compare Japanese, which has no direct “L” sound). The transliteration function deliberately does not handle these cases to avoid misspellings and false assumptions. If you attempt to put in foreign letters, an error will stop you.</p>
+<img alt="screenshot of error message, saying 'Cannot unambiguously convert this letter. There is no direct baybayin equivalent for the said letter. You can write it first in the Tagalog alphabet (abakada).'" src="ceres.png" loading="lazy"></img>
+
+<p>One thing I’ve noticed in other baybayin converters online was that their outputs were <em>opaque</em>. That is, if you can’t read baybayin, you can’t verify the output. This would sometimes trick people into getting silly mispelled tattoos and stuff. While that’s their fault for being ignorant, we can do better.</p>
+<img alt="example of syllabication. tilapia, ti-la-pi-ya" src="tilapia.png" loading="lazy"></img>
+
+<p>GuhitKudlit makes the transliteration process transparent by showing the resulting syllabication, which one-to-one maps to baybayin glyphs. This should allow users to double-check their results and make adjustments.</p>
+<p>The module had a single-file test suite:</p>
+<code-block language="js"><pre><code><!--
+-->import { baybayin } from &quot;./baybay.mjs&quot;;
+
+// Karaniwan
+dapat(baybayin(&quot;aso&quot;)).ay([&quot;a&quot;, &quot;su&quot;]);
+dapat(baybayin(&quot;pusa&quot;)).ay([&quot;pu&quot;, &quot;sa&quot;]);
+dapat(baybayin(&quot;araw&quot;)).ay([&quot;a&quot;, &quot;da&quot;, &quot;w&quot;]);
+dapat(baybayin(&quot;elepante&quot;)).ay([&quot;i&quot;, &quot;li&quot;, &quot;pa&quot;, &quot;n&quot;, &quot;ti&quot;]);
+dapat(baybayin(&quot;bantay&quot;)).ay([&quot;ba&quot;, &quot;n&quot;, &quot;ta&quot;, &quot;y&quot;]);
+dapat(baybayin(&quot;daan&quot;)).ay([&quot;da&quot;, &quot;a&quot;, &quot;n&quot;]);
+dapat(baybayin(&quot;doon&quot;)).ay([&quot;du&quot;, &quot;u&quot;, &quot;n&quot;]);
+dapat(baybayin(&quot;biik&quot;)).ay([&quot;bi&quot;, &quot;i&quot;, &quot;k&quot;]);
+dapat(baybayin(&quot;kailan&quot;)).ay([&quot;ka&quot;, &quot;i&quot;, &quot;la&quot;, &quot;n&quot;]);
+dapat(baybayin(&quot;baon&quot;)).ay([&quot;ba&quot;, &quot;u&quot;, &quot;n&quot;]);
+dapat(baybayin(&quot;baul&quot;)).ay([&quot;ba&quot;, &quot;u&quot;, &quot;l&quot;]);
+dapat(baybayin(&quot;kain&quot;)).ay([&quot;ka&quot;, &quot;i&quot;, &quot;n&quot;]);
+dapat(baybayin(&quot;upuan&quot;)).ay([&quot;u&quot;, &quot;pu&quot;, &quot;a&quot;, &quot;n&quot;]);
+
+// Di normal na baybay
+dapat(baybayin(&quot;tilapia&quot;)).ay([&quot;ti&quot;, &quot;la&quot;, &quot;pi&quot;, &quot;ya&quot;]);
+dapat(baybayin(&quot;durian&quot;)).ay([&quot;du&quot;, &quot;di&quot;, &quot;ya&quot;, &quot;n&quot;]);
+
+// Bigkas na iba sa baybay
+dapat(baybayin(&quot;ng&quot;)).ay([&quot;na&quot;, &quot;ng&quot;]);
+dapat(baybayin(&quot;mga&quot;)).ay([&quot;ma&quot;, &quot;nga&quot;]);
+// ...</code></pre></code-block>
+<p>(Yes, I wrote all the code for this project in Tagalog)</p>
+<p>The transliteration process is just one half of the program. It took me a a while to code it, but what I really wanted to make was the drawing algorithm. While transliteration is essential for a good user experience, the real show starts with the calligraphy algorithm.</p>
+<h2 id="calligraphy">Calligraphy</h2>
+<p>Once we have a sequence of baybayin glyphs, we can start drawing them on the canvas.</p>
+<p>The calligraphy algorithm goes like this (heavily simplified):</p>
+<ol start="0">
+<li>A brush head is simulated in 2D space. It has position, size, velocity, pressure, and other properties.</li>
+<li>The brush is continuously pulled along the canvas following the strokes of the current glyph. This simulation mimics natural movement and momentum.</li>
+<li>When the current glyph is finished, the brush head moves down the next available space to start drawing the next glyph, and so on.</li>
+</ol>
+<video autoplay="" muted="" loop="" playsinline="" aria-label="video of calligraphy algorithm in action" src="calligraphy.mp4" loading="lazy"></video>
+
+<p>There are four preset calligraphy styles. These variations are created by changing the parameters of the brush simulation, like acceleration, pressure, etc.</p>
+<figure><img alt="screenshot of different calligraphy styles" src="styles.png" loading="lazy"></img><figcaption>Different styles starting from top-left, clockwise: Modern, Classic, Dry brush, Chisel tip</figcaption></figure>
+
+<p>To define the vertices or waypoints that the brush head would follow, I started by decomposing baybayin into individual strokes and identified the common structural elements.</p>
+<p>You know how Latin characters have something called “typography anatomy”? Things like ascenders, descenders, stems, bars, etc? These are elements common across Latin letters, like how the loop in ‘b’ is the same loop as in ‘p’, just with a different stem.</p>
+<img alt="Elements of Latin typography, partial anatomy" src="latin-parts.png" loading="lazy"></img>
+
+<p>Well, I tried to decompose baybayin in a similar way. A big inspiration came from others who have done the same before, like <a href="https://nordenx.blogspot.com/2014/04/saving-baybayin-through-technology.html" target="_blank">Nordenx</a>. However, for my specific purpose of constructing baybayin forms programmatically, my decomposition strategy is more about the reuse of common elements.</p>
+<img alt="Elements of Baybayin typography, partial anatomy" src="baybayin-parts.png" loading="lazy"></img>
+
+<p>Here’s a partial list of the typographical building blocks that I ended up with:</p>
+<img alt="My version of elements of Baybayin typography" src="baybayin-elements.png" loading="lazy"></img>
+
+<p>The decomposition is more apparent in code:</p>
+<code-block language="js"><pre><code>const talaguhitan = {
+&quot;a&quot;: [
+  ...guhitYa,
+  [guhitTuwid, 0.0, 0.4, 0.2, 0.4, 0.05, -0.05, PUTOL],
+],
+&quot;i&quot;: [
+  [guhitAlon, 0.0, 0.2, 1.0, 0.2, 0.0, 0.1, PUTOL],
+  [guhitUlap, 0.0, 0.5, 1.0, 0.5, 0.0, 0.2, PUTOL],
+],
+&quot;u&quot;: [
+  [guhitIlog, 0.3, 0.0, 0.3, 1.0, 0.4, 0.0, PUTOL],
+],
+&quot;b&quot;: [
+  [guhitBundok, 0.0, 0.8, 0.5, 0.2, 1.0, 0.7, 0.1, 0.1],
+  [guhitUlap, DUGTONG, DUGTONG, 0.05, 0.7, 0.0, 0.3, PUTOL],
+],
+// ...</code></pre></code-block>
+<p>In the above code, baybayin glyphs (represented by Latin character keys) are defined by an array of elements. The numbers next to each element are parameters that vary the position &amp; form of the element.</p>
+<p>Looking at <em>‘b’</em> (ᜊ), we can see that it’s composed of a <code>guhitBundok</code> connected (<code>DUGTONG</code>) to a <code>guhitUlap</code> below it. (“guhit” means stroke in this case)</p>
+<code-block language="js"><pre><code>&quot;b&quot;: [
+  [guhitBundok, 0.0, 0.8, 0.5, 0.2, 1.0, 0.7, 0.1, 0.1],
+  [guhitUlap, DUGTONG, DUGTONG, 0.05, 0.7, 0.0, 0.3, PUTOL],
+],</code></pre></code-block>
+<p>Sometimes a character can even reuse another character, like <em>‘a’</em> (ᜀ) which is just <em>‘ya’</em> (ᜌ) with an extra <code>guhitTuwid</code> (straight stroke).</p>
+<code-block language="js"><pre><code>&quot;a&quot;: [
+  ...guhitYa,
+  [guhitTuwid, 0.0, 0.4, 0.2, 0.4, 0.05, -0.05, PUTOL],
+],</code></pre></code-block>
+<figure><img alt="Baybayin of the word ‘nagpaambon’" src="nagpaambon.png" loading="lazy"></img><figcaption>Decomposition of baybayin in the word ᜈᜄ᜕ᜉᜀᜋ᜕ᜊᜓᜈ᜕ (‘nagpaambon’, ‘made something be rained on’)</figcaption></figure>
+
+<p>You probably have inferred that these vertices are hardcoded, so the resulting calligraphy is not as dynamic as you might expect. One quick fix I added was to slightly warp them in certain directions with a bit of randomness, but it’s not great. This is something I could improve upon in a future iteration &mdash; e.g., make the brush movement purposeful, or arrange vertices with respect to other vertices across the whole word.</p>
+<h2 id="end-note">End note</h2>
+<p>This was a project that was hastily launched as a proof-of-concept. It was fun, but the codebase got quite spaghetti. The concept seems mildly successful, since it is now getting regular visitors (though, I have no idea what they actually do with it, I haven’t seen an output of this in the wild). Anyway, since this webapp looks useful, I intend to rewrite it with a better and more dynamic calligraphy algorithm. Maybe.</p>
+<figure><img alt="Generated baybayin calligraphy of the word ‘padayon’" src="padayon.png" loading="lazy"></img><figcaption>This post wouldn’t be complete without writing the now-clichéd word ‘padayon’ in baybayin.</figcaption></figure>
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>

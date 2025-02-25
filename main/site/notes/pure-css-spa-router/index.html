@@ -1,0 +1,85 @@
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
+
+<title>Pure CSS single-page app routing</title>
+
+<site-header></site-header>
+
+<content-header>
+  <h1>Pure CSS single-page app routing</h1>
+</content-header>
+
+<blog-post-info>
+  <time datetime="2024-02-27">27 Feb 2024</time>
+  · 2 min read
+</blog-post-info>
+
+<tag-row>
+  <tag-chip title="css"></tag-chip>
+</tag-row>
+
+<main class="prose"><p>You’re probably a busy person, so here’s the CSS:</p>
+<code-block language="css"><pre><code>section:not(:target) {
+  display: none;
+}</code></pre></code-block>
+<p><strong>Demo:</strong> <a href="example1.html" target="_blank">Open in a new tab</a>
+<window-decor title="My App">
+        <iframe class="example-frame" src="example1.html"></iframe>
+      </window-decor>
+<a href="example1.html" target="_blank">Open in a new tab</a></p>
+<h2 id="explanation">Explanation</h2>
+<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/:target" target="_blank"><code>:target</code></a> CSS selector selects the element that is targeted by the URL fragment.</p>
+<p>Combined with <code>:not</code>, we can hide sections that are <em>not</em> referenced by the URL fragment.</p>
+<p>Just as JS routers use the fragment to hide/show sections in the DOM, this “CSS router” uses the same fragment to hide/show sections in the DOM.</p>
+<h2 id="experiment-default-section">Experiment: Default section</h2>
+<p>Notice that the example above doesn’t start with the Home section. The content is blank initially. This is because on initial page load we don’t have a URL fragment to begin with.</p>
+<p>We need to make an exception for the Home section.</p>
+<p>Let’s start by not hiding the <code>#home</code> section by default. Only hide <code>#home</code> if there’s a specific <code>:target</code> section.</p>
+<code-block language="diff" languagecode="css"><pre><code>- section:not(:target) {
++ section:not(#home, :target),
++ :root:has(:target) #home {
+    display: none;
+  }</code></pre></code-block>
+<p><strong>Demo v2:</strong> <a href="example2.html" target="_blank">Open in a new tab</a>
+<window-decor title="My App">
+        <iframe class="example-frame" src="example2.html"></iframe>
+      </window-decor>
+<a href="example2.html" target="_blank">Open in a new tab</a></p>
+<h2 id="experiment-nested-routes">Experiment: Nested routes</h2>
+<p>One thing that makes most client-side routers modular is the ability to nest routes. We can do the same with CSS.</p>
+<code-block language="diff" languagecode="css"><pre><code>- section:not(:target) {
++ section:not(:target, :has(:target)) {
+    display: none;
+  }</code></pre></code-block>
+<p><strong>Demo v3: This demo is best when you <a href="example3.html" target="_blank">view it in a separate tab</a></strong>
+<window-decor title="My App">
+        <iframe class="example-frame" src="example3.html"></iframe>
+      </window-decor>
+<a href="example3.html" target="_blank">Open in a new tab</a></p>
+<h2 id="parameterised-routes">Parameterised routes?</h2>
+<p>The ultimate feature for client-side routers is to dynamically catch routes with parameters like for example <code>/post/:id</code>.</p>
+<p>Since HTML is static, there’s no real way to do this with CSS. ☹</p>
+<p>Unless&hellip; you could render all possible <code>:id</code> values in the markup and use it like you would nested routes.</p>
+<code-block language="html"><pre><code>&lt;!-- ... -->
+&lt;section id="post/128">&lt;!-- ... -->&lt;/section>
+&lt;section id="post/129">&lt;!-- ... -->&lt;/section>
+&lt;section id="post/130">&lt;!-- ... -->&lt;/section>
+&lt;!-- ... --></code></pre></code-block>
+<p>But that’d be like putting the entire database in HTML. And if you had multiple parameters in the route, it would be combinatorial explosion. So, nope. 👋</p>
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
+
+<style>
+  .example-frame {
+    display: block;
+    border: none;
+    width: 100%;
+    min-height: 32rem;
+    background: white;
+  }
+</style>

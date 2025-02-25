@@ -1,0 +1,505 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/common.css" />
+<script defer src="/common.js"></script>
+
+<title>Guestbook</title>
+
+<site-header></site-header>
+
+<content-header>
+  <h1>Guestbook</h1>
+</content-header>
+
+<script>
+  //* <- remove a slash to toggle dev mode
+  window.GUESTBOOK_API = "https://guestbook.leanrada.com/api";
+  /*/
+  window.GUESTBOOK_API = "http://localhost:8787/api";
+  //*/
+</script>
+
+<p class="intro">Thanks for visiting the site. Leave a card below! :)</p>
+
+<form class="form" method="post" action="https://guestbook.leanrada.com/api">
+  <input name="schemaVersion" type="hidden" value="v2" />
+  <input name="fontIndex" type="hidden" value="0" />
+  <input name="bgStyleIndex" type="hidden" value="0" />
+  <input name="bgRGB" type="hidden" value="0xffffff" />
+  <input name="fgRGB" type="hidden" value="0x000000" />
+  <guestbook-card id="guestbook-card">
+    <textarea name="text" placeholder="Your message" required></textarea>
+    <input name="name" placeholder="Name / pseudonym" />
+    <div></div>
+  </guestbook-card>
+  <div class="button-row">
+    <button class="style-button" id="bgStyleBtn" type="button">Style</button>
+    <button class="style-button" id="bgBtn" type="button">Background</button>
+    <button class="style-button" id="fgBtn" type="button">Foreground</button>
+    <button class="style-button" id="fontBtn" type="button">Font</button>
+    <button class="style-button" id="stampBtn" type="button">Stamp</button>
+    <button class="submit-button" id="submitBtn" type="submit">Send</button>
+  </div>
+</form>
+
+<main class="messages-section">
+  <div class="messages-list"></div>
+</main>
+
+<site-footer></site-footer>
+
+<style>
+  guestbook-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 10px #0002;
+    background: var(--gbc-background-image, none)
+      var(--gbc-background-color, white);
+    color: var(--gbc-color, black);
+    text-shadow: 0 0 1px var(--gbc-color, black);
+    font-family: var(--gbc-font, sans-serif);
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 1em;
+    max-width: 100vw;
+    width: 384px;
+    height: 192px;
+    box-sizing: border-box;
+    border-radius: 3px;
+    overflow: hidden;
+    filter: contrast(0.8);
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("./noise.png");
+      opacity: 0.08;
+      mix-blend-mode: hard-light;
+      filter: blur(0.5px);
+      pointer-events: none;
+    }
+    > textarea {
+      flex: 1 1 auto;
+      resize: none;
+    }
+    > input {
+      flex: 0 1 auto;
+      text-align: right;
+    }
+    > textarea,
+    > input {
+      background: none;
+      border: none;
+      font: inherit;
+      color: inherit;
+      text-shadow: inherit;
+    }
+    > textarea::placeholder,
+    > input::placeholder {
+      color: inherit;
+      opacity: 0.4;
+    }
+    > div {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    > div > div {
+      position: absolute;
+      font-size: 60px;
+      color: black;
+      filter: grayscale(0.5) brightness(1.07) drop-shadow(0 1px 0 #0002);
+      mix-blend-mode: multiply;
+    }
+  }
+
+  .intro,
+  .form {
+    margin: 18px auto;
+    max-width: 384px;
+    box-sizing: border-box;
+  }
+  .button-row {
+    position: relative;
+    display: flex;
+    margin-top: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+    z-index: 1;
+  }
+  .style-button {
+    display: inline-block;
+    position: relative;
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    color: transparent;
+    background: var(--card-clr);
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    &:hover,
+    &:focus-visible {
+      background-color: var(--clr0-dark);
+    }
+  }
+  .style-button::after {
+    position: absolute;
+    inset: 6px;
+    content: "";
+  }
+  #bgStyleBtn::after {
+    background: var(--gbc-background-image, none) #fff;
+    inset: -25%;
+    border-radius: 18px;
+    filter: brightness(0.5) contrast(8) brightness(2);
+    transform: scale(0.5);
+  }
+  #fgBtn::after {
+    content: "A";
+    font-size: 18px;
+    line-height: 18px;
+    color: var(--gbc-color, black);
+    text-shadow: -1px -2px 0 white, 1px -2px 0 white, -2px 0 0 white,
+      2px 0 0 white, -2px 1px 0 white, 2px 1px 0 white, -2px 2px 0 white,
+      2px 2px 0 white, 0 2px 0 white;
+  }
+  #bgBtn::after {
+    background: var(--gbc-background-color, white);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px white;
+  }
+  #fontBtn::after {
+    content: "f";
+    font-family: var(--gbc-font, sans-serif);
+    font-weight: bold;
+    font-size: 21px;
+    line-height: 21px;
+    color: white;
+  }
+  #stampBtn {
+    padding: 0;
+    color: unset;
+  }
+  .submit-button {
+    display: inline-block;
+    padding: 0 12px;
+    height: 30px;
+    margin-left: auto;
+    border: none;
+    border-radius: 12px;
+    font-family: var(--display-font);
+    font-weight: bold;
+    font-size: 12px;
+    background-color: var(--clr0-dark);
+    cursor: pointer;
+    &:hover,
+    &:focus-visible {
+      background-color: var(--clr0-light);
+    }
+  }
+
+  .messages-section {
+    min-height: 200vh;
+    min-height: 200svh;
+    animation: messages-fade-in 0.6s;
+  }
+  .messages-section.loading {
+    visibility: hidden;
+  }
+  .messages-list {
+    padding: 120px 40px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    overflow: clip;
+    transform: skewY(12deg);
+  }
+  .messages-list > * {
+    margin: calc(max(0px, var(--gbli-margin-y, 0) * 1vmin - 80px))
+      calc(max(0px, var(--gbli-margin-x, 0) * 1vmin - 80px))
+      calc(max(0px, var(--gbli-margin-y, 0) * -1vmin - 80px));
+    transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
+    animation: message-scroll 1ms cubic-bezier(0, 0.8, 0.2, 1) both;
+    animation-timeline: view(block 40% -5%);
+  }
+  .messages-list > :first-child {
+    margin-inline-start: calc(max(0px, 50% - 384px));
+  }
+  .messages-list > :last-child {
+    margin-inline-end: calc(max(0px, 50% - 384px));
+  }
+
+  @keyframes messages-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes message-scroll {
+    from {
+      transform: skewY(-12deg) rotate(calc(var(--gbli-rotate, 0deg) * 5))
+        translateY(100%);
+    }
+    to {
+      /* same as original value */
+      transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
+    }
+  }
+
+  .messages-list > :nth-child(3n) {
+    --gbli-rotate: 3deg;
+  }
+  .messages-list > :nth-child(3n + 1) {
+    --gbli-rotate: -3deg;
+  }
+  .messages-list > :nth-child(3n + 2) {
+    --gbli-rotate: 2deg;
+  }
+  .messages-list > :nth-child(4n) {
+    --gbli-rotate: -2deg;
+  }
+  .messages-list > :nth-child(5n) {
+    --gbli-rotate: 1deg;
+  }
+  .messages-list > :nth-child(6n) {
+    --gbli-rotate: 2deg;
+  }
+  .messages-list > :nth-child(7n) {
+    --gbli-rotate: -1deg;
+  }
+  .messages-list > :nth-child(8n) {
+    --gbli-rotate: -2deg;
+  }
+  .messages-list > :nth-child(2n) {
+    --gbli-margin-y: 3;
+  }
+  .messages-list > :nth-child(3n) {
+    --gbli-margin-y: -4;
+  }
+  .messages-list > :nth-child(5n + 2) {
+    --gbli-margin-y: 6;
+  }
+  .messages-list > :nth-child(5n + 4) {
+    --gbli-margin-y: -7;
+  }
+  .messages-list > :nth-child(2n + 1) {
+    --gbli-margin-x: 3;
+  }
+  .messages-list > :nth-child(3n) {
+    --gbli-margin-x: 6;
+  }
+  .messages-list > :nth-child(4n + 2) {
+    --gbli-margin-x: 7;
+  }
+  .messages-list > :nth-child(5n) {
+    --gbli-margin-x: 9;
+  }
+  .messages-list > :nth-child(6n + 3) {
+    --gbli-margin-x: 11;
+  }
+  .messages-list > :nth-child(7n) {
+    --gbli-margin-x: 12;
+  }
+  .messages-list > :nth-child(8n + 6) {
+    --gbli-margin-x: 16;
+  }
+  .messages-list > :nth-child(9n) {
+    --gbli-margin-x: 22;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const {
+      BG_COLORS,
+      FG_COLORS,
+      STAMPS,
+      getDefaults,
+      getStampContent,
+      createGuestbookCard,
+    } = await import("/guestbook/guestbook-card.js");
+
+    initForm();
+    initMessagesList();
+
+    async function initForm() {
+      const form = document.querySelector(".form");
+      const { fgRGB, bgRGB, bgStyleIndex, fontIndex } = form.elements;
+      const guestbookCard = document.getElementById("guestbook-card");
+      const submitBtn = document.getElementById("submitBtn");
+      const bgStyleBtn = document.getElementById("bgStyleBtn");
+      const bgBtn = document.getElementById("bgBtn");
+      const fgBtn = document.getElementById("fgBtn");
+      const fontBtn = document.getElementById("fontBtn");
+      const stampBtn = document.getElementById("stampBtn");
+
+      form.action = window.GUESTBOOK_API;
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        submitBtn.disabled = true;
+        try {
+          await fetch(form.action, {
+            method: "post",
+            body: new FormData(form),
+          });
+        } finally {
+          setTimeout(() => {
+            location.reload();
+            submitBtn.disabled = false;
+          }, 50);
+        }
+      });
+
+      fgBtn.addEventListener("click", async () => {
+        fgRGB.value =
+          FG_COLORS[
+            (FG_COLORS.indexOf(Number(fgRGB.value)) + 1) % FG_COLORS.length
+          ];
+        const style = await guestbookCard.updateStyle({
+          fgRGB: Number(fgRGB.value),
+        });
+        form.setAttribute("style", style);
+      });
+
+      bgBtn.addEventListener("click", async () => {
+        bgRGB.value =
+          BG_COLORS[
+            (BG_COLORS.indexOf(Number(bgRGB.value)) + 1) % BG_COLORS.length
+          ];
+        const style = await guestbookCard.updateStyle({
+          bgRGB: Number(bgRGB.value),
+        });
+        form.setAttribute("style", style);
+      });
+
+      bgStyleBtn.addEventListener("click", async () => {
+        bgStyleIndex.value = (Number(bgStyleIndex.value) + 1) % 4;
+        const style = await guestbookCard.updateStyle({
+          bgStyleIndex: Number(bgStyleIndex.value),
+        });
+        form.setAttribute("style", style);
+      });
+
+      fontBtn.addEventListener("click", async () => {
+        fontIndex.value = (Number(fontIndex.value) + 1) % 3;
+        const style = await guestbookCard.updateStyle({
+          fontIndex: Number(fontIndex.value),
+        });
+        form.setAttribute("style", style);
+      });
+
+      // Stamp logic
+      let holdingStampState = null;
+      let stampIndex = Math.floor(Math.random() * STAMPS.length);
+      stampBtn.textContent = getStampContent(stampIndex);
+      stampBtn.addEventListener("click", async () => {
+        if (holdingStampState) {
+          stampIndex = (Number(stampIndex) + 1) % STAMPS.length;
+          stampBtn.textContent = getStampContent(stampIndex);
+        } else {
+          const cursorStyle = document.createElement("style");
+          document.head.appendChild(cursorStyle);
+
+          holdingStampState = {
+            cursorStyle,
+          };
+
+          const listenerParameters = [
+            "click",
+            (event) => {
+              if (stampBtn.contains(event.target)) return;
+
+              const bounds = guestbookCard.getBoundingClientRect();
+              if (
+                event.clientX + size > bounds.left &&
+                event.clientX < bounds.right &&
+                event.clientY + size > bounds.top &&
+                event.clientY < bounds.bottom
+              ) {
+                const x = Math.round(
+                  (100 * (event.clientX - bounds.x)) / bounds.width
+                );
+                const y = Math.round(
+                  (100 * (event.clientY - bounds.y)) / bounds.height
+                );
+                guestbookCard.addStamp(stampIndex, x, y);
+              }
+
+              setTimeout(() => cursorStyle.remove());
+              holdingStampState = null;
+
+              event.preventDefault();
+              document.activeElement?.blur();
+              window.removeEventListener(...listenerParameters);
+            },
+            { capture: true },
+          ];
+          window.addEventListener(...listenerParameters);
+        }
+
+        const content = getStampContent(stampIndex);
+        const size = 60;
+        holdingStampState.cursorStyle.textContent = `
+            body, #guestbook-card * {
+              cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${
+                (size * 5) / 3
+              }px' height='${
+          size * 2
+        }px' viewport='0 0 100 100' style='fill:black;font-size:${size}px;'><text y='50%'>${content}</text></svg>") 0 0,grabbing
+            }`;
+      });
+    }
+
+    async function initMessagesList() {
+      const messagesSection = document.querySelector(".messages-section");
+      const messagesList = document.querySelector(".messages-list");
+
+      messagesSection.classList.add("loading");
+
+      let currentPage = 0;
+      let loadQueue = initFromCache()
+        .then(() => loadPage(currentPage))
+        .finally(() => void messagesSection.classList.remove("loading"));
+
+      // TODO: bring back
+      async function initFromCache() {
+        const cache = window.GUESTBOOK_CACHE ?? null;
+        if (cache?.length > 0) {
+          for (const message of cache) {
+            messagesList.appendChild(await renderMessage(message));
+          }
+        }
+      }
+
+      async function loadPage(page) {
+        const response = await fetch(GUESTBOOK_API + "?page=" + page);
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        if (!data || data.length === 0) return 0;
+        if (page === 0) messagesList.replaceChildren();
+        for (const message of data) {
+          messagesList.appendChild(await renderMessage(message));
+        }
+      }
+
+      async function renderMessage(message) {
+        return createGuestbookCard({
+          text: message.text,
+          name: message.name,
+          stamps: message.stamps,
+          style: {
+            fontIndex: message.fontIndex,
+            bgStyleIndex: message.bgStyleIndex,
+            bgRGB: message.bgRGB,
+            fgRGB: message.fgRGB,
+          },
+        });
+      }
+    }
+  });
+</script>

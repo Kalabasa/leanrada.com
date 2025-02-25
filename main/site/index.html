@@ -1,0 +1,885 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="/common.css" />
+<script defer src="/common.js"></script>
+
+<title>leanrada.com</title>
+
+<site-header prehide></site-header>
+
+<section class="header">
+  <div class="header-content">
+    <div class="header-circle title-font">
+      <nebula-animation
+        class="nebula"
+        palette="#e79907 #bf1852 #4d4aff #0ad591"
+        mouse
+      ></nebula-animation>
+      <div class="header-circle-text header-circle-text-big">
+        <script>
+          function renderCircleText(radiusVh, angleStepDeg, text) {
+            let htmlString = "";
+            let angle = angleStepDeg * -((text.length - 1) / 2);
+            for (const char of text) {
+              htmlString += `<span class="header-circle-text-char" style="transform: translateX(calc(${radiusVh}vh - 0.5ch)) rotate(${angle}deg); transform-origin: 0.5ch ${radiusVh}vh">${char}</span>`;
+              angle += angleStepDeg;
+            }
+            document.currentScript.parentElement.innerHTML = htmlString;
+          }
+          renderCircleText(18, 7.5, "Welcome to my personal website!");
+        </script>
+      </div>
+      <div class="header-circle-text header-circle-text-small">
+        <script>
+          renderCircleText(13, 9, "Welcome to my site!");
+        </script>
+      </div>
+      <img
+        class="home-circle-icon pixelated"
+        src="/icons/yay_sheet.png"
+        alt=""
+      />
+    </div>
+
+    <span class="intro-text">
+      <div class="intro-spacer"></div>
+      <span class="intro-line">
+        Hello!
+        <script>
+          document.currentScript.parentElement.textContent = [
+            "Hello!",
+            "Hey~~~",
+            "What’s up ↑",
+            "Hi there →",
+            "Hey there →",
+          ][Date.now() % 5];
+        </script>
+      </span>
+      <br />
+      <span class="intro-line">
+        I’m Lean
+        <a class="ipa" href="https://ipa-reader.xyz/?text=lian"
+          >/<span class="ipa-text">liˈan</span>/<span class="ipa-icon"
+            >🔊</span
+          ></a
+        >,
+      </span>
+      <br />
+      <span class="intro-line"> software engineer </span>
+      <br />
+      <span class="intro-line">
+        who likes making <a href="/notes/">stuff</a>,
+      </span>
+      <br />
+      <span class="intro-line">
+        <a href="/wares/">code</a>, <a href="/art/">art</a>, and
+        <a href="/music/">music</a>.
+      </span>
+      <br />
+      <br />
+      <span class="intro-line"> Nice to meet you. </span>
+      <br />
+      <span class="intro-line">
+        Please,
+        <span class="great-time-trigger" onclick="haveAGreatTime(event)"
+          >have a great time.</span
+        >
+      </span>
+    </span>
+  </div>
+</section>
+
+<style>
+  section.header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: clamp(75vh, 600px, 100vh);
+  }
+  @media (prefers-reduced-motion) {
+    section.header * {
+      animation: none !important;
+    }
+  }
+
+  .header-content {
+    white-space: nowrap;
+    height: 40vh;
+    min-width: 80vh;
+    overflow: hidden;
+  }
+
+  .header-circle {
+    position: relative;
+    display: block;
+    float: left;
+    width: 40vh;
+    height: 40vh;
+    box-sizing: content-box;
+    margin: 0vh 2vh;
+    border-radius: 50%;
+    background: #bf1852;
+    shape-outside: circle(calc(50% + 1vh));
+    text-align: initial;
+    overflow: hidden;
+    animation: header-circle-reveal 0.5s cubic-bezier(1, 0, 0.9, 1),
+      fade-background-in 0.2s;
+  }
+  @keyframes header-circle-reveal {
+    from {
+      clip-path: circle(2.5vh);
+    }
+    to {
+      clip-path: circle(50%);
+    }
+  }
+  @keyframes fade-background-in {
+    from {
+      background: transparent;
+    }
+  }
+
+  .header-circle-text {
+    position: relative;
+    margin: 2vh;
+    width: 100%;
+    height: 100%;
+    font-size: 3vh;
+    color: #fff;
+    animation: home-circle-text-animation 7s
+      cubic-bezier(0.785, 0.135, 0.15, 0.86) infinite;
+  }
+  .header-circle:activew .header-circle-text {
+    animation-play-state: paused;
+  }
+
+  @keyframes home-circle-text-animation {
+    to {
+      transform: rotate(-1turn);
+    }
+  }
+
+  .nebula {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .header-circle-text-big {
+    width: 36vh;
+    height: 36vh;
+  }
+  .header-circle-text-small {
+    display: none;
+  }
+  .header-circle-text-char {
+    display: inline-block;
+    width: 0;
+    clip-path: inset(0.8ex -1ch 0);
+    color: transparent;
+    text-shadow: 0 0 0 #fff, 0 4vh 0 #fff;
+    transition: text-shadow 0.4s 0.4s cubic-bezier(0, 0, 0.2, 1);
+    @starting-style {
+      text-shadow: 0 4vh 0 #fff, 0 4vh 0 #fff;
+    }
+  }
+
+  .home-circle-icon {
+    position: absolute;
+    left: calc(50% - 2.5vh);
+    top: calc(50% - 2.5vh);
+    width: 5vh;
+    height: 5vh;
+    object-fit: cover;
+    object-position: 0 0;
+  }
+
+  .header-circle:hover .header-circle-text-char {
+    text-shadow: 0 -4vh 0 #fff, 0 0 0 #fff;
+    transition-delay: 0s;
+    transition-timing-function: var(--ease);
+  }
+  .header-circle:hover .home-circle-icon {
+    object-position: 20% 0;
+  }
+
+  .intro-text {
+    line-height: 1.8;
+    font-size: 2.2vh;
+    font-style: italic;
+    animation: intro-text 0.8s 0.4s cubic-bezier(0, 0.7, 0.4, 1) backwards;
+  }
+  @keyframes intro-text {
+    from {
+      line-height: 8;
+    }
+  }
+
+  .intro-line {
+    display: inline-block;
+    animation: intro-text-drift 0.9s cubic-bezier(0, 0.8, 0.2, 1) both;
+  }
+  .intro-line a,
+  .intro-line a:visited {
+    color: inherit;
+  }
+  @keyframes intro-text-drift {
+    from {
+      transform: translate(-1em, 4em);
+      text-shadow: 0 3em 0 var(--clr0), 0 6em 0 var(--clr1);
+    }
+    to {
+      transform: translate(0, 0);
+      text-shadow: 0 0 0 var(--clr0), 0 0 0 var(--clr1);
+    }
+  }
+
+  .intro-spacer {
+    display: block;
+    height: 0px;
+    animation: intro-spacer 0.4s 0.4s cubic-bezier(0, 0.8, 0.1, 1) backwards;
+  }
+  @keyframes intro-spacer {
+    from {
+      height: 100%;
+    }
+  }
+
+  .ipa {
+    font-size: 85%;
+    font-style: normal;
+    text-decoration: none;
+    color: inherit;
+  }
+  .ipa-text {
+    text-decoration: underline;
+  }
+  .ipa-icon {
+    display: inline-block;
+    transform: scale(0.6);
+    filter: brightness(8);
+  }
+
+  @media (max-aspect-ratio: 4/5) {
+    .header {
+      height: auto;
+      min-height: 80vh;
+      margin: 30px 0 60px;
+    }
+    .header-content {
+      height: auto;
+      min-width: unset;
+      text-align: center;
+    }
+    .header-circle {
+      display: inline-block;
+      float: none;
+      width: 30vh;
+      height: 30vh;
+    }
+    .header-circle-text-big {
+      display: none;
+    }
+    .header-circle-text-small {
+      display: block;
+      width: 26vh;
+      height: 26vh;
+    }
+    .intro-text {
+      display: block;
+      margin-top: 4vh;
+      font-size: 16px;
+      animation: intro-text-mobile 1s cubic-bezier(0.8, 0.2, 0.2, 0.8);
+    }
+    .intro-spacer {
+      animation: none;
+    }
+  }
+  @keyframes intro-text-mobile {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .great-time-trigger {
+    text-decoration: underline;
+    cursor: pointer;
+    user-select: none;
+  }
+  .great-time-counter {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    font-size: 15px;
+    background-color: var(--bg-clr);
+    pointer-events: none;
+    transform-origin: bottom right;
+    animation: great-time-counter-appear 0.6s both;
+    z-index: 200;
+  }
+  .great-time-counter.flash {
+    background-color: #fff;
+  }
+
+  @keyframes great-time-counter-appear {
+    from {
+      opacity: 0;
+      transform: scale(4);
+    }
+  }
+
+  .section,
+  .lg-column-section {
+    margin: 150px auto;
+  }
+
+  .start-from-top .content-columns {
+    animation: section-appear 0.2s 1s backwards;
+  }
+  @keyframes section-appear {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .bento-section {
+    max-width: 1600px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    grid-auto-rows: 180px;
+    justify-items: center;
+    gap: 12px;
+    font-size: 120%;
+    font-weight: bold;
+    font-style: italic;
+  }
+  @media (max-width: 690px) {
+    .bento-section {
+      grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+      gap: 6px;
+      font-size: 100%;
+    }
+  }
+  .bento-section > * {
+    display: block;
+    color: inherit;
+    width: 100%;
+    height: 100%;
+    max-width: 600px;
+  }
+  .bento-section card-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+  }
+  .bento-tall {
+    grid-row: span 2;
+  }
+  card-box.bento-map {
+    overflow: hidden;
+    position: relative;
+    justify-content: end;
+    text-align: center;
+
+    > map-flight {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+    > span {
+      z-index: 1;
+    }
+  }
+  .bento-img {
+    padding: 24px;
+  }
+  .bento-img img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+  }
+
+  .content-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(480px, 50vw), 1fr));
+    gap: 90px 48px;
+    justify-items: center;
+  }
+  .content-columns section {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  lab-item {
+    position: relative;
+    width: 100%;
+    /* aspect ratio trick*/
+    padding-bottom: 100%;
+
+    a {
+      position: absolute;
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      text-decoration: none;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    img,
+    video {
+      position: absolute;
+      inset: 0;
+      /* we still need width/height */
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    & a:focus-visible img,
+    & a:focus-visible video,
+    &:hover img,
+    &:hover video {
+      filter: invert(1) contrast(0.6);
+    }
+
+    span {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      inset: 0;
+      padding: 24px 18px 0;
+      font-size: 15px;
+      font-style: italic;
+      font-weight: bold;
+      line-height: 1.6;
+      text-align: center;
+      visibility: hidden;
+      color: #fff;
+      z-index: 0;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--clr0-dark);
+        opacity: 0.7;
+        z-index: -1;
+      }
+    }
+    & a:focus-visible span,
+    &:hover span {
+      visibility: visible;
+    }
+
+    /* require double tap to open on mobile */
+    @media (hover: none) {
+      a {
+        pointer-events: none;
+      }
+      /* :hover is a hack to select the last touched item */
+      &:hover {
+        a {
+          animation: disable-pointer-events 0.2s forwards;
+        }
+        span::after {
+          content: "↗";
+          position: absolute;
+          right: 18px;
+          top: 18px;
+          width: 18px;
+          height: 18px;
+          line-height: 16px;
+          font-family: var(--display-font);
+          font-size: 24px;
+          font-style: normal;
+          font-weight: bold;
+          background: #fff;
+          color: var(--clr0-dark);
+        }
+      }
+    }
+  }
+  @keyframes disable-pointer-events {
+    0%,
+    99% {
+      pointer-events: none;
+    }
+    100% {
+      pointer-events: all;
+    }
+  }
+</style>
+
+<div class="great-time-counter">
+  you now have <span id="great-time-num">0</span> great time(s)
+</div>
+
+<div class="md-column-section content-columns">
+  <section>
+    <img
+      class="pixelated lg-icon"
+      src="/icons/glasses.png"
+      alt=""
+      loading="lazy"
+    />
+    <h2>Latest notes</h2>
+    <notes-list id="latest-notes" data-rewritten="2025-02-23">
+      <ul>
+        <li>
+          <a href="/notes/css-sprite-sheets/">
+            <strong>CSS sprite sheet animations</strong>
+            <tag-chip title="css"></tag-chip>
+            <time datetime="2024-11-03">3 Nov 2024</time>
+          </a>
+        </li>
+        <li>
+          <a href="/notes/how-to-center-in-css/">
+            <strong>Centering a div in a div in 2020</strong>
+            <tag-chip title="css"></tag-chip>
+            <tag-chip title="µpost"></tag-chip>
+            <time datetime="2024-10-17">17 Oct 2024</time>
+          </a>
+        </li>
+        <li>
+          <a href="/notes/motion-sickness-app/">
+            <strong>I made an app to fix my motion sickness</strong>
+            <tag-chip title="android"></tag-chip>
+            <time datetime="2024-09-02">2 Sept 2024</time>
+          </a>
+        </li>
+        <li>
+          <a href="/notes/stop-using-ease-out/">
+            <strong>Stop using ease-out in your UIs!</strong>
+            <tag-chip title="css"></tag-chip>
+            <tag-chip title="essay"></tag-chip>
+            <time datetime="2024-07-15">15 Jul 2024</time>
+          </a>
+        </li>
+      </ul>
+    </notes-list>
+    <p class="center-text">
+      <a class="bold" href="/notes/">
+        More notes<span class="inline-block no-text-decoration">→</span>
+      </a>
+    </p>
+  </section>
+  <section style="grid-row-end: span 2">
+    <img class="pixelated lg-icon" src="/icons/pot.png" alt="" loading="lazy" />
+    <h2>Some things I've built</h2>
+    <fixed-grid>
+      <feature-card>
+        <a href="/wares/wikawik/">
+          <img src="/wares/wikawik/media/wikawik.jpg" loading="lazy" />
+          <hgroup>
+            <h1>Wikawik</h1>
+            <em>2020 · Interactive language map</em>
+          </hgroup>
+          <p>
+            A webapp that shows the diversity of languages in the Philippines.
+            Learn about the local languages. Listen to local songs and other
+            media. Made in vanilla JS with D3.js. Passion project.
+          </p>
+        </a>
+      </feature-card>
+
+      <feature-card>
+        <a href="/wares/dimensions/">
+          <img src="/wares/dimensions/media/dimensions_0.jpg" loading="lazy" />
+          <hgroup>
+            <h1>Dimensions</h1>
+            <em>2019 · Augmented reality generative art</em>
+          </hgroup>
+          <p>
+            Generative art with extra dimensions. Web-based, uses Vue.js for the
+            generator and a three.js-based mobile webapp for the AR experience.
+            Made for a workplace event.
+          </p>
+        </a>
+      </feature-card>
+
+      <feature-card>
+        <a href="/wares/miniforts/">
+          <img
+            src="/wares/miniforts/media/miniforts_thumb.png"
+            loading="lazy"
+          />
+          <hgroup>
+            <h1>MiniForts</h1>
+            <em>2021 · Base-builder game</em>
+          </hgroup>
+          <p>
+            A game about building and defending a fort set in the miniature
+            world of mushroom people. Build defenses against the evil slugs,
+            snails, and other evil critters! Hobby project.
+          </p>
+        </a>
+      </feature-card>
+    </fixed-grid>
+    <p class="center-text">
+      <a class="bold" href="/wares/">
+        More s/w projects<span class="inline-block no-text-decoration">→</span>
+      </a>
+    </p>
+  </section>
+  <section style="grid-row-end: span 2">
+    <img
+      class="pixelated lg-icon"
+      src="/icons/science.png"
+      alt=""
+      loading="lazy"
+    />
+    <h2>From the lab</h2>
+    <fixed-grid style="--cols: 2; --gap: 4">
+      <lab-item>
+        <a href="https://leanrada.com/guhit-kudlit/" target="_blank">
+          <video
+            autoplay
+            muted
+            loop
+            src="/labs/baybayin.mp4"
+            loading="lazy"
+          ></video>
+          <span>Baybayin calligraphy generator</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://kalabasa.github.io/genuary_2023/09/" target="_blank">
+          <img src="/labs/wc-sim-9.png" loading="lazy" />
+          <span>Flowers in simulated watercolour [GPU heavy!]</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://codepen.io/kalabasa/pen/OJLQEWY" target="_blank">
+          <video
+            autoplay
+            muted
+            loop
+            src="/labs/3d-hamburger.opt.mp4"
+            loading="lazy"
+          ></video>
+          <span>3D hamburger menu animation</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://codepen.io/kalabasa/pen/oVMOZK" target="_blank">
+          <img src="/labs/pure-css-ai-tic-tac-toe.png" loading="lazy" />
+          <span>
+            Tic-tac-toe AI written in pure CSS. Can you beat a stylesheet?
+          </span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://kalabasa.github.io/genuary_2022/04/" target="_blank">
+          <img src="/labs/floridablanca.png" loading="lazy" />
+          <span>Floridablanca - flow art generator</span>
+        </a>
+      </lab-item>
+      <lab-item>
+        <a href="https://kalabasa.github.io/genuary_2023/28/" target="_blank">
+          <img src="/labs/poetry-gen.png" loading="lazy" />
+          <span>Poetry generator</span>
+        </a>
+      </lab-item>
+    </fixed-grid>
+  </section>
+  <section>
+    <img
+      class="pixelated lg-icon"
+      src="/icons/person.png"
+      alt=""
+      loading="lazy"
+    />
+    <h2>About me</h2>
+    <p>My name is Lean Rada.</p>
+    <p>I want to build good things.</p>
+    <p>
+      My interests are programming, interactive things, procedural animations,
+      algorithms, art, music theory, games, and tech.
+    </p>
+    <p>
+      Currently working at
+      <a href="https://canva.com" target="_blank">Canva</a> doing frontend
+      stuff.
+    </p>
+    <p>More <a href="/about/">about me</a>.</p>
+  </section>
+</div>
+
+<section class="section bento-section">
+  <a href="/notes/">
+    <card-box>
+      <img
+        class="pixelated lg-icon"
+        src="/icons/glasses.png"
+        alt=""
+        loading="lazy"
+      />
+      <span><span data-rewrite="noteCount">25</span> notes</span>
+    </card-box>
+  </a>
+  <a href="/wares/">
+    <card-box>
+      <img
+        class="pixelated lg-icon"
+        src="/icons/pot.png"
+        alt=""
+        loading="lazy"
+      />
+      <span><span data-rewrite="wareCount">20</span> projects</span>
+    </card-box>
+  </a>
+  <card-box class="bento-tall">
+    <div class="icon-and-text-line">
+      <img
+        class="invert pixelated md-icon"
+        src="/icons/github.png"
+        alt=""
+        loading="lazy"
+      />
+      github<br />heatmap
+    </div>
+    <gh-contribs></gh-contribs>
+  </card-box>
+  <a href="/art/">
+    <card-box>
+      <img
+        class="pixelated lg-icon"
+        src="/icons/art.png"
+        alt=""
+        loading="lazy"
+      />
+      my art
+    </card-box>
+  </a>
+  <card-box>
+    <img
+      class="pixelated lg-icon"
+      src="/misc/manjaro.svg"
+      alt="Manjaro logo"
+      loading="lazy"
+    />
+    <p class="center-text">
+      i use <a href="https://manjaro.org/" target="_blank">manjaro</a> btw.
+    </p>
+  </card-box>
+  <card-box class="bento-tall bento-map">
+    <map-flight bgsrc="/components/map-flight/mnl.png" origin></map-flight>
+    <span>i'm from the Philippines</span>
+  </card-box>
+  <a href="/music/">
+    <card-box>
+      <img
+        class="pixelated lg-icon"
+        src="/icons/sound.png"
+        alt=""
+        loading="lazy"
+      />
+      my music
+    </card-box>
+  </a>
+  <card-box class="bento-img">
+    <img src="/cat.jpg" alt="Cat" loading="lazy" />
+  </card-box>
+  <card-box class="bento-tall bento-map">
+    <map-flight bgsrc="/components/map-flight/syd.png" destination></map-flight>
+    <span>i'm currently based in<br />Sydney, Australia</span>
+  </card-box>
+  <card-box>
+    <span class="right-now">
+      <right-now></right-now>
+    </span>
+  </card-box>
+  <card-box>
+    <div>hit counter</div>
+    <bump-tally data-rewrite="hits">78602</bump-tally>
+  </card-box>
+  <!-- <card-box> (spotify card) </card-box> -->
+  <a href="/misc/">
+    <card-box>
+      <img
+        class="pixelated lg-icon"
+        src="/icons/person.png"
+        alt=""
+        loading="lazy"
+      />
+      misc
+    </card-box>
+  </a>
+</section>
+
+<div class="center-text">Thanks for visiting. Have a look around!</div>
+
+<site-footer nobg></site-footer>
+
+<script>
+  window.addEventListener("load", () => {
+    const yayIcon = document.querySelector(".home-circle-icon");
+    const sayLean = new Audio("/lean.mp3");
+    const greatTimeContainer = document.querySelector(".great-time-counter");
+    const greatTimeNum = document.getElementById("great-time-num");
+    document.body.classList.toggle("start-from-top", window.scrollY < 100);
+
+    let sayTime = 0;
+    const ipa = document.querySelector(".ipa");
+    ipa.addEventListener("click", (event) => {
+      if (sayLean.readyState >= /*HAVE_ENOUGH_DATA*/ 4) {
+        event.preventDefault();
+        sayLean.play();
+      }
+    });
+
+    function animateYay() {
+      const t =
+        ((Date.now() - (sayTime + 400)) / (sayLean.duration * 1000)) * 1.5;
+
+      if (t >= 1) {
+        yayIcon.style.objectPosition = null;
+      } else {
+        const frame = Math.floor(t * 3);
+        if (frame >= 0 && frame <= 2) {
+          yayIcon.style.objectPosition = 40 + (frame % 3) * 20 + "% 0";
+        } else if (frame > 2) {
+          yayIcon.style.objectPosition = "40% 0";
+        } else {
+          yayIcon.style.objectPosition = null;
+        }
+        requestAnimationFrame(animateYay);
+      }
+    }
+
+    sayLean.addEventListener("play", () => {
+      sayTime = Date.now();
+      animateYay();
+    });
+
+    let greatTimes = 0;
+    window.haveAGreatTime = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      greatTimes++;
+      greatTimeNum.innerText = greatTimes;
+      if (greatTimes === 1) {
+        greatTimeContainer.style.display = "block";
+      } else {
+        greatTimeContainer.classList.add("flash");
+        setTimeout(() => greatTimeContainer.classList.remove("flash"), 34);
+      }
+    };
+  });
+</script>
