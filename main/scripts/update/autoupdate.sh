@@ -17,6 +17,7 @@ git worktree add -f update origin/src
 cd update/main
 
 # Update
+npm install
 node scripts/update/autoupdate.mjs
 
 # Commit updates
