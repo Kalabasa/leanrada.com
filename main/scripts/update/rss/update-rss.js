@@ -60,9 +60,9 @@ async function rewriteRSS({ rss, notes, siteDir }) {
     } else {
       const nearest = deltas[0];
       if (nearest.delta > 0) {
-        ch(nearest.el).before(itemXML);
+        ch(nearest.el).before(itemXML.trimStart());
       } else {
-        ch(nearest.el).after(itemXML);
+        ch(nearest.el).after(itemXML.trimEnd());
       }
     }
   }
@@ -104,7 +104,7 @@ async function renderItem({ note, url, componentNames, siteDir }) {
   while (loopFlatten) {
     loopFlatten = false;
     content.contents().each((i, el) => {
-      if (["div", "span"].includes(el.name)) {
+      if (["div", "span", "code-block"].includes(el.name)) {
         ch(el).replaceWith(el.children);
         loopFlatten = true;
       } else if (el.type === "comment") {
@@ -189,14 +189,16 @@ async function renderItem({ note, url, componentNames, siteDir }) {
   const description = content.html();
 
   return `
-      <item>
-        <title><![CDATA[${note.title}]]></title>
-        <link><![CDATA[${url}]]></link>
-        <guid isPermaLink="true"><![CDATA[${url}]]></guid>
-        <pubDate>${formatDate(new Date(note.date))}</pubDate>
-        <description><![CDATA[${description}]]></description>
-      </item>
-`;
+
+    <item>
+      <title><![CDATA[${note.title}]]></title>
+      <link><![CDATA[${url}]]></link>
+      <guid isPermaLink="true"><![CDATA[${url}]]></guid>
+      <pubDate>${formatDate(new Date(note.date))}</pubDate>
+      <description><![CDATA[${description}]]></description>
+    </item>
+
+    `;
 }
 
 function renderBase() {

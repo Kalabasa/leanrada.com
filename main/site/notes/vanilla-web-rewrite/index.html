@@ -245,7 +245,7 @@ This pattern maps neatly to Web Component style:
 <p><strong>AI &mdash;</strong> I used LLMs to help me convert a bunch of pages into the new style. What I did was give it an example of an old page and the converted version (manually converted by me), and then it gave me a converter script that I tweaked and ran through most of the pages. I did the same to convert components and it was a breeze. The converted script was iteratively improved upon and made more robust by me and the LLM via examples of incorrect conversions and corrected versions. I guess the trick was to give it more examples instead of more elaborate instructions.</p>
 
 <code-block language="js">
-<code><pre>// this snippet from the AI-assisted converter script
+<pre><code>// this snippet from the AI-assisted converter script
 // converts &lt;blog-post-info> elements
 input("blog-post-info").each((i, el) => {
   const tag = input(el);
@@ -263,13 +263,13 @@ input("blog-post-info").each((i, el) => {
   out += `&lt;/blog-post-info>`;
   tag.remove();
   main.before(out + "\n\n");
-});</pre></code>
+});</code></pre>
 </code-block>
 
 <p><strong>Autoload &mdash;</strong> I added client-side JS that searched for custom tags and loaded the appropriate script files when those tags enter the viewport. In short, <em>lazy loading components</em>. I did have to impose a rigid file structure, because whenever it encounters a tag it would try to <code>import(`/components/${tagName}.js`)</code> &mdash; all my autoloaded components had to be in that flat directory. Am I a hypocrite? No, I can change that rule anytime.</p>
 
 <code-block language="js">
-<code><pre>// autoloads components in the viewport
+<pre><code>// autoloads components in the viewport
 new IntersectionObserver((entries) => {
   for (const entry of entries) {
     if (entry.isIntersecting) {
@@ -280,7 +280,7 @@ new IntersectionObserver((entries) => {
       intersectionObserver.unobserve(entry.target);
     }
   }
-});</pre></code>
+});</code></pre>
 </code-block>
 
 <p><strong>This is not an exercise in purity &mdash;</strong> This is a real website, a personal one at that. This is not a pure HTML proof-of-concept. Not a TAC role model. Not a Web Component masterpiece. I would add inline JS whenever it’s more convenient, break encapsulation if necessary, use classes instead of pure tag selectors. Don’t let the ideal pure plain static TAC+WebComponent vanilla HTML+CSS get in the way of finishing the project. In other words, pragmatism over principles.</p>
