@@ -14,7 +14,7 @@ if (path.basename(projectRoot) !== "main") {
 const dryRun = process.argv.includes("--dry-run");
 const notePath = process.argv[process.argv.length - 1];
 
-const wordsPerMinute = 130;
+const wordsPerMinute = 140;
 
 main();
 
