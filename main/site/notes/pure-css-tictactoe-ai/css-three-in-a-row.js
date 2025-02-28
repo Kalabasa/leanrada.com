@@ -176,7 +176,7 @@ customElements.define(
           <input id="css-three-in-a-row-${i}" type="checkbox" />
         `;
       }
-      return inputs;
+      return html.raw(inputs);
     }
 
     generateLabels() {
@@ -186,7 +186,7 @@ customElements.define(
           <label for="css-three-in-a-row-${i}">X</label>
         `;
       }
-      return labels;
+      return html.raw(labels);
     }
   }
 );

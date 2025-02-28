@@ -13,7 +13,7 @@ customElements.define(
             <span class="card-carousel-btn-symbol">&lt;&lt;</span>
           </button>
         </div>
-        ${this.innerHTML}
+        ${html.raw(this.innerHTML)}
         <div class="card-carousel-btn-container">
           <button
             class="card-carousel-btn card-carousel-btn-next"

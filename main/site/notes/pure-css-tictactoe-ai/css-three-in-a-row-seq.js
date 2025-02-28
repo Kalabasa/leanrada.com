@@ -222,7 +222,7 @@ customElements.define(
           `;
         }
       }
-      return inputs;
+      return html.raw(inputs);
     }
 
     generateGrids() {
@@ -234,7 +234,7 @@ customElements.define(
           </div>
         `;
       }
-      return grids;
+      return html.raw(grids);
     }
 
     generateLabels(row) {
@@ -247,7 +247,7 @@ customElements.define(
           ${row}
         </label>`;
       }
-      return labels;
+      return html.raw(labels);
     }
   }
 );
