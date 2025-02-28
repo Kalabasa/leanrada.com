@@ -3,7 +3,7 @@ import path from "node:path";
 import { dateString, indent, reindent } from "./format/format.mjs";
 import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
 import { fetchHits } from "./misc/fetch-hits.mjs";
-import { fetchStackOverflowReputation } from "./misc/fetch-so-rep.js";
+import { fetchStackOverflowReputation } from "./misc/fetch-so-rep.mjs";
 import { populateSuggestions } from "./notes/populate-suggestions.mjs";
 import { readNotes } from "./notes/read-notes.mjs";
 import { renderNoteListItem } from "./notes/render-note-list-item.mjs";
