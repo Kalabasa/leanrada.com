@@ -129,12 +129,12 @@ async function updateIndexHTML({ notes, wares, hits }) {
   if (!notes && !wares && !hits) return;
 
   const notesListIndent = 2;
-  const latestNotes = notes?.slice(0, 4);
+  const latestNotes = notes?.filter(n => n.public).slice(0, 4);
 
   await rewrite({
     htmlFilePath: path.resolve(siteDir, "index.html"),
     data: {
-      noteCount: notes?.filter((w) => w.public).length,
+      noteCount: notes?.filter((n) => n.public).length,
       wareCount: wares?.filter((w) => w.public).length,
       hits,
     },

@@ -49,15 +49,17 @@ export async function readNotes(siteDir) {
           throw new Error("No content!");
         }
 
-        const refdNotePaths =
-          content.html().match(/(?<=\/)notes\/[\w\-]+\b/g) ?? [];
-        for (const path of refdNotePaths) {
-          const otherHref = `/${path}/`;
+        if (isPublic) {
+          const refdNotePaths =
+            content.html().match(/(?<=\/)notes\/[A-Za-z0-9\-]+\b/g) ?? [];
+          for (const path of refdNotePaths) {
+            const otherHref = `/${path}/`;
 
-          if (href === otherHref) continue;
+            if (href === otherHref) continue;
 
-          multimapAdd(noteReferences, href, otherHref);
-          multimapAdd(noteReferences, otherHref, href);
+            multimapAdd(noteReferences, href, otherHref);
+            multimapAdd(noteReferences, otherHref, href);
+          }
         }
 
         return {

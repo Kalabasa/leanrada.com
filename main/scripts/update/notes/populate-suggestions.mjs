@@ -18,7 +18,7 @@ export function populateSuggestions({
     // suggest by tag
     if (item.suggestions < maxSmartSuggestions) {
       const cotagged = notes
-        .filter((other) => other !== item)
+        .filter((other) => other !== item && (!item.public || other.public))
         .map((other) => ({
           href: other.href,
           score: computeScore(other, item),
@@ -39,6 +39,8 @@ export function populateSuggestions({
       j = (j + 1) % notes.length
     ) {
       const other = notes[j];
+      if (!other.href.startsWith("/notes/")) continue;
+      if (item.public && !other.public) continue;
       if (item.suggestions.every((s) => s.href !== other.href)) {
         item.suggestions.push({ href: other.href, reason: "next" });
       }
