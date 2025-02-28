@@ -517,12 +517,7 @@
         }
 
         function renderContent(value, row, col) {
-          const text = value.replace(
-            /[\u00A0-\u9999<>\&]/g,
-            (i) => "&#" + i.charCodeAt(0) + ";"
-          );
-
-          let content = text;
+          let content = value;
           if (layerButton && layerButton[0] === row && layerButton[1] === col) {
             content = html`<button class="lily58-layer-button">
               ${content}

@@ -34,6 +34,40 @@ script.async = true;
 script.src = "https://leanrada.com/analytics/analytics.js";
 document.head.appendChild(script);
 
+const html = (() => {
+  const staging = document.createElement("div");
+  const rawSymbol = Symbol("raw");
+
+  function sanitize(string) {
+    staging.textContent = string;
+    return staging.innerHTML;
+  }
+
+  function raw(rawHTML) {
+    const marked = new String(rawHTML);
+    marked[rawSymbol] = true;
+    return marked;
+  }
+
+  function html(strings, ...values) {
+    console.group("html", strings, values);
+    let result = strings[0];
+    for (let i = 0; i < values.length; i++) {
+      const value = values[i];
+      const sanitizedValue =
+        value && value instanceof String && value[rawSymbol] === true
+          ? value
+          : sanitize(String(value));
+      result += sanitizedValue + strings[i + 1];
+    }
+    console.groupEnd();
+    return raw(result);
+  }
+
+  html.raw = raw;
+  return html;
+})();
+
 customElements.define(
   "site-header",
   class SiteHeader extends HTMLElement {
@@ -416,10 +450,6 @@ customElements.define(
     }
   }
 );
-
-function html(strings, ...values) {
-  return String.raw({ raw: strings }, ...values);
-}
 
 const appendStyle = (() => {
   const appendedStyles = new Set();

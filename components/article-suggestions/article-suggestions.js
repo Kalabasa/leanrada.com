@@ -63,16 +63,17 @@ customElements.define(
 
       const fragment = document.createElement("template");
       for (const suggestion of suggestions) {
+        const tagChips = html.raw(
+          (suggestion.meta.tags ?? [])
+            .map((tag) => html`<tag-chip title="${tag}"></tag-chip>`)
+            .join(" ")
+        );
+        const reason = renderReason(suggestion.reason);
         fragment.innerHTML += renderFeatureCard({
           media: suggestion.meta.media,
           href: suggestion.meta.href,
           title: suggestion.meta.title,
-          description:
-            (suggestion.meta.tags ?? [])
-              .map((tag) => html`<tag-chip title="${tag}"></tag-chip>`)
-              .join(" ") +
-            " " +
-            renderReason(suggestion.reason),
+          description: html`${tagChips} ${reason}`,
         });
       }
 

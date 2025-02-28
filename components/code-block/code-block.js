@@ -162,11 +162,11 @@
         const language = this.getAttribute("language") ?? "clike";
         const languageCode = this.getAttribute("languagecode");
         // & > pre > code
-        const code = this.firstChild?.firstChild;
+        const code = this.firstElementChild?.firstElementChild;
 
         if (code) {
-          this.firstChild.firstChild.innerHTML = Prism.highlight(
-            this.firstChild.firstChild.textContent,
+          code.innerHTML = Prism.highlight(
+            code.textContent,
             Prism.languages[language],
             languageCode ?? language
           );
