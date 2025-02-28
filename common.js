@@ -50,7 +50,6 @@ const html = (() => {
   }
 
   function html(strings, ...values) {
-    console.group("html", strings, values);
     let result = strings[0];
     for (let i = 0; i < values.length; i++) {
       const value = values[i];
@@ -60,7 +59,6 @@ const html = (() => {
           : sanitize(String(value));
       result += sanitizedValue + strings[i + 1];
     }
-    console.groupEnd();
     return raw(result);
   }
 
