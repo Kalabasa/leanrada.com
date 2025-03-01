@@ -23,6 +23,8 @@ export async function updateRSS({ rssFilePath, notes, siteDir, dryRun }) {
 async function rewriteRSS({ rss, notes, siteDir }) {
   const componentNames = findComponentNames(siteDir);
 
+  let added = false;
+
   const ch = cheerio.load(rss, { xml: true });
   for (const note of notes) {
     if (!note.public) continue;
@@ -65,6 +67,15 @@ async function rewriteRSS({ rss, notes, siteDir }) {
         ch(nearest.el).after(itemXML.trimEnd());
       }
     }
+    added = true;
+  }
+
+  // prune old items
+  if (added) {
+    // assuming items are sorted by descending date
+    ch("item").each((i, el) => {
+      if (i >= 20) ch(el).remove();
+    });
   }
 
   return ch.xml();
