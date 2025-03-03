@@ -50,6 +50,7 @@ function saveAppData() {
     glyphs: appState.glyphs.sort(
       (a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)
     ),
+    trajectoryParams: appState.trajectoryParams,
   });
 }
 
@@ -79,7 +80,11 @@ function exportGlyphs() {
     })),
     edges: glyph.edges.map(({ nodes }) => ({ nodes })),
   }));
-  downloadString("export default = " + JSON.stringify(glyphs), "text/json", "glyph-map.js");
+  downloadString(
+    "export default = " + JSON.stringify(glyphs),
+    "text/json",
+    "glyph-map.js"
+  );
 }
 
 const Toolbar = createToolbar({
@@ -198,6 +203,7 @@ function applyAppDataFromObject(appData) {
         )
       )
     );
+    Object.assign(appState.trajectoryParams, appData.trajectoryParams);
   });
 }
 

@@ -3,8 +3,8 @@ import { BasePainter } from "../calligraphy/painter.js";
 import { html } from "../components/html.js";
 import { useEffect, useRef } from "../lib/htm-preact.js";
 import { computed } from "../lib/mobx.js";
-import { debounce } from "../util/debounce.js";
 import { observer } from "../util/observer.js";
+import { throttle } from "../util/throttle.js";
 
 const annotatePath = new URL(location).searchParams.has("annotatePath");
 
@@ -21,7 +21,7 @@ export function createGlyphPreview({ appState }) {
     );
   });
 
-  const drawPreview = debounce((canvas, strokes) => {
+  const drawPreview = throttle((canvas, strokes) => {
     const context = canvas.getContext("2d");
     context.reset();
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -70,33 +70,61 @@ function drawDebugPath(context, stroke) {
   let lastAnnotatedVertex = null;
   let index = 0;
   for (const vertex of stroke.vertices) {
+    const debug = vertex.debug;
     const to = index === 0 ? context.moveTo : context.lineTo;
     to.call(context, vertex.x, vertex.y);
-    if (annotatePath) {
-      if (
-        !lastAnnotatedVertex ||
-        Math.hypot(
-          lastAnnotatedVertex.x - vertex.x,
-          lastAnnotatedVertex.y - vertex.y
-        ) > 20
-      ) {
-        context.fillStyle = "#f00";
-        context.font = "bold 10px sans-serif";
-        const slope = lastAnnotatedVertex
-          ? (lastAnnotatedVertex.y - vertex.y) /
-            (lastAnnotatedVertex.x - vertex.x)
-          : 0;
-        context.textBaseline = slope < 0 ? "top" : "bottom";
-        context.fillText(vertex.t.toFixed(1), vertex.x, vertex.y);
-        lastAnnotatedVertex = vertex;
-      }
+    if (
+      !lastAnnotatedVertex ||
+      Math.hypot(
+        lastAnnotatedVertex.x - vertex.x,
+        lastAnnotatedVertex.y - vertex.y
+      ) > 20
+    ) {
+      context.fillStyle = "#f00";
+      context.font = "bold 10px sans-serif";
+      const slope = lastAnnotatedVertex
+        ? (lastAnnotatedVertex.y - vertex.y) /
+          (lastAnnotatedVertex.x - vertex.x)
+        : 0;
+      context.textBaseline = slope < 0 ? "top" : "bottom";
+      context.fillText(debug.pen.t.toFixed(1), vertex.x, vertex.y);
+      lastAnnotatedVertex = vertex;
     }
     index++;
   }
   context.fillStyle = null;
-  context.lineWidth = annotatePath ? 2 : 20;
-  context.strokeStyle = annotatePath ? "#f00" : "#cff";
+  context.lineWidth = 2;
+  context.strokeStyle = "#f00";
   context.lineJoin = "round";
   context.lineCap = "round";
   context.stroke();
+
+  context.lineWidth = 1;
+  for (const vertex of stroke.vertices) {
+    const debug = vertex.debug;
+    context.beginPath();
+    context.moveTo(vertex.x, vertex.y);
+    context.lineTo(vertex.x + debug.pen.vel.x, vertex.y + debug.pen.vel.y);
+    context.strokeStyle = "#00f";
+    context.stroke();
+    context.beginPath();
+    context.moveTo(vertex.x + debug.pen.vel.x, vertex.y + debug.pen.vel.y);
+    context.lineTo(
+      vertex.x + debug.pen.vel.x + debug.pen.accel.x,
+      vertex.y + debug.pen.vel.y + debug.pen.accel.y
+    );
+    context.strokeStyle = "#0ff";
+    context.stroke();
+    context.beginPath();
+    context.moveTo(
+      vertex.x + debug.pen.vel.x + debug.pen.accel.x,
+      vertex.y + debug.pen.vel.y + debug.pen.accel.y
+    );
+    context.lineTo(
+      vertex.x + debug.pen.vel.x + debug.pen.accel.x + debug.pen.jerk.x,
+      vertex.y + debug.pen.vel.y + debug.pen.accel.y + debug.pen.jerk.y
+    );
+    context.strokeStyle = "#0f0";
+    context.stroke();
+  }
 }

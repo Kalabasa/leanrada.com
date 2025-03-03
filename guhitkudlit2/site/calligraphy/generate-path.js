@@ -2,7 +2,7 @@
  * @typedef {import("../authoring/node-editor.js").Node} Node
  *
  * A path is an array of Strokes.
- * 
+ *
  * @typedef {{
  *  vertices: Vertex[]
  * }} Stroke
@@ -10,6 +10,9 @@
  * @typedef {{
  *  x: number,
  *  y: number,
+ *  debug?: {
+ *    pen: Pen,
+ *  },
  * }} Vertex
  *
  * @typedef {{
@@ -23,10 +26,10 @@
 
 /** @type {TrajectoryParams} */
 export const defaultTrajectoryParams = Object.freeze({
-  posErrorWeight: 0.1,
+  posErrorWeight: 0.5,
   velErrorWeight: 0.95,
   accelErrorWeight: 1,
-  lookaheadTime: 12,
+  lookaheadTime: 3,
   iterations: 1,
 });
 
@@ -80,15 +83,37 @@ function* generateStroke(sequence, params) {
 
   let emergencyLimit = 10000;
 
-  const nodeTimes = sequence.map((_, i) => i * 10);
+  const nodeTimes = generateNodeTimes(sequence);
+
   const step = 0.5;
   while (pen.t < nodeTimes[sequence.length - 1]) {
     optimizeTrajectory(pen, sequence, nodeTimes, params);
     integrate(pen, step);
-    yield { ...pen.pos, t: pen.t };
+    const debug = {
+      pen: structuredClone(pen),
+    };
+    yield { ...pen.pos, debug };
 
     if (emergencyLimit-- < 0) throw new Error("Too many iterations!");
   }
+}
+
+/**
+ * @param {Node[]} nodes
+ * @returns {number[]}
+ */
+function generateNodeTimes(nodes) {
+  const nodeTimes = [];
+  let lastNode = null;
+  let t = 0;
+  for (const node of nodes) {
+    if (lastNode) {
+      t += Math.hypot(node.x - lastNode.x, node.y - lastNode.y) / 20;
+    }
+    nodeTimes.push(t);
+    lastNode = node;
+  }
+  return nodeTimes;
 }
 
 /**
@@ -130,10 +155,9 @@ function optimizeTrajectory(pen, nodes, nodeTimes, params) {
 
       integrate(extrapolatedPen, dt);
 
-      const posXError =
-        (interpolatedNode.x - extrapolatedPen.pos.x) * params.posErrorWeight;
-      const posYError =
-        (interpolatedNode.y - extrapolatedPen.pos.y) * params.posErrorWeight;
+      const error = calculateError(extrapolatedPen.pos, interpolatedNode);
+      const posXError = error.x * params.posErrorWeight;
+      const posYError = error.y * params.posErrorWeight;
       const velXError = -extrapolatedPen.vel.x * params.velErrorWeight;
       const velYError = -extrapolatedPen.vel.y * params.velErrorWeight;
       const accelXError = -extrapolatedPen.accel.x * params.accelErrorWeight;
@@ -144,19 +168,51 @@ function optimizeTrajectory(pen, nodes, nodeTimes, params) {
       const sampleJerkY =
         ((posYError * (1.5 / et) + velYError) / et + accelYError) * (0.5 / et);
 
-      const weight = 1 / (1 + t - pen.t);
+      const weight = 1 * (step / params.lookaheadTime);
 
       jerkX += weight * sampleJerkX;
       jerkY += weight * sampleJerkY;
-      totalWeight += weight;
+
+      extrapolatedPen.jerk.x += weight * sampleJerkX;
+      extrapolatedPen.jerk.y += weight * sampleJerkY;
     }
 
-    if (totalWeight === 0) continue;
-    jerkX /= totalWeight;
-    jerkY /= totalWeight;
     pen.jerk.x = jerkX;
     pen.jerk.y = jerkY;
   }
+}
+
+/**
+ * @param {{ x: number, y: number }} pos
+ * @param {Node} node
+ */
+function calculateError(pos, node) {
+  const deltaX = node.x - pos.x;
+  const deltaY = node.y - pos.y;
+
+  const localControlX = node.controlX - node.x;
+  const localControlY = node.controlY - node.y;
+
+  const halfHeight = Math.hypot(localControlX, localControlY);
+  const halfWidth = node.width * 0.5;
+
+  const angle = Math.atan2(localControlY, localControlX);
+  const radiusX =
+    (halfHeight * halfWidth) /
+    Math.sqrt(
+      (halfWidth * Math.cos(-angle)) ** 2 + (halfHeight * Math.sin(-angle)) ** 2
+    );
+  const radiusY =
+    (halfWidth * halfHeight) /
+    Math.sqrt(
+      (halfHeight * Math.cos(-angle + Math.PI / 2)) ** 2 +
+        (halfWidth * Math.sin(-angle + Math.PI / 2)) ** 2
+    );
+
+  return {
+    x: (deltaX * Math.abs(deltaX)) / radiusX,
+    y: (deltaY * Math.abs(deltaY)) / radiusY,
+  };
 }
 
 /**
