@@ -16,14 +16,14 @@ export function getDefaults() {
   };
 }
 
-export function createGuestbookCard(data, html = concat) {
+export function createGuestbookCard(data) {
   if (typeof module === "object") {
     // node
     const text = encodeHtmlAttribute(data.text);
     const name = encodeHtmlAttribute(data.name);
     const stamps = encodeHtmlAttribute(JSON.stringify(data.stamps));
     const style = encodeHtmlAttribute(JSON.stringify(data.style));
-    return html`<guestbook-card
+    return `<guestbook-card
       data-text="${text}"
       data-name="${name}"
       data-stamps-json="${stamps}"
@@ -39,14 +39,6 @@ export function createGuestbookCard(data, html = concat) {
     card.setAttribute("data-style-json", JSON.stringify(data.style));
     return card;
   }
-}
-
-function concat(strings, ...values) {
-  let result = "";
-  strings.forEach((string, i) => {
-    result += string + (values[i] || "");
-  });
-  return result;
 }
 
 function encodeHtmlAttribute(value) {

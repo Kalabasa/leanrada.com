@@ -6,14 +6,16 @@ customElements.define(
     constructor() {
       super();
 
-      const beforeGraphSlotHTML = Array.from(
-        this.querySelectorAll('[slot="before-graph"]')
-      )
-        .map((e) => e.outerHTML)
-        .join("");
-      const defaultSlotHTML = Array.from(this.querySelectorAll(":not([slot])"))
-        .map((e) => e.outerHTML)
-        .join("");
+      const beforeGraphSlotHTML = html.raw(
+        Array.from(this.querySelectorAll('[slot="before-graph"]'))
+          .map((e) => e.outerHTML)
+          .join("")
+      );
+      const defaultSlotHTML = html.raw(
+        Array.from(this.querySelectorAll(":not([slot])"))
+          .map((e) => e.outerHTML)
+          .join("")
+      );
       const showGraph = this.getAttribute("show-graph") !== null;
 
       this.innerHTML = html`
