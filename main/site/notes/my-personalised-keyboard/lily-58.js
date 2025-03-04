@@ -140,7 +140,8 @@
           this.hasAttribute("focus-rects") &&
           JSON.parse("[" + this.getAttribute("focus-rects") + "]");
         const layer =
-          this.hasAttribute("layerkeydatakey") && DATA[this.getAttribute("layerkeydatakey")];
+          this.hasAttribute("layerkeydatakey") &&
+          DATA[this.getAttribute("layerkeydatakey")];
         const layerButton =
           this.hasAttribute("layer-button") &&
           this.getAttribute("layer-button").split(",").map(Number);
@@ -148,19 +149,21 @@
         const keyDataKey = this.getAttribute("keydatakey");
         const keys = DATA[keyDataKey];
 
-        const leftSlotHTML = Array.from(this.querySelectorAll('[slot="left"]'))
-          .map((e) => e.outerHTML)
-          .join("");
-        const rightSlotHTML = Array.from(
-          this.querySelectorAll('[slot="right"]')
-        )
-          .map((e) => e.outerHTML)
-          .join("");
-        const defaultSlotHTML = Array.from(
-          this.querySelectorAll(":not([slot])")
-        )
-          .map((e) => e.outerHTML)
-          .join("");
+        const leftSlotHTML = html.raw(
+          Array.from(this.querySelectorAll('[slot="left"]'))
+            .map((e) => e.outerHTML)
+            .join("")
+        );
+        const rightSlotHTML = html.raw(
+          Array.from(this.querySelectorAll('[slot="right"]'))
+            .map((e) => e.outerHTML)
+            .join("")
+        );
+        const defaultSlotHTML = html.raw(
+          Array.from(this.querySelectorAll(":not([slot])"))
+            .map((e) => e.outerHTML)
+            .join("")
+        );
 
         this.innerHTML = html`
           <div class="lily58-half-container">
