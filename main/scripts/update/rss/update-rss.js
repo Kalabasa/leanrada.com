@@ -26,11 +26,20 @@ async function rewriteRSS({ rss, notes, siteDir }) {
   let added = false;
 
   const ch = cheerio.load(rss, { xml: true });
+
+  let oldestTime = Infinity;
+  ch("item > pubDate").each(function (_, el) {
+    oldestTime = Math.min(oldestTime, Date.parse(ch(el).text()));
+  });
+
   for (const note of notes) {
     if (!note.public) continue;
     if (!note.href.startsWith("/")) {
       throw new Error("Sanity check failed!");
     }
+
+    const date = new Date(note.date);
+    if (date < oldestTime) continue;
 
     const url = new URL(note.href, `https://${domain}`);
     url.searchParams.set("ref", "rss");
@@ -46,7 +55,6 @@ async function rewriteRSS({ rss, notes, siteDir }) {
     const itemXML = await renderItem({ note, url, componentNames, siteDir });
 
     // Find a place to insert the new item
-    const date = new Date(note.date);
     const deltas = ch("item")
       .toArray()
       .map((el) => {
