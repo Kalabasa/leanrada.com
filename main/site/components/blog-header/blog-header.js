@@ -92,7 +92,7 @@
                 font-weight: bold;
                 font-style: italic;
                 text-align: left;
-                line-height: 72px;
+                line-height: 2;
                 background: var(--bg-clr);
                 z-index: 2;
               }
@@ -132,11 +132,10 @@
                 & {
                   width: 100vw;
                   width: 100svw;
-                  height: 400px;
+                  height: 300px;
                   padding-right: 36px;
                 }
                 h1 {
-                  top: 0;
                   left: 0;
                   font-size: clamp(24px, 20px + 2vw, 36px);
                 }
