@@ -1,0 +1,255 @@
+<!doctype html>
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
+
+<title>Inline templating and interactivity with document.currentScript</title>
+
+<site-header></site-header>
+
+<blog-header>
+  <h1>Inline templating and interactivity with document.currentScript</h1>
+  <img src="hero.png" alt="" loading="lazy"></img>
+</blog-header>
+
+<blog-post-info>
+  <time datetime="2025-03-04">3 Mar 2025</time>
+  · 1 min read
+</blog-post-info>
+
+<tag-row>
+  <tag-chip title="js"></tag-chip>
+</tag-row>
+
+<main class="prose">
+
+<script>const $=(...n)=>document.currentScript.replaceWith(...n);</script>
+
+<p>For quick and ‘dirty’ rendering of simple dynamic content, you may not need the complexity of a templating language with a preprocessing step like Handlebars or a server backend like PHP.</p>
+
+<p>Let’s use the example phrase, <i>“Come on, it’s <code>&lt;currentYear></code>”</i>. It should result in <i>“Come on, it’s <u><noscript>2025</noscript><script>$(new Date().getFullYear())</script></u>”</i> when rendered today.</p>
+
+<p>This dynamic phrase could be written directly in the HTML! We don’t even need element IDs, classes, or selectors to locate and modify the content. This is possible using the  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript" target="_blank"><code>document.currentScript</code></a> property, which gives us a reference to the <em>current <code>&lt;script></code> element that’s running</em>.</p>
+
+<p>iirc, I learned about this technique from the <a href="https://github.com/gnat/surreal" target="_blank">Surreal</a> library or something adjacent to it. I forgot.</p>
+
+<p>Anyway, the dynamic phrase <strong>“Come on, it’s <noscript>2025</noscript><script>$(new Date().getFullYear())</script>”</strong> would now be written as:</p>
+
+<code-block language="html">
+<pre><code>Come on, it’s
+&lt;script>
+  document.currentScript.replaceWith(new Date().getFullYear())
+&lt;/script></code></pre>
+</code-block>
+
+<p>The script simply replaces itself with its computed value on the spot.</p>
+
+<p>The code’s a bit wordy though, but we can <em>alias</em> it to a constant like <code>$</code> via <code>$=(...n)=>document.currentScript.replaceWith(...n)</code>. Then we’d have something reminiscent of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals" target="_blank">template literals</a> in JS.</p>
+
+<code-block language="html">
+<pre><code>Come on, it’s &lt;script>$(new Date().getFullYear())&lt;/script></code></pre>
+</code-block>
+
+<p>The code is pretty readable at a glance without context (after you get past the bit of indirection that is the <code>$</code> alias).</p>
+
+<p>A <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noscript" target="_blank"><code>noscript</code></a> fallback would also be nice for those that don’t run JS.</p>
+
+<code-block language="html">
+<pre><code>Come on, it’s
+&lt;noscript>current year&lt;/noscript>
+&lt;script>$(new Date().getFullYear())&lt;/script></code></pre>
+</code-block>
+
+<p>The resulting script-noscript juxtaposition in the markup looks almost like Angular/Vue’s if-else markup, neat.</p>
+
+<box-note><code>Date().split` `[3]</code> is also a short (but very hacky) way to get the year.</box-note>
+
+<h2>Real world examples</h2>
+
+<p>If you thought this technique is only useful for rendering the current year, you’re mostly right! &mdash; I’ve used inline scripts to refer to relative dates in my living pages. Because <strong>“<noscript>8</noscript><script>$(new Date().getFullYear()-2017)</script> years ago”</strong> sounds more natural than <strong>“2017”</strong>.</p>
+
+<code-block language="html">
+<pre><code>It was planted
+&lt;noscript>in 2017&lt;/noscript>
+&lt;script>$(new Date().getFullYear()-2017, ' years ago')&lt;/script>
+but now it has grown tall and strong.</code></pre>
+</code-block>
+
+<card-box>
+  It was planted
+  <noscript>in 2017</noscript>
+  <script>$(new Date().getFullYear()-2017, ' years ago')</script>
+  but now it has grown tall and strong.
+</card-box>
+
+<h3>Random greeting</h3>
+
+<p>Another example is in my front page, which says a randomly selected greeting on each visit.</p>
+
+<img src="greeting.png" alt="screenshot of my homepage intro section">
+
+<code-block language="html">
+<pre><code>&lt;span class="intro-line">
+  &lt;noscript>Hello!&lt;/noscript>
+  &lt;script>
+    $([
+      "Hello!",
+      "Hey~~~",
+      "What’s up ↑",
+      "Hi there →",
+      "Hey there →",
+    ][Date.now() % 5])
+  &lt;/script>
+&lt;/span></code></pre>
+</code-block>
+
+<box-note>The randomiser is just a <code>Date.now()</code> with modulo because it was more concise than <code>Math.floor(Math.random() * 5)</code>.</box-note>
+
+<h3>Splitting text for animation</h3>
+
+<p>I’ve split text into characters using inline scripts to generate markup per character. In my case, it was for rendering circular text, but a more common use case is text animation like the following.</p>
+
+<card-box class="crazy-example">
+  It was extremely clunky but it worked. It was a
+  <script>document.currentScript.outerHTML=
+    "crazy".replace(/./g, c => `<strong>${c}</strong>`)
+  </script>
+  hack.
+  <style>
+    /* TODO: use @scope when widely available */
+    .crazy-example strong {
+      display: inline-block;
+      animation: crazy-wave 0.3s infinite alternate ease-in-out;
+      &:nth-child(4n + 1) {
+        animation-delay: -0.6s;
+      }
+      &:nth-child(4n + 2) {
+        animation-delay: -0.45s;
+      }
+      &:nth-child(4n + 3) {
+        animation-delay: -0.3s;
+      }
+      &:nth-child(4n + 4) {
+        animation-delay: -0.15s;
+      }
+    }
+    @keyframes crazy-wave {
+      from {
+        transform: translateY(-2px);
+      }
+      to {
+        transform: translateY(2px);
+      }
+    }
+  </style>
+</card-box>
+
+<code-block language="html">
+<pre><code>It was extremely clunky but it worked. It was a
+&lt;script>document.currentScript.outerHTML=
+  "crazy".replace(/./g, c => `&lt;strong>${c}&lt;/strong>`)
+&lt;/script>
+hack.</code></pre>
+</code-block>
+  
+<h3>Auto-updating footer</h3>
+
+<p>How about an auto-updating copyright notice in the footer which may or may not have legal implications? <small>(IANAL)</small></p>
+
+<code-block language="html">
+<pre><code>&lt;footer>
+  © &lt;script>$(new Date().getFullYear())&lt;/script> Mycorp, Ltd.
+&lt;/footer></code></pre>
+</code-block>
+
+<p>For comparison, here’s the StackOverflow/ChatGPT answer:</p>
+
+<fixed-grid style="--cols:1;--gap:1">
+<code-block language="js">
+<pre><code>document
+  .getElementById("copyright-year")
+  .textContent = new Date().getFullYear();</code></pre>
+</code-block>
+<code-block language="html">
+<pre><code>&lt;footer>
+  © &lt;span id="copyright-year">&lt;/span> Mycorp, Ltd.
+&lt;/footer></code></pre>
+</code-block>
+</fixed-grid>
+
+<p>Why pollute the global ID namespace and separate coupled code if we can avoid it?</p>
+
+<p>At this point you may be asking, is this technique only really useful for rendering the current year? Maybe, but we can do more than just <em>rendering</em> text.</p>
+
+<p>Come on, it’s <noscript>2025</noscript><script>$(new Date().getFullYear())</script>, the web is rich and interactive!</p>
+
+<h3>The ubiquitous counter app example</h3>
+
+<p>This is not a simple templating example anymore, but shows the power of <code>currentScript</code> in <a href="https://en.wikipedia.org/wiki/Hydration_(web_development)" target="_blank">hydrating</a> self-contained bits of interactive HTML.</p>
+
+<card-box>
+  Count: <span>0</span>
+  <button theme="button">Increment</button>
+  <button theme="button">Decrement</button>
+  <script>
+    const [span, increment, decrement] = document.currentScript.parentElement.children;
+    let count = 0;
+    increment.onclick = () => span.replaceChildren(++count);
+    decrement.onclick = () => span.replaceChildren(--count);
+  </script>
+</card-box>
+
+<code-block language="html">
+<pre><code>&lt;div>
+  Count: &lt;span>0&lt;/span>
+  &lt;button>Increment&lt;/button>
+  &lt;button>Decrement&lt;/button>
+  &lt;script>
+    const [span, increment, decrement] =
+      document.currentScript.parentElement.children;
+    let count = 0;
+    increment.onclick = () => span.replaceChildren(++count);
+    decrement.onclick = () => span.replaceChildren(--count);
+  &lt;/script>
+&lt;/div></code></pre>
+</code-block>
+
+<p>I used this ‘local script’ pattern all the time in a previous version of this blog. It’s useful when making interactive illustrations in the middle of a long post &mdash; You wouldn’t want to put that logic at the very end or start of the file, away from the relevant section! Unless you love scrolling, that is! Same goes for styles, now made even better with the <a href="https://developer.chrome.com/docs/css-ui/at-scope#prelude-less_scope" target="_blank"><code>@scope</code> rule</a>.</p>
+
+<p>It’s a great way to keep isolated interactive bits manageable.</p>
+
+<h2>The catch</h2>
+
+<p>If you want to use an alias like <code>$</code>, you'd first have to define it at the top of the HTML, <strong>synchronously</strong>. Say you want to use this in multiple pages, so you put this in a common script file and load it via <code>&lt;script src="$.js"&lt;/script></code>. This could result in a parser- and render-blocking fetch &mdash; Potentially very bad for performance!</p>
+
+<p>For my own cases, I don’t use the alias. I straight up just use <code>document.currentScript...</code>. Wish it was shorter&hellip;</p>
+
+<p>Also, you cannot do <strong>data-driven templates</strong> this way. The title of this post is a misnomer &mdash; This inline scripting technique is not really a <em>templating</em> solution in the sense that you have <strong>templates</strong> to apply <strong>data</strong> onto. So if you have metadata such as date published, post title, and tags that are stored in some posts database table or in some frontmatter format somewhere, then how would you get this data in the client for inline scripting purposes? Fetching from inline scripts is a big no-no. Therefore, unless data is somehow pre-injected in the global scope, no luck in pure vanilla JS templating. Data-driven templates are where the real templating languages like <a href="https://shopify.github.io/liquid/" target="_blank">Liquid</a> really shine.</p>
+
+<p>For my site, I don’t need a templating system as I use direct patching to data-drive my HTML (in which the source and the output files are the same).</p>
+
+<h2>Further reading</h2>
+
+<ul>
+  <li><a href="https://github.com/gnat/surreal" target="_blank">Surreal</a> - a library that offers this technique, plus other jQuery-style helpers. Note the synchronous script tag loading issue though!</li>
+  <li><a href="https://github.com/sveltejs/kit/issues/2221" target="_blank">currentScript discussion in SvelteKit</a> - this as an alternative to global IDs for self-hydrating things. In the end they went with generated IDs. :|</li>
+</ul>
+
+<h2>Appendix</h2>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/write" target="_blank"><code>document.write()</code></a> used to (?) work like this for inline rendering, but it’s now deprecated because it had inconsistent behaviour.</p>
+
+<code-block language="html">
+<code><pre>Come on, it’s
+&lt;script>document.write(new Date().getFullYear())&lt;/script>,
+but this example is still using &lt;code>document.write&lt;/code>!</pre></code>
+</code-block>
+  
+<iframe srcdoc="Come on, it’s <noscript>2025</noscript><script>document.write(new Date().getFullYear())</script>, but this example is still using <code>document.write</code>!"></iframe>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
