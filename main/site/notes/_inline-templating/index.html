@@ -108,19 +108,19 @@ but now it has grown tall and strong.</code></pre>
 
 <h3>Splitting text for animation</h3>
 
-<p>I’ve split text into characters using inline scripts to generate markup per character. In my case, it was for rendering circular text, but a more common use case is text animation like the following.</p>
+<p>Split text into characters using inline scripts to generate markup per character which can then be controlled or animated! In my case, I used it to render circular text, but a more common use case is text animation like the following.</p>
 
-<card-box class="crazy-example">
+<card-box class="supercali-example">
   It has been a
   <script>document.currentScript.outerHTML=
-    "crazy".replace(/./g, c => `<strong>${c}</strong>`)
+    "supercalifragilisticexpialidocious".replace(/./g, c => `<strong>${c}</strong>`)
   </script>
   week.
   <style>
     /* TODO: use @scope when widely available */
-    .crazy-example strong {
+    .supercali-example strong {
       display: inline-block;
-      animation: crazy-wave 0.3s infinite alternate ease-in-out;
+      animation: supercali-wave 0.3s infinite alternate ease-in-out;
       &:nth-child(4n + 1) {
         animation-delay: -0.6s;
       }
@@ -134,12 +134,9 @@ but now it has grown tall and strong.</code></pre>
         animation-delay: -0.15s;
       }
     }
-    @keyframes crazy-wave {
-      from {
-        transform: translateY(-2px);
-      }
+    @keyframes supercali-wave {
       to {
-        transform: translateY(2px);
+        transform: translateY(-2px);
       }
     }
   </style>
@@ -148,9 +145,23 @@ but now it has grown tall and strong.</code></pre>
 <code-block language="html">
 <pre><code>It has been a
 &lt;script>document.currentScript.outerHTML=
-  "crazy".replace(/./g, c => `&lt;strong>${c}&lt;/strong>`)
+  "supercalifragilisticexpialidocious"
+    .replace(/./g, c => `&lt;strong>${c}&lt;/strong>`)
 &lt;/script>
-week.</code></pre>
+week.
+&lt;style>
+  strong {
+    display: inline-block;
+    animation: wave 0.3s infinite alternate ease-in-out;
+    &:nth-child(4n + 1) { animation-delay: -0.6s; }
+    &:nth-child(4n + 2) { animation-delay: -0.45s; }
+    &:nth-child(4n + 3) { animation-delay: -0.3s; }
+    &:nth-child(4n + 4) { animation-delay: -0.15s; }
+  }
+  @keyframes wave {
+    to { transform: translateY(-2px); }
+  }
+&lt;/style></code></pre>
 </code-block>
 
 <h3>Rendering metadata to reduce duplication</h3>
