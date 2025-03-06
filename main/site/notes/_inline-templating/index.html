@@ -26,15 +26,13 @@
 
 <main class="prose">
 
-<p>For quick and dirty rendering of simple dynamic content, you may not need the complexity of a templating language with a preprocessing step like Handlebars or a server backend like PHP.</p>
+<p>For quick and dirty rendering of simple dynamic content, you may not need the complexity of a templating language like Handlebars or a PHP backend.</p>
 
 <p>Let’s use the example phrase, <i>“Come on, it’s <code>&lt;currentYear></code>”</i>. It should result in <i>“Come on, it’s <u><noscript>2025</noscript><script>$(new Date().getFullYear())</script></u>”</i> when rendered today.</p>
 
-<p>This dynamic phrase could be written directly in the HTML! We don’t even need element IDs, classes, or selectors to locate and modify the content. This is possible using the  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript" target="_blank"><code>document.currentScript</code></a> property, which gives us a reference to the <em>current <code>&lt;script></code> element that’s running</em>.</p>
+<p>You can write this directly in HTML&mdash;<em>without IDs, classes, or querySelectors in your JS!</em> Thanks to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript" target="_blank"><code>document.currentScript</code></a> property, which points to the <em>currently running <code>&lt;script></code> element</em>.</p>
 
-<p>iirc, I learned about this technique from the <a href="https://github.com/gnat/surreal" target="_blank">Surreal</a> library or something adjacent to it. I forgot.</p>
-
-<p>Anyway, the dynamic phrase <strong>“Come on, it’s <noscript>2025</noscript><script>$(new Date().getFullYear())</script>”</strong> would now be written as:</p>
+<p>So the dynamic phrase <strong>“Come on, it’s <noscript>2025</noscript><script>$(new Date().getFullYear())</script>”</strong> would now be written as:</p>
 
 <code-block language="html">
 <pre><code>Come on, it’s
@@ -63,7 +61,7 @@
 
 <p>The resulting script-noscript juxtaposition in the markup looks almost like Angular/Vue’s if-else markup, neat.</p>
 
-<box-note><code>Date().split` `[3]</code> is also a short (but very hacky) way to get the year.</box-note>
+<box-note>IIRC, I learned about this technique from the <a href="https://github.com/gnat/surreal" target="_blank">Surreal</a> library or something similar. But I’m sure this is not a new discovery. These APIs have been standardised for a long time.</box-note>
 
 <h2>Real world examples</h2>
 
@@ -203,9 +201,11 @@ week.
 
 <p>Why pollute the global ID namespace and separate coupled code if we can avoid it?</p>
 
+<box-note><code>Date().split` `[3]</code> is also a short (but very hacky) way to get the year.</box-note>
+
 <p>At this point you may be asking, is this technique only really useful for rendering the current year? Maybe, but we can do more than just <em>rendering</em> text.</p>
 
-<p>Come on, it’s <noscript>2025</noscript><script>$(new Date().getFullYear())</script>, the web is rich and interactive!</p>
+<p>Come on, it’s <noscript>2025</noscript><script>$(new Date().toLocaleDateString())</script>, the web is rich and interactive!</p>
 
 <h3>The ubiquitous counter app example</h3>
 
