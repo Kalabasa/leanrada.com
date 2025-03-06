@@ -34,7 +34,9 @@ export async function readNotes(siteDir) {
         const date = ch("blog-post-info time").attr("datetime");
         if (!date) {
           console.error("No date for page:", title);
-          throw new Error("No date!");
+          if (isPublic) {
+            throw new Error("No date!");
+          }
         }
 
         const tags = ch("tag-row tag-chip")
