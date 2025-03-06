@@ -11,17 +11,6 @@
         super();
 
         const title = this.querySelector("h1");
-        const segments = title.textContent.split(" ");
-        let titleHTML = "";
-        for (let i = 0; i < segments.length; i++) {
-          const t = (i + 1) / segments.length;
-          const delay = t ** 3 * 600;
-          const segment = segments[i];
-          titleHTML += html`
-            <span style="animation-delay:${delay}ms">${segment}</span>
-          `;
-        }
-        title.innerHTML = titleHTML;
 
         const img = this.querySelector("img");
         const imgWrapper = document.createElement("div");
@@ -55,7 +44,7 @@
               animation: none;
 
               @media (max-width: 600px) {
-                margin-top: 60px;
+                margin-top: 48px;
               }
 
               /* Wrap lines in an angle */
@@ -97,17 +86,9 @@
                 z-index: 2;
               }
 
-              .blog-header-title-segment {
-                display: inline-block;
-                line-height: 40px;
-                overflow: hidden;
-              }
-
               .blog-header-hero-box {
                 position: absolute;
-                inset: 1px;
-                width: 100%;
-                height: 100%;
+                inset: 0;
                 border-radius: 18px;
                 background: gray;
                 overflow: hidden;
@@ -129,12 +110,15 @@
               }
 
               @media (max-width: 860px) {
-                & {
-                  width: 100vw;
-                  width: 100svw;
-                  height: 300px;
-                  padding-right: 36px;
+                width: 100vw;
+                width: 100svw;
+                height: 330px;
+                padding-right: 36px;
+
+                .blog-header-hero-box {
+                  top: calc(clamp(24px, 20px + 2vw, 36px) * 2);
                 }
+
                 h1 {
                   left: 0;
                   font-size: clamp(24px, 20px + 2vw, 36px);

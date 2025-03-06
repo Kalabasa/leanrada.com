@@ -7,6 +7,227 @@
     <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title><![CDATA[Inline rendering with document​.currentScript]]></title>
+      <link><![CDATA[https://leanrada.com/notes/inline-rendering-currentscript/?ref=rss]]></link>
+      <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/inline-rendering-currentscript/?ref=rss]]></guid>
+      <pubDate>Fri, 07 Mar 2025 00:00:00 GMT</pubDate>
+      <description><![CDATA[
+<p>For quick and dirty rendering of simple dynamic content, you may not need the complexity of a templating language like Handlebars or a PHP backend.</p>
+
+<p>Let’s use the example phrase, <i>“Come on, it’s <code>&lt;currentYear&gt;</code>”</i>. It should result in <i>“Come on, it’s <u><noscript>2025</noscript><script>$(new Date().getFullYear())</script></u>”</i> when rendered today.</p>
+
+<p>You can write this directly in HTML—<em>without IDs, classes, or querySelectors in your JS!</em> Thanks to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript" target="_blank"><code>document.currentScript</code></a> property, we can refer to the <em>currently running <code>&lt;script&gt;</code> element</em> directly and go from there.</p>
+
+<p>So the dynamic phrase <strong>“Come on, it’s <noscript>2025</noscript><script>$(new Date().getFullYear())</script>”</strong> would now be written as:</p>
+
+<pre><code>Come on, it’s
+&lt;script&gt;
+  document.currentScript.replaceWith(new Date().getFullYear())
+&lt;/script&gt;</code></pre>
+
+<p>The script simply replaces itself with its computed value on the spot.</p>
+
+<p>The code’s a bit wordy though, but we can <em>alias</em> it to a constant like <code>$</code> via <code>$=(...n)=&gt;document.currentScript.replaceWith(...n)</code>. Then we’d have something reminiscent of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals" target="_blank">template literals</a> in JS.</p>
+
+<pre><code>Come on, it’s &lt;script&gt;$(new Date().getFullYear())&lt;/script&gt;</code></pre>
+
+<p>The code is pretty readable at a glance without context (after you get past the bit of indirection that is the <code>$</code> alias).</p>
+<box-note role="complementary">
+  <details>
+    <summary>Click to see the WebComponent version! <small>Disclaimer: This is a joke.</small></summary>
+
+    <code-block language="js">
+      <code><pre><script>$(RenderJS.toString())</script></pre></code>
+    </code-block>
+
+    <p>This is the <code>RenderJS</code> custom element. All it does is replace itself with the result of its contents treated as JavaScript code.</p>
+
+    <p>To use it, we must first name the tag. The beloved dollar sign <code>$</code> is not allowed, so we use the next best thing—the emoji 💲. Sadly, that’s not enough: Tag names must start with a letter of the alphabet and include a hyphen. As such, we are forced to name it: <code>j-💲</code> representing JavaScript.</p>
+
+    <code-block language="js">
+      <code><pre><script>customElements.define('j-💲', RenderJS);</script></pre></code>
+    </code-block>
+
+    <h3>Example usage</h3>
+
+    <fixed-grid>
+      <code-block>
+        <code><pre>I overslept by about &lt;j-💲&gt;Math.PI&lt;/j-💲&gt; hours this morning.</pre></code>
+      </code-block>
+      <card-box>
+        I overslept by about <j-💲>Math.PI</j-💲> hours this morning.
+      </card-box>
+    </fixed-grid>
+  </details>
+</box-note>
+<p>A <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noscript" target="_blank"><code>noscript</code></a> fallback would be nice for those that don’t run JS.</p>
+
+<pre><code>Come on, it’s
+&lt;noscript&gt;current year&lt;/noscript&gt;
+&lt;script&gt;$(new Date().getFullYear())&lt;/script&gt;</code></pre>
+
+<p>The resulting script-noscript juxtaposition in the markup looks almost like Angular/Vue’s if-else markup, neat.</p>
+<box-note>IIRC, I learned about this technique from the <a href="https://github.com/gnat/surreal" target="_blank">Surreal</a> library or something similar. But I’m sure this is not a new discovery. These APIs have been standardised for a long time.</box-note>
+<h2>Real world examples</h2>
+
+<p>If you thought this technique is only useful for rendering the current year, you’re mostly right! As an example, I’ve used inline scripts to refer to relative dates in my living pages. Because <strong>“<noscript>8</noscript><script>$(new Date().getFullYear()-2017)</script> years ago”</strong> sounds more natural than <strong>“2017”</strong>.</p>
+
+<pre><code>It was planted
+&lt;noscript&gt;in 2017&lt;/noscript&gt;
+&lt;script&gt;$(new Date().getFullYear()-2017, ' years ago')&lt;/script&gt;
+but now it has grown tall and strong.</code></pre>
+<card-box>
+  It was planted
+  <noscript>in 2017</noscript>
+  <script>$(new Date().getFullYear()-2017, ' years ago')</script>
+  but now it has grown tall and strong.
+</card-box>
+<h3>Random greeting</h3>
+
+<p>Another example is in my front page, which says a randomly selected greeting on each visit.</p>
+
+<img src="https://leanrada.com/notes/inline-rendering-currentscript/greeting.png?ref=rss" alt="screenshot of my homepage intro section">
+
+<pre><code>&lt;span class="intro-line"&gt;
+  &lt;noscript&gt;Hello!&lt;/noscript&gt;
+  &lt;script&gt;
+    $([
+      "Hello!",
+      "Hey~~~",
+      "What’s up ↑",
+      "Hi there →",
+      "Hey there →",
+    ][Date.now() % 5])
+  &lt;/script&gt;
+&lt;/span&gt;</code></pre>
+<box-note>The randomiser is just a <code>Date.now()</code> with modulo because it was more concise than <code>Math.floor(Math.random() * 5)</code>.</box-note>
+<h3>Splitting text for animation</h3>
+
+<p>Split text into characters using inline scripts to generate markup per character which can then be controlled or animated! In my case, I used it to render circular text, but a more common use case is text animation like the following.</p>
+<card-box>
+  It has been a
+  <script>document.currentScript.outerHTML=
+    "supercalifragilisticexpialidocious".replace(/./g, c => `<strong>${c}</strong>`)
+  </script>
+  week.
+  
+</card-box>
+<pre><code>It has been a
+&lt;script&gt;document.currentScript.outerHTML=
+  "supercalifragilisticexpialidocious"
+    .replace(/./g, c =&gt; `&lt;strong&gt;${c}&lt;/strong&gt;`)
+&lt;/script&gt;
+week.
+
+&lt;style&gt;
+  strong {
+    display: inline-block;
+    animation: wave 0.3s infinite alternate ease-in-out;
+    &amp;:nth-child(4n + 1) { animation-delay: -0.6s; }
+    &amp;:nth-child(4n + 2) { animation-delay: -0.45s; }
+    &amp;:nth-child(4n + 3) { animation-delay: -0.3s; }
+    &amp;:nth-child(4n + 4) { animation-delay: -0.15s; }
+  }
+  @keyframes wave {
+    to { transform: translateY(-2px); }
+  }
+&lt;/style&gt;</code></pre>
+
+<h3>Rendering metadata to reduce duplication</h3>
+
+<p>This post’s heading is dynamically derived from the page title metadata. I only have to define this post’s title once, in the <code>&lt;title&gt;</code> tag.</p>
+<code><pre>&lt;blog-header&gt;
+  &lt;h1&gt;&lt;script&gt;$(document.title)&lt;/script&gt;&lt;/h1&gt;
+  &lt;img src="hero.jpg" alt="" loading="lazy"&gt;&lt;/img&gt;
+&lt;/blog-header&gt;</pre></code>
+<h3>Auto-updating footer</h3>
+
+<p>How about an auto-updating copyright notice in the footer which may or may not have legal implications? <small>(IANAL)</small></p>
+
+<pre><code>&lt;footer&gt;
+  © &lt;script&gt;$(new Date().getFullYear())&lt;/script&gt; Mycorp, Ltd.
+&lt;/footer&gt;</code></pre>
+
+<p>For comparison, here’s the StackOverflow/ChatGPT answer:</p>
+<fixed-grid>
+<code-block language="js">
+<pre><code>document
+  .getElementById("copyright-year")
+  .textContent = new Date().getFullYear();</code></pre>
+</code-block>
+<code-block language="html">
+<pre><code>&lt;footer&gt;
+  © &lt;span id="copyright-year"&gt;&lt;/span&gt; Mycorp, Ltd.
+&lt;/footer&gt;</code></pre>
+</code-block>
+</fixed-grid>
+<p>Why pollute the global ID namespace and separate coupled code if we can avoid it?</p>
+<box-note><code>Date().split` `[3]</code> is also a short (but very hacky) way to get the year.</box-note>
+<p>At this point you may be asking, is this technique only really useful for rendering the current year? Maybe, but we can do more than just <em>rendering</em> text.</p>
+
+<p>Come on, it’s <noscript>2025</noscript><script>$(new Date().toLocaleDateString())</script>, the web is rich and interactive!</p>
+
+<h3>The ubiquitous counter app example</h3>
+
+<p>This is not a simple templating example anymore, but shows the power of <code>currentScript</code> in <a href="https://en.wikipedia.org/wiki/Hydration_(web_development)" target="_blank">hydrating</a> self-contained bits of interactive HTML.</p>
+<card-box>
+  Count: <span>0</span>
+  <button theme="button">Increment</button>
+  <button theme="button">Decrement</button>
+  <script>
+    const [span, increment, decrement] = document.currentScript.parentElement.children;
+    let count = 0;
+    increment.onclick = () => span.replaceChildren(++count);
+    decrement.onclick = () => span.replaceChildren(--count);
+  </script>
+</card-box>
+<pre><code>&lt;div&gt;
+  Count: &lt;span&gt;0&lt;/span&gt;
+  &lt;button&gt;Increment&lt;/button&gt;
+  &lt;button&gt;Decrement&lt;/button&gt;
+  &lt;script&gt;
+    const [span, increment, decrement] =
+      document.currentScript.parentElement.children;
+    let count = 0;
+    increment.onclick = () =&gt; span.replaceChildren(++count);
+    decrement.onclick = () =&gt; span.replaceChildren(--count);
+  &lt;/script&gt;
+&lt;/div&gt;</code></pre>
+
+<p>I used this ‘local script’ pattern all the time in a previous version of this blog. It’s useful when making interactive illustrations in the middle of a long post. You wouldn’t want to put that logic at the very end or start of the file, away from the relevant section! Same goes for styles, now made even better with the <a href="https://developer.chrome.com/docs/css-ui/at-scope#prelude-less_scope" target="_blank"><code>@scope</code> rule</a>.</p>
+
+<p>It’s a good way to manage islands of interactivity.</p>
+
+<h2>The catch</h2>
+
+<p>There are reasons people gravitate to libraries and frameworks. They’re just too convenient.</p>
+
+<p>If you want to use the alias definition above—the <code>$</code> shorthand—then you'd first have to define it at the top of the HTML, <strong>synchronously</strong>. Say you want to use this in multiple pages, so you put this in a common script file and load it via <code>&lt;script src="$.js"&lt;/script&gt;</code>. This could result in a parser- and render-blocking fetch: potentially very bad for performance!</p>
+
+<p>For my own cases, I don’t use the alias. I straight up just use <code>document.currentScript​.replaceWith</code>. Wish it was  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/write" target="_blank">shorter…</a></p>
+
+<p>Also, you cannot do <strong>data-driven templating</strong> this way, in the sense that you have <strong>templates</strong> to apply <strong>data</strong> onto. Metadata such as date published, post title, and tags that are stored in some posts table or in frontmatter somewhere, cannot be used for inline scripting purposes. You can’t fetch data from inline scripts. Therefore, unless data is somehow pre-injected in the global scope, no luck in pure vanilla JS templating. This is where templating languages like <a href="https://shopify.github.io/liquid/" target="_blank">Liquid</a> really shine.</p>
+
+<p>For my site, I don’t need a templating system—I use direct patching to data-drive my HTML (in which the source and the output files are the same).</p>
+
+<p>Even if you use a templating framework or a static site generator, inline scripts remain useful!</p>
+
+<h2>Further reading</h2>
+
+<ul>
+  <li><a href="https://github.com/gnat/surreal" target="_blank">Surreal</a> - a library that offers this technique, plus other jQuery-style helpers. Note the synchronous script tag loading issue though!</li>
+  <li><a href="https://github.com/sveltejs/kit/issues/2221" target="_blank">currentScript discussion in SvelteKit</a> - this as an alternative to global IDs for self-hydrating things. In the end they went with generated IDs. :|</li>
+</ul>
+
+<h2>Appendix</h2>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/write" target="_blank"><code>document.write()</code></a> used to (?) work like this for inline rendering, but it’s now deprecated because it had inconsistent behaviour.</p>
+<code><pre>Come on, it’s
+&lt;script&gt;document.write(new Date().getFullYear())&lt;/script&gt;,
+stop using &lt;code&gt;document.write&lt;/code&gt;!</pre></code><iframe srcdoc="Come on, it’s <noscript>2025</noscript><script>document.write(new Date().getFullYear())</script>, stop using <code>document.write</code>!"></iframe>]]></description>
+    </item>
+
+    <item>
       <title><![CDATA[Rewriting my site in vanilla web]]></title>
       <link><![CDATA[https://leanrada.com/notes/vanilla-web-rewrite/?ref=rss]]></link>
       <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/vanilla-web-rewrite/?ref=rss]]></guid>
@@ -3745,26 +3966,7 @@ Sorted pairwise
             <guid isPermaLink="true">https://leanrada.com/notes/sweep-and-prune?ref=rss</guid>
             <pubDate>Sat, 05 Aug 2023 00:00:00 GMT</pubDate>
         </item>
-        <item>
-            <title><![CDATA[Volley ball game in pure CSS]]></title>
-            <description><![CDATA[
-<p>I don’t know why I did this, but it was fun / funny.</p>
-
-<p>This is a volley ball / tennis game implemented purely using HTML and CSS. Features real-time action gameplay and score counting.</p>
-
-<p>👉 See the Pen <a target="_blank" href="https://codepen.io/kalabasa/pen/MWzmPXb">Pure CSS Volley Game<span>🡵</span></a> on CodePen!</p>
-
-<video muted="" autoplay="" loop="" playsinline="" aria-label="video of CSS volley ball video game" media-class="u-media" alt="video of CSS volley ball video game" data-src="/notes/pure-css-volley-ball-game/video.web.mp4">
-                <source src="https://leanrada.com/notes/pure-css-volley-ball-game/video.web.mp4?ref=rss">
-
-                Video: video of CSS volley ball video game | Source: /notes/pure-css-volley-ball-game/video.web.mp4
-
-              </video>
-]]></description>
-            <link>https://leanrada.com/notes/pure-css-volley-ball-game?ref=rss</link>
-            <guid isPermaLink="true">https://leanrada.com/notes/pure-css-volley-ball-game?ref=rss</guid>
-            <pubDate>Mon, 03 Jul 2023 00:00:00 GMT</pubDate>
-        </item>
+        
         
 
     
