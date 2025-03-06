@@ -4,12 +4,14 @@
 <link rel="stylesheet" href="/common.css"></link>
 <script defer="" src="/common.js"></script>
 
-<title>Inline templating and interactivity with document.currentScript</title>
+<title>Inline templating & interactivity with document&ZeroWidthSpace;.currentScript</title>
+
+<script>const $=(...n)=>document.currentScript.replaceWith(...n);</script>
 
 <site-header></site-header>
 
 <blog-header>
-  <h1>Inline templating & interactivity via document&ZeroWidthSpace;.currentScript</h1>
+  <h1><script>$(document.title)</script></h1>
   <img src="hero.jpg" alt="" loading="lazy"></img>
 </blog-header>
 
@@ -24,9 +26,7 @@
 
 <main class="prose">
 
-<script>const $=(...n)=>document.currentScript.replaceWith(...n);</script>
-
-<p>For quick and ‘dirty’ rendering of simple dynamic content, you may not need the complexity of a templating language with a preprocessing step like Handlebars or a server backend like PHP.</p>
+<p>For quick and dirty rendering of simple dynamic content, you may not need the complexity of a templating language with a preprocessing step like Handlebars or a server backend like PHP.</p>
 
 <p>Let’s use the example phrase, <i>“Come on, it’s <code>&lt;currentYear></code>”</i>. It should result in <i>“Come on, it’s <u><noscript>2025</noscript><script>$(new Date().getFullYear())</script></u>”</i> when rendered today.</p>
 
@@ -67,7 +67,7 @@
 
 <h2>Real world examples</h2>
 
-<p>If you thought this technique is only useful for rendering the current year, you’re mostly right! &mdash; I’ve used inline scripts to refer to relative dates in my living pages. Because <strong>“<noscript>8</noscript><script>$(new Date().getFullYear()-2017)</script> years ago”</strong> sounds more natural than <strong>“2017”</strong>.</p>
+<p>If you thought this technique is only useful for rendering the current year, you’re mostly right! As an example, I’ve used inline scripts to refer to relative dates in my living pages. Because <strong>“<noscript>8</noscript><script>$(new Date().getFullYear()-2017)</script> years ago”</strong> sounds more natural than <strong>“2017”</strong>.</p>
 
 <code-block language="html">
 <pre><code>It was planted
@@ -111,11 +111,11 @@ but now it has grown tall and strong.</code></pre>
 <p>I’ve split text into characters using inline scripts to generate markup per character. In my case, it was for rendering circular text, but a more common use case is text animation like the following.</p>
 
 <card-box class="crazy-example">
-  It was extremely clunky but it worked. It was a
+  It has been a
   <script>document.currentScript.outerHTML=
     "crazy".replace(/./g, c => `<strong>${c}</strong>`)
   </script>
-  hack.
+  week.
   <style>
     /* TODO: use @scope when widely available */
     .crazy-example strong {
@@ -146,13 +146,24 @@ but now it has grown tall and strong.</code></pre>
 </card-box>
 
 <code-block language="html">
-<pre><code>It was extremely clunky but it worked. It was a
+<pre><code>It has been a
 &lt;script>document.currentScript.outerHTML=
   "crazy".replace(/./g, c => `&lt;strong>${c}&lt;/strong>`)
 &lt;/script>
-hack.</code></pre>
+week.</code></pre>
 </code-block>
-  
+
+<h3>Rendering metadata to reduce duplication</h3>
+
+<p>This post’s heading is dynamically derived from the page title metadata. I only have to define this post’s title once, in the <code>&lt;title></code> tag.</p>
+
+<code-block language="html">
+<code><pre>&lt;blog-header>
+  &lt;h1>&lt;script>$(document.title)&lt;/script>&lt;/h1>
+  &lt;img src="hero.jpg" alt="" loading="lazy">&lt;/img>
+&lt;/blog-header></pre></code>
+</code-block>
+
 <h3>Auto-updating footer</h3>
 
 <p>How about an auto-updating copyright notice in the footer which may or may not have legal implications? <small>(IANAL)</small></p>
@@ -215,17 +226,19 @@ hack.</code></pre>
 &lt;/div></code></pre>
 </code-block>
 
-<p>I used this ‘local script’ pattern all the time in a previous version of this blog. It’s useful when making interactive illustrations in the middle of a long post &mdash; You wouldn’t want to put that logic at the very end or start of the file, away from the relevant section! Unless you love scrolling, that is! Same goes for styles, now made even better with the <a href="https://developer.chrome.com/docs/css-ui/at-scope#prelude-less_scope" target="_blank"><code>@scope</code> rule</a>.</p>
+<p>I used this ‘local script’ pattern all the time in a previous version of this blog. It’s useful when making interactive illustrations in the middle of a long post. You wouldn’t want to put that logic at the very end or start of the file, away from the relevant section! Same goes for styles, now made even better with the <a href="https://developer.chrome.com/docs/css-ui/at-scope#prelude-less_scope" target="_blank"><code>@scope</code> rule</a>.</p>
 
-<p>It’s a great way to keep isolated interactive bits manageable.</p>
+<p>It’s a good way to manage islands of interactivity.</p>
 
 <h2>The catch</h2>
 
-<p>If you want to use an alias like <code>$</code>, you'd first have to define it at the top of the HTML, <strong>synchronously</strong>. Say you want to use this in multiple pages, so you put this in a common script file and load it via <code>&lt;script src="$.js"&lt;/script></code>. This could result in a parser- and render-blocking fetch &mdash; Potentially very bad for performance!</p>
+<p>There are reasons people gravitate to libraries and frameworks. They just too convenient.</p>
+
+<p>If you want to use the alias definition above&mdash;the <code>$</code> shorthand&mdash;then you'd first have to define it at the top of the HTML, <strong>synchronously</strong>. Say you want to use this in multiple pages, so you put this in a common script file and load it via <code>&lt;script src="$.js"&lt;/script></code>. This could result in a parser- and render-blocking fetch: potentially very bad for performance!</p>
 
 <p>For my own cases, I don’t use the alias. I straight up just use <code>document.currentScript...</code>. Wish it was shorter&hellip;</p>
 
-<p>Also, you cannot do <strong>data-driven templates</strong> this way. The title of this post is a misnomer &mdash; This inline scripting technique is not really a <em>templating</em> solution in the sense that you have <strong>templates</strong> to apply <strong>data</strong> onto. So if you have metadata such as date published, post title, and tags that are stored in some posts database table or in some frontmatter format somewhere, then how would you get this data in the client for inline scripting purposes? Fetching from inline scripts is a big no-no. Therefore, unless data is somehow pre-injected in the global scope, no luck in pure vanilla JS templating. Data-driven templates are where the real templating languages like <a href="https://shopify.github.io/liquid/" target="_blank">Liquid</a> really shine.</p>
+<p>Also, you cannot do <strong>data-driven templates</strong> this way. The title of this post is a misnomer&mdash;this inline scripting technique is not really a <em>templating</em> solution in the sense that you have <strong>templates</strong> to apply <strong>data</strong> onto. So if you have metadata such as date published, post title, and tags that are stored in some posts database table or in some frontmatter format somewhere, then how would you get this data in the client for inline scripting purposes? Fetching from inline scripts is a big no-no. Therefore, unless data is somehow pre-injected in the global scope, no luck in pure vanilla JS templating. Data-driven templates are where the real templating languages like <a href="https://shopify.github.io/liquid/" target="_blank">Liquid</a> really shine.</p>
 
 <p>For my site, I don’t need a templating system as I use direct patching to data-drive my HTML (in which the source and the output files are the same).</p>
 
