@@ -87,8 +87,18 @@ customElements.define(
     async loadSuggestions() {
       const myHref = window.location.pathname;
 
-      const indexResponse = await fetch("/notes/index.generated.combined.json");
-      const index = await indexResponse.json();
+      // TODO: Remove fallback
+      let loadNotesIndex;
+      await import("/notes/index-loader.js")
+        .then((module) => {
+          loadNotesIndex = module.loadNotesIndex;
+        })
+        .catch(() => {
+          loadNotesIndex = async () =>
+            fetch("/notes/index.generated.combined.json").then((r) => r.json());
+        });
+
+      const index = await loadNotesIndex();
       const item = index.find((item) => item.href === myHref);
       return (item?.suggestions ?? []).map((suggestion) => ({
         ...suggestion,
