@@ -108,7 +108,7 @@ function generateNodeTimes(nodes) {
   let t = 0;
   for (const node of nodes) {
     if (lastNode) {
-      t += Math.hypot(node.x - lastNode.x, node.y - lastNode.y) / 20;
+      t += Math.hypot(node.x - lastNode.x, node.y - lastNode.y) / 30;
     }
     nodeTimes.push(t);
     lastNode = node;
@@ -128,7 +128,6 @@ function optimizeTrajectory(pen, nodes, nodeTimes, params) {
   for (let i = 0; i < Math.min(params.iterations, 10); i++) {
     let jerkX = 0;
     let jerkY = 0;
-    let totalWeight = 0;
 
     const extrapolatedPen = structuredClone(pen);
 
@@ -139,7 +138,7 @@ function optimizeTrajectory(pen, nodes, nodeTimes, params) {
     );
     let prevNodeIndex = 0;
 
-    for (let t = extrapolatedPen.t + step; t < maxT; t += step) {
+    for (let t = extrapolatedPen.t + step; t <= maxT; t += step) {
       while (t > nodeTimes[prevNodeIndex + 1]) prevNodeIndex++;
       if (prevNodeIndex + 1 >= nodes.length) continue;
 
@@ -156,45 +155,43 @@ function optimizeTrajectory(pen, nodes, nodeTimes, params) {
       integrate(extrapolatedPen, dt);
 
       const error = calculateError(extrapolatedPen.pos, interpolatedNode);
-      const posXError = error.x * params.posErrorWeight;
-      const posYError = error.y * params.posErrorWeight;
-      const velXError = -extrapolatedPen.vel.x * params.velErrorWeight;
-      const velYError = -extrapolatedPen.vel.y * params.velErrorWeight;
-      const accelXError = -extrapolatedPen.accel.x * params.accelErrorWeight;
-      const accelYError = -extrapolatedPen.accel.y * params.accelErrorWeight;
-      const et = t - pen.t;
-      const sampleJerkX =
-        ((posXError * (1.5 / et) + velXError) / et + accelXError) * (0.5 / et);
-      const sampleJerkY =
-        ((posYError * (1.5 / et) + velYError) / et + accelYError) * (0.5 / et);
 
-      const weight = 1 * (step / params.lookaheadTime);
+      const posXError = error.x;
+      const posYError = error.y;
+      const targetVelX = (params.posErrorWeight * posXError) / dt;
+      const targetVelY = (params.posErrorWeight * posYError) / dt;
+      const velXError = targetVelX - extrapolatedPen.vel.x;
+      const velYError = targetVelY - extrapolatedPen.vel.y;
+      const targetAccelX = (params.velErrorWeight * velXError) / dt;
+      const targetAccelY = (params.velErrorWeight * velYError) / dt;
+      const accelXError = targetAccelX - extrapolatedPen.accel.x;
+      const accelYError = targetAccelY - extrapolatedPen.accel.y;
+      const targetJerkX = (params.accelErrorWeight * accelXError) / dt;
+      const targetJerkY = (params.accelErrorWeight * accelYError) / dt;
+      const jerkXError = targetJerkX - extrapolatedPen.jerk.x;
+      const jerkYError = targetJerkY - extrapolatedPen.jerk.y;
 
-      jerkX += weight * sampleJerkX;
-      jerkY += weight * sampleJerkY;
-
-      extrapolatedPen.jerk.x += weight * sampleJerkX;
-      extrapolatedPen.jerk.y += weight * sampleJerkY;
+      pen.jerk.x += jerkXError;
+      pen.jerk.y += jerkYError;
+      extrapolatedPen.jerk.x += jerkXError;
+      extrapolatedPen.jerk.y += jerkYError;
     }
-
-    pen.jerk.x = jerkX;
-    pen.jerk.y = jerkY;
   }
 }
 
 /**
  * @param {{ x: number, y: number }} pos
- * @param {Node} node
+ * @param {Node} target
  */
-function calculateError(pos, node) {
-  const deltaX = node.x - pos.x;
-  const deltaY = node.y - pos.y;
+function calculateError(pos, target) {
+  const deltaX = target.x - pos.x;
+  const deltaY = target.y - pos.y;
 
-  const localControlX = node.controlX - node.x;
-  const localControlY = node.controlY - node.y;
+  const localControlX = target.controlX - target.x;
+  const localControlY = target.controlY - target.y;
 
   const halfHeight = Math.hypot(localControlX, localControlY);
-  const halfWidth = node.width * 0.5;
+  const halfWidth = target.width * 0.5;
 
   const angle = Math.atan2(localControlY, localControlX);
   const radiusX =
@@ -222,19 +219,23 @@ function calculateError(pos, node) {
  * @returns {Pen} out
  */
 function integrate(pen, dt = 1, out = pen) {
-  const dAccelX = pen.jerk.x * dt;
-  const dAccelY = pen.jerk.y * dt;
-  const dVelX = (pen.accel.x + dAccelX / 3) * dt;
-  const dVelY = (pen.accel.y + dAccelY / 3) * dt;
-  const dPosX = (pen.vel.x + dVelX / 2) * dt;
-  const dPosY = (pen.vel.y + dVelY / 2) * dt;
+  out.pos.x = pen.pos.x + pen.vel.x * dt + 0.5 * pen.accel.x * dt * dt;
+  out.pos.y = pen.pos.y + pen.vel.y * dt + 0.5 * pen.accel.y * dt * dt;
+
+  const newAccelX = pen.accel.x + pen.jerk.x * dt;
+  const newAccelY = pen.accel.y + pen.jerk.y * dt;
+
+  const avgAccelX = 0.5 * (pen.accel.x + newAccelX);
+  const avgAccelY = 0.5 * (pen.accel.y + newAccelY);
+
+  out.vel.x = pen.vel.x + avgAccelX * dt;
+  out.vel.y = pen.vel.y + avgAccelY * dt;
+
+  out.accel.x = newAccelX;
+  out.accel.y = newAccelY;
+
   out.t = pen.t + dt;
-  out.accel.x = pen.accel.x + dAccelX;
-  out.accel.y = pen.accel.y + dAccelY;
-  out.vel.x = pen.vel.x + dVelX;
-  out.vel.y = pen.vel.y + dVelY;
-  out.pos.x = pen.pos.x + dPosX;
-  out.pos.y = pen.pos.y + dPosY;
+
   return out;
 }
 

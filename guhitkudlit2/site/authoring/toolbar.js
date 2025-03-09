@@ -311,7 +311,7 @@ export function Toolbar({
           <${LabelText}>Lookahead<//>
           <${Input}
             type="range"
-            min="2"
+            min="1"
             max="60"
             step="1"
             onInput=${action(
