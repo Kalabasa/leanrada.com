@@ -22,12 +22,12 @@ export function EdgeEditor({ edge, getNode, onClickEdge }) {
         z-index: 1;
       }
       .edgeEditorEdgeHandle {
-        border: solid 1px var(--edge-editor-color, blue);
+        border: solid 1px var(--edge-editor-color, royalblue);
         background: white;
       }
       .edgeEditorLine {
         position: absolute;
-        stroke: var(--edge-editor-color, blue);
+        stroke: var(--edge-editor-color, royalblue);
         stroke-width: 1px;
         pointer-events: none;
       }

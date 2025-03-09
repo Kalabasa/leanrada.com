@@ -109,27 +109,27 @@ export function NodeEditor({ node, onGrabNode }) {
       }
       .nodeEditorArea {
         position: absolute;
-        border: solid 1px var(--node-editor-color, blue);
+        border: solid 1px var(--node-editor-color, royalblue);
         border-radius: 50%;
         background: linear-gradient(
             to right,
             transparent 50%,
-            var(--node-editor-color, blue) 50%,
-            var(--node-editor-color, blue) calc(50% + 1px),
+            var(--node-editor-color, royalblue) 50%,
+            var(--node-editor-color, royalblue) calc(50% + 1px),
             transparent calc(50% + 1px)
           ) / 100% 50%;
         pointer-events: none;
       }
       .nodeEditorNodeHandle {
-        border: solid 1px var(--node-editor-color, blue);
+        border: solid 1px var(--node-editor-color, royalblue);
         background: white;
       }
       .nodeEditorControlHandle {
         border-radius: 50%;
-        background: var(--node-editor-color, blue);
+        background: var(--node-editor-color, royalblue);
       }
       .nodeEditorWidthHandle {
-        border: solid 1px var(--node-editor-color, blue);
+        border: solid 1px var(--node-editor-color, royalblue);
         border-radius: 50%;
         background: white;
       }
