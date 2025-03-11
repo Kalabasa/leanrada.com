@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="/common.css" />
@@ -834,7 +834,6 @@
 <script>
   window.addEventListener("load", () => {
     const yayIcon = document.querySelector(".home-circle-icon");
-    const sayLean = new Audio("/lean.mp3");
     const greatTimeContainer = document.querySelector(".great-time-counter");
     const greatTimeNum = document.getElementById("great-time-num");
     document.body.classList.toggle("start-from-top", window.scrollY < 100);
@@ -842,15 +841,20 @@
     let sayTime = 0;
     const ipa = document.querySelector(".ipa");
     ipa.addEventListener("click", (event) => {
-      if (sayLean.readyState >= /*HAVE_ENOUGH_DATA*/ 4) {
-        event.preventDefault();
-        sayLean.play();
-      }
+      event.preventDefault();
+      const sayName = new Audio("/lean.mp3");
+      sayName.addEventListener("canplaythrough", () => {
+        sayName.play();
+        sayTime = Date.now();
+        animateYay(sayName.duration);
+      });
+      sayName.addEventListener("ended", () => {
+        sayName.remove();
+      });
     });
 
-    function animateYay() {
-      const t =
-        ((Date.now() - (sayTime + 400)) / (sayLean.duration * 1000)) * 1.5;
+    function animateYay(duration) {
+      const t = ((Date.now() - (sayTime + 400)) / (duration * 1000)) * 1.5;
 
       if (t >= 1) {
         yayIcon.style.objectPosition = null;
@@ -863,14 +867,9 @@
         } else {
           yayIcon.style.objectPosition = null;
         }
-        requestAnimationFrame(animateYay);
+        requestAnimationFrame(() => animateYay(duration));
       }
     }
-
-    sayLean.addEventListener("play", () => {
-      sayTime = Date.now();
-      animateYay();
-    });
 
     let greatTimes = 0;
     window.haveAGreatTime = function (event) {
