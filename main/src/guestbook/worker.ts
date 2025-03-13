@@ -173,7 +173,7 @@ async function evictSnapshots(env: Env) {
     limit: 1000,
   });
 
-  const forEviction = [];
+  const forEviction: string[] = [];
 
   let lastDate = null;
   for (const key of snapshots.keys) {
@@ -188,14 +188,21 @@ async function evictSnapshots(env: Env) {
       shouldEvictSnapshot(date.getTime(), lastDate.getTime(), Date.now())
     ) {
       forEviction.push(key.name);
+    } else {
+      lastDate = date;
     }
-    lastDate = date;
   }
 
   if (env.enable_snapshot_eviction === "true") {
     console.error("Snapshot eviction not implemented!");
   } else {
-    console.log("[disabled] For eviction:", forEviction);
+    console.log(
+      "[disabled] Eviction result:",
+      snapshots.keys.reduce((obj, key) => {
+        obj[key.name] = forEviction.includes(key.name) ? "evict" : "keep";
+        return obj;
+      }, {} as Record<string, any>)
+    );
   }
 
   return forEviction;
