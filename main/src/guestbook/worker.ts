@@ -193,16 +193,20 @@ async function evictSnapshots(env: Env) {
     }
   }
 
+  console.log(
+    "Snapshot eviction result:",
+    forEviction.length,
+    snapshots.keys.reduce((obj, key) => {
+      obj[key.name] = forEviction.includes(key.name) ? "evict" : "keep";
+      return obj;
+    }, {} as Record<string, any>)
+  );
+
   if (env.enable_snapshot_eviction === "true") {
-    console.error("Snapshot eviction not implemented!");
-  } else {
-    console.log(
-      "[disabled] Eviction result:",
-      snapshots.keys.reduce((obj, key) => {
-        obj[key.name] = forEviction.includes(key.name) ? "evict" : "keep";
-        return obj;
-      }, {} as Record<string, any>)
-    );
+    for (const key of forEviction) {
+      console.log("Evicting", key);
+      env.data.delete(key);
+    }
   }
 
   return forEviction;
