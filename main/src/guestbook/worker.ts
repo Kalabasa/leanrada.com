@@ -1,5 +1,8 @@
+import { shouldEvictSnapshot } from "./evict";
+
 export interface Env {
   data: KVNamespace;
+  enable_snapshot_eviction: string;
 }
 
 const MASTER_KEY = "v2";
@@ -46,7 +49,7 @@ async function handleRequest(
   ctx: ExecutionContext
 ): Promise<Response> {
   try {
-    const response = handleRequestMethod(request, env);
+    const response = handleRequestMethod(request, env, ctx);
     (await response).headers.append(
       "Access-Control-Allow-Origin",
       "https://leanrada.com"
@@ -64,16 +67,20 @@ async function handleRequest(
   }
 }
 
-async function handleRequestMethod(request: Request, env: Env) {
+async function handleRequestMethod(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext
+) {
   if (new URL(request.url).pathname !== "/api") {
     return new Response(null, { status: 404 });
   }
-  if (request.method == "GET") return await handleGet(request, env);
-  else if (request.method == "POST") return await handlePost(request, env);
+  if (request.method == "GET") return await handleGet(request, env, ctx);
+  else if (request.method == "POST") return await handlePost(request, env, ctx);
   else throw new Error("Wrong HTTP method");
 }
 
-async function handleGet(request: Request, env: Env) {
+async function handleGet(request: Request, env: Env, ctx: ExecutionContext) {
   const url = new URL(request.url);
   const getRequest = {
     page: Number.parseInt(url.searchParams.get("page")!, 10),
@@ -95,7 +102,7 @@ async function handleGet(request: Request, env: Env) {
   return new Response(JSON.stringify(slice));
 }
 
-async function handlePost(request: Request, env: Env) {
+async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
   const submitRequest: Partial<SubmitRequest> = parseFormData(
     await request.formData()
   );
@@ -140,10 +147,46 @@ async function handlePost(request: Request, env: Env) {
     env.data.put(MASTER_KEY, JSON.stringify(data)),
   ]);
 
+  ctx.waitUntil(evictSnapshots(env));
+
   return new Response(
     null,
     Response.redirect("https://leanrada.com/guestbook/")
   );
+}
+
+async function evictSnapshots(env: Env) {
+  const snapshots = await env.data.list({
+    prefix: "snapshot-",
+    limit: 1000,
+  });
+
+  const forEviction = [];
+
+  let lastDate = null;
+  for (const key of snapshots.keys) {
+    const [_, yearStr, monthStr, dateStr] = key.name.split("-");
+    const date = new Date(
+      Number(yearStr),
+      Number(monthStr) - 1,
+      Number(dateStr)
+    );
+    if (
+      lastDate &&
+      shouldEvictSnapshot(date.getTime(), lastDate.getTime(), Date.now())
+    ) {
+      forEviction.push(key.name);
+    }
+    lastDate = date;
+  }
+
+  if (env.enable_snapshot_eviction === "true") {
+    console.error("not implemented!");
+  } else {
+    console.log("[dry run] For eviction:", forEviction);
+  }
+
+  return forEviction;
 }
 
 async function getData(env: Env): Promise<StoredData> {
