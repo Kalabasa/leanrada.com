@@ -1,7 +1,9 @@
+import { sendNotificationEmail } from "./email";
 import { shouldEvictSnapshot } from "./evict";
 
 export interface Env {
   data: KVNamespace;
+  notify: SendEmail;
   enable_snapshot_eviction: string;
 }
 
@@ -147,7 +149,18 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
     env.data.put(MASTER_KEY, JSON.stringify(data)),
   ]);
 
-  ctx.waitUntil(evictSnapshots(env));
+  ctx.waitUntil(
+    Promise.all([
+      evictSnapshots(env),
+      sendNotificationEmail(env, {
+        subject: "New guestbook entry",
+        body:
+          String(submitRequest.text) +
+          "\n\n" +
+          (submitRequest.name && String(submitRequest.name)),
+      }),
+    ])
+  );
 
   return new Response(
     null,
@@ -181,7 +194,7 @@ async function evictSnapshots(env: Env) {
   }
 
   if (env.enable_snapshot_eviction === "true") {
-    console.error("not implemented!");
+    console.error("Snapshot eviction not implemented!");
   } else {
     console.log("[dry run] For eviction:", forEviction);
   }
