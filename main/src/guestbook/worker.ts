@@ -1,10 +1,10 @@
-import { sendNotificationEmail } from "./email";
 import { shouldEvictSnapshot } from "./evict";
 
 export interface Env {
   data: KVNamespace;
   notify: SendEmail;
   enable_snapshot_eviction: string;
+  enable_notification_email: string;
 }
 
 const MASTER_KEY = "v2";
@@ -152,13 +152,12 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
   ctx.waitUntil(
     Promise.all([
       evictSnapshots(env),
-      sendNotificationEmail(env, {
-        subject: "New guestbook entry",
-        body:
-          String(submitRequest.text) +
+      sendNotificationEmail(
+        env,
+        String(submitRequest.text) +
           "\n\n" +
-          (submitRequest.name && String(submitRequest.name)),
-      }),
+          (submitRequest.name && String(submitRequest.name))
+      ),
     ])
   );
 
@@ -196,10 +195,36 @@ async function evictSnapshots(env: Env) {
   if (env.enable_snapshot_eviction === "true") {
     console.error("Snapshot eviction not implemented!");
   } else {
-    console.log("[dry run] For eviction:", forEviction);
+    console.log("[disabled] For eviction:", forEviction);
   }
 
   return forEviction;
+}
+
+async function sendNotificationEmail(env: Env, body: string) {
+  const data = {
+    from: "notify@leanrada.com",
+    to: "notify-xfscgrxn@leanrada.com",
+    subject: "New guestbook entry",
+    body,
+  };
+
+  if (env.enable_notification_email === "true") {
+    const [{ generateMimeEmail }, { EmailMessage }] = await Promise.all([
+      import("./email"),
+      import("cloudflare:email"),
+    ]);
+
+    const email = generateMimeEmail(data);
+
+    try {
+      await env.notify.send(new EmailMessage(data.from, data.to, email));
+    } catch (e) {
+      console.error("Notification email not sent!");
+    }
+  } else {
+    console.log("[disabled] Notification email:", data);
+  }
 }
 
 async function getData(env: Env): Promise<StoredData> {

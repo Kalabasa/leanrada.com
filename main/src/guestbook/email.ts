@@ -1,28 +1,4 @@
-import { EmailMessage } from "cloudflare:email";
-import { Env } from "./worker";
-
-export async function sendNotificationEmail(
-  env: Env,
-  data: {
-    subject: string;
-    body: string;
-  }
-) {
-  const from = "notify@leanrada.com";
-  const to = "notify-xfscgrxn@leanrada.com";
-  const email = generateMimeEmail({
-    ...data,
-    from,
-    to,
-  });
-  try {
-    await env.notify.send(new EmailMessage(from, to, email));
-  } catch (e) {
-    console.error("Notification email not sent!");
-  }
-}
-
-function generateMimeEmail(data: {
+export function generateMimeEmail(data: {
   from: string;
   to: string;
   subject: string;
