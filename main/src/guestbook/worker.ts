@@ -155,7 +155,7 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
       sendNotificationEmail(
         env,
         String(submitRequest.text) +
-          "\n\n" +
+          "\r\n\r\n" +
           (submitRequest.name && String(submitRequest.name))
       ),
     ])
