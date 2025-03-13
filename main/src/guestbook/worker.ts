@@ -168,6 +168,8 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
 }
 
 async function evictSnapshots(env: Env) {
+  const enableSnapshotEviction = env.enable_snapshot_eviction === "true";
+
   const snapshots = await env.data.list({
     prefix: "snapshot-",
     limit: 1000,
@@ -194,15 +196,15 @@ async function evictSnapshots(env: Env) {
   }
 
   console.log(
-    "Snapshot eviction result:",
-    forEviction.length,
+    (enableSnapshotEviction ? "[disabled] " : "") +
+      `Snapshot eviction (${forEviction.length})...`,
     snapshots.keys.reduce((obj, key) => {
       obj[key.name] = forEviction.includes(key.name) ? "evict" : "keep";
       return obj;
     }, {} as Record<string, any>)
   );
 
-  if (env.enable_snapshot_eviction === "true") {
+  if (enableSnapshotEviction) {
     for (const key of forEviction) {
       console.log("Evicting", key);
       env.data.delete(key);
@@ -234,7 +236,7 @@ async function sendNotificationEmail(env: Env, body: string) {
       console.error("Notification email not sent!");
     }
   } else {
-    console.log("[disabled] Notification email:", data);
+    console.log("[disabled] Notification email...", data);
   }
 }
 
