@@ -3,8 +3,8 @@ import { shouldEvictSnapshot } from "./evict";
 export interface Env {
   data: KVNamespace;
   notify: SendEmail;
-  enable_snapshot_eviction: string;
-  enable_notification_email: string;
+  enable_snapshot_eviction: unknown;
+  enable_notification_email: unknown;
 }
 
 const MASTER_KEY = "v2";
@@ -168,7 +168,7 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
 }
 
 async function evictSnapshots(env: Env) {
-  const enableSnapshotEviction = env.enable_snapshot_eviction === "true";
+  const enableSnapshotEviction = env.enable_snapshot_eviction === true;
 
   const snapshots = await env.data.list({
     prefix: "snapshot-",
@@ -222,7 +222,7 @@ async function sendNotificationEmail(env: Env, body: string) {
     body,
   };
 
-  if (env.enable_notification_email === "true") {
+  if (env.enable_notification_email === true) {
     const [{ generateMimeEmail }, { EmailMessage }] = await Promise.all([
       import("./email"),
       import("cloudflare:email"),
