@@ -81,6 +81,7 @@
     position: relative;
     width: var(--img-width);
     height: var(--img-height);
+    isolation: isolate;
 
     > * {
       width: 100%;
@@ -89,18 +90,23 @@
     img {
       filter: blur(calc(var(--img-width) / 9));
       clip-path: rect(0 100% 100% 0);
-      transition: filter 1s 1s;
+      transition: opacity 1s 1s, filter 1s;
+      opacity: 0;
     }
     div {
       position: absolute;
       top: 0;
-      transition: opacity 1s;
+      transition: opacity 1s 1s;
+      mix-blend-mode: plus-lighter;
     }
     &:hover div {
       opacity: 0;
+      transition: opacity 1s;
     }
     &:hover img {
       filter: blur(0);
+      transition: opacity 1s, filter 0s;
+      opacity: 1;
     }
   }
 
