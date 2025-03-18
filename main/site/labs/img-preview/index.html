@@ -111,7 +111,7 @@
   }
 
   /*
-  --placeholder: 20-bit number
+  --lqip: 20-bit number
   :98765432109876543210:
   :aaBBccDDeeFFrrrGGGbb:
 
@@ -122,15 +122,15 @@
     - 2-bit B channel
   */
   img + div {
-    --ca: 1;
-    --cb: 1;
-    --cc: 1;
-    --cd: 1;
-    --ce: 1;
-    --cf: 1;
-    --rrr: 0;
-    --ggg: 0;
-    --bb: 0;
+    --ca: mod(round(down, calc(var(--lqip) / pow(2, 18))), 4);
+    --cb: mod(round(down, calc(var(--lqip) / pow(2, 16))), 4);
+    --cc: mod(round(down, calc(var(--lqip) / pow(2, 14))), 4);
+    --cd: mod(round(down, calc(var(--lqip) / pow(2, 12))), 4);
+    --ce: mod(round(down, calc(var(--lqip) / pow(2, 10))), 4);
+    --cf: mod(round(down, calc(var(--lqip) / pow(2, 8))), 4);
+    --rrr: mod(round(down, calc(var(--lqip) / pow(2, 5))), 8);
+    --ggg: mod(round(down, calc(var(--lqip) / pow(2, 2))), 8);
+    --bb: mod(var(--lqip), 4);
 
     --ca-color: hsl(0 0% calc(var(--ca) / 3 * 50% + 25%));
     --cb-color: hsl(0 0% calc(var(--cb) / 3 * 50% + 25%));
@@ -253,15 +253,26 @@
     const rrr = Math.round((baseR * 0b111) / 255);
     const ggg = Math.round((baseG * 0b111) / 255);
     const bb = Math.round((baseB * 0b11) / 255);
-    div.style.setProperty("--ca", ca);
-    div.style.setProperty("--cb", cb);
-    div.style.setProperty("--cc", cc);
-    div.style.setProperty("--cd", cd);
-    div.style.setProperty("--ce", ce);
-    div.style.setProperty("--cf", cf);
-    div.style.setProperty("--rrr", rrr);
-    div.style.setProperty("--ggg", ggg);
-    div.style.setProperty("--bb", bb);
+    const lqip =
+      ((ca & 0b11) << 18) +
+      ((cb & 0b11) << 16) +
+      ((cc & 0b11) << 14) +
+      ((cd & 0b11) << 12) +
+      ((ce & 0b11) << 10) +
+      ((cf & 0b11) << 8) +
+      ((rrr & 0b111) << 5) +
+      ((ggg & 0b111) << 2) +
+      (bb & 0b11);
+    div.style.setProperty("--lqip", lqip);
+    div.dataset.ca = ca;
+    div.dataset.cb = cb;
+    div.dataset.cc = cc;
+    div.dataset.cd = cd;
+    div.dataset.ce = ce;
+    div.dataset.cf = cf;
+    div.dataset.rrr = rrr;
+    div.dataset.ggg = ggg;
+    div.dataset.bb = bb;
   }
 
   async function getData(img) {
