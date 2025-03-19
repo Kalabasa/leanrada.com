@@ -196,7 +196,7 @@ async function evictSnapshots(env: Env) {
   }
 
   console.log(
-    (enableSnapshotEviction ? "[disabled] " : "") +
+    (enableSnapshotEviction ? "" : "[disabled]") +
       `Snapshot eviction (${forEviction.length})...`,
     snapshots.keys.reduce((obj, key) => {
       obj[key.name] = forEviction.includes(key.name) ? "evict" : "keep";
@@ -205,10 +205,12 @@ async function evictSnapshots(env: Env) {
   );
 
   if (enableSnapshotEviction) {
-    for (const key of forEviction) {
-      console.log("Evicting", key);
-      env.data.delete(key);
-    }
+    await Promise.all(
+      forEviction.map((key) => {
+        console.log("Evicting", key);
+        return env.data.delete(key);
+      })
+    );
   }
 
   return forEviction;
