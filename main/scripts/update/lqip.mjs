@@ -1,8 +1,11 @@
 #!/usr/bin/env node
-import fs from "node:fs/promises";
 import path from "node:path";
 import { rewrite } from "./rewrite/rewrite.mjs";
 import sharp from "sharp";
+
+const excludes = [
+  // todo: exclude list (is this needed?)
+];
 
 process.chdir(path.resolve(import.meta.dirname, "..", ".."));
 const projectRoot = process.cwd();
@@ -18,8 +21,6 @@ const htmlFilePath = process.argv[process.argv.length - 1];
 main();
 
 async function main() {
-  let count = 0;
-
   await rewrite({
     dryRun,
     htmlFilePath,
@@ -33,42 +34,50 @@ async function main() {
             const imagePath = filePathFromSrc(htmlFilePath, src);
             console.log("Analyzing", imagePath);
             const theSharp = sharp(imagePath);
-            const { baseR, baseG, baseB, values } = await getImageStats(
-              theSharp
-            );
+            const { width, height, opaque, baseR, baseG, baseB, values } =
+              await analyzeImage(theSharp);
 
-            const ca = Math.round(values[0] * 0b11);
-            const cb = Math.round(values[1] * 0b11);
-            const cc = Math.round(values[2] * 0b11);
-            const cd = Math.round(values[3] * 0b11);
-            const ce = Math.round(values[4] * 0b11);
-            const cf = Math.round(values[5] * 0b11);
-            const rrr = Math.round((baseR * 0b111) / 255);
-            const ggg = Math.round((baseG * 0b111) / 255);
-            const bb = Math.round((baseB * 0b11) / 255);
-            const lqip =
-              ((ca & 0b11) << 18) +
-              ((cb & 0b11) << 16) +
-              ((cc & 0b11) << 14) +
-              ((cd & 0b11) << 12) +
-              ((ce & 0b11) << 10) +
-              ((cf & 0b11) << 8) +
-              ((rrr & 0b111) << 5) +
-              ((ggg & 0b111) << 2) +
-              (bb & 0b11);
-
-            // sanity check (999999 is the max safe integer for css in browsers)
-            if (lqip > 999999) {
-              throw new Error("miscalculated");
+            if (
+              !element.hasAttribute("width") &&
+              !element.hasAttribute("height")
+            ) {
+              element.setAttribute("width", String(width));
+              element.setAttribute("height", String(height));
             }
 
-            const style = element.getAttribute("style");
-            const rule = `--lqip:${lqip.toFixed(0).padStart(6, "0")}`;
-            element.setAttribute(
-              "style",
-              [style, rule].filter(exists).join(";")
-            );
-            count++;
+            if (opaque) {
+              const ca = Math.round(values[0] * 0b11);
+              const cb = Math.round(values[1] * 0b11);
+              const cc = Math.round(values[2] * 0b11);
+              const cd = Math.round(values[3] * 0b11);
+              const ce = Math.round(values[4] * 0b11);
+              const cf = Math.round(values[5] * 0b11);
+              const rrr = Math.round((baseR * 0b111) / 255);
+              const ggg = Math.round((baseG * 0b111) / 255);
+              const bb = Math.round((baseB * 0b11) / 255);
+              const lqip =
+                ((ca & 0b11) << 18) +
+                ((cb & 0b11) << 16) +
+                ((cc & 0b11) << 14) +
+                ((cd & 0b11) << 12) +
+                ((ce & 0b11) << 10) +
+                ((cf & 0b11) << 8) +
+                ((rrr & 0b111) << 5) +
+                ((ggg & 0b111) << 2) +
+                (bb & 0b11);
+
+              // sanity check (999999 is the max safe integer for css in browsers)
+              if (lqip > 999999) {
+                throw new Error("miscalculated");
+              }
+
+              const existingStyle = element.getAttribute("style");
+              const lqipRule = `--lqip:${lqip.toFixed(0).padStart(6, "0")}`;
+              element.setAttribute(
+                "style",
+                [existingStyle, lqipRule].filter(exists).join(";")
+              );
+            }
           } catch (error) {
             // print error here, else it be hidden by the html rewrite wasm layer
             console.error(error);
@@ -80,16 +89,27 @@ async function main() {
   });
 }
 
-async function getImageStats(aSharp) {
-  const [stats, previewBuffer] = await Promise.all([
+async function analyzeImage(aSharp) {
+  const [metadata, stats, previewBuffer] = await Promise.all([
+    aSharp.metadata(),
     aSharp.stats(),
     aSharp
-      .gamma(2)
+      .gamma(3)
       .resize(3, 2, { fit: "fill" })
       .removeAlpha()
       .toFormat("raw", { bitdepth: 8 })
       .toBuffer(),
   ]);
+
+  const size = getNormalSize(metadata);
+  const opaque = stats.isOpaque;
+
+  if (!opaque) {
+    return {
+      ...size,
+      opaque: false,
+    };
+  }
 
   const { r: baseR, g: baseG, b: baseB } = stats.dominant;
 
@@ -118,6 +138,8 @@ async function getImageStats(aSharp) {
   });
 
   return {
+    ...size,
+    opaque: true,
     baseR,
     baseG,
     baseB,
@@ -127,6 +149,12 @@ async function getImageStats(aSharp) {
 
 function getValue(r, g, b) {
   return 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
+}
+
+function getNormalSize({ width, height, orientation }) {
+  return (orientation || 0) >= 5
+    ? { width: height, height: width }
+    : { width, height };
 }
 
 function filePathFromSrc(htmlFilePath, src) {
