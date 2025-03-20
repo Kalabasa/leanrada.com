@@ -52,23 +52,23 @@ async function main() {
               const cd = Math.round(values[3] * 0b11);
               const ce = Math.round(values[4] * 0b11);
               const cf = Math.round(values[5] * 0b11);
-              const rrr = Math.round((baseR * 0b111) / 255);
+              const rr = Math.round((baseR * 0b11) / 255);
               const ggg = Math.round((baseG * 0b111) / 255);
               const bb = Math.round((baseB * 0b11) / 255);
               const lqip =
-                ((ca & 0b11) << 18) +
-                ((cb & 0b11) << 16) +
-                ((cc & 0b11) << 14) +
-                ((cd & 0b11) << 12) +
-                ((ce & 0b11) << 10) +
-                ((cf & 0b11) << 8) +
-                ((rrr & 0b111) << 5) +
+                ((ca & 0b11) << 17) +
+                ((cb & 0b11) << 15) +
+                ((cc & 0b11) << 13) +
+                ((cd & 0b11) << 11) +
+                ((ce & 0b11) << 9) +
+                ((cf & 0b11) << 7) +
+                ((rr & 0b11) << 5) +
                 ((ggg & 0b111) << 2) +
                 (bb & 0b11);
 
               // sanity check (999999 is the max safe integer for css in browsers)
               if (lqip > 999999) {
-                throw new Error("miscalculated");
+                throw new Error(`Invalid lqip value: ${lqip}`);
               }
 
               const existingStyle = element.getAttribute("style");
