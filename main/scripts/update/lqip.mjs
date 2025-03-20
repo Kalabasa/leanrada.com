@@ -2,6 +2,7 @@
 import path from "node:path";
 import { rewrite } from "./rewrite/rewrite.mjs";
 import sharp from "sharp";
+import { ciede2000 } from "./lib/color-diff/diff.mjs";
 
 const excludes = [
   // todo: exclude list (is this needed?)
@@ -16,6 +17,7 @@ if (path.basename(projectRoot) !== "main") {
 
 const siteDir = path.resolve(projectRoot, "site");
 const dryRun = process.argv.includes("--dry-run");
+const refresh = process.argv.includes("--refresh");
 const htmlFilePath = process.argv[process.argv.length - 1];
 
 main();
@@ -25,17 +27,23 @@ async function main() {
     dryRun,
     htmlFilePath,
     setup(rewrite) {
-      rewrite.on('img:not([style*="--lqip:"])', {
+      rewrite.on(refresh ? "img" : 'img:not([style*="--lqip:"])', {
         async element(element) {
           try {
             const src = element.getAttribute("src");
             if (!src) throw new Error("<img> with no src!");
 
+            // todo: maybe it can fetch these?
+            // external resources
+            if (src.match("^([a-z]+:)?//")) return;
+            if (src === "intentionally-broken-image") return;
+
             const imagePath = filePathFromSrc(htmlFilePath, src);
-            console.log("Analyzing", imagePath);
+            console.group("Analyzing", imagePath);
             const theSharp = sharp(imagePath);
-            const { width, height, opaque, baseR, baseG, baseB, values } =
+            const { width, height, opaque, rr, ggg, bb, values } =
               await analyzeImage(theSharp);
+            console.groupEnd();
 
             if (
               !element.hasAttribute("width") &&
@@ -52,9 +60,6 @@ async function main() {
               const cd = Math.round(values[3] * 0b11);
               const ce = Math.round(values[4] * 0b11);
               const cf = Math.round(values[5] * 0b11);
-              const rr = Math.round((baseR * 0b11) / 255);
-              const ggg = Math.round((baseG * 0b111) / 255);
-              const bb = Math.round((baseB * 0b11) / 255);
               const lqip =
                 ((ca & 0b11) << 17) +
                 ((cb & 0b11) << 15) +
@@ -71,15 +76,21 @@ async function main() {
                 throw new Error(`Invalid lqip value: ${lqip}`);
               }
 
-              const existingStyle = element.getAttribute("style");
               const lqipRule = `--lqip:${lqip.toFixed(0).padStart(6, "0")}`;
+              let existingStyle = element.getAttribute("style");
+              if (refresh && existingStyle?.includes("--lqip:")) {
+                existingStyle = existingStyle.replaceAll(
+                  /;--lqip:\s*\d+|--lqip:\s*\d+;?/g,
+                  ""
+                );
+              }
+
               element.setAttribute(
                 "style",
-                [existingStyle, lqipRule].filter(exists).join(";")
+                [existingStyle, lqipRule].filter(truthy).join(";")
               );
             }
           } catch (error) {
-            // print error here, else it be hidden by the html rewrite wasm layer
             console.error(error);
             throw error;
           }
@@ -94,7 +105,7 @@ async function analyzeImage(aSharp) {
     aSharp.metadata(),
     aSharp.stats(),
     aSharp
-      .gamma(3)
+      .gamma(2)
       .resize(3, 2, { fit: "fill" })
       .removeAlpha()
       .toFormat("raw", { bitdepth: 8 })
@@ -111,7 +122,22 @@ async function analyzeImage(aSharp) {
     };
   }
 
-  const { r: baseR, g: baseG, b: baseB } = stats.dominant;
+  const { r: rawBaseR, g: rawBaseG, b: rawBaseB } = stats.dominant;
+
+  const { rr, ggg, bb } = findRgbBits(rawBaseR, rawBaseG, rawBaseB);
+  const baseR = Math.round((rr / 0b11) * 255);
+  const baseG = Math.round((ggg / 0b111) * 255);
+  const baseB = Math.round((bb / 0b11) * 255);
+  // console.log(
+  //   "Base color:",
+  //   rawBaseR,
+  //   rawBaseG,
+  //   rawBaseB,
+  //   "Compressed:",
+  //   baseR,
+  //   baseG,
+  //   baseB
+  // );
 
   const cells = Array.from({ length: 6 }, (_, index) => {
     const r = previewBuffer.readUint8(index * 3);
@@ -140,15 +166,41 @@ async function analyzeImage(aSharp) {
   return {
     ...size,
     opaque: true,
-    baseR,
-    baseG,
-    baseB,
+    rr,
+    ggg,
+    bb,
     values,
   };
 }
 
 function getValue(r, g, b) {
   return 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
+}
+
+// find the best bit configuration that would produce a color closest to target
+function findRgbBits(targetR, targetG, targetB) {
+  let bestBits = [0, 0, 0];
+  let bestDifference = Infinity;
+
+  for (let rri = 0; rri <= 0b11; rri++) {
+    for (let gggi = 0; gggi <= 0b111; gggi++) {
+      for (let bbi = 0; bbi <= 0b11; bbi++) {
+        const testR = (rri / 0b11) * 255;
+        const testG = (gggi / 0b111) * 255;
+        const testB = (bbi / 0b11) * 255;
+        const difference = ciede2000(
+          { r: testR, g: testG, b: testB },
+          { r: targetR, g: targetG, b: targetB }
+        );
+        if (difference < bestDifference) {
+          bestDifference = difference;
+          bestBits = [rri, gggi, bbi];
+        }
+      }
+    }
+  }
+
+  return { rr: bestBits[0], ggg: bestBits[1], bb: bestBits[2] };
 }
 
 function getNormalSize({ width, height, orientation }) {
@@ -166,6 +218,6 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function exists(thing) {
-  return thing != null;
+function truthy(thing) {
+  return !!thing;
 }
