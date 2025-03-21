@@ -2,11 +2,9 @@
 import path from "node:path";
 import { rewrite } from "./rewrite/rewrite.mjs";
 import sharp from "sharp";
-import { ciede2000 } from "./lib/color-diff/diff.mjs";
-
-const excludes = [
-  // todo: exclude list (is this needed?)
-];
+import { rgbToOkLab } from "./lib/color/convert.mjs";
+import { getPalette } from "./lib/color/thief.mjs";
+import { existsSync } from "node:fs";
 
 process.chdir(path.resolve(import.meta.dirname, "..", ".."));
 const projectRoot = process.cwd();
@@ -33,16 +31,15 @@ async function main() {
             const src = element.getAttribute("src");
             if (!src) throw new Error("<img> with no src!");
 
-            // todo: maybe it can fetch these?
-            // external resources
+            // todo: maybe fetch and save as tmp file?
             if (src.match("^([a-z]+:)?//")) return;
-            if (src === "intentionally-broken-image") return;
 
             const imagePath = filePathFromSrc(htmlFilePath, src);
+            if (!existsSync(imagePath)) return;
+
             console.group("Analyzing", imagePath);
-            const theSharp = sharp(imagePath);
-            const { width, height, opaque, rr, ggg, bb, values } =
-              await analyzeImage(theSharp);
+            const { width, height, opaque, ll, aaa, bbb, values } =
+              await analyzeImage(imagePath);
             console.groupEnd();
 
             if (
@@ -61,26 +58,27 @@ async function main() {
               const ce = Math.round(values[4] * 0b11);
               const cf = Math.round(values[5] * 0b11);
               const lqip =
-                ((ca & 0b11) << 17) +
-                ((cb & 0b11) << 15) +
-                ((cc & 0b11) << 13) +
-                ((cd & 0b11) << 11) +
-                ((ce & 0b11) << 9) +
-                ((cf & 0b11) << 7) +
-                ((rr & 0b11) << 5) +
-                ((ggg & 0b111) << 2) +
-                (bb & 0b11);
+                -(2 ** 19) +
+                ((ca & 0b11) << 18) +
+                ((cb & 0b11) << 16) +
+                ((cc & 0b11) << 14) +
+                ((cd & 0b11) << 12) +
+                ((ce & 0b11) << 10) +
+                ((cf & 0b11) << 8) +
+                ((ll & 0b11) << 6) +
+                ((aaa & 0b111) << 3) +
+                (bbb & 0b111);
 
-              // sanity check (999999 is the max safe integer for css in browsers)
-              if (lqip > 999999) {
+              // sanity check (+-999999 is the max int range in css in major browsers)
+              if (lqip < -999_999 || lqip > 999_999) {
                 throw new Error(`Invalid lqip value: ${lqip}`);
               }
 
-              const lqipRule = `--lqip:${lqip.toFixed(0).padStart(6, "0")}`;
+              const lqipRule = `--lqip:${lqip.toFixed(0)}`;
               let existingStyle = element.getAttribute("style");
               if (refresh && existingStyle?.includes("--lqip:")) {
                 existingStyle = existingStyle.replaceAll(
-                  /;--lqip:\s*\d+|--lqip:\s*\d+;?/g,
+                  /;--lqip:\s*-?\d+|--lqip:\s*-?\d+;?/g,
                   ""
                 );
               }
@@ -100,16 +98,11 @@ async function main() {
   });
 }
 
-async function analyzeImage(aSharp) {
-  const [metadata, stats, previewBuffer] = await Promise.all([
-    aSharp.metadata(),
-    aSharp.stats(),
-    aSharp
-      .gamma(2)
-      .resize(3, 2, { fit: "fill" })
-      .removeAlpha()
-      .toFormat("raw", { bitdepth: 8 })
-      .toBuffer(),
+async function analyzeImage(imagePath) {
+  const theSharp = sharp(imagePath);
+  const [metadata, stats] = await Promise.all([
+    theSharp.metadata(),
+    theSharp.stats(),
   ]);
 
   const size = getNormalSize(metadata);
@@ -122,85 +115,104 @@ async function analyzeImage(aSharp) {
     };
   }
 
-  const { r: rawBaseR, g: rawBaseG, b: rawBaseB } = stats.dominant;
+  const [previewBuffer, dominantColor] = await Promise.all([
+    theSharp
+      .resize(3, 2, { fit: "fill" })
+      .sharpen({ sigma: 1 })
+      .removeAlpha()
+      .toFormat("raw", { bitdepth: 8 })
+      .toBuffer(),
+    getPalette(imagePath, 4, 10).then((palette) => palette[0]),
+  ]);
 
-  const { rr, ggg, bb } = findRgbBits(rawBaseR, rawBaseG, rawBaseB);
-  const baseR = Math.round((rr / 0b11) * 255);
-  const baseG = Math.round((ggg / 0b111) * 255);
-  const baseB = Math.round((bb / 0b11) * 255);
-  // console.log(
-  //   "Base color:",
-  //   rawBaseR,
-  //   rawBaseG,
-  //   rawBaseB,
-  //   "Compressed:",
-  //   baseR,
-  //   baseG,
-  //   baseB
-  // );
+  const {
+    L: rawBaseL,
+    a: rawBaseA,
+    b: rawBaseB,
+  } = rgbToOkLab({
+    r: dominantColor[0],
+    g: dominantColor[1],
+    b: dominantColor[2],
+  });
+  const { ll, aaa, bbb } = findOklabBits(rawBaseL, rawBaseA, rawBaseB);
+  const { L: baseL, a: baseA, b: baseB } = bitsToLab(ll, aaa, bbb);
+  console.log(
+    "dominant rgb",
+    dominantColor,
+    "lab",
+    Number(rawBaseL.toFixed(4)),
+    Number(rawBaseA.toFixed(4)),
+    Number(rawBaseB.toFixed(4)),
+    "compressed",
+    Number(baseL.toFixed(4)),
+    Number(baseA.toFixed(4)),
+    Number(baseB.toFixed(4))
+  );
 
   const cells = Array.from({ length: 6 }, (_, index) => {
     const r = previewBuffer.readUint8(index * 3);
     const g = previewBuffer.readUint8(index * 3 + 1);
     const b = previewBuffer.readUint8(index * 3 + 2);
-    return {
-      r,
-      g,
-      b,
-      value: getValue(r, g, b),
-    };
+    return rgbToOkLab({ r, g, b });
   });
 
-  const averageValue = cells.reduce((sum, { value }) => sum + value, 0) / 6;
-
-  const offsetR = -baseR;
-  const offsetG = -baseG;
-  const offsetB = -baseB;
-  const values = cells.map((cell) => {
-    const { r, g, b, value } = cell;
-    const rgbDelta = getValue(r + offsetR, g + offsetG, b + offsetB) / 255;
-    const valueDelta = (value - averageValue) / 255;
-    return clamp(0.5 + rgbDelta * 0.5 + valueDelta, 0, 1);
-  });
+  const values = cells.map(({ L }) => clamp(0.5 + L - baseL, 0, 1));
 
   return {
     ...size,
     opaque: true,
-    rr,
-    ggg,
-    bb,
+    ll,
+    aaa,
+    bbb,
     values,
   };
 }
 
-function getValue(r, g, b) {
-  return 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
-}
-
 // find the best bit configuration that would produce a color closest to target
-function findRgbBits(targetR, targetG, targetB) {
+function findOklabBits(targetL, targetA, targetB) {
+  const targetChroma = Math.hypot(targetA, targetB);
+  const scaledTargetA = scaleComponentForDiff(targetA, targetChroma);
+  const scaledTargetB = scaleComponentForDiff(targetB, targetChroma);
+
   let bestBits = [0, 0, 0];
   let bestDifference = Infinity;
 
-  for (let rri = 0; rri <= 0b11; rri++) {
-    for (let gggi = 0; gggi <= 0b111; gggi++) {
-      for (let bbi = 0; bbi <= 0b11; bbi++) {
-        const testR = (rri / 0b11) * 255;
-        const testG = (gggi / 0b111) * 255;
-        const testB = (bbi / 0b11) * 255;
-        const difference = ciede2000(
-          { r: testR, g: testG, b: testB },
-          { r: targetR, g: targetG, b: targetB }
+  for (let lli = 0; lli <= 0b11; lli++) {
+    for (let aaai = 0; aaai <= 0b111; aaai++) {
+      for (let bbbi = 0; bbbi <= 0b111; bbbi++) {
+        const { L, a, b } = bitsToLab(lli, aaai, bbbi);
+        const chroma = Math.hypot(a, b);
+        const scaledA = scaleComponentForDiff(a, chroma);
+        const scaledB = scaleComponentForDiff(b, chroma);
+
+        const difference = Math.hypot(
+          L - targetL,
+          scaledA - scaledTargetA,
+          scaledB - scaledTargetB
         );
+
         if (difference < bestDifference) {
           bestDifference = difference;
-          bestBits = [rri, gggi, bbi];
+          bestBits = [lli, aaai, bbbi];
         }
       }
     }
   }
 
-  return { rr: bestBits[0], ggg: bestBits[1], bb: bestBits[2] };
+  return { ll: bestBits[0], aaa: bestBits[1], bbb: bestBits[2] };
+}
+
+// Scales a or b of Oklab to move away from the center
+// so that euclidean comparison won't be biased to the center
+function scaleComponentForDiff(x, chroma) {
+  return x / (1e-6 + Math.pow(chroma, 0.5));
+}
+
+function bitsToLab(ll, aaa, bbb) {
+  const L = (ll / 0b11) * 0.6 + 0.2;
+  const a = (aaa / 0b1000) * 0.7 - 0.35;
+  const b = ((bbb + 1) / 0b1000) * 0.7 - 0.35;
+  return { L, a, b };
 }
 
 function getNormalSize({ width, height, orientation }) {
