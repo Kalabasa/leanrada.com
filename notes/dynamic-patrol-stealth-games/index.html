@@ -11,7 +11,7 @@
 
 <blog-header>
   <h1>Dynamic patrol behaviour with Markov chains</h1>
-  <img src="hero.jpg" alt="" loading="lazy" width="4080" height="3072" style="--lqip:174806"></img>
+  <img src="hero.jpg" alt="" loading="lazy" width="4080" height="3072" style="--lqip:-109149"></img>
 </blog-header>
 
 <blog-post-info>
@@ -46,7 +46,7 @@
       "></dynamic-patrol-demo></p>
 <h2 id="background">Background</h2>
 <p>I enjoy stealth games. However, I felt like the genre has become formulaic. Nowadays, we have standardised light, shadow, and noise mechanics. We almost always get discrete levels of alertness where on one end NPCs have wallhacks while on the other, NPCs have amnesia.</p>
-<figure><img alt="Screenshot of Splinter Cell" src="sc.jpg" loading="lazy" width="1200" height="750" style="--lqip:324864"></img><figcaption>Screenshot of Splinter Cell: Chaos Theory from mobygames.com. This game is good.</figcaption></figure>
+<figure><img alt="Screenshot of Splinter Cell" src="sc.jpg" loading="lazy" width="1200" height="750" style="--lqip:-219804"></img><figcaption>Screenshot of Splinter Cell: Chaos Theory from mobygames.com. This game is good.</figcaption></figure>
 
 <p>The most immersion-breaking moment for me was when you get spotted, the subsequent investigation consists solely of staring at the ground where you were last seen. Like when you get spotted at an entrance to a room, guards will just stare at the doorway. <em>Why not check inside the room?</em></p>
 <p><box-note>Yeah, I know, game designers don’t deem smart game AI “fun”. But an easy predictable game is no fun! Whatever, I just wanted to share this prototype.</box-note></p>
@@ -54,33 +54,33 @@
 <h2 id="a-room-and-a-hallway">A room and a hallway</h2>
 <p>As an example, here are a room and a hallway with a doorway in between, modelled as a <a href="https://en.wikipedia.org/wiki/Graph" target="_blank">graph</a>:</p>
 <div class="small-diagram-row small-diagram-row-solo">
-        <img class="media" alt="Node graph representing a room node, a doorway node, and hallway nodes" src="room-graph.png" loading="lazy" width="526" height="544" style="--lqip:341193"></img>
+        <img class="media" alt="Node graph representing a room node, a doorway node, and hallway nodes" src="room-graph.png" loading="lazy" width="526" height="544" style="--lqip:91619"></img>
       </div>
 
 <p>If we assign a number to each node representing the probability that the target (the player) is there, we can start making inferences of where the target could be at later times.</p>
 <p>Let’s say the target was just seen in room <em>R</em>. At that exact moment, there is complete certainty that the target is there, so node <em>R</em> will be assigned a probability of <strong>1.0</strong>.</p>
 <div class="small-diagram-row small-diagram-row-solo">
-        <img class="media" alt="Node graph representing the room node with 1.0, the doorway node with 0.0, and hallway nodes with 0.0" src="room-graph-r1.png" loading="lazy" width="528" height="544" style="--lqip:307967"></img>
+        <img class="media" alt="Node graph representing the room node with 1.0, the doorway node with 0.0, and hallway nodes with 0.0" src="room-graph-r1.png" loading="lazy" width="528" height="544" style="--lqip:174819"></img>
       </div>
 
 <p>After that moment however, the certainty fades. Because the target could have exited the room next, or maybe they stayed.</p>
 <p>The graph is recalculated to reflect this uncertainty by distributing the probability value of <strong>1.0</strong> from node <em>R</em> to each possible choice of node - <em>D</em> (exit) and <em>R</em> (stay). We don’t know the likeliness of either happening so we can just assume equal chances, giving them <strong>0.5</strong> each.</p>
 <div class="small-diagram-row small-diagram-row-solo">
-        <img class="media" alt="Node graph representing the room node with 0.5, the doorway node with 0.5, and hallway nodes with 0.0" src="room-graph-r1d1.png" loading="lazy" width="528" height="544" style="--lqip:307967"></img>
+        <img class="media" alt="Node graph representing the room node with 0.5, the doorway node with 0.5, and hallway nodes with 0.0" src="room-graph-r1d1.png" loading="lazy" width="528" height="544" style="--lqip:174819"></img>
       </div>
 
 <p>Now there is 50% probability that the target is in the room, and 50% in the doorway. This process is repeated for each node over time to calculate the target’s potential location at any given moment.</p>
 <p>Let’s do another iteration. The next one is a bit tricky, but it’s all calculated the same. We just need to calculate the distribution from each node <em>in parallel</em>, like so:</p>
 <div class="small-diagram-row">
-        <figure><img class="media" alt="Node graph representing the distribution from previous state" src="room-graph-r1d1t.png" loading="lazy" width="528" height="544" style="--lqip:307967"></img><figcaption>Split the probabilities per node to each possible choice (including staying).</figcaption></figure>
-        <figure><img class="media" alt="Node graph representing the room node with 0.42, the doorway node with 0.42, and the hallway node H1 directly next to the doorway with 0.16" src="room-graph-r5d5h2.png" loading="lazy" width="528" height="544" style="--lqip:307967"></img><figcaption>Then sum up the values that arrived in each node.</figcaption></figure>
+        <figure><img class="media" alt="Node graph representing the distribution from previous state" src="room-graph-r1d1t.png" loading="lazy" width="528" height="544" style="--lqip:174819"></img><figcaption>Split the probabilities per node to each possible choice (including staying).</figcaption></figure>
+        <figure><img class="media" alt="Node graph representing the room node with 0.42, the doorway node with 0.42, and the hallway node H1 directly next to the doorway with 0.16" src="room-graph-r5d5h2.png" loading="lazy" width="528" height="544" style="--lqip:174819"></img><figcaption>Then sum up the values that arrived in each node.</figcaption></figure>
       </div>
 
 <p><strong>Explanation of above:</strong> The <strong>0.5</strong> at <em>R</em> is split into two, giving <strong>0.5 / 2 = 0.25</strong> each to <em>R</em> and <em>D</em>. Meanwhile, the <strong>0.5</strong> at <em>D</em> is split into three, giving <strong>0.5 / 3 ≈ 0.16</strong> each to <em>R</em>, <em>D</em>, and <em>H1</em>. Then node values are added together in a separate step after the split.</p>
 <p>After some time, we will get a picture of where the target is likely to be and a smarter game AI can utilise this to send guards on a more realistic investigation route.</p>
 <p>Another iteration and we get this:</p>
 <div class="small-diagram-row small-diagram-row-solo">
-        <figure><img class="media" alt="Node graph representing the room node with 0.35, the doorway node with 0.39, hallway nodes H0 and H2 with 0.04, and H1 with 0.18" src="room-graph-final.png" loading="lazy" width="528" height="545" style="--lqip:307967"></img><figcaption>The state after some time</figcaption></figure>
+        <figure><img class="media" alt="Node graph representing the room node with 0.35, the doorway node with 0.39, hallway nodes H0 and H2 with 0.04, and H1 with 0.18" src="room-graph-final.png" loading="lazy" width="528" height="545" style="--lqip:174819"></img><figcaption>The state after some time</figcaption></figure>
       </div>
 
 <p>What I’ve just described is some generalisation of a <strong><a href="https://en.wikipedia.org/wiki/Markov_chain" target="_blank">Markov chain</a></strong>. Well, it’s not exactly accurate to call it that since the Markov chain is just one part of the algorithm. You’ll see why in the next section.</p>
@@ -89,7 +89,7 @@
 <p>Suppose a guard did come to investigate the nearest highest probability node (the doorway <em>D</em>). Coming from the south, the guard just saw the doorway and the immediate hallway in their field of vision - There are two possibilities: Either <strong>(1)</strong> they saw nothing, or <strong>(2)</strong> they saw <em>the target</em>.</p>
 <p>In case <strong>(1)</strong> where the guard saw nothing, we need to update the seen nodes according to the guard’s a posteriori observation.</p>
 <div class="small-diagram-row small-diagram-row-solo">
-        <figure><img class="media" alt="Node graph with observed nodes having 0.0" src="observe-none.png" loading="lazy" width="528" height="544" style="--lqip:307967"></img><figcaption>After observation</figcaption></figure>
+        <figure><img class="media" alt="Node graph with observed nodes having 0.0" src="observe-none.png" loading="lazy" width="528" height="544" style="--lqip:174819"></img><figcaption>After observation</figcaption></figure>
       </div>
 
 <p>The nodes that were seen having no target at their locations are forced to a probability of <strong>0.0</strong>, because if you think about it, that makes sense. The remaining nodes are then scaled so that they still add up to a total of <strong>1.0</strong> (This is an invariant in any case).</p>
@@ -165,7 +165,7 @@
 <hr>
 <p>In case <strong>(2)</strong> where the guard saw the target, a similar but more drastic approach applies. The node containing the target is assigned <strong>1.0</strong> while <em>the rest of the nodes in the whole graph</em> are cleared back to <strong>0.0</strong>. The target can only be in one place at at a time!</p>
 <div class="small-diagram-row small-diagram-row-solo">
-        <figure><img alt="Node graph with observed target in node having 1.0" src="observe-target.png" loading="lazy" width="528" height="544" style="--lqip:307967"></img><figcaption>After observation of target</figcaption></figure>
+        <figure><img alt="Node graph with observed target in node having 1.0" src="observe-target.png" loading="lazy" width="528" height="544" style="--lqip:174819"></img><figcaption>After observation of target</figcaption></figure>
       </div>
 
 <p>It stays that way as long as the guard can see the target. When the guard loses sight of the target again, we just continue the Markov inference and the probability values will spread again like a wave. The cycle of chasing, investigation, and hiding continues.</p>

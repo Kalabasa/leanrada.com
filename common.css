@@ -121,23 +121,23 @@
   }
 
   /* Low quality image placeholders in pure CSS in a single element.
-  --lqip: 19-bit number
-  :8765432109876543210:
-  :aaBBccDDeeFFrrGGGbb:
+  --lqip: (20-bit number) - 2^19
+  :98765432109876543210:
+  :aaBBccDDeeFFllAAAbbb:
   - 6 2-bit grayscale area values dividing the area in 3x2
-  - 2 bits R channel of base color for full area
-  - 3 bits G channel of base color for full area
-  - 2 bits B channel of base color for full area */
+  - 2 bits L channel of base Oklab color for full area
+  - 3 bits a channel of base Oklab color for full area
+  - 3 bits b channel of base Oklab color for full area */
   [style*="--lqip:"] {
-    --lqip-ca: mod(round(down, calc(var(--lqip) / pow(2, 17))), 4);
-    --lqip-cb: mod(round(down, calc(var(--lqip) / pow(2, 15))), 4);
-    --lqip-cc: mod(round(down, calc(var(--lqip) / pow(2, 13))), 4);
-    --lqip-cd: mod(round(down, calc(var(--lqip) / pow(2, 11))), 4);
-    --lqip-ce: mod(round(down, calc(var(--lqip) / pow(2, 9))), 4);
-    --lqip-cf: mod(round(down, calc(var(--lqip) / pow(2, 7))), 4);
-    --lqip-rr: mod(round(down, calc(var(--lqip) / pow(2, 5))), 4);
-    --lqip-ggg: mod(round(down, calc(var(--lqip) / pow(2, 2))), 8);
-    --lqip-bb: mod(var(--lqip), 4);
+    --lqip-ca: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 18))), 4);
+    --lqip-cb: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 16))), 4);
+    --lqip-cc: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 14))), 4);
+    --lqip-cd: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 12))), 4);
+    --lqip-ce: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 10))), 4);
+    --lqip-cf: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 8))), 4);
+    --lqip-ll: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 6))), 4);
+    --lqip-aaa: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 3))), 8);
+    --lqip-bbb: mod(calc(var(--lqip) + pow(2, 19)), 8);
 
     --lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
     --lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
@@ -145,9 +145,9 @@
     --lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
     --lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
     --lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
-    --lqip-base-clr: rgb(
-      calc(var(--lqip-rr) / 3 * 255) calc(var(--lqip-ggg) / 7 * 255)
-        calc(var(--lqip-bb) / 3 * 255)
+    --lqip-base-clr: oklab(
+      calc(var(--lqip-ll) / 3 * 0.6 + 0.2) calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
+        calc((var(--lqip-bbb) + 1) / 8 * 0.7 - 0.35)
     );
 
     background-blend-mode: hard-light, hard-light, hard-light, hard-light,
