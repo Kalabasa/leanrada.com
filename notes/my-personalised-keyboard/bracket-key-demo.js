@@ -116,7 +116,6 @@ customElements.define(
         let bracketState = 0;
 
         demo.addEventListener("keydown", (event) => {
-          event.preventDefault();
           const key = event.key.toUpperCase();
 
           if (downState[key]) return;
@@ -148,10 +147,10 @@ customElements.define(
           keys[1 - (bracket + 1) / 2].classList.add(
             "bracket-key-demo-key-active"
           );
+          event.preventDefault();
         });
 
         demo.addEventListener("keyup", (event) => {
-          event.preventDefault();
           const key = event.key.toUpperCase();
 
           downState[key] = false;
@@ -175,6 +174,7 @@ customElements.define(
           keys[1 - (bracket + 1) / 2].classList.remove(
             "bracket-key-demo-key-active"
           );
+          event.preventDefault();
         });
 
         function getBracket(key) {
