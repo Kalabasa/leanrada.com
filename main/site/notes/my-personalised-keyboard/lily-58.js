@@ -953,11 +953,6 @@
           let input = kbd?.innerText.trim();
           if (!input) return;
 
-          playSound("keypress.wav", {
-            pitch: Math.pow(2, Math.random() * 0.4 - 0.2),
-            volume: 0.7 * Math.pow(2, Math.random() * 0.4 - 0.2),
-          });
-
           keyIsDown = true;
           sendOnUp = null;
 
@@ -1050,6 +1045,11 @@
         });
 
         const handleKeyDown = (kbd, input) => {
+          playSound("keypress.wav", {
+            pitch: Math.pow(2, Math.random() * 0.4 - 0.2),
+            volume: 0.7 * Math.pow(2, Math.random() * 0.4 - 0.2),
+          });
+
           if (callbacks[input] && callbacks[input](kbd) !== "pass") {
             return;
           }
