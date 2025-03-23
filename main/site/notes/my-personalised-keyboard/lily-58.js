@@ -136,6 +136,8 @@
     // 3. Fully simulated keyboard that doesn't interactive with the ONE layer toggle, has its own state & layers.
     class Lily58 extends HTMLElement {
       #currentLayerKey = "BASE_LAYER";
+      #leftHalf = null;
+      #rightHalf = null;
 
       constructor() {
         super();
@@ -178,7 +180,7 @@
           <div class="lily58-half-container">
             <div
               class="lily58-half lily58-left-half ${this.#halfClass(0)}"
-              aria-hidden="true"
+              aria-label="Left half of keyboard"
             >
               ${this.#renderKeys({ halfIndex: 0, keys, layer, oledLeft })}
             </div>
@@ -187,7 +189,7 @@
           <div class="lily58-half-container">
             <div
               class="lily58-half lily58-right-half ${this.#halfClass(1)}"
-              aria-hidden="true"
+              aria-label="Right half of keyboard"
             >
               ${this.#renderKeys({ halfIndex: 1, keys, layer, oledRight })}
             </div>
@@ -196,6 +198,8 @@
           ${defaultSlotHTML}
         `;
 
+        this.#leftHalf = this.querySelector(".lily58-left-half");
+        this.#rightHalf = this.querySelector(".lily58-right-half");
         const layerButtons = this.querySelectorAll(".lily58-layer-button");
 
         if (!layerButtons.length) {
@@ -628,6 +632,13 @@
       }
 
       #renderKeys({ halfIndex, keys, oledLeft, oledRight, layer = null }) {
+        let focusRow = -1;
+        let focusCol = -1;
+        if (this.contains(document.activeElement)) {
+          focusRow = Number(document.activeElement.dataset.row ?? -1);
+          focusCol = Number(document.activeElement.dataset.col ?? -1);
+        }
+
         const layerButton =
           this.hasAttribute("layer-button") &&
           this.getAttribute("layer-button").split(",").map(Number);
@@ -667,9 +678,17 @@
               <div class="lily58-oled">${renderRightOLED()}</div>`;
         }
 
+        if (focusRow >= 0 && focusCol >= 0) {
+          const next =
+            this.querySelector(
+              `kbd[data-row="${focusRow}"][data-col="${focusCol}"]`
+            ) ?? this.querySelector('kbd[role="button"]');
+          next?.focus();
+        }
+
         function kbd(row, col, className = "") {
           // prettier-ignore
-          return html`<kbd class="${className} ${kbdClass(row, col)}">${kbdContent(row, col)}</kbd>`;
+          return html`<kbd class="${className} ${kbdClass(row, col)}" ${kbdAsButton(row, col)}>${kbdContent(row, col)}</kbd>`;
         }
 
         // renders kbd class
@@ -688,6 +707,11 @@
                 col >= x && col < x + w && row >= y && row < y + h
             )
           );
+        }
+
+        function kbdAsButton(row, col) {
+          if ((focusRects && !isFocused(row, col)) || !keys[row][col]) return;
+          return `tabindex="0" role="button" data-row="${row}" data-col="${col}"`;
         }
 
         // renders kbd content
@@ -802,7 +826,7 @@
           if (this.#currentLayerKey !== "BASE_LAYER") return "pass";
           sendOnUp = tapInput;
           setTimeout(() => {
-            if (!pointerIsDown || sendOnUp !== tapInput) return;
+            if (!keyIsDown || sendOnUp !== tapInput) return;
             sendOnUp = null;
             sendInput(mod);
           }, tapHoldMs);
@@ -816,10 +840,10 @@
         const callbacks = {
           "␣": (kbd) => {
             if (this.#currentLayerKey !== "BASE_LAYER") return "pass";
-            if (!kbd.closest(".lily58-left-half")) return "pass";
+            if (!this.#leftHalf.contains(kbd)) return "pass";
             sendOnUp = "␣";
             setTimeout(() => {
-              if (!pointerIsDown) return;
+              if (!keyIsDown) return;
               sendOnUp = null;
               this.#toggleLayer("SHIFT_LAYER", os);
               sendInput("⇧");
@@ -910,25 +934,7 @@
           FB3: () => {},
         };
 
-        const sendInput = async (input) => {
-          const keyPresses = Array.isArray(input) ? input : [input];
-          const endTime =
-            Date.now() + Math.max(1500, Math.log2(keyPresses.length) * 1000);
-          for (let keyPress of keyPresses) {
-            while (modifiers[keyPress[0]]) {
-              const modText = modifiers[keyPress[0]]();
-              this.#sendKey(overlay, modText, endTime, true);
-              await delay(20);
-              keyPress = keyPress.slice(1);
-            }
-            if (keyPress) {
-              this.#sendKey(overlay, keyPress, endTime);
-              await delay(150);
-            }
-          }
-        };
-
-        let pointerIsDown = false;
+        let keyIsDown = false;
         let sendOnUp = null;
 
         this.addEventListener("pointerup", (event) => {
@@ -936,12 +942,10 @@
           let input = kbd?.innerText.trim();
           if (!input) return;
 
-          pointerIsDown = false;
+          keyIsDown = false;
 
-          if (sendOnUp) {
-            this.#sendKey(overlay, sendOnUp);
-            sendOnUp = null;
-          }
+          handleKeyUp();
+          event.preventDefault();
         });
 
         this.addEventListener("pointerdown", (event) => {
@@ -954,9 +958,98 @@
             volume: 0.7 * Math.pow(2, Math.random() * 0.4 - 0.2),
           });
 
-          pointerIsDown = true;
+          keyIsDown = true;
           sendOnUp = null;
 
+          handleKeyDown(kbd, input);
+          event.preventDefault();
+        });
+
+        this.addEventListener("keydown", (event) => {
+          const kbd = event.target.closest("kbd");
+          let input = kbd?.innerText.trim();
+          if (!input) return;
+
+          let row = Number(kbd.dataset.row);
+          let col = Number(kbd.dataset.col);
+
+          const isUp = event.key === "ArrowUp";
+          const isDown = event.key === "ArrowDown";
+          const isLeft = event.key === "ArrowLeft";
+          const isRight = event.key === "ArrowRight";
+          if (isUp || isDown || isLeft || isRight) {
+            const isLandscape =
+              this.#leftHalf.offsetTop === this.#rightHalf.offsetTop;
+
+            let next = null;
+            search: for (let f = 1; f < 8; f++) {
+              for (let s = 0; s < 8; s++) {
+                const searchSide = Math.ceil(s / 2) * ((s % 2) * 2 - 1);
+                let searchRow = row + (isUp ? -f : isDown ? f : searchSide);
+                let searchCol = col + (isLeft ? -f : isRight ? f : searchSide);
+
+                // the markup is laid out that halves are stacked in rows (portrait)
+                // need special behaviour when landscape
+                if (isLandscape) {
+                  // keep within same half when moving rows
+                  if (searchRow < 5 !== row < 5) {
+                    continue;
+                  }
+                  // go to other half when moving beyond columns
+                  if (isLeft || isRight) {
+                    const gap = 2;
+                    if (searchRow >= 5 && searchRow < 10 && searchCol < -gap) {
+                      searchCol += 6 + gap;
+                      searchRow -= 5;
+                    } else if (searchRow < 5 && searchCol >= 6 + gap) {
+                      searchCol -= 6 + gap;
+                      searchRow += 5;
+                    }
+                  }
+                }
+
+                next = this.querySelector(
+                  `kbd[data-row="${searchRow}"][data-col="${searchCol}"]`
+                );
+                if (next) break search;
+              }
+            }
+
+            if (next) next.focus();
+            event.preventDefault();
+            return;
+          }
+
+          if (event.key === "Enter" || event.key === " ") {
+            keyIsDown = true;
+
+            if (!event.repeat) {
+              handleKeyDown(kbd, input);
+
+              // the focused <kbd> gets replaced when layers change
+              if (document.activeElement !== kbd) {
+                const next =
+                  this.querySelector(
+                    `kbd[data-row="${row}"][data-col="${col}"]`
+                  ) ?? this.querySelector('kbd[role="button"]');
+                next?.focus();
+              }
+            }
+
+            event.preventDefault();
+            return;
+          }
+        });
+
+        this.addEventListener("keyup", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            keyIsDown = false;
+            handleKeyUp();
+            event.preventDefault();
+          }
+        });
+
+        const handleKeyDown = (kbd, input) => {
           if (callbacks[input] && callbacks[input](kbd) !== "pass") {
             return;
           }
@@ -979,7 +1072,32 @@
           }
 
           sendInput(input);
-        });
+        };
+
+        const handleKeyUp = () => {
+          if (sendOnUp) {
+            this.#sendKey(overlay, sendOnUp);
+            sendOnUp = null;
+          }
+        };
+
+        const sendInput = async (input) => {
+          const keyPresses = Array.isArray(input) ? input : [input];
+          const endTime =
+            Date.now() + Math.max(1500, Math.log2(keyPresses.length) * 1000);
+          for (let keyPress of keyPresses) {
+            while (modifiers[keyPress[0]]) {
+              const modText = modifiers[keyPress[0]]();
+              this.#sendKey(overlay, modText, endTime, true);
+              await delay(20);
+              keyPress = keyPress.slice(1);
+            }
+            if (keyPress) {
+              this.#sendKey(overlay, keyPress, endTime);
+              await delay(150);
+            }
+          }
+        };
       }
 
       #sendKey(overlay, text, endTime = Date.now() + 1500, isModifier = false) {
@@ -1024,8 +1142,7 @@
           QWERTY_LAYER: "qwerty_mode_oled.png",
         }[this.#currentLayerKey];
 
-        const halves = this.querySelectorAll(".lily58-half");
-        halves.forEach((half, halfIndex) => {
+        [this.#leftHalf, this.#rightHalf].forEach((half, halfIndex) => {
           half.innerHTML = this.#renderKeys({
             halfIndex,
             keys,

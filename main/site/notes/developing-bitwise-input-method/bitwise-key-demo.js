@@ -129,10 +129,10 @@ customElements.define(
       if (full) {
         for (let i = 0; i < numDigits; i++) {
           digits[i].style.pointerEvents = "none";
+          digits[i].disabled = true;
         }
 
         this.addEventListener("keydown", (event) => {
-          event.preventDefault();
           const index = hotkeys.indexOf(event.key.toUpperCase());
 
           if (index < 0) return;
@@ -144,10 +144,11 @@ customElements.define(
           resultNum = 0;
           renderState();
           digits[index].classList.add("bitwise-key-demo-digit-active");
+
+          event.preventDefault();
         });
 
         this.addEventListener("keyup", (event) => {
-          event.preventDefault();
           const index = hotkeys.indexOf(event.key.toUpperCase());
 
           if (index < 0) return;
@@ -162,6 +163,8 @@ customElements.define(
 
           renderState();
           digits[index].classList.remove("bitwise-key-demo-digit-active");
+
+          event.preventDefault();
         });
       } else {
         this.addEventListener("click", (event) => {
