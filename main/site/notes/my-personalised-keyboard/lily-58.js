@@ -6,7 +6,7 @@
     ["?", "q", "w", "f", "p", "b"],
     ["Tab", "a", "r", "s", "t", "g"],
     ["+", "z", "x", "c", "d", "v"],
-    ["⌃", "L(s)", "❖", "␣", "◆"],
+    ["⌃", "L(s)", "⌘", "␣", "◆"],
     // Right hand
     ["L(e)", "Wksp←", "Wksp↑", "Wksp↓", "Wksp→", "⌫"],
     ["j", "l", "u", "y", "=", "'"],
@@ -119,7 +119,7 @@
     ["`", "Q", "W", "E", "R", "T"],
     ["Tab", "A", "S", "D", "F", "G"],
     ["⇧", "Z", "X", "C", "V", "B"],
-    ["⌃", "⌥", "❖", "␣", ""],
+    ["⌃", "⌥", "⌘", "␣", ""],
     // Right hand
     ["6", "7", "8", "9", "0", "⌫"],
     ["Y", "U", "I", "O", "P", "-"],
@@ -130,24 +130,27 @@
 
   customElements.define(
     "lily-58",
+    // This component is a mess because of multiple iterations piled on top of each other
+    // 1. Base code that shows a static keyboard with ONE layer toggle via `layer-button` and `layerkeydatakey`.
+    // 2. WebComponent migration (this was a plain script before).
+    // 3. Fully simulated keyboard that doesn't interactive with the ONE layer toggle, has its own state & layers.
     class Lily58 extends HTMLElement {
+      #currentLayerKey = "BASE_LAYER";
+
       constructor() {
         super();
 
         const oledLeft = this.getAttribute("oled-left");
         const oledRight = this.getAttribute("oled-right");
-        const focusRects =
-          this.hasAttribute("focus-rects") &&
-          JSON.parse("[" + this.getAttribute("focus-rects") + "]");
+        const hasFocusRects = this.hasAttribute("focus-rects");
+        const hasLayerButton = this.hasAttribute("layer-button");
         const layer =
           this.hasAttribute("layerkeydatakey") &&
           DATA[this.getAttribute("layerkeydatakey")];
-        const layerButton =
-          this.hasAttribute("layer-button") &&
-          this.getAttribute("layer-button").split(",").map(Number);
 
         const keyDataKey = this.getAttribute("keydatakey");
-        const keys = DATA[keyDataKey];
+        this.#currentLayerKey = keyDataKey;
+        const keys = DATA[this.#currentLayerKey];
 
         const leftSlotHTML = html.raw(
           Array.from(this.querySelectorAll('[slot="left"]'))
@@ -165,48 +168,28 @@
             .join("")
         );
 
+        const fullSim =
+          keys === DATA.BASE_LAYER &&
+          !layer &&
+          !hasLayerButton &&
+          !hasFocusRects;
+
         this.innerHTML = html`
           <div class="lily58-half-container">
             <div
-              class="lily58-half lily58-left-half ${halfClass(0)}"
+              class="lily58-half lily58-left-half ${this.#halfClass(0)}"
               aria-hidden="true"
             >
-              <div class="lily58-grid">
-                ${kbd(0, 0, "lily58-accent")} ${kbd(0, 1)} ${kbd(0, 2)}
-                ${kbd(0, 3)} ${kbd(0, 4)} ${kbd(0, 5)} ${kbd(1, 0)} ${kbd(1, 1)}
-                ${kbd(1, 2)} ${kbd(1, 3)} ${kbd(1, 4)} ${kbd(1, 5)}
-                ${kbd(2, 0, "lily58-shade")} ${kbd(2, 1)} ${kbd(2, 2)}
-                ${kbd(2, 3)} ${kbd(2, 4)} ${kbd(2, 5)} ${kbd(3, 0)} ${kbd(3, 1)}
-                ${kbd(3, 2)} ${kbd(3, 3)} ${kbd(3, 4)} ${kbd(3, 5)}
-              </div>
-              ${kbd(4, 0, "lily58-x0 lily58-shade")}
-              ${kbd(4, 1, "lily58-x1 lily58-shade")}
-              ${kbd(4, 2, "lily58-x2 lily58-shade")}
-              ${kbd(4, 3, "lily58-x3 lily58-shade")}
-              ${kbd(4, 4, "lily58-x4 lily58-shade")}
-              <div class="lily58-oled">${renderLeftOLED()}</div>
+              ${this.#renderKeys({ halfIndex: 0, keys, layer, oledLeft })}
             </div>
             ${leftSlotHTML}
           </div>
           <div class="lily58-half-container">
             <div
-              class="lily58-half lily58-right-half ${halfClass(1)}"
+              class="lily58-half lily58-right-half ${this.#halfClass(1)}"
               aria-hidden="true"
             >
-              <div class="lily58-grid">
-                ${kbd(5, 0)} ${kbd(5, 1)} ${kbd(5, 2)} ${kbd(5, 3)} ${kbd(5, 4)}
-                ${kbd(5, 5, "lily58-shade")} ${kbd(6, 0)} ${kbd(6, 1)}
-                ${kbd(6, 2)} ${kbd(6, 3)} ${kbd(6, 4)} ${kbd(6, 5)} ${kbd(7, 0)}
-                ${kbd(7, 1)} ${kbd(7, 2)} ${kbd(7, 3)} ${kbd(7, 4)}
-                ${kbd(7, 5, "lily58-accent")} ${kbd(8, 0)} ${kbd(8, 1)}
-                ${kbd(8, 2)} ${kbd(8, 3)} ${kbd(8, 4)} ${kbd(8, 5)}
-              </div>
-              ${kbd(9, 0, "lily58-x0 lily58-shade")}
-              ${kbd(9, 1, "lily58-x1 lily58-shade")}
-              ${kbd(9, 2, "lily58-x2 lily58-shade")}
-              ${kbd(9, 3, "lily58-x3 lily58-shade")}
-              ${kbd(9, 4, "lily58-x4 lily58-shade")}
-              <div class="lily58-oled">${renderRightOLED()}</div>
+              ${this.#renderKeys({ halfIndex: 1, keys, layer, oledRight })}
             </div>
             ${rightSlotHTML}
           </div>
@@ -230,6 +213,10 @@
           }
         }
 
+        if (fullSim) {
+          this.#initFullSim();
+        }
+
         appendStyle(
           this.tagName,
           html`<style>
@@ -237,15 +224,32 @@
               display: flex;
               justify-content: center;
               flex-wrap: wrap;
-              column-gap: calc(30px + 6vw);
+              column-gap: var(--lily58-gap);
               row-gap: 30px;
               font-family: var(--default-font, monospace);
               font-size: 15px;
+              touch-action: pan-x pan-y pinch-zoom;
+              --lily58-gap: calc(30px + 6vw);
               /* bleed */
               position: relative;
               min-width: 100vw;
               left: calc(50% - 50vw);
             }
+
+            lily-58.lily58-full-sim {
+              filter: drop-shadow(
+                0 0 60px rgba(from var(--clr0-light) r g b / 0.4)
+              );
+              transition: filter 0.5s;
+
+              &:hover {
+                filter: drop-shadow(
+                  0 0 0 rgba(from var(--clr0-light) r g b / 0)
+                );
+                transition: filter 2s;
+              }
+            }
+
             lily-58 kbd {
               display: flex;
               justify-content: center;
@@ -256,7 +260,35 @@
               line-height: 1;
               background: white;
               color: black;
+              user-select: none;
             }
+
+            lily-58.lily58-full-sim {
+              margin-block: min(var(--lily58-gap), 25vh);
+
+              kbd:not(:empty) {
+                cursor: pointer;
+                &:is(:hover, :focus-visible) {
+                  background: #cccccc;
+                  &.lily58-accent {
+                    background: #34b5df;
+                  }
+                  &.lily58-shade {
+                    background: #80abcc;
+                  }
+                }
+                &:active {
+                  animation: lily58-full-sim-press 0.1s
+                    cubic-bezier(0.8, 0, 1, 1) both;
+                }
+              }
+            }
+            @keyframes lily58-full-sim-press {
+              25% {
+                translate: 0 2px;
+              }
+            }
+
             kbd.lily58-accent {
               background: #72cbe9;
             }
@@ -382,7 +414,7 @@
               align-items: center;
               width: 40px;
               height: 85px;
-              background: black;
+              background-color: black !important;
               border: solid 1px #222;
             }
             .lily58-no-layers .lily58-oled:has(img),
@@ -463,21 +495,176 @@
             .lily58-on-layer1 .lily58-layer0 {
               display: none;
             }
+
+            .lily58-overlay {
+              position: fixed;
+              top: 0;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              padding: min(5vh, 4vw) 2vw;
+              display: flex;
+              justify-content: start;
+              align-content: end;
+              flex-wrap: wrap-reverse;
+              z-index: calc(infinity * 1px);
+              pointer-events: none;
+
+              kbd {
+                display: grid;
+                place-content: center;
+                --lily58-preview-kbd-width: min(128px, 10vw);
+                --lily58-preview-kbd-length: 1;
+                width: var(--lily58-preview-kbd-width);
+                height: var(--lily58-preview-kbd-width);
+                margin-right: calc(var(--lily58-preview-kbd-width) * 0.1);
+                margin-top: calc(var(--lily58-preview-kbd-width) * 0.2);
+                border-radius: calc(var(--lily58-preview-kbd-width) * 0.2);
+                font-size: calc(
+                  1.25 *
+                    (
+                      var(--lily58-preview-kbd-width) /
+                        max(3, var(--lily58-preview-kbd-length))
+                    )
+                );
+                line-height: var(--lily58-preview-kbd-width);
+                font-weight: bold;
+                text-wrap: nowrap;
+                color: #000;
+                background: var(--lily58-preview-kbd-background);
+                box-shadow: 0 calc(var(--lily58-preview-kbd-width) * 0.1) 0 #999,
+                  var(--lily58-preview-kbd-box-shadow);
+                overflow: hidden;
+
+                animation: lily58-preview-kbd-enter 0.4s ease both;
+                --lily58-preview-kbd-background: #fff;
+                --lily58-preview-kbd-box-shadow: 0 0
+                  calc(var(--lily58-preview-kbd-width) * 0.2) #0008;
+
+                &.lily58-preview-kbd-modifier {
+                  --lily58-preview-kbd-background: #ccc;
+                }
+                &.lily58-preview-kbd-exit {
+                  animation: lily58-preview-kbd-exit 2s ease both;
+                }
+              }
+            }
+
+            @keyframes lily58-preview-kbd-enter {
+              0% {
+                width: var(--lily58-preview-kbd-width);
+              }
+              0%,
+              75%,
+              100% {
+                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+                translate: 0;
+                background: var(--lily58-preview-kbd-background);
+                box-shadow: 0 calc(var(--lily58-preview-kbd-width) * 0.1) 0 #999,
+                  var(--lily58-preview-kbd-box-shadow);
+              }
+              25%,
+              50% {
+                animation-timing-function: cubic-bezier(0.2, 0, 1, 1);
+                translate: 0 calc(var(--lily58-preview-kbd-width) * 0.1);
+                background: lch(
+                  from var(--lily58-preview-kbd-background) calc(l * 0.9) c h
+                );
+                box-shadow: 0 0 0 #999, var(--lily58-preview-kbd-box-shadow);
+              }
+              0% {
+                opacity: 0;
+              }
+              20% {
+                opacity: 1;
+              }
+              0% {
+                color: transparent;
+              }
+              100% {
+                color: #000;
+              }
+            }
+
+            @keyframes lily58-preview-kbd-exit {
+              0% {
+                opacity: 1;
+              }
+              30% {
+                width: var(--lily58-preview-kbd-width);
+                margin-right: calc(var(--lily58-preview-kbd-width) * 0.1);
+                opacity: 0;
+              }
+              100% {
+                width: 0px;
+                margin-right: 0px;
+                opacity: 0;
+              }
+            }
           </style>`
         );
+      }
 
-        function halfClass(half) {
-          if (focusRects) {
-            // check if a focusRect intersects this half
-            const [hx, hy, hw, hh] =
-              half <= 0 ? /* left */ [0, 0, 6, 5] : /* right */ [0, 5, 6, 5];
-            const intersects = focusRects.some(
-              ([x, y, w, h]) =>
-                x <= hx + hw && x + w >= hx && y <= hy + hh && y + h >= hy
-            );
-            if (!intersects) return "lily58-half-unfocused";
-          }
-          return "";
+      #getFocusRects() {
+        return (
+          this.hasAttribute("focus-rects") &&
+          JSON.parse("[" + this.getAttribute("focus-rects") + "]")
+        );
+      }
+
+      #halfClass(half) {
+        const focusRects = this.#getFocusRects();
+        if (focusRects) {
+          // check if a focusRect intersects this half
+          const [hx, hy, hw, hh] =
+            half <= 0 ? /* left */ [0, 0, 6, 5] : /* right */ [0, 5, 6, 5];
+          const intersects = focusRects.some(
+            ([x, y, w, h]) =>
+              x <= hx + hw && x + w >= hx && y <= hy + hh && y + h >= hy
+          );
+          if (!intersects) return "lily58-half-unfocused";
+        }
+        return "";
+      }
+
+      #renderKeys({ halfIndex, keys, oledLeft, oledRight, layer = null }) {
+        const layerButton =
+          this.hasAttribute("layer-button") &&
+          this.getAttribute("layer-button").split(",").map(Number);
+        const focusRects = this.#getFocusRects();
+
+        switch (halfIndex) {
+          case 0:
+            return html`<div class="lily58-grid">
+                ${kbd(0, 0, "lily58-accent")} ${kbd(0, 1)} ${kbd(0, 2)}
+                ${kbd(0, 3)} ${kbd(0, 4)} ${kbd(0, 5)} ${kbd(1, 0)} ${kbd(1, 1)}
+                ${kbd(1, 2)} ${kbd(1, 3)} ${kbd(1, 4)} ${kbd(1, 5)}
+                ${kbd(2, 0, "lily58-shade")} ${kbd(2, 1)} ${kbd(2, 2)}
+                ${kbd(2, 3)} ${kbd(2, 4)} ${kbd(2, 5)} ${kbd(3, 0)} ${kbd(3, 1)}
+                ${kbd(3, 2)} ${kbd(3, 3)} ${kbd(3, 4)} ${kbd(3, 5)}
+              </div>
+              ${kbd(4, 0, "lily58-x0 lily58-shade")}
+              ${kbd(4, 1, "lily58-x1 lily58-shade")}
+              ${kbd(4, 2, "lily58-x2 lily58-shade")}
+              ${kbd(4, 3, "lily58-x3 lily58-shade")}
+              ${kbd(4, 4, "lily58-x4 lily58-shade")}
+              <div class="lily58-oled">${renderLeftOLED()}</div>`;
+
+          case 1:
+            return html`<div class="lily58-grid">
+                ${kbd(5, 0)} ${kbd(5, 1)} ${kbd(5, 2)} ${kbd(5, 3)} ${kbd(5, 4)}
+                ${kbd(5, 5, "lily58-shade")} ${kbd(6, 0)} ${kbd(6, 1)}
+                ${kbd(6, 2)} ${kbd(6, 3)} ${kbd(6, 4)} ${kbd(6, 5)} ${kbd(7, 0)}
+                ${kbd(7, 1)} ${kbd(7, 2)} ${kbd(7, 3)} ${kbd(7, 4)}
+                ${kbd(7, 5, "lily58-accent")} ${kbd(8, 0)} ${kbd(8, 1)}
+                ${kbd(8, 2)} ${kbd(8, 3)} ${kbd(8, 4)} ${kbd(8, 5)}
+              </div>
+              ${kbd(9, 0, "lily58-x0 lily58-shade")}
+              ${kbd(9, 1, "lily58-x1 lily58-shade")}
+              ${kbd(9, 2, "lily58-x2 lily58-shade")}
+              ${kbd(9, 3, "lily58-x3 lily58-shade")}
+              ${kbd(9, 4, "lily58-x4 lily58-shade")}
+              <div class="lily58-oled">${renderRightOLED()}</div>`;
         }
 
         function kbd(row, col, className = "") {
@@ -562,45 +749,434 @@
           if (!oledRight) return "";
           return html`<img alt="" class="lily58-layer0" src="${oledRight}" />`;
         }
+      }
 
-        function altText() {
-          const leftKeymap = renderAltKeymap(keys.slice(0, 5), 0);
-          const rightKeymap = renderAltKeymap(keys.slice(5, 10), 5);
-          const wwith = focusRects ? " with highlighted keys" : "";
-          return (
-            `Lily58 keyboard layout diagram${wwith}` +
-            "\n  Left hand:\n" +
-            leftKeymap +
-            "\n  Right hand:\n" +
-            rightKeymap
-          );
-        }
+      #initFullSim() {
+        this.classList.add("lily58-full-sim");
 
-        function renderAltKeymap(keys, rowOffset) {
-          // prettier-ignore
-          return keys
-      .map((rowKeys, row) =>
-        "    " + rowKeys.map((key, col) =>
-          renderAltKey(key, row + rowOffset, col)
-        ).join("")
-      ).join("\n");
-        }
+        const overlay = document.createElement("div");
+        overlay.classList.add("lily58-overlay");
+        document.body.appendChild(overlay);
 
-        function renderAltKey(key, row, col) {
-          const content = centerAltKey(key);
-          if (focusRects && isFocused(row, col)) {
-            return `〘${content}〙`;
+        this.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+        });
+
+        let os = { value: "macos" };
+        this.#setOLEDBaseOS(os);
+
+        const modifiers = {
+          "⌃": () => "Ctrl",
+          "⌥": () => (os.value === "macos" ? "Option" : "Alt"),
+          "⇧": () => "Shift",
+          "◆": () => (os.value === "macos" ? "Command" : "Super"),
+          "⌘": () => modifiers[getPrimaryMod(os)](),
+        };
+
+        const wSelSub = () => [
+          `${getWordMod(os)}←`,
+          `${getWordMod(os)}→`,
+          `⇧`,
+          `${getWordMod(os)}←`,
+        ];
+
+        const subs = {
+          "⌃[": () => `${getPrimaryMod(os)}[`,
+          "⌃]": () => `${getPrimaryMod(os)}]`,
+          "Wksp←": () => `${getDesktopMod(os)}←`,
+          "Wksp↑": () => `${getDesktopMod(os)}↑`,
+          "Wksp↓": () => `${getDesktopMod(os)}↓`,
+          "Wksp→": () => `${getDesktopMod(os)}→`,
+          "W⌫": () => [...wSelSub(), "Backspace"],
+          "W←": () => `${getWordMod(os)}←`,
+          WSel: wSelSub,
+          "W→": () => `${getWordMod(os)}→`,
+          "⌫": () => "Backspace",
+          "⌦": () => "Delete",
+          "↵": () => "Enter",
+        };
+
+        const tapHoldMs = 300;
+
+        const homeRowModTapHold = (tapInput, mod) => {
+          if (this.#currentLayerKey !== "BASE_LAYER") return "pass";
+          sendOnUp = tapInput;
+          setTimeout(() => {
+            if (!pointerIsDown || sendOnUp !== tapInput) return;
+            sendOnUp = null;
+            sendInput(mod);
+          }, tapHoldMs);
+        };
+
+        const shift = (rawKey, layerKey) => {
+          if (this.#currentLayerKey !== layerKey) return "pass";
+          sendInput(["⇧", rawKey]);
+        };
+
+        const callbacks = {
+          "␣": (kbd) => {
+            if (this.#currentLayerKey !== "BASE_LAYER") return "pass";
+            if (!kbd.closest(".lily58-left-half")) return "pass";
+            sendOnUp = "␣";
+            setTimeout(() => {
+              if (!pointerIsDown) return;
+              sendOnUp = null;
+              this.#toggleLayer("SHIFT_LAYER", os);
+              sendInput("⇧");
+              callbacks["⇧"] = () => {
+                delete callbacks["⇧"];
+                this.#toggleLayer("BASE_LAYER", os);
+              };
+            }, tapHoldMs);
+          },
+          a: () => homeRowModTapHold("a", "⇧"),
+          r: () => homeRowModTapHold("r", "⌘"),
+          s: () => homeRowModTapHold("s", "⌥"),
+          t: () => homeRowModTapHold("t", "⌃"),
+          n: () => homeRowModTapHold("n", "⌃"),
+          e: () => homeRowModTapHold("e", "⌥"),
+          i: () => homeRowModTapHold("i", "⌘"),
+          o: () => homeRowModTapHold("o", "⇧"),
+          "?": () => shift("/", "BASE_LAYER"),
+          "+": () => shift("=", "BASE_LAYER"),
+          "~": () => shift("`", "SHIFT_LAYER"),
+          "@": () => shift("2", "SHIFT_LAYER"),
+          "#": () => shift("3", "SHIFT_LAYER"),
+          "%": () => shift("5", "SHIFT_LAYER"),
+          "^": () => shift("6", "SHIFT_LAYER"),
+          "&": () => shift("7", "SHIFT_LAYER"),
+          "|": () => shift("\\", "SHIFT_LAYER"),
+          _: () => shift("-", "SHIFT_LAYER"),
+          "!": () => shift("1", "SHIFT_LAYER"),
+          '"': () => shift("'", "SHIFT_LAYER"),
+          ":": () => shift(";", "SHIFT_LAYER"),
+          "*": () => shift("8", "SHIFT_LAYER"),
+          $: () => shift("4", "SYMBOL_LAYER"),
+          "{": () => shift("[", "SYMBOL_LAYER"),
+          "}": () => shift("]", "SYMBOL_LAYER"),
+          "<": () => shift(",", "SYMBOL_LAYER"),
+          "(": () => shift("9", "SYMBOL_LAYER"),
+          ")": () => shift("0", "SYMBOL_LAYER"),
+          ">": () => shift(".", "SYMBOL_LAYER"),
+          "L(s)": () => this.#toggleLayer("SYMBOL_LAYER", os),
+          "L(e)": () => this.#toggleLayer("EMOJI_LAYER", os),
+          "L(n)": () => this.#toggleLayer("NAVIGATION_LAYER", os),
+          "L(#)": () => this.#toggleLayer("NUMBER_LAYER", os),
+          "L(f)": () => this.#toggleLayer("FUNCTION_LAYER", os),
+          QWERTY: () => this.#toggleLayer("QWERTY_LAYER", os),
+          Cancel: () => this.#toggleLayer("BASE_LAYER", os),
+          Chat: () => {
+            this.#toggleLayer("BASE_LAYER", os);
+            const exitChat = () => {
+              this.#toggleLayer("QWERTY_LAYER", os);
+              delete callbacks["↵"];
+              delete callbacks.Esc;
+              return "pass";
+            };
+            callbacks.Esc = exitChat;
+            callbacks["↵"] = exitChat;
+          },
+          Linux: () => {
+            os.value = "linux";
+            this.#setOLEDBaseOS(os);
+          },
+          macOS: () => {
+            os.value = "macos";
+            this.#setOLEDBaseOS(os);
+          },
+          "🔉-": () => {
+            changeVolume(-10);
+            return "pass";
+          },
+          "🔊+": () => {
+            changeVolume(+10);
+            return "pass";
+          },
+          "🔇": () => {
+            toggleVolume();
+            return "pass";
+          },
+          "🔅-": () => {
+            changeBrightness(-10);
+            return "pass";
+          },
+          "🔆+": () => {
+            changeBrightness(+10);
+            return "pass";
+          },
+          FB0: () => {},
+          FB1: () => {},
+          FB2: () => {},
+          FB3: () => {},
+        };
+
+        const sendInput = async (input) => {
+          const keyPresses = Array.isArray(input) ? input : [input];
+          const endTime =
+            Date.now() + Math.max(1500, Math.log2(keyPresses.length) * 1000);
+          for (let keyPress of keyPresses) {
+            while (modifiers[keyPress[0]]) {
+              const modText = modifiers[keyPress[0]]();
+              this.#sendKey(overlay, modText, endTime, true);
+              await delay(20);
+              keyPress = keyPress.slice(1);
+            }
+            if (keyPress) {
+              this.#sendKey(overlay, keyPress, endTime);
+              await delay(150);
+            }
           }
-          return `〔${content}〕`;
+        };
+
+        let pointerIsDown = false;
+        let sendOnUp = null;
+
+        this.addEventListener("pointerup", (event) => {
+          const kbd = event.target.closest("kbd");
+          let input = kbd?.innerText.trim();
+          if (!input) return;
+
+          pointerIsDown = false;
+
+          if (sendOnUp) {
+            this.#sendKey(overlay, sendOnUp);
+            sendOnUp = null;
+          }
+        });
+
+        this.addEventListener("pointerdown", (event) => {
+          const kbd = event.target.closest("kbd");
+          let input = kbd?.innerText.trim();
+          if (!input) return;
+
+          playSound("keypress.wav", {
+            pitch: Math.pow(2, Math.random() * 0.4 - 0.2),
+            volume: 0.7 * Math.pow(2, Math.random() * 0.4 - 0.2),
+          });
+
+          pointerIsDown = true;
+          sendOnUp = null;
+
+          if (callbacks[input] && callbacks[input](kbd) !== "pass") {
+            return;
+          }
+
+          // special cases
+          if (this.#currentLayerKey === "SHIFT_LAYER") {
+            const uppercase = input.toUpperCase();
+            // exclude 'unshifted' keys
+            if (!";`\\".includes(input)) {
+              if (input === uppercase) input = input.toLowerCase();
+              input = ["⇧", input];
+            }
+          } else if (this.#currentLayerKey === "EMOJI_LAYER") {
+            input = unicodeInput(input, os);
+            this.#toggleLayer("BASE_LAYER", os);
+          }
+
+          if (subs[input]) {
+            input = subs[input]();
+          }
+
+          sendInput(input);
+        });
+      }
+
+      #sendKey(overlay, text, endTime = Date.now() + 1500, isModifier = false) {
+        const previewKbd = document.createElement("kbd");
+        previewKbd.innerText = text.trim();
+        previewKbd.classList.toggle("lily58-preview-kbd-modifier", isModifier);
+        previewKbd.style.setProperty(
+          "--lily58-preview-kbd-length",
+          previewKbd.innerText.length
+        );
+
+        if (previewKbd.innerText.length === 1) {
+          previewKbd.innerText = previewKbd.innerText.toUpperCase();
         }
 
-        function centerAltKey(label) {
-          const maxLength = 4;
-          return (
-            "".padStart(Math.floor((maxLength - label.length) / 2), " ") + label
-          ).padEnd(maxLength, " ");
+        const duration = endTime - Date.now();
+
+        overlay.appendChild(previewKbd);
+        setTimeout(
+          () => previewKbd.classList.add("lily58-preview-kbd-exit"),
+          duration
+        );
+        setTimeout(() => previewKbd.remove(), duration + 2000);
+      }
+
+      #toggleLayer(layerKey, os) {
+        if (this.#currentLayerKey === layerKey) {
+          layerKey = "BASE_LAYER";
         }
+        this.#currentLayerKey = layerKey;
+        const keys = DATA[this.#currentLayerKey];
+        const oledLeft = {
+          SYMBOL_LAYER: "symbol_layer_oled.png",
+          SHIFT_LAYER: "shift_layer_oled.png",
+          QWERTY_LAYER: "qwerty_mode_oled.png",
+        }[this.#currentLayerKey];
+        const oledRight = {
+          EMOJI_LAYER: "emoji_layer_oled.png",
+          NAVIGATION_LAYER: "navigation_layer_oled.png",
+          NUMBER_LAYER: "number_layer_oled.png",
+          FUNCTION_LAYER: "function_layer_oled.png",
+          QWERTY_LAYER: "qwerty_mode_oled.png",
+        }[this.#currentLayerKey];
+
+        const halves = this.querySelectorAll(".lily58-half");
+        halves.forEach((half, halfIndex) => {
+          half.innerHTML = this.#renderKeys({
+            halfIndex,
+            keys,
+            oledLeft,
+            oledRight,
+          });
+        });
+        this.#setOLEDBaseOS(os);
+      }
+
+      #setOLEDBaseOS(os) {
+        const background = os
+          ? os.value === "macos"
+            ? "url('macos_oled.png') 18px 12px / 6px 6px no-repeat"
+            : "url('linux_oled.png') 12px 12px / 6px 6px no-repeat"
+          : "none";
+        this.querySelectorAll(".lily58-oled")[1].style.background = background;
       }
     }
   );
+
+  function unicodeInput(input, os) {
+    const unicodeHex =
+      input.length === 1
+        ? input.charCodeAt(0).toString(16)
+        : (
+            (input.charCodeAt(0) - 0xd800) * 0x400 +
+            (input.charCodeAt(1) - 0xdc00) +
+            0x10000
+          ).toString(16);
+    switch (os.value) {
+      case "linux":
+        return ["⌃⇧u", ...unicodeHex.split(""), "Enter"];
+      case "macos":
+        return ["⌥", "+", ...unicodeHex.split("")];
+      default:
+        throw new Error("invalid os value", os);
+    }
+  }
+
+  function getPrimaryMod(os) {
+    switch (os.value) {
+      case "linux":
+        return "⌃";
+      case "macos":
+        return "◆";
+      default:
+        throw new Error("invalid os value", os);
+    }
+  }
+
+  function getDesktopMod(os) {
+    switch (os.value) {
+      case "linux":
+        return "⌃◆";
+      case "macos":
+        return "⌃";
+      default:
+        throw new Error("invalid os value", os);
+    }
+  }
+
+  function getWordMod(os) {
+    switch (os.value) {
+      case "linux":
+        return "⌃";
+      case "macos":
+        return "⌥";
+      default:
+        throw new Error("invalid os value", os);
+    }
+  }
+
+  function delay(ms) {
+    const resolver = Promise.withResolvers();
+    setTimeout(resolver.resolve, ms);
+    return resolver.promise;
+  }
+
+  let osd = null;
+  let osdTimeout = null;
+
+  function showOSD(title, progress) {
+    if (!osd) {
+      osd = document.createElement("div");
+      osd.style.position = "fixed";
+      osd.style.inset = 0;
+      osd.style.pointerEvents = "none";
+      osd.style.zIndex = "99990px";
+      document.body.append(osd);
+    }
+
+    osd.innerHTML = html`<div
+      style="position:fixed;left:50%;top:50%;translate:-50% -50%;display:flex;gap:10px;width:min(95vw,300px);background:#2224;color:#fff;padding:20px;border-radius:5px;font-family:system-ui;font-size:14px;backdrop-filter:blur(20px)"
+    >
+      ${title}
+      <progress value="${progress}" style="flex:1 1 auto"></progress>
+      <span style="flex:0 0 4ch">${Math.round(progress * 100)}%</span>
+    </div>`;
+
+    scheduleHideOSD();
+  }
+
+  function scheduleHideOSD() {
+    clearTimeout(osdTimeout);
+    osdTimeout = setTimeout(() => {
+      osd.innerHTML = "";
+    }, 1000);
+  }
+
+  let volume = 100;
+
+  function changeVolume(delta) {
+    volume = Math.max(0, Math.min(100, volume + delta));
+    showOSD("Audio", volume / 100);
+    playSound("popup.wav", { volume: volume / 100 });
+  }
+
+  function toggleVolume() {
+    if (volume > 0) {
+      changeVolume(-volume);
+    } else {
+      changeVolume(+100);
+    }
+  }
+
+  let brightness = 100;
+  let brightnessOverlay = null;
+
+  function changeBrightness(delta) {
+    brightness = Math.max(10, Math.min(100, brightness + delta));
+    if (!brightnessOverlay) {
+      brightnessOverlay = document.createElement("div");
+      brightnessOverlay.style.position = "fixed";
+      brightnessOverlay.style.inset = 0;
+      brightnessOverlay.style.pointerEvents = "none";
+      brightnessOverlay.style.zIndex = "calc(infinity * 1)";
+      brightnessOverlay.style.transition = "background-color 0.1s";
+      document.body.append(brightnessOverlay);
+    }
+    const opacity = 100 - brightness;
+    brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity}%)`;
+    showOSD("Brightness", brightness / 100);
+  }
+
+  function playSound(src, { pitch = 1, volume = 1 }) {
+    var sound = new Audio(src);
+    sound.volume = volume;
+    sound.playbackRate = pitch;
+    sound.preservesPitch = false;
+    sound.play();
+    sound.addEventListener("ended", () => sound.remove());
+  }
 })();
