@@ -4,12 +4,12 @@
 <link rel="stylesheet" href="/common.css"></link>
 <script defer="" src="/common.js"></script>
 
-<title>CSS-only single-element blurry image placeholders</title>
+<title>Minimal CSS-only blurry image placeholders</title>
 
 <site-header></site-header>
 
 <blog-header>
-  <h1>CSS-only single-element blurry image placeholders</h1>
+  <h1>Minimal CSS-only blurry image placeholders</h1>
   <img src="hero.jpg" alt="" loading="lazy"></img>
 </blog-header>
 
@@ -19,10 +19,460 @@
 
 <main class="prose">
   
-<p>Hello world!</p>
+<p>Here’s a CSS technique that produces blurry image placeholders (LQIPs) without requiring too much clutter in the markup &mdash; <em>Only a single custom property.</em></p>
+
+<card-box>
+  <code-block language="html"><pre><code>&lt;img src="&hellip;" style="--lqip:192900"></code></pre></code-block>
+
+  <p>The custom property above gives you:</p>
+
+  <p>
+    <div style="height:200px;border-radius:var(--card-border-radius);--my-lqip:192900"></div>
+  </p>
+
+  <label>
+    Try changing the property’s value <strong>(WARNING: FLASHING)</strong>
+    <input type="range" min="-999999" max="999999" style="width: 100%;">
+  </label>
+  <script>
+    {
+      const card = document.currentScript.parentElement;
+      const input = card.querySelector("input");
+      const code = card.querySelector("code");
+      const preview = card.querySelector("div");
+
+      let currentValueStr = "192900";
+      let targetCode = null
+
+      input.addEventListener("input", event => {
+        if (!targetCode) {
+          targetCode = Array.from(code.querySelectorAll("span")).filter(el => el.textContent.includes(currentValueStr)).slice(-1)[0] ?? code;
+        }
+
+        const lqip = Number(event.currentTarget.value);
+        // use this page's lqip to avoid breakage if I ever update the scheme
+        preview.style.setProperty("--my-lqip", lqip);
+        targetCode.innerHTML = targetCode.innerHTML.replace(currentValueStr, lqip);
+        currentValueStr = String(lqip);
+      });
+    }
+  </script>
+</card-box>
+
+<p>Granted, it’s a <em>very blurry</em> placeholder especially when compared to leading solutions. But it’s non-invasive and lightweight! I don’t need any wrapper element or to clutter up my markup with long strings of data, or to require JavaScript at all.</p>
+
+<card-box>
+  <a href="./gallery/">Check out the LQIP gallery for examples!</a>
+</card-box>
+
+<h2>Background</h2>
+
+<p>There have been many different techniques to implement LQIPs (low quality image placeholders), such as a very low resolution WebP or JPEG (<a href="https://engineering.fb.com/2015/08/06/android/the-technology-behind-preview-photos/" target="_blank">beheaded JPEGs</a> even), optimised SVG shape placements (<a href="https://github.com/axe312ger/sqip" target="_blank">SQIP</a>), and directly applying a discrete cosine transform (<a href="https://blurha.sh/">BlurHash</a>). Don’t forget the native progressive JPEGs and interlaced PNGs!</p>
+
+<figure>
+  <img src="solid-colour.png" alt="image gallery with solid colour placeholders">
+  <figcaption>Canva and Pinterest use solid colour placeholders.</figcaption>
+</figure>
+
+<p>At the other end of the spectrum, we have low tech solutions such as a simple solid fill with the image’s average colour. A pure inline CSS solution has the advantage rendering immediately &mdash; even a <code>background-image: url(&hellip;a data URL)</code> would do!</p>
+
+<figure>
+  <img src="gradient-css.png" alt="image gallery with gradient placeholders">
+  <figcaption><a href="https://github.com/fraser-hemp/gradify" target="_blank">Gradify</a> generates linear-gradients that very roughly approximate the full image.</figcaption>
+</figure>
+
+<p>The big disadvantage of pure CSS approaches is that you typically litter your markup with lengthy inline styles or obnoxious data URLs. My handcoded site with no build step would be especially incompatible with this approach!</p>
+
+<code-block language="html"><pre><code>&lt;!-- typical gradify css -->
+&lt;img width="200" height="150" style="
+  background: linear-gradient(45deg, #f4a261, transparent),
+    linear-gradient(-45deg, #e76f51, transparent),
+    linear-gradient(90deg, #8ab17d, transparent),
+    linear-gradient(0deg, #d62828, #023047);
+">
+</code></pre></code-block>
+
+<p><a href="https://blurha.sh/">BlurHash</a> comes close to minimising markup as it compresses image data into a <strong>short base-83 string</strong>, but decoding and rendering that data requires additional JS&hellip;</p>
+
+<code-block language="html"><pre><code>&lt;!-- a blurhash markup -->
+&lt;img width="200" height="150" src="&hellip;"
+  data-blurhash="LEHV6nWB2yk8pyo0adR*.7kCMdnj"></code></pre></code-block>
+
+<p>Is it possible to decode the hash in CSS instead?</p>
+
+<h2>Decoding in pure CSS</h2>
+
+<p>Unlike BlurHash, we can’t encode the data into a string because there are very few if any string manipulation functions in CSS (2025), so string encoding is out.</p>
+
+<p>In the end, I came up with my own hash / encoding, and the <b>integer</b> type was the best vessel for it.</p>
+
+<p>The usual way to encode stuff in integers is via <a href="https://en.wikipedia.org/wiki/Bit_manipulation" target="_blank">bit packing</a>. Assuming we have bits packed in a CSS integer value, we can unpack them in pure CSS!</p>
+
+<p>Bit-shifting can be done by division and floor operations &mdash; <code>calc(x / y)</code> and <code>round(down,n)</code> &mdash; and bit masking via the modulo function <code>mod(a, b)</code>.</p>
+
+<code-block language="css"><pre><code>* {
+/* 0b11_00_001_101 */
+--packed-int: 781;
+--bits-9-10: mod(round(down, calc(var(--packed-int) / 256)), 4); /* 3 */
+--bits-7-8: mod(round(down, calc(var(--packed-int) / 64)), 4); /* 0 */
+--bits-4-6: mod(round(down, calc(var(--packed-int) / 8)), 8); /* 1 */
+--bits-0-3: mod(var(--packed-int), 8); /* 5 */
+}</code></pre></code-block>
+
+<p>Of course, we could also use <code>pow(2,n)</code> instead of hardcoded powers of two.</p>
+
+<p>So, a <strong>single CSS integer value</strong> was going to be the encoding of the “hash” of my CSS-only blobhash (that’s what I’m calling it now). But how much information can we pack in a single CSS int?</p>
+
+<h2>Limits of CSS values</h2>
+
+<p>The spec doesn’t say anything about the allowed range for int values.</p>
+
+<p>From my experiments, apparently you can only use integers from <strong>-999,999 up to 999,999</strong> in custom properties before you lose precision. Just beyond that limit, we start getting values rounded to tens &mdash; 1,234,56<del>7</del> becomes 1,234,56<ins>0</ins>. Which is weird (precision is counted in decimal places!?), but I bet it’s due to historical, Internet Explorer-esque reasons.</p>
+
+<p>Anyway, within the range of [-999999, 999999] there are <strong>1,999,999</strong> values. This meant that with a single integer hash, there could be 1,999,999 possible configurations for the LQIP to be in. To make calculation easier, I reduced it to the nearest power of two down which is 2<sup>20</sup>.</p>
+
+<card-box class="center-text">
+  <code>2<sup>20</sup> = 1,048,576 &lt; 1,999,999 &lt; 2,097,152 = 2<sup>21</sup></code>
+</card-box>
+
+<p><strong>In short, I had 20 bits of information to encode the CSS-based LQIP hash.</strong></p>
+
+<box-note><strong>Why is it called a “hash”?</strong> Because it’s a mapping from an any-size data to a fixed-size value. In this case, there are an infinite number of images of arbitrary sizes, but only 1,999,999 possible hash values.</box-note>
+
+<h2>Scheme</h2>
+
+<p>With only 20 bits, the LQIP image must be a very simplified version of the full image. I ended up with this scheme: a single base colour + 6 brightness components, to be overlaid on top of the base colour in a 3&times;2 grid. A rather extreme version of <a href="https://en.wikipedia.org/wiki/Chroma_subsampling" target="_blank">chroma subsampling</a>.</p>
+
+<img src="scheme.png" alt="illustration of encoded components">
+
+<p>This gives us a total of 9 numbers to pack into the 20-bit integer:</p>
+
+<p>The <strong>lower 8 bits</strong> encode the base colour in <a href="https://en.wikipedia.org/wiki/Oklab_color_space" target="_blank">Oklab colour space</a>. 2 bits for luminance, and 3 bits each for the a and b coordinates. I’ve found Oklab to give subjectively balanced results, but RGB should work just as well.</p>
+
+<p>The <strong>higher 12 bits</strong> encode the 6 greyscale component values, 2 bits each.</p>
+
+<p>An offline script can compress any given image into this integer format. The script quite simple: Get the average or dominant colour &mdash; there are a lot of libraries that can do that &mdash; then resize the image down to 3&times;2 pixels and get the greyscale values. <a href="https://github.com/Kalabasa/leanrada.com/blob/7b6739c7c30c66c771fcbc9e1dc8942e628c5024/main/scripts/update/lqip.mjs#L118-L159" target="_blank">Here’s my script.</a></p>
+
+<p>Once encoded, we set it as the value of <code>--lqip</code> via the style attribute in the target element, and decode in CSS. Here’s the actual CSS:</p>
+
+<code-block language="css"><pre><code>[style*="--lqip:"] {
+  --lqip-ca: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 18))), 4);
+  --lqip-cb: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 16))), 4);
+  --lqip-cc: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 14))), 4);
+  --lqip-cd: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 12))), 4);
+  --lqip-ce: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 10))), 4);
+  --lqip-cf: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 8))), 4);
+  --lqip-ll: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 6))), 4);
+  --lqip-aaa: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 3))), 8);
+  --lqip-bbb: mod(calc(var(--lqip) + pow(2, 19)), 8);
+}</code></pre></code-block>
+
+<p>Before rendering the decoded values, the raw number data values need to be converted to CSS colours. It’s fairly straightforward, just a bunch linear interpolations in colour constructor functions.</p>
+
+<code-block language="css"><pre><code>[style*="--lqip:"] {
+  --lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
+  --lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
+  --lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
+  --lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
+  --lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
+  --lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
+  --lqip-base-clr: oklab(
+    calc(var(--lqip-ll) / 3 * 0.6 + 0.2)
+    calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
+    calc((var(--lqip-bbb) + 1) / 8 * 0.7 - 0.35)
+  );
+}</code></pre></code-block>
+
+<card-box>
+  <strong>Decoder demo!</strong>
+  <label>
+    Try different values of <code>--lqip</code>
+    <input type="range" min="-999999" max="999999" style="width: 100%;">
+  </label>
+  <p style="border-radius:var(--card-border-radius);overflow:auto">
+    <code class="lqip-unpack"></code>
+  </p>
+  <script>
+    {
+      const card = document.currentScript.parentElement;
+      const input = card.querySelector("input");
+      const preview = card.querySelector(".lqip-unpack").parentElement;
+
+      let currentValueStr = "-721311";
+      render(Number(currentValueStr));
+      
+      input.addEventListener("input", event => {
+        const lqip = Number(event.currentTarget.value);
+        render(lqip);
+        currentValueStr = String(lqip);
+      });
+      
+      function render (lqip) {
+        preview.style.setProperty("--my-lqip", lqip);
+      };
+    }
+  </script>
+  <style>
+    .lqip-unpack {
+      display: inline-block;
+      white-space: pre;
+      padding: 12px;
+      background-color: #444c;
+      border-radius: var(--card-border-radius);
+      &::after {
+        display: inline-block;
+        /* counter hack to evaluate vars and use them in content */
+        counter-reset:
+          lqip var(--my-lqip)
+          ca var(--lqip-ca)
+          cb var(--lqip-cb)
+          cc var(--lqip-cc)
+          cd var(--lqip-cd)
+          ce var(--lqip-ce)
+          cf var(--lqip-cf)
+          ll var(--lqip-ll)
+          aaa var(--lqip-aaa)
+          bbb var(--lqip-bbb);
+        content:
+          "--lqip: " counter(lqip)
+          ";\A--lqip-ca: " counter(ca) ";  --lqip-ca-clr:     "
+          ";\A--lqip-cb: " counter(cb) ";  --lqip-cb-clr:     "
+          ";\A--lqip-cc: " counter(cc) ";  --lqip-cc-clr:     "
+          ";\A--lqip-cd: " counter(cd) ";  --lqip-cd-clr:     "
+          ";\A--lqip-ce: " counter(ce) ";  --lqip-ce-clr:     "
+          ";\A--lqip-cf: " counter(cf) ";  --lqip-cf-clr:     "
+          ";\A--lqip-ll: " counter(ll) ";  --lqip-base-clr:   "
+          ";\A--lqip-aaa: " counter(aaa)
+          ";\A--lqip-bbb: " counter(bbb)
+          ";";
+        background-image: linear-gradient(
+          to bottom,
+          transparent 0 10%,
+          var(--lqip-ca-clr) 10% 20%,
+          var(--lqip-cb-clr) 20% 30%,
+          var(--lqip-cc-clr) 30% 40%,
+          var(--lqip-cd-clr) 40% 50%,
+          var(--lqip-ce-clr) 50% 60%,
+          var(--lqip-cf-clr) 60% 70%,
+          var(--lqip-base-clr) 70% 80%,
+          transparent 80% 100%
+        );
+        background-position: 33ch 0;
+        background-size: 2ch 100%;
+        background-repeat: no-repeat;
+      }
+    }
+  </style>
+
+  You can see here how each component variable maps to the LQIP image. E.g. the <code>cb</code> value corresponds to the relative brightness of the top middle area. <em>Fun fact: The above preview content is implemented in pure CSS!</em>
+</card-box>
+
+<h2>Rendering</h2>
+
+<p>Finally, rendering the LQIP. I used multiple <strong>radial gradients</strong> to render the greyscale components, and a flat base colour at the bottom.</p>
+
+<code-block language="css"><pre><code>[style*="--lqip:"] {
+  background-image:
+    radial-gradient(50% 75% at 16.67% 25%, var(--lqip-ca-clr), transparent),
+    radial-gradient(50% 75% at 50% 25%, var(--lqip-cb-clr), transparent),
+    radial-gradient(50% 75% at 83.33% 25%, var(--lqip-cc-clr), transparent),
+    radial-gradient(50% 75% at 16.67% 75%, var(--lqip-cd-clr), transparent),
+    radial-gradient(50% 75% at 50% 75%, var(--lqip-ce-clr), transparent),
+    radial-gradient(50% 75% at 83.33% 75%, var(--lqip-cf-clr), transparent),
+    linear-gradient(0deg, var(--lqip-base-clr), var(--lqip-base-clr));
+}</code></pre></code-block>
+
+<p>The above is a simplified version of the full renderer for illustrative purposes. The real one has doubled layers, gaussian gradient falloffs, and blend modes.</p>
+
+<p>As you might expect, the radial gradients are arranged in a 3&times;2 grid. You can see it in this interactive deconstructor view!</p>
+
+<card-box>
+  <strong>Deconstructed LQIP!</strong>
+  <label>
+    Change the <code>--lqip</code> value,
+    <input type="range" min="-999999" max="999999" style="width: 100%;">
+    Deconstruct the LQIP!
+    <input type="range" min="0" max="100" value="0" style="width: 100%;">
+  </label>
+  <div class="lqip-reveal"></div>
+  <script>
+    {
+      const card = document.currentScript.parentElement;
+      const [lqipInput, revealInput] = card.querySelectorAll("input");
+      const preview = card.querySelector(".lqip-reveal");
+
+      let currentValueStr = "-747540";
+      render(Number(currentValueStr));
+      
+      lqipInput.addEventListener("input", event => {
+        const lqip = Number(event.currentTarget.value);
+        render(lqip);
+        currentValueStr = String(lqip);
+      });
+      
+      revealInput.addEventListener("input", event => {
+        preview.style.setProperty("--reveal", event.currentTarget.value + "%");
+      });
+      
+      function render (lqip) {
+        preview.style.setProperty("--my-lqip", lqip);
+      };
+    }
+  </script>
+  <style>
+    .lqip-reveal {
+      --reveal: 0%;
+      border-radius: var(--card-border-radius);
+      overflow: hidden;
+      &::after {
+        display: block;
+        content: "";
+        width: 100%;
+        height: 300px;
+        --spread: calc((150% - var(--reveal)) * 0.25);
+        --opacity: var(--reveal);
+        background-image:
+          radial-gradient(
+            50% 75% at 16.67% 25%,
+            rgba(from var(--lqip-ca-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent calc(var(--spread) * 2)
+          ),
+          radial-gradient(
+            50% 75% at 50% 25%,
+            rgba(from var(--lqip-cb-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent calc(var(--spread) * 2)
+          ),
+          radial-gradient(
+            50% 75% at 83.33% 25%,
+            rgba(from var(--lqip-cc-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent calc(var(--spread) * 2)
+          ),
+          radial-gradient(
+            50% 75% at 16.67% 75%,
+            rgba(from var(--lqip-cd-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent calc(var(--spread) * 2)
+          ),
+          radial-gradient(
+            50% 75% at 50% 75%,
+            rgba(from var(--lqip-ce-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent calc(var(--spread) * 2)
+          ),
+          radial-gradient(
+            50% 75% at 83.33% 75%,
+            rgba(from var(--lqip-cf-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent calc(var(--spread) * 2)
+          ),
+          linear-gradient(0deg,
+            rgba(from var(--lqip-base-clr) r g b / var(--opacity)),
+            rgba(from var(--lqip-base-clr) r g b / var(--opacity))
+          );
+      }
+    }
+  </style>
+</card-box>
+
+<h2>More examples</h2>
+
+<card-box>
+  <a href="./gallery/">Check out the LQIP gallery for more examples!</a>
+</card-box>
+
+<h2>Alternatives considered</h2>
+
+<h3>Four colours</h3>
+
+<p>Four 5-bit colours, where each <b>R</b> is 2 bits, <b>G</b> is 2 bits, and <b>B</b> is just a zero or one.</p>
+
+<p>The four colours would map to the four corners of the image box, rendered as radial gradients</p>
+
+<h3>Single solid colour</h3>
+
+<code-block language="html"><pre><code>&lt;img style="--lqip:#9bc28e">
+&lt;style>
+/* we save some bytes by ‘aliasing’ this property */
+* { background-color: var(--lqip) }
+&lt;/style></code></pre></code-block>
 
 </main>
 
 <article-footer></article-footer>
 
 <site-footer></site-footer>
+
+<style>
+[style*="--my-lqip:"] {
+--lqip-ca: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 18))), 4);
+--lqip-cb: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 16))), 4);
+--lqip-cc: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 14))), 4);
+--lqip-cd: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 12))), 4);
+--lqip-ce: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 10))), 4);
+--lqip-cf: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 8))), 4);
+--lqip-ll: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 6))), 4);
+--lqip-aaa: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 3))), 8);
+--lqip-bbb: mod(calc(var(--my-lqip) + pow(2, 19)), 8);
+
+--lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
+--lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
+--lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
+--lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
+--lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
+--lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
+--lqip-base-clr: oklab(
+  calc(var(--lqip-ll) / 3 * 0.6 + 0.2) calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
+    calc((var(--lqip-bbb) + 1) / 8 * 0.7 - 0.35)
+);
+
+background-blend-mode: hard-light, hard-light, hard-light, hard-light,
+  hard-light, hard-light, overlay, overlay, overlay, overlay, overlay,
+  overlay;
+background-image: radial-gradient(
+    50% 75% at 16.67% 25%,
+    rgb(from var(--lqip-ca-clr) r g b / 50%),
+    rgb(from var(--lqip-ca-clr) r g b / 40%) 25%,
+    rgb(from var(--lqip-ca-clr) r g b / 10%) 75%,
+    transparent
+  ),
+  radial-gradient(
+    50% 75% at 83.33% 25%,
+    rgb(from var(--lqip-cc-clr) r g b / 50%),
+    rgb(from var(--lqip-cc-clr) r g b / 40%) 25%,
+    rgb(from var(--lqip-cc-clr) r g b / 10%) 75%,
+    transparent
+  ),
+  radial-gradient(
+    50% 75% at 50% 25%,
+    rgb(from var(--lqip-cb-clr) r g b / 50%),
+    rgb(from var(--lqip-cb-clr) r g b / 40%) 25%,
+    rgb(from var(--lqip-cb-clr) r g b / 10%) 75%,
+    transparent
+  ),
+  radial-gradient(
+    50% 75% at 16.67% 75%,
+    rgb(from var(--lqip-cd-clr) r g b / 50%),
+    rgb(from var(--lqip-cd-clr) r g b / 40%) 25%,
+    rgb(from var(--lqip-cd-clr) r g b / 10%) 75%,
+    transparent
+  ),
+  radial-gradient(
+    50% 75% at 83.33% 75%,
+    rgb(from var(--lqip-cf-clr) r g b / 50%),
+    rgb(from var(--lqip-cf-clr) r g b / 40%) 25%,
+    rgb(from var(--lqip-cf-clr) r g b / 10%) 75%,
+    transparent
+  ),
+  radial-gradient(
+    50% 75% at 50% 75%,
+    rgb(from var(--lqip-ce-clr) r g b / 50%),
+    rgb(from var(--lqip-ce-clr) r g b / 40%) 25%,
+    rgb(from var(--lqip-ce-clr) r g b / 10%) 75%,
+    transparent
+  ),
+  radial-gradient(50% 75% at 16.67% 25%, var(--lqip-ca-clr), transparent),
+  radial-gradient(50% 75% at 50% 25%, var(--lqip-cb-clr), transparent),
+  radial-gradient(50% 75% at 83.33% 25%, var(--lqip-cc-clr), transparent),
+  radial-gradient(50% 75% at 16.67% 75%, var(--lqip-cd-clr), transparent),
+  radial-gradient(50% 75% at 50% 75%, var(--lqip-ce-clr), transparent),
+  radial-gradient(50% 75% at 83.33% 75%, var(--lqip-cf-clr), transparent),
+  linear-gradient(0deg, var(--lqip-base-clr), var(--lqip-base-clr));
+}
+</style>
