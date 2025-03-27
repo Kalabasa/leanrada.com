@@ -501,12 +501,13 @@
             }
 
             .lily58-overlay {
+              box-sizing: border-box;
               position: fixed;
               top: 0;
-              bottom: 0;
+              height: 100lvh;
               left: 0;
               right: 0;
-              padding: min(5vh, 4vw) 2vw;
+              padding: min(5lvh, 4vw) 2vw;
               display: flex;
               justify-content: start;
               align-content: end;

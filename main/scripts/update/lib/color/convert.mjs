@@ -51,13 +51,9 @@ SOFTWARE.
 */
 
 export function rgbToOkLab(rgb) {
-  return rgb_to_oklab(rgb);
-}
-
-function rgb_to_oklab(c) {
-  const r = gamma_inv(c.r / 255);
-  const g = gamma_inv(c.g / 255);
-  const b = gamma_inv(c.b / 255);
+  const r = gamma_inv(rgb.r / 255);
+  const g = gamma_inv(rgb.g / 255);
+  const b = gamma_inv(rgb.b / 255);
 
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
   const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
@@ -70,6 +66,22 @@ function rgb_to_oklab(c) {
   };
 }
 
+export function oklabToRGB({ L, a, b }) {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+
+  return {
+    r: 255 * gamma(+4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    g: 255 * gamma(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    b: 255 * gamma(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+  };
+}
+
+function gamma(x) {
+  return x >= 0.0031308 ? 1.055 * Math.pow(x, 1 / 2.4) - 0.055 : 12.92 * x;
+}
+
 function gamma_inv(x) {
-  return x >= 0.04045 ? Math.pow((x + 0.055) / (1.055), 2.4) : x / 12.92;
+  return x >= 0.04045 ? Math.pow((x + 0.055) / 1.055, 2.4) : x / 12.92;
 }

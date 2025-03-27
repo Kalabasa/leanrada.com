@@ -118,7 +118,7 @@ async function analyzeImage(imagePath) {
   const [previewBuffer, dominantColor] = await Promise.all([
     theSharp
       .resize(3, 2, { fit: "fill" })
-      .sharpen({ sigma: 1 })
+      .sharpen({ sigma: 0.5 })
       .removeAlpha()
       .toFormat("raw", { bitdepth: 8 })
       .toBuffer(),
@@ -181,15 +181,21 @@ function findOklabBits(targetL, targetA, targetB) {
     for (let aaai = 0; aaai <= 0b111; aaai++) {
       for (let bbbi = 0; bbbi <= 0b111; bbbi++) {
         const { L, a, b } = bitsToLab(lli, aaai, bbbi);
+
+        // gray is a common average colour and i don't like that
+        const grayPenalty = aaai === 4 && bbbi === 3 ? 0.05 : 0;
+
         const chroma = Math.hypot(a, b);
         const scaledA = scaleComponentForDiff(a, chroma);
         const scaledB = scaleComponentForDiff(b, chroma);
 
-        const difference = Math.hypot(
-          L - targetL,
-          scaledA - scaledTargetA,
-          scaledB - scaledTargetB
-        );
+        const difference =
+          grayPenalty +
+          Math.hypot(
+            L - targetL,
+            scaledA - scaledTargetA,
+            scaledB - scaledTargetB
+          );
 
         if (difference < bestDifference) {
           bestDifference = difference;
