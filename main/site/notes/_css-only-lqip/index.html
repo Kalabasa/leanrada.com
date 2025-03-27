@@ -163,7 +163,7 @@
 <p>So, a <strong>single CSS integer value</strong> was going to be the encoding of the “hash” of my CSS-only blobhash
   (that’s what I’m calling it now). But how much information can we pack in a single CSS int?</p>
 
-<h2>Limits of CSS values</h2>
+<h2>Side quest: Limits of CSS values</h2>
 
 <p>The spec doesn’t say anything about the allowed range for int values, leaving the fate of my shenanigans to browser vendors.</p>
 
@@ -186,7 +186,7 @@
   value. In this case, there are an infinite number of images of arbitrary sizes, but only 1,999,999 possible hash
   values.</box-note>
 
-<h2>Scheme</h2>
+<h2>The Scheme</h2>
 
 <p>With only 20 bits, the LQIP image must be a very simplified version of the full image. I ended up with this scheme:
   a single base colour + 6 brightness components, to be overlaid on top of the base colour in a 3&times;2 grid. A
@@ -203,11 +203,11 @@
 
 <p>The <strong>higher 12 bits</strong> encode the 6 greyscale component values, 2 bits each.</p>
 
-<p>An offline script can compress any given image into this integer format. The script quite simple: Get the average
+<p>An offline script was created to compress any given image into this integer format. The script was quite simple: Get the average
   or dominant colour &mdash; there are a lot of libraries that can do that &mdash; then resize the image down to
   3&times;2 pixels and get the greyscale values. <a href="https://github.com/Kalabasa/leanrada.com/blob/7b6739c7c30c66c771fcbc9e1dc8942e628c5024/main/scripts/update/lqip.mjs#L118-L159" target="_blank">Here’s my script.</a></p>
 
-<box-note>I even tried a <a href="https://blog.4dcu.be/programming/2020/01/12/Genetic-Art-Algorithm.html" target="_blank">genetic algorithm</a> to optimise the LQIP integer, but the fitness function was hard to establish. Ultimately, I needed an offline CSS renderer for that. Maybe I can try again with some headless Chrome solution.</box-note>
+<box-note>I even tried a <a href="https://blog.4dcu.be/programming/2020/01/12/Genetic-Art-Algorithm.html" target="_blank">genetic algorithm</a> to optimise the LQIP integer, but the fitness function was hard to establish. Ultimately, I would’ve needed an offline CSS renderer for that to work. Maybe I can try again with some headless Chrome solution.</box-note>
 
 <p>Once encoded, it’s set as the value of <code>--lqip</code> via the style attribute in the target element. It could then be decoded in CSS. Here’s the actual code I used for decoding:</p>
 
@@ -437,6 +437,8 @@
 </code-block>
 
 <h3>HTML attribute instead of CSS custom property</h3>
+
+<p>We can use HTML attributes to control CSS soon! Here’s what the LQIP markup would look like:</p>
 
 <code-block language="html">
   <pre><code>&lt;img src="&hellip;" lqip="192900"></code></pre>
