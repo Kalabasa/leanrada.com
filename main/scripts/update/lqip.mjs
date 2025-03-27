@@ -43,8 +43,11 @@ async function main() {
             console.groupEnd();
 
             if (
-              !element.hasAttribute("width") &&
-              !element.hasAttribute("height")
+              refresh
+                ? element.getAttribute("width") !== String(width) ||
+                  element.getAttribute("height") !== String(height)
+                : !element.hasAttribute("width") &&
+                  !element.hasAttribute("height")
             ) {
               element.setAttribute("width", String(width));
               element.setAttribute("height", String(height));
@@ -117,6 +120,7 @@ async function analyzeImage(imagePath) {
 
   const [previewBuffer, dominantColor] = await Promise.all([
     theSharp
+      .gamma(2)
       .resize(3, 2, { fit: "fill" })
       .sharpen({ sigma: 0.5 })
       .removeAlpha()
@@ -183,7 +187,7 @@ function findOklabBits(targetL, targetA, targetB) {
         const { L, a, b } = bitsToLab(lli, aaai, bbbi);
 
         // gray is a common average colour and i don't like that
-        const grayPenalty = aaai === 4 && bbbi === 3 ? 0.05 : 0;
+        const grayPenalty = aaai === 4 && bbbi === 3 ? 0.04 : 0;
 
         const chroma = Math.hypot(a, b);
         const scaledA = scaleComponentForDiff(a, chroma);
