@@ -6,24 +6,152 @@
 
 <style>
   main {
-    img {
+    > * {
+      vertical-align: middle;
+    }
+
+    [style*="--lqip:"] {
       width: min(calc(50lvw - 1em), 200px);
       height: auto;
-      vertical-align: middle;
-      cursor: pointer;
+    }
+  }
 
-      &:hover.lqip-img-blurred {
-        filter: blur(calc(min(calc(50lvw - 1em), 200px) / 6));
-        clip-path: inset(0 0 0 0);
+  lqip-comparer {
+    padding: 12px;
+    max-width: 900px;
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 6px;
+    text-align: start;
+
+    img, [data-blurhash] {
+      width: 100% !important;
+    }
+
+    [data-blurhash] {
+      position: relative;
+      & > canvas {
+        position: absolute;
+        width: 100%;
+      }
+      &:hover > canvas {
+        opacity: 0;
+      }
+    }
+
+    code {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+
+      em {
+        color: #ff0;
+        font-weight: bold;
+        font-style: normal;
       }
     }
   }
 </style>
+
 <style id="lqip-debug">
   [style*="--lqip:"]:not(:hover) {
     object-position: calc(infinity * 1px) !important;
   }
 </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    import("./blurhash_pure_js_port.min.js").then(({blurhash}) => {
+      document.getElementById("toggle-comparisons")
+        .addEventListener("click", async ({ currentTarget: button }) => {
+          button.disabled = true;
+          button.textContent = "Loading...";
+
+          await Promise.all(Array.from(document.querySelectorAll('[style*="--lqip:"]'))
+            .map(async (img, index) => {
+              const originalImg = document.createElement("img");
+              originalImg.src = img.src;
+
+              const pixels = blurhash.getImageData(img);
+              await yieldTask();
+              const hash = await blurhash.encodePromise(pixels, img.width, img.height, 4, 3);
+              await yieldTask();
+              const canvas = blurhash.drawImageDataOnNewCanvas(
+                blurhash.decode(hash, img.width, img.height, 0),
+                img.width,
+                img.height
+              );
+              await yieldTask();
+
+              const blurhashElement = document.createElement("div");
+              blurhashElement.dataset.blurhash = hash;
+              blurhashElement.append(canvas, originalImg.cloneNode());
+
+              const comparer = document.createElement("lqip-comparer");
+              img.replaceWith(comparer);
+
+              const lqipCode = document.createElement("code");
+              const lqip = img.style.getPropertyValue("--lqip");
+              lqipCode.innerText = hideSrc(img.outerHTML, index);
+
+              const blurhashCode = document.createElement("code");
+              blurhashCode.innerText = formatCode(hideSrc(blurhashElement.outerHTML, index));
+
+              highlightSubstr(lqipCode, /(?<=--lqip:)-?\d+/);
+              highlightSubstr(blurhashCode, /(?<=data-blurhash=")([^"]+)/);
+
+              comparer.append(
+                originalImg, img, blurhashElement,
+                comparerLabel("Original"),
+                comparerLabel("CSS LQIP DOM:"),
+                comparerLabel(`<a href="https://blurha.sh/" target="_blank">BlurHash</a> LQIP DOM:`),
+                emptyDiv(), lqipCode, blurhashCode);
+            })
+          );
+
+          button.remove();
+        });
+    });
+  });
+
+  function highlightSubstr(element, pattern) {
+    element.innerHTML = element.innerHTML.replace(pattern, (substr) => `<wbr><em>${substr}</em><wbr>`);
+  }
+
+  function formatCode(htmlString) {
+    return htmlString
+      .replaceAll(/<\/?\w+/g, (substr) => {
+        if (substr === "<canvas") {
+          return "\n  " + substr;
+        } else if (substr === "<img") {
+          return "\n  " + substr;
+        } else if (substr === "</div") {
+          return "\n" + substr;
+        }
+        return substr;
+      });
+  }
+
+  const names = "abcdefghijklmnopqrstuvwxyz";
+  function hideSrc(htmlString, index) {
+    const name = names[index % names.length];
+    return htmlString.replaceAll(/src=".+?"/g, `src="${name}.jpg"`);
+  }
+
+  function comparerLabel(htmlString) {
+    const el = document.createElement("strong");
+    el.innerHTML = htmlString;
+    return el;
+  }
+
+  function emptyDiv() {
+    return document.createElement("div");
+  }
+
+  function yieldTask() {
+    return new Promise(resolve => setTimeout(resolve));
+  }
+</script>
 
 <title>CSS-only LQIP gallery</title>
 
@@ -36,11 +164,12 @@
 </content-header>
 
 <main class="center-text">
-  <div style="position: sticky; top: 12px">
-    <a class="button"
+  <div style="position: sticky; top: 12px; z-index: 1">
+    <a appearance="button"
       href="javascript:(()=>{let s;(s=document.getElementById('lqip-debug'))?s.remove():((s=document.createElement('style')).innerHTML=%60[style*='--lqip:']:not(:hover){object-position:calc(infinity*1px)!important}%60,s.id='lqip-debug',document.head.append(s))})()">
-      Toggle images
+      Toggle CSS LQIP
     </a>
+    <button appearance="button" id="toggle-comparisons">Load full comparisons</button>
   </div>
   <p>
     <small class="text2-color">
@@ -74,11 +203,6 @@
   <img src="./sean-sinclair-C_NJKfnTR5A-unsplash.jpg" width="300" height="200" style="--lqip:-235796">
   <img src="./tienko-dima-uYoVf9I6ANI-unsplash.jpg" width="300" height="196" style="--lqip:158043">
   <img src="./weichao-deng-E0bj4Q53_Dw-unsplash.jpg" width="300" height="205" style="--lqip:-108197">
-</main>
 
-<script>
-  document.querySelector("main").addEventListener("click", (event) => {
-    if (event.target.tagName !== "IMG") return;
-    event.target.classList.toggle("lqip-img-blurred");
-  });
-</script>
+  <p class="text2-color">Images from Unsplash</p>
+</main>

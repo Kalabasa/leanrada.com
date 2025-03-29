@@ -260,8 +260,8 @@ week.
 
 <card-box>
   Count: <span>0</span>
-  <button theme="button">Increment</button>
-  <button theme="button">Decrement</button>
+  <button appearance="button">Increment</button>
+  <button appearance="button">Decrement</button>
   <script>
     const [span, increment, decrement] = document.currentScript.parentElement.children;
     let count = 0;
@@ -297,7 +297,31 @@ week.
 
 <p>For my own cases, I don’t use the alias. I straight up just use <code>document.currentScript&ZeroWidthSpace;.replaceWith</code>. Wish it was  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/write" target="_blank">shorter&hellip;</a></p>
 
-<p>Also, you cannot do <strong>data-driven templating</strong> this way, in the sense that you have <strong>templates</strong> to apply <strong>data</strong> onto. Metadata such as date published, post title, and tags that are stored in some posts table or in frontmatter somewhere, cannot be used for inline scripting purposes. You can’t fetch data from inline scripts. Therefore, unless data is somehow pre-injected in the global scope, no luck in pure vanilla JS templating. This is where templating languages like <a href="https://shopify.github.io/liquid/" target="_blank">Liquid</a> really shine.</p>
+<p><del>Also, you cannot do <strong>data-driven templating</strong> this way, in the sense that you have <strong>templates</strong> to apply <strong>data</strong> onto. Metadata such as date published, post title, and tags that are stored in some posts table or in frontmatter somewhere, cannot be used for inline scripting purposes. You can’t fetch data from inline scripts. Therefore, unless data is somehow pre-injected in the global scope, no luck in pure vanilla JS templating. This is where templating languages like <a href="https://shopify.github.io/liquid/" target="_blank">Liquid</a> really shine.</del></p>
+
+<h2>Update: Data-driven templating</h2>
+
+<p>I previously said that you cannot do <strong>data-driven templating</strong> this way (see deleted section above), however a nice reader has found a way to do so!</p>
+
+<p>All you need is to save the <code>currentScript</code> in a variable, then you can refer to it in any async operation!</p>
+
+<p>Here’s the code for that: <a href="https://jsfiddle.net/0xh2mg8f/" target="_blank">jsfiddle</a>.</p>
+
+<code-block language="js"><pre><code>&lt;ul class="posts">
+  &lt;script>
+    const script = document.currentScript;
+    fetch("/posts.json") 
+      .then(response => response.json()) 
+      .then(data => data.map(p => (
+        `&lt;li>&lt;a href="${p.url}">${p.title}&lt;/a>&lt;/li>`
+      )).join(""))
+      .then(html => script.outerHTML = html);
+  &lt;/script>
+&lt;/ul></code></pre></code-block>
+
+<box-note><strong>Reminder:</strong> If using <code>innerHTML</code> or <code>outerHTML</code>, sanitise the HTML first, especially if you fetched it externally!</box-note>
+
+<p>It incurs an extra HTTP request on the client, though, unlike backend-side templating systems.</p>
 
 <p>For my site, I don’t need a templating system&mdash;I use direct patching to data-drive my HTML (in which the source and the output files are the same).</p>
 
