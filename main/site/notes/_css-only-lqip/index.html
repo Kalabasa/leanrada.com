@@ -71,6 +71,8 @@
 
 <p>Granted, it’s a <em>very blurry</em> placeholder especially in contrast to other leading solutions. But the point is that it’s minimal and non-invasive! No need for wrapper elements or attributes with long strings of data, or JavaScript at all.</p>
 
+<box-note>Note for RSS readers / ‘Reader’ mode clients: This post makes heavy use of CSS-based images. Your client may not support it.</box-note>
+
 <h2>Example images</h2>
 
 <lqip-examples>
@@ -146,7 +148,7 @@
 
 <p>In the end, I came up with my own hash / encoding, and the <b>integer</b> type was the best vessel for it.</p>
 
-<p>The usual way to encode stuff in a single integer is by <a href="https://en.wikipedia.org/wiki/Bit_manipulation" target="_blank"><strong>bit packing</strong></a>. And the good thing is we can unpack them in pure CSS!</p>
+<p>The usual way to encode stuff in a single integer is by <a href="https://en.wikipedia.org/wiki/Bit_manipulation" target="_blank"><strong>bit packing</strong></a>, where you pack multiple numbers in an integer as bits. Amazingly, we can unpack them in pure CSS!</p>
 
 <p>To unpack bits, all you need is bit shifting and bit masking. <strong>Bit shifting</strong> can be done by division and floor operations &mdash; <code>calc(x / y)</code> and <code>round(down,n)</code> &mdash; and <strong>bit masking</strong> via the modulo function <code>mod(a,b)</code>.</p>
 
@@ -177,7 +179,7 @@
   bet it’s due to historical, Internet Explorer-esque reasons.</p>
 
 <p>Anyway, within the range of [-999999, 999999] there are <strong>1,999,999</strong> values. This meant that with a
-  single integer hash, there could be 1,999,999 possible configurations for the LQIP to be in. To make calculation
+  single integer hash, almost two million LQIP configurations could be described. To make calculation
   easier, I reduced it to the nearest power of two down which is 2<sup>20</sup>.</p>
 
 <card-box class="center-text">
@@ -195,7 +197,7 @@
 <p>With only 20 bits, the LQIP image must be a very simplified version of the full image. I ended up with this scheme:
   a single base colour + 6 brightness components, to be overlaid on top of the base colour in a 3&times;2 grid. A
   rather extreme version of <a href="https://en.wikipedia.org/wiki/Chroma_subsampling" target="_blank">chroma
-    subsampling</a>, eh?</p>
+    subsampling</a>.</p>
 
 <img src="scheme.png" alt="illustration of encoded components" width="600" height="500" style="--lqip:240226">
 
@@ -215,33 +217,33 @@
 
 <code-block language="css">
 <pre><code>[style*="--lqip:"] {
-  --lqip-ca: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 18))), 4);
-  --lqip-cb: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 16))), 4);
-  --lqip-cc: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 14))), 4);
-  --lqip-cd: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 12))), 4);
-  --lqip-ce: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 10))), 4);
-  --lqip-cf: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 8))), 4);
-  --lqip-ll: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 6))), 4);
-  --lqip-aaa: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 3))), 8);
-  --lqip-bbb: mod(calc(var(--lqip) + pow(2, 19)), 8);</code></pre>
+--lqip-ca: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 18))), 4);
+--lqip-cb: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 16))), 4);
+--lqip-cc: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 14))), 4);
+--lqip-cd: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 12))), 4);
+--lqip-ce: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 10))), 4);
+--lqip-cf: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 8))), 4);
+--lqip-ll: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 6))), 4);
+--lqip-aaa: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 3))), 8);
+--lqip-bbb: mod(calc(var(--lqip) + pow(2, 19)), 8);</code></pre>
 </code-block>
 
 <p>Before rendering the decoded values, the raw number data values need to be converted to CSS colours. It’s fairly
   straightforward, just a bunch linear interpolations into colour constructor functions.</p>
 
 <code-block language="css">
-<pre><code>  /* continued */
-  --lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
-  --lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
-  --lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
-  --lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
-  --lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
-  --lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
-  --lqip-base-clr: oklab(
-    calc(var(--lqip-ll) / 3 * 0.6 + 0.2)
-    calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
-    calc((var(--lqip-bbb) + 1) / 8 * 0.7 - 0.35)
-  );
+<pre><code>/* continued */
+--lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
+--lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
+--lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
+--lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
+--lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
+--lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
+--lqip-base-clr: oklab(
+  calc(var(--lqip-ll) / 3 * 0.6 + 0.2)
+  calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
+  calc((var(--lqip-bbb) + 1) / 8 * 0.7 - 0.35)
+);
 }</code></pre>
 </code-block>
 
@@ -324,22 +326,21 @@
   and a flat base colour at the bottom.</p>
 
 <code-block language="css">
-  <pre><code>[style*="--lqip:"] {
-  background-image:
-    radial-gradient(50% 75% at 16.67% 25%, var(--lqip-ca-clr), transparent),
-    radial-gradient(50% 75% at 50% 25%, var(--lqip-cb-clr), transparent),
-    radial-gradient(50% 75% at 83.33% 25%, var(--lqip-cc-clr), transparent),
-    radial-gradient(50% 75% at 16.67% 75%, var(--lqip-cd-clr), transparent),
-    radial-gradient(50% 75% at 50% 75%, var(--lqip-ce-clr), transparent),
-    radial-gradient(50% 75% at 83.33% 75%, var(--lqip-cf-clr), transparent),
-    linear-gradient(0deg, var(--lqip-base-clr), var(--lqip-base-clr));
+<pre><code>[style*="--lqip:"] {
+background-image:
+  radial-gradient(50% 75% at 16.67% 25%, var(--lqip-ca-clr), transparent),
+  radial-gradient(50% 75% at 50% 25%, var(--lqip-cb-clr), transparent),
+  radial-gradient(50% 75% at 83.33% 25%, var(--lqip-cc-clr), transparent),
+  radial-gradient(50% 75% at 16.67% 75%, var(--lqip-cd-clr), transparent),
+  radial-gradient(50% 75% at 50% 75%, var(--lqip-ce-clr), transparent),
+  radial-gradient(50% 75% at 83.33% 75%, var(--lqip-cf-clr), transparent),
+  linear-gradient(0deg, var(--lqip-base-clr), var(--lqip-base-clr));
 }</code></pre>
 </code-block>
 
 <p>The above is a simplified version of the full renderer for illustrative purposes. <small>The real one has doubled layers, smooth gradient falloffs, and blend modes.</small></p>
 
-<p>As you might expect, the radial gradients are arranged in a 3&times;2 grid. You can see it in this interactive
-  deconstructor view!</p>
+<p>As you might expect, the radial gradients are arranged in a 3&times;2 grid. You can see it in this interactive deconstructor view!</p>
 
 <card-box>
   <strong>LQIP deconstructor!</strong>
@@ -416,6 +417,10 @@
   </style>
 </card-box>
 
+<p>These radial gradients are the core of the CSS-based LQIP. The position and radius of the gradients are an important detail that would determine how well these can approximate real images. Besides that, another requirement is that these individual radial gradients must be seamless when combined together.</p>
+
+<p>I implemented smooth gradient falloffs to make the final result look seamless. It took special care to make the gradients extra smooth, so let’s dive into it&hellip;</p>
+
 <h2>Bilinear interpolation approximation with radial gradients</h2>
 
 <p>Radial gradients use linear interpolation by default. Interpolation refers to how it maps the in-between colours from the start colour to the end colour. And linear interpolation, the most basic interpolation, well&hellip;</p>
@@ -425,11 +430,13 @@
   <figcaption>CSS radial-gradients with linear interpolation</figcaption>
 </figure>
 
-<p>It doesn’t look good. It gives us these hard edges. You could almost see the elliptical edges of each radial gradient and their centers.</p>
+<p>It doesn’t look good. It gives us these hard edges (highlighted above). You could almost see the elliptical edges of each radial gradient and their centers.</p>
 
 <p>In real raster images, we’d use <a href="https://harmoniccode.blogspot.com/2011/04/bilinear-color-interpolation.html" target="_blank">bilinear interpolation</a> at the very least when scaling up low resolution images. <a href="https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/" target="_blank">Bicubic interpolation is even better.</a></p>
 
-<p>One way to simulate bilinear interpolation in an array of CSS radial-gradients is to use <strong>‘quadratic easing’</strong> to control the gradation of opacity, smoothening the composite image.</p>
+<p>One way to simulate the smoothness of bilinear interpolation in an array of CSS radial-gradients is to use <strong>‘quadratic easing’</strong> to control the gradation of opacity.</p>
+
+<p>This means the opacity falloff of the gradient would be smoother around the center and the edges. Each gradient would get feathered edges, smoothening the overall composite image.</p>
 
 <prose-bleed>
   <fixed-grid style="--cols:2;--gap:2">
@@ -592,10 +599,10 @@ interpolation-example {
     }
   }
   @keyframes interpolation-example-gradient-debug {
-    0%, 10%, 20% {
+    0%, 10% {
       --interpolation-end-clr: white;
     }
-    5%, 15%, 30% {
+    5%, 15% {
       --interpolation-end-clr: transparent;
     }
   }
