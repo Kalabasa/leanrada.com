@@ -1,0 +1,901 @@
+<!doctype html>
+<meta charset="utf-8">
+</meta>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</meta>
+<link rel="stylesheet" href="/common.css">
+</link>
+<script defer="" src="/common.js"></script>
+
+<title>Minimal CSS-only blurry image placeholders</title>
+
+<site-header></site-header>
+
+<blog-header>
+  <h1>Minimal CSS-only blurry image placeholders</h1>
+  <img src="hero.jpg" alt="" loading="lazy" width="1200" height="900" style="--lqip:174443"></img>
+</blog-header>
+
+<blog-post-info>
+  <time datetime="2025-03-30">30 Mar 2025</time>
+  · 22 min read
+</blog-post-info>
+
+<tag-row>
+  <tag-chip title="css"></tag-chip>
+</tag-row>
+
+<main class="prose">
+
+<p>Here’s a CSS technique that produces blurry image placeholders (LQIPs) without cluttering up your markup &mdash; <em>Only a single custom property needed!</em></p>
+
+<card-box>
+  <code-block language="html">
+    <pre><code>&lt;img src="&hellip;" style="--lqip:192900"></code></pre>
+  </code-block>
+
+  <p>The custom property above gives you this image:</p>
+
+  <p>
+  <div style="height:200px;border-radius:var(--card-border-radius);--my-lqip:192900"></div>
+  </p>
+
+  <label>
+    Try changing the property’s value <strong>(WARNING: FLASHING)</strong>
+    <input type="range" min="-999999" max="999999" style="width: 100%;">
+  </label>
+  <script>
+    {
+      const card = document.currentScript.parentElement;
+      const input = card.querySelector("input");
+      const code = card.querySelector("code");
+      const preview = card.querySelector("div");
+
+      let currentValueStr = "192900";
+      let targetCode = null
+
+      input.addEventListener("input", event => {
+        if (!targetCode) {
+          targetCode = Array.from(code.querySelectorAll("span")).filter(el => el.textContent.includes(currentValueStr)).slice(-1)[0] ?? code;
+        }
+
+        const lqip = Number(event.currentTarget.value);
+        // use this page's lqip to avoid breakage if I ever update the scheme
+        preview.style.setProperty("--my-lqip", lqip);
+        targetCode.innerHTML = targetCode.innerHTML.replace(currentValueStr, lqip);
+        currentValueStr = String(lqip);
+      });
+    }
+  </script>
+</card-box>
+
+<p>Granted, it’s a <em>very blurry</em> placeholder especially in contrast to other leading solutions. But the point is that it’s minimal and non-invasive! No need for wrapper elements or attributes with long strings of data, or JavaScript at all.</p>
+
+<box-note>Note for RSS readers / ‘Reader’ mode clients: This post makes heavy use of CSS-based images. Your client may not support it.</box-note>
+
+<h2>Example images</h2>
+
+<lqip-examples>
+  <img class="media" src="./gallery/aj-McsNra2VRQQ-unsplash.jpg" width="300" height="199" style="--my-lqip:-92437;--lqip:-92437">
+  <img class="media" src="./gallery/henry-co-3JFVNo4ukKQ-unsplash.jpg" width="300" height="200" style="--my-lqip:174708;--lqip:174708">
+  <img class="media" src="./gallery/tienko-dima-uYoVf9I6ANI-unsplash.jpg" width="300" height="196" style="--my-lqip:158043;--lqip:158043">
+  <a class="button" href="javascript:(()=>{let s;(s=document.getElementById('lqip-debug'))?s.remove():((s=document.createElement('style')).innerHTML=%60[style*='--my-lqip:']:not(:hover){object-position:calc(infinity*1px)!important}%60,s.id='lqip-debug',document.head.append(s))})()">
+    Toggle images
+  </a>
+</lqip-examples>
+
+<card-box>
+  <a href="./gallery/" target="_blank">Check out the LQIP gallery for examples!</a>
+</card-box>
+
+<h2>Survey of LQIP approaches</h2>
+
+<p>There have been many different techniques to implement LQIPs (low quality image placeholders), such as a very low
+  resolution WebP or JPEG (<a href="https://engineering.fb.com/2015/08/06/android/the-technology-behind-preview-photos/" target="_blank">beheaded JPEGs</a> even), optimised SVG shape placements (<a href="https://github.com/axe312ger/sqip" target="_blank">SQIP</a>), and directly applying a discrete cosine
+  transform (<a href="https://blurha.sh/" target="_blank">BlurHash</a>). Don’t forget good old progressive JPEGs and interlaced
+  PNGs!</p>
+
+<figure>
+  <img src="solid-colour.png" alt="image gallery with solid colour placeholders" width="1368" height="832" style="--lqip:154284">
+  <figcaption>Canva and Pinterest use solid colour placeholders.</figcaption>
+</figure>
+
+<p>At the other end of the spectrum, we have low tech solutions such as a simple solid fill of the image’s average colour.</p>
+  
+<p>Pure inline CSS solutions have the advantage rendering immediately &mdash; even a <code>background-image: url(&hellip;a data URL)</code> would be fine!</p>
+
+<figure>
+  <img src="gradient-css.png" alt="image gallery with gradient placeholders" width="1368" height="832" style="--lqip:240226">
+  <figcaption><a href="https://github.com/fraser-hemp/gradify" target="_blank">Gradify</a> generates linear-gradients
+    that very roughly approximate the full image.</figcaption>
+</figure>
+
+<p>The big disadvantage of pure CSS approaches is that you typically litter your markup with lengthy inline styles or obnoxious data URLs. My handcoded site with no build step would be extra incompatible with this approach!</p>
+
+<code-block language="html">
+  <pre><code>&lt;!-- typical gradify css -->
+&lt;img width="200" height="150" style="
+  background: linear-gradient(45deg, #f4a261, transparent),
+    linear-gradient(-45deg, #e76f51, transparent),
+    linear-gradient(90deg, #8ab17d, transparent),
+    linear-gradient(0deg, #d62828, #023047);
+">
+</code></pre>
+</code-block>
+
+<p><strong><a href="https://blurha.sh/">BlurHash</a></strong> is a solution that minimises markup by compressing image
+  data into a
+  <strong>short base-83 string</strong>, but decoding and rendering that data requires additional JS&hellip;
+</p>
+
+<code-block language="html">
+  <pre><code>&lt;!-- a blurhash markup -->
+&lt;img width="200" height="150" src="&hellip;"
+  data-blurhash="LEHV6nWB2yk8pyo0adR*.7kCMdnj"></code></pre>
+</code-block>
+
+<figure>
+  <img src="blurhash.png" width="276" height="171" style="--lqip:174490">
+  <figcaption>BlurHash example</figcaption>
+</figure>
+
+<p>Is it possible to decode a blur hash in CSS instead?</p>
+
+<h2>Decoding in pure CSS</h2>
+
+<p>Unlike BlurHash, we can’t use a string encoding because there are very few if any string manipulation
+  functions in CSS (2025), so strings are out.</p>
+
+<p>In the end, I came up with my own hash / encoding, and the <b>integer</b> type was the best vessel for it.</p>
+
+<p>The usual way to encode stuff in a single integer is by <a href="https://en.wikipedia.org/wiki/Bit_manipulation" target="_blank"><strong>bit packing</strong></a>, where you pack multiple numbers in an integer as bits. Amazingly, we can unpack them in pure CSS!</p>
+
+<p>To unpack bits, all you need is bit shifting and bit masking. <strong>Bit shifting</strong> can be done by division and floor operations &mdash; <code>calc(x / y)</code> and <code>round(down,n)</code> &mdash; and <strong>bit masking</strong> via the modulo function <code>mod(a,b)</code>.</p>
+
+<code-block language="css">
+  <pre><code>* {
+/* Example packed int: */
+/* 0b11_00_001_101 */
+--packed-int: 781;
+--bits-9-10: mod(round(down, calc(var(--packed-int) / 256)), 4); /* 3 */
+--bits-7-8: mod(round(down, calc(var(--packed-int) / 64)), 4); /* 0 */
+--bits-4-6: mod(round(down, calc(var(--packed-int) / 8)), 8); /* 1 */
+--bits-0-3: mod(var(--packed-int), 8); /* 5 */
+}</code></pre>
+</code-block>
+
+<p>Of course, we could also use <code>pow(2,n)</code> instead of hardcoded powers of two.</p>
+
+<p>So, a <strong>single CSS integer value</strong> was going to be the encoding of the “hash” of my CSS-only blobhash
+  (that’s what I’m calling it now). But how much information can we pack in a single CSS int?</p>
+
+<h2>Side quest: Limits of CSS values</h2>
+
+<p>The spec doesn’t say anything about the allowed range for int values, leaving the fate of my shenanigans to browser vendors.</p>
+
+<p>From my experiments, apparently you can only use integers from <strong>-999,999 up to 999,999</strong> in custom
+  properties before you lose precision. Just beyond that limit, we start getting values rounded to tens &mdash;
+  1,234,56<del>7</del> becomes 1,234,56<ins>0</ins>. Which is weird (precision is counted in decimal places!?), but I
+  bet it’s due to historical, Internet Explorer-esque reasons.</p>
+
+<p>Anyway, within the range of [-999999, 999999] there are <strong>1,999,999</strong> values. This meant that with a
+  single integer hash, almost two million LQIP configurations could be described. To make calculation
+  easier, I reduced it to the nearest power of two down which is 2<sup>20</sup>.</p>
+
+<card-box class="center-text">
+  <code>2<sup>20</sup> = 1,048,576 &lt; 1,999,999 &lt; 2,097,152 = 2<sup>21</sup></code>
+</card-box>
+
+<p><strong>In short, I had 20 bits of information to encode the CSS-based LQIP hash.</strong></p>
+
+<box-note><strong>Why is it called a “hash”?</strong> Because it’s a mapping from an any-size data to a fixed-size
+  value. In this case, there are an infinite number of images of arbitrary sizes, but only 1,999,999 possible hash
+  values.</box-note>
+
+<h2>The Scheme</h2>
+
+<p>With only 20 bits, the LQIP image must be a very simplified version of the full image. I ended up with this scheme:
+  a single base colour + 6 brightness components, to be overlaid on top of the base colour in a 3&times;2 grid. A
+  rather extreme version of <a href="https://en.wikipedia.org/wiki/Chroma_subsampling" target="_blank">chroma
+    subsampling</a>.</p>
+
+<img src="scheme.png" alt="illustration of encoded components" width="600" height="500" style="--lqip:240226">
+
+<p>This totals <strong>9 numbers</strong> to pack into the 20-bit integer:</p>
+
+<p>The <strong>base colour</strong> is encoded in the <strong>lower 8 bits</strong> in the <a href="https://en.wikipedia.org/wiki/Oklab_color_space" target="_blank">Oklab colour space</a>. 2 bits for luminance, and 3 bits for each of the a and b coordinates. I’ve found Oklab to give subjectively balanced results, but RGB should work just as well.</p>
+
+<p>The <strong>6 greyscale components</strong> are encoded in the <strong>higher 12 bits</strong> &mdash; 2 bits each.</p>
+
+<p>An offline script was created to compress any given image into this integer format. The script was quite simple: Get the average
+  or dominant colour &mdash; there are a lot of libraries that can do that &mdash; then resize the image down to
+  3&times;2 pixels and get the greyscale values. <a href="https://github.com/Kalabasa/leanrada.com/blob/7b6739c7c30c66c771fcbc9e1dc8942e628c5024/main/scripts/update/lqip.mjs#L118-L159" target="_blank">Here’s my script.</a></p>
+
+<box-note>I even tried a <a href="https://blog.4dcu.be/programming/2020/01/12/Genetic-Art-Algorithm.html" target="_blank">genetic algorithm</a> to optimise the LQIP bits, but the fitness function was hard to establish. Ultimately, I would’ve needed an offline CSS renderer for this to work accurately. Maybe a future iteration could use some headless Chrome solution to automatically compare real renderings of the LQIP against the source image.</box-note>
+
+<p>Once encoded, it’s set as the value of <code>--lqip</code> via the style attribute in the target element. It could then be decoded in CSS. Here’s the actual code I used for decoding:</p>
+
+<code-block language="css">
+<pre><code>[style*="--lqip:"] {
+--lqip-ca: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 18))), 4);
+--lqip-cb: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 16))), 4);
+--lqip-cc: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 14))), 4);
+--lqip-cd: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 12))), 4);
+--lqip-ce: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 10))), 4);
+--lqip-cf: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 8))), 4);
+--lqip-ll: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 6))), 4);
+--lqip-aaa: mod(round(down, calc((var(--lqip) + pow(2, 19)) / pow(2, 3))), 8);
+--lqip-bbb: mod(calc(var(--lqip) + pow(2, 19)), 8);</code></pre>
+</code-block>
+
+<p>Before rendering the decoded values, the raw number data values need to be converted to CSS colours. It’s fairly
+  straightforward, just a bunch linear interpolations into colour constructor functions.</p>
+
+<code-block language="css">
+<pre><code>/* continued */
+--lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
+--lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
+--lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
+--lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
+--lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
+--lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
+--lqip-base-clr: oklab(
+  calc(var(--lqip-ll) / 3 * 0.6 + 0.2)
+  calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
+  calc((var(--lqip-bbb) + 1) / 8 * 0.7 - 0.35)
+);
+}</code></pre>
+</code-block>
+
+<card-box>
+  <strong>Time for another demo!</strong>
+  <label>
+    Try different values of <code>--lqip</code> to decode
+    <input type="range" min="-999999" max="999999" style="width: 100%;">
+  </label>
+  <p style="border-radius:var(--card-border-radius);overflow:auto">
+    <code class="lqip-unpack"></code>
+  </p>
+  <script>
+    {
+      const card = document.currentScript.parentElement;
+      const input = card.querySelector("input");
+      const preview = card.querySelector(".lqip-unpack").parentElement;
+
+      let currentValueStr = "-721311";
+      render(Number(currentValueStr));
+
+      input.addEventListener("input", event => {
+        const lqip = Number(event.currentTarget.value);
+        render(lqip);
+        currentValueStr = String(lqip);
+      });
+
+      function render(lqip) {
+        preview.style.setProperty("--my-lqip", lqip);
+      };
+    }
+  </script>
+  <style>
+    .lqip-unpack {
+      display: inline-block;
+      white-space: pre;
+      padding: 12px;
+      background-color: #0006;
+      border-radius: var(--card-border-radius);
+
+      &::after {
+        display: inline-block;
+        /* counter hack to eval vars and use them in content */
+        counter-reset:
+          lqip var(--my-lqip) ca var(--lqip-ca) cb var(--lqip-cb) cc var(--lqip-cc) cd var(--lqip-cd) ce var(--lqip-ce) cf var(--lqip-cf) ll var(--lqip-ll) aaa var(--lqip-aaa) bbb var(--lqip-bbb);
+        content:
+          "--lqip: " counter(lqip) ";\A--lqip-ca: " counter(ca) ";  --lqip-ca-clr:     "
+          ";\A--lqip-cb: " counter(cb) ";  --lqip-cb-clr:     "
+          ";\A--lqip-cc: " counter(cc) ";  --lqip-cc-clr:     "
+          ";\A--lqip-cd: " counter(cd) ";  --lqip-cd-clr:     "
+          ";\A--lqip-ce: " counter(ce) ";  --lqip-ce-clr:     "
+          ";\A--lqip-cf: " counter(cf) ";  --lqip-cf-clr:     "
+          ";\A--lqip-ll: " counter(ll) ";  --lqip-base-clr:   "
+          ";\A--lqip-aaa: " counter(aaa) ";\A--lqip-bbb: " counter(bbb) ";";
+        background-image: linear-gradient(to bottom,
+            transparent 0 10%,
+            var(--lqip-ca-clr) 10% 20%,
+            var(--lqip-cb-clr) 20% 30%,
+            var(--lqip-cc-clr) 30% 40%,
+            var(--lqip-cd-clr) 40% 50%,
+            var(--lqip-ce-clr) 50% 60%,
+            var(--lqip-cf-clr) 60% 70%,
+            var(--lqip-base-clr) 70% 80%,
+            transparent 80% 100%);
+        background-position: 33ch 0;
+        background-size: 2ch 100%;
+        background-repeat: no-repeat;
+      }
+    }
+  </style>
+
+  You can see here how each component variable maps to the LQIP image. E.g. the <code>cb</code> value corresponds to
+  the relative brightness of the top middle area. <em>Fun fact: The above preview content is implemented in pure
+    CSS!</em>
+</card-box>
+
+<h2>Rendering it all</h2>
+
+<p>Finally, rendering the LQIP. I used multiple <strong>radial gradients</strong> to render the greyscale components,
+  and a flat base colour at the bottom.</p>
+
+<code-block language="css">
+<pre><code>[style*="--lqip:"] {
+background-image:
+  radial-gradient(50% 75% at 16.67% 25%, var(--lqip-ca-clr), transparent),
+  radial-gradient(50% 75% at 50% 25%, var(--lqip-cb-clr), transparent),
+  radial-gradient(50% 75% at 83.33% 25%, var(--lqip-cc-clr), transparent),
+  radial-gradient(50% 75% at 16.67% 75%, var(--lqip-cd-clr), transparent),
+  radial-gradient(50% 75% at 50% 75%, var(--lqip-ce-clr), transparent),
+  radial-gradient(50% 75% at 83.33% 75%, var(--lqip-cf-clr), transparent),
+  linear-gradient(0deg, var(--lqip-base-clr), var(--lqip-base-clr));
+}</code></pre>
+</code-block>
+
+<p>The above is a simplified version of the full renderer for illustrative purposes. <small>The real one has doubled layers, smooth gradient falloffs, and blend modes.</small></p>
+
+<p>As you might expect, the radial gradients are arranged in a 3&times;2 grid. You can see it in this interactive deconstructor view!</p>
+
+<card-box>
+  <strong>LQIP deconstructor!</strong>
+  <label>
+    Reveal the individual layers using this slider!
+    <input type="range" min="0" max="100" value="0" style="width: 100%;">
+    Change the <code>--lqip</code> value,
+    <input type="range" min="-999999" max="999999" style="width: 100%;">
+  </label>
+  <div class="lqip-reveal"></div>
+  <script>
+    {
+      const card = document.currentScript.parentElement;
+      const [revealInput, lqipInput] = card.querySelectorAll("input");
+      const preview = card.querySelector(".lqip-reveal");
+
+      let currentValueStr = "-747540";
+      render(Number(currentValueStr));
+
+      lqipInput.addEventListener("input", event => {
+        const lqip = Number(event.currentTarget.value);
+        render(lqip);
+        currentValueStr = String(lqip);
+      });
+
+      revealInput.addEventListener("input", event => {
+        preview.style.setProperty("--reveal", event.currentTarget.value / 100);
+      });
+
+      function render(lqip) {
+        preview.style.setProperty("--my-lqip", lqip);
+      };
+    }
+  </script>
+  <style>
+    .lqip-reveal {
+      --reveal: 0%;
+      border-radius: var(--card-border-radius);
+      overflow: hidden;
+
+      &::after {
+        display: block;
+        content: "";
+        width: 100%;
+        height: 300px;
+        --ease-reveal: calc((cos(pi * var(--reveal)) - 1) * -0.5);
+        --spread: calc((150% - var(--ease-reveal) * 100%) * 0.25);
+        --spread-end: calc(max((var(--spread) - 12.5%) * 4, var(--spread)) + 1.5px);
+        --opacity: calc(var(--ease-reveal) * 100%);
+        background-image:
+          radial-gradient(50% 75% at 16.67% 25%,
+            rgba(from var(--lqip-ca-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent var(--spread-end)),
+          radial-gradient(50% 75% at 50% 25%,
+            rgba(from var(--lqip-cb-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent var(--spread-end)),
+          radial-gradient(50% 75% at 83.33% 25%,
+            rgba(from var(--lqip-cc-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent var(--spread-end)),
+          radial-gradient(50% 75% at 16.67% 75%,
+            rgba(from var(--lqip-cd-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent var(--spread-end)),
+          radial-gradient(50% 75% at 50% 75%,
+            rgba(from var(--lqip-ce-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent var(--spread-end)),
+          radial-gradient(50% 75% at 83.33% 75%,
+            rgba(from var(--lqip-cf-clr) r g b / var(--opacity)) 0 var(--spread),
+            transparent var(--spread-end)),
+          linear-gradient(0deg,
+            rgba(from var(--lqip-base-clr) r g b / var(--opacity)),
+            rgba(from var(--lqip-base-clr) r g b / var(--opacity)));
+      }
+    }
+  </style>
+</card-box>
+
+<p>These radial gradients are the core of the CSS-based LQIP. The position and radius of the gradients are an important detail that would determine how well these can approximate real images. Besides that, another requirement is that these individual radial gradients must be seamless when combined together.</p>
+
+<p>I implemented smooth gradient falloffs to make the final result look seamless. It took special care to make the gradients extra smooth, so let’s dive into it&hellip;</p>
+
+<h2>Bilinear interpolation approximation with radial gradients</h2>
+
+<p>Radial gradients use linear interpolation by default. Interpolation refers to how it maps the in-between colours from the start colour to the end colour. And linear interpolation, the most basic interpolation, well&hellip;</p>
+
+<figure>
+  <interpolation-example class="interpolation-example-debug"></interpolation-example>
+  <figcaption>CSS radial-gradients with linear interpolation</figcaption>
+</figure>
+
+<p>It doesn’t look good. It gives us these hard edges (highlighted above). You could almost see the elliptical edges of each radial gradient and their centers.</p>
+
+<p>In real raster images, we’d use <a href="https://harmoniccode.blogspot.com/2011/04/bilinear-color-interpolation.html" target="_blank">bilinear interpolation</a> at the very least when scaling up low resolution images. <a href="https://blog.demofox.org/2015/08/15/resizing-images-with-bicubic-interpolation/" target="_blank">Bicubic interpolation is even better.</a></p>
+
+<p>One way to simulate the smoothness of bilinear interpolation in an array of CSS radial-gradients is to use <strong>‘quadratic easing’</strong> to control the gradation of opacity.</p>
+
+<p>This means the opacity falloff of the gradient would be smoother around the center and the edges. Each gradient would get feathered edges, smoothening the overall composite image.</p>
+
+<prose-bleed>
+  <fixed-grid style="--cols:2;--gap:2">
+    <figure>
+      <interpolation-example style="--lqip-stop10: 2%; --lqip-stop20: 8%; --lqip-stop30: 18%; --lqip-stop40: 32%;"></interpolation-example>
+      <figcaption>
+        <strong>CSS radial-gradients:</strong>
+        Quadratic interpolation <em>(touch to see edges)</em>
+      </figcaption>
+    </figure>
+    <figure>
+      <interpolation-example></interpolation-example>
+      <figcaption>
+        <strong>CSS radial-gradients:</strong>
+        Linear interpolation <em>(touch to see edges)</em>
+      </figcaption>
+    </figure>
+    <figure>
+      <img class="img-interpolation-example" src="interpolation-bilinear.png" width="900" height="600" style="--lqip:109153">
+      <figcaption>Image: Bilinear interpolation</figcaption>
+    </figure>
+    <figure>
+      <img class="img-interpolation-example" src="interpolation-bicubic.png" width="900" height="600" style="--lqip:109153">
+      <figcaption>Image: Bicubic interpolation</figcaption>
+    </figure>
+    <figure>
+      <img class="img-interpolation-example" src="interpolation-pixels.png" style="image-rendering: optimizeQuality;--lqip:87457" width="3" height="2">
+      <figcaption>Image: Your browser’s native interpolation</figcaption>
+    </figure>
+    <figure>
+      <img class="img-interpolation-example" src="interpolation-pixels.png" style="image-rendering: pixelated;--lqip:87457" width="3" height="2">
+      <figcaption>Image: No interpolation</figcaption>
+    </figure>
+  </grid>
+</prose-bleed>
+
+<style>
+.img-interpolation-example,
+interpolation-example {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--card-border-radius);
+}
+
+@property --interpolation-end-clr {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+interpolation-example {
+  --lqip-stop10: 10%; --lqip-stop20: 20%; --lqip-stop30: 30%; --lqip-stop40: 40%;
+  --lqip-ca-clr:#fff;--lqip-cb-clr:#000;--lqip-cc-clr:#999;
+  --lqip-cd-clr:#333;--lqip-ce-clr:#ccc;--lqip-cf-clr:#666;
+  --lqip-base-clr:#266ba3;
+
+  background-blend-mode:
+      overlay, overlay, overlay, overlay, overlay, overlay,
+      normal;
+  background-image: 
+      radial-gradient(
+        50% 75% at 16.67% 25%,
+        var(--lqip-ca-clr),
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop10) / 2)) 95%,
+        var(--interpolation-end-clr) 100%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 50% 25%,
+        var(--lqip-cb-clr),
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop10) / 2)) 95%,
+        var(--interpolation-end-clr) 100%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 83.33% 25%,
+        var(--lqip-cc-clr),
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop10) / 2)) 95%,
+        var(--interpolation-end-clr) 100%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 16.67% 75%,
+        var(--lqip-cd-clr),
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop10) / 2)) 95%,
+        var(--interpolation-end-clr) 100%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 50% 75%,
+        var(--lqip-ce-clr),
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop10) / 2)) 95%,
+        var(--interpolation-end-clr) 100%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 83.33% 75%,
+        var(--lqip-cf-clr),
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop10) / 2)) 95%,
+        var(--interpolation-end-clr) 100%,
+        transparent
+      ),
+      linear-gradient(0deg, var(--lqip-base-clr), var(--lqip-base-clr));
+
+    &.interpolation-example-debug {
+      animation: interpolation-example-gradient-debug 8s step-end infinite;
+    }
+    &:hover {
+      --interpolation-end-clr: white;
+      animation: none;
+    }
+  }
+  @keyframes interpolation-example-gradient-debug {
+    0%, 10% {
+      --interpolation-end-clr: white;
+    }
+    5%, 15% {
+      --interpolation-end-clr: transparent;
+    }
+  }
+</style>
+
+<p>However, CSS gradients <a href="https://github.com/w3c/csswg-drafts/issues/1332" target="_blank">don’t support nonlinear interpolation of opacity yet as of writing</a> (not to be confused with colour space interpolation, which browsers do support!). The solution for now is to add more points in the gradient to get a smooth opacity curve based on the quadratic formula.</p>
+
+<code-block language="css"><pre><code>radial-gradient(
+  &lt;position>,
+  rgb(82 190 240 / 100%) 0%,
+  rgb(82 190 204 / 98%) 10%,
+  rgb(82 190 204 / 92%) 20%,
+  rgb(82 190 204 / 82%) 30%,
+  rgb(82 190 204 / 68%) 40%,
+  rgb(82 190 204 / 32%) 60%,
+  rgb(82 190 204 / 18%) 70%,
+  rgb(82 190 204 / 8%) 80%,
+  rgb(82 190 204 / 2%) 90%,
+  transparent 100%
+)</code></pre></code-block>
+
+<figure>
+  <img src="interpolation-graph.png" width="1024" height="768" style="--lqip:-87773">
+  <figcaption>The quadratic interpolation is based on two quadratic curves (parabolas), one for each half of the gradient &mdash; one upward and another downward.</figcaption>
+</figure>
+
+<p>The quadratic easing blends adjacent radial gradients together, mimicking the smooth bilinear (or even bicubic) interpolation. It’s almost like a fake blur filter, thus achieving the ‘blur’ part of this BlurHash alternative.</p>
+
+<card-box>
+  <a href="./gallery/">Check out the gallery for a direct comparison to BlurHash.</a>
+</card-box>
+
+<lqip-examples>
+  <img class="media" src="./gallery/karsten-winegeart-613pTZEFf2U-unsplash.jpg" width="300" height="208" style="--my-lqip:-41693;--lqip:-41693">
+  <img class="media" src="./gallery/fahrul-azmi-Q1l1ofdVYl4-unsplash.jpg" width="225" height="300" style="--my-lqip:-86485;--lqip:-86485">
+  <img class="media" src="./gallery/esma-melike-sezer-9NRRCTGKYS4-unsplash.jpg" width="191" height="300" style="--my-lqip:173538;--lqip:173538">
+  <img class="media" src="./gallery/daniel-b-herrmann-squbLwpQRQ8-unsplash.jpg" width="240" height="300" style="--my-lqip:-169253;--lqip:-169253">
+  <a class="button" href="javascript:(()=>{let s;(s=document.getElementById('lqip-debug'))?s.remove():((s=document.createElement('style')).innerHTML=%60[style*='--my-lqip:']:not(:hover){object-position:calc(infinity*1px)!important}%60,s.id='lqip-debug',document.head.append(s))})()">
+    Toggle images
+  </a>
+</lqip-examples>
+
+<h2>Appendix: Alternatives considered</h2>
+
+<h3>Four colours instead of monochromatic preview</h3>
+
+<p>Four 5-bit colours, where each <b>R</b> is 2 bits, <b>G</b> is 2 bits, and <b>B</b> is just a zero or one.</p>
+
+<p>The four colours would map to the four corners of the image box, rendered as radial gradients</p>
+
+<p>This was my first attempt, and I fiddled with this for a while, but mixing four colours properly require proper bilinear interpolation and probably a shader. Just layering gradients resulted in muddiness (just like mixing too many watercolour pigments), and there was no CSS blend mode that could fix it. So I abandoned it, and moved on to a monochromatic approach.</p>
+
+<h3>Single solid colour</h3>
+
+<p>This was what I used on this website before. It’s simple and effective. A clean-markup approach could still use the custom <code>--lqip</code> variable:</p>
+
+<code-block language="html">
+  <pre><code>&lt;img src="&hellip;" style="--lqip:#9bc28e">
+
+&lt;style>
+/* we save some bytes by ‘aliasing’ this property */
+* { background-color: var(--lqip) }
+&lt;/style></code></pre>
+</code-block>
+
+<h3>HTML attribute instead of CSS custom property</h3>
+
+<p>We can use HTML attributes to control CSS soon! Here’s what the LQIP markup would look like in the future:</p>
+
+<code-block language="html">
+  <pre><code>&lt;img src="&hellip;" lqip="192900"></code></pre>
+</code-block>
+
+<p>Waiting for <a href="https://developer.chrome.com/blog/advanced-attr" target="_blank"><code>attr()</code> Level 5</a> for this one. It’s nicer and shorter, fewer weird punctuations in markup <small>(who came up with the double dash for CSS vars anyway?)</small>. The value can then be referenced in CSS with <code>attr(lqip type(&lt;number>))</code> instead of <code>var(--lqip)</code>.</p>
+
+<p>For extra safety, a <code>data-</code> prefix could be added to the attribute name.</p>
+
+<p>Can’t wait for this to get widespread adoption. I also want it for my <a href="https://jordanbrennan.hashnode.dev/tac-a-new-css-methodology" target="_blank">TAC components</a>.</p>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
+
+<style>
+  lqip-examples {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    img {
+      display: block;
+      margin: 0;
+    }
+    a {
+      width: 100%;
+      position: sticky;
+      bottom: 30px;
+      box-shadow: 0 0 60px #000;
+    }
+  }
+
+  /* separate copy from common.css to prevent rot */
+  [style*="--my-lqip:"] {
+    --lqip-ca: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 18))), 4);
+    --lqip-cb: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 16))), 4);
+    --lqip-cc: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 14))), 4);
+    --lqip-cd: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 12))), 4);
+    --lqip-ce: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 10))), 4);
+    --lqip-cf: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 8))), 4);
+    --lqip-ll: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 6))), 4);
+    --lqip-aaa: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 3))), 8);
+    --lqip-bbb: mod(calc(var(--my-lqip) + pow(2, 19)), 8);
+
+    --lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
+    --lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
+    --lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
+    --lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
+    --lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
+    --lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
+    --lqip-base-clr: oklab(
+      calc(var(--lqip-ll) / 3 * 0.6 + 0.2)
+        calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
+        calc((var(--lqip-bbb) + 1) / 8 * 0.7 - 0.35)
+    );
+
+    --lqip-stop10: 2%;
+    --lqip-stop20: 8%;
+    --lqip-stop30: 18%;
+    --lqip-stop40: 32%;
+    background-blend-mode:
+      hard-light, hard-light, hard-light, hard-light, hard-light, hard-light,
+      overlay, overlay, overlay, overlay, overlay, overlay,
+      normal;
+    background-image: radial-gradient(
+        50% 75% at 16.67% 25%,
+        rgb(from var(--lqip-ca-clr) r g b / 50%),
+        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 83.33% 25%,
+        rgb(from var(--lqip-cc-clr) r g b / 50%),
+        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 50% 25%,
+        rgb(from var(--lqip-cb-clr) r g b / 50%),
+        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 16.67% 75%,
+        rgb(from var(--lqip-cd-clr) r g b / 50%),
+        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 83.33% 75%,
+        rgb(from var(--lqip-cf-clr) r g b / 50%),
+        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 50% 75%,
+        rgb(from var(--lqip-ce-clr) r g b / 50%),
+        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 16.67% 25%,
+        var(--lqip-ca-clr),
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 50% 25%,
+        var(--lqip-cb-clr),
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 83.33% 25%,
+        var(--lqip-cc-clr),
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 16.67% 75%,
+        var(--lqip-cd-clr),
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 50% 75%,
+        var(--lqip-ce-clr),
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        transparent
+      ),
+      radial-gradient(
+        50% 75% at 83.33% 75%,
+        var(--lqip-cf-clr),
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop20))) 20%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop30))) 30%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(100% - var(--lqip-stop40))) 40%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop40))) 60%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop30))) 70%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop20))) 80%,
+        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop10))) 90%,
+        transparent
+      ),
+      linear-gradient(0deg, var(--lqip-base-clr), var(--lqip-base-clr));
+  }
+</style>

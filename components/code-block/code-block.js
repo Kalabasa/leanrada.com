@@ -32,6 +32,11 @@
                 white-space: pre;
               }
 
+              [wraptext] code {
+                white-space: pre-wrap;
+                overflow-wrap: anywhere;
+              }
+
               /**
                * THEME
                * Modified by Kalabasa.
