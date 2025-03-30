@@ -85,25 +85,27 @@ customElements.define(
     }
 
     async loadSuggestions() {
-      const myHref = window.location.pathname;
+      const { loadNotesIndex, loadNote } = await import(
+        "/notes/index-loader.js"
+      );
 
-      // TODO: Remove fallback
-      let loadNotesIndex;
-      await import("/notes/index-loader.js")
-        .then((module) => {
-          loadNotesIndex = module.loadNotesIndex;
-        })
-        .catch(() => {
-          loadNotesIndex = async () =>
-            fetch("/notes/index.generated.combined.json").then((r) => r.json());
-        });
-
-      const index = await loadNotesIndex();
-      const item = index.find((item) => item.href === myHref);
-      return (item?.suggestions ?? []).map((suggestion) => ({
-        ...suggestion,
-        meta: index.find((item) => item.href === suggestion.href),
-      }));
+      // TODO: Remove else branch when loadNote has propagated
+      if (loadNote) {
+        const result = await loadNote(window.location.pathname);
+        if (!result) return [];
+        return result.note.suggestions.map((suggestion) => ({
+          ...suggestion,
+          meta: result.index.find((item) => item.href === suggestion.href),
+        }));
+      } else {
+        const index = await loadNotesIndex();
+        const myHref = window.location.pathname;
+        const note = index.find((item) => item.href === myHref);
+        return (note?.suggestions ?? []).map((suggestion) => ({
+          ...suggestion,
+          meta: index.find((item) => item.href === suggestion.href),
+        }));
+      }
     }
   }
 );
