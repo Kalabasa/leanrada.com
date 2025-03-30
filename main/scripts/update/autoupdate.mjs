@@ -155,7 +155,6 @@ async function updateIndexHTML({ notes, wares, hits }) {
               `\n${indent(notesListIndent)}`;
 
             element.setInnerContent(innerHTML, { html: true });
-            element.setAttribute("data-rewritten", dateString());
           },
         });
       }
@@ -233,7 +232,6 @@ async function updateNotesIndexHTML({ notes }) {
             `\n${indent(notesListIndent + 1)}</ul>` +
             `\n${indent(notesListIndent)}`;
           element.setInnerContent(innerHTML, { html: true });
-          element.setAttribute("data-rewritten", dateString());
         },
       });
     },
