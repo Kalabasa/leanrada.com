@@ -35,9 +35,7 @@ export async function rewrite({
         if (this.textBuffer === this.newContent) {
           endTag.before(this.textBuffer);
         } else {
-          endTag
-            .before(this.newContent)
-            .before(`<!--${dateString()}-->`, { html: true });
+          endTag.before(this.newContent);
         }
       });
     },
@@ -46,12 +44,6 @@ export async function rewrite({
       if (!this.replacing) return;
       this.textBuffer += text.text;
       text.remove();
-    },
-
-    comments(comment) {
-      if (this.replacing && this.textBuffer !== this.newContent) {
-        comment.remove();
-      }
     },
   });
 
