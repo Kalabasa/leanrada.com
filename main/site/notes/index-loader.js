@@ -17,3 +17,24 @@ export async function loadNotesIndex() {
     return await newResponse.json();
   }
 }
+
+export async function loadNote(href) {
+  const index = await loadNotesIndex();
+  const note = index.find((item) => item.href === href);
+  if (note) {
+    return { index, note };
+  }
+
+  // bust cache if not found
+  const response = await fetch(jsonPath + `?cachebust=${encodeURIComponent(href)}`);
+  const index2 = await response.json();
+  const note2 = index2.find((item) => item.href === href);
+  if (note2) {
+    return {
+      index: index2,
+      note: note2,
+    };
+  }
+
+  return null;
+}
