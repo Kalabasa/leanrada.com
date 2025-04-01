@@ -42,6 +42,11 @@ async function main() {
               await analyzeImage(imagePath);
             console.groupEnd();
 
+            // add this as well because why not
+            if (!element.hasAttribute("loading")) {
+              element.setAttribute("loading", "lazy");
+            }
+
             if (
               refresh
                 ? element.getAttribute("width") !== String(width) ||
