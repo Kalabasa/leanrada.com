@@ -233,12 +233,12 @@
 
 <code-block language="css">
 <pre><code>/* continued */
---lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
---lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
---lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
---lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
---lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
---lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
+--lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 60% + 20%));
+--lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 60% + 20%));
+--lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 60% + 20%));
+--lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 60% + 20%));
+--lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 60% + 20%));
+--lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 60% + 20%));
 --lqip-base-clr: oklab(
   calc(var(--lqip-ll) / 3 * 0.6 + 0.2)
   calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
@@ -338,7 +338,7 @@ background-image:
 }</code></pre>
 </code-block>
 
-<p>The above is a simplified version of the full renderer for illustrative purposes. <small>The real one has doubled layers, smooth gradient falloffs, and blend modes.</small></p>
+<p>The above is a simplified version of the full renderer for illustrative purposes. <small>The real one has smooth gradient falloffs and blend modes.</small></p>
 
 <p>As you might expect, the radial gradients are arranged in a 3&times;2 grid. You can see it in this interactive deconstructor view!</p>
 
@@ -709,7 +709,7 @@ interpolation-example {
   }
 
   /* separate copy from common.css to prevent rot */
-  [style*="--my-lqip:"] {
+  [style*="--my-lqip:"]:not(#x) {
     --lqip-ca: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 18))), 4);
     --lqip-cb: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 16))), 4);
     --lqip-cc: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 14))), 4);
@@ -720,12 +720,12 @@ interpolation-example {
     --lqip-aaa: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 3))), 8);
     --lqip-bbb: mod(calc(var(--my-lqip) + pow(2, 19)), 8);
 
-    --lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 100%));
-    --lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 100%));
-    --lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 100%));
-    --lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 100%));
-    --lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 100%));
-    --lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 100%));
+    --lqip-ca-clr: hsl(0 0% calc(var(--lqip-ca) / 3 * 60% + 20%));
+    --lqip-cb-clr: hsl(0 0% calc(var(--lqip-cb) / 3 * 60% + 20%));
+    --lqip-cc-clr: hsl(0 0% calc(var(--lqip-cc) / 3 * 60% + 20%));
+    --lqip-cd-clr: hsl(0 0% calc(var(--lqip-cd) / 3 * 60% + 20%));
+    --lqip-ce-clr: hsl(0 0% calc(var(--lqip-ce) / 3 * 60% + 20%));
+    --lqip-cf-clr: hsl(0 0% calc(var(--lqip-cf) / 3 * 60% + 20%));
     --lqip-base-clr: oklab(
       calc(var(--lqip-ll) / 3 * 0.6 + 0.2)
         calc(var(--lqip-aaa) / 8 * 0.7 - 0.35)
@@ -738,87 +738,8 @@ interpolation-example {
     --lqip-stop40: 32%;
     background-blend-mode:
       hard-light, hard-light, hard-light, hard-light, hard-light, hard-light,
-      overlay, overlay, overlay, overlay, overlay, overlay,
       normal;
     background-image: radial-gradient(
-        50% 75% at 16.67% 25%,
-        rgb(from var(--lqip-ca-clr) r g b / 50%),
-        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
-        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
-        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
-        rgb(from var(--lqip-ca-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
-        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
-        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
-        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
-        rgb(from var(--lqip-ca-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
-        transparent
-      ),
-      radial-gradient(
-        50% 75% at 83.33% 25%,
-        rgb(from var(--lqip-cc-clr) r g b / 50%),
-        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
-        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
-        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
-        rgb(from var(--lqip-cc-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
-        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
-        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
-        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
-        rgb(from var(--lqip-cc-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
-        transparent
-      ),
-      radial-gradient(
-        50% 75% at 50% 25%,
-        rgb(from var(--lqip-cb-clr) r g b / 50%),
-        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
-        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
-        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
-        rgb(from var(--lqip-cb-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
-        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
-        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
-        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
-        rgb(from var(--lqip-cb-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
-        transparent
-      ),
-      radial-gradient(
-        50% 75% at 16.67% 75%,
-        rgb(from var(--lqip-cd-clr) r g b / 50%),
-        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
-        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
-        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
-        rgb(from var(--lqip-cd-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
-        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
-        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
-        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
-        rgb(from var(--lqip-cd-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
-        transparent
-      ),
-      radial-gradient(
-        50% 75% at 83.33% 75%,
-        rgb(from var(--lqip-cf-clr) r g b / 50%),
-        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
-        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
-        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
-        rgb(from var(--lqip-cf-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
-        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
-        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
-        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
-        rgb(from var(--lqip-cf-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
-        transparent
-      ),
-      radial-gradient(
-        50% 75% at 50% 75%,
-        rgb(from var(--lqip-ce-clr) r g b / 50%),
-        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop10) / 2)) 10%,
-        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop20) / 2)) 20%,
-        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop30) / 2)) 30%,
-        rgb(from var(--lqip-ce-clr) r g b / calc(50% - var(--lqip-stop40) / 2)) 40%,
-        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop40) / 2)) 60%,
-        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop30) / 2)) 70%,
-        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop20) / 2)) 80%,
-        rgb(from var(--lqip-ce-clr) r g b / calc(var(--lqip-stop10) / 2)) 90%,
-        transparent
-      ),
-      radial-gradient(
         50% 75% at 16.67% 25%,
         var(--lqip-ca-clr),
         rgb(from var(--lqip-ca-clr) r g b / calc(100% - var(--lqip-stop10))) 10%,
