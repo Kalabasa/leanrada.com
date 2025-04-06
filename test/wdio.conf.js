@@ -65,7 +65,7 @@ export const config = {
   // Define all options that are relevant for the WebdriverIO instance here
   //
   // Level of logging verbosity: trace | debug | info | warn | error | silent
-  logLevel: "info",
+  logLevel: "warn",
   //
   // Set specific log levels per logger
   // loggers:
@@ -131,7 +131,7 @@ export const config = {
   //
   // Make sure you have the wdio adapter package for the specific framework installed
   // before running any tests.
-  framework: "jasmine",
+  framework: "mocha",
 
   //
   // The number of times to retry the entire specfile when it fails as a whole
@@ -148,17 +148,8 @@ export const config = {
   // see also: https://webdriver.io/docs/dot-reporter
   reporters: ["spec"],
 
-  // Options to be passed to Jasmine.
-  jasmineOpts: {
-    // Jasmine default timeout
-    defaultTimeoutInterval: 60000,
-    //
-    // The Jasmine framework allows interception of each assertion in order to log the state of the application
-    // or website depending on the result. For example, it is pretty handy to take a screenshot every time
-    // an assertion fails.
-    expectationResultHandler: function (passed, assertion) {
-      // do something
-    },
+  mochaOpts: {
+    timeout: 60000,
   },
 
   //

@@ -481,9 +481,11 @@ function debounce(fn, ms = 0) {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupAutoLoadComponents();
+  setupLQIP();
 
   function setupAutoLoadComponents() {
     const components = [
+      ["art-gallery"],
       ["nebula-animation"],
       ["blog-header"],
       ["code-block"],
@@ -520,6 +522,15 @@ document.addEventListener("DOMContentLoaded", () => {
         intersectionObserver.observe(element);
       }
     }
+  }
+
+  function setupLQIP() {
+    document.addEventListener("load", (event) => {
+      const tagName = event.target.tagName;
+      if (tagName && (tagName === "IMG" || tagName === "VIDEO")) {
+        event.target.removeAttribute("loading");
+      }
+    }, { capture: true });
   }
 });
 

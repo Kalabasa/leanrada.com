@@ -1,8 +1,9 @@
 import { browser } from "@wdio/globals";
-import { setup } from "../../common.js";
+import { block, setup } from "../../common.js";
 
 describe("/notes/<post>/", () => {
   beforeEach(async () => {
+    await block(browser, ["**/notes/**/*.@(png|jpg|mp4)"]);
     await setup(
       browser,
       "desktop",
@@ -11,6 +12,6 @@ describe("/notes/<post>/", () => {
   });
 
   it("passes visreg", async () => {
-    await browser.checkFullPageScreen("notes-post-full");
+    await expect(browser).toMatchFullPageSnapshot("notes-post-full");
   });
 });

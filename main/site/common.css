@@ -68,7 +68,7 @@
 
   body {
     margin: 0;
-    min-height: 100vh;
+    min-height: 100svh;
     font-family: var(--default-font, monospace);
     font-size: 15px;
     font-display: swap;
@@ -129,7 +129,7 @@
   - 3 bits a channel of base Oklab color for full area
   - 3 bits b channel of base Oklab color for full area */
   /* prettier-ignore */
-  [style*="--lqip:"] {
+  [loading=lazy][style*="--lqip:"] {
     --lqip-ca: mod(round(down, calc((var(--lqip) + 524288) / 262144)), 4);
     --lqip-cb: mod(round(down, calc((var(--lqip) + 524288) / 65536)), 4);
     --lqip-cc: mod(round(down, calc((var(--lqip) + 524288) / 16384)), 4);
@@ -342,7 +342,7 @@
     gap: 12px;
   }
 
-  /* TODO: Convert to section[type=column][size=sm] */
+  /* TODO: Convert to section[appearance=column][size=sm] */
   .section,
   .sm-column-section,
   .md-column-section,
@@ -363,7 +363,7 @@
     max-width: 1800px;
   }
 
-  /* TODO: convert to img[type=icon][size=sm] */
+  /* TODO: convert to img[appearance=icon][size=sm] */
   .sm-icon {
     width: 16px;
     height: 16px;
@@ -1316,15 +1316,18 @@
 /* ----------------------------------------------------------------------------- */
 
 @layer prose-base {
-  main.prose > * {
+  /* TODO: Convert all to main[appearance=prose] */
+  main.prose > *,
+  main[appearance=prose] > * {
     margin: 36px auto;
   }
 }
 @layer prose {
   /* #region */
 
-  /* TODO: Convert to main[type=prose] */
-  main.prose {
+  /* TODO: Convert all to main[appearance=prose] */
+  main.prose,
+  main[appearance=prose] {
     margin: auto;
     padding: 0 18px 60px;
     width: 100%;
@@ -1374,7 +1377,6 @@
       margin-left: auto;
       margin-right: auto;
       max-width: 100%;
-      max-height: 80vh;
       max-height: 80svh;
       border-radius: 18px;
       box-sizing: border-box;
@@ -1505,10 +1507,14 @@
     prose-bleed {
       display: block;
       position: relative;
-      width: 100vh;
-      max-width: max(min(100vw, 800px), 80vw);
+      margin-inline: 0;
+      width: min(100svh, 95vw, 1200px);
       left: 50%;
-      transform: translateX(-50%);
+      translate: -50% 0;
+
+      :where(img, video) {
+        max-height: unset;
+      }
     }
 
     prose-caption {

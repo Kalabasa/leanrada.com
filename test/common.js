@@ -15,12 +15,22 @@ const windowSizes = {
 export async function setup(browser, platform, path) {
   await Promise.all([
     browser.setWindowSize(...windowSizes[platform]),
-    await browser
-      .mock("https://*.goatcounter.com/**")
-      .then((mock) => mock.abort("BlockedByClient")),
+    block(browser, [
+      "https://*.goatcounter.com/**",
+      "https://*.goatcounter.com/**/.*",
+      "**/components/nebula-animation/nebula-animation.js",
+    ]),
   ]);
 
   return await browser.url(getURL(path));
+}
+
+export async function block(browser, patterns) {
+  return Promise.all(
+    patterns.map((pattern) =>
+      browser.mock(pattern).then((mock) => mock.abort("BlockedByClient"))
+    )
+  );
 }
 
 export async function shoudHaveNavigation() {

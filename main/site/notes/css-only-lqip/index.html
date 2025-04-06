@@ -79,7 +79,7 @@
   <img class="media" src="./gallery/aj-McsNra2VRQQ-unsplash.jpg" loading="lazy" width="300" height="199" style="--my-lqip:-92437;--lqip:-92437">
   <img class="media" src="./gallery/henry-co-3JFVNo4ukKQ-unsplash.jpg" loading="lazy"  width="300" height="200" style="--my-lqip:174708;--lqip:174708">
   <img class="media" src="./gallery/tienko-dima-uYoVf9I6ANI-unsplash.jpg" loading="lazy"  width="300" height="196" style="--my-lqip:158043;--lqip:158043">
-  <a class="button" href="javascript:(()=>{let s;(s=document.getElementById('lqip-debug'))?s.remove():((s=document.createElement('style')).innerHTML=%60[style*='--my-lqip:']:not(:hover){object-position:calc(infinity*1px)!important}%60,s.id='lqip-debug',document.head.append(s))})()">
+  <a class="button" onclick="toggleImages(this)">
     Toggle images
   </a>
 </lqip-examples>
@@ -640,7 +640,7 @@ interpolation-example {
   <img class="media" loading="lazy" src="./gallery/fahrul-azmi-Q1l1ofdVYl4-unsplash.jpg" width="225" height="300" style="--my-lqip:-86485;--lqip:-86485">
   <img class="media" loading="lazy" src="./gallery/esma-melike-sezer-9NRRCTGKYS4-unsplash.jpg" width="191" height="300" style="--my-lqip:173538;--lqip:173538">
   <img class="media" loading="lazy" src="./gallery/daniel-b-herrmann-squbLwpQRQ8-unsplash.jpg" width="240" height="300" style="--my-lqip:-169253;--lqip:-169253">
-  <a class="button" href="javascript:(()=>{let s;(s=document.getElementById('lqip-debug'))?s.remove():((s=document.createElement('style')).innerHTML=%60[style*='--my-lqip:']:not(:hover){object-position:calc(infinity*1px)!important}%60,s.id='lqip-debug',document.head.append(s))})()">
+  <a class="button" onclick="toggleImages(this)">
     Toggle images
   </a>
 </lqip-examples>
@@ -688,6 +688,37 @@ interpolation-example {
 
 <site-footer></site-footer>
 
+<script>
+  function toggleImages(button) {
+    const examplesContainer = button.closest("lqip-examples");
+    if (!examplesContainer) return;
+
+    if (!examplesContainer.id) {
+      examplesContainer.id = "a" + Math.floor(Math.random() * 0xffff).toString(16);
+    }
+
+    let style = examplesContainer.querySelector("#lqip-debug");
+    
+    const selector = `#${examplesContainer.id} img`;
+    for (const el of examplesContainer.querySelectorAll("img")) {
+      if (el.complete && style) {
+        el.removeAttribute("loading");
+      } else {
+        el.setAttribute("loading", "lazy");
+      }
+    }
+
+    if (style) {
+      style.remove();
+    } else {
+      style = document.createElement("style");
+      style.innerHTML = `${selector}:not(:hover){object-position:calc(infinity*1px)!important}`;
+      style.id = "lqip-debug";
+      examplesContainer.append(style);
+    }
+  }
+</script>
+
 <style>
   lqip-examples {
     display: flex;
@@ -709,7 +740,7 @@ interpolation-example {
   }
 
   /* separate copy from common.css to prevent rot */
-  [style*="--my-lqip:"]:not(#x) {
+  [style*="--my-lqip:"]:not(img:not([loading=lazy])) {
     --lqip-ca: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 18))), 4);
     --lqip-cb: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 16))), 4);
     --lqip-cc: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 14))), 4);
