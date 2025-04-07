@@ -1,4 +1,5 @@
 import { shouldEvictSnapshot } from "./evict";
+import { checkSpam } from "./spam";
 
 export interface Env {
   data: KVNamespace;
@@ -16,17 +17,19 @@ type GetRequest = {
   page: number;
 };
 
-type SubmitRequest = {
+export type SubmitRequest = {
   schemaVersion: string;
   text: string;
   name?: string;
-  fontIndex?: number;
-  bgStyleIndex?: number;
-  bgRGB?: number;
-  fgRGB?: number;
-  stampTypes?: number | number[];
-  stampXs?: number | number[];
-  stampYs?: number | number[];
+  website?: string;
+  timeSpentMs?: string;
+  fontIndex?: string;
+  bgStyleIndex?: string;
+  bgRGB?: string;
+  fgRGB?: string;
+  stampTypes?: string | string[];
+  stampXs?: string | string[];
+  stampYs?: string | string[];
 };
 
 type StoredData = {
@@ -105,11 +108,18 @@ async function handleGet(request: Request, env: Env, ctx: ExecutionContext) {
 }
 
 async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
-  const submitRequest: Partial<SubmitRequest> = parseFormData(
+  const submitRequest: Partial<SubmitRequest> = getFormData(
     await request.formData()
   );
   console.log("Handling POST request:", submitRequest);
   checkSubmitRequest(submitRequest);
+
+  const spamCheck = checkSpam(submitRequest);
+  if (spamCheck.isSpam) {
+    console.log("Discarding detected spam. Reason: " + spamCheck.reason);
+    return refreshResponse();
+  }
+
   const stampXs = arrayField(submitRequest.stampXs);
   const stampYs = arrayField(submitRequest.stampYs);
 
@@ -130,9 +140,9 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
     stamps: arrayField(submitRequest.stampTypes)
       .slice(0, Math.min(stampXs.length, stampYs.length, MAX_STAMPS))
       .map((typeIndex, index) => ({
-        typeIndex: typeIndex,
-        x: stampXs[index],
-        y: stampYs[index],
+        typeIndex: Number(typeIndex),
+        x: Number(stampXs[index]),
+        y: Number(stampYs[index]),
       })),
   });
 
@@ -161,6 +171,10 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
     ])
   );
 
+  return refreshResponse();
+}
+
+function refreshResponse() {
   return new Response(
     null,
     Response.redirect("https://leanrada.com/guestbook/")
@@ -302,21 +316,26 @@ function checkSubmitRequest(
   )
     throw new TypeError("submitRequest.stamp*s not equal in length");
   for (const type of stampTypes)
-    if (type != undefined && !Number.isInteger(parseInt(type, 10)))
+    if (!Number.isInteger(parseInt(type, 10)))
       throw new TypeError("stampTypes[] is not an integer");
   for (const x of stampXs)
-    if (x != undefined && isNaN(x))
+    if (!Number.isInteger(parseInt(x, 10)))
       throw new TypeError("stampXs[] is not an number");
   for (const y of stampYs)
-    if (y != undefined && isNaN(y))
+    if (!Number.isInteger(parseInt(y, 10)))
       throw new TypeError("stampYs[] is not an number");
 }
 
-function parseFormData(formData: FormData): Record<string, any> {
-  const object: Record<string, any> = {};
+function getFormData(formData: FormData): Record<string, string | string[]> {
+  const maxLength = 1000;
+  const object: Record<string, string | string[]> = Object.create(null);
   for (const key of formData.keys()) {
-    object[key] = formData.getAll(key);
-    if (object[key].length === 1) object[key] = object[key][0];
+    const values = formData.getAll(key);
+    if (values.length === 1) {
+      object[key] = values[0].slice(0, maxLength);
+    } else {
+      object[key] = values.map((value) => value.slice(0, maxLength));
+    }
   }
   return object;
 }

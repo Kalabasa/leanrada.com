@@ -1,16 +1,6 @@
 import { shouldEvictSnapshot } from "../evict";
-
-let passed = 0;
-let total = 0;
-
-function assert(message: string, condition: boolean) {
-  total++;
-  if (condition) {
-    passed++;
-  } else {
-    console.error(`FAIL: ${message || "Assertion failed"}`);
-  }
-}
+import { createTest } from "./base";
+const { assert, report } = createTest();
 
 function getTime(dateString: string) {
   return new Date(dateString).getTime();
@@ -103,4 +93,4 @@ try {
   assert("Should enforce ascending order", false);
 } catch (e) {}
 
-console.log(`${passed}/${total} tests passed`);
+report();
