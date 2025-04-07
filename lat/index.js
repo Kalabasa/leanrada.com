@@ -14,6 +14,8 @@ const args = arg({
   "--yes": Boolean,
   "--prod": Boolean,
   "--cf-prod": Boolean,
+  "--preview": Boolean,
+  "--cf-preview": Boolean,
   "--gh-prod": Boolean,
   "--staging": Boolean,
   "--port": Number,
@@ -57,6 +59,15 @@ function deploy(targetProjectDirs) {
       targetProjectDirs,
       workingDir: wwwProdDir,
       cfBranch: "cf-pages",
+      dryRun: args["--dry-run"],
+      noConfirm: args["--yes"],
+    });
+  } else if (args["--cf-preview"] || args["--preview"]) {
+    const wwwProdDir = `${wwwDir}/cf-preview`;
+    deployProjectsToCloudflarePages({
+      targetProjectDirs,
+      workingDir: wwwProdDir,
+      cfBranch: "cf-pages-preview",
       dryRun: args["--dry-run"],
       noConfirm: args["--yes"],
     });
