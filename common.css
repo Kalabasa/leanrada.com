@@ -64,6 +64,8 @@
 
     --card-border-radius: 18px;
     --ease: cubic-bezier(0.8, 0, 1, 1);
+
+    scroll-snap-type: block proximity;
   }
 
   body {
@@ -105,10 +107,11 @@
     }
   }
 
-  img {
-    max-width: 100%;
-    width: auto;
+  img[width][height] {
     height: auto;
+    --aspect-ratio: calc(
+      attr(width type(<number>)) / attr(height type(<number>))
+    );
   }
 
   figure {
@@ -742,6 +745,14 @@
     }
   }
 
+  art-gallery {
+    /* placeholder */
+    display: block;
+    img {
+      max-width: 100%;
+    }
+  }
+
   article-footer {
     /* placeholder */
     display: block;
@@ -1318,7 +1329,7 @@
 @layer prose-base {
   /* TODO: Convert all to main[appearance=prose] */
   main.prose > *,
-  main[appearance=prose] > * {
+  main[appearance="prose"] > * {
     margin: 36px auto;
   }
 }
@@ -1327,7 +1338,7 @@
 
   /* TODO: Convert all to main[appearance=prose] */
   main.prose,
-  main[appearance=prose] {
+  main[appearance="prose"] {
     margin: auto;
     padding: 0 18px 60px;
     width: 100%;
@@ -1376,8 +1387,8 @@
       display: block;
       margin-left: auto;
       margin-right: auto;
-      max-width: 100%;
-      max-height: 80svh;
+      /* setting max-height breaks aspect-ratio, use only max-width */
+      max-width: min(100%, calc(80svh * var(--aspect-ratio, 1)));
       border-radius: 18px;
       box-sizing: border-box;
     }
@@ -1511,10 +1522,6 @@
       width: min(100svh, 95vw, 1200px);
       left: 50%;
       translate: -50% 0;
-
-      :where(img, video) {
-        max-height: unset;
-      }
     }
 
     prose-caption {

@@ -21,15 +21,16 @@
 
 <p class="intro">Thanks for visiting the site. Leave a card below! :)</p>
 
-<form class="form" method="post" action="https://guestbook.leanrada.com/api">
+<form class="form" action="https://guestbook.leanrada.com/v2/api">
   <input name="schemaVersion" type="hidden" value="v2" />
   <input name="fontIndex" type="hidden" value="0" />
   <input name="bgStyleIndex" type="hidden" value="0" />
   <input name="bgRGB" type="hidden" value="0xffffff" />
   <input name="fgRGB" type="hidden" value="0x000000" />
   <guestbook-card id="guestbook-card">
-    <textarea name="text" placeholder="Your message" required></textarea>
-    <input name="name" placeholder="Name / pseudonym" />
+    <textarea name="text" placeholder="Your message" required autocomplete="off"></textarea>
+    <input name="name" placeholder="Name / pseudonym" autocomplete="off" />
+    <input name="website" placeholder="Your website" autocomplete="off" />
     <div></div>
   </guestbook-card>
   <div class="button-row">
@@ -113,6 +114,10 @@
       filter: grayscale(0.5) brightness(1.07) drop-shadow(0 1px 0 #0002);
       mix-blend-mode: multiply;
     }
+  }
+
+  [name=website] {
+    display: none;
   }
 
   .intro,
@@ -338,10 +343,19 @@
       const stampBtn = document.getElementById("stampBtn");
 
       form.action = window.GUESTBOOK_API;
+      const start = Date.now();
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         submitBtn.disabled = true;
+
+        const elapsed = Date.now() - start;
+        const timeField = document.createElement("input");
+        timeField.type = "hidden";
+        timeField.name = "timeSpentMs";
+        timeField.value = elapsed;
+        form.appendChild(timeField);
+
         try {
           await fetch(form.action, {
             method: "post",
@@ -349,9 +363,10 @@
           });
         } finally {
           setTimeout(() => {
+            // TODO: optimistic, animate the submitted card into the existing cards, no need reload
             location.reload();
             submitBtn.disabled = false;
-          }, 50);
+          }, 200);
         }
       });
 
