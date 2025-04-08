@@ -47,7 +47,6 @@ customElements.define(
               position: absolute;
               display: block;
               inset: calc(var(--fade-length) * -1) 0;
-              background-color: #0004;
               background-image: url("/components/art-gallery/cursor-right.png");
               background-size: 96px;
               background-position: center;
@@ -62,13 +61,9 @@ customElements.define(
               cursor: unset;
             }
             &:focus-visible::after {
-              transition-duration: 1s;
-              transition-delay: 0.2s;
-            }
-
-            &:focus-visible img {
-              outline: solid 4px var(--clr0);
-              outline-offset: 6px;
+              animation-play-state: paused;
+              transition-duration: 0.4s;
+              transition-delay: 0.4s;
             }
 
             img {
@@ -81,12 +76,13 @@ customElements.define(
               max-width: min(100%, calc(80svh * var(--aspect-ratio, 1)));
               z-index: 1;
               transition: opacity 0.1s ease,
-                transform 0.1s cubic-bezier(0.2, 0, 0.4, 1);
+                transform 0.1s cubic-bezier(0.2, 0, 0.4, 1),
+                filter 1s ease;
 
               &.art-gallery-active {
                 visibility: visible;
                 opacity: 1;
-                transition-duration: 0.1s, 0.1s;
+                transition-duration: 0.1s, 0.1s, 1s;
               }
               .art-gallery-active + &,
               &:first-child:has(~ .art-gallery-active:last-child) {
@@ -98,6 +94,13 @@ customElements.define(
                 visibility: visible;
                 transform: translateX(-60px) rotate3d(0, 1, 0, -15deg);
               }
+            }
+            &:not(:focus) img.art-gallery-active {
+              filter: brightness(0.8);
+            }
+            &:focus-visible img {
+              outline: solid 4px var(--clr0);
+              outline-offset: 6px;
             }
           }
 
