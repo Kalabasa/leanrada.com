@@ -28,6 +28,7 @@ customElements.define(
             perspective: 3000px;
             z-index: 200; /* above <site-header> */
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
 
             &::before {
               content: "";
