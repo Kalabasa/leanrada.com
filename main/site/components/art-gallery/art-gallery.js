@@ -32,10 +32,7 @@ customElements.define(
             &::before {
               content: "";
               position: absolute;
-              left: 0;
-              right: 0;
-              top: calc(var(--fade-length) * -1);
-              height: calc(100% + var(--fade-length) * 2);
+              inset: calc(var(--fade-length) * -1) 0;
               background: linear-gradient(
                 to bottom,
                 transparent,
@@ -49,7 +46,7 @@ customElements.define(
               content: "";
               position: absolute;
               display: block;
-              inset: 0;
+              inset: calc(var(--fade-length) * -1) 0;
               background-color: #0004;
               background-image: url("/components/art-gallery/cursor-right.png");
               background-size: 96px;
@@ -59,9 +56,6 @@ customElements.define(
               z-index: 1;
               transition: opacity 0.1s;
               cursor: pointer;
-            }
-            &:hover::after {
-              opacity: 0.8;
             }
             &:focus::after {
               opacity: 0;
