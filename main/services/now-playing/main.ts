@@ -80,11 +80,10 @@ async function getData(env: Env): Promise<{
       samplingTimeOffset: 0,
       trackSpans: [],
     };
-    await env.data.put(DATA_KEY, JSON.stringify(data));
   }
 
   if (data.lastFetchTime + DATA_UPDATE_INTERVAL_MS < Date.now()) {
-    console.group("Updating data...");
+    console.log("Updating data...");
     const accessToken = await getAccessToken(env);
     const spans = await fetchRecentlyPlayedSpans(accessToken);
     data.lastFetchTime = Date.now();
@@ -104,7 +103,6 @@ async function getData(env: Env): Promise<{
     ];
     console.log(data.trackSpans.length + " total track spans", data.trackSpans);
     await env.data.put(DATA_KEY, JSON.stringify(data));
-    console.groupEnd();
   }
 
   const sample = sampleSpan(
@@ -241,7 +239,7 @@ async function getAccessToken(env: Env): Promise<string> {
 }
 
 async function updateTokens(env: Env) {
-  console.group("Updating tokens...");
+  console.log("Updating tokens...");
 
   if (typeof env.client_id !== "string")
     throw new Error("invalid env.client_id");
@@ -291,7 +289,6 @@ async function updateTokens(env: Env) {
   });
 
   console.log("Tokens updated!");
-  console.groupEnd();
   return { accessToken };
 }
 
