@@ -89,9 +89,6 @@ async function getData(env: Env): Promise<{
     const spans = await fetchRecentlyPlayedSpans(accessToken);
     data.lastFetchTime = Date.now();
     data.samplingTimeOffset = Math.floor(Math.random() * 24 * 60 * 60_000);
-    console.log(
-      "New sampling offset: " + formatTimeOffset(data.samplingTimeOffset)
-    );
     data.trackSpans = [
       // expire old spans
       ...data.trackSpans.filter((span) => span.startAbsTime + SPAN_TTL_MS),
@@ -99,7 +96,9 @@ async function getData(env: Env): Promise<{
       ...spans.filter(
         (span) =>
           !data.trackSpans.some(
-            (existingSpan) => existingSpan.href === span.href
+            (existingSpan) =>
+              existingSpan.href === span.href &&
+              existingSpan.startAbsTime === span.startAbsTime
           )
       ),
     ];
@@ -108,7 +107,10 @@ async function getData(env: Env): Promise<{
     console.groupEnd();
   }
 
-  const sample = sampleSpan(data.trackSpans, Date.now() + data.samplingTimeOffset);
+  const sample = sampleSpan(
+    data.trackSpans,
+    Date.now() + data.samplingTimeOffset
+  );
   console.log(
     `Sampled with ${formatTimeOffset(data.samplingTimeOffset)} offset:`,
     sample
