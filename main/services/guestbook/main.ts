@@ -257,9 +257,7 @@ async function sendNotificationEmail(env: Env, body: string) {
 }
 
 async function getData(env: Env): Promise<StoredData> {
-  let data: StoredData | null = await env.data.get(MASTER_KEY, {
-    type: "json",
-  });
+  let data: StoredData | null = await env.data.get(MASTER_KEY, "json");
 
   if (!data) {
     console.log("New blank data");

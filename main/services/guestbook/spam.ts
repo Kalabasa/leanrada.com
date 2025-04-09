@@ -1,4 +1,4 @@
-import { SubmitRequest } from "./worker";
+import { SubmitRequest } from "./main";
 
 export function checkSpam(submitRequest: SubmitRequest): {
   isSpam: boolean;
