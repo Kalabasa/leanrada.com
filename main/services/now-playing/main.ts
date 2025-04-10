@@ -7,11 +7,13 @@ export interface Env {
   refresh_token: unknown;
 }
 
+const ONE_DAY_IN_MS = 24 * 60 * 60_000;
+
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const DATA_KEY = "data";
-const DATA_UPDATE_INTERVAL_MS = 24 * 60 * 60_000;
-const SPAN_TTL_MS = 7 * 24 * 60 * 60_000;
+const DATA_UPDATE_INTERVAL_MS = ONE_DAY_IN_MS;
+const SPAN_TTL_MS = 7 * ONE_DAY_IN_MS;
 const TARGET_IMAGE_SIZE = 150;
 
 // The now-playing service doesn’t actually give accurate time information for privacy purposes
@@ -87,7 +89,7 @@ async function getData(env: Env): Promise<{
     const accessToken = await getAccessToken(env);
     const spans = await fetchRecentlyPlayedSpans(accessToken);
     data.lastFetchTime = Date.now();
-    data.samplingTimeOffset = Math.floor(Math.random() * 24 * 60 * 60_000);
+    data.samplingTimeOffset = Math.floor(Math.random() * ONE_DAY_IN_MS);
     data.trackSpans = [
       // expire old spans
       ...data.trackSpans.filter((span) => span.startAbsTime + SPAN_TTL_MS),
@@ -147,12 +149,12 @@ export function sampleSpan<T>(
     if (span.startRelTime <= relTime && relTime <= span.endRelTime) {
       return { span, current: true };
     }
-    if (
-      span.startRelTime < relTime &&
-      relTime - span.startRelTime < lastSpanElapsed
-    ) {
+
+    const elapsed =
+      (ONE_DAY_IN_MS + relTime - span.startRelTime) % ONE_DAY_IN_MS;
+    if (elapsed < lastSpanElapsed) {
       lastSpan = span;
-      lastSpanElapsed = relTime - span.startRelTime;
+      lastSpanElapsed = elapsed;
     }
   }
 

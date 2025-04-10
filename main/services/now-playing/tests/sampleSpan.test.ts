@@ -32,6 +32,17 @@ assert(
 );
 
 assert(
+  "Wraparound to nearest past span when no current match",
+  sampleSpan(
+    [
+      span("a", relTime(10, 30), relTime(10, 35)),
+      span("b", relTime(15, 0), relTime(15, 5)),
+    ],
+    utc10
+  ).span?.label === "b"
+);
+
+assert(
   "Not current when outside all spans",
   sampleSpan([span("a", relTime(9, 50), relTime(9, 55))], utc10).current ===
     false
