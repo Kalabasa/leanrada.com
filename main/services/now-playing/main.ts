@@ -112,7 +112,8 @@ async function getData(env: Env): Promise<{
     Date.now() + data.samplingTimeOffset
   );
   console.log(
-    `Sampled with ${formatTimeOffset(data.samplingTimeOffset)} offset:`,
+    `Sampled from ${data.trackSpans.length}` +
+      ` with ${formatTimeOffset(data.samplingTimeOffset)} offset:`,
     sample
   );
 
@@ -127,7 +128,7 @@ async function getData(env: Env): Promise<{
 export function formatTimeOffset(timeOffsetMs: number) {
   const hours = Math.floor(timeOffsetMs / (60 * 60_000));
   const minutes = Math.floor(timeOffsetMs / 60_000 - hours * 60);
-  return `+${hours}:${minutes.toString().padStart(2, "0")}`;
+  return `+${hours}h:${minutes.toString().padStart(2, "0")}m`;
 }
 
 export function sampleSpan<T>(
