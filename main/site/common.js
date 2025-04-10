@@ -486,15 +486,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupAutoLoadComponents() {
     const components = [
       ["art-gallery"],
-      ["nebula-animation"],
+      ["article-footer"],
       ["blog-header"],
+      ["bump-tally"],
       ["code-block"],
       ["feature-card-carousel"],
-      ["article-footer"],
       ["gh-contribs"],
       ["map-flight"],
+      ["nebula-animation"],
+      ["now-playing"],
       ["right-now"],
-      ["bump-tally"],
     ];
 
     const intersectionObserver = new IntersectionObserver(
