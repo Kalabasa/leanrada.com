@@ -103,7 +103,7 @@ async function getData(env: Env): Promise<{
           )
       ),
     ];
-    console.log(data.trackSpans.length + " total track spans", data.trackSpans);
+    console.log(data.trackSpans.length + " total track spans:", data.trackSpans);
     await env.data.put(DATA_KEY, JSON.stringify(data));
   }
 
