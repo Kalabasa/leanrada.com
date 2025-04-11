@@ -253,7 +253,7 @@ async function updateGuestbookIndexHTML({ guestbook }) {
     setup(rewriter) {
       rewriter.on("#messages-list", {
         element(element) {
-          let innerHTML = `\n${indent(messagesListIndent)}`;
+          let innerHTML = "";
           for (const item of list) {
             innerHTML += reindent(
               "\n" + createGuestbookCard(item),
