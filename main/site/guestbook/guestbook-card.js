@@ -31,11 +31,11 @@ export function createGuestbookCard(data) {
     const stamps = encodeHtmlAttribute(JSON.stringify(data.stamps));
     const style = encodeHtmlAttribute(JSON.stringify(styleData));
     return `<guestbook-card
-      data-text="${text}"
-      data-name="${name}"
-      data-stamps-json="${stamps}"
-      data-style-json="${style}"
-    ></guestbook-card>`;
+  data-text="${text}"
+  data-name="${name}"
+  data-stamps-json="${stamps}"
+  data-style-json="${style}"
+></guestbook-card>`;
   } else {
     // web
     const card = document.createElement("guestbook-card");

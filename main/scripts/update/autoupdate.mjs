@@ -245,9 +245,8 @@ async function updateNotesIndexHTML({ notes }) {
 async function updateGuestbookIndexHTML({ guestbook }) {
   if (!guestbook) return;
 
-  const messagesListIndent = 1;
+  const messagesListIndent = 2;
   const list = guestbook.slice(0, 10);
-  console.log(list);
 
   await rewrite({
     htmlFilePath: path.resolve(siteDir, "guestbook", "index.html"),
@@ -255,14 +254,12 @@ async function updateGuestbookIndexHTML({ guestbook }) {
       rewriter.on("#messages-list", {
         element(element) {
           let innerHTML = `\n${indent(messagesListIndent)}`;
-
           for (const item of list) {
             innerHTML += reindent(
-              createGuestbookCard(item),
-              messagesListIndent + 2
+              "\n" + createGuestbookCard(item),
+              messagesListIndent
             );
           }
-
           innerHTML += `\n${indent(messagesListIndent)}`;
           element.setInnerContent(innerHTML, { html: true });
         },
