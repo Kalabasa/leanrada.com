@@ -1,26 +1,10 @@
-#!/usr/bin/env node
 import * as cheerio from "cheerio";
 import fs from "node:fs/promises";
-import path from "node:path";
-import { rewrite } from "./rewrite/rewrite.mjs";
-
-process.chdir(path.resolve(import.meta.dirname, "..", ".."));
-const projectRoot = process.cwd();
-console.log("Project root:", projectRoot);
-if (path.basename(projectRoot) !== "main") {
-  throw new Error("Unexpected project root!");
-}
-
-const dryRun = process.argv.includes("--dry-run");
-const notePath = process.argv[process.argv.length - 1];
+import { rewrite } from "../rewrite/rewrite.mjs";
 
 const wordsPerMinute = 140;
 
-main();
-
-async function main() {
-  const htmlFilePath = path.join(notePath, "index.html");
-  console.log("Reading", htmlFilePath);
+export async function rewriteReadMins({ dryRun = false, htmlFilePath }) {
   const ch = cheerio.load(await fs.readFile(htmlFilePath));
 
   const info = ch("blog-post-info");

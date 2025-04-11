@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import path from "node:path";
-import { dateString, indent, reindent } from "./format/format.mjs";
+import { indent, reindent } from "./format/format.mjs";
+import { initScript } from "./lib/script.mjs";
 import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
 import { fetchHits } from "./misc/fetch-hits.mjs";
 import { fetchStackOverflowReputation } from "./misc/fetch-so-rep.mjs";
@@ -9,19 +10,12 @@ import { readNotes } from "./notes/read-notes.mjs";
 import { renderNoteListItem } from "./notes/render-note-list-item.mjs";
 import { rewrite } from "./rewrite/rewrite.mjs";
 import { updateRSS } from "./rss/update-rss.js";
-import { readWares } from "./wares/read-wares.mjs";
 import { tryWrite } from "./util/try-write.mjs";
+import { readWares } from "./wares/read-wares.mjs";
 
-process.chdir(path.resolve(import.meta.dirname, "..", ".."));
-const projectRoot = process.cwd();
-console.log("Project root:", projectRoot);
-if (path.basename(projectRoot) !== "main") {
-  throw new Error("Unexpected project root!");
-}
+const { siteDir } = initScript();
 
-const siteDir = path.resolve(projectRoot, "site");
 const dryRun = process.argv.includes("--dry-run");
-
 const options = parseOptionArgs([
   "notes",
   "wares",
@@ -29,6 +23,7 @@ const options = parseOptionArgs([
   "gh-contribs",
   "so-rep",
 ]);
+
 main();
 
 async function main() {
@@ -129,7 +124,7 @@ async function updateIndexHTML({ notes, wares, hits }) {
   if (!notes && !wares && !hits) return;
 
   const notesListIndent = 2;
-  const latestNotes = notes?.filter(n => n.public).slice(0, 4);
+  const latestNotes = notes?.filter((n) => n.public).slice(0, 4);
 
   await rewrite({
     htmlFilePath: path.resolve(siteDir, "index.html"),

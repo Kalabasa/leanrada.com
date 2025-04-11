@@ -1,26 +1,18 @@
-#!/usr/bin/env node
-import path from "node:path";
-import { rewrite } from "./rewrite/rewrite.mjs";
-import sharp from "sharp";
-import { rgbToOkLab } from "./lib/color/convert.mjs";
-import { getPalette } from "./lib/color/thief.mjs";
 import { existsSync } from "node:fs";
+import path from "node:path";
+import sharp from "sharp";
+import { rgbToOkLab } from "../lib/color/convert.mjs";
+import { getPalette } from "../lib/color/thief.mjs";
+import { getDirs } from "../lib/script.mjs";
+import { rewrite } from "../rewrite/rewrite.mjs";
 
-process.chdir(path.resolve(import.meta.dirname, "..", ".."));
-const projectRoot = process.cwd();
-console.log("Project root:", projectRoot);
-if (path.basename(projectRoot) !== "main") {
-  throw new Error("Unexpected project root!");
-}
+const { siteDir } = getDirs();
 
-const siteDir = path.resolve(projectRoot, "site");
-const dryRun = process.argv.includes("--dry-run");
-const refresh = process.argv.includes("--refresh");
-const htmlFilePath = process.argv[process.argv.length - 1];
-
-main();
-
-async function main() {
+export async function rewriteLQIP({
+  dryRun = false,
+  refresh = false,
+  htmlFilePath,
+}) {
   await rewrite({
     dryRun,
     htmlFilePath,
