@@ -12,6 +12,8 @@ import { rewrite } from "./rewrite/rewrite.mjs";
 import { updateRSS } from "./rss/update-rss.js";
 import { tryWrite } from "./util/try-write.mjs";
 import { readWares } from "./wares/read-wares.mjs";
+import { fetchGuestbookData } from "./guestbook/fetch-guestbook-data.js";
+import { createGuestbookCard } from "../../site/guestbook/guestbook-card.js";
 
 const { siteDir } = initScript();
 
@@ -19,6 +21,7 @@ const dryRun = process.argv.includes("--dry-run");
 const options = parseOptionArgs([
   "notes",
   "wares",
+  "guestbook",
   "hits",
   "gh-contribs",
   "so-rep",
@@ -28,7 +31,7 @@ main();
 
 async function main() {
   console.group("Loading data...");
-  const [notes, wares, hits, ghContribs, soRep] = await Promise.all([
+  const [notes, wares, guestbook, hits, ghContribs, soRep] = await Promise.all([
     optional("notes", async () => {
       const { notes, noteReferences } = await readNotes(siteDir);
       populateSuggestions({
@@ -40,6 +43,9 @@ async function main() {
       return notes;
     }),
     optional("wares", () => readWares(siteDir)),
+    optional("guestbook", () =>
+      fetchGuestbookData(0).catch(fallback("guestbook"))
+    ),
     optional("hits", () => fetchHits().catch(fallback("hits"))),
     optional("gh-contribs", () =>
       fetchGitHubContribs().catch(fallback("gh-contribs"))
@@ -53,6 +59,7 @@ async function main() {
   console.log("Loaded data:", {
     notes: notes?.length,
     wares: wares?.length,
+    guestbook: guestbook?.length,
     hits,
     ghContribs: ghContribs?.flat().length,
     soRep,
@@ -73,8 +80,9 @@ async function main() {
     }),
     updateNotesIndexJson({ notes }),
     updateNotesIndexHTML({ notes }),
+    updateGuestbookIndexHTML({ guestbook }),
     updateComponentsGhContribsJson({ ghContribs }),
-    updateRSS({ rssFilePath, notes, siteDir, dryRun }),
+    notes && updateRSS({ rssFilePath, notes, siteDir, dryRun }),
   ]);
   console.groupEnd();
 
@@ -226,6 +234,36 @@ async function updateNotesIndexHTML({ notes }) {
           innerHTML +=
             `\n${indent(notesListIndent + 1)}</ul>` +
             `\n${indent(notesListIndent)}`;
+          element.setInnerContent(innerHTML, { html: true });
+        },
+      });
+    },
+    dryRun,
+  });
+}
+
+async function updateGuestbookIndexHTML({ guestbook }) {
+  if (!guestbook) return;
+
+  const messagesListIndent = 1;
+  const list = guestbook.slice(0, 10);
+  console.log(list);
+
+  await rewrite({
+    htmlFilePath: path.resolve(siteDir, "guestbook", "index.html"),
+    setup(rewriter) {
+      rewriter.on("#messages-list", {
+        element(element) {
+          let innerHTML = `\n${indent(messagesListIndent)}`;
+
+          for (const item of list) {
+            innerHTML += reindent(
+              createGuestbookCard(item),
+              messagesListIndent + 2
+            );
+          }
+
+          innerHTML += `\n${indent(messagesListIndent)}`;
           element.setInnerContent(innerHTML, { html: true });
         },
       });

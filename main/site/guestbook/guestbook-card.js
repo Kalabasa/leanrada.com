@@ -17,12 +17,19 @@ export function getDefaults() {
 }
 
 export function createGuestbookCard(data) {
-  if (typeof module === "object") {
+  const styleData = {
+    fontIndex: data.fontIndex,
+    bgStyleIndex: data.bgStyleIndex,
+    bgRGB: data.bgRGB,
+    fgRGB: data.fgRGB,
+  };
+
+  if (typeof window === "undefined") {
     // node
     const text = encodeHtmlAttribute(data.text);
     const name = encodeHtmlAttribute(data.name);
     const stamps = encodeHtmlAttribute(JSON.stringify(data.stamps));
-    const style = encodeHtmlAttribute(JSON.stringify(data.style));
+    const style = encodeHtmlAttribute(JSON.stringify(styleData));
     return `<guestbook-card
       data-text="${text}"
       data-name="${name}"
@@ -36,7 +43,7 @@ export function createGuestbookCard(data) {
     card.setAttribute("data-text", data.text);
     card.setAttribute("data-name", data.name);
     card.setAttribute("data-stamps-json", JSON.stringify(data.stamps));
-    card.setAttribute("data-style-json", JSON.stringify(data.style));
+    card.setAttribute("data-style-json", JSON.stringify(styleData));
     return card;
   }
 }
@@ -148,10 +155,7 @@ globalThis.customElements?.define(
     }
 
     set stamps(value) {
-      if (!Array.isArray(value)) throw new TypeError();
-      if (value[0].typeIndex == undefined) throw new TypeError();
-      if (value[0].x == undefined) throw new TypeError();
-      if (value[0].y == undefined) throw new TypeError();
+      validateStamps(value);
       this.setAttribute("data-stamps-json", JSON.stringify(value));
     }
 
@@ -164,7 +168,7 @@ globalThis.customElements?.define(
     }
 
     set cardStyle(value) {
-      if (typeof value !== "object") throw new TypeError();
+      validateCardStyle(value);
       this.setAttribute("data-style-json", JSON.stringify(value));
     }
 
@@ -208,9 +212,11 @@ globalThis.customElements?.define(
           if (this.nameInput) this.nameInput.value = newValue;
           return;
         case "data-stamps-json":
+          if (newValue) validateStamps(JSON.parse(newValue));
           this.#renderStamps();
           return;
         case "data-style-json":
+          if (newValue) validateCardStyle(JSON.parse(newValue));
           this.#renderStyle();
           return;
       }
@@ -253,3 +259,16 @@ globalThis.customElements?.define(
     }
   }
 );
+
+function validateStamps(value) {
+  if (!Array.isArray(value)) throw new TypeError();
+  value.forEach((item) => {
+    if (item.typeIndex == undefined) throw new TypeError();
+    if (item.x == undefined) throw new TypeError();
+    if (item.y == undefined) throw new TypeError();
+  });
+}
+
+function validateCardStyle(value) {
+  if (typeof value !== "object") throw new TypeError();
+}
