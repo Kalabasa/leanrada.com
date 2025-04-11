@@ -260,7 +260,7 @@ async function updateGuestbookIndexHTML({ guestbook }) {
               messagesListIndent
             );
           }
-          innerHTML += `\n${indent(messagesListIndent)}`;
+          innerHTML += `\n${indent(messagesListIndent - 1)}`;
           element.setInnerContent(innerHTML, { html: true });
         },
       });
