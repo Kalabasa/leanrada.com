@@ -278,10 +278,7 @@
   .messages-section {
     min-height: 200vh;
     min-height: 200svh;
-    animation: messages-fade-in 0.6s;
-  }
-  .messages-section.loading {
-    visibility: hidden;
+    animation: messages-fade-in 1s;
   }
   #messages-list {
     padding: 120px 40px;
@@ -543,21 +540,7 @@
       const messagesSection = document.querySelector(".messages-section");
       const messagesList = document.getElementById("messages-list");
 
-      messagesSection.classList.add("loading");
-      const removeLoadingClass = () => void messagesSection.classList.remove("loading");
-
-      // loadPage(0).finally(removeLoadingClass);
-      setTimeout(removeLoadingClass, 3000);
-
-      // TODO: bring back
-      async function initFromCache() {
-        const cache = window.GUESTBOOK_CACHE ?? null;
-        if (cache?.length > 0) {
-          for (const message of cache) {
-            messagesList.appendChild(await renderMessage(message));
-          }
-        }
-      }
+      loadPage(0);
 
       async function loadPage(page) {
         const response = await fetch(GUESTBOOK_API + "?page=" + page);
