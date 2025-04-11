@@ -77,12 +77,12 @@ function getCSS({
   bgStyleIndex = defaults.bgStyleIndex,
   fontIndex = defaults.fontIndex,
 }) {
-  return formatStyle({
+  return {
     "--gbc-font": getFont(fontIndex),
     "--gbc-background-image": formatBgImageSize(bgStyleIndex),
     "--gbc-background-color": rgbToCSS(bgRGB),
     "--gbc-color": rgbToCSS(fgRGB),
-  });
+  };
 }
 
 function getFont(fontIndex) {
@@ -245,7 +245,9 @@ globalThis.customElements?.define(
     }
 
     #renderStyle() {
-      this.setAttribute("style", getCSS(this.cardStyle));
+      for (const [property, value] of Object.entries(getCSS(this.cardStyle))) {
+        this.style.setProperty(property, value);
+      }
     }
 
     addStamp(typeIndex, x, y) {
@@ -255,7 +257,7 @@ globalThis.customElements?.define(
     updateStyle(style) {
       const newStyle = { ...this.cardStyle, ...style };
       this.cardStyle = newStyle;
-      return getCSS(newStyle);
+      return formatStyle(getCSS(newStyle));
     }
   }
 );

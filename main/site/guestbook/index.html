@@ -46,7 +46,11 @@
   </div>
 </form>
 
+<p id="thanks">I appreciate your card!</p>
+
 <main class="messages-section">
+  <div id="submitted-list">
+  </div>
   <div id="messages-list">
     <guestbook-card
       data-text="luv it"
@@ -170,6 +174,12 @@
       color: inherit;
       opacity: 0.4;
     }
+    &[disabled] {
+      > textarea::placeholder,
+      > input::placeholder {
+        opacity: 0;
+      }
+    }
     > div {
       position: absolute;
       inset: 0;
@@ -194,6 +204,9 @@
     margin: 18px auto;
     max-width: 384px;
     box-sizing: border-box;
+  }
+  #guestbook-card {
+    view-transition-name: form-guestbook-card;
   }
   .button-row {
     position: relative;
@@ -275,12 +288,39 @@
     }
   }
 
+  #thanks {
+    view-transition-name: thanks;
+    padding: 60px 6px;
+    text-align: center;
+    display: none;
+  }
+
   .messages-section {
     min-height: 200vh;
     min-height: 200svh;
     animation: messages-fade-in 1s;
   }
+
+  #submitted-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    position: relative;
+    z-index: 1;
+
+    > * {
+      view-transition-name: form-guestbook-card;
+      translate: 0 90px;
+      rotate: 1deg;
+      &::view-transition {
+        animation-duration: 0.2s;
+      }
+    }
+  }
+
   #messages-list {
+    view-transition-name: messages-list;
     padding: 120px 40px;
     display: flex;
     flex-wrap: wrap;
@@ -288,6 +328,10 @@
     gap: 30px;
     overflow: clip;
     transform: skewY(12deg);
+
+    &::view-transition {
+      animation-duration: 0.2s;
+    }
 
     > * {
       margin: calc(max(0px, var(--gbli-margin-y, 0) * 1vmin - 80px))
@@ -407,6 +451,8 @@
       const fgBtn = document.getElementById("fgBtn");
       const fontBtn = document.getElementById("fontBtn");
       const stampBtn = document.getElementById("stampBtn");
+      const thanks = document.getElementById("thanks");
+      const submittedList = document.getElementById("submitted-list");
 
       form.action = window.GUESTBOOK_API;
       const start = Date.now();
@@ -422,17 +468,23 @@
         timeField.value = elapsed;
         form.appendChild(timeField);
 
-        try {
-          await fetch(form.action, {
-            method: "post",
-            body: new FormData(form),
-          });
-        } finally {
-          setTimeout(() => {
-            // TODO: optimistic, animate the submitted card into the existing cards, no need reload
-            location.reload();
-            submitBtn.disabled = false;
-          }, 200);
+        const formData = new FormData(form);
+        fetch(form.action, {
+          method: "post",
+          body: formData,
+        }).catch(() => {});
+
+        const finishSubmission = () => {
+          guestbookCard.toggleAttribute("disabled", true);
+          submittedList.prepend(guestbookCard);
+          form.remove();
+          showThanks(thanks, formData);
+        };
+
+        if (document.startViewTransition) {
+          document.startViewTransition(finishSubmission);
+        } else {
+          finishSubmission();
         }
       });
 
@@ -534,6 +586,37 @@
         }px' viewport='0 0 100 100' style='fill:black;font-size:${size}px;'><text y='50%'>${content}</text></svg>") 0 0,grabbing
             }`;
       });
+    }
+
+    // why use LLMs when you can use if-else chains
+    function showThanks(thanksElement, formData) {
+      thanksElement.style.display = "block";
+
+      const text = formData.get("text");
+      const lowText = text.toLowerCase();
+      if (lowText.match(/\blove\b/)) {
+        thanksElement.textContent = "🩵 Very much appreciated! 🩵";
+      } else if (lowText.match(/\binspir(e|ed|ing|ation|ational)\b/)) {
+        thanksElement.textContent = "Your words inspire me too!";
+      } else if (lowText.match(/\bthanks?( you)?\b/)){
+        thanksElement.textContent = "I appreciate you too!";
+      } else if (text.includes("<script>") && text.includes("<"+ "/script>")) {
+        // we do a little trolling
+        const matchAlert = text.match(/alert\((\d+)|(?:['"](.*?)['"])|(document.cookie)|(document.domain)/);
+        if (matchAlert) {
+          const [, num, string, cookie, domain] = matchAlert;
+          if (num) {
+            alert(num);
+          } else if (string) {
+            alert(string);
+          } else if(cookie) {
+            alert("Here’s your cookie 🍪");
+          } else if(domain) {
+            alert("localhost");
+          }
+        }
+        thanksElement.textContent = "Nice try, thanks anyway. ;)";
+      }
     }
 
     async function initMessagesList() {
