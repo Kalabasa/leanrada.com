@@ -63,7 +63,7 @@ export async function rewriteCanonicalHref({ dryRun = false, htmlFilePath }) {
         });
       } else {
         let hasInserted = false;
-        rewriter.on("link,script,title,site-header", {
+        rewriter.on(":not(meta)", {
           element(element) {
             if (!hasInserted) {
               hasInserted = true;
