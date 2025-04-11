@@ -1,8 +1,11 @@
 #!/usr/bin/env node
+import * as cheerio from "cheerio";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { initScript } from "./lib/script.mjs";
 import { rewriteLQIP } from "./lqip/lqip.mjs";
 import { rewriteReadMins } from "./notes/read-mins.mjs";
+import { rewrite } from "./rewrite/rewrite.mjs";
 
 const { siteDir } = initScript();
 
@@ -52,7 +55,7 @@ export async function rewriteCanonicalHref({ dryRun = false, htmlFilePath }) {
   await rewrite({
     htmlFilePath,
     setup(rewriter) {
-      if (existingRelCanonical) {
+      if (existingRelCanonical.length > 0) {
         rewriter.on("link[rel=canonical]", {
           element(element) {
             element.setAttribute("href", href);
@@ -60,11 +63,13 @@ export async function rewriteCanonicalHref({ dryRun = false, htmlFilePath }) {
         });
       } else {
         let hasInserted = false;
-        rewriter.on("link", {
+        rewriter.on("link,script,title,site-header", {
           element(element) {
             if (!hasInserted) {
               hasInserted = true;
-              element.before(`<link rel="canonical" href="${href}">`);
+              element.before(`<link rel="canonical" href="${href}">\n`, {
+                html: true,
+              });
             }
           },
         });
