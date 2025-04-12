@@ -242,7 +242,7 @@
 
           // Special corners for the hero background
           // Top edge
-          if (r1.top <= heroRect.top && r1.bottom > heroRect.top) {
+          if (r1.top <= heroRect.top && r1.bottom > heroRect.top + radius) {
             pathCommands.push(
               drawInnerCorner(
                 offsetLeft + r1.right - 1,

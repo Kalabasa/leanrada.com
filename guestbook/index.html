@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="canonical" href="/guestbook/">
 <link rel="stylesheet" href="/common.css" />
 <script defer src="/common.js"></script>
 
@@ -45,8 +46,78 @@
   </div>
 </form>
 
+<p id="thanks">I appreciate your card!</p>
+
 <main class="messages-section">
-  <div class="messages-list"></div>
+  <div id="submitted-list">
+  </div>
+  <div id="messages-list">
+    <guestbook-card
+      data-text="luv it"
+      data-name="pessoa"
+      data-stamps-json="[{&quot;typeIndex&quot;:6,&quot;x&quot;:79,&quot;y&quot;:46},{&quot;typeIndex&quot;:6,&quot;x&quot;:29,&quot;y&quot;:35},{&quot;typeIndex&quot;:6,&quot;x&quot;:57,&quot;y&quot;:17},{&quot;typeIndex&quot;:6,&quot;x&quot;:51,&quot;y&quot;:71}]"
+      data-style-json="{&quot;fontIndex&quot;:2,&quot;bgStyleIndex&quot;:1,&quot;bgRGB&quot;:14535935,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="&lt;script&gt;window.onload();&lt;/script&gt;"
+      data-name=""
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:14535935,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="you&#39;re awesome. just read the css only lqip, and i&#39;m going 🤯"
+      data-name="mad"
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:1,&quot;bgStyleIndex&quot;:2,&quot;bgRGB&quot;:14548940,&quot;fgRGB&quot;:43520}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="woah these reads are really nice "
+      data-name="emi"
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:16777215,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="Found your post about sweep and prune through Reddit. Super interesting read and can&#39;t wait to implement it in my own projects!"
+      data-name="Monke :)"
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:16777215,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="Love your site! Went down a clonk rabbithole :)"
+      data-name="Josh Sowin"
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:2,&quot;bgStyleIndex&quot;:2,&quot;bgRGB&quot;:14535935,&quot;fgRGB&quot;:11167232}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="Hi,
+    Came across the blog posts about sweep-and-prune, from a video showing https://github.com/ChrisPHP/odin-sweep-prune.
+    
+    The interactiveness and the blog posts were great.
+    
+    Thanks, and have a great week."
+      data-name="Raphaël Duchaîne "
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:16777215,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="I like it! Learned something new. Thanks"
+      data-name="Name / pseudonym"
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:16777215,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="Thanks"
+      data-name="🐠"
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:16777215,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+    <guestbook-card
+      data-text="Nice content. I&#39;m just jealous you have a job"
+      data-name="Someone from somewhere"
+      data-stamps-json="[]"
+      data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:16777215,&quot;fgRGB&quot;:0}"
+    ></guestbook-card>
+  </div>
 </main>
 
 <site-footer></site-footer>
@@ -103,6 +174,12 @@
       color: inherit;
       opacity: 0.4;
     }
+    &[disabled] {
+      > textarea::placeholder,
+      > input::placeholder {
+        opacity: 0;
+      }
+    }
     > div {
       position: absolute;
       inset: 0;
@@ -127,6 +204,9 @@
     margin: 18px auto;
     max-width: 384px;
     box-sizing: border-box;
+  }
+  #guestbook-card {
+    view-transition-name: form-guestbook-card;
   }
   .button-row {
     position: relative;
@@ -208,15 +288,39 @@
     }
   }
 
+  #thanks {
+    view-transition-name: thanks;
+    padding: 60px 6px;
+    text-align: center;
+    display: none;
+  }
+
   .messages-section {
     min-height: 200vh;
     min-height: 200svh;
-    animation: messages-fade-in 0.6s;
+    animation: messages-fade-in 1s;
   }
-  .messages-section.loading {
-    visibility: hidden;
+
+  #submitted-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    position: relative;
+    z-index: 1;
+
+    > * {
+      view-transition-name: form-guestbook-card;
+      translate: 0 90px;
+      rotate: 1deg;
+      &::view-transition {
+        animation-duration: 0.2s;
+      }
+    }
   }
-  .messages-list {
+
+  #messages-list {
+    view-transition-name: messages-list;
     padding: 120px 40px;
     display: flex;
     flex-wrap: wrap;
@@ -224,20 +328,85 @@
     gap: 30px;
     overflow: clip;
     transform: skewY(12deg);
-  }
-  .messages-list > * {
-    margin: calc(max(0px, var(--gbli-margin-y, 0) * 1vmin - 80px))
-      calc(max(0px, var(--gbli-margin-x, 0) * 1vmin - 80px))
-      calc(max(0px, var(--gbli-margin-y, 0) * -1vmin - 80px));
-    transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
-    animation: message-scroll 1ms cubic-bezier(0, 0.8, 0.2, 1) both;
-    animation-timeline: view(block 40% -5%);
-  }
-  .messages-list > :first-child {
-    margin-inline-start: calc(max(0px, 50% - 384px));
-  }
-  .messages-list > :last-child {
-    margin-inline-end: calc(max(0px, 50% - 384px));
+
+    &::view-transition {
+      animation-duration: 0.2s;
+    }
+
+    > * {
+      margin: calc(max(0px, var(--gbli-margin-y, 0) * 1vmin - 80px))
+        calc(max(0px, var(--gbli-margin-x, 0) * 1vmin - 80px))
+        calc(max(0px, var(--gbli-margin-y, 0) * -1vmin - 80px));
+      transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
+      animation: message-scroll 1ms cubic-bezier(0, 0.8, 0.2, 1) both;
+      animation-timeline: view(block 40% -5%);
+    }
+    > :first-child {
+      margin-inline-start: calc(max(0px, 50% - 384px));
+    }
+    > :last-child {
+      margin-inline-end: calc(max(0px, 50% - 384px));
+    }
+    > :nth-child(3n) {
+      --gbli-rotate: 3deg;
+    }
+    > :nth-child(3n + 1) {
+      --gbli-rotate: -3deg;
+    }
+    > :nth-child(3n + 2) {
+      --gbli-rotate: 2deg;
+    }
+    > :nth-child(4n) {
+      --gbli-rotate: -2deg;
+    }
+    > :nth-child(5n) {
+      --gbli-rotate: 1deg;
+    }
+    > :nth-child(6n) {
+      --gbli-rotate: 2deg;
+    }
+    > :nth-child(7n) {
+      --gbli-rotate: -1deg;
+    }
+    > :nth-child(8n) {
+      --gbli-rotate: -2deg;
+    }
+    > :nth-child(2n) {
+      --gbli-margin-y: 3;
+    }
+    > :nth-child(3n) {
+      --gbli-margin-y: -4;
+    }
+    > :nth-child(5n + 2) {
+      --gbli-margin-y: 6;
+    }
+    > :nth-child(5n + 4) {
+      --gbli-margin-y: -7;
+    }
+    > :nth-child(2n + 1) {
+      --gbli-margin-x: 3;
+    }
+    > :nth-child(3n) {
+      --gbli-margin-x: 6;
+    }
+    > :nth-child(4n + 2) {
+      --gbli-margin-x: 7;
+    }
+    > :nth-child(5n) {
+      --gbli-margin-x: 9;
+    }
+    > :nth-child(6n + 3) {
+      --gbli-margin-x: 11;
+    }
+    > :nth-child(7n) {
+      --gbli-margin-x: 12;
+    }
+    > :nth-child(8n + 6) {
+      --gbli-margin-x: 16;
+    }
+    > :nth-child(9n) {
+      --gbli-margin-x: 22;
+    }
   }
 
   @keyframes messages-fade-in {
@@ -255,67 +424,6 @@
       /* same as original value */
       transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
     }
-  }
-
-  .messages-list > :nth-child(3n) {
-    --gbli-rotate: 3deg;
-  }
-  .messages-list > :nth-child(3n + 1) {
-    --gbli-rotate: -3deg;
-  }
-  .messages-list > :nth-child(3n + 2) {
-    --gbli-rotate: 2deg;
-  }
-  .messages-list > :nth-child(4n) {
-    --gbli-rotate: -2deg;
-  }
-  .messages-list > :nth-child(5n) {
-    --gbli-rotate: 1deg;
-  }
-  .messages-list > :nth-child(6n) {
-    --gbli-rotate: 2deg;
-  }
-  .messages-list > :nth-child(7n) {
-    --gbli-rotate: -1deg;
-  }
-  .messages-list > :nth-child(8n) {
-    --gbli-rotate: -2deg;
-  }
-  .messages-list > :nth-child(2n) {
-    --gbli-margin-y: 3;
-  }
-  .messages-list > :nth-child(3n) {
-    --gbli-margin-y: -4;
-  }
-  .messages-list > :nth-child(5n + 2) {
-    --gbli-margin-y: 6;
-  }
-  .messages-list > :nth-child(5n + 4) {
-    --gbli-margin-y: -7;
-  }
-  .messages-list > :nth-child(2n + 1) {
-    --gbli-margin-x: 3;
-  }
-  .messages-list > :nth-child(3n) {
-    --gbli-margin-x: 6;
-  }
-  .messages-list > :nth-child(4n + 2) {
-    --gbli-margin-x: 7;
-  }
-  .messages-list > :nth-child(5n) {
-    --gbli-margin-x: 9;
-  }
-  .messages-list > :nth-child(6n + 3) {
-    --gbli-margin-x: 11;
-  }
-  .messages-list > :nth-child(7n) {
-    --gbli-margin-x: 12;
-  }
-  .messages-list > :nth-child(8n + 6) {
-    --gbli-margin-x: 16;
-  }
-  .messages-list > :nth-child(9n) {
-    --gbli-margin-x: 22;
   }
 </style>
 
@@ -343,6 +451,8 @@
       const fgBtn = document.getElementById("fgBtn");
       const fontBtn = document.getElementById("fontBtn");
       const stampBtn = document.getElementById("stampBtn");
+      const thanks = document.getElementById("thanks");
+      const submittedList = document.getElementById("submitted-list");
 
       form.action = window.GUESTBOOK_API;
       const start = Date.now();
@@ -358,17 +468,23 @@
         timeField.value = elapsed;
         form.appendChild(timeField);
 
-        try {
-          await fetch(form.action, {
-            method: "post",
-            body: new FormData(form),
-          });
-        } finally {
-          setTimeout(() => {
-            // TODO: optimistic, animate the submitted card into the existing cards, no need reload
-            location.reload();
-            submitBtn.disabled = false;
-          }, 200);
+        const formData = new FormData(form);
+        fetch(form.action, {
+          method: "post",
+          body: formData,
+        }).catch(() => {});
+
+        const finishSubmission = () => {
+          guestbookCard.toggleAttribute("disabled", true);
+          submittedList.prepend(guestbookCard);
+          form.remove();
+          showThanks(thanks, formData);
+        };
+
+        if (document.startViewTransition) {
+          document.startViewTransition(finishSubmission);
+        } else {
+          finishSubmission();
         }
       });
 
@@ -472,26 +588,42 @@
       });
     }
 
-    async function initMessagesList() {
-      const messagesSection = document.querySelector(".messages-section");
-      const messagesList = document.querySelector(".messages-list");
+    // why use LLMs when you can use if-else chains
+    function showThanks(thanksElement, formData) {
+      thanksElement.style.display = "block";
 
-      messagesSection.classList.add("loading");
-
-      let currentPage = 0;
-      let loadQueue = initFromCache()
-        .then(() => loadPage(currentPage))
-        .finally(() => void messagesSection.classList.remove("loading"));
-
-      // TODO: bring back
-      async function initFromCache() {
-        const cache = window.GUESTBOOK_CACHE ?? null;
-        if (cache?.length > 0) {
-          for (const message of cache) {
-            messagesList.appendChild(await renderMessage(message));
+      const text = formData.get("text");
+      const lowText = text.toLowerCase();
+      if (lowText.match(/\blove\b/)) {
+        thanksElement.textContent = "🩵 Very much appreciated! 🩵";
+      } else if (lowText.match(/\binspir(e|ed|ing|ation|ational)\b/)) {
+        thanksElement.textContent = "Your words inspire me too!";
+      } else if (lowText.match(/\bthanks?( you)?\b/)){
+        thanksElement.textContent = "I appreciate you too!";
+      } else if (text.includes("<script>") && text.includes("<"+ "/script>")) {
+        // we do a little trolling
+        const matchAlert = text.match(/alert\((\d+)|(?:['"](.*?)['"])|(document.cookie)|(document.domain)/);
+        if (matchAlert) {
+          const [, num, string, cookie, domain] = matchAlert;
+          if (num) {
+            alert(num);
+          } else if (string) {
+            alert(string);
+          } else if(cookie) {
+            alert("Here’s your cookie 🍪");
+          } else if(domain) {
+            alert("localhost");
           }
         }
+        thanksElement.textContent = "Nice try, thanks anyway. ;)";
       }
+    }
+
+    async function initMessagesList() {
+      const messagesSection = document.querySelector(".messages-section");
+      const messagesList = document.getElementById("messages-list");
+
+      loadPage(0);
 
       async function loadPage(page) {
         const response = await fetch(GUESTBOOK_API + "?page=" + page);
@@ -509,12 +641,10 @@
           text: message.text,
           name: message.name,
           stamps: message.stamps,
-          style: {
-            fontIndex: message.fontIndex,
-            bgStyleIndex: message.bgStyleIndex,
-            bgRGB: message.bgRGB,
-            fgRGB: message.fgRGB,
-          },
+          fontIndex: message.fontIndex,
+          bgStyleIndex: message.bgStyleIndex,
+          bgRGB: message.bgRGB,
+          fgRGB: message.fgRGB,
         });
       }
     }

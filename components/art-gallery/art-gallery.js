@@ -25,6 +25,7 @@ customElements.define(
             grid-template-columns: 1fr;
             cursor: pointer;
             isolation: isolate;
+            overflow-x: clip;
             perspective: 3000px;
             z-index: 200; /* above <site-header> */
             user-select: none;
@@ -79,6 +80,10 @@ customElements.define(
               transition: opacity 0.1s ease,
                 transform 0.1s cubic-bezier(0.2, 0, 0.4, 1),
                 filter 1s ease;
+
+              @-moz-document url-prefix() {
+                max-width: 100%; /* FF can't handle the expr above */
+              }
 
               &.art-gallery-active {
                 visibility: visible;
