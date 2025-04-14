@@ -1,2 +1,31 @@
 #!/usr/bin/env bash
-echo "hello from pre-commit"
+
+SENSITIVE_FIELDS="GPSLatitude|GPSLongitude|GPSAltitude|GPSDateStamp|GPSTimeStamp|GPSPosition|Make|Model|Software|SerialNumber|DateTimeOriginal|Crea
+teDate|ModifyDate|Location|ExposureTime|FNumber|ISOSpeedRatings|FocalLength|Artist|Copyright"
+
+FOUND_METADATA=0
+
+# Staged files (not deleted)
+FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+for FILE in $FILES; do
+    if [ -f "$FILE" ]; then
+        # Check for specific sensitive tags
+        META=$(exiftool "$FILE" | grep -E '^$SENSITIVE_FIELDS')
+        if [ -n "$META" ]; then
+            echo "❌ Sensitive metadata found in: $FILE"
+            echo "$META"
+            echo
+            FOUND_METADATA=1
+        fi
+    fi
+done
+
+if [ $FOUND_METADATA -eq 1 ]; then
+    echo "🚫 Commit blocked due to sensitive metadata. Use:"
+    echo "    exiftool -all= -overwrite_original <file>"
+    echo "to remove it before committing."
+    exit 1
+fi
+
+exit 0
