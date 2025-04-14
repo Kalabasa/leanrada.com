@@ -24,20 +24,26 @@ customElements.define(
             font-weight: bold;
             container-type: inline-size;
 
-            a {
-              width: 100%;
-              max-width: 300px;
+            :is(a, summary) {
               display: grid;
               grid-template-columns: 1fr 2fr;
               grid-template-rows: auto auto;
-              gap: 12px 18px;
               align-content: center;
-              text-decoration: none;
-              color: var(--text-clr);
+              gap: 12px 18px;
+              padding: 12px;
+              width: 100%;
+              max-width: 324px;
+              cursor: pointer;
 
               &:hover {
-                color: var(--clr0-light);
+                background-color: var(--card-clr);
+                border-radius: var(--card-border-radius);
               }
+            }
+
+            a {
+              text-decoration: none;
+              color: var(--text-clr);
             }
 
             img {
@@ -51,8 +57,7 @@ customElements.define(
               background-color: var(--card-clr);
             }
 
-            span:first-of-type,
-            summary {
+            span:first-of-type {
               font-size: 93.75%;
               font-style: italic;
               color: var(--text2-clr);
@@ -102,9 +107,16 @@ customElements.define(
               flex-direction: column;
               gap: 12px;
 
-              summary {
-                pointer-events: none;
-                align-self: start;
+              &[open] summary {
+                display: contents;
+
+                span:first-of-type {
+                  align-self: stretch;
+                }
+                img,
+                span:last-of-type {
+                  display: none;
+                }
               }
             }
           }
@@ -195,18 +207,28 @@ customElements.define(
           });
       };
 
-      this.addEventListener("click", (event) => {
-        if (!this.#href) return;
-        if (this.querySelector("a").offsetWidth < 250) return;
-        event.preventDefault();
-        this.#convertToEmbed(this.#href);
-      });
+      const convertListener = new AbortController();
+      this.addEventListener(
+        "click",
+        (event) => {
+          if (!this.#href) return;
+          if (this.querySelector("a").offsetWidth < 250) return;
+          event.preventDefault();
+          this.#convertToEmbed(this.#href);
+          convertListener.abort();
+        },
+        {
+          signal: convertListener.signal,
+        }
+      );
     }
 
     #convertToEmbed(href) {
       const src = href.replace("/track", "/embed/track");
-      this.innerHTML = html`<details disabled open>
-        <summary tabindex="-1">${getStatusHTML(this.#isPlayingNow)}</summary>
+      this.innerHTML = html`<details open>
+        <summary tabindex="-1">
+          ${html.raw(this.querySelector("a").innerHTML)}
+        </summary>
         <iframe
           src="${src}"
           width="100%"
