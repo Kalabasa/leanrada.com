@@ -56,6 +56,7 @@ customElements.define(
               font-size: 93.75%;
               font-style: italic;
               color: var(--text2-clr);
+              min-width: 0;
               align-self: end;
               text-wrap: nowrap;
               overflow: hidden;
@@ -63,10 +64,17 @@ customElements.define(
             }
 
             span:last-of-type {
+              position: relative;
+              min-width: 0;
               font-weight: normal;
               text-wrap: nowrap;
               overflow: hidden;
-              text-overflow: ellipsis;
+              animation: now-playing-marquee 6s linear infinite alternate;
+
+              @media (prefers-reduced-motion) {
+                text-overflow: ellipsis;
+                animation: none;
+              }
             }
 
             em::before {
@@ -98,6 +106,22 @@ customElements.define(
                 pointer-events: none;
                 align-self: start;
               }
+            }
+          }
+
+          @keyframes now-playing-marquee {
+            0%,
+            20% {
+              color: transparent;
+              text-shadow: 0px 0 0 var(--text-clr);
+            }
+            80%,
+            100% {
+              color: transparent;
+              text-shadow: calc(
+                  var(--now-playing-marquee-scroll-length, 0) * -1
+                )
+                0 0 var(--text-clr);
             }
           }
 
@@ -160,6 +184,14 @@ customElements.define(
           })
           .catch(() => {
             title.textContent = "none";
+          })
+          .finally(() => {
+            const scrollLength = title.scrollWidth - title.offsetWidth;
+            title.style.animationDuration = scrollLength * 60 + "ms";
+            title.style.setProperty(
+              "--now-playing-marquee-scroll-length",
+              Math.max(0, scrollLength) + "px"
+            );
           });
       };
 

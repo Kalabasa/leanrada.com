@@ -40,6 +40,6 @@
       etag = newEtag;
     }
 
-    setInterval(check, 200);
+    setInterval(check, 1000);
   }
 })();
