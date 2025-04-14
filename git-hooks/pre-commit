@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 
-SENSITIVE_FIELDS="GPSLatitude|GPSLongitude|GPSAltitude|GPSDateStamp|GPSTimeStamp|GPSPosition|Make|Model|Software|SerialNumber|DateTimeOriginal|Crea
-teDate|ModifyDate|Location|ExposureTime|FNumber|ISOSpeedRatings|FocalLength|Artist|Copyright"
+ALLOWED_FIELDS="Orientation ImageWidth ImageHeight XResolution YResolution ResolutionUnit ColorSpace BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion Copyright"
 
 FOUND_METADATA=0
 
-# Staged files (not deleted)
 FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
 for FILE in $FILES; do
     if [ -f "$FILE" ]; then
-        # Check for specific sensitive tags
-        META=$(exiftool "$FILE" | grep -E '^$SENSITIVE_FIELDS')
+        META=$(exiftool -EXIF:all "$file" | sed -e "s/^\([^:]*\):.*/\1/g" -e "s/[[:blank:]]//g" | grep -vE "$(echo $ALLOWED_FIELDS | tr " " "|")")
         if [ -n "$META" ]; then
             echo "❌ Sensitive metadata found in: $FILE"
             echo "$META"
@@ -23,7 +20,7 @@ done
 
 if [ $FOUND_METADATA -eq 1 ]; then
     echo "🚫 Commit blocked due to sensitive metadata. Use:"
-    echo "    exiftool -all= -overwrite_original <file>"
+    echo "    exiftool $(echo $ALLOWED_FIELDS | sed 's/\([[:alnum:]]*\)/-\1=/g') -overwrite_original <file>"
     echo "to remove it before committing."
     exit 1
 fi
