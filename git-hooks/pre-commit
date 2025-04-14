@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ALLOWED_FIELDS="Orientation ImageWidth ImageHeight XResolution YResolution ResolutionUnit ColorSpace BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion Copyright"
+ALLOWED_FIELDS="Orientation ImageWidth ImageHeight ThumnailOffset ThumbnailLength XResolution YResolution ResolutionUnit ColorSpace BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion SubfileType Copyright"
 
 FOUND_METADATA=0
 
@@ -8,7 +8,7 @@ FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
 for FILE in $FILES; do
     if [ -f "$FILE" ]; then
-        META=$(exiftool -s -EXIF:all "$file" | sed -e "s/^\([[:alnum:]]*).*/\1/g" | grep -vE "$(echo $ALLOWED_FIELDS | tr " " "|")")
+        META=$(exiftool -s -EXIF:all -XMP:all "$FILE" | sed -e "s/^\([[:alnum:]]*\).*/\1/g" | grep -vE "$(echo $ALLOWED_FIELDS | tr " " "|")")
         if [ -n "$META" ]; then
             echo "❌ Sensitive metadata found in: $FILE"
             echo "$META"
@@ -20,7 +20,7 @@ done
 
 if [ $FOUND_METADATA -eq 1 ]; then
     echo "🚫 Commit blocked due to sensitive metadata. Use:"
-    echo "    exiftool $(echo $ALLOWED_FIELDS | sed 's/\([[:alnum:]]*\)/-\1=/g') -overwrite_original <file>"
+    echo "    exiftool $(echo $ALLOWED_FIELDS | sed 's/\([[:alnum:]]*\)/-\1=/g') -XMP:all -overwrite_original <file>"
     echo "to remove it before committing."
     exit 1
 fi
