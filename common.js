@@ -526,12 +526,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupLQIP() {
-    document.addEventListener("load", (event) => {
-      const tagName = event.target.tagName;
-      if (tagName && (tagName === "IMG" || tagName === "VIDEO")) {
-        event.target.removeAttribute("loading");
-      }
-    }, { capture: true });
+    document.addEventListener(
+      "load",
+      (event) => {
+        const tagName = event.target.tagName;
+        if (tagName && (tagName === "IMG" || tagName === "VIDEO")) {
+          event.target.removeAttribute("loading");
+        }
+      },
+      { capture: true }
+    );
   }
 });
 
@@ -541,4 +545,8 @@ function autoLoadGlobalComponents() {
   if (location.pathname.startsWith("/notes/")) {
     import("/components/blog-header/blog-header.js");
   }
+}
+
+if (window.location.hostname === "localhost") {
+  import("/_hot.js");
 }
