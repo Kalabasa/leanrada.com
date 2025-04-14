@@ -14,7 +14,7 @@ const REFRESH_TOKEN_KEY = "refresh_token";
 const DATA_KEY = "data";
 const DATA_UPDATE_INTERVAL_MS = ONE_DAY_IN_MS;
 const SPAN_TTL_MS = 7 * ONE_DAY_IN_MS;
-const TARGET_IMAGE_SIZE = 150;
+const TARGET_IMAGE_SIZE = 200;
 
 // The now-playing service doesn’t actually give accurate time information for privacy purposes
 // Instead, it returns a *typical* now-playing data sampled from real historical data with a random timezone offset
