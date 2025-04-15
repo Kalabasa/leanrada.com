@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-set -l allowed "Orientation ImageWidth ImageHeight ThumnailOffset ThumbnailLength XResolution YResolution ResolutionUnit ColorSpace BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion SubfileType Copyright"
+set -l allowed "Orientation ImageWidth ImageHeight ThumbnailOffset ThumbnailLength XResolution YResolution ResolutionUnit ColorSpace YCbCrPositioning BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion SubfileType Copyright"
 
 find $argv -type f \
   -not -path "*/node_modules/*" \
