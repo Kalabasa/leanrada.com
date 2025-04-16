@@ -249,7 +249,7 @@ async function sendNotificationEmail(env: Env, body: string) {
     try {
       await env.notify.send(new EmailMessage(data.from, data.to, email));
     } catch (e) {
-      console.error("Notification email not sent!");
+      console.error("Notification email not sent!", e);
     }
   } else {
     console.log("[disabled] Notification email...", data);
