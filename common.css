@@ -40,7 +40,7 @@
   src: url("/fonts/miriam/MiriamLibre-Regular.ttf") format("truetype");
 }
 
-@layer prose-base, base, prose, component, utility;
+@layer prose-base, base, prose, prose-extra, component, utility;
 
 @layer base {
   /* #region */
@@ -72,7 +72,7 @@
     margin: 0;
     min-height: 100svh;
     font-family: var(--default-font, monospace);
-    font-size: 15px;
+    font-size: 16px;
     font-display: swap;
     font-variant-ligatures: none;
     background-color: var(--bg-clr, #111);
@@ -97,6 +97,12 @@
 
   p {
     margin: 1.5em 0;
+    line-height: 1.4;
+  }
+
+  ul,
+  li {
+    line-height: 1.4;
   }
 
   a {
@@ -132,7 +138,7 @@
   - 3 bits a channel of base Oklab color for full area
   - 3 bits b channel of base Oklab color for full area */
   /* prettier-ignore */
-  [loading=lazy][style*="--lqip:"] {
+  [style*="--lqip:"]:where([loading=lazy],.force-lqip) {
     --lqip-ca: mod(round(down, calc((var(--lqip) + 524288) / 262144)), 4);
     --lqip-cb: mod(round(down, calc((var(--lqip) + 524288) / 65536)), 4);
     --lqip-cc: mod(round(down, calc((var(--lqip) + 524288) / 16384)), 4);
@@ -819,6 +825,21 @@
     gap: calc(var(--gap, 1) * 6px);
   }
 
+  auto-flex {
+    @supports (x: attr(x string)) {
+      --colwidth: attr(colwidth type(<length>), 300px);
+      --gap: attr(gap type(<number>), 1);
+    }
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: calc(var(--gap, 1) * 6px);
+    
+    > * {
+      flex: 1 1 var(--colwidth);
+    }
+  }
+
   content-header {
     display: block;
     font-family: var(--default-font);
@@ -1147,6 +1168,7 @@
       font-size: 18px;
       font-style: italic;
       font-weight: bold;
+      text-wrap: stable;
     }
 
     hgroup em {
@@ -1350,8 +1372,13 @@
     color: #ddd;
     box-sizing: border-box;
 
-    > :is(p, figure) {
+    :where(p, figure) {
       margin: 36px auto;
+      line-height: inherit;
+    }
+
+    :where(ul, li) {
+      line-height: inherit;
     }
 
     a[target="_blank"]::after {
@@ -1374,6 +1401,8 @@
 
     box-note > p {
       margin: 18px 0;
+      line-height: inherit;
+
       &:first-child {
         margin-top: 0;
       }
@@ -1391,6 +1420,10 @@
       max-width: min(100%, calc(80svh * var(--aspect-ratio, 1)));
       border-radius: 18px;
       box-sizing: border-box;
+
+      @-moz-document url-prefix() {
+        max-width: 100%; /* FF can't handle the expr above */
+      }
     }
 
     .caption,
@@ -1398,6 +1431,7 @@
       display: block;
       font-size: 15px;
       text-align: center;
+      line-height: inherit;
     }
 
     .horizontal-scroll {
@@ -1457,6 +1491,7 @@
       font-family: var(--default-font, monospace);
       font-size: 15px;
       font-style: italic;
+      line-height: inherit;
       overflow-wrap: anywhere;
     }
 

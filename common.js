@@ -486,15 +486,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupAutoLoadComponents() {
     const components = [
       ["art-gallery"],
-      ["nebula-animation"],
+      ["article-footer"],
       ["blog-header"],
+      ["bump-tally"],
       ["code-block"],
       ["feature-card-carousel"],
-      ["article-footer"],
       ["gh-contribs"],
       ["map-flight"],
+      ["nebula-animation"],
+      ["now-playing"],
       ["right-now"],
-      ["bump-tally"],
     ];
 
     const intersectionObserver = new IntersectionObserver(
@@ -525,12 +526,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupLQIP() {
-    document.addEventListener("load", (event) => {
-      const tagName = event.target.tagName;
-      if (tagName && (tagName === "IMG" || tagName === "VIDEO")) {
-        event.target.removeAttribute("loading");
-      }
-    }, { capture: true });
+    document.addEventListener(
+      "load",
+      (event) => {
+        const tagName = event.target.tagName;
+        if (tagName && (tagName === "IMG" || tagName === "VIDEO")) {
+          event.target.removeAttribute("loading");
+        }
+      },
+      { capture: true }
+    );
   }
 });
 
@@ -540,4 +545,8 @@ function autoLoadGlobalComponents() {
   if (location.pathname.startsWith("/notes/")) {
     import("/components/blog-header/blog-header.js");
   }
+}
+
+if (window.location.hostname === "localhost") {
+  import("/_hot.js");
 }

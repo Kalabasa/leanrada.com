@@ -3,6 +3,7 @@
 </meta>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </meta>
+<link rel="canonical" href="/notes/css-only-lqip/">
 <link rel="stylesheet" href="/common.css">
 </link>
 <script defer="" src="/common.js"></script>
@@ -18,7 +19,7 @@
 
 <blog-post-info>
   <time datetime="2025-03-30">30 Mar 2025</time>
-  · 22 min read
+  · 23 min read
 </blog-post-info>
 
 <tag-row>
@@ -701,11 +702,7 @@ interpolation-example {
     
     const selector = `#${examplesContainer.id} img`;
     for (const el of examplesContainer.querySelectorAll("img")) {
-      if (el.complete && style) {
-        el.removeAttribute("loading");
-      } else {
-        el.setAttribute("loading", "lazy");
-      }
+      el.classList.toggle('force-my-lqip', !el.complete || !style);
     }
 
     if (style) {
@@ -720,6 +717,10 @@ interpolation-example {
 </script>
 
 <style>
+  input[type=range] {
+    touch-action: manipulation;
+  }
+
   lqip-examples {
     display: flex;
     flex-wrap: wrap;
@@ -740,7 +741,11 @@ interpolation-example {
   }
 
   /* separate copy from common.css to prevent rot */
-  [style*="--my-lqip:"]:not(img:not([loading=lazy])) {
+  [style*="--my-lqip:"]:is(
+    :not(img),
+    img[loading=lazy],
+    .force-my-lqip
+  ) {
     --lqip-ca: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 18))), 4);
     --lqip-cb: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 16))), 4);
     --lqip-cc: mod(round(down, calc((var(--my-lqip) + pow(2, 19)) / pow(2, 14))), 4);
