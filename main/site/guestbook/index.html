@@ -14,7 +14,7 @@
 </content-header>
 
 <script>
-  window.GUESTBOOK_API =
+  window.GUESTBOOK_API = "https://guestbook.leanrada.com/api"; // DONTSHIP
     window.location.hostname === "localhost"
       ? "http://localhost:8787/api"
       : window.location.hostname === "leanrada.com"
@@ -119,6 +119,9 @@
       data-stamps-json="[]"
       data-style-json="{&quot;fontIndex&quot;:0,&quot;bgStyleIndex&quot;:0,&quot;bgRGB&quot;:16777215,&quot;fgRGB&quot;:0}"
     ></guestbook-card>
+  </div>
+  <div class="center-text">
+    <button appearance="button" id="load-more">Load more&hellip;</button>
   </div>
 </main>
 
@@ -292,14 +295,14 @@
 
   #thanks {
     view-transition-name: thanks;
-    padding: 60px 6px;
+    padding: 60px 6px 0;
     text-align: center;
     display: none;
   }
 
   .messages-section {
-    min-height: 200vh;
-    min-height: 200svh;
+    min-height: 100vh;
+    min-height: 100svh;
     animation: messages-fade-in 1s cubic-bezier(0.8, 0, 0.8, 0.4) backwards;
   }
 
@@ -323,7 +326,7 @@
 
   #messages-list {
     view-transition-name: messages-list;
-    padding: 120px 40px;
+    padding: 120px 40px 60px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -409,6 +412,9 @@
     > :nth-child(9n) {
       --gbli-margin-x: 22;
     }
+    > :nth-child(13n) {
+      --gbli-margin-x: 38;
+    }
   }
 
   @keyframes messages-fade-in {
@@ -426,6 +432,10 @@
       /* same as original value */
       transform: skewY(-12deg) rotate(var(--gbli-rotate, 0deg));
     }
+  }
+
+  #load-more {
+    margin: 0 0 60px;
   }
 </style>
 
@@ -624,17 +634,57 @@
     async function initMessagesList() {
       const messagesSection = document.querySelector(".messages-section");
       const messagesList = document.getElementById("messages-list");
+      const loadMoreButton = document.getElementById("load-more");
 
-      loadPage(0);
+      let nextPage = 0;
+      let inferredPageSize = 0;
 
-      async function loadPage(page) {
+      loadNextPage(nextPage);
+      nextPage++;
+
+      loadMoreButton.addEventListener("click", async () =>{
+        loadMoreButton.disabled = true;
+        try {
+          const result = await loadNextPage(nextPage);
+          nextPage++;
+          if (result?.end) {
+            loadMoreButton.remove();
+          } else {
+            loadMoreButton.disabled = false;
+          }
+        } catch (e) {
+          loadMoreButton.disabled = false;
+        }
+      });
+
+      async function loadNextPage(page) {
         const response = await fetch(GUESTBOOK_API + "?page=" + page);
         if (!response.ok) throw new Error();
         const data = await response.json();
-        if (!data || data.length === 0) return 0;
-        if (page === 0) messagesList.replaceChildren();
-        for (const message of data) {
-          messagesList.appendChild(await renderMessage(message));
+
+        if (!Array.isArray(data)) {
+          return { end: true };
+        }
+
+        if (data.length > inferredPageSize) {
+          inferredPageSize = data.length;
+        }
+
+        const showMessages = async () => {
+          if (page === 0) messagesList.replaceChildren();
+          for (const message of data) {
+            messagesList.appendChild(await renderMessage(message));
+          }
+        };
+
+        if (document.startViewTransition) {
+          document.startViewTransition(showMessages);
+        } else {
+          showMessages();
+        }
+
+        if (data.length < inferredPageSize) {
+          return { end: true };
         }
       }
 
