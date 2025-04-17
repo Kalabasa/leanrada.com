@@ -1,20 +1,19 @@
 // prefixed with underscore so it doesnt get deployed
 (() => {
   let watching = new Set();
-
   watch(location.href);
 
-  const observer = new PerformanceObserver((list) => {
+  new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       watch(entry.name);
     }
-  });
-  observer.observe({ type: "resource", buffered: true });
+  }).observe({ type: "resource", buffered: true });
 
   function watch(urlString) {
     if (!urlString) return;
     const url = new URL(urlString);
     if (url.origin !== location.origin) return;
+
     if (watching.has(url.pathname)) return;
     watching.add(url.pathname);
 
