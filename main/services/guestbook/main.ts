@@ -8,8 +8,8 @@ export interface Env {
   enable_notification_email: unknown;
 }
 
-const MASTER_KEY = "v2";
-const CURRENT_SCHEMA_VERSION = "v2";
+const MASTER_KEY = "v3";
+const CURRENT_SCHEMA_VERSION = "v3";
 const GET_PAGE_SIZE = 100;
 const MAX_STAMPS = 4;
 
@@ -32,11 +32,7 @@ export type SubmitRequest = {
   stampYs?: string | string[];
 };
 
-type StoredData = {
-  messages?: Array<StoredMessage>;
-};
-
-type StoredMessage = {
+type StoredMessageRow = {
   schemaVersion?: string;
   createdUnixTime?: number;
   text?: string;
@@ -93,18 +89,20 @@ async function handleGet(request: Request, env: Env, ctx: ExecutionContext) {
   console.log("Handling GET request:", getRequest);
   checkGetRequest(getRequest);
 
-  const data = await getData(env);
-
-  if (!data.messages) {
-    return new Response(JSON.stringify([]));
-  }
-
-  const slice = data.messages.slice(
+  const messagesJSON = readRows(
+    env,
     getRequest.page * GET_PAGE_SIZE,
     (getRequest.page + 1) * GET_PAGE_SIZE
   );
 
-  return new Response(JSON.stringify(slice));
+  let responseJSON = "";
+  for await (const messageJSON of messagesJSON) {
+    responseJSON += responseJSON.length === 0 ? "[" : ",";
+    responseJSON += messageJSON;
+  }
+  responseJSON += "]";
+
+  return new Response(responseJSON);
 }
 
 async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
@@ -124,11 +122,22 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
   const stampYs = arrayField(submitRequest.stampYs);
 
   const now = new Date();
-  const data = await getData(env);
-  const snapshot = structuredClone(data);
 
-  data.messages = data.messages || [];
-  data.messages.unshift({
+  const snapshot = await env.data.get(MASTER_KEY, "stream");
+  const writingSnapshot = (async () => {
+    if (snapshot) {
+      const snapshotName =
+        "snapshot-" +
+        now.getFullYear() +
+        "-" +
+        String(now.getUTCMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(now.getUTCDate()).padStart(2, "0");
+      await env.data.put(snapshotName, snapshot);
+    }
+  })();
+
+  const newMessageJSON = JSON.stringify({
     schemaVersion: submitRequest.schemaVersion,
     createdUnixTime: Math.floor(now.getTime() / 1000),
     text: String(submitRequest.text),
@@ -145,27 +154,16 @@ async function handlePost(request: Request, env: Env, ctx: ExecutionContext) {
         y: Number(stampYs[index]),
       })),
   });
-
-  const snapshotName =
-    "snapshot-" +
-    now.getFullYear() +
-    "-" +
-    String(now.getUTCMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(now.getUTCDate()).padStart(2, "0");
-
-  await Promise.all([
-    env.data.put(snapshotName, JSON.stringify(snapshot)),
-    env.data.put(MASTER_KEY, JSON.stringify(data)),
-  ]);
+  await prependRow(env, newMessageJSON);
 
   ctx.waitUntil(
     Promise.all([
+      writingSnapshot,
       evictSnapshots(env),
       sendNotificationEmail(
         env,
         String(submitRequest.text) +
-          "\r\n\r\n" +
+          "\r\n" +
           (submitRequest.name && String(submitRequest.name))
       ),
     ])
@@ -256,15 +254,65 @@ async function sendNotificationEmail(env: Env, body: string) {
   }
 }
 
-async function getData(env: Env): Promise<StoredData> {
-  let data: StoredData | null = await env.data.get(MASTER_KEY, "json");
+async function prependRow(env: Env, newRow: string) {
+  const stream = await env.data.get(MASTER_KEY, "stream");
+  if (stream) {
+    const encoder = new TextEncoder();
+    let prepended = false;
 
-  if (!data) {
-    console.log("New blank data");
-    data = {};
+    const prependTransform = new TransformStream({
+      start(controller) {
+        if (!prepended) {
+          controller.enqueue(encoder.encode(newRow + "\n"));
+          prepended = true;
+        }
+      },
+      transform(chunk, controller) {
+        controller.enqueue(chunk);
+      },
+    });
+
+    await env.data.put(MASTER_KEY, stream.pipeThrough(prependTransform));
+  } else {
+    await env.data.put(MASTER_KEY, newRow);
+  }
+}
+
+async function* readRows(
+  env: Env,
+  startIndex: number,
+  endIndex: number
+): AsyncGenerator<string> {
+  const stream: ReadableStream | null = await env.data.get(
+    MASTER_KEY,
+    "stream"
+  );
+
+  if (!stream) {
+    console.log("No existing data");
+    return;
   }
 
-  return data;
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let currentIndex = 0;
+
+  for await (const chunk of stream) {
+    buffer += decoder.decode(chunk, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (currentIndex >= startIndex && currentIndex < endIndex) {
+        yield line;
+      }
+      if (++currentIndex >= endIndex) return;
+    }
+  }
+
+  if (buffer && currentIndex >= startIndex && currentIndex < endIndex) {
+    yield buffer;
+  }
 }
 
 function checkGetRequest(getRequest: any): asserts getRequest is GetRequest {
