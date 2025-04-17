@@ -25,19 +25,19 @@
     async function check() {
       const res = await fetch(url, { method: "head" });
       const newLastModified = res.headers.get("Last-Modified");
-      const newEtag = res.headers.get("ETag");
+      const newETag = res.headers.get("ETag");
 
       if (
         lastModified !== undefined &&
         etag !== undefined &&
-        (lastModified !== newLastModified || etag !== newEtag)
+        (lastModified !== newLastModified || etag !== newETag)
       ) {
         // TODO: add @view-transition
         location.reload();
       }
 
       lastModified = newLastModified;
-      etag = newEtag;
+      etag = newETag;
     }
 
     setInterval(check, 1000);
