@@ -246,7 +246,7 @@ async function updateGuestbookIndexHTML({ guestbook }) {
   if (!guestbook) return;
 
   const messagesListIndent = 2;
-  const list = guestbook.slice(0, 10);
+  const list = guestbook.slice(0, 15);
 
   await rewrite({
     htmlFilePath: path.resolve(siteDir, "guestbook", "index.html"),
