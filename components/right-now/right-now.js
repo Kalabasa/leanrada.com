@@ -28,10 +28,11 @@
           this.tagName,
           html`<style>
             right-now {
+              font-size: 16px;
               text-align: center;
             }
             .right-now-emoji {
-              font-size: 48px;
+              font-size: 40px;
               min-height: 48px;
               font-style: normal;
             }
@@ -43,7 +44,7 @@
             }
             .right-now-disclaim {
               font-size: 6px;
-              opacity: 0.1;
+              opacity: 0.3;
             }
           </style>`
         );
