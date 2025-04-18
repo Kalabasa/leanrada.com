@@ -32,7 +32,7 @@
                 white-space: pre;
               }
 
-              [wraptext] code {
+              &[wraptext] code {
                 white-space: pre-wrap;
                 overflow-wrap: anywhere;
               }

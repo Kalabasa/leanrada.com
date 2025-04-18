@@ -53,7 +53,7 @@ function encodeHtmlAttribute(value) {
     return "";
   }
 
-  return String(value).replace(/[&<>"']/g, (match) => {
+  return String(value).replace(/[&<>"'\r\n]/g, (match) => {
     switch (match) {
       case "&":
         return "&amp;";
@@ -65,6 +65,10 @@ function encodeHtmlAttribute(value) {
         return "&quot;";
       case "'":
         return "&#39;";
+      case "\n":
+        return "&#10;";
+      case "\r":
+        return "&#13;";
       default:
         return match;
     }
