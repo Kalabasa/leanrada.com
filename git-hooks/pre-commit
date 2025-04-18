@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ALLOWED_FIELDS="Orientation ImageWidth ImageHeight ThumbnailOffset ThumbnailLength XResolution YResolution ResolutionUnit ColorSpace YCbCrPositioning BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion SubfileType Copyright"
+ALLOWED_FIELDS="Orientation ImageWidth ImageHeight ThumbnailOffset ThumbnailLength XResolution YResolution ResolutionUnit ColorSpace YCbCrPositioning BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion SubfileType Copyright Rss"
 
 FOUND_METADATA=0
 
@@ -19,9 +19,7 @@ for FILE in $FILES; do
 done
 
 if [ $FOUND_METADATA -eq 1 ]; then
-    echo "🚫 Commit blocked due to sensitive metadata. Use:"
-    echo "    exiftool $(echo $ALLOWED_FIELDS | sed 's/\([[:alnum:]]*\)/-\1=/g') -XMP:all= -overwrite_original <file>"
-    echo "to remove it before committing."
+    echo "🚫 Commit blocked due to sensitive metadata."
     exit 1
 fi
 

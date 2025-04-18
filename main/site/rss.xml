@@ -7,6 +7,96 @@
     <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title><![CDATA[Simple live reload for developing static sites]]></title>
+      <link><![CDATA[https://leanrada.com/notes/simple-live-reload/?ref=rss]]></link>
+      <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/simple-live-reload/?ref=rss]]></guid>
+      <pubDate>Fri, 18 Apr 2025 00:00:00 GMT</pubDate>
+      <description><![CDATA[
+<p>When developing my website, I’m using a simple client-side script to <strong>automatically reload the page</strong> whenever I make a change to the source files.</p>
+
+<p>Since it’s not coupled to any particular backend, I could continue using <code>python3 -m http.server -d ./site/</code> or whatever local web server I wanted and it would still work. I could clone this repo on a new machine and get going with only preinstalled programs: a text editor, a browser, and a Python (or whatever) HTTP server. And live reload should<sup>*</sup> just work.</p>
+<prose-bleed>
+  <video autoplay="" muted="" loop="" src="https://leanrada.com/notes/simple-live-reload/demo.mp4?ref=rss" alt="demo video" loading="lazy"></video>
+</prose-bleed>
+<p>Here’s the code (39 lines):</p>
+
+<pre><code>let watching = new Set();
+watch(location.href);
+
+new PerformanceObserver((list) =&gt; {
+  for (const entry of list.getEntries()) {
+    watch(entry.name);
+  }
+}).observe({ type: "resource", buffered: true });
+
+function watch(urlString) {
+  if (!urlString) return;
+  const url = new URL(urlString);
+  if (url.origin !== location.origin) return;
+
+  if (watching.has(url.pathname)) return;
+  watching.add(url.pathname);
+
+  console.log("watching", url.pathname);
+
+  let lastModified, etag;
+
+  async function check() {
+    const res = await fetch(url, { method: "head" });
+    const newLastModified = res.headers.get("Last-Modified");
+    const newETag = res.headers.get("ETag");
+
+    if (
+      (lastModified !== undefined || etag !== undefined) &amp;&amp;
+      (lastModified !== newLastModified || etag !== newETag)
+    ) {
+      location.reload();
+    }
+
+    lastModified = newLastModified;
+    etag = newETag;
+  }
+
+  setInterval(check, 1000);
+}</code></pre>
+
+<h2>Chuck it into your HTML</h2>
+
+<pre><code>&lt;script src="https://kalabasa.github.io/simple-live-reload/script.js"&gt;&lt;/script&gt;</code></pre>
+
+<p>It should just work! ✨</p>
+
+<p><small><sup>*</sup>Check the <a href="https://github.com/Kalabasa/simple-live-reload/blob/master/README.md" target="_blank">README</a> for more details.</small></p>
+
+<h2>How it works, in a nutshell</h2>
+
+<ul>
+  <li>Start <a href="https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver" target="_blank"><code>PerformanceObserver</code></a> to watch loaded URLs
+  </li><li>Poll <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/HEAD" target="_blank"><code>HEAD</code></a> metadata
+  </li><li>Check <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Last-Modified" target="_blank"><code>Last-Modified</code></a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag" target="_blank"><code>ETag</code></a>
+</li></ul>
+
+<p><strong>PerformanceObserver</strong> — This class was intended to measure performance of things like network requests. But in this case it was repurposed to record requested URLs so we can watch them for changes. This includes lazy-loaded resources, and resources not in the markup (e.g. imported JS modules)!</p>
+
+<p><strong>HEAD</strong> — Upon recording a requested URL, start polling the URL with <code>HEAD</code> HTTP requests to get resource metadata. Frequent polling should be fine if you’re using a local server which is what I would expect for development. The response returned by <code>HEAD</code> contains metadata useful for determining when to refresh.</p>
+
+<p><strong>Last-Modified</strong> and <strong>ETag</strong> — These are the headers used to indicate when the underlying resource has changed. The script triggers a <code>location.reload()</code> when any of these change.</p>
+<prose-bleed>
+  <img src="https://leanrada.com/notes/simple-live-reload/flow.png?ref=rss" alt="flowchart showing the steps" loading="lazy" width="1056" height="387">
+</prose-bleed>
+<h2>Story time</h2>
+
+<p>I was directly inspired by <strong><a href="https://livejs.com/" target="_blank">livejs</a></strong> (2004), which polls headers as well. However, it has not been updated for modern browsers. Instead of watching network requests, it scans the markup for <code>&lt;script&gt;</code> and <code>&lt;link&gt;</code> (CSS) resources.</p>
+
+<p>In fact, I’ve been using livejs for a long while. I’ve never been fond of the other solutions which require integration with your local filesystem, via extra programs that you install and run. They always seem to run slow or take up lots of resources, and sometimes choke if there are errors.</p>
+
+<p>I’m planning to make a fine-grained version of this module. Simple live reloading is fine, but a more advanced <em>hot</em> reloading that doesn't always refresh the whole page would be great. For the modern web, the advanced version must be able to <a href="https://github.com/WICG/webcomponents/issues/820" target="_blank">hot reload WebComponents</a> in place, and do other fun stuff. I wonder if it’s even possible. 🤔</p>
+
+<p><strong>GitHub repo: <a href="https://github.com/Kalabasa/simple-live-reload" target="_blank">Kalabasa/simple-live-reload</a></strong></p>
+]]></description>
+    </item>
+
+    <item>
       <title><![CDATA[Language evolves, so we must too. On generative art]]></title>
       <link><![CDATA[https://leanrada.com/notes/language-evolves-generative-art/?ref=rss]]></link>
       <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/language-evolves-generative-art/?ref=rss]]></guid>
@@ -3665,24 +3755,7 @@ B: <span><span><span>&lt;</span>script</span><span>&gt;</span></span><span><span
             <guid isPermaLink="true">https://leanrada.com/notes/compressing-websites-into-urls?ref=rss</guid>
             <pubDate>Tue, 10 Oct 2023 00:00:00 GMT</pubDate>
         </item>
-        <item>
-            <title><![CDATA[Introducing portabl.ink]]></title>
-            <description><![CDATA[
-<p>I just released a small weekend project called <a target="_blank" href="https://kalabasa.github.io/portabl.ink/">portabl.ink<span>🡵</span></a>. It’s a tool to compress whole web pages into a self-contained portable link.</p>
-
-<p>Try it out online at <a target="_blank" href="https://kalabasa.github.io/portabl.ink/">kalabasa.github.io/portabl.ink<span>🡵</span></a>!</p>
-
-<img srcset="" sizes="" spec="100% [800) 70% [1750) 1225" loading="lazy" width="400%" type="bleed" alt="screenshot" src="https://leanrada.com/notes/introducing-portabl.ink/hero.png?ref=rss">
-
-<p>For some examples and more details, read the <a target="_self" href="https://leanrada.com/wares/portabl.ink?ref=rss">project page<span></span></a>.</p>
-
-<p>Next, I will write another post on how it works under-the-hood. Stay tuned!
-            </p>
-]]></description>
-            <link>https://leanrada.com/notes/introducing-portabl.ink?ref=rss</link>
-            <guid isPermaLink="true">https://leanrada.com/notes/introducing-portabl.ink?ref=rss</guid>
-            <pubDate>Mon, 25 Sep 2023 00:00:00 GMT</pubDate>
-        </item>
+        
         
         
         
