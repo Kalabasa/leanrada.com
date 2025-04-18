@@ -27,8 +27,7 @@
       const newETag = res.headers.get("ETag");
 
       if (
-        lastModified !== undefined &&
-        etag !== undefined &&
+        (lastModified !== undefined || etag !== undefined) &&
         (lastModified !== newLastModified || etag !== newETag)
       ) {
         // TODO: add @view-transition
