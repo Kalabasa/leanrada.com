@@ -27,7 +27,7 @@ async function rewriteRSS({ rss, notes, siteDir }) {
 
   const ch = cheerio.load(rss, { xml: true });
 
-  let oldestTime = Infinity;
+  let oldestTime = -Infinity;
   ch("item > pubDate").each(function (_, el) {
     oldestTime = Math.min(oldestTime, Date.parse(ch(el).text()));
   });
@@ -96,8 +96,7 @@ async function renderItem({ note, url, componentNames, siteDir }) {
     )
   );
 
-  const scripts = ch("script[src]");
-  const pageScripts = scripts
+  const probableLocalComponentNames = ch("script[src]")
     .toArray()
     .map((script) => {
       const name = path.basename(script.attribs.src, ".js");
@@ -105,7 +104,7 @@ async function renderItem({ note, url, componentNames, siteDir }) {
       return name;
     })
     .filter((name) => name);
-  const interactiveTags = pageScripts
+  const interactiveTags = probableLocalComponentNames
     .concat(componentNames)
     .filter((tag) => !tag.includes("code-block"));
 
@@ -137,23 +136,30 @@ async function renderItem({ note, url, componentNames, siteDir }) {
     ch(el).removeAttr("class").removeAttr("style");
   });
 
-  // Replace interactive components
-  const interactiveElements = content.find(interactiveTags.join(","));
+  const interactiveElements = content.find(
+    interactiveTags.concat("iframe", "script:not([src])").join(",")
+  );
+
   if (interactiveElements.length > 0) {
     content.prepend(
       `<p><em>For RSS readers: This article contains interactive content available on the <a href="${url.href}">original post on ${domain}</a>.</em></p>\n`
     );
   }
+
+  // Replace interactive components
   interactiveElements.each((i, el) => {
     const cel = ch(el);
-    const name = el.name
-      .split("-")
-      .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1))
-      .join(" ");
+    const name =
+      el.name === "script"
+        ? "Inline script"
+        : el.name
+            .split("-")
+            .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1))
+            .join(" ");
     // TOOD: label generator imported from corresponding script module
     const label = cel.attr("alt") ?? cel.attr("aria-label") ?? "";
     cel.replaceWith(
-      `<pre>Interactive content: <a href="${url.href}">Visit the website to play with interactive content!</a>` +
+      `<pre>Interactive content: <a href="${url.href}">Visit the post to interact with this content.</a>` +
         `\nAlternative name: ${name}` +
         (label ? `\nAlternative text: ${label}` : "") +
         `</pre>`
@@ -234,7 +240,7 @@ function renderBase() {
 }
 
 function makeURL(pageHref, href) {
-  if (/^(.+):\/\//.test(href)) return href;
+  if (/^(.+):/.test(href)) return href;
   const urlPath = path.resolve("/", pageHref, href);
   const url = new URL(urlPath, `https://${domain}`);
   url.searchParams.set("ref", "rss");
