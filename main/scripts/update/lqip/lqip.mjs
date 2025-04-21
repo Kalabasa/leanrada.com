@@ -1,47 +1,92 @@
-import { existsSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { rgbToOkLab } from "../lib/color/convert.mjs";
 import { getPalette } from "../lib/color/thief.mjs";
 import { getDirs } from "../lib/script.mjs";
 import { rewrite } from "../rewrite/rewrite.mjs";
-import { readFile } from "node:fs/promises";
 
 const { siteDir } = getDirs();
 
 export async function rewriteLQIP({
   dryRun = false,
   refresh = false,
+  includeVideos = false,
   htmlFilePath,
 }) {
-  await rewrite({
-    dryRun,
-    htmlFilePath,
-    setup(rewrite) {
-      rewrite.on(refresh ? "img" : 'img:not([style*="--lqip:"])', {
-        async element(element) {
-          try {
-            const src = element.getAttribute("src");
-            if (!src) throw new Error("<img> with no src!");
+  let tmpPreviewDir;
+  if (includeVideos) {
+    tmpPreviewDir = mkdtempSync("/tmp/lqip-");
+  }
 
-            // todo: maybe fetch and save as tmp file?
-            if (src.match("^([a-z]+:)?//")) return;
+  try {
+    await rewrite({
+      dryRun,
+      htmlFilePath,
+      async setup(rewrite) {
+        rewrite.on(refresh ? "img" : 'img:not([style*="--lqip:"])', {
+          async element(element) {
+            try {
+              const src = element.getAttribute("src");
+              if (!src) throw new Error("<img> with no src!");
 
-            const imagePath = filePathFromSrc(htmlFilePath, src);
-            if (!existsSync(imagePath)) return;
+              // todo: maybe fetch and save as tmp file?
+              if (src.match("^([a-z]+:)?//")) return;
 
-            console.group("Analyzing", imagePath);
-            const imageData = (await readFile(imagePath)).buffer;
-            await applyElementLQIP(imageData, element, refresh);
-            console.groupEnd();
-          } catch (error) {
-            console.error(error);
-            throw error;
-          }
-        },
-      });
-    },
-  });
+              const imagePath = filePathFromSrc(htmlFilePath, src);
+              if (!existsSync(imagePath)) return;
+
+              console.group("Analyzing", imagePath);
+              await applyElementLQIP(readFileSync(imagePath), element, refresh);
+              console.groupEnd();
+            } catch (error) {
+              console.error(error);
+              throw error;
+            }
+          },
+        });
+        if (includeVideos) {
+          rewrite.on(refresh ? "video" : 'video:not([style*="--lqip:"])', {
+            async element(element) {
+              try {
+                const src = element.getAttribute("src");
+                if (!src) throw new Error("<video> with no src!");
+
+                // todo: maybe fetch and save as tmp file?
+                if (src.match("^([a-z]+:)?//")) return;
+
+                const videoPath = filePathFromSrc(htmlFilePath, src);
+                if (!existsSync(videoPath)) return;
+
+                console.group("Analyzing", videoPath);
+                const imagePath = path.resolve(
+                  tmpPreviewDir,
+                  path.basename(videoPath).replaceAll(".", "_") + ".jpg"
+                );
+                execSync(
+                  `ffmpeg -y -i ${videoPath} -vf "select=eq(n\\,0)" -q:v 2 -update true -frames:v 1 ${imagePath}`
+                );
+                await applyElementLQIP(
+                  readFileSync(imagePath),
+                  element,
+                  refresh
+                );
+                console.groupEnd();
+              } catch (error) {
+                console.error(error);
+                throw error;
+              }
+            },
+          });
+        }
+      },
+    });
+  } finally {
+    if (tmpPreviewDir) {
+      rmSync(tmpPreviewDir, { recursive: true, force: true });
+    }
+  }
 }
 
 async function applyElementLQIP(imageData, element, refresh) {
