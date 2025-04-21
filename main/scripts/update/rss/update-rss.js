@@ -156,7 +156,6 @@ async function renderItem({ note, url, componentNames, siteDir }) {
             .split("-")
             .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1))
             .join(" ");
-    // TOOD: label generator imported from corresponding script module
     const label = cel.attr("alt") ?? cel.attr("aria-label") ?? "";
     cel.replaceWith(
       `<pre>Interactive content: <a href="${url.href}">Visit the post to interact with this content.</a>` +
