@@ -5,6 +5,7 @@ import { rgbToOkLab } from "../lib/color/convert.mjs";
 import { getPalette } from "../lib/color/thief.mjs";
 import { getDirs } from "../lib/script.mjs";
 import { rewrite } from "../rewrite/rewrite.mjs";
+import { readFile } from "node:fs/promises";
 
 const { siteDir } = getDirs();
 
@@ -30,64 +31,9 @@ export async function rewriteLQIP({
             if (!existsSync(imagePath)) return;
 
             console.group("Analyzing", imagePath);
-            const { width, height, opaque, ll, aaa, bbb, values } =
-              await analyzeImage(imagePath);
+            const imageData = (await readFile(imagePath)).buffer;
+            await applyElementLQIP(imageData, element, refresh);
             console.groupEnd();
-
-            // add this as well because why not
-            if (!element.hasAttribute("loading")) {
-              element.setAttribute("loading", "lazy");
-            }
-
-            if (
-              refresh
-                ? element.getAttribute("width") !== String(width) ||
-                  element.getAttribute("height") !== String(height)
-                : !element.hasAttribute("width") &&
-                  !element.hasAttribute("height")
-            ) {
-              element.setAttribute("width", String(width));
-              element.setAttribute("height", String(height));
-            }
-
-            if (opaque) {
-              const ca = Math.round(values[0] * 0b11);
-              const cb = Math.round(values[1] * 0b11);
-              const cc = Math.round(values[2] * 0b11);
-              const cd = Math.round(values[3] * 0b11);
-              const ce = Math.round(values[4] * 0b11);
-              const cf = Math.round(values[5] * 0b11);
-              const lqip =
-                -(2 ** 19) +
-                ((ca & 0b11) << 18) +
-                ((cb & 0b11) << 16) +
-                ((cc & 0b11) << 14) +
-                ((cd & 0b11) << 12) +
-                ((ce & 0b11) << 10) +
-                ((cf & 0b11) << 8) +
-                ((ll & 0b11) << 6) +
-                ((aaa & 0b111) << 3) +
-                (bbb & 0b111);
-
-              // sanity check (+-999999 is the max int range in css in major browsers)
-              if (lqip < -999_999 || lqip > 999_999) {
-                throw new Error(`Invalid lqip value: ${lqip}`);
-              }
-
-              const lqipRule = `--lqip:${lqip.toFixed(0)}`;
-              let existingStyle = element.getAttribute("style");
-              if (refresh && existingStyle?.includes("--lqip:")) {
-                existingStyle = existingStyle.replaceAll(
-                  /;--lqip:\s*-?\d+|--lqip:\s*-?\d+;?/g,
-                  ""
-                );
-              }
-
-              element.setAttribute(
-                "style",
-                [existingStyle, lqipRule].filter(truthy).join(";")
-              );
-            }
           } catch (error) {
             console.error(error);
             throw error;
@@ -98,8 +44,68 @@ export async function rewriteLQIP({
   });
 }
 
-async function analyzeImage(imagePath) {
-  const theSharp = sharp(imagePath);
+async function applyElementLQIP(imageData, element, refresh) {
+  const { width, height, opaque, ll, aaa, bbb, values } = await analyzeImage(
+    imageData
+  );
+
+  // add this as well because why not
+  if (!element.hasAttribute("loading")) {
+    element.setAttribute("loading", "lazy");
+  }
+
+  if (
+    refresh
+      ? element.getAttribute("width") !== String(width) ||
+        element.getAttribute("height") !== String(height)
+      : !element.hasAttribute("width") && !element.hasAttribute("height")
+  ) {
+    element.setAttribute("width", String(width));
+    element.setAttribute("height", String(height));
+  }
+
+  if (opaque) {
+    const ca = Math.round(values[0] * 0b11);
+    const cb = Math.round(values[1] * 0b11);
+    const cc = Math.round(values[2] * 0b11);
+    const cd = Math.round(values[3] * 0b11);
+    const ce = Math.round(values[4] * 0b11);
+    const cf = Math.round(values[5] * 0b11);
+    const lqip =
+      -(2 ** 19) +
+      ((ca & 0b11) << 18) +
+      ((cb & 0b11) << 16) +
+      ((cc & 0b11) << 14) +
+      ((cd & 0b11) << 12) +
+      ((ce & 0b11) << 10) +
+      ((cf & 0b11) << 8) +
+      ((ll & 0b11) << 6) +
+      ((aaa & 0b111) << 3) +
+      (bbb & 0b111);
+
+    // sanity check (+-999999 is the max int range in css in major browsers)
+    if (lqip < -999999 || lqip > 999999) {
+      throw new Error(`Invalid lqip value: ${lqip}`);
+    }
+
+    const lqipRule = `--lqip:${lqip.toFixed(0)}`;
+    let existingStyle = element.getAttribute("style");
+    if (refresh && existingStyle?.includes("--lqip:")) {
+      existingStyle = existingStyle.replaceAll(
+        /;--lqip:\s*-?\d+|--lqip:\s*-?\d+;?/g,
+        ""
+      );
+    }
+
+    element.setAttribute(
+      "style",
+      [existingStyle, lqipRule].filter(truthy).join(";")
+    );
+  }
+}
+
+async function analyzeImage(imageData) {
+  const theSharp = sharp(imageData);
   const [metadata, stats] = await Promise.all([
     theSharp.metadata(),
     theSharp.stats(),
@@ -123,7 +129,7 @@ async function analyzeImage(imagePath) {
       .removeAlpha()
       .toFormat("raw", { bitdepth: 8 })
       .toBuffer(),
-    getPalette(imagePath, 4, 10).then((palette) => palette[0]),
+    getPalette(imageData, 4, 10).then((palette) => palette[0]),
   ]);
 
   const {
