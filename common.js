@@ -495,6 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["map-flight"],
       ["nebula-animation"],
       ["now-playing"],
+      ["now-reading"],
       ["right-now"],
     ];
 
