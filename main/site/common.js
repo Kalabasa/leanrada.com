@@ -549,5 +549,5 @@ function autoLoadGlobalComponents() {
 }
 
 if (window.location.hostname === "localhost") {
-  import("/_hot.js");
+  import("https://kalabasa.github.io/simple-live-reload/script.js");
 }
