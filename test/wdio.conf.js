@@ -114,6 +114,7 @@ export const config = {
         autoSaveBaseline: true,
         screenshotPath: path.join(dirname, "tmp"),
         fullPageScrollTimeout: 400,
+        disableCSSAnimation: true,
       },
     ],
     [
