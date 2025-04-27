@@ -60,7 +60,7 @@ customElements.define(
             iframe {
               min-width: 0;
               max-height: 100%; 
-              flex: 0 1 auto;
+              flex: 0 1 96px;
               border: 0;
               border-radius: 6px;
               aspect-ratio: 1 / 1.5;
