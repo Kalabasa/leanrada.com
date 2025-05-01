@@ -240,7 +240,7 @@ customElements.define(
       } else {
         this.#currentY = this.#currentYTarget;
       }
-    }, 15);
+    });
   }
 );
 
