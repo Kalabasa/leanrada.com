@@ -115,7 +115,6 @@ customElements.define(
       this.addEventListener("touchstart", this.#onTouchStart, passive);
 
       if (this.hasAttribute("prehide")) {
-        // todo: fix
         this.#currentY = this.#currentYTarget = -this.offsetHeight;
         this.#updateDOM();
       }
@@ -215,9 +214,6 @@ customElements.define(
         this.#currentY += dy;
         if (this.#currentY >= 0) {
           this.#currentY = 0;
-          document.body.style.overscrollBehaviorY = null;
-        } else if (this.#currentY < 0) {
-          document.body.style.overscrollBehaviorY = "none";
         }
 
         this.#currentYTarget = this.#currentY;
@@ -244,7 +240,7 @@ customElements.define(
       } else {
         this.#currentY = this.#currentYTarget;
       }
-    });
+    }, 15);
   }
 );
 
