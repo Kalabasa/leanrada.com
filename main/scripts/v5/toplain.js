@@ -14,9 +14,9 @@ function convertToWebComponents(inputHtml) {
   const title = input("page-title").attr("title") ?? "Untitled";
 
   let newHtml = `\
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="stylesheet" href="/common.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/common.css">
 <script defer src="/common.js"></script>
 
 <title>${title}</title>
