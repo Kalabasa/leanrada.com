@@ -93,7 +93,9 @@ customElements.define(
         ${renderItem("/", "Home")} ${renderItem("/notes/", "Notes")}
         ${renderItem("/about/", "About")}
         <img
-          class="${iconsrc === "/icons/yay_sheet.png" ? "site-header-icon-yay" : ""}"
+          class="${iconsrc === "/icons/yay_sheet.png"
+            ? "site-header-icon-yay"
+            : ""}"
           src="${iconsrc}"
           alt=""
         />
@@ -533,16 +535,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupLQIP() {
-    document.addEventListener(
-      "load",
-      (event) => {
-        const tagName = event.target.tagName;
-        if (tagName && (tagName === "IMG" || tagName === "VIDEO")) {
-          event.target.removeAttribute("loading");
-        }
-      },
-      { capture: true }
-    );
+    const removeLQIP = (event) => {
+      const tagName = event.target.tagName;
+      if (tagName === "IMG") {
+        console.log(event.target);
+        event.target.removeAttribute("loading");
+      } else if (tagName === "VIDEO") {
+        console.log(event.target);
+        event.target.removeAttribute("preload");
+      }
+    };
+    document.addEventListener("load", removeLQIP, { capture: true });
+    document.addEventListener("canplay", removeLQIP, { capture: true });
   }
 });
 

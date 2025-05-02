@@ -31,7 +31,6 @@ export async function rewriteLQIP({
               const src = element.getAttribute("src");
               if (!src) throw new Error("<img> with no src!");
 
-              // todo: maybe fetch and save as tmp file?
               if (src.match("^([a-z]+:)?//")) return;
 
               const imagePath = filePathFromSrc(htmlFilePath, src);
@@ -53,7 +52,6 @@ export async function rewriteLQIP({
                 const src = element.getAttribute("src");
                 if (!src) throw new Error("<video> with no src!");
 
-                // todo: maybe fetch and save as tmp file?
                 if (src.match("^([a-z]+:)?//")) return;
 
                 const videoPath = filePathFromSrc(htmlFilePath, src);
@@ -95,8 +93,10 @@ async function applyElementLQIP(imageData, element, refresh) {
   );
 
   // add this as well because why not
-  if (!element.hasAttribute("loading")) {
+  if (element.tagName === "img" && !element.hasAttribute("loading")) {
     element.setAttribute("loading", "lazy");
+  } else if (element.tagName === "video" && !element.hasAttribute("preload")) {
+    element.setAttribute("preload", "none");
   }
 
   if (
