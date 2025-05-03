@@ -538,10 +538,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const removeLQIP = (event) => {
       const tagName = event.target.tagName;
       if (tagName === "IMG") {
-        console.log(event.target);
         event.target.removeAttribute("loading");
       } else if (tagName === "VIDEO") {
-        console.log(event.target);
         event.target.removeAttribute("preload");
       }
     };
