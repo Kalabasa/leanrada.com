@@ -47,22 +47,6 @@
                 margin-top: 48px;
               }
 
-              /* Wrap lines in an angle */
-              &::before {
-                content: "";
-                width: 0;
-                width: calc(min(100% - 400px, 120vw - 600px));
-                height: 400px;
-                float: right;
-                shape-outside: polygon(
-                  100% 0%,
-                  30% 25%,
-                  0% 100%,
-                  100% 100%,
-                  100% 0%
-                );
-              }
-
               h1 {
                 display: inline;
                 position: relative;
@@ -113,7 +97,6 @@
                 width: 100vw;
                 width: 100svw;
                 height: 330px;
-                padding-right: 36px;
 
                 .blog-header-hero-box {
                   top: calc(clamp(24px, 20px + 2vw, 36px) * 2);
@@ -134,14 +117,93 @@
           </style>`
         );
 
+        new ResizeObserver(() => this.#updateLayout()).observe(this);
+      }
+
+      #updateLayout() {
+        this.#updateTextWrap();
         this.#updateDecorations();
-        const observer = new ResizeObserver(() =>
-          // Wait for layout
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => this.#updateDecorations())
-          )
+      }
+
+      // Typesetting the title
+      #updateTextWrap() {
+        this.#title.querySelectorAll("br").forEach((br) => br.remove());
+        if (this.#title.childElementCount.length > 0) return;
+
+        const paddingInline = Number.parseFloat(
+          getComputedStyle(this.#title).paddingInline
         );
-        observer.observe(this);
+
+        // default flow if screen is too small to do proper wrapping
+        if (window.innerWidth < 400) {
+          this.style.paddingRight = `${paddingInline}px`;
+          return;
+        } else {
+          this.style.paddingRight = null;
+        }
+
+        this.#title.normalize();
+        const textNode = this.#title.childNodes[0];
+        if (textNode.nodeType !== Node.TEXT_NODE) return;
+
+        const tokens = [];
+        const range = document.createRange();
+        for (const token of textNode.textContent.matchAll(/.+?(?:\W|$)/g)) {
+          range.setStart(textNode, token.index);
+          range.setEnd(textNode, token.index + token[0].length);
+          tokens.push({
+            text: token[0],
+            rect: range.getBoundingClientRect(),
+          });
+        }
+
+        // wrap text such that each line should be progressively shorter than the last
+        const lines = [
+          {
+            tokens,
+            width: tokens.reduce((sum, token) => sum + token.rect.width, 0),
+          },
+        ];
+
+        const heroWidth = this.#hero.offsetWidth;
+        let maxWidth = Math.min(
+          heroWidth * 0.95 - paddingInline,
+          lines[0].width * 0.7
+        );
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          let accumLineWidth = 0;
+          for (let j = 0; j < line.tokens.length; j++) {
+            const tokenWidth = line.tokens[j].rect.width;
+
+            if (
+              j > 0 &&
+              ((line.width - accumLineWidth < accumLineWidth &&
+                accumLineWidth + tokenWidth > maxWidth) ||
+                accumLineWidth + tokenWidth > heroWidth - paddingInline * 2)
+            ) {
+              lines.push({
+                width: line.width - accumLineWidth,
+                tokens: line.tokens.splice(j, Infinity),
+              });
+              line.width = accumLineWidth;
+
+              maxWidth = Math.min(
+                maxWidth,
+                line.width * 1.1 - paddingInline * 2
+              );
+              break; // on to the new line
+            } else {
+              accumLineWidth += tokenWidth;
+            }
+          }
+        }
+
+        this.#title.innerHTML = lines
+          .map((line) => line.tokens.map((token) => token.text).join(""))
+          .join("<br>");
       }
 
       // Add inner corner radius decorations using SVG
@@ -271,21 +333,21 @@
 
         this.#decorPath.setAttribute("d", pathCommands.join(" "));
 
-        if (heroAnimationPoints.length > 0) {
-          const point1 = heroAnimationPoints[heroAnimationPoints.length - 1];
-          this.style.setProperty(
-            "--blog-header-hero-animation-point-1-y",
-            point1.y + "px"
-          );
+        // if (heroAnimationPoints.length > 0) {
+        //   const point1 = heroAnimationPoints[heroAnimationPoints.length - 1];
+        //   this.style.setProperty(
+        //     "--blog-header-hero-animation-point-1-y",
+        //     point1.y + "px"
+        //   );
 
-          if (heroAnimationPoints.length > 1) {
-            const point2 = heroAnimationPoints[heroAnimationPoints.length - 2];
-            this.style.setProperty(
-              "--blog-header-hero-animation-point-2-y",
-              point2.y + "px"
-            );
-          }
-        }
+        //   if (heroAnimationPoints.length > 1) {
+        //     const point2 = heroAnimationPoints[heroAnimationPoints.length - 2];
+        //     this.style.setProperty(
+        //       "--blog-header-hero-animation-point-2-y",
+        //       point2.y + "px"
+        //     );
+        //   }
+        // }
       }
     }
   );
