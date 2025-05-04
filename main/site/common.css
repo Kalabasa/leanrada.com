@@ -1005,12 +1005,20 @@
       margin: 0;
       padding: 0;
     }
+    li {
+      --item-padding: 12px;
+      --time-width: 12ch; /*'31 Sept 1990'*/
+      &.no-year {
+        --time-width: 7ch; /*'31 Sept'*/
+      }
+    }
     a,
     a:visited {
-      display: flex;
-      align-items: baseline;
+      display: block;
+      position: relative;
       gap: 6px;
-      padding: 12px;
+      padding: var(--item-padding);
+      padding-right: calc(var(--item-padding) + var(--time-width) + var(--item-padding));
       border-bottom: solid 1px var(--card-clr);
       font-weight: bold;
       color: var(--text-clr);
@@ -1021,11 +1029,15 @@
       font-size: 16px;
     }
     time {
-      margin-inline-start: auto;
-      flex: 0 0 auto;
+      position: absolute;
+      top: var(--item-padding);
+      right: var(--item-padding);
+      width: var(--time-width);
+      overflow: hidden;
+      text-wrap: nowrap;
       font-weight: bold;
       color: var(--text2-clr);
-      text-align: end;
+      text-align: right;
     }
     a:hover,
     a:focus-visible {
