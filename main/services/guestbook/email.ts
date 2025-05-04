@@ -5,8 +5,11 @@ export function generateMimeEmail(data: {
   body: string;
 }): string {
   const date = new Date().toUTCString();
+  const domain = data.from.split("@")[1] || "leanrada.com";
+  const messageId = `<${crypto.randomUUID()}@${domain}>`;
 
   return `Date: ${date}
+Message-ID: ${messageId}
 From: ${data.from}
 To: ${data.to}
 Subject: ${data.subject}
