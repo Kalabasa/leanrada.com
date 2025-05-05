@@ -82,6 +82,7 @@
 </section>
 
 <section class="sm-column-section">
+  <a class="clear-tag-button" appearance="button" href=".">Clear tag filter</a>
   <notes-list id="notes">
     <h3>2025</h3>
     <ul>
@@ -321,4 +322,80 @@
   </notes-list>
 </section>
 
+<section class="sm-column-section">
+  <a class="clear-tag-button" appearance="button" href=".">Clear tag filter</a>
+  tags:
+  <span id="tags-list">
+    <a href="?tag=css"><tag-chip title="css"></tag-chip></a>
+    <a href="?tag=js"><tag-chip title="js"></tag-chip></a>
+    <a href="?tag=games"><tag-chip title="games"></tag-chip></a>
+    <a href="?tag=algo"><tag-chip title="algo"></tag-chip></a>
+    <a href="?tag=essay"><tag-chip title="essay"></tag-chip></a>
+    <a href="?tag=keyboard"><tag-chip title="keyboard"></tag-chip></a>
+  </span>
+</section>
+
 <site-footer></site-footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchTag = new URL(location.href).searchParams.get("tag");
+    if (searchTag) {
+      for (const clearTagButton of document.querySelectorAll(".clear-tag-button")) {
+        clearTagButton.style.display = "inline-block";
+      }
+      filterTag(searchTag);
+    }
+
+    const tagLinks = document.querySelectorAll("#tags-list a:has(tag-chip)");
+    for (const tagLink of tagLinks) {
+      const tag = tagLink.querySelector("tag-chip").getAttribute("title");
+      const previewFilter = () => filterTag(tag);
+      const resetFilter = () => filterTag(searchTag);
+      tagLink.addEventListener("pointerover", previewFilter);
+      tagLink.addEventListener("focus", previewFilter);
+      tagLink.addEventListener("pointerout", resetFilter);
+      tagLink.addEventListener("blur", resetFilter);
+    }
+  });
+
+  function filterTag(tag) {
+    for (const unsearched of document.querySelectorAll(".unsearched")) {
+      unsearched.classList.remove("unsearched");
+    }
+    if (tag) {
+      for (const item of document.querySelectorAll("notes-list li")) {
+        if (item.querySelector(`tag-chip[title=${tag}]`)) {
+          for (const otherTag of item.querySelectorAll(`tag-chip:not([title=${tag}])`)) {
+            otherTag.classList.add("unsearched");
+          }
+        } else {
+          item.querySelector("a").classList.add("unsearched");
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .clear-tag-button {
+    margin: 1em 0;
+    display: none;
+  }
+
+  :not(:hover,:focus-within) .unsearched {
+    opacity: 0.3;
+    filter: contrast(0.5);
+  }
+
+  #tags-list {
+    display: inline-flex;
+    flex-wrap: wrap;
+    a {
+      padding: 2mm 0.5em;
+    }
+  }
+  #tags-list:has(a:hover) a:not(:hover) {
+    opacity: 0.3;
+  }
+</style>
