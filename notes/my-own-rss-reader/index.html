@@ -1,0 +1,84 @@
+<!doctype html>
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="canonical" href="/notes/my-own-rss-reader/">
+<link rel="stylesheet" href="/common.css"></link>
+<script defer src="/common.js"></script>
+
+<title>My own RSS reader</title>
+
+<site-header></site-header>
+
+<content-header>
+  <h1>My own RSS reader</h1>
+</content-header>
+
+<blog-post-info>
+  <time datetime="2025-05-15">15 May 2025</time>
+  · 4 min read
+</blog-post-info>
+
+<main class="prose">
+  
+<p>I started making my own RSS reader webapp (<a href="https://reedybear.bearblog.dev/getting-started-with-feed-readers/" target="_blank">a what reader?</a>). It can be accessed at <a href="/tools/rss/" target="_blank"><code>/tools/rss/</code></a>. Currently it’s hardcoded to just load my own site feed <code>leanrada.com/rss.xml</code> and that’s totally fine.</p>
+
+<p>I made this primarily to test how my own posts get rendered in <strong>‘reader mode’</strong>.</p>
+
+<h2>Reader mode</h2>
+
+<p>You see, I like to incorporate interactive elements in my posts. However, custom elements and JS are scrubbed by RSS reader apps, ultimately resulting in a clean but confusing and broken experience. Even custom CSS which I use to format some graphs and illustrations are lost.</p>
+
+<p>The same could be said for the <i>Reading mode</i> feature offered by most full-fledged web browsers today, if not their add-ons. It’s a feature that strips ‘distracting’ elements away. My own RSS reader actually uses <strong><a href="https://github.com/mozilla/readability" target="_blank">the same library</a></strong> used by Mozilla Firefox’s <i>Reader View</i>.</p>
+
+<figure>
+  <img src="./ss.png" alt="Screenshot of my RSS reader" loading="lazy" width="1280" height="768" style="--lqip:173540">
+  <figcaption>My barebones RSS reader showing a reader mode transformation of posts.</figcaption>
+</figure>
+
+<p>But many of my posts are not meant to be just for <em>reading</em>. I want my posts to be interactive and playable. A <em>reading</em> mode transformation is inherently incompatible. Still, I wanted to provide an RSS feed. I had to compromise.</p>
+
+<p>An easy way out would be to omit the post body in the feed, maybe put in a summary instead, and just link to the original URL like what other feeds do. The <a href="https://feeds.bbci.co.uk/news/rss.xml" target="_blank">BBC news feed</a> does this, for example. But that’s boring.</p>
+
+<h2>An alt text kind of way</h2>
+
+<p>I went with an alt text kind of way. That is, all interactive content are replaced by alternative plain text in the feed body.</p>
+
+<fixed-grid style="--cols:2">
+  <figure>
+    <img src="./before-reading.png" loading="lazy" width="704" height="832" style="--lqip:153067">
+    <figcaption>Original content</figcaption>
+  </figure>
+  <figure>
+    <img src="./after-reading.png" loading="lazy" width="704" height="832" style="--lqip:174820">
+    <figcaption>Converted content</figcaption>
+  </figure>
+</fixed-grid>
+
+<p>Right now it’s pretty crude &mdash; my HTML to RSS converter scans custom tags in the markup, and replaces them with the tag name in sentence case. So <code>&lt;some-demo>&lt;/some-demo></code> would turn into <i>Some demo</i>.</p>
+
+<p>It also tries to look for <code>alt</code> and <code>aria-label</code> attributes if present.</p>
+
+<p>It’s not really a complete solution since it doesn’t cover other stuff like plain DOM-based JS stuff (non-WebComponents). I don’t think RSS readers will start running third-party JS or WebComponents anytime soon, so this is not going to be a temporary solution either.</p>
+
+<p>The idea for the RSS reader is that it will help me continuously test these conversions, and remind myself to polish the HTML to RSS solution.</p>
+
+<figure>
+  <img src="./alt-prelude.png" alt="Quote: For RSS readers: This article contains interactive content available on the original post on leanrada.com." loading="lazy" width="755" height="71" style="--lqip:174820">
+  <figcaption>Prelude prepended to the post body when there is interactive content in the post.</figcaption>
+</figure>
+
+<p>Beyond just a testing tool, this RSS reader is, well, an RSS reader!</p>
+
+<h2>It is a feed reader!</h2>
+
+<p>Now that I’ve made an actual RSS reader, it’d be trivial to add other feeds and use this as my main reader app! I’ve always wanted to make my own feed reader.</p>
+
+<p>I’m currently using an online service <a href="https://www.inoreader.com/" target="_blank">InoReader</a> to subscribe to and read around <strong>123 feeds</strong> in total. I could potentially switch to my own reader&hellip;? I should probably start with OPML import functionality. It would be a nice project, at least.</p>
+
+<p>Actually, more than a feed reader, I’ve always wanted to make my own personal front page containing not just RSS feeds, but also social media posts and other stuff I follow all in one place. So many project ideas&hellip; 🤔</p>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
