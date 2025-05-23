@@ -81,25 +81,22 @@ customElements.define(
     }
 
     connectedCallback() {
-      const isSelected = (href) =>
-        href === "/"
-          ? location.pathname === "/"
-          : location.pathname.startsWith(href);
-
       const renderItem = (href, label) => html`<a
         href="${href}"
-        class="${isSelected(href) ? "selected" : ""}"
+        class="${this.#isSelected(href) ? "selected" : ""}"
         >${label}</a
       >`;
 
-      const iconsrc = this.getAttribute("iconsrc");
+      const iconsrc = this.#getIconSrc();
 
       this.innerHTML = html`<nav>
         ${renderItem("/", "Home")} ${renderItem("/notes/", "Notes")}
         ${renderItem("/about/", "About")}
         <img
-          class="${iconsrc ? "" : "site-header-icon-yay"}"
-          src="${iconsrc || "/icons/yay_sheet.png"}"
+          class="${iconsrc === "/icons/yay_sheet.png"
+            ? "site-header-icon-yay"
+            : ""}"
+          src="${iconsrc}"
           alt=""
         />
         ${renderItem("/wares/", "Wares")} ${renderItem("/art/", "Art")}
@@ -120,10 +117,24 @@ customElements.define(
       this.addEventListener("touchstart", this.#onTouchStart, passive);
 
       if (this.hasAttribute("prehide")) {
-        // todo: fix
         this.#currentY = this.#currentYTarget = -this.offsetHeight;
         this.#updateDOM();
       }
+    }
+
+    #getIconSrc() {
+      if (this.#isSelected("/notes/")) return "/icons/glasses.png";
+      if (this.#isSelected("/about/")) return "/icons/person.png";
+      if (this.#isSelected("/wares/")) return "/icons/pot.png";
+      if (this.#isSelected("/art/")) return "/icons/art.png";
+      if (this.#isSelected("/music/")) return "/icons/sound.png";
+      return "/icons/yay_sheet.png";
+    }
+
+    #isSelected(href) {
+      return href === "/"
+        ? location.pathname === "/"
+        : location.pathname.startsWith(href);
     }
 
     #onScroll = (event) => {
@@ -205,9 +216,6 @@ customElements.define(
         this.#currentY += dy;
         if (this.#currentY >= 0) {
           this.#currentY = 0;
-          document.body.style.overscrollBehaviorY = null;
-        } else if (this.#currentY < 0) {
-          document.body.style.overscrollBehaviorY = "none";
         }
 
         this.#currentYTarget = this.#currentY;
@@ -495,6 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["map-flight"],
       ["nebula-animation"],
       ["now-playing"],
+      ["now-reading"],
       ["right-now"],
     ];
 
@@ -526,16 +535,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupLQIP() {
-    document.addEventListener(
-      "load",
-      (event) => {
-        const tagName = event.target.tagName;
-        if (tagName && (tagName === "IMG" || tagName === "VIDEO")) {
-          event.target.removeAttribute("loading");
-        }
-      },
-      { capture: true }
-    );
+    const removeLQIP = (event) => {
+      const tagName = event.target.tagName;
+      if (tagName === "IMG") {
+        event.target.removeAttribute("loading");
+      } else if (tagName === "VIDEO") {
+        event.target.removeAttribute("preload");
+      }
+    };
+    document.addEventListener("load", removeLQIP, { capture: true });
+    document.addEventListener("canplay", removeLQIP, { capture: true });
   }
 });
 
@@ -548,5 +557,5 @@ function autoLoadGlobalComponents() {
 }
 
 if (window.location.hostname === "localhost") {
-  import("/_hot.js");
+  import("https://kalabasa.github.io/simple-live-reload/script.js");
 }

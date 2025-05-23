@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.min.css">
+
+<title>RSS test</title>
+
+<body>
+<nav>
+  <a href="/rss.xml">leanrada.com</a>
+</nav>
+<nav></nav>
+<main class="pico"></main>
+</body>
+
+
+<style>
+html {
+  width: 100%;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  font-size: 13pt;
+  background: #eed;
+  color: #221;
+}
+body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 150px 250px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  > nav {
+    display: flex;
+    flex-direction: column;
+
+    > a {
+      padding: 0.5rem 1rem;
+    }
+  }
+
+  main {
+    line-height: 1.6;
+    padding-inline: calc(50% - 375px);
+    overflow-y: scroll;
+
+    > .article-meta {
+      padding: 1rem;
+      background: #f8f8f8;
+    }
+
+    img, video {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+  }
+}
+</style>
+
+<script>
+  const [primaryNav, secondaryNav] = document.querySelectorAll("body>nav");
+  const main = document.querySelector("body>main");
+  const feeds = Array.from(primaryNav.querySelectorAll("a"), asFeed);
+  let feedItems = [];
+
+  initPrimaryNav();
+  initSecondaryNav();
+
+  async function initPrimaryNav() {
+    primaryNav.addEventListener("click", event => {
+      if (event.target.tagName !== "A") return;
+
+      const feed = feeds.find(feed => feed.href === event.target.href);
+      if (!feed) return;
+
+      event.preventDefault();
+      updateSecondaryNav(feed);
+    });
+  }
+
+  function initSecondaryNav() {
+    secondaryNav.addEventListener("click", event => {
+      if (event.target.tagName !== "A") return;
+
+      const item = feedItems.find(item => item.link === event.target.href);
+      if (!item) return;
+
+      event.preventDefault();
+      updateMain(item);
+    });
+    if (feeds.length) updateSecondaryNav(feeds[0]);
+  }
+
+  async function updateSecondaryNav(feed) {
+    secondaryNav.replaceChildren();
+
+    const rss = await fetchRSSDocument(feed.href);
+    feedItems = Array.from(rss.querySelectorAll("rss>channel>item"), asItem);
+
+    for (const item of feedItems) {
+      const itemLink = document.createElement("a");
+      itemLink.textContent = item.title;
+      itemLink.href = item.link;
+      itemLink.target = "_blank";
+      secondaryNav.appendChild(itemLink);
+    }
+    if (feedItems.length) updateMain(feedItems[0]);
+  }
+
+  async function updateMain(item) {
+    const { Readability } = await import("./Readability.js");
+    const itemDocument = document.implementation.createHTMLDocument(item.title);
+    itemDocument.body.innerHTML = item.description;
+    const readable = new Readability(itemDocument).parse();
+    main.innerHTML =
+      `<section class="article-meta">` +
+      `<h1>${readable.title}</h1>` +
+      `<blockquote>${readable.excerpt}</blockquote>` +
+      `</section>` +
+      readable.content;
+    main.scrollTop = 0;
+  }
+
+  async function fetchRSSDocument(url) {
+    const rssResponse = await fetch(url);
+    const rssText = await rssResponse.text();
+    return new DOMParser().parseFromString(rssText, "text/xml");
+  }
+
+  function asFeed(element) {
+    return {
+      element,
+      href: element.href,
+    };
+  }
+  
+  function asItem(element) {
+    return {
+      element,
+      title: element.querySelector("title")?.textContent,
+      link: element.querySelector("link")?.textContent,
+      description: element.querySelector("description")?.textContent,
+    };
+  }
+</script>

@@ -22,7 +22,6 @@ customElements.define(
             display: contents;
             font-style: normal;
             font-weight: bold;
-            container-type: inline-size;
 
             :is(a, summary) {
               display: grid;
@@ -33,11 +32,24 @@ customElements.define(
               padding: 12px;
               width: 100%;
               max-width: 324px;
+              max-height: 100%;
+              box-sizing: border-box;
               cursor: pointer;
 
               &:hover {
                 background-color: var(--card-clr);
                 border-radius: var(--card-border-radius);
+              }
+
+              @container (max-width: 240px) {
+                justify-items: center;
+                grid-template-columns: 1fr;
+                grid-template-rows: 2fr 1fr 1fr;
+
+                img {
+                  height: 100%;
+                  width: auto;
+                }
               }
             }
 
@@ -103,6 +115,7 @@ customElements.define(
             }
 
             details {
+              max-height: 100%;
               display: flex;
               flex-direction: column;
               gap: 12px;
