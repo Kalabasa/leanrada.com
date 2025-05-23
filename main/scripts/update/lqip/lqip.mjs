@@ -96,7 +96,7 @@ async function applyElementLQIP(imageData, element, refresh) {
   if (element.tagName === "img" && !element.hasAttribute("loading")) {
     element.setAttribute("loading", "lazy");
   } else if (element.tagName === "video" && !element.hasAttribute("preload")) {
-    element.setAttribute("preload", "none");
+    element.setAttribute("preload", "metadata");
   }
 
   if (
