@@ -8,6 +8,7 @@ export interface Env {
 }
 
 const ONE_DAY_IN_MS = 24 * 60 * 60_000;
+const SIX_HOURS_IN_MS = 6 * 60 * 60_000;
 
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -103,7 +104,10 @@ async function getData(env: Env): Promise<{
           )
       ),
     ];
-    console.log(data.trackSpans.length + " total track spans:", data.trackSpans);
+    console.log(
+      data.trackSpans.length + " total track spans:",
+      data.trackSpans
+    );
     await env.data.put(DATA_KEY, JSON.stringify(data));
   }
 
@@ -137,29 +141,43 @@ export function sampleSpan<T>(
 ): { span: T | null; current: boolean } {
   const relTime = time - new Date(time).setUTCHours(0, 0, 0, 0);
 
-  let lastSpan: T | null = null;
-  let lastSpanElapsed = Infinity;
+  const overlaps: Array<{ span: T; elapsed: number }> = [];
+  let nearestSpan: T | null = null;
+  let nearestSpanElapsed = Infinity;
 
-  const remainingIndices = Array.from(spans, (_, i) => i);
-  while (remainingIndices.length > 0) {
-    const indexIndex = Math.floor(Math.random() * remainingIndices.length);
-    const index = remainingIndices[indexIndex];
-    remainingIndices.splice(indexIndex, 1);
+  for (const span of spans) {
+    const elapsedSinceStart =
+      (ONE_DAY_IN_MS + relTime - span.startRelTime) % ONE_DAY_IN_MS;
+    const elapsedSinceEnd =
+      (ONE_DAY_IN_MS + relTime - span.endRelTime) % ONE_DAY_IN_MS;
 
-    const span = spans[index];
-    if (span.startRelTime <= relTime && relTime <= span.endRelTime) {
-      return { span, current: true };
+    if (elapsedSinceStart > SIX_HOURS_IN_MS) {
+      continue;
     }
 
-    const elapsed =
-      (ONE_DAY_IN_MS + relTime - span.startRelTime) % ONE_DAY_IN_MS;
-    if (elapsed < lastSpanElapsed) {
-      lastSpan = span;
-      lastSpanElapsed = elapsed;
+    if (
+      elapsedSinceStart < ONE_DAY_IN_MS / 2 &&
+      elapsedSinceEnd > ONE_DAY_IN_MS / 2
+    ) {
+      overlaps.push({ span, elapsed: elapsedSinceStart });
+    }
+    if (elapsedSinceEnd < nearestSpanElapsed) {
+      nearestSpan = span;
+      nearestSpanElapsed = elapsedSinceEnd;
     }
   }
 
-  return { span: lastSpan, current: false };
+  if (overlaps.length) {
+    let farthestOverlap: { span: T; elapsed: number } = overlaps[0];
+    for (const overlap of overlaps) {
+      if (overlap.elapsed > farthestOverlap.elapsed) {
+        farthestOverlap = overlap;
+      }
+    }
+    return { span: farthestOverlap.span, current: true };
+  }
+
+  return { span: nearestSpan, current: false };
 }
 
 /* ----------------------------------------------------------------------------- *

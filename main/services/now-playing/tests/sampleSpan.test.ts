@@ -10,6 +10,7 @@ const span = (label: string, start: number, end: number) => ({
 
 const relTime = (h: number, m = 0, s = 0) => ((h * 60 + m) * 60 + s) * 1000;
 
+const utc2 = new Date("2024-01-01T02:00:00Z").getTime();
 const utc10 = new Date("2024-01-01T10:00:00Z").getTime();
 
 assert("No span", sampleSpan([], utc10).span === null);
@@ -17,6 +18,17 @@ assert("No span", sampleSpan([], utc10).span === null);
 assert(
   "Current when time is inside span",
   sampleSpan([span("a", relTime(10), relTime(10, 20))], utc10).current === true
+);
+
+assert(
+  "Earliest span when inside multiple spans",
+  sampleSpan(
+    [
+      span("a", relTime(9, 50), relTime(10, 5)),
+      span("b", relTime(9, 55), relTime(10, 5)),
+    ],
+    utc10
+  ).span?.label === "a"
 );
 
 assert(
@@ -32,14 +44,20 @@ assert(
 );
 
 assert(
-  "Wraparound to nearest past span when no current match",
+  "Wraps around midnight",
   sampleSpan(
     [
-      span("a", relTime(10, 30), relTime(10, 35)),
-      span("b", relTime(15, 0), relTime(15, 5)),
+      span("a", relTime(21, 30), relTime(21, 35)),
+      span("b", relTime(23, 0), relTime(23, 5)),
+      span("c", relTime(2, 30), relTime(2, 35)),
     ],
-    utc10
+    utc2
   ).span?.label === "b"
+);
+
+assert(
+  "Not too long ago since last span",
+  sampleSpan([span("a", relTime(3, 50), relTime(3, 55))], utc10).span == null
 );
 
 assert(
