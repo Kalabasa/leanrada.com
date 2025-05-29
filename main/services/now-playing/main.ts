@@ -85,15 +85,18 @@ async function getData(env: Env): Promise<{
     };
   }
 
-  if (data.lastFetchTime + DATA_UPDATE_INTERVAL_MS < Date.now()) {
+  const now = Date.now();
+  if (data.lastFetchTime + DATA_UPDATE_INTERVAL_MS < now) {
     console.log("Updating data...");
     const accessToken = await getAccessToken(env);
     const spans = await fetchRecentlyPlayedSpans(accessToken);
-    data.lastFetchTime = Date.now();
+    data.lastFetchTime = now;
     data.samplingTimeOffset = Math.floor(Math.random() * ONE_DAY_IN_MS);
     data.trackSpans = [
       // expire old spans
-      ...data.trackSpans.filter((span) => span.startAbsTime + SPAN_TTL_MS),
+      ...data.trackSpans.filter(
+        (span) => span.startAbsTime + SPAN_TTL_MS < now
+      ),
       // add new spans without duplicates
       ...spans.filter(
         (span) =>
