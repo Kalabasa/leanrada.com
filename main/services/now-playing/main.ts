@@ -95,7 +95,7 @@ async function getData(env: Env): Promise<{
     data.trackSpans = [
       // expire old spans
       ...data.trackSpans.filter(
-        (span) => span.startAbsTime + SPAN_TTL_MS < now
+        (span) => span.startAbsTime + SPAN_TTL_MS > now
       ),
       // add new spans without duplicates
       ...spans.filter(
