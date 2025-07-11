@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="favicon.png" />
+<link rel="stylesheet" href="styles.css" />
+<title>wikaraoke</title>
+
+<style>
+  body {
+    display: grid;
+    grid-template-columns: minmax(20rem, 1fr) 3fr;
+    grid-template-rows: 100vh;
+    grid-template-areas: "side-pane main-pane";
+
+    @media (max-width: 800px) {
+      grid-template-columns: 100vw;
+      grid-template-rows: 90vh min-content;
+      grid-template-areas: "main-pane" "side-pane";
+    }
+  }
+
+  .side-pane {
+    grid-area: side-pane;
+    box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 1rem;
+    gap: 0.5rem;
+
+    img {
+      align-self: start;
+      width: auto;
+      height: 2rem;
+      margin: 0 1rem;
+
+      @media (max-width: 800px) {
+        height: 1.5rem;
+      }
+    }
+
+    p {
+      font-weight: bold;
+      font-size: 1rem;
+      margin: 0 1rem;
+      opacity: 0.6;
+    }
+  }
+
+  #sort-controls {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    overflow: auto;
+
+    button {
+      font-size: 0.8em;
+      font-weight: bold;
+      opacity: 0.6;
+
+      &:hover,
+      &.asc,
+      &.desc {
+        opacity: 1;
+      }
+
+      &.asc::after {
+        content: "↑";
+        margin-left: 0.25em;
+      }
+
+      &.desc::after {
+        content: "↓";
+        margin-left: 0.25em;
+      }
+    }
+  }
+
+  #song-list {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 1rem 1rem;
+    overflow: auto;
+
+    button {
+      display: grid;
+      gap: 1rem;
+      grid-template-rows: 1fr 0.25rem;
+
+      stats-bar {
+        :first-child {
+          border-bottom-left-radius: 1rem;
+          border-top-left-radius: 1rem;
+        }
+        :last-child {
+          border-bottom-right-radius: 1rem;
+          border-top-right-radius: 1rem;
+        }
+      }
+    }
+  }
+
+  @media (hover: hover) {
+    .has-song-selected
+      #song-list:not(:hover):has(.selected)
+      button:not(.selected, :hover) {
+      opacity: 0.3;
+    }
+  }
+
+  @media not (hover: hover) {
+    .has-song-selected #song-list:has(.selected) button:not(.selected) {
+      opacity: 0.8;
+    }
+  }
+
+  .main-pane {
+    overflow: hidden;
+    position: relative;
+    grid-area: main-pane;
+    display: grid;
+    grid-template-rows: 1fr min-content min-content;
+    grid-template-areas:
+      "map"
+      "lyrics"
+      "bar";
+  }
+
+  #map-container {
+    grid-area: 1 / 1 / -1 / -1;
+    display: grid;
+    place-content: center;
+    pointer-events: none;
+
+    .is-loading & {
+      animation: loading-flash 1s linear infinite;
+    }
+  }
+
+  @keyframes loading-flash {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  #player-container {
+    position: absolute;
+    top: calc(min(1rem, 1vmin));
+    right: calc(min(1rem, 1vmin));
+    width: calc(min(200px, 50vw));
+    height: calc(min(200px, 28vw));
+    display: grid;
+    place-content: center;
+    border-radius: 1rem;
+    overflow: hidden;
+    filter: saturate(0) sepia(0.5);
+    opacity: 0;
+    transition: filter 1s, opacity 1s;
+
+    .is-playing & {
+      opacity: 0.3;
+    }
+
+    &:hover {
+      filter: saturate(1) sepia(0);
+      opacity: 1;
+      z-index: 9999;
+    }
+  }
+
+  #lyrics-container {
+    position: absolute;
+    width: 16vw;
+    grid-area: map;
+    background: linear-gradient(to right, #240d18 40%, #240d1888);
+    pointer-events: none;
+
+    @media (max-width: 1200px) {
+      position: relative;
+      grid-area: lyrics;
+      place-self: center;
+      width: auto;
+      min-height: 3em;
+      margin: 0 1em;
+    }
+
+    lyric-line {
+      --dark-lang-color: color-mix(in srgb, var(--lang-color, #fff) 60%, black);
+      font-size: calc(min(2.2em, 7vw));
+      font-weight: bold;
+      line-height: 85%;
+      letter-spacing: -0.05em;
+      color: transparent;
+      background: var(--lang-color, #fff);
+      background-clip: text;
+      animation: lyric-fill var(--duration, 2s) linear forwards;
+      padding-bottom: 0.33em;
+    }
+
+    lang-tag {
+      font-size: calc(min(0.7em, 4vw));
+      display: block;
+      text-transform: uppercase;
+      font-weight: bolder;
+      color: var(--lang-color, inherit);
+      padding-bottom: 0.25em;
+      opacity: 0.4;
+    }
+  }
+
+  @keyframes lyric-fill {
+    from,
+    to {
+      background-color: none;
+      background-image: linear-gradient(
+        to right,
+        var(--lang-color, #fff) 50%,
+        var(--dark-lang-color, transparent) 70%
+      );
+      background-size: 200% 100%;
+    }
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0 0;
+    }
+  }
+
+  #play-button {
+    grid-area: 1 / 1 / -1 / -1;
+    place-self: center;
+    padding: 2rem;
+    opacity: 0;
+    box-shadow: 0 0 2rem #ffe8;
+    transition: all 0.2s 0s, opacity 1s 1s;
+
+    .has-song-selected & {
+      opacity: 0.9;
+    }
+
+    .is-loading &,
+    .is-playing & {
+      transition: all 0.2s 0s, opacity 0.2s;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  .now-playing-bar {
+    grid-area: "bar";
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    visibility: hidden;
+    min-width: 0;
+
+    .is-loading & {
+      visibility: visible;
+      animation: loading-flash 2s linear infinite;
+    }
+
+    .has-song-selected & {
+      visibility: visible;
+    }
+
+    .playing-status {
+      min-width: 0;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #playing-title {
+      width: 100%;
+      font-size: 1rem;
+      text-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    seekbar {
+      display: grid;
+      align-items: center;
+      justify-content: stretch;
+
+      #progress-container {
+        position: relative;
+        grid-area: 1 / 1;
+        height: 0.5rem;
+        display: grid;
+        place-content: stretch;
+        border-radius: 1rem;
+        overflow: hidden;
+
+        &::after {
+          position: absolute;
+          inset: 0;
+          content: "";
+          background-color: #0006;
+          clip-path: inset(0 0 0 calc(var(--seek, 0) / 100 * 100%));
+        }
+      }
+
+      input {
+        grid-area: 1 / 1;
+        cursor: pointer;
+        opacity: 0;
+      }
+    }
+  }
+
+  #tooltip {
+    display: none;
+    position: absolute;
+    pointer-events: none;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 1rem #0004;
+    background: var(--color, grey);
+    color: #000e;
+
+    @media (hover: hover) {
+      &.active {
+        display: block;
+      }
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: calc(-0.5rem + 1px);
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 0.25rem;
+      border-style: solid;
+      border-color: var(--color, grey) transparent transparent transparent;
+    }
+  }
+
+  tooltip-hit-rect {
+    display: block;
+    position: absolute;
+    inset: -2mm 0;
+    z-index: 9999;
+  }
+</style>
+
+<div class="side-pane">
+  <img class="logo" src="logo.png" alt="wikaraoke" />
+  <p>
+    Lyric visualizer for songs in multiple Philippine languages.
+    <a href="about/" target="_blank">About</a>
+  </p>
+  <div id="sort-controls">
+    <button data-sort="title">Title</button>
+    <button data-sort="artist">Artist</button>
+    <button data-sort="popularity">Popularity</button>
+    <button data-sort="multilinguality">Multilinguality</button>
+  </div>
+  <div id="song-list">Loading&hellip;</div>
+</div>
+<div class="main-pane">
+  <div id="map-container"></div>
+  <div id="player-container"></div>
+  <div id="lyrics-container"></div>
+  <button id="play-button" class="icon" aria-label="Play">
+    <img src="icons/play.png" />
+  </button>
+  <div class="now-playing-bar">
+    <button id="pause-button" class="icon" aria-label="Play/pause">
+      <img src="icons/play.png" />
+    </button>
+    <div class="playing-status">
+      <div id="playing-title"></div>
+      <seekbar>
+        <div id="progress-container"></div>
+        <input type="range" max="100" step="1" />
+      </seekbar>
+    </div>
+    <button id="share-button" class="icon" aria-label="Share">
+      <img src="icons/share.png" />
+    </button>
+    <button id="close-button" class="icon" aria-label="Close">
+      <img src="icons/x.png" />
+    </button>
+  </div>
+</div>
+<div id="tooltip"></div>
+
+<script>
+  const mainPane = document.querySelector(".main-pane");
+  const sidePane = document.querySelector(".side-pane");
+  const sortControls = document.getElementById("sort-controls");
+  const songList = document.getElementById("song-list");
+  const mapContainer = document.getElementById("map-container");
+  const playerContainer = document.getElementById("player-container");
+  const lyricsContainer = document.getElementById("lyrics-container");
+  const progressContainer = document.getElementById("progress-container");
+  const playButton = document.getElementById("play-button");
+  const closeButton = document.getElementById("close-button");
+  const shareButton = document.getElementById("share-button");
+  const pauseButton = document.getElementById("pause-button");
+  const pauseButtonImg = pauseButton.firstElementChild;
+  const playingTitle = document.getElementById("playing-title");
+  const seekbar = document.querySelector("seekbar");
+  const seekbarInput = document.querySelector("seekbar input");
+  const tooltip = document.getElementById("tooltip");
+
+  const appTitle = document.title;
+
+  let currentSortKey = null;
+  let currentSortDir = "asc";
+
+  let currentPlayer = null;
+
+  // left edge and right edge of land for each [y]
+  const mapXEdges = [];
+
+  const shockwaveRadius = 111;
+  let shockwaves = [];
+  let pulses = [];
+
+  const languages = {
+    ceb: {
+      name: "Bisaya/Cebuano",
+      color: "#ffcc00",
+      epicenters: [
+        [45, 69],
+        [47, 77],
+      ],
+    },
+    ilo: { name: "Ilokano", color: "rgb(70 161 138)", epicenters: [[24, 17]] },
+    hil: {
+      name: "Hiligaynon/Ilonggo",
+      color: "#BA6CCE",
+      epicenters: [
+        [36, 64],
+        [51, 91],
+      ],
+    },
+    bik: { name: "Bikol", color: "#13A6F5", epicenters: [[44, 44]] },
+    war: { name: "Waray-Waray", color: "#F2EB88", epicenters: [[53, 56]] },
+    pam: { name: "Kapampangan", color: "#8CD829", epicenters: [[24, 34]] },
+    tsg: { name: "Bahasa Sug", color: "#1CB1B1", epicenters: [[25, 93]] },
+    cbk: { name: "Chavacano", color: "#A759FF", epicenters: [[32, 87]] },
+    tgl: { name: "Tagalog", color: "#F05252", epicenters: [[29, 39]] },
+    eng: { name: "English", color: "#B9C2C1", epicenters: [[63, 0]] },
+  };
+
+  initialize();
+
+  function initialize() {
+    const songsPromise = loadSongs();
+    const mapPromise = loadMap();
+
+    if (window.location.hash) {
+      songsPromise.then(() => {
+        for (const button of songList.querySelectorAll("button")) {
+          if ("#" + button.dataset.json === window.location.hash + ".json") {
+            button.scrollIntoView({
+              block: "center",
+            });
+            selectSong({
+              json: button.dataset.json,
+              artist: button.dataset.artist,
+              title: button.dataset.title,
+              mapPromise,
+            });
+            break;
+          }
+        }
+      });
+    } else {
+      Promise.all([mapPromise, delay(600)]).then(() => {
+        sidePane.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+
+    songList.addEventListener("click", async (e) => {
+      const button = e.target.closest("button");
+      if (button.dataset.json) {
+        selectSong({
+          json: button.dataset.json,
+          artist: button.dataset.artist,
+          title: button.dataset.title,
+          mapPromise,
+        });
+      }
+    });
+
+    sortControls.addEventListener("click", (e) => {
+      const key = e.target.dataset.sort;
+      if (!key) return;
+
+      if (currentSortKey === key) {
+        currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+      } else {
+        currentSortKey = key;
+        currentSortDir =
+          key === "popularity" || key === "multilinguality" ? "desc" : "asc";
+      }
+
+      const sortButtons = sortControls.querySelectorAll("button");
+      sortButtons.forEach((btn) => {
+        const isActive = btn.dataset.sort === currentSortKey;
+        btn.classList.toggle("asc", isActive && currentSortDir === "asc");
+        btn.classList.toggle("desc", isActive && currentSortDir === "desc");
+      });
+
+      const songButtons = Array.from(songList.children);
+      songButtons.sort((a, b) => {
+        let valA = a.dataset[key];
+        let valB = b.dataset[key];
+
+        if (key === "popularity" || key === "multilinguality") {
+          valA = parseFloat(valA);
+          valB = parseFloat(valB);
+          return currentSortDir === "asc" ? valA - valB : valB - valA;
+        }
+
+        return currentSortDir === "asc"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
+      });
+
+      songButtons.forEach((button) => {
+        renderSongLabel(button, currentSortKey);
+        songList.appendChild(button);
+      });
+    });
+
+    playButton.addEventListener("click", () => {
+      currentPlayer?.playVideo?.();
+    });
+
+    seekbarInput.addEventListener("input", () => {
+      seekbar.style.setProperty("--seek", seekbarInput.value);
+      seekToPercentage(Number.parseInt(seekbarInput.value), false);
+    });
+    seekbarInput.addEventListener("change", () => {
+      seekToPercentage(Number.parseInt(seekbarInput.value), true);
+    });
+
+    closeButton.addEventListener("click", () => {
+      currentPlayer?.destroy();
+      playerContainer.replaceChildren();
+      lyricsContainer.replaceChildren();
+      playingTitle.replaceChildren();
+      document.title = appTitle;
+      toggleHasSongSelectedClass(false);
+      sidePane.scrollIntoView({ behavior: "smooth" });
+    });
+
+    pauseButton.addEventListener("click", () => {
+      if (currentPlayer?.getPlayerState() === YT.PlayerState.PLAYING) {
+        currentPlayer?.pauseVideo?.();
+      } else {
+        currentPlayer?.playVideo?.();
+      }
+    });
+
+    shareButton.addEventListener("click", async () => {
+      const shareData = {
+        title: document.title,
+        url: window.location.href,
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          console.error("Share failed:", err);
+        }
+      } else if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(shareData.url);
+          alert("Link copied to clipboard");
+        } catch (err) {
+          console.error("Clipboard write failed:", err);
+        }
+      } else {
+        alert("Sharing not supported");
+      }
+    });
+  }
+
+  function isDesktopLayout() {
+    return window.innerWidth > 1200;
+  }
+
+  function loadSongs() {
+    return fetch("data/_app_songs.json")
+      .then((res) => res.json())
+      .then((songs) => {
+        songList.replaceChildren();
+        songs.forEach((song) => {
+          const button = document.createElement("button");
+          button.dataset.json = song.json;
+          button.dataset.artist = song.artist;
+          button.dataset.title = song.title;
+          button.dataset.popularity = song.spotifyPopularity;
+          button.dataset.multilinguality = calculateMultilinguality(song.stats);
+
+          const label = document.createElement("span");
+          label.className = "song-label";
+          button.appendChild(label);
+          renderSongLabel(button);
+
+          const stats = createStatsBar({ stats: song.stats });
+          button.appendChild(stats);
+
+          songList.appendChild(button);
+        });
+        return songs;
+      })
+      .catch(() => {
+        songList.textContent = "Error loading song list. Refresh to try again.";
+      });
+  }
+
+  function renderSongLabel(button, style = "default") {
+    const artist = escapeHTML(button.dataset.artist);
+    const title = escapeHTML(button.dataset.title);
+    const label = button.querySelector(".song-label");
+    switch (style) {
+      default:
+        return (label.innerHTML = `<b>“${title}”</b> by ${artist}`);
+      case "artist":
+        return (label.innerHTML = `<b>${artist}</b> &ndash; “${title}”`);
+      case "title":
+        return (label.innerHTML = `<b>“${title}”</b> by ${artist}`);
+    }
+  }
+
+  function selectSong({ json, artist, title, mapPromise }) {
+    const hashId = json.substring(0, json.lastIndexOf("."));
+    window.history.replaceState(null, "", "#" + hashId);
+
+    songList
+      .querySelectorAll(".selected")
+      .forEach((s) => s.classList.remove("selected"));
+    songList.querySelector(`[data-json="${json}"]`)?.classList.add("selected");
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const playingText = `${title} - ${artist}`;
+
+    playerContainer.replaceChildren();
+    lyricsContainer.replaceChildren();
+    progressContainer.replaceChildren();
+    toggleLoadingClass(true);
+    toggleHasSongSelectedClass(true);
+    playingTitle.innerText = "[Loading] " + playingText;
+    shockwaves.length = 0;
+
+    return Promise.all([
+      fetch("data/" + json).then((res) => res.json()),
+      mapPromise,
+    ]).then(async ([data, map]) => {
+      const offset = data.offset ?? 0;
+      const lyrics = data.lyrics.map((line) => ({
+        ...line,
+        start: line.start + offset,
+        end: line.end + offset,
+        ...(shouldHighlightLine(line.text, title) ? { highlight: true } : {}),
+      }));
+      const peaks =
+        data.peaks?.map((peak) => ({
+          ...peak,
+          time: peak.time + offset,
+        })) ?? [];
+      const { element, playerPromise } = await createPlayer({
+        youtubeId: data.youtubeId,
+      });
+      playerContainer.replaceChildren(element);
+      const player = await playerPromise;
+      const duration = player.getDuration();
+      progressContainer.replaceChildren(
+        createTimeline({
+          lyrics,
+          duration,
+        })
+      );
+      installSeekbarTooltip({ lyrics, duration });
+      playSong({ player, skip: data.skip, lyrics, peaks, map });
+      playingTitle.innerText = playingText;
+      document.title = playingText + " | " + appTitle;
+      // YouTube takes some more load time before actually playing
+      setTimeout(() => {
+        toggleLoadingClass(false);
+      }, 600);
+    });
+  }
+
+  function shouldHighlightLine(text, title) {
+    shouldHighlightLine.myTitleCache = shouldHighlightLine.myTitleCache ?? {};
+    normalizedTitle =
+      shouldHighlightLine.myTitleCache[title] ??
+      title.replaceAll(/\W/g, "").toLowerCase();
+    return text.replaceAll(/\W/g, "").toLowerCase().includes(normalizedTitle);
+  }
+
+  function seekToPercentage(percentage, allowSeekAhead) {
+    if (!currentPlayer) return;
+    const seconds = currentPlayer.getDuration() * (percentage / 100);
+    currentPlayer.seekTo(seconds, allowSeekAhead);
+  }
+
+  function toggleLoadingClass(isLoading) {
+    document.body.classList.toggle("is-loading", isLoading);
+  }
+
+  function toggleHasSongSelectedClass(hasSongSelected) {
+    document.body.classList.toggle("has-song-selected", hasSongSelected);
+  }
+
+  function toggleIsPlayingClass(isPlaying) {
+    document.body.classList.toggle("is-playing", isPlaying);
+  }
+
+  async function createPlayer({ youtubeId }) {
+    const iframe = document.createElement("iframe");
+    iframe.width = playerContainer.offsetWidth;
+    iframe.height = playerContainer.offsetHeight;
+    iframe.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&enablejsapi=1`;
+    iframe.frameBorder = "0";
+    iframe.allowFullscreen = true;
+    iframe.allow = "autoplay";
+    iframe.id = "yt-player";
+
+    const playerPromise = new Promise(async (resolve) => {
+      await loadYouTubeAPI();
+      new YT.Player(iframe, {
+        events: {
+          onReady: (event) => {
+            resolve(event.target);
+          },
+          onStateChange: (event) => {
+            const isPlaying = event.data === 1;
+            pauseButtonImg.src = isPlaying
+              ? "icons/pause.png"
+              : "icons/play.png";
+            toggleIsPlayingClass(isPlaying);
+            if (isPlaying) {
+              toggleLoadingClass(false);
+            }
+          },
+        },
+      });
+    });
+
+    return { element: iframe, playerPromise };
+  }
+
+  function playSong({ player, skip, lyrics, peaks, map }) {
+    currentPlayer = player;
+    if (skip) {
+      player.seekTo(skip, true);
+    }
+    player.playVideo();
+    toggleHasSongSelectedClass(true);
+
+    let currentLine = null;
+    let nextPeakIndex = 0;
+    let relativePeakDb = -6;
+
+    const lyricsLangs = new Set(lyrics.map((l) => l.lang));
+
+    const intervalID = setInterval(() => {
+      if (!player.getIframe().isConnected) {
+        currentPlayer = null;
+        clearInterval(intervalID);
+        lyricsContainer.innerText = "";
+        return;
+      }
+
+      const time = player.getCurrentTime();
+      seekbar.style.setProperty("--seek", 100 * (time / player.getDuration()));
+
+      const line = lyrics.find((l, i) => time >= l.start && time < l.end);
+      if (currentLine !== line) {
+        currentLine = line;
+        if (line) {
+          const duration = Math.min(line.end - line.start, 8);
+
+          const lyricLine = document.createElement("lyric-line");
+          lyricLine.innerText = line.text;
+          lyricLine.style.setProperty("--duration", duration + "s");
+          lyricsContainer.replaceChildren(lyricLine);
+
+          const language = languages[line.lang];
+          if (language) {
+            lyricsContainer.style.setProperty("--lang-color", language.color);
+            const langTag = document.createElement("lang-tag");
+            langTag.innerText = language.name;
+            lyricsContainer.prepend(langTag);
+
+            if (language.epicenters?.length) {
+              if (isDesktopLayout()) {
+                const mapView = map.app.view;
+                if (line.lang === "eng") {
+                  const [left, top] = map.normToPx(41, 27);
+                  lyricsContainer.style.left =
+                    clamp(
+                      mapView.offsetLeft + left,
+                      0,
+                      mapContainer.offsetLeft +
+                        mapContainer.offsetWidth -
+                        lyricsContainer.offsetWidth
+                    ) + "px";
+                  lyricsContainer.style.top =
+                    clamp(
+                      mapView.offsetTop +
+                        top -
+                        lyricsContainer.offsetHeight / 2,
+                      0,
+                      mapContainer.offsetTop +
+                        mapContainer.offsetHeight -
+                        lyricsContainer.offsetHeight
+                    ) + "px";
+                } else {
+                  const anchor = language.epicenters[0];
+
+                  let [leftEdge, rightEdge] = map
+                    .getMapXEdges(anchor[1])
+                    ?.map((edge) => edge.norm) ?? [0, 100];
+                  for (let d = -3; d <= 3; d++) {
+                    const edges = map.getMapXEdges(anchor[1] + d);
+                    if (!edges) continue;
+                    if (Math.abs(anchor[0] - edges[0].norm) < 20) {
+                      leftEdge = Math.min(leftEdge, edges[0].norm);
+                    }
+                    if (Math.abs(anchor[0] - edges[1].norm) < 20) {
+                      rightEdge = Math.max(rightEdge, edges[1].norm);
+                    }
+                  }
+
+                  const side =
+                    anchor[0] < (leftEdge + rightEdge) / 2 ? "left" : "right";
+
+                  let [anchorX, anchorY] = map.normToPx(
+                    side === "left" ? leftEdge : rightEdge,
+                    anchor[1]
+                  );
+
+                  lyricsContainer.style.left =
+                    clamp(
+                      side === "left"
+                        ? Math.max(
+                            20,
+                            mapView.offsetLeft +
+                              anchorX -
+                              lyricsContainer.offsetWidth
+                          )
+                        : Math.min(
+                            mainPane.offsetWidth -
+                              lyricsContainer.offsetWidth -
+                              20,
+                            mapView.offsetLeft + anchorX + 40
+                          ),
+                      0,
+                      mapContainer.offsetLeft +
+                        mapContainer.offsetWidth -
+                        lyricsContainer.offsetWidth
+                    ) + "px";
+                  lyricsContainer.style.top =
+                    clamp(
+                      mapView.offsetTop +
+                        anchorY -
+                        lyricsContainer.offsetHeight / 2,
+                      0,
+                      mapContainer.offsetTop +
+                        mapContainer.offsetHeight -
+                        lyricsContainer.offsetHeight
+                    ) + "px";
+                }
+              } else if (
+                lyricsContainer.style.left ||
+                lyricsContainer.style.top
+              ) {
+                lyricsContainer.style.left = "";
+                lyricsContainer.style.top = "";
+              }
+
+              language.usageCount = (language.usageCount ?? -1) + 1;
+              const shockwavePos =
+                language.epicenters[
+                  language.usageCount % language.epicenters.length
+                ];
+              const shockwaveDuration =
+                line.lang === "eng"
+                  ? duration * 1000 + 1000
+                  : duration * 1500 + 1500;
+              const birthOffset =
+                line.lang === "eng" ? shockwaveDuration * -0.2 : 0;
+              shockwaves.push({
+                x: shockwavePos[0],
+                y: shockwavePos[1],
+                color: language.color,
+                duration: shockwaveDuration,
+                spread: line.highlight
+                  ? shockwaveDuration / 3000
+                  : shockwaveDuration / 6000,
+                birth: line.start * 1000 + birthOffset,
+              });
+              if (line.highlight) {
+                for (const langCode of lyricsLangs) {
+                  const burstLang = languages[langCode];
+                  if (!burstLang) continue;
+                  shockwaves.push({
+                    x: burstLang.epicenters[0][0] + Math.random() * 10 - 5,
+                    y: burstLang.epicenters[0][1] + Math.random() * 10 - 5,
+                    color: burstLang.color,
+                    duration: Math.max(1500, duration * 1000),
+                    spread: 4,
+                    core: false,
+                    birth: line.start * 1000,
+                  });
+                }
+              }
+            }
+          }
+        } else {
+          lyricsContainer.replaceChildren();
+          lyricsContainer.removeAttribute("style");
+        }
+      }
+
+      while (time + 0.08 >= peaks[nextPeakIndex]?.t) {
+        const peak = peaks[nextPeakIndex];
+        if (time - 0.1 < peak.t) {
+          let type = "strength";
+          let strengthFactor = 1;
+          let durationFactor = 1;
+          if (peak.f === "H") {
+            type = "color";
+            strengthFactor = 3;
+            durationFactor = 0.6;
+          } else if (peak.f === "M") {
+            type = "radius";
+            strengthFactor = 1.2;
+            durationFactor = 1;
+          } else if (peak.f === "L") {
+            type = "strength";
+            strengthFactor = 1;
+            durationFactor = 1.2;
+          }
+          pulses.push({
+            type,
+            strength:
+              strengthFactor *
+              2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4),
+            duration: durationFactor * 600,
+            birth: peak.t * 1000,
+          });
+        }
+        relativePeakDb += (peak.d - relativePeakDb) * 0.5;
+        nextPeakIndex++;
+      }
+    }, 50);
+  }
+
+  function createStatsBar({ stats }) {
+    if (!stats) return document.createElement("div");
+
+    const total = Object.values(stats).reduce((a, b) => a + Math.log(b), 0);
+    if (total === 0) return document.createElement("div");
+
+    const container = document.createElement("stats-bar");
+    container.style.display = "flex";
+
+    const langCodes = Object.keys(languages).sort((a, b) => rank(a) - rank(b));
+    function rank(langCode) {
+      if (langCode === "eng") return 2000;
+      if (langCode === "tgl") return 1000;
+      return stats[langCode] ?? 0;
+    }
+
+    for (const langCode of langCodes) {
+      const weight = Math.log(stats[langCode]);
+      if (!weight) continue;
+
+      const widthPercent = (weight / total) * 100;
+
+      const rect = document.createElement("div");
+      rect.style.position = "relative";
+      rect.style.flex = `0 0 ${widthPercent}%`;
+      rect.style.backgroundColor = languages[langCode].color ?? "gray";
+      container.appendChild(rect);
+
+      const hitRect = document.createElement("tooltip-hit-rect");
+      rect.appendChild(hitRect);
+      installTooltip(
+        hitRect,
+        languages[langCode].name,
+        rect.style.backgroundColor
+      );
+    }
+
+    return container;
+  }
+
+  function createTimeline({ lyrics, duration }) {
+    if (!lyrics.length) return document.createElement("div");
+
+    if (duration == null) {
+      duration = lyrics[lyrics.length - 1].end;
+    }
+
+    const container = document.createElement("lyrics-timeline");
+    container.style.display = "flex";
+
+    let currentTime = 0;
+    for (const segment of lyrics) {
+      const segDuration = segment.end - currentTime;
+      const widthPercent = (segDuration / duration) * 100;
+      currentTime = Math.min(segment.end, duration);
+
+      const rect = document.createElement("div");
+      rect.style.flex = `0 0 ${widthPercent}%`;
+      rect.style.backgroundColor = languages[segment.lang]?.color ?? "gray";
+      container.appendChild(rect);
+    }
+
+    if (currentTime < duration) {
+      const rect = document.createElement("div");
+      rect.style.flex = `0 0 ${((duration - currentTime) / duration) * 100}%`;
+      rect.style.backgroundColor =
+        container.lastElementChild.style.backgroundColor;
+      container.appendChild(rect);
+    }
+
+    return container;
+  }
+
+  async function loadMap() {
+    return Promise.all([
+      import("https://cdn.jsdelivr.net/npm/pixi.js@7.2.4/dist/pixi.min.mjs"),
+      fetch("./data/_app_hexmap.json").then((r) => r.json()),
+    ]).then(([PIXI, hexmap]) => {
+      const app = new PIXI.Application({
+        useContextAlpha: false,
+        antialias: false,
+        backgroundColor: PIXI.utils.string2hex(
+          getComputedStyle(document.body).backgroundColor
+        ),
+      });
+      app.ticker.maxFPS = 30;
+      mapContainer.replaceChildren(app.view);
+
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const [x, y] of hexmap) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+      const mapWidth = maxX - minX;
+      const mapHeight = maxY - minY;
+
+      const normXMid = (mapWidth / mapHeight) * 50;
+      for (let y = 0; y <= 100; y++) {
+        mapXEdges[y] = [normXMid, normXMid];
+      }
+      for (const [x, y] of hexmap) {
+        const normY = Math.round((y - minY) * (100 / mapHeight));
+        if (x < mapXEdges[normY][0]) mapXEdges[normY][0] = x;
+        if (x > mapXEdges[normY][1]) mapXEdges[normY][1] = x;
+      }
+
+      // global PIXI for pixi-filters
+      if (!window.location.search.includes("disableBloomFilter")) {
+        window.PIXI = PIXI;
+        import(
+          "https://cdn.jsdelivr.net/npm/pixi-filters@5.3.0/dist/browser/pixi-filters.min.js"
+        )
+          .then(() => {
+            const bloom = new PIXI.filters.AdvancedBloomFilter({
+              threshold: 0.25,
+              brightness: 1.4,
+              blur: 3,
+              quality: 1,
+            });
+            app.stage.filters = [bloom];
+          })
+          .finally(() => {
+            delete window.PIXI;
+          });
+      }
+
+      const cellContainer = new PIXI.Container();
+      app.stage.addChild(cellContainer);
+
+      drawMap();
+      window.addEventListener("resize", () => drawMap());
+
+      const mousePos = { x: 0, y: 0 };
+      app.stage.eventMode = "static";
+      app.stage.hitArea = app.screen;
+      app.stage.on("mousemove", (event) => {
+        mousePos.x = event.global.x;
+        mousePos.y = event.global.y;
+      });
+
+      let time = 0;
+      let lastPlayerTime = 0;
+      let lastDateTime = 0;
+      let swayStrength = 0;
+      app.ticker.add(() => {
+        // Combine player time and date time into one `time` counter
+        const playerTime = (currentPlayer?.getCurrentTime() ?? 0) * 1000;
+        const dateNow = Date.now();
+        if (
+          currentPlayer &&
+          window.YT?.PlayerState != null &&
+          currentPlayer.getPlayerState() === YT.PlayerState.PLAYING
+        ) {
+          time += playerTime - lastPlayerTime;
+        } else {
+          time += dateNow - lastDateTime;
+        }
+        lastPlayerTime = playerTime;
+        lastDateTime = dateNow;
+
+        // Cleanup old effects (effect times are based on audio track time)
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const s = shockwaves[i];
+          if (playerTime - s.birth > s.duration) {
+            shockwaves.splice(i, 1);
+          }
+        }
+        for (let i = pulses.length - 1; i >= 0; i--) {
+          const s = pulses[i];
+          if (playerTime - s.birth > s.duration) {
+            pulses.splice(i, 1);
+          }
+        }
+
+        const { margin, scale } = getMarginScale();
+
+        for (const g of cellContainer.children) {
+          const baseSeed = Math.sin(g.x * 11.7748 + g.y * 70.8945) * 11407.8853;
+          const baseRandom = baseSeed - Math.floor(baseSeed);
+
+          const mouseDx = (mousePos.x - g.x) / scale;
+          const mouseDy = (mousePos.y - g.y) / scale;
+          const mouseDist2 = mouseDx ** 2 + mouseDy ** 2;
+
+          const baseBrightness =
+            0x80 + Math.floor(0x7f / Math.max(1, mouseDist2 / 2));
+
+          let color =
+            (baseBrightness << 16) | (baseBrightness << 8) | baseBrightness;
+          let alpha =
+            0.1 +
+            Math.abs(Math.sin(time * 0.001 + baseRandom * Math.PI * 2)) * 0.2;
+
+          const baseRadius = 0.35;
+          let radius = baseRadius;
+
+          const colorSeed =
+            Math.sin(g.x * 83.1738 + g.y * 58.4075) * 21874.9651;
+          const colorRandom = colorSeed - Math.floor(colorSeed);
+
+          let epicenterFactor = 1;
+          let colorFactor = 0;
+          let radiusFactor = 1;
+          for (let i = pulses.length - 1; i >= 0; i--) {
+            const p = pulses[i];
+            const age = playerTime - p.birth;
+            if (age < 0 || age > p.duration) continue;
+
+            const progress = age / p.duration;
+            const pulseStrength = Math.min(
+              1,
+              (1 - progress) ** 2 * p.strength * (shockwaves.length ? 1 : 2)
+            );
+
+            if (pulseStrength > 0) {
+              if (p.type === "strength") {
+                alpha = Math.min(
+                  1,
+                  Math.max(alpha, alpha + pulseStrength * 0.1)
+                );
+                epicenterFactor = Math.max(epicenterFactor, 1 + pulseStrength);
+              } else if (p.type === "color") {
+                colorFactor = Math.max(colorFactor, pulseStrength);
+              } else if (p.type === "radius") {
+                radiusFactor = Math.max(
+                  radiusFactor,
+                  1 +
+                    pulseStrength *
+                      (1 +
+                        0.2 *
+                          Math.sin(
+                            time * (10 / p.duration) +
+                              g.x * -0.008 +
+                              g.y * 0.004
+                          ))
+                );
+              }
+            }
+          }
+
+          // simultaneous effects
+          radiusFactor = Math.max(0, radiusFactor - epicenterFactor * 0.8);
+          const shakeFactor =
+            0.1 * colorFactor +
+            1.2 * Math.max(0, radiusFactor - 1) +
+            0.1 * Math.max(0, epicenterFactor - 1);
+
+          color = lerpColor(
+            color,
+            0x404040 | Math.floor(colorRandom * 0xffffff),
+            colorFactor
+          );
+          radius = Math.max(radius, baseRadius * radiusFactor);
+
+          for (let i = shockwaves.length - 1; i >= 0; i--) {
+            const s = shockwaves[i];
+            const age = playerTime - s.birth;
+            if (age < 0 || age > s.duration) continue;
+
+            const progress = age / s.duration;
+            const waveRadius = progress ** 0.7 * shockwaveRadius * scale;
+
+            const sx = s.x * scale + margin;
+            const sy = s.y * scale + margin;
+            const dx = g.x - sx;
+            const dy = g.y - sy;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            const waveSeed =
+              Math.sin(g.x * 12.9898 + g.y * 78.233) * 43758.5453;
+            const waveRandom = waveSeed - Math.floor(waveSeed);
+            const waveOffset =
+              (((waveRandom - 0.5) * (waveRandom - 0.5)) / 0.25 - 1) *
+              -15 *
+              (scale * s.spread);
+            const waveComponent =
+              0.65 *
+              (1 - Math.abs(dist + waveOffset - waveRadius) / (10 * scale)) *
+              (1 - progress ** 4);
+
+            const centerSeed =
+              Math.sin(g.x * 57.7799 + g.y * 24.7107) * 51905.4873;
+            const centerRandom = centerSeed - Math.floor(centerSeed);
+            const epicenterComponent =
+              (s.core === false ? 0 : 1) *
+              (isDesktopLayout() ? 1 : 1.5) *
+              (1 - (Math.abs(dist) / (50 * scale)) ** 0.5) *
+              (1 -
+                (Math.abs(progress - 0.05) / (progress < 0.05 ? 0.05 : 0.95)) **
+                  1.5) *
+              (0.7 +
+                Math.sin(playerTime * 0.01 + centerRandom * Math.PI * 2) * 0.2);
+
+            const shockwaveStrength = Math.min(
+              1,
+              Math.max(0, waveComponent, epicenterComponent * epicenterFactor)
+            );
+            if (shockwaveStrength > 0) {
+              if (s.colorHex == null) {
+                s.colorHex = PIXI.utils.string2hex(s.color);
+              }
+              color = lerpColor(color, s.colorHex, Math.min(shockwaveStrength));
+              alpha = Math.max(alpha, Math.min(1, shockwaveStrength));
+              radius = Math.max(radius, baseRadius * (0.5 + shockwaveStrength));
+            }
+          }
+
+          swayStrength +=
+            ((shockwaves.length ? 0.6 : 1.6) - swayStrength) * 0.00001;
+          const swayX =
+            Math.sin(g.y * 0.02 + time * 0.0002) * swayStrength * scale;
+          const swayY =
+            Math.sin(g.x * 0.015 + time * -0.0003) * swayStrength * scale;
+
+          const shakeX =
+            Math.sin(
+              g.x * (5.58 + Math.sin(time * 0.002)) + g.y * 6.14 + time * 0.001
+            ) *
+            shakeFactor *
+            scale;
+          const shakeY =
+            Math.cos(
+              g.x * 9.55 + g.y * (4.89 + Math.cos(time * 0.003)) + time * 0.0015
+            ) *
+            shakeFactor *
+            scale;
+
+          g.myOffsetX += (swayX - g.myOffsetX) * 0.1 + shakeX;
+          g.myOffsetY += (swayY - g.myOffsetY) * 0.1 + shakeY;
+
+          g.clear();
+          g.beginFill(color, alpha);
+          g.drawCircle(g.myOffsetX, g.myOffsetY, radius * scale);
+          g.endFill();
+        }
+      });
+
+      return new Promise((resolve) => {
+        setTimeout(() => resolve({ app, normToPx, getMapXEdges }));
+      });
+
+      function drawMap() {
+        const maxWidth = mainPane.offsetWidth;
+        const maxHeight = mainPane.offsetHeight;
+        if (mapWidth / mapHeight > maxWidth / maxHeight) {
+          app.renderer.resize(maxWidth, maxWidth * (mapHeight / mapWidth));
+        } else {
+          app.renderer.resize(maxHeight * (mapWidth / mapHeight), maxHeight);
+        }
+
+        const { margin, scale } = getMarginScale();
+
+        cellContainer.removeChildren();
+        for (const [x, y] of hexmap) {
+          const g = new PIXI.Graphics();
+          g.x = margin + x * scale;
+          g.y = margin + y * scale;
+          g.myOffsetX = 0;
+          g.myOffsetY = 0;
+          g.beginFill(0xffffff, 0.2);
+          g.drawCircle(0, 0, 0.4 * scale);
+          g.endFill();
+          cellContainer.addChild(g);
+        }
+      }
+
+      function normToPx(normX, normY) {
+        const { margin, scale } = getMarginScale();
+        return [margin + normX * scale, margin + normY * scale];
+      }
+
+      function getMapXEdges(y) {
+        const { margin, scale } = getMarginScale();
+        return mapXEdges[Math.round(y)]?.map((x) => ({
+          norm: x,
+          px: margin + x * scale,
+        }));
+      }
+
+      function getMarginScale() {
+        const { width, height } = app.renderer;
+        const margin = height * 0.04;
+        const scale = (width - margin * 2) / mapWidth;
+        return { margin, scale };
+      }
+    });
+  }
+
+  function lerpColor(a, b, t) {
+    const ar = (a >> 16) & 0xff;
+    const ag = (a >> 8) & 0xff;
+    const ab = a & 0xff;
+
+    const br = (b >> 16) & 0xff;
+    const bg = (b >> 8) & 0xff;
+    const bb = b & 0xff;
+
+    const rr = ar + (br - ar) * t;
+    const rg = ag + (bg - ag) * t;
+    const rb = ab + (bb - ab) * t;
+
+    return (rr << 16) | (rg << 8) | (rb << 0);
+  }
+
+  const tooltipTarget = Symbol("tooltipTarget");
+  function installTooltip(el, text, color, anchor = "element") {
+    el.addEventListener("mouseenter", (event) => {
+      tooltip.textContent = text;
+      tooltip.classList.toggle("active", true);
+      tooltip.style.setProperty("--color", color);
+      const rect = el.getBoundingClientRect();
+      tooltip.style.top = rect.y - tooltip.offsetHeight + "px";
+      if (anchor === "element") {
+        tooltip.style.left =
+          rect.x + (rect.width - tooltip.offsetWidth) / 2 + "px";
+      } else {
+        tooltip.style.left = event.pageX - tooltip.offsetWidth / 2 + "px";
+      }
+      tooltip[tooltipTarget] = el;
+    });
+    if (anchor !== "element") {
+      el.addEventListener("mousemove", (event) => {
+        if (tooltip.classList.contains("active")) {
+          tooltip.style.left = event.pageX - tooltip.offsetWidth / 2 + "px";
+        }
+      });
+    }
+    el.addEventListener("mouseleave", () => {
+      if (tooltip[tooltipTarget] === el) {
+        tooltip.classList.toggle("active", false);
+      }
+    });
+  }
+
+  let seekbarTooltipListenerController;
+  function installSeekbarTooltip({ lyrics, duration }) {
+    if (duration == null) {
+      duration = lyrics[lyrics.length - 1].end;
+    }
+    seekbarTooltipListenerController?.abort();
+    seekbarTooltipListenerController = new AbortController();
+    seekbarInput.addEventListener(
+      "mousemove",
+      (event) => {
+        const rect = seekbarInput.getBoundingClientRect();
+        const time = duration * ((event.clientX - rect.x) / rect.width);
+        const line = lyrics.find((l, i) => time >= l.start && time < l.end);
+        const language = languages[line?.lang];
+        tooltip.classList.toggle("active", !!language);
+        if (language) {
+          tooltip.textContent = language.name;
+          tooltip.style.setProperty("--color", language.color);
+        }
+        tooltip.style.top = rect.y - tooltip.offsetHeight + "px";
+        tooltip.style.left = event.pageX - tooltip.offsetWidth / 2 + "px";
+      },
+      { signal: seekbarTooltipListenerController.signal }
+    );
+    seekbarInput.addEventListener(
+      "mouseleave",
+      () => {
+        tooltip.classList.toggle("active", false);
+      },
+      { signal: seekbarTooltipListenerController.signal }
+    );
+  }
+
+  function calculateMultilinguality(stats) {
+    const counts = Object.entries(stats)
+      .filter(([code, num]) => code !== "eng" && num > 0)
+      .map(([, num]) => num);
+    const total = counts.reduce((a, b) => a + b, 0);
+    const probs = counts.map((n) => n / total);
+    const entropy = -probs.reduce((sum, p) => sum + p * Math.log2(p), 0);
+    const maxEntropy = Math.log2(counts.length);
+    const normalizedEntropy = maxEntropy > 0 ? entropy / maxEntropy : 0;
+    return counts.length + normalizedEntropy;
+  }
+
+  const loadYouTubeAPI = (() => {
+    let promise;
+    return () => {
+      if (!promise) {
+        promise = new Promise((resolve, reject) => {
+          window.onYouTubeIframeAPIReady = resolve;
+          const script = document.createElement("script");
+          script.src = "https://www.youtube.com/iframe_api";
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      return promise;
+    };
+  })();
+
+  const escapeHTML = (() => {
+    const element = document.createElement("div");
+    return (text) => {
+      element.textContent = text;
+      return element.innerHTML;
+    };
+  })();
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+</script>
