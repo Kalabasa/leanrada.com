@@ -154,10 +154,10 @@
 
   #player-container {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: calc(min(356px, 35.6vw));
-    height: calc(min(200px, 20vw));
+    top: calc(min(1rem, 1vmin));
+    right: calc(min(1rem, 1vmin));
+    width: calc(min(200px, 50vw));
+    height: calc(min(200px, 28vw));
     display: grid;
     place-content: center;
     border-radius: 1rem;
@@ -173,14 +173,16 @@
     &:hover {
       filter: saturate(1) sepia(0);
       opacity: 1;
+      z-index: 9999;
     }
   }
 
   #lyrics-container {
     position: absolute;
-    width: 14vw;
+    width: 16vw;
     grid-area: map;
     background: linear-gradient(to right, #240d18 40%, #240d1888);
+    pointer-events: none;
 
     @media (max-width: 1200px) {
       position: relative;
@@ -555,6 +557,7 @@
     closeButton.addEventListener("click", () => {
       currentPlayer?.destroy();
       playerContainer.replaceChildren();
+      lyricsContainer.replaceChildren();
       playingTitle.replaceChildren();
       document.title = appTitle;
       toggleHasSongSelectedClass(false);
@@ -592,6 +595,10 @@
         alert("Sharing not supported");
       }
     });
+  }
+
+  function isDesktopLayout() {
+    return window.innerWidth > 1200;
   }
 
   function loadSongs() {
@@ -801,16 +808,28 @@
             lyricsContainer.prepend(langTag);
 
             if (language.epicenters?.length) {
-              if (window.innerWidth > 1200) {
+              if (isDesktopLayout()) {
+                const mapView = map.app.view;
                 if (line.lang === "eng") {
                   const [left, top] = map.normToPx(41, 27);
                   lyricsContainer.style.left =
-                    map.app.view.offsetLeft + left + "px";
+                    clamp(
+                      mapView.offsetLeft + left,
+                      0,
+                      mapContainer.offsetLeft +
+                        mapContainer.offsetWidth -
+                        lyricsContainer.offsetWidth
+                    ) + "px";
                   lyricsContainer.style.top =
-                    map.app.view.offsetTop +
-                    top -
-                    lyricsContainer.offsetHeight / 2 +
-                    "px";
+                    clamp(
+                      mapView.offsetTop +
+                        top -
+                        lyricsContainer.offsetHeight / 2,
+                      0,
+                      mapContainer.offsetTop +
+                        mapContainer.offsetHeight -
+                        lyricsContainer.offsetHeight
+                    ) + "px";
                 } else {
                   const anchor = language.epicenters[0];
 
@@ -837,25 +856,42 @@
                   );
 
                   lyricsContainer.style.left =
-                    (side === "left"
-                      ? Math.max(
-                          20,
-                          map.app.view.offsetLeft +
-                            anchorX -
-                            lyricsContainer.offsetWidth
-                        )
-                      : Math.min(
-                          mainPane.offsetWidth -
-                            lyricsContainer.offsetWidth -
+                    clamp(
+                      side === "left"
+                        ? Math.max(
                             20,
-                          map.app.view.offsetLeft + anchorX + 40
-                        )) + "px";
+                            mapView.offsetLeft +
+                              anchorX -
+                              lyricsContainer.offsetWidth
+                          )
+                        : Math.min(
+                            mainPane.offsetWidth -
+                              lyricsContainer.offsetWidth -
+                              20,
+                            mapView.offsetLeft + anchorX + 40
+                          ),
+                      0,
+                      mapContainer.offsetLeft +
+                        mapContainer.offsetWidth -
+                        lyricsContainer.offsetWidth
+                    ) + "px";
                   lyricsContainer.style.top =
-                    map.app.view.offsetTop +
-                    anchorY -
-                    lyricsContainer.offsetHeight / 2 +
-                    "px";
+                    clamp(
+                      mapView.offsetTop +
+                        anchorY -
+                        lyricsContainer.offsetHeight / 2,
+                      0,
+                      mapContainer.offsetTop +
+                        mapContainer.offsetHeight -
+                        lyricsContainer.offsetHeight
+                    ) + "px";
                 }
+              } else if (
+                lyricsContainer.style.left ||
+                lyricsContainer.style.top
+              ) {
+                lyricsContainer.style.left = "";
+                lyricsContainer.style.top = "";
               }
 
               language.usageCount = (language.usageCount ?? -1) + 1;
@@ -877,7 +913,7 @@
                 spread: line.highlight
                   ? shockwaveDuration / 3000
                   : shockwaveDuration / 6000,
-                birth: Date.now() + birthOffset,
+                birth: line.start * 1000 + birthOffset,
               });
               if (line.highlight) {
                 for (const langCode of lyricsLangs) {
@@ -890,7 +926,7 @@
                     duration: Math.max(1500, duration * 1000),
                     spread: 4,
                     core: false,
-                    birth: Date.now(),
+                    birth: line.start * 1000,
                   });
                 }
               }
@@ -927,7 +963,7 @@
               strengthFactor *
               2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4),
             duration: durationFactor * 600,
-            birth: Date.now(),
+            birth: peak.t * 1000,
           });
         }
         relativePeakDb += (peak.d - relativePeakDb) * 0.5;
@@ -1081,25 +1117,42 @@
         mousePos.y = event.global.y;
       });
 
+      let time = 0;
+      let lastPlayerTime = 0;
+      let lastDateTime = 0;
       let swayStrength = 0;
       app.ticker.add(() => {
+        // Combine player time and date time into one `time` counter
+        const playerTime = (currentPlayer?.getCurrentTime() ?? 0) * 1000;
+        const dateNow = Date.now();
+        if (
+          currentPlayer &&
+          window.YT?.PlayerState != null &&
+          currentPlayer.getPlayerState() === YT.PlayerState.PLAYING
+        ) {
+          time += playerTime - lastPlayerTime;
+        } else {
+          time += dateNow - lastDateTime;
+        }
+        lastPlayerTime = playerTime;
+        lastDateTime = dateNow;
+
+        // Cleanup old effects (effect times are based on audio track time)
         for (let i = shockwaves.length - 1; i >= 0; i--) {
           const s = shockwaves[i];
-          if (Date.now() - s.birth > s.duration) {
+          if (playerTime - s.birth > s.duration) {
             shockwaves.splice(i, 1);
           }
         }
-
         for (let i = pulses.length - 1; i >= 0; i--) {
           const s = pulses[i];
-          if (Date.now() - s.birth > s.duration) {
+          if (playerTime - s.birth > s.duration) {
             pulses.splice(i, 1);
           }
         }
 
         const { margin, scale } = getMarginScale();
 
-        const now = Date.now();
         for (const g of cellContainer.children) {
           const baseSeed = Math.sin(g.x * 11.7748 + g.y * 70.8945) * 11407.8853;
           const baseRandom = baseSeed - Math.floor(baseSeed);
@@ -1115,7 +1168,7 @@
             (baseBrightness << 16) | (baseBrightness << 8) | baseBrightness;
           let alpha =
             0.1 +
-            Math.abs(Math.sin(now * 0.001 + baseRandom * Math.PI * 2)) * 0.2;
+            Math.abs(Math.sin(time * 0.001 + baseRandom * Math.PI * 2)) * 0.2;
 
           const baseRadius = 0.35;
           let radius = baseRadius;
@@ -1129,8 +1182,8 @@
           let radiusFactor = 1;
           for (let i = pulses.length - 1; i >= 0; i--) {
             const p = pulses[i];
-            const age = now - p.birth;
-            if (age > p.duration) continue;
+            const age = playerTime - p.birth;
+            if (age < 0 || age > p.duration) continue;
 
             const progress = age / p.duration;
             const pulseStrength = Math.min(
@@ -1155,7 +1208,9 @@
                       (1 +
                         0.2 *
                           Math.sin(
-                            now * (10 / p.duration) + g.x * -0.008 + g.y * 0.004
+                            time * (10 / p.duration) +
+                              g.x * -0.008 +
+                              g.y * 0.004
                           ))
                 );
               }
@@ -1178,8 +1233,8 @@
 
           for (let i = shockwaves.length - 1; i >= 0; i--) {
             const s = shockwaves[i];
-            const age = now - s.birth;
-            if (age > s.duration) continue;
+            const age = playerTime - s.birth;
+            if (age < 0 || age > s.duration) continue;
 
             const progress = age / s.duration;
             const waveRadius = progress ** 0.7 * shockwaveRadius * scale;
@@ -1207,11 +1262,13 @@
             const centerRandom = centerSeed - Math.floor(centerSeed);
             const epicenterComponent =
               (s.core === false ? 0 : 1) *
+              (isDesktopLayout() ? 1 : 1.5) *
               (1 - (Math.abs(dist) / (50 * scale)) ** 0.5) *
               (1 -
                 (Math.abs(progress - 0.05) / (progress < 0.05 ? 0.05 : 0.95)) **
                   1.5) *
-              (0.7 + Math.sin(now * 0.01 + centerRandom * Math.PI * 2) * 0.2);
+              (0.7 +
+                Math.sin(playerTime * 0.01 + centerRandom * Math.PI * 2) * 0.2);
 
             const shockwaveStrength = Math.min(
               1,
@@ -1230,19 +1287,19 @@
           swayStrength +=
             ((shockwaves.length ? 0.6 : 1.6) - swayStrength) * 0.00001;
           const swayX =
-            Math.sin(g.y * 0.02 + now * 0.0002) * swayStrength * scale;
+            Math.sin(g.y * 0.02 + time * 0.0002) * swayStrength * scale;
           const swayY =
-            Math.sin(g.x * 0.015 + now * -0.0003) * swayStrength * scale;
+            Math.sin(g.x * 0.015 + time * -0.0003) * swayStrength * scale;
 
           const shakeX =
             Math.sin(
-              g.x * (5.58 + Math.sin(now * 0.002)) + g.y * 6.14 + now * 0.001
+              g.x * (5.58 + Math.sin(time * 0.002)) + g.y * 6.14 + time * 0.001
             ) *
             shakeFactor *
             scale;
           const shakeY =
             Math.cos(
-              g.x * 9.55 + g.y * (4.89 + Math.cos(now * 0.003)) + now * 0.0015
+              g.x * 9.55 + g.y * (4.89 + Math.cos(time * 0.003)) + time * 0.0015
             ) *
             shakeFactor *
             scale;
@@ -1422,6 +1479,10 @@
       return element.innerHTML;
     };
   })();
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
 
   function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
