@@ -16,12 +16,12 @@
   body {
     display: grid;
     grid-template-columns: minmax(20rem, 1fr) 3fr;
-    grid-template-rows: 100vh;
+    grid-template-rows: 100svh;
     grid-template-areas: "side-pane main-pane";
 
     @media (max-width: 800px) {
-      grid-template-columns: 100vw;
-      grid-template-rows: 90vh min-content;
+      grid-template-columns: 100svw;
+      grid-template-rows: 90svh min-content;
       grid-template-areas: "main-pane" "side-pane";
     }
   }
@@ -161,10 +161,10 @@
 
   #player-container {
     position: absolute;
-    top: calc(min(1rem, 1vmin));
-    right: calc(min(1rem, 1vmin));
-    width: calc(min(200px, 50vw));
-    height: calc(min(200px, 28vw));
+    top: calc(min(1rem, 1svmin));
+    right: calc(min(1rem, 1svmin));
+    width: calc(min(200px, 50svw));
+    height: calc(min(200px, 28svw));
     display: grid;
     place-content: center;
     border-radius: 1rem;
@@ -186,7 +186,7 @@
 
   #lyrics-container {
     position: absolute;
-    width: 16vw;
+    width: 16svw;
     grid-area: map;
     background: linear-gradient(to right, #240d18 40%, #240d1888);
     pointer-events: none;
@@ -202,7 +202,7 @@
 
     lyric-line {
       --dark-lang-color: color-mix(in srgb, var(--lang-color, #fff) 60%, black);
-      font-size: calc(min(2.2em, 7vw));
+      font-size: calc(min(2.2em, 7svw));
       font-weight: bold;
       line-height: 85%;
       letter-spacing: -0.05em;
@@ -214,7 +214,7 @@
     }
 
     lang-tag {
-      font-size: calc(min(0.7em, 4vw));
+      font-size: calc(min(0.7em, 4svw));
       display: block;
       text-transform: uppercase;
       font-weight: bolder;
@@ -428,6 +428,8 @@
 
   const appTitle = document.title;
 
+  let cachedWindowWidth = window.innerWidth;
+
   let currentSortKey = null;
   let currentSortDir = "asc";
 
@@ -477,9 +479,11 @@
       songsPromise.then(() => {
         for (const button of songList.querySelectorAll("button")) {
           if ("#" + button.dataset.json === window.location.hash + ".json") {
-            button.scrollIntoView({
-              block: "center",
-            });
+            if (isDesktopLayout()) {
+              button.scrollIntoView({
+                block: "center",
+              });
+            }
             selectSong({
               json: button.dataset.json,
               artist: button.dataset.artist,
@@ -605,7 +609,7 @@
   }
 
   function isDesktopLayout() {
-    return window.innerWidth > 1200;
+    return cachedWindowWidth > 1200;
   }
 
   function loadSongs() {
@@ -785,13 +789,25 @@
 
     const lyricsLangs = new Set(lyrics.map((l) => l.lang));
 
+    const targetUpdateInterval = 1000 / 15;
+    let actualUpdateInterval = targetUpdateInterval;
+    let lastUpdateTime = performance.now();
     const intervalID = setInterval(() => {
-      if (!player.getIframe().isConnected) {
+      if (!player.getIframe()?.isConnected) {
         currentPlayer = null;
         clearInterval(intervalID);
         lyricsContainer.innerText = "";
         return;
       }
+
+      const performanceNow = performance.now();
+      actualUpdateInterval +=
+        (performanceNow - lastUpdateTime - actualUpdateInterval) * 0.1;
+      lastUpdateTime = performanceNow;
+      const performanceRate =
+        targetUpdateInterval /
+        Math.max(targetUpdateInterval, actualUpdateInterval);
+      console.log(performanceRate);
 
       const time = player.getCurrentTime();
       seekbar.style.setProperty("--seek", 100 * (time / player.getDuration()));
@@ -922,7 +938,8 @@
                   : shockwaveDuration / 6000,
                 birth: line.start * 1000 + birthOffset,
               });
-              if (line.highlight) {
+              // throttle effects based on performance
+              if (performanceRate > 0.7 && line.highlight) {
                 for (const langCode of lyricsLangs) {
                   const burstLang = languages[langCode];
                   if (!burstLang) continue;
@@ -948,35 +965,38 @@
       while (time + 0.08 >= peaks[nextPeakIndex]?.t) {
         const peak = peaks[nextPeakIndex];
         if (time - 0.1 < peak.t) {
-          let type = "strength";
-          let strengthFactor = 1;
-          let durationFactor = 1;
-          if (peak.f === "H") {
-            type = "color";
-            strengthFactor = 3;
-            durationFactor = 0.6;
-          } else if (peak.f === "M") {
-            type = "radius";
-            strengthFactor = 1.2;
-            durationFactor = 1;
-          } else if (peak.f === "L") {
-            type = "strength";
-            strengthFactor = 1;
-            durationFactor = 1.2;
+          const baseStrength =
+            2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4);
+          // throttle effects based on performance
+          if (baseStrength * 0.2 > 1 - performanceRate) {
+            let type = "strength";
+            let strengthFactor = 1;
+            let durationFactor = 1;
+            if (peak.f === "H") {
+              type = "color";
+              strengthFactor = 3;
+              durationFactor = 0.6;
+            } else if (peak.f === "M") {
+              type = "radius";
+              strengthFactor = 1.2;
+              durationFactor = 1;
+            } else if (peak.f === "L") {
+              type = "strength";
+              strengthFactor = 1;
+              durationFactor = 1.2;
+            }
+            pulses.push({
+              type,
+              strength: baseStrength * strengthFactor,
+              duration: durationFactor * 600,
+              birth: peak.t * 1000,
+            });
           }
-          pulses.push({
-            type,
-            strength:
-              strengthFactor *
-              2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4),
-            duration: durationFactor * 600,
-            birth: peak.t * 1000,
-          });
         }
         relativePeakDb += (peak.d - relativePeakDb) * 0.5;
         nextPeakIndex++;
       }
-    }, 50);
+    }, targetUpdateInterval);
   }
 
   function createStatsBar({ stats }) {
@@ -1113,6 +1133,7 @@
       const cellContainer = new PIXI.Container();
       app.stage.addChild(cellContainer);
 
+      const baseRadius = 0.35;
       drawMap();
       window.addEventListener("resize", () => drawMap());
 
@@ -1161,11 +1182,13 @@
         const { margin, scale } = getMarginScale();
 
         for (const g of cellContainer.children) {
-          const baseSeed = Math.sin(g.x * 11.7748 + g.y * 70.8945) * 11407.8853;
+          const baseSeed =
+            Math.sin(g.myOriginX * 11.7748 + g.myOriginY * 70.8945) *
+            11407.8853;
           const baseRandom = baseSeed - Math.floor(baseSeed);
 
-          const mouseDx = (mousePos.x - g.x) / scale;
-          const mouseDy = (mousePos.y - g.y) / scale;
+          const mouseDx = (mousePos.x - g.myOriginX) / scale;
+          const mouseDy = (mousePos.y - g.myOriginY) / scale;
           const mouseDist2 = mouseDx ** 2 + mouseDy ** 2;
 
           const baseBrightness =
@@ -1177,11 +1200,11 @@
             0.1 +
             Math.abs(Math.sin(time * 0.001 + baseRandom * Math.PI * 2)) * 0.2;
 
-          const baseRadius = 0.35;
           let radius = baseRadius;
 
           const colorSeed =
-            Math.sin(g.x * 83.1738 + g.y * 58.4075) * 21874.9651;
+            Math.sin(g.myOriginX * 83.1738 + g.myOriginY * 58.4075) *
+            21874.9651;
           const colorRandom = colorSeed - Math.floor(colorSeed);
 
           let epicenterFactor = 1;
@@ -1216,8 +1239,8 @@
                         0.2 *
                           Math.sin(
                             time * (10 / p.duration) +
-                              g.x * -0.008 +
-                              g.y * 0.004
+                              g.myOriginX * -0.008 +
+                              g.myOriginY * 0.004
                           ))
                 );
               }
@@ -1248,12 +1271,13 @@
 
             const sx = s.x * scale + margin;
             const sy = s.y * scale + margin;
-            const dx = g.x - sx;
-            const dy = g.y - sy;
+            const dx = g.myOriginX - sx;
+            const dy = g.myOriginY - sy;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             const waveSeed =
-              Math.sin(g.x * 12.9898 + g.y * 78.233) * 43758.5453;
+              Math.sin(g.myOriginX * 12.9898 + g.myOriginY * 78.233) *
+              43758.5453;
             const waveRandom = waveSeed - Math.floor(waveSeed);
             const waveOffset =
               (((waveRandom - 0.5) * (waveRandom - 0.5)) / 0.25 - 1) *
@@ -1265,7 +1289,8 @@
               (1 - progress ** 4);
 
             const centerSeed =
-              Math.sin(g.x * 57.7799 + g.y * 24.7107) * 51905.4873;
+              Math.sin(g.myOriginX * 57.7799 + g.myOriginY * 24.7107) *
+              51905.4873;
             const centerRandom = centerSeed - Math.floor(centerSeed);
             const epicenterComponent =
               (s.core === false ? 0 : 1) *
@@ -1294,19 +1319,25 @@
           swayStrength +=
             ((shockwaves.length ? 0.6 : 1.6) - swayStrength) * 0.00001;
           const swayX =
-            Math.sin(g.y * 0.02 + time * 0.0002) * swayStrength * scale;
+            Math.sin(g.myOriginY * 0.02 + time * 0.0002) * swayStrength * scale;
           const swayY =
-            Math.sin(g.x * 0.015 + time * -0.0003) * swayStrength * scale;
+            Math.sin(g.myOriginX * 0.015 + time * -0.0003) *
+            swayStrength *
+            scale;
 
           const shakeX =
             Math.sin(
-              g.x * (5.58 + Math.sin(time * 0.002)) + g.y * 6.14 + time * 0.001
+              g.myOriginX * (5.58 + Math.sin(time * 0.002)) +
+                g.myOriginY * 6.14 +
+                time * 0.001
             ) *
             shakeFactor *
             scale;
           const shakeY =
             Math.cos(
-              g.x * 9.55 + g.y * (4.89 + Math.cos(time * 0.003)) + time * 0.0015
+              g.myOriginX * 9.55 +
+                g.myOriginY * (4.89 + Math.cos(time * 0.003)) +
+                time * 0.0015
             ) *
             shakeFactor *
             scale;
@@ -1314,10 +1345,11 @@
           g.myOffsetX += (swayX - g.myOffsetX) * 0.1 + shakeX;
           g.myOffsetY += (swayY - g.myOffsetY) * 0.1 + shakeY;
 
-          g.clear();
-          g.beginFill(color, alpha);
-          g.drawCircle(g.myOffsetX, g.myOffsetY, radius * scale);
-          g.endFill();
+          g.x = g.myOriginX + g.myOffsetX;
+          g.y = g.myOriginY + g.myOffsetY;
+          g.scale.set(radius / baseRadius);
+          g.alpha = alpha;
+          g.tint = color;
         }
       });
 
@@ -1326,25 +1358,42 @@
       });
 
       function drawMap() {
+        // cache window size piggyback on drawMap
+        cachedWindowWidth = window.innerWidth;
+
+        let targetWidth, targetHeight;
         const maxWidth = mainPane.offsetWidth;
         const maxHeight = mainPane.offsetHeight;
         if (mapWidth / mapHeight > maxWidth / maxHeight) {
-          app.renderer.resize(maxWidth, maxWidth * (mapHeight / mapWidth));
+          targetWidth = Math.floor(maxWidth);
+          targetHeight = Math.floor(maxWidth * (mapHeight / mapWidth));
         } else {
-          app.renderer.resize(maxHeight * (mapWidth / mapHeight), maxHeight);
+          targetWidth = Math.floor(maxHeight * (mapWidth / mapHeight));
+          targetHeight = Math.floor(maxHeight);
         }
+
+        if (
+          app.renderer.width === targetWidth &&
+          app.renderer.height === targetHeight &&
+          cellContainer.children.length > 0
+        ) {
+          // no redraw needed
+          return;
+        }
+
+        app.renderer.resize(targetWidth, targetHeight);
 
         const { margin, scale } = getMarginScale();
 
         cellContainer.removeChildren();
         for (const [x, y] of hexmap) {
           const g = new PIXI.Graphics();
-          g.x = margin + x * scale;
-          g.y = margin + y * scale;
+          g.myOriginX = g.x = margin + x * scale;
+          g.myOriginY = g.y = margin + y * scale;
           g.myOffsetX = 0;
           g.myOffsetY = 0;
-          g.beginFill(0xffffff, 0.2);
-          g.drawCircle(0, 0, 0.4 * scale);
+          g.beginFill(0xffffff);
+          g.drawCircle(0, 0, baseRadius * scale);
           g.endFill();
           cellContainer.addChild(g);
         }
