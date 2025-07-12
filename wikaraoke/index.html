@@ -274,7 +274,7 @@
 
     .is-loading & {
       visibility: visible;
-      animation: loading-flash 2s linear infinite;
+      animation: loading-flash 1s linear infinite;
     }
 
     .has-song-selected & {
@@ -784,7 +784,7 @@
     toggleHasSongSelectedClass(true);
 
     let currentLine = null;
-    let nextPeakIndex = 0;
+    let currentPeakIndex = 0;
     let relativePeakDb = -6;
 
     const lyricsLangs = new Set(lyrics.map((l) => l.lang));
@@ -792,6 +792,7 @@
     const targetUpdateInterval = 1000 / 15;
     let actualUpdateInterval = targetUpdateInterval;
     let lastUpdateTime = performance.now();
+    let lastPlayerTime = skip ?? 0;
     const intervalID = setInterval(() => {
       if (!player.getIframe()?.isConnected) {
         currentPlayer = null;
@@ -961,40 +962,65 @@
         }
       }
 
-      while (time + 0.08 >= peaks[nextPeakIndex]?.t) {
-        const peak = peaks[nextPeakIndex];
-        if (time - 0.1 < peak.t) {
-          const baseStrength =
-            2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4);
-          // throttle effects based on performance
-          if (baseStrength * 0.2 > 1 - performanceRate) {
-            let type = "strength";
-            let strengthFactor = 1;
-            let durationFactor = 1;
-            if (peak.f === "H") {
-              type = "color";
-              strengthFactor = 3;
-              durationFactor = 0.6;
-            } else if (peak.f === "M") {
-              type = "radius";
-              strengthFactor = 1.2;
-              durationFactor = 1;
-            } else if (peak.f === "L") {
-              type = "strength";
-              strengthFactor = 1;
-              durationFactor = 1.2;
-            }
-            pulses.push({
-              type,
-              strength: baseStrength * strengthFactor,
-              duration: durationFactor * 600,
-              birth: peak.t * 1000,
-            });
-          }
-        }
+      const direction =
+        currentPeakIndex < 0
+          ? 1
+          : currentPeakIndex >= peaks.length
+          ? -1
+          : time >= peaks[currentPeakIndex].t
+          ? 1
+          : -1;
+      while (
+        peaks[currentPeakIndex + direction] &&
+        (peaks[currentPeakIndex + direction].t - targetUpdateInterval / 1000) *
+          direction <=
+          time * direction
+      ) {
+        currentPeakIndex += direction;
+        const peak = peaks[currentPeakIndex];
         relativePeakDb += (peak.d - relativePeakDb) * 0.5;
-        nextPeakIndex++;
+
+        if (
+          Math.max(lastPlayerTime, time - actualUpdateInterval / 500) >=
+            peak.t - targetUpdateInterval / 1000 ||
+          time < peak.t - targetUpdateInterval / 1000
+        ) {
+          continue;
+        }
+        console.log("peak", currentPeakIndex, peak.d);
+
+        const baseStrength =
+          2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4);
+
+        // throttle effects based on performance
+        if (baseStrength * 0.2 < 1 - performanceRate) continue;
+
+        let type = "strength";
+        let strengthFactor = 1;
+        let durationFactor = 1;
+        if (peak.f === "H") {
+          type = "color";
+          strengthFactor = 3;
+          durationFactor = 0.6;
+        } else if (peak.f === "M") {
+          type = "radius";
+          strengthFactor = 1.2;
+          durationFactor = 1;
+        } else if (peak.f === "L") {
+          type = "strength";
+          strengthFactor = 1;
+          durationFactor = 1.2;
+        }
+
+        pulses.push({
+          type,
+          strength: baseStrength * strengthFactor,
+          duration: durationFactor * 600,
+          birth: peak.t * 1000,
+        });
       }
+
+      lastPlayerTime = time;
     }, targetUpdateInterval);
   }
 

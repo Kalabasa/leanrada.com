@@ -29,7 +29,7 @@ def download_and_analyze(youtube_id, cache_dir='./cache'):
 
     return analyze_audio_peaks(wav_file)
 
-def analyze_audio_peaks(file_path, db_threshold=-18, prominence=8):
+def analyze_audio_peaks(file_path, db_threshold=-15, prominence=8):
     y, sr = librosa.load(file_path, sr=None)
     S = np.abs(librosa.stft(y, n_fft=2048, hop_length=512))
     freqs = librosa.fft_frequencies(sr=sr, n_fft=2048)
