@@ -475,7 +475,7 @@
     const songsPromise = loadSongs();
     const mapPromise = loadMap();
 
-    if (window.location.hash) {
+    if (window.location.hash.length > 1) {
       songsPromise.then(() => {
         for (const button of songList.querySelectorAll("button")) {
           if ("#" + button.dataset.json === window.location.hash + ".json") {
@@ -490,7 +490,6 @@
               title: button.dataset.title,
               mapPromise,
             });
-            break;
           }
         }
       });
@@ -570,9 +569,10 @@
       playerContainer.replaceChildren();
       lyricsContainer.replaceChildren();
       playingTitle.replaceChildren();
-      document.title = appTitle;
       toggleHasSongSelectedClass(false);
       sidePane.scrollIntoView({ behavior: "smooth" });
+      window.history.replaceState(null, "", "#");
+      document.title = appTitle;
     });
 
     pauseButton.addEventListener("click", () => {
