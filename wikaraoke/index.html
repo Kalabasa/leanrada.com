@@ -428,6 +428,8 @@
 
   const appTitle = document.title;
 
+  let cachedWindowWidth = window.innerWidth;
+
   let currentSortKey = null;
   let currentSortDir = "asc";
 
@@ -477,9 +479,11 @@
       songsPromise.then(() => {
         for (const button of songList.querySelectorAll("button")) {
           if ("#" + button.dataset.json === window.location.hash + ".json") {
-            button.scrollIntoView({
-              block: "center",
-            });
+            if (isDesktopLayout()) {
+              button.scrollIntoView({
+                block: "center",
+              });
+            }
             selectSong({
               json: button.dataset.json,
               artist: button.dataset.artist,
@@ -605,7 +609,7 @@
   }
 
   function isDesktopLayout() {
-    return window.innerWidth > 1200;
+    return cachedWindowWidth > 1200;
   }
 
   function loadSongs() {
@@ -785,13 +789,25 @@
 
     const lyricsLangs = new Set(lyrics.map((l) => l.lang));
 
+    const targetUpdateInterval = 1000 / 15;
+    let actualUpdateInterval = targetUpdateInterval;
+    let lastUpdateTime = performance.now();
     const intervalID = setInterval(() => {
-      if (!player.getIframe().isConnected) {
+      if (!player.getIframe()?.isConnected) {
         currentPlayer = null;
         clearInterval(intervalID);
         lyricsContainer.innerText = "";
         return;
       }
+
+      const performanceNow = performance.now();
+      actualUpdateInterval +=
+        (performanceNow - lastUpdateTime - actualUpdateInterval) * 0.1;
+      lastUpdateTime = performanceNow;
+      const performanceRate =
+        targetUpdateInterval /
+        Math.max(targetUpdateInterval, actualUpdateInterval);
+      console.log(performanceRate);
 
       const time = player.getCurrentTime();
       seekbar.style.setProperty("--seek", 100 * (time / player.getDuration()));
@@ -922,7 +938,8 @@
                   : shockwaveDuration / 6000,
                 birth: line.start * 1000 + birthOffset,
               });
-              if (line.highlight) {
+              // throttle effects based on performance
+              if (performanceRate > 0.7 && line.highlight) {
                 for (const langCode of lyricsLangs) {
                   const burstLang = languages[langCode];
                   if (!burstLang) continue;
@@ -948,35 +965,38 @@
       while (time + 0.08 >= peaks[nextPeakIndex]?.t) {
         const peak = peaks[nextPeakIndex];
         if (time - 0.1 < peak.t) {
-          let type = "strength";
-          let strengthFactor = 1;
-          let durationFactor = 1;
-          if (peak.f === "H") {
-            type = "color";
-            strengthFactor = 3;
-            durationFactor = 0.6;
-          } else if (peak.f === "M") {
-            type = "radius";
-            strengthFactor = 1.2;
-            durationFactor = 1;
-          } else if (peak.f === "L") {
-            type = "strength";
-            strengthFactor = 1;
-            durationFactor = 1.2;
+          const baseStrength =
+            2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4);
+          // throttle effects based on performance
+          if (baseStrength * 0.2 > 1 - performanceRate) {
+            let type = "strength";
+            let strengthFactor = 1;
+            let durationFactor = 1;
+            if (peak.f === "H") {
+              type = "color";
+              strengthFactor = 3;
+              durationFactor = 0.6;
+            } else if (peak.f === "M") {
+              type = "radius";
+              strengthFactor = 1.2;
+              durationFactor = 1;
+            } else if (peak.f === "L") {
+              type = "strength";
+              strengthFactor = 1;
+              durationFactor = 1.2;
+            }
+            pulses.push({
+              type,
+              strength: baseStrength * strengthFactor,
+              duration: durationFactor * 600,
+              birth: peak.t * 1000,
+            });
           }
-          pulses.push({
-            type,
-            strength:
-              strengthFactor *
-              2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4),
-            duration: durationFactor * 600,
-            birth: peak.t * 1000,
-          });
         }
         relativePeakDb += (peak.d - relativePeakDb) * 0.5;
         nextPeakIndex++;
       }
-    }, 1000 / 30);
+    }, targetUpdateInterval);
   }
 
   function createStatsBar({ stats }) {
@@ -1338,6 +1358,9 @@
       });
 
       function drawMap() {
+        // cache window size piggyback on drawMap
+        cachedWindowWidth = window.innerWidth;
+
         let targetWidth, targetHeight;
         const maxWidth = mainPane.offsetWidth;
         const maxHeight = mainPane.offsetHeight;
