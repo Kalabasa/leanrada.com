@@ -443,6 +443,11 @@
   let pulses = [];
 
   const languages = {
+    akl: {
+      name: "Akeanon",
+      color: "#FFBB34",
+      epicenters: [[34, 61]],
+    },
     ceb: {
       name: "Bisaya/Cebuano",
       color: "#ffcc00",
@@ -1026,7 +1031,7 @@
   function createStatsBar({ stats }) {
     if (!stats) return document.createElement("div");
 
-    const total = Object.values(stats).reduce((a, b) => a + Math.log(b), 0);
+    const total = Object.values(stats).reduce((a, b) => a + 1 + Math.log(b), 0);
     if (total === 0) return document.createElement("div");
 
     const container = document.createElement("stats-bar");
@@ -1040,7 +1045,7 @@
     }
 
     for (const langCode of langCodes) {
-      const weight = Math.log(stats[langCode]);
+      const weight = 1 + Math.log(stats[langCode]);
       if (!weight) continue;
 
       const widthPercent = (weight / total) * 100;
