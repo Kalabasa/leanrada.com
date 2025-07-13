@@ -445,18 +445,18 @@
   const languages = {
     akl: {
       name: "Akeanon",
-      color: "#FFBB34",
+      color: "#E62D36",
       epicenters: [[34, 61]],
     },
     ceb: {
       name: "Bisaya/Cebuano",
-      color: "#ffcc00",
+      color: "#FFCC00",
       epicenters: [
         [45, 69],
         [47, 77],
       ],
     },
-    ilo: { name: "Ilokano", color: "rgb(70 161 138)", epicenters: [[24, 17]] },
+    ilo: { name: "Ilokano", color: "#51D1BC", epicenters: [[24, 17]] },
     hil: {
       name: "Hiligaynon/Ilonggo",
       color: "#BA6CCE",
@@ -465,9 +465,9 @@
         [51, 91],
       ],
     },
-    bik: { name: "Bikol", color: "#13A6F5", epicenters: [[44, 44]] },
-    war: { name: "Waray-Waray", color: "#F2EB88", epicenters: [[53, 56]] },
-    pam: { name: "Kapampangan", color: "#8CD829", epicenters: [[24, 34]] },
+    bik: { name: "Bikol", color: "#30B7FF", epicenters: [[44, 44]] },
+    war: { name: "Waray-Waray", color: "#32AF00", epicenters: [[53, 56]] },
+    pam: { name: "Kapampangan", color: "#A1E04F", epicenters: [[24, 34]] },
     tsg: { name: "Bahasa Sug", color: "#1CB1B1", epicenters: [[25, 93]] },
     cbk: { name: "Chavacano", color: "#A759FF", epicenters: [[32, 87]] },
     tgl: { name: "Tagalog", color: "#F05252", epicenters: [[29, 39]] },
@@ -1078,24 +1078,35 @@
     const container = document.createElement("lyrics-timeline");
     container.style.display = "flex";
 
-    let currentTime = 0;
-    for (const segment of lyrics) {
-      const segDuration = segment.end - currentTime;
-      const widthPercent = (segDuration / duration) * 100;
-      currentTime = Math.min(segment.end, duration);
-
+    const appendRect = (widthPercent, color) => {
       const rect = document.createElement("div");
       rect.style.flex = `0 0 ${widthPercent}%`;
-      rect.style.backgroundColor = languages[segment.lang]?.color ?? "gray";
+      rect.style.backgroundColor = color;
       container.appendChild(rect);
+    };
+
+    let currentTime = 0;
+    for (const segment of lyrics) {
+      if (currentTime < segment.start) {
+        const skipPercent = ((segment.start - currentTime) / duration) * 100;
+        const lastColor =
+          container.lastElementChild?.style.backgroundColor ??
+          languages[segment.lang]?.color ??
+          "gray";
+        appendRect(skipPercent, lastColor);
+      }
+      const segDuration = segment.end - segment.start;
+      const widthPercent = (segDuration / duration) * 100;
+      const color = languages[segment.lang]?.color ?? "gray";
+      appendRect(widthPercent, color);
+      currentTime = Math.min(segment.end, duration);
     }
 
     if (currentTime < duration) {
-      const rect = document.createElement("div");
-      rect.style.flex = `0 0 ${((duration - currentTime) / duration) * 100}%`;
-      rect.style.backgroundColor =
-        container.lastElementChild.style.backgroundColor;
-      container.appendChild(rect);
+      const remainingPercent = ((duration - currentTime) / duration) * 100;
+      const lastColor =
+        container.lastElementChild?.style.backgroundColor ?? "gray";
+      appendRect(remainingPercent, lastColor);
     }
 
     return container;
@@ -1530,15 +1541,13 @@
   }
 
   function calculateMultilinguality(stats) {
-    const counts = Object.entries(stats)
-      .filter(([code, num]) => code !== "eng" && num > 0)
-      .map(([, num]) => num);
+    const counts = Object.entries(stats).map(([, num]) => num);
     const total = counts.reduce((a, b) => a + b, 0);
     const probs = counts.map((n) => n / total);
     const entropy = -probs.reduce((sum, p) => sum + p * Math.log2(p), 0);
     const maxEntropy = Math.log2(counts.length);
     const normalizedEntropy = maxEntropy > 0 ? entropy / maxEntropy : 0;
-    return counts.length + normalizedEntropy;
+    return counts.length * normalizedEntropy;
   }
 
   const loadYouTubeAPI = (() => {
