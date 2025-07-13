@@ -7,6 +7,190 @@
     <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title><![CDATA[Vibecoding Lima Gang, web-based map visualization]]></title>
+      <link><![CDATA[https://leanrada.com/notes/vibecoding-lima-gang/?ref=rss]]></link>
+      <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/vibecoding-lima-gang/?ref=rss]]></guid>
+      <pubDate>Fri, 13 Jun 2025 00:00:00 GMT</pubDate>
+      <description><![CDATA[
+<p>I made <strong><a href="https://kalabasa.github.io/lima/" target="_blank">Lima Gang</a></strong>, a map-based visualization, over a weekend using <strong>‘vibecoding’</strong>.</p>
+
+<img src="https://leanrada.com/notes/vibecoding-lima-gang/screenshot.png?ref=rss" alt="Screenshot" loading="lazy" width="2800" height="1400">
+
+<h2>Lima what?</h2>
+
+<p><strong><i>lima</i></strong> means <em>five</em> in several languages particularly in island nations in Southeast Asia and the Pacific. These are part of the Austronesian language family that spans several seas from Madagascar to Indonesia, to Taiwan, to Hawaii.</p>
+
+<figure>
+  <img src="https://leanrada.com/notes/vibecoding-lima-gang/austronesian.png?ref=rss" loading="lazy" width="960" height="388">
+  <figcaption>Extent of Austronesian peoples. They must’ve been good with boats. Source: <a href="https://commons.wikimedia.org/wiki/File:Chronological_dispersal_of_Austronesian_people_across_the_Pacific.svg" target="_blank">Wikimedia</a></figcaption>
+</figure>
+
+<p>The <strong>Lima Gang</strong> is a meme based on the fact that the word <i>lima</i> seemed to have survived intact, echoed in various tongues, and now somehow uniting people across vast oceans.</p>
+
+<p>This is more than a meme, Unicode even gave recognition to the Lima Gang by including its gang sign as an official emoji: 🖐🏽</p>
+
+<p>Jokes aside, I’m posting this to share a vibecoding experience.</p>
+
+<h2>Vibecoding</h2>
+
+<p>This small one-off app that I knew almost exactly how to make is a perfect case for some <a href="https://en.wikipedia.org/wiki/Vibe_coding" target="_blank">vibecoding</a> practice. My initial thoughts were, it was going to be mostly boilerplate HTML code, some standard map UI code, and some standard visualization code. There are hundreds of map visualization web pages just like this, nothing too novel here. I used ChatGPT to generate about 80-90% of the code.</p>
+
+<p>First, I had it generate the basic UI. It gave me a basic Leaflet-based map.</p>
+
+<figure>
+  <img src="https://leanrada.com/notes/vibecoding-lima-gang/basic-ui.png?ref=rss" loading="lazy" width="800" height="400">
+  <figcaption>Basic Leaflet map.</figcaption>
+</figure>
+
+<p>It’s good to start with the basics. From my brief experience, it’s better to implement small chunks at a time than bigger integrated pieces.</p>
+
+<p>I didn’t like the look of OpenStreetMap, and I know <a href="https://carto.com/basemaps" target="_blank">Carto</a> has some nice-looking maps, so I asked ChatGPT to switch to Carto.</p>
+
+<p>I remember having to manually tweak the tile layer API URL to get the specific style that I wanted: <code>{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png</code>. This was the first time I looked into any documentation for the components that I was using.</p>
+
+<img src="https://leanrada.com/notes/vibecoding-lima-gang/carto.png?ref=rss" alt="Carto base map" loading="lazy" width="800" height="400">
+
+<p>Skipping the friction of going through documentation to get started with an API or a library was great for building up momentum at the start of a project, and I think LLMs are good with that initial scaffolding, but looking up documentaton is still necessary at some point.</p>
+
+<h2>Getting the data</h2>
+
+<p>The main source of data is <a href="https://en.wiktionary.org/wiki/lima" target="_blank">this Wiktionary entry on <strong>‘lima’</strong></a>.</p>
+
+<p>I asked ChatGPT to create a script that scrapes this page. It should look for all entries where ‘lima’ means ‘five’, and list the corresponding languages in JSON format. A couple of iterations later, it gave me a Python script that uses the Wiktionary REST API.</p>
+<code><pre># ...
+url = "https://en.wiktionary.org/api/rest_v1/page/definition/lima"
+response = requests.get(url)
+data = response.json()
+
+language_map = {}
+
+for section, entries in data.items():
+    for entry in entries:
+        language = entry["language"]
+        entry_definition_htmls = entry.get("definitions", [])
+        entry_definitions = {extract_definition(d.get("definition", "")) for d in entry_definition_htmls}
+        entry_definitions.discard(None)
+
+        if language not in language_map:
+            language_map[language] = {"name": language, "definitions": set()}
+
+        language_map[language]["definitions"].update(entry_definitions)
+# ...</pre></code>
+<p>Again, not having to look these APIs up was a great time-saver. And I don’t usually code in Python, so it would’ve taken me time to review sets and list comprehensions otherwise.</p>
+
+<p>I did have to go into the REST API and the Python code because of increasingly complex requirements, like getting secondary meanings, and massaging the data. ChatGPT wasn’t really able to dive in and iterate on these more complex requirements.</p>
+
+<p>In the end I got this JSON file, the list of languages where ‘lima’ means 5:</p>
+<code><pre>[
+  { "name": "Agutaynen" },
+  { "name": "Bariai" },
+  { "name": "Cia-Cia",
+    "otherMeanings": ["hand"] },
+  { "name": "Dibabawon Manobo" },
+  { "name": "East Futuna" },
+  { "name": "Gela" },
+  { "name": "Hiligaynon",
+    "otherMeanings": ["hand", "handle", "lime"] },
+  // ...
+]</pre></code>
+<p>I still needed to map this data geographically, so I asked ChatGPT to assign geographic IDs for the purpose of rendering these on the map. It’s basically a fill-in-the-blank exercise for ChatGPT. I think even spreadsheet apps have this kind of AI autocomplete now.</p>
+<prose-table>
+  <table>
+    <tbody><tr>
+      <th>Language
+      </th><th>Geo code
+    </th></tr><tr>
+      <td>Agutaynen
+      </td><td><strong>PHL</strong> [<em>Philippines</em>]
+    </td></tr><tr>
+      <td>Bariai
+      </td><td><strong>PNG</strong> [<em>Papua New Guinea</em>]
+    </td></tr><tr>
+      <td>Cia-Cia
+      </td><td><strong>IDN</strong> [<em>Indonesia</em>]
+    </td></tr><tr>
+      <td>Dibabawon Manobo
+      </td><td>?
+    </td></tr><tr>
+      <td>East Futuna
+      </td><td>
+    </td></tr><tr>
+      <td>Gela
+      </td><td>
+    </td></tr><tr>
+      <td>Hiligaynon
+      </td><td>
+  </td></tr></tbody></table>
+</prose-table>
+<p>This is where I leaned a bit into the vibecoding vibes, because I have no scalable way to verify this data. I can verify code and logic, but I’m no linguist. I relied on ChatGPT’s knowledge and/or search capabilities to map the languages to where they are spoken.</p>
+
+<p>To instill some confidence, I created a new thread and asked it to ‘fact-check’ the data it generated in a previous instance.</p>
+
+<img src="https://leanrada.com/notes/vibecoding-lima-gang/fact-check-query.png?ref=rss" alt="Screenshot telling ChatGPT to fact-check the JSON" loading="lazy" width="640" height="209">
+
+<p>Of course, it proceeded to ignore my second instruction in its very first bullet point, but it actually gave me a good number of issues to double-check. The <a href="https://www.ethnologue.com/language/khl/" target="_blank">Lusi</a> issue was hallucinated, but the rest seemed reasonable.</p>
+
+<img src="https://leanrada.com/notes/vibecoding-lima-gang/fact-check-answer.png?ref=rss" alt="Incorrect or questionable entries:
+
+    Brunei Malay — GeoCode should be 'BRN' (correct).
+
+    Lusi — No known language 'Lusi' in PNG; likely incorrect or misspelled.
+
+    Muduapa — No known language by this name in Indonesia.
+
+    Papora — Extinct Taiwanese language, but rarely used; valid but obscure.
+
+    Old Javanese — Historical language, not currently spoken; 'IDN' is reasonable.
+
+    Hawaiian — GeoCode 'HI' is U.S. state code, not ISO 3166-1 alpha-3. Should be 'USA'.
+
+    Tokelauan — GeoCode 'TKL' is not ISO 3166-1 alpha-3 (correct ISO code is 'TKL' for Tokelau but it's an exception; often 'TKL' is not officially ISO-3)." loading="lazy" width="865" height="358">
+
+<p>The Hawaiian and Tokelauan cases were actually good points to raise, and I had to add special handling for those later.</p>
+<box-note>
+  <p>I think a safer way to go about it is to use the LLM to map the language name to language code, then use a database to lookup country codes from language codes.</p>
+  <p>This way the LLM would just be doing a syntactic transformation, which it should be good at, leaving the accuracy-sensitive job of identifying the appropriate country to a deterministic database lookup.</p>
+  <p>Maybe there’d be no need for an LLM at all if I got the language code from the initial Wiktionary scrape in the first place. 🤔</p>
+</box-note>
+<p>I also asked ChatGPT to fetch GeoJSON data needed to render these geographic areas on the map. It hallucinated some GeoJSON datasets like <code>raw.githubusercontent.com/david/world/b1b8704/data/country.geojson</code>. In the end, I had to search for some of the GeoJSON data myself.</p>
+
+<figure>
+  <img src="https://leanrada.com/notes/vibecoding-lima-gang/geojson.png?ref=rss" loading="lazy" width="800" height="400">
+  <figcaption>Map with GeoJSON layer highlighting the identified areas.</figcaption>
+</figure>
+
+<p>There were a few special cases regarding geographic areas as hinted at earlier. These are the state of Hawaii and some territories of New Zealand. These aren’t countries themselves, and it didn’t make sense to highlight the whole USA to represent the Hawaiian language, or all of New Zealand for the Tokelauan language.</p>
+
+<p>ChatGPT didn’t like that I was using both countries and states and territories in the same dataset. I had to implement these special cases mostly manually, only giving really small isolated instructions to ChatGPT.</p>
+
+<h2>Interactivity</h2>
+
+<p>I asked it to generate popups on hover per geographic area to show the data in more detail. It added code using Leaflet tooltips. Another cool API I didn’t know beforehand. Overall pretty straightforward.</p>
+
+<figure>
+  <img src="https://leanrada.com/notes/vibecoding-lima-gang/tooltips.png?ref=rss" loading="lazy" width="800" height="400">
+  <figcaption>Map tooltips on hover.</figcaption>
+</figure>
+
+<p>That’s most of it. I did the CSS polishing bits and mobile responsiveness. I don’t feel like ChatGPT would have an <em>eye</em> for this as a <em>language</em> model. Maybe it’s multimodal now, but I still don’t trust it for visual things.</p>
+<box-note>In the end, what happened wasn’t technically pure vibecoding as in the original definition. It started out that way, but I saw some pretty wrong code and and took the wheel at some point. Unfortunately I don’t possess the blissful gift of ignorance.</box-note>
+<h2>Opinions</h2>
+
+<p>From this experience, I can say that ChatGPT (or LLMs in general?) can get you started on tiny apps really quickly. That initial phase of writing boilerplate, finding the right libraries, and setting it all up can be automated away. But, it’s still not quite reliable enough to go bigger or deeper without proper direction. I don’t think this is a groundbreaking observation, many others have noted similar strengths and weaknesses of LLMs for coding.</p>
+
+<p>To be fair, I didn’t use Cursor or any kind of coding agent. I have some experience with Cursor at work, and while it is significanly more capable than the general chat interface, still I doubt it could create the whole app in a single ask. It likely would require the same directed iteration in chunks as with a general chat interface, just maybe faster and in slightly bigger chunks.</p>
+
+<p>I think for successful AI-assisted coding, you must have some kind of an implementation plan in mind, a breakdown of components and subcomponents to implement and integrate (just like in real life). In my case, I didn’t really have an explicit plan, but I had a sense of which bite-sized chunks to implement and iterate on.</p>
+
+<p>I’ve seen some practices where the agent generates that plan itself, and iterates on it in small chunks. Like making a todo list for itself then completing that. I think that would actually go further, and with less supervision. But you still have to review and know what it’s doing at any point so you can course-correct in case it goes off track, which happens often.</p>
+
+<p>In conclusion: I guess you have to know what you’re doing.</p>
+
+<p></p>
+]]></description>
+    </item>
+
+    <item>
       <title><![CDATA[My own RSS reader]]></title>
       <link><![CDATA[https://leanrada.com/notes/my-own-rss-reader/?ref=rss]]></link>
       <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/my-own-rss-reader/?ref=rss]]></guid>
@@ -3574,43 +3758,125 @@ Alternative text: Lily58 keyboard layout diagram
             <guid isPermaLink="true">https://leanrada.com/wares/guhit-kudlit?ref=rss</guid>
             <pubDate>Mon, 30 Oct 2023 00:00:00 GMT</pubDate>
         </item>
-        <item>
-            <title><![CDATA[Debug CSS boxes with this bookmarklet]]></title>
-            <description><![CDATA[
-<p>Here’s a quick &amp; simple way to show all element bounds on a page.</p>
 
-<pre><code><span>javascript</span><span>:</span><span>(</span>a<span>=</span><span>(</span>d<span>=</span>document<span>)</span><span>.</span><span>createElement</span><span>(</span><span>'style'</span><span>)</span><span>)</span><span>.</span>innerHTML<span>=</span><span>'*{outline:solid 1px red}'</span><span>;</span>d<span>.</span>head<span>.</span><span>append</span><span>(</span>a<span>)</span></code></pre>
+    
 
-<p>The bookmarklet: <a target="_self" href="https://leanrada.com/notes/debug-css-boxes-bookmarklet/javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:solid 1px red}';d.head.append(a)?ref=rss"><strong>▤outlinify</strong></a></p>
+    
 
-<img srcset="" sizes="" spec="100% [800) 70% [1750) 1225" loading="lazy" width="400%" src="https://leanrada.com/notes/debug-css-boxes-bookmarklet/example.png?ref=rss" media-class="u-media" type="bleed" caption="Example result on threads.net" alt="example of a website with element outlines visible">
-<span>Example result on threads.net</span>
-<p>Not sure how to use it? Save or <em>drag</em> the following link into your bookmarks:</p>
-<a target="_self" tag="aa" href="https://leanrada.com/notes/debug-css-boxes-bookmarklet/javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:solid 1px red}';d.head.append(a)?ref=rss">
-                ▤outlinify
-              </a>☝
-<video muted="" autoplay="" loop="" playsinline="" aria-label="video of dragging the bookmarklet into the bookmarks bar" type="windowed" alt="video of dragging the bookmarklet into the bookmarks bar" data-src="/notes/debug-css-boxes-bookmarklet/drag.web.mp4">
-                  <source src="https://leanrada.com/notes/debug-css-boxes-bookmarklet/drag.web.mp4?ref=rss">
+    
 
-                  Video: video of dragging the bookmarklet into the bookmarks bar | Source: /notes/debug-css-boxes-bookmarklet/drag.web.mp4
+    
 
-                </video>
+    
 
-<p>If you prefer different styles:</p>
+    
 
-<ul>
-              <li>Dashed: <a target="_self" tag="aa" href="https://leanrada.com/notes/debug-css-boxes-bookmarklet/javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:dashed 1px red}';d.head.append(a)?ref=rss">
-                  ▤outlinify
-                </a></li>
-              <li>Dotted: <a target="_self" tag="aa" href="https://leanrada.com/notes/debug-css-boxes-bookmarklet/javascript:(a=(d=document).createElement('style')).innerHTML='*{outline:dotted 1px red}';d.head.append(a)?ref=rss">
-                  ▤outlinify
-                </a></li>
-            </ul>
-]]></description>
-            <link>https://leanrada.com/notes/debug-css-boxes-bookmarklet?ref=rss</link>
-            <guid isPermaLink="true">https://leanrada.com/notes/debug-css-boxes-bookmarklet?ref=rss</guid>
-            <pubDate>Sun, 15 Oct 2023 00:00:00 GMT</pubDate>
-        </item>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 
