@@ -230,9 +230,11 @@
     grid-area: map;
     background: linear-gradient(to right, #240d18 40%, #240d1888);
     pointer-events: none;
+    font-size: calc(min(2.4em, calc(3.2svw - 0.4rem)));
 
     .fullscreen & {
-      width: 22vw;
+      width: 24vw;
+      font-size: calc(min(3.6em, 3.6svw));
     }
 
     @media (max-width: 960px) {
@@ -242,11 +244,12 @@
       width: auto;
       min-height: 3em;
       margin: 0 1em;
+      font-size: 2.2em;
     }
 
     lyric-line {
       --dark-lang-color: color-mix(in srgb, var(--lang-color, #fff) 60%, black);
-      font-size: calc(min(2.2em, 7svw));
+      display: block;
       font-weight: bold;
       line-height: 85%;
       letter-spacing: -0.05em;
@@ -254,11 +257,12 @@
       background: var(--lang-color, #fff);
       background-clip: text;
       animation: lyric-fill var(--duration, 2s) linear forwards;
-      padding-bottom: 0.33em;
+      padding-bottom: 0.17em;
+      hyphens: auto;
     }
 
     lang-tag {
-      font-size: calc(min(0.7em, 4svw));
+      font-size: 0.5em;
       display: block;
       text-transform: uppercase;
       font-weight: bolder;
@@ -869,7 +873,8 @@
           const duration = Math.min(line.end - line.start, 8);
 
           const lyricLine = document.createElement("lyric-line");
-          lyricLine.innerText = line.text;
+          lyricLine.lang = line.lang;
+          lyricLine.innerHTML = hyphenate(escapeHTML(line.text), line.lang);
           lyricLine.style.setProperty("--duration", duration + "s");
           lyricsContainer.replaceChildren(lyricLine);
 
@@ -1071,6 +1076,17 @@
 
       lastPlayerTime = time;
     }, targetUpdateInterval);
+  }
+
+  function hyphenate(str, lang) {
+    return lang === "eng"
+      ? str
+      : str.replace(/\w{9,}/g, (word) =>
+          word.replace(
+            /(?<=[a-z])([bcdfhjklmnpqrtvwxz]|(?<!n)g|ng|(?<!t)s|ts|(?<!t)y|ty|(?<!s)y|sy)([aeiou])/gi,
+            "&shy;$1$2"
+          )
+        );
   }
 
   function createStatsBar({ stats }) {
