@@ -19,7 +19,7 @@
     grid-template-rows: 100svh;
     grid-template-areas: "side-pane main-pane";
 
-    @media (max-width: 800px) {
+    @media (max-width: 960px) {
       grid-template-columns: 100svw;
       grid-template-rows: 90svh min-content;
       grid-template-areas: "main-pane" "side-pane";
@@ -47,7 +47,7 @@
       height: 2rem;
       margin: 0 1rem;
 
-      @media (max-width: 800px) {
+      @media (max-width: 960px) {
         height: 1.5rem;
       }
 
@@ -235,15 +235,13 @@
       width: 22vw;
     }
 
-    @media (max-width: 1200px) {
-      body:not(.fullscreen) & {
-        position: relative;
-        grid-area: lyrics;
-        place-self: center;
-        width: auto;
-        min-height: 3em;
-        margin: 0 1em;
-      }
+    @media (max-width: 960px) {
+      position: relative;
+      grid-area: lyrics;
+      place-self: center;
+      width: auto;
+      min-height: 3em;
+      margin: 0 1em;
     }
 
     lyric-line {
@@ -976,8 +974,8 @@
                 ];
               const shockwaveDuration =
                 line.lang === "eng"
-                  ? duration * 1000 + 1000
-                  : duration * 1500 + 1500;
+                  ? duration * 1000 + 500
+                  : duration * 1414 + 500;
               const birthOffset =
                 line.lang === "eng" ? shockwaveDuration * -0.2 : 0;
               shockwaves.push({
@@ -1182,12 +1180,20 @@
       let maxX = -Infinity;
       let minY = Infinity;
       let maxY = -Infinity;
+      let sumX = 0;
       for (const [x, y] of hexmap) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
         if (y > maxY) maxY = y;
+        sumX += x;
       }
+
+      const initialWidth = maxX - minX;
+      const centerOfMassX = sumX / hexmap.length;
+      minX = Math.min(minX, centerOfMassX - initialWidth / 2);
+      maxX = Math.max(maxX, centerOfMassX + initialWidth / 2);
+
       const mapWidth = maxX - minX;
       const mapHeight = maxY - minY;
 
@@ -1455,7 +1461,7 @@
 
       function drawMap() {
         let targetWidth, targetHeight;
-        const maxWidth = mainPane.offsetWidth * (isDesktopLayout() ? 0.8 : 1);
+        const maxWidth = mainPane.offsetWidth * (isDesktopLayout() ? 0.9 : 1);
         const maxHeight = mainPane.offsetHeight;
         if (mapWidth / mapHeight > maxWidth / maxHeight) {
           targetWidth = Math.floor(maxWidth);
