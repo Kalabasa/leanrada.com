@@ -24,6 +24,12 @@
       grid-template-rows: 90svh min-content;
       grid-template-areas: "main-pane" "side-pane";
     }
+
+    &.fullscreen {
+      grid-template-columns: 100vw;
+      grid-template-rows: 100vh;
+      grid-template-areas: "main-pane";
+    }
   }
 
   .side-pane {
@@ -35,7 +41,7 @@
     padding-top: 1rem;
     gap: 0.5rem;
 
-    img {
+    .logo {
       align-self: start;
       width: auto;
       height: 2rem;
@@ -44,12 +50,21 @@
       @media (max-width: 800px) {
         height: 1.5rem;
       }
+
+      .fullscreen & {
+        visibility: visible;
+      }
     }
 
     p {
       font-size: 1rem;
       margin: 0 1rem;
       opacity: 0.6;
+    }
+
+    .fullscreen & {
+      position: absolute;
+      visibility: hidden;
     }
   }
 
@@ -198,6 +213,10 @@
       opacity: 0.3;
     }
 
+    .fullscreen & {
+      opacity: 0;
+    }
+
     &:hover {
       filter: saturate(1) sepia(0);
       opacity: 1;
@@ -212,13 +231,19 @@
     background: linear-gradient(to right, #240d18 40%, #240d1888);
     pointer-events: none;
 
+    .fullscreen & {
+      width: 22vw;
+    }
+
     @media (max-width: 1200px) {
-      position: relative;
-      grid-area: lyrics;
-      place-self: center;
-      width: auto;
-      min-height: 3em;
-      margin: 0 1em;
+      body:not(.fullscreen) & {
+        position: relative;
+        grid-area: lyrics;
+        place-self: center;
+        width: auto;
+        min-height: 3em;
+        margin: 0 1em;
+      }
     }
 
     lyric-line {
@@ -346,6 +371,10 @@
         opacity: 0;
       }
     }
+
+    .fullscreen & {
+      display: none;
+    }
   }
 
   #tooltip {
@@ -449,7 +478,7 @@
 
   const appTitle = document.title;
 
-  let cachedWindowWidth = window.innerWidth;
+  let cachedIsDesktopLayout = null;
 
   let currentSortKey = null;
   let currentSortDir = "asc";
@@ -462,6 +491,9 @@
   const shockwaveRadius = 111;
   let shockwaves = [];
   let pulses = [];
+
+  const fullscreen = window.location.search.includes("fullscreen");
+  document.body.classList.toggle("fullscreen", fullscreen);
 
   const languages = {
     akl: {
@@ -634,7 +666,11 @@
   }
 
   function isDesktopLayout() {
-    return cachedWindowWidth > 1200;
+    if (cachedIsDesktopLayout == null) {
+      console.log(sidePane.offsetLeft, mainPane.offsetLeft);
+      cachedIsDesktopLayout = sidePane.offsetTop === mainPane.offsetTop;
+    }
+    return cachedIsDesktopLayout;
   }
 
   function loadSongs() {
@@ -1190,15 +1226,20 @@
 
       const baseRadius = 0.35;
       drawMap();
-      window.addEventListener("resize", () => drawMap());
+      window.addEventListener("resize", () => {
+        cachedIsDesktopLayout = null;
+        drawMap();
+      });
 
       const mousePos = { x: 0, y: 0 };
-      app.stage.eventMode = "static";
-      app.stage.hitArea = app.screen;
-      app.stage.on("mousemove", (event) => {
-        mousePos.x = event.global.x;
-        mousePos.y = event.global.y;
-      });
+      if (!fullscreen) {
+        app.stage.eventMode = "static";
+        app.stage.hitArea = app.screen;
+        app.stage.on("mousemove", (event) => {
+          mousePos.x = event.global.x;
+          mousePos.y = event.global.y;
+        });
+      }
 
       let time = 0;
       let lastPlayerTime = 0;
@@ -1413,11 +1454,8 @@
       });
 
       function drawMap() {
-        // cache window size piggyback on drawMap
-        cachedWindowWidth = window.innerWidth;
-
         let targetWidth, targetHeight;
-        const maxWidth = mainPane.offsetWidth;
+        const maxWidth = mainPane.offsetWidth * (isDesktopLayout() ? 0.8 : 1);
         const maxHeight = mainPane.offsetHeight;
         if (mapWidth / mapHeight > maxWidth / maxHeight) {
           targetWidth = Math.floor(maxWidth);
