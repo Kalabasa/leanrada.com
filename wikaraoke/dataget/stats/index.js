@@ -8,13 +8,53 @@ for (const entry of master) {
   const jsonPath = path.join(path.dirname(masterPath), entry.json);
   const data = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
 
-  const stats = {};
+  const totalWordsPerLang = {};
+  const uniqueWordsPerLang = {};
+
   for (const line of data.lyrics ?? []) {
     if (!line.lang) continue;
-    stats[line.lang] = (stats[line.lang] ?? 0) + 1;
+    const words = line.text.split(" ");
+    totalWordsPerLang[line.lang] =
+      (totalWordsPerLang[line.lang] ?? 0) + words.length;
+    for (const word of words) {
+      const normalised = word.replaceAll(/\W/g, "").toLowerCase();
+
+      // skip non-speech
+      if (normalised.match(/\b(y?(ea|a|o|u)+h)+\b/)) {
+        continue;
+      }
+
+      (
+        uniqueWordsPerLang[line.lang] ??
+        (uniqueWordsPerLang[line.lang] = new Set())
+      ).add(normalised);
+    }
   }
 
-  entry.stats = stats;
+  const uniqueCounts = {};
+  for (const lang in uniqueWordsPerLang) {
+    uniqueCounts[lang] = uniqueWordsPerLang[lang].size;
+  }
+
+  delete entry.multilingualism;
+  entry.multilingualism = calculateMultilingualism(uniqueCounts);
+
+  delete entry.multilingualismNonEng;
+  delete uniqueCounts.eng;
+  entry.multilingualismNonEng = calculateMultilingualism(uniqueCounts);
+
+  delete entry.stats;
+  entry.stats = totalWordsPerLang;
+}
+
+function calculateMultilingualism(stats) {
+  const counts = Object.values(stats);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const probs = counts.map((n) => n / total);
+  const entropy = -probs.reduce((sum, p) => sum + p * Math.log2(p), 0);
+  const maxEntropy = Math.log2(counts.length);
+  const normalizedEntropy = maxEntropy > 0 ? entropy / maxEntropy : 0;
+  return Math.round(counts.length * normalizedEntropy * 1000) / 1000;
 }
 
 fs.writeFileSync(masterPath, JSON.stringify(master, null, 2));

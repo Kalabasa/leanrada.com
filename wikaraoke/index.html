@@ -47,7 +47,6 @@
     }
 
     p {
-      font-weight: bold;
       font-size: 1rem;
       margin: 0 1rem;
       opacity: 0.6;
@@ -96,10 +95,32 @@
 
     button {
       display: grid;
-      gap: 1rem;
-      grid-template-rows: 1fr 0.25rem;
+      grid-template-rows: min-content min-content;
+      grid-template-columns: 1fr 2fr;
+      grid-template-areas:
+        "title title"
+        "artist stats";
+      gap: 0.25rem;
+      flex-direction: column;
+      padding: 1rem;
+      font-weight: bold;
+
+      .song-title {
+        grid-area: title;
+      }
+
+      .song-artist {
+        grid-area: artist;
+        opacity: 0.6;
+        font-size: 80%;
+        margin-bottom: -0.18rem;
+      }
 
       stats-bar {
+        grid-area: stats;
+        height: 0.25rem;
+        align-self: flex-end;
+
         :first-child {
           border-bottom-left-radius: 1rem;
           border-top-left-radius: 1rem;
@@ -375,7 +396,7 @@
     <button data-sort="title">Title</button>
     <button data-sort="artist">Artist</button>
     <button data-sort="popularity">Popularity</button>
-    <button data-sort="multilinguality">Multilinguality</button>
+    <button data-sort="multilingualism">Multilingualism</button>
   </div>
   <div id="song-list">Loading&hellip;</div>
 </div>
@@ -525,7 +546,7 @@
       } else {
         currentSortKey = key;
         currentSortDir =
-          key === "popularity" || key === "multilinguality" ? "desc" : "asc";
+          key === "popularity" || key === "multilingualism" ? "desc" : "asc";
       }
 
       const sortButtons = sortControls.querySelectorAll("button");
@@ -540,7 +561,7 @@
         let valA = a.dataset[key];
         let valB = b.dataset[key];
 
-        if (key === "popularity" || key === "multilinguality") {
+        if (key === "popularity" || key === "multilingualism") {
           valA = parseFloat(valA);
           valB = parseFloat(valB);
           return currentSortDir === "asc" ? valA - valB : valB - valA;
@@ -552,7 +573,6 @@
       });
 
       songButtons.forEach((button) => {
-        renderSongLabel(button, currentSortKey);
         songList.appendChild(button);
       });
     });
@@ -628,12 +648,17 @@
           button.dataset.artist = song.artist;
           button.dataset.title = song.title;
           button.dataset.popularity = song.spotifyPopularity;
-          button.dataset.multilinguality = calculateMultilinguality(song.stats);
+          button.dataset.multilingualism = song.multilingualism;
 
-          const label = document.createElement("span");
-          label.className = "song-label";
-          button.appendChild(label);
-          renderSongLabel(button);
+          const title = document.createElement("span");
+          title.className = "song-title";
+          title.textContent = song.title;
+          button.appendChild(title);
+
+          const artist = document.createElement("span");
+          artist.className = "song-artist";
+          artist.textContent = song.artist;
+          button.appendChild(artist);
 
           const stats = createStatsBar({ stats: song.stats });
           button.appendChild(stats);
@@ -645,20 +670,6 @@
       .catch(() => {
         songList.textContent = "Error loading song list. Refresh to try again.";
       });
-  }
-
-  function renderSongLabel(button, style = "default") {
-    const artist = escapeHTML(button.dataset.artist);
-    const title = escapeHTML(button.dataset.title);
-    const label = button.querySelector(".song-label");
-    switch (style) {
-      default:
-        return (label.innerHTML = `<b>“${title}”</b> by ${artist}`);
-      case "artist":
-        return (label.innerHTML = `<b>${artist}</b> &ndash; “${title}”`);
-      case "title":
-        return (label.innerHTML = `<b>“${title}”</b> by ${artist}`);
-    }
   }
 
   function selectSong({ json, artist, title, mapPromise }) {
@@ -1031,7 +1042,11 @@
   function createStatsBar({ stats }) {
     if (!stats) return document.createElement("div");
 
-    const total = Object.values(stats).reduce((a, b) => a + 1 + Math.log(b), 0);
+    function skew(x) {
+      return 0.05 + Math.log1p(x * 0.005);
+    }
+
+    const total = Object.values(stats).reduce((a, b) => a + skew(b), 0);
     if (total === 0) return document.createElement("div");
 
     const container = document.createElement("stats-bar");
@@ -1045,7 +1060,7 @@
     }
 
     for (const langCode of langCodes) {
-      const weight = 1 + Math.log(stats[langCode]);
+      const weight = skew(stats[langCode]);
       if (!weight) continue;
 
       const widthPercent = (weight / total) * 100;
@@ -1538,16 +1553,6 @@
       },
       { signal: seekbarTooltipListenerController.signal }
     );
-  }
-
-  function calculateMultilinguality(stats) {
-    const counts = Object.entries(stats).map(([, num]) => num);
-    const total = counts.reduce((a, b) => a + b, 0);
-    const probs = counts.map((n) => n / total);
-    const entropy = -probs.reduce((sum, p) => sum + p * Math.log2(p), 0);
-    const maxEntropy = Math.log2(counts.length);
-    const normalizedEntropy = maxEntropy > 0 ? entropy / maxEntropy : 0;
-    return counts.length * normalizedEntropy;
   }
 
   const loadYouTubeAPI = (() => {
