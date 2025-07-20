@@ -51,10 +51,7 @@ function calculateMultilingualism(stats) {
   const counts = Object.values(stats);
   const total = counts.reduce((a, b) => a + b, 0);
   const probs = counts.map((n) => n / total);
-  const entropy = -probs.reduce((sum, p) => sum + p * Math.log2(p), 0);
-  const maxEntropy = Math.log2(counts.length);
-  const normalizedEntropy = maxEntropy > 0 ? entropy / maxEntropy : 0;
-  return Math.round(counts.length * normalizedEntropy * 1000) / 1000;
+  return Math.round(-probs.reduce((sum, p) => sum + p * Math.log(p), 0) * 1000) / 1000;
 }
 
 fs.writeFileSync(masterPath, JSON.stringify(master, null, 2));

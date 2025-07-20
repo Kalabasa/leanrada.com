@@ -21,7 +21,7 @@
 
     @media (max-width: 960px) {
       grid-template-columns: 100svw;
-      grid-template-rows: 90svh min-content;
+      grid-template-rows: calc(100svh - 1rem) min-content;
       grid-template-areas: "main-pane" "side-pane";
     }
 
@@ -40,6 +40,10 @@
     flex-direction: column;
     padding-top: 1rem;
     gap: 0.5rem;
+
+    @media (max-width: 960px) {
+      padding-top: 0;
+    }
 
     .logo {
       align-self: start;
@@ -167,7 +171,7 @@
     position: relative;
     grid-area: main-pane;
     display: grid;
-    grid-template-rows: 1fr min-content min-content;
+    grid-template-rows: minmax(0, 1fr) min-content min-content;
     grid-template-areas:
       "map"
       "lyrics"
@@ -175,7 +179,7 @@
   }
 
   #map-container {
-    grid-area: 1 / 1 / -1 / -1;
+    grid-area: map;
     display: grid;
     place-content: center;
     pointer-events: none;
@@ -226,15 +230,20 @@
 
   #lyrics-container {
     position: absolute;
-    width: 16svw;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    width: 20svw;
     grid-area: map;
     background: linear-gradient(to right, #240d18 40%, #240d1888);
     pointer-events: none;
-    font-size: calc(min(2.4em, calc(3.2svw - 0.4rem)));
+    line-height: 85%;
+    /* not using clamp(), prioritise min value */
+    font-size: min(max(2.4em, 3.2svw - 0.4rem), 4.8svmin);
 
     .fullscreen & {
-      width: 24vw;
-      font-size: calc(min(3.6em, 3.6svw));
+      width: 28svw;
+      font-size: min(max(2.8em, 3.8svw), 5.8svmin);
     }
 
     @media (max-width: 960px) {
@@ -242,16 +251,15 @@
       grid-area: lyrics;
       place-self: center;
       width: auto;
-      min-height: 3em;
+      height: 2em;
       margin: 0 1em;
-      font-size: 2.2em;
+      font-size: 1.8em;
     }
 
     lyric-line {
       --dark-lang-color: color-mix(in srgb, var(--lang-color, #fff) 60%, black);
-      display: block;
+      display: inline;
       font-weight: bold;
-      line-height: 85%;
       letter-spacing: -0.05em;
       color: transparent;
       background: var(--lang-color, #fff);
@@ -262,12 +270,13 @@
     }
 
     lang-tag {
-      font-size: 0.5em;
+      font-size: 0.4em;
+      line-height: 100%;
       display: block;
       text-transform: uppercase;
       font-weight: bolder;
       color: var(--lang-color, inherit);
-      padding-bottom: 0.25em;
+      padding-bottom: 0.1em;
       opacity: 0.4;
     }
   }
@@ -312,7 +321,7 @@
   }
 
   .now-playing-bar {
-    grid-area: "bar";
+    grid-area: bar;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -677,7 +686,6 @@
 
   function isDesktopLayout() {
     if (cachedIsDesktopLayout == null) {
-      console.log(sidePane.offsetLeft, mainPane.offsetLeft);
       cachedIsDesktopLayout = sidePane.offsetTop === mainPane.offsetTop;
     }
     return cachedIsDesktopLayout;
@@ -941,25 +949,40 @@
                     anchor[1]
                   );
 
+                  lyricsContainer.style.minWidth = "";
+                  const minWidth =
+                    side === "left"
+                      ? undefined
+                      : lyricsContainer.offsetWidth * 0.5 +
+                        (mainPane.offsetWidth -
+                          mapView.offsetLeft -
+                          anchorX -
+                          40) *
+                          0.5;
+                  const actualWidth = Math.max(
+                    minWidth ?? 0,
+                    lyricsContainer.offsetWidth
+                  );
+                  lyricsContainer.style.minWidth = minWidth
+                    ? minWidth + "px"
+                    : "";
+
+                  console.log({ minWidth });
                   lyricsContainer.style.left =
                     clamp(
                       side === "left"
                         ? Math.max(
                             20,
-                            mapView.offsetLeft +
-                              anchorX -
-                              lyricsContainer.offsetWidth
+                            mapView.offsetLeft + anchorX - actualWidth
                           )
                         : Math.min(
-                            mainPane.offsetWidth -
-                              lyricsContainer.offsetWidth -
-                              20,
+                            mainPane.offsetWidth - actualWidth - 20,
                             mapView.offsetLeft + anchorX + 40
                           ),
                       0,
                       mapContainer.offsetLeft +
                         mapContainer.offsetWidth -
-                        lyricsContainer.offsetWidth
+                        actualWidth
                     ) + "px";
                   lyricsContainer.style.top =
                     clamp(
@@ -973,9 +996,11 @@
                     ) + "px";
                 }
               } else if (
+                lyricsContainer.style.minWidth ||
                 lyricsContainer.style.left ||
                 lyricsContainer.style.top
               ) {
+                lyricsContainer.style.minWidth = "";
                 lyricsContainer.style.left = "";
                 lyricsContainer.style.top = "";
               }
