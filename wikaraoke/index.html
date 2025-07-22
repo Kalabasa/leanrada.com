@@ -1211,16 +1211,21 @@
 
   async function loadMap() {
     return Promise.all([
-      import("https://cdn.jsdelivr.net/npm/pixi.js@7.2.4/dist/pixi.min.mjs"),
+      import("./lib/pixi-legacy.min.mjs"),
       fetch("./data/_app_hexmap.json").then((r) => r.json()),
     ]).then(([PIXI, hexmap]) => {
       const app = new PIXI.Application({
         useContextAlpha: false,
         antialias: false,
-        backgroundColor: PIXI.utils.string2hex(
+        backgroundColor: new PIXI.Color(
           getComputedStyle(document.body).backgroundColor
         ),
       });
+      if (app.renderer.type === PIXI.RENDERER_TYPE.WEBGL) {
+        console.log("Using WebGL renderer");
+      } else if (app.renderer.type === PIXI.RENDERER_TYPE.CANVAS) {
+        console.log("Using Canvas renderer");
+      }
       app.ticker.maxFPS = 30;
       mapContainer.replaceChildren(app.view);
 
@@ -1458,7 +1463,7 @@
             );
             if (shockwaveStrength > 0) {
               if (s.colorHex == null) {
-                s.colorHex = PIXI.utils.string2hex(s.color);
+                s.colorHex = new PIXI.Color(s.color).toNumber();
               }
               color = lerpColor(color, s.colorHex, Math.min(shockwaveStrength));
               alpha = Math.max(alpha, Math.min(1, shockwaveStrength));
