@@ -1211,7 +1211,9 @@
 
   async function loadMap() {
     return Promise.all([
-      import("./lib/pixi-legacy.min.mjs"),
+      isWebGLSupported()
+        ? import("./lib/pixi.min.mjs")
+        : import("./lib/pixi-legacy.min.mjs"),
       fetch("./data/_app_hexmap.json").then((r) => r.json()),
     ]).then(([PIXI, hexmap]) => {
       const app = new PIXI.Application({
@@ -1667,6 +1669,18 @@
       return promise;
     };
   })();
+
+  function isWebGLSupported() {
+    try {
+      const canvas = document.createElement("canvas");
+      return !!(
+        window.WebGLRenderingContext &&
+        (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+      );
+    } catch {
+      return false;
+    }
+  }
 
   const escapeHTML = (() => {
     const element = document.createElement("div");
