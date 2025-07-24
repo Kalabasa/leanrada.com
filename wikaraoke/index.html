@@ -1285,7 +1285,9 @@
       const cellContainer = new PIXI.Container();
       app.stage.addChild(cellContainer);
 
+      let cellTexture = null;
       const baseRadius = 0.35;
+
       drawMap();
       window.addEventListener("resize", () => {
         cachedIsDesktopLayout = null;
@@ -1338,14 +1340,14 @@
 
         const { margin, scale } = getMarginScale();
 
-        for (const g of cellContainer.children) {
+        for (const sprite of cellContainer.children) {
           const baseSeed =
-            Math.sin(g.myOriginX * 11.7748 + g.myOriginY * 70.8945) *
+            Math.sin(sprite.myOriginX * 11.7748 + sprite.myOriginY * 70.8945) *
             11407.8853;
           const baseRandom = baseSeed - Math.floor(baseSeed);
 
-          const mouseDx = (mousePos.x - g.myOriginX) / scale;
-          const mouseDy = (mousePos.y - g.myOriginY) / scale;
+          const mouseDx = (mousePos.x - sprite.myOriginX) / scale;
+          const mouseDy = (mousePos.y - sprite.myOriginY) / scale;
           const mouseDist2 = mouseDx ** 2 + mouseDy ** 2;
 
           const baseBrightness =
@@ -1360,7 +1362,7 @@
           let radius = baseRadius;
 
           const colorSeed =
-            Math.sin(g.myOriginX * 83.1738 + g.myOriginY * 58.4075) *
+            Math.sin(sprite.myOriginX * 83.1738 + sprite.myOriginY * 58.4075) *
             21874.9651;
           const colorRandom = colorSeed - Math.floor(colorSeed);
 
@@ -1396,8 +1398,8 @@
                         0.2 *
                           Math.sin(
                             time * (10 / p.duration) +
-                              g.myOriginX * -0.008 +
-                              g.myOriginY * 0.004
+                              sprite.myOriginX * -0.008 +
+                              sprite.myOriginY * 0.004
                           ))
                 );
               }
@@ -1428,12 +1430,12 @@
 
             const sx = s.x * scale + margin;
             const sy = s.y * scale + margin;
-            const dx = g.myOriginX - sx;
-            const dy = g.myOriginY - sy;
+            const dx = sprite.myOriginX - sx;
+            const dy = sprite.myOriginY - sy;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             const waveSeed =
-              Math.sin(g.myOriginX * 12.9898 + g.myOriginY * 78.233) *
+              Math.sin(sprite.myOriginX * 12.9898 + sprite.myOriginY * 78.233) *
               43758.5453;
             const waveRandom = waveSeed - Math.floor(waveSeed);
             const waveOffset =
@@ -1446,8 +1448,9 @@
               (1 - progress ** 4);
 
             const centerSeed =
-              Math.sin(g.myOriginX * 57.7799 + g.myOriginY * 24.7107) *
-              51905.4873;
+              Math.sin(
+                sprite.myOriginX * 57.7799 + sprite.myOriginY * 24.7107
+              ) * 51905.4873;
             const centerRandom = centerSeed - Math.floor(centerSeed);
             const epicenterComponent =
               (s.core === false ? 0 : 1) *
@@ -1476,37 +1479,39 @@
           swayStrength +=
             ((shockwaves.length ? 0.6 : 1.6) - swayStrength) * 0.00001;
           const swayX =
-            Math.sin(g.myOriginY * 0.02 + time * 0.0002) * swayStrength * scale;
+            Math.sin(sprite.myOriginY * 0.02 + time * 0.0002) *
+            swayStrength *
+            scale;
           const swayY =
-            Math.sin(g.myOriginX * 0.015 + time * -0.0003) *
+            Math.sin(sprite.myOriginX * 0.015 + time * -0.0003) *
             swayStrength *
             scale;
 
           const shakeX =
             Math.sin(
-              g.myOriginX * (5.58 + Math.sin(time * 0.002)) +
-                g.myOriginY * 6.14 +
+              sprite.myOriginX * (5.58 + Math.sin(time * 0.002)) +
+                sprite.myOriginY * 6.14 +
                 time * 0.001
             ) *
             shakeFactor *
             scale;
           const shakeY =
             Math.cos(
-              g.myOriginX * 9.55 +
-                g.myOriginY * (4.89 + Math.cos(time * 0.003)) +
+              sprite.myOriginX * 9.55 +
+                sprite.myOriginY * (4.89 + Math.cos(time * 0.003)) +
                 time * 0.0015
             ) *
             shakeFactor *
             scale;
 
-          g.myOffsetX += (swayX - g.myOffsetX) * 0.1 + shakeX;
-          g.myOffsetY += (swayY - g.myOffsetY) * 0.1 + shakeY;
+          sprite.myOffsetX += (swayX - sprite.myOffsetX) * 0.1 + shakeX;
+          sprite.myOffsetY += (swayY - sprite.myOffsetY) * 0.1 + shakeY;
 
-          g.x = g.myOriginX + g.myOffsetX;
-          g.y = g.myOriginY + g.myOffsetY;
-          g.scale.set(radius / baseRadius);
-          g.alpha = alpha;
-          g.tint = color;
+          sprite.x = sprite.myOriginX + sprite.myOffsetX;
+          sprite.y = sprite.myOriginY + sprite.myOffsetY;
+          sprite.scale.set(radius / baseRadius);
+          sprite.alpha = alpha;
+          sprite.tint = color;
         }
       });
 
@@ -1539,17 +1544,29 @@
 
         const { margin, scale } = getMarginScale();
 
+        cellTexture?.destroy();
+        const cellGraphics = new PIXI.Graphics();
+        cellGraphics.beginFill(0xffffff);
+        cellGraphics.drawCircle(baseRadius * scale, baseRadius * scale, baseRadius * scale);
+        cellGraphics.endFill();
+        cellTexture = app.renderer.generateTexture(cellGraphics, {
+          region: new PIXI.Rectangle(
+            0,
+            0,
+            2 * baseRadius * scale,
+            2 * baseRadius * scale
+          ),
+        });
+
         cellContainer.removeChildren();
         for (const [x, y] of hexmap) {
-          const g = new PIXI.Graphics();
-          g.myOriginX = g.x = margin + x * scale;
-          g.myOriginY = g.y = margin + y * scale;
-          g.myOffsetX = 0;
-          g.myOffsetY = 0;
-          g.beginFill(0xffffff);
-          g.drawCircle(0, 0, baseRadius * scale);
-          g.endFill();
-          cellContainer.addChild(g);
+          const sprite = new PIXI.Sprite(cellTexture);
+          sprite.anchor.set(0.5);
+          sprite.myOriginX = sprite.x = margin + x * scale;
+          sprite.myOriginY = sprite.y = margin + y * scale;
+          sprite.myOffsetX = 0;
+          sprite.myOffsetY = 0;
+          cellContainer.addChild(sprite);
         }
       }
 
