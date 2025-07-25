@@ -1,5 +1,125 @@
-<!doctype html>
-<link rel="canonical" href="/music/isolation/">
-<html>
-  🚧 Under construction 🚧
-</html>
+<!DOCTYPE html>
+<link rel="canonical" href="/music/isolation/" />
+
+<script type="module">
+  import * as PIXI from "/lib/vendor/pixi-8.min.mjs";
+
+  const app = new PIXI.Application();
+  await app.init({
+    width: 800,
+    height: 800,
+    background: 0x111111,
+  });
+  document.body.appendChild(app.canvas);
+
+  const audio = new Audio("./Isolation.mp3");
+
+  // --- Create reusable circle texture ---
+  const g = new PIXI.Graphics();
+  g.beginFill(0x00ffff);
+  g.drawCircle(0, 0, 6);
+  g.endFill();
+  const particleTexture = app.renderer.generateTexture(g);
+
+  // --- Particle container setup ---
+  const container = new PIXI.Container();
+  app.stage.addChild(container);
+
+  const particles = [];
+
+  document.body.addEventListener("click", start, { once: true });
+
+  function start() {
+    const ctx = new AudioContext();
+    const src = ctx.createMediaElementSource(audio);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    const analyserBuffer = new Uint8Array(analyser.frequencyBinCount);
+
+    src.connect(analyser);
+    analyser.connect(ctx.destination);
+
+    audio.play();
+
+    app.ticker.add(() => {
+      analyser.getByteFrequencyData(analyserBuffer);
+      update(analyserBuffer);
+    });
+  }
+
+  const detectBass = createPeakDetector({
+    start: 0,
+    end: 1,
+    threshold: 16,
+  });
+
+  function update(analysis) {
+    const bass = detectBass(analysis);
+    if (bass > 0) spawnParticles(bass);
+    updateParticles();
+  }
+
+  function spawnParticles(strength) {
+    for (let i = 0; i < Math.min(1, strength * 10); i++) {
+      const sprite = new PIXI.Sprite(particleTexture);
+      sprite.anchor.set(0.5);
+      sprite.x = app.screen.width / 2;
+      sprite.y = app.screen.height / 2;
+      sprite.scale.set(0.5 + Math.random());
+      sprite.alpha = (strength / 100) ** 2;
+      sprite.vx = (Math.random() - 0.5) * 4;
+      sprite.vy = (Math.random() - 0.5) * 4;
+      particles.push(sprite);
+      container.addChild(sprite);
+    }
+  }
+
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha *= 0.95;
+      if (p.alpha < 0.01) {
+        container.removeChild(p);
+        particles.splice(i, 1);
+      }
+    }
+  }
+  function createPeakDetector({
+    start = 0,
+    end = 5,
+    historySize = 60,
+    threshold = 16,
+  } = {}) {
+    const history = new Float32Array(historySize);
+    let index = 0;
+    let count = 0;
+    let runningSum = 0;
+    let lastPeak = 0;
+
+    return function detect(freqAnalysis) {
+      const region = freqAnalysis.slice(start, end);
+      const avg = region.reduce((a, b) => a + b, 0) / region.length;
+
+      runningSum += avg - history[index];
+      history[index] = avg;
+      count = Math.min(historySize, count + 1);
+      index = (index + 1) % historySize;
+
+      const mean = runningSum / count;
+      return Math.max(0, avg - mean * (historySize / count) - threshold);
+    };
+  }
+</script>
+
+<body
+  style="
+    display: grid;
+    place-content: center;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+  "
+></body>
