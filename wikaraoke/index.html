@@ -351,13 +351,6 @@
       font-size: 1rem;
       text-wrap: nowrap;
       overflow: hidden;
-
-      .fullscreen & {
-        position: fixed;
-        bottom: 1rem;
-        left: 1rem;
-        visibility: visible;
-      }
     }
 
     seekbar {
@@ -390,9 +383,8 @@
       }
     }
 
-    .fullscreen & {
-      position: absolute;
-      visibility: hidden;
+    .fullscreen & button {
+      display: none;
     }
   }
 
@@ -633,23 +625,33 @@
     });
 
     closeButton.addEventListener("click", () => {
-      currentPlayer?.destroy();
-      playerContainer.replaceChildren();
-      lyricsContainer.replaceChildren();
-      playingTitle.replaceChildren();
-      toggleHasSongSelectedClass(false);
-      sidePane.scrollIntoView({ behavior: "smooth" });
-      window.history.replaceState(null, "", "#");
-      document.title = appTitle;
+      closeSong();
     });
 
+    function closeSong() {
+      if (currentPlayer) {
+        currentPlayer.destroy();
+        playerContainer.replaceChildren();
+        lyricsContainer.replaceChildren();
+        playingTitle.replaceChildren();
+        toggleHasSongSelectedClass(false);
+        sidePane.scrollIntoView({ behavior: "smooth" });
+        window.history.replaceState(null, "", "#");
+        document.title = appTitle;
+      }
+    }
+
     pauseButton.addEventListener("click", () => {
+      playPause();
+    });
+
+    function playPause() {
       if (currentPlayer?.getPlayerState() === YT.PlayerState.PLAYING) {
         currentPlayer?.pauseVideo?.();
       } else {
         currentPlayer?.playVideo?.();
       }
-    });
+    }
 
     shareButton.addEventListener("click", async () => {
       const shareData = {
@@ -672,6 +674,30 @@
         }
       } else {
         alert("Sharing not supported");
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.code === "Space" &&
+        !(
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLButtonElement
+        )
+      ) {
+        e.preventDefault();
+        playPause();
+      }
+      if (
+        e.code === "Escape" &&
+        !(
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        )
+      ) {
+        e.preventDefault();
+        closeSong();
       }
     });
   }
@@ -870,8 +896,9 @@
         Math.max(targetUpdateInterval, actualUpdateInterval);
 
       const time = player.getCurrentTime();
+      const normalizedTime = (time - start) / duration;
       if (player.getPlayerState() === YT.PlayerState.PLAYING) {
-        seekbar.style.setProperty("--seek", 100 * ((time - start) / duration));
+        seekbar.style.setProperty("--seek", 100 * normalizedTime);
       }
 
       if (end && player.getCurrentTime() >= end) {
@@ -1043,6 +1070,10 @@
           lyricsContainer.replaceChildren();
           lyricsContainer.removeAttribute("style");
         }
+      }
+
+      if (fullscreen) {
+        setSeekbarTooltip(normalizedTime, languages[currentLine?.lang]);
       }
 
       const direction =
@@ -1644,23 +1675,19 @@
     seekbarListenerController?.abort();
     seekbarListenerController = new AbortController();
 
-    seekbarInput.addEventListener(
-      "mousemove",
-      (event) => {
-        const rect = seekbarInput.getBoundingClientRect();
-        const time = start + duration * ((event.clientX - rect.x) / rect.width);
-        const line = lyrics.find((l, i) => time >= l.start && time < l.end);
-        const language = languages[line?.lang];
-        tooltip.classList.toggle("active", !!language);
-        if (language) {
-          tooltip.textContent = language.name;
-          tooltip.style.setProperty("--color", language.color);
-        }
-        tooltip.style.top = rect.y - tooltip.offsetHeight + "px";
-        tooltip.style.left = event.pageX - tooltip.offsetWidth / 2 + "px";
-      },
-      { signal: seekbarListenerController.signal }
-    );
+    if (!fullscreen) {
+      seekbarInput.addEventListener(
+        "mousemove",
+        (event) => {
+          const rect = seekbarInput.getBoundingClientRect();
+          const normalizedPosition = (event.clientX - rect.x) / rect.width;
+          const time = start + duration * normalizedPosition;
+          const line = lyrics.find((l, i) => time >= l.start && time < l.end);
+          setSeekbarTooltip(normalizedPosition, languages[line?.lang]);
+        },
+        { signal: seekbarListenerController.signal }
+      );
+    }
 
     seekbarInput.addEventListener(
       "mouseleave",
@@ -1693,6 +1720,19 @@
         seekbar.style.setProperty("--seek", percentage);
       }
     }
+  }
+
+  function setSeekbarTooltip(normalizedPosition, language) {
+    const rect = seekbarInput.getBoundingClientRect();
+    tooltip.classList.toggle("active", !!language);
+    if (language) {
+      tooltip.textContent = language.name;
+      tooltip.style.setProperty("--color", language.color);
+    }
+    tooltip.style.translate = [
+      rect.x + rect.width * normalizedPosition - tooltip.offsetWidth / 2 + "px",
+      rect.y - tooltip.offsetHeight + "px",
+    ].join(" ");
   }
 
   const loadYouTubeAPI = (() => {
