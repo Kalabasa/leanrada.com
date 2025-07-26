@@ -351,13 +351,6 @@
       font-size: 1rem;
       text-wrap: nowrap;
       overflow: hidden;
-
-      .fullscreen & {
-        position: fixed;
-        bottom: 1rem;
-        left: 1rem;
-        visibility: visible;
-      }
     }
 
     seekbar {
@@ -390,9 +383,8 @@
       }
     }
 
-    .fullscreen & {
-      position: absolute;
-      visibility: hidden;
+    .fullscreen & button {
+      display: none;
     }
   }
 
@@ -632,32 +624,34 @@
       currentPlayer?.playVideo?.();
     });
 
-    seekbarInput.addEventListener("input", () => {
-      seekbar.style.setProperty("--seek", seekbarInput.value);
-      seekToPercentage(Number.parseInt(seekbarInput.value), false);
-    });
-    seekbarInput.addEventListener("change", () => {
-      seekToPercentage(Number.parseInt(seekbarInput.value), true);
+    closeButton.addEventListener("click", () => {
+      closeSong();
     });
 
-    closeButton.addEventListener("click", () => {
-      currentPlayer?.destroy();
-      playerContainer.replaceChildren();
-      lyricsContainer.replaceChildren();
-      playingTitle.replaceChildren();
-      toggleHasSongSelectedClass(false);
-      sidePane.scrollIntoView({ behavior: "smooth" });
-      window.history.replaceState(null, "", "#");
-      document.title = appTitle;
-    });
+    function closeSong() {
+      if (currentPlayer) {
+        currentPlayer.destroy();
+        playerContainer.replaceChildren();
+        lyricsContainer.replaceChildren();
+        playingTitle.replaceChildren();
+        toggleHasSongSelectedClass(false);
+        sidePane.scrollIntoView({ behavior: "smooth" });
+        window.history.replaceState(null, "", "#");
+        document.title = appTitle;
+      }
+    }
 
     pauseButton.addEventListener("click", () => {
+      playPause();
+    });
+
+    function playPause() {
       if (currentPlayer?.getPlayerState() === YT.PlayerState.PLAYING) {
         currentPlayer?.pauseVideo?.();
       } else {
         currentPlayer?.playVideo?.();
       }
-    });
+    }
 
     shareButton.addEventListener("click", async () => {
       const shareData = {
@@ -680,6 +674,30 @@
         }
       } else {
         alert("Sharing not supported");
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.code === "Space" &&
+        !(
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLButtonElement
+        )
+      ) {
+        e.preventDefault();
+        playPause();
+      }
+      if (
+        e.code === "Escape" &&
+        !(
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        )
+      ) {
+        e.preventDefault();
+        closeSong();
       }
     });
   }
@@ -762,22 +780,24 @@
           ...peak,
           time: peak.time + offset,
         })) ?? [];
+
       const { element, playerPromise } = await createPlayer({
         youtubeId: data.youtubeId,
       });
+
       playerContainer.replaceChildren(element);
+      // playerPromise depends on `element` being connected
       const player = await playerPromise;
-      const duration = player.getDuration();
-      progressContainer.replaceChildren(
-        createTimeline({
-          lyrics,
-          duration,
-        })
-      );
-      installSeekbarTooltip({ lyrics, duration });
-      playSong({ player, skip: data.skip, lyrics, peaks, map });
+      const end = data.end ?? player.getDuration();
+      const start = data.start ?? data.skip ?? 0;
+
+      progressContainer.replaceChildren(createTimeline({ lyrics, start, end }));
+      installSeekbarListeners({ lyrics, start, end });
+      playSong({ player, start, end, lyrics, peaks, map });
+
       playingTitle.innerText = playingText;
       document.title = playingText + " | " + appTitle;
+
       // YouTube takes some more load time before actually playing
       setTimeout(() => {
         toggleLoadingClass(false);
@@ -791,12 +811,6 @@
       shouldHighlightLine.myTitleCache[title] ??
       title.replaceAll(/\W/g, "").toLowerCase();
     return text.replaceAll(/\W/g, "").toLowerCase().includes(normalizedTitle);
-  }
-
-  function seekToPercentage(percentage, allowSeekAhead) {
-    if (!currentPlayer) return;
-    const seconds = currentPlayer.getDuration() * (percentage / 100);
-    currentPlayer.seekTo(seconds, allowSeekAhead);
   }
 
   function toggleLoadingClass(isLoading) {
@@ -845,24 +859,26 @@
     return { element: iframe, playerPromise };
   }
 
-  function playSong({ player, skip, lyrics, peaks, map }) {
+  function playSong({ player, start, end, lyrics, peaks, map }) {
     currentPlayer = player;
-    if (skip) {
-      player.seekTo(skip, true);
+    if (start) {
+      player.seekTo(start, true);
     }
     player.playVideo();
     toggleHasSongSelectedClass(true);
+
+    const duration = end - start;
+    const lyricsLangs = new Set(lyrics.map((l) => l.lang));
 
     let currentLine = null;
     let currentPeakIndex = 0;
     let relativePeakDb = -6;
 
-    const lyricsLangs = new Set(lyrics.map((l) => l.lang));
-
     const targetUpdateInterval = 1000 / 15;
     let actualUpdateInterval = targetUpdateInterval;
     let lastUpdateTime = performance.now();
-    let lastPlayerTime = skip ?? 0;
+    let lastPlayerTime = start ?? 0;
+
     const intervalID = setInterval(() => {
       if (!player.getIframe()?.isConnected) {
         currentPlayer = null;
@@ -880,7 +896,14 @@
         Math.max(targetUpdateInterval, actualUpdateInterval);
 
       const time = player.getCurrentTime();
-      seekbar.style.setProperty("--seek", 100 * (time / player.getDuration()));
+      const normalizedTime = (time - start) / duration;
+      if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+        seekbar.style.setProperty("--seek", 100 * normalizedTime);
+      }
+
+      if (end && player.getCurrentTime() >= end) {
+        player.stopVideo();
+      }
 
       const line = lyrics.find((l) => time >= l.start && time < l.end);
       if (currentLine !== line) {
@@ -1049,6 +1072,10 @@
         }
       }
 
+      if (fullscreen) {
+        setSeekbarTooltip(normalizedTime, languages[currentLine?.lang]);
+      }
+
       const direction =
         currentPeakIndex < 0
           ? 1
@@ -1079,7 +1106,7 @@
           2 ** (Math.min(0, peak.d - (relativePeakDb + 3) * 0.4) / 4);
 
         // throttle effects based on performance
-        if (baseStrength * 0.2 < 1 - performanceRate) continue;
+        if (baseStrength * 0.5 < 1 - performanceRate) continue;
 
         let type = "strength";
         let strengthFactor = 1;
@@ -1165,12 +1192,8 @@
     return container;
   }
 
-  function createTimeline({ lyrics, duration }) {
+  function createTimeline({ lyrics, start, end }) {
     if (!lyrics.length) return document.createElement("div");
-
-    if (duration == null) {
-      duration = lyrics[lyrics.length - 1].end;
-    }
 
     const container = document.createElement("lyrics-timeline");
     container.style.display = "flex";
@@ -1182,7 +1205,8 @@
       container.appendChild(rect);
     };
 
-    let currentTime = 0;
+    const duration = end - start;
+    let currentTime = start;
     for (const segment of lyrics) {
       if (currentTime < segment.start) {
         const skipPercent = ((segment.start - currentTime) / duration) * 100;
@@ -1192,15 +1216,17 @@
           "gray";
         appendRect(skipPercent, lastColor);
       }
-      const segDuration = segment.end - segment.start;
+      const segmentEnd = Math.min(segment.end, end);
+      const segDuration = segmentEnd - segment.start;
       const widthPercent = (segDuration / duration) * 100;
       const color = languages[segment.lang]?.color ?? "gray";
       appendRect(widthPercent, color);
-      currentTime = Math.min(segment.end, duration);
+      currentTime = segmentEnd;
+      if (segmentEnd >= end) break;
     }
 
-    if (currentTime < duration) {
-      const remainingPercent = ((duration - currentTime) / duration) * 100;
+    if (currentTime < end) {
+      const remainingPercent = ((end - currentTime) / duration) * 100;
       const lastColor =
         container.lastElementChild?.style.backgroundColor ?? "gray";
       appendRect(remainingPercent, lastColor);
@@ -1285,7 +1311,9 @@
       const cellContainer = new PIXI.Container();
       app.stage.addChild(cellContainer);
 
+      let cellTexture = null;
       const baseRadius = 0.35;
+
       drawMap();
       window.addEventListener("resize", () => {
         cachedIsDesktopLayout = null;
@@ -1338,14 +1366,14 @@
 
         const { margin, scale } = getMarginScale();
 
-        for (const g of cellContainer.children) {
+        for (const sprite of cellContainer.children) {
           const baseSeed =
-            Math.sin(g.myOriginX * 11.7748 + g.myOriginY * 70.8945) *
+            Math.sin(sprite.myOriginX * 11.7748 + sprite.myOriginY * 70.8945) *
             11407.8853;
           const baseRandom = baseSeed - Math.floor(baseSeed);
 
-          const mouseDx = (mousePos.x - g.myOriginX) / scale;
-          const mouseDy = (mousePos.y - g.myOriginY) / scale;
+          const mouseDx = (mousePos.x - sprite.myOriginX) / scale;
+          const mouseDy = (mousePos.y - sprite.myOriginY) / scale;
           const mouseDist2 = mouseDx ** 2 + mouseDy ** 2;
 
           const baseBrightness =
@@ -1360,7 +1388,7 @@
           let radius = baseRadius;
 
           const colorSeed =
-            Math.sin(g.myOriginX * 83.1738 + g.myOriginY * 58.4075) *
+            Math.sin(sprite.myOriginX * 83.1738 + sprite.myOriginY * 58.4075) *
             21874.9651;
           const colorRandom = colorSeed - Math.floor(colorSeed);
 
@@ -1396,8 +1424,8 @@
                         0.2 *
                           Math.sin(
                             time * (10 / p.duration) +
-                              g.myOriginX * -0.008 +
-                              g.myOriginY * 0.004
+                              sprite.myOriginX * -0.008 +
+                              sprite.myOriginY * 0.004
                           ))
                 );
               }
@@ -1428,12 +1456,12 @@
 
             const sx = s.x * scale + margin;
             const sy = s.y * scale + margin;
-            const dx = g.myOriginX - sx;
-            const dy = g.myOriginY - sy;
+            const dx = sprite.myOriginX - sx;
+            const dy = sprite.myOriginY - sy;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             const waveSeed =
-              Math.sin(g.myOriginX * 12.9898 + g.myOriginY * 78.233) *
+              Math.sin(sprite.myOriginX * 12.9898 + sprite.myOriginY * 78.233) *
               43758.5453;
             const waveRandom = waveSeed - Math.floor(waveSeed);
             const waveOffset =
@@ -1446,8 +1474,9 @@
               (1 - progress ** 4);
 
             const centerSeed =
-              Math.sin(g.myOriginX * 57.7799 + g.myOriginY * 24.7107) *
-              51905.4873;
+              Math.sin(
+                sprite.myOriginX * 57.7799 + sprite.myOriginY * 24.7107
+              ) * 51905.4873;
             const centerRandom = centerSeed - Math.floor(centerSeed);
             const epicenterComponent =
               (s.core === false ? 0 : 1) *
@@ -1476,37 +1505,39 @@
           swayStrength +=
             ((shockwaves.length ? 0.6 : 1.6) - swayStrength) * 0.00001;
           const swayX =
-            Math.sin(g.myOriginY * 0.02 + time * 0.0002) * swayStrength * scale;
+            Math.sin(sprite.myOriginY * 0.02 + time * 0.0002) *
+            swayStrength *
+            scale;
           const swayY =
-            Math.sin(g.myOriginX * 0.015 + time * -0.0003) *
+            Math.sin(sprite.myOriginX * 0.015 + time * -0.0003) *
             swayStrength *
             scale;
 
           const shakeX =
             Math.sin(
-              g.myOriginX * (5.58 + Math.sin(time * 0.002)) +
-                g.myOriginY * 6.14 +
+              sprite.myOriginX * (5.58 + Math.sin(time * 0.002)) +
+                sprite.myOriginY * 6.14 +
                 time * 0.001
             ) *
             shakeFactor *
             scale;
           const shakeY =
             Math.cos(
-              g.myOriginX * 9.55 +
-                g.myOriginY * (4.89 + Math.cos(time * 0.003)) +
+              sprite.myOriginX * 9.55 +
+                sprite.myOriginY * (4.89 + Math.cos(time * 0.003)) +
                 time * 0.0015
             ) *
             shakeFactor *
             scale;
 
-          g.myOffsetX += (swayX - g.myOffsetX) * 0.1 + shakeX;
-          g.myOffsetY += (swayY - g.myOffsetY) * 0.1 + shakeY;
+          sprite.myOffsetX += (swayX - sprite.myOffsetX) * 0.1 + shakeX;
+          sprite.myOffsetY += (swayY - sprite.myOffsetY) * 0.1 + shakeY;
 
-          g.x = g.myOriginX + g.myOffsetX;
-          g.y = g.myOriginY + g.myOffsetY;
-          g.scale.set(radius / baseRadius);
-          g.alpha = alpha;
-          g.tint = color;
+          sprite.x = sprite.myOriginX + sprite.myOffsetX;
+          sprite.y = sprite.myOriginY + sprite.myOffsetY;
+          sprite.scale.set(radius / baseRadius);
+          sprite.alpha = alpha;
+          sprite.tint = color;
         }
       });
 
@@ -1539,17 +1570,33 @@
 
         const { margin, scale } = getMarginScale();
 
+        cellTexture?.destroy();
+        const cellGraphics = new PIXI.Graphics();
+        cellGraphics.beginFill(0xffffff);
+        cellGraphics.drawCircle(
+          baseRadius * scale,
+          baseRadius * scale,
+          baseRadius * scale
+        );
+        cellGraphics.endFill();
+        cellTexture = app.renderer.generateTexture(cellGraphics, {
+          region: new PIXI.Rectangle(
+            0,
+            0,
+            2 * baseRadius * scale,
+            2 * baseRadius * scale
+          ),
+        });
+
         cellContainer.removeChildren();
         for (const [x, y] of hexmap) {
-          const g = new PIXI.Graphics();
-          g.myOriginX = g.x = margin + x * scale;
-          g.myOriginY = g.y = margin + y * scale;
-          g.myOffsetX = 0;
-          g.myOffsetY = 0;
-          g.beginFill(0xffffff);
-          g.drawCircle(0, 0, baseRadius * scale);
-          g.endFill();
-          cellContainer.addChild(g);
+          const sprite = new PIXI.Sprite(cellTexture);
+          sprite.anchor.set(0.5);
+          sprite.myOriginX = sprite.x = margin + x * scale;
+          sprite.myOriginY = sprite.y = margin + y * scale;
+          sprite.myOffsetX = 0;
+          sprite.myOffsetY = 0;
+          cellContainer.addChild(sprite);
         }
       }
 
@@ -1621,37 +1668,71 @@
     });
   }
 
-  let seekbarTooltipListenerController;
-  function installSeekbarTooltip({ lyrics, duration }) {
-    if (duration == null) {
-      duration = lyrics[lyrics.length - 1].end;
+  let seekbarListenerController;
+  function installSeekbarListeners({ lyrics, start, end }) {
+    const duration = end - start;
+
+    seekbarListenerController?.abort();
+    seekbarListenerController = new AbortController();
+
+    if (!fullscreen) {
+      seekbarInput.addEventListener(
+        "mousemove",
+        (event) => {
+          const rect = seekbarInput.getBoundingClientRect();
+          const normalizedPosition = (event.clientX - rect.x) / rect.width;
+          const time = start + duration * normalizedPosition;
+          const line = lyrics.find((l, i) => time >= l.start && time < l.end);
+          setSeekbarTooltip(normalizedPosition, languages[line?.lang]);
+        },
+        { signal: seekbarListenerController.signal }
+      );
     }
-    seekbarTooltipListenerController?.abort();
-    seekbarTooltipListenerController = new AbortController();
-    seekbarInput.addEventListener(
-      "mousemove",
-      (event) => {
-        const rect = seekbarInput.getBoundingClientRect();
-        const time = duration * ((event.clientX - rect.x) / rect.width);
-        const line = lyrics.find((l, i) => time >= l.start && time < l.end);
-        const language = languages[line?.lang];
-        tooltip.classList.toggle("active", !!language);
-        if (language) {
-          tooltip.textContent = language.name;
-          tooltip.style.setProperty("--color", language.color);
-        }
-        tooltip.style.top = rect.y - tooltip.offsetHeight + "px";
-        tooltip.style.left = event.pageX - tooltip.offsetWidth / 2 + "px";
-      },
-      { signal: seekbarTooltipListenerController.signal }
-    );
+
     seekbarInput.addEventListener(
       "mouseleave",
       () => {
         tooltip.classList.toggle("active", false);
       },
-      { signal: seekbarTooltipListenerController.signal }
+      { signal: seekbarListenerController.signal }
     );
+
+    seekbarInput.addEventListener(
+      "input",
+      () => {
+        seekToPercentage(Number.parseInt(seekbarInput.value), false);
+      },
+      { signal: seekbarListenerController.signal }
+    );
+
+    seekbarInput.addEventListener(
+      "change",
+      () => {
+        seekToPercentage(Number.parseInt(seekbarInput.value), true);
+      },
+      { signal: seekbarListenerController.signal }
+    );
+
+    function seekToPercentage(percentage, allowSeekAhead) {
+      const seconds = start + duration * (percentage / 100);
+      currentPlayer?.seekTo(seconds, allowSeekAhead);
+      if (!allowSeekAhead) {
+        seekbar.style.setProperty("--seek", percentage);
+      }
+    }
+  }
+
+  function setSeekbarTooltip(normalizedPosition, language) {
+    const rect = seekbarInput.getBoundingClientRect();
+    tooltip.classList.toggle("active", !!language);
+    if (language) {
+      tooltip.textContent = language.name;
+      tooltip.style.setProperty("--color", language.color);
+    }
+    tooltip.style.translate = [
+      rect.x + rect.width * normalizedPosition - tooltip.offsetWidth / 2 + "px",
+      rect.y - tooltip.offsetHeight + "px",
+    ].join(" ");
   }
 
   const loadYouTubeAPI = (() => {
