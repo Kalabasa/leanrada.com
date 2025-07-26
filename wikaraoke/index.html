@@ -632,14 +632,6 @@
       currentPlayer?.playVideo?.();
     });
 
-    seekbarInput.addEventListener("input", () => {
-      seekbar.style.setProperty("--seek", seekbarInput.value);
-      seekToPercentage(Number.parseInt(seekbarInput.value), false);
-    });
-    seekbarInput.addEventListener("change", () => {
-      seekToPercentage(Number.parseInt(seekbarInput.value), true);
-    });
-
     closeButton.addEventListener("click", () => {
       currentPlayer?.destroy();
       playerContainer.replaceChildren();
@@ -762,22 +754,24 @@
           ...peak,
           time: peak.time + offset,
         })) ?? [];
+
       const { element, playerPromise } = await createPlayer({
         youtubeId: data.youtubeId,
       });
+
       playerContainer.replaceChildren(element);
+      // playerPromise depends on `element` being connected
       const player = await playerPromise;
-      const duration = player.getDuration();
-      progressContainer.replaceChildren(
-        createTimeline({
-          lyrics,
-          duration,
-        })
-      );
-      installSeekbarTooltip({ lyrics, duration });
-      playSong({ player, skip: data.skip, lyrics, peaks, map });
+      const end = data.end ?? player.getDuration();
+      const start = data.start ?? data.skip ?? 0;
+
+      progressContainer.replaceChildren(createTimeline({ lyrics, start, end }));
+      installSeekbarListeners({ lyrics, start, end });
+      playSong({ player, start, end, lyrics, peaks, map });
+
       playingTitle.innerText = playingText;
       document.title = playingText + " | " + appTitle;
+
       // YouTube takes some more load time before actually playing
       setTimeout(() => {
         toggleLoadingClass(false);
@@ -791,12 +785,6 @@
       shouldHighlightLine.myTitleCache[title] ??
       title.replaceAll(/\W/g, "").toLowerCase();
     return text.replaceAll(/\W/g, "").toLowerCase().includes(normalizedTitle);
-  }
-
-  function seekToPercentage(percentage, allowSeekAhead) {
-    if (!currentPlayer) return;
-    const seconds = currentPlayer.getDuration() * (percentage / 100);
-    currentPlayer.seekTo(seconds, allowSeekAhead);
   }
 
   function toggleLoadingClass(isLoading) {
@@ -845,24 +833,26 @@
     return { element: iframe, playerPromise };
   }
 
-  function playSong({ player, skip, lyrics, peaks, map }) {
+  function playSong({ player, start, end, lyrics, peaks, map }) {
     currentPlayer = player;
-    if (skip) {
-      player.seekTo(skip, true);
+    if (start) {
+      player.seekTo(start, true);
     }
     player.playVideo();
     toggleHasSongSelectedClass(true);
+
+    const duration = end - start;
+    const lyricsLangs = new Set(lyrics.map((l) => l.lang));
 
     let currentLine = null;
     let currentPeakIndex = 0;
     let relativePeakDb = -6;
 
-    const lyricsLangs = new Set(lyrics.map((l) => l.lang));
-
     const targetUpdateInterval = 1000 / 15;
     let actualUpdateInterval = targetUpdateInterval;
     let lastUpdateTime = performance.now();
-    let lastPlayerTime = skip ?? 0;
+    let lastPlayerTime = start ?? 0;
+
     const intervalID = setInterval(() => {
       if (!player.getIframe()?.isConnected) {
         currentPlayer = null;
@@ -880,7 +870,13 @@
         Math.max(targetUpdateInterval, actualUpdateInterval);
 
       const time = player.getCurrentTime();
-      seekbar.style.setProperty("--seek", 100 * (time / player.getDuration()));
+      if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+        seekbar.style.setProperty("--seek", 100 * ((time - start) / duration));
+      }
+
+      if (end && player.getCurrentTime() >= end) {
+        player.stopVideo();
+      }
 
       const line = lyrics.find((l) => time >= l.start && time < l.end);
       if (currentLine !== line) {
@@ -1165,12 +1161,8 @@
     return container;
   }
 
-  function createTimeline({ lyrics, duration }) {
+  function createTimeline({ lyrics, start, end }) {
     if (!lyrics.length) return document.createElement("div");
-
-    if (duration == null) {
-      duration = lyrics[lyrics.length - 1].end;
-    }
 
     const container = document.createElement("lyrics-timeline");
     container.style.display = "flex";
@@ -1182,7 +1174,8 @@
       container.appendChild(rect);
     };
 
-    let currentTime = 0;
+    const duration = end - start;
+    let currentTime = start;
     for (const segment of lyrics) {
       if (currentTime < segment.start) {
         const skipPercent = ((segment.start - currentTime) / duration) * 100;
@@ -1192,15 +1185,17 @@
           "gray";
         appendRect(skipPercent, lastColor);
       }
-      const segDuration = segment.end - segment.start;
+      const segmentEnd = Math.min(segment.end, end);
+      const segDuration = segmentEnd - segment.start;
       const widthPercent = (segDuration / duration) * 100;
       const color = languages[segment.lang]?.color ?? "gray";
       appendRect(widthPercent, color);
-      currentTime = Math.min(segment.end, duration);
+      currentTime = segmentEnd;
+      if (segmentEnd >= end) break;
     }
 
-    if (currentTime < duration) {
-      const remainingPercent = ((duration - currentTime) / duration) * 100;
+    if (currentTime < end) {
+      const remainingPercent = ((end - currentTime) / duration) * 100;
       const lastColor =
         container.lastElementChild?.style.backgroundColor ?? "gray";
       appendRect(remainingPercent, lastColor);
@@ -1547,7 +1542,11 @@
         cellTexture?.destroy();
         const cellGraphics = new PIXI.Graphics();
         cellGraphics.beginFill(0xffffff);
-        cellGraphics.drawCircle(baseRadius * scale, baseRadius * scale, baseRadius * scale);
+        cellGraphics.drawCircle(
+          baseRadius * scale,
+          baseRadius * scale,
+          baseRadius * scale
+        );
         cellGraphics.endFill();
         cellTexture = app.renderer.generateTexture(cellGraphics, {
           region: new PIXI.Rectangle(
@@ -1638,18 +1637,18 @@
     });
   }
 
-  let seekbarTooltipListenerController;
-  function installSeekbarTooltip({ lyrics, duration }) {
-    if (duration == null) {
-      duration = lyrics[lyrics.length - 1].end;
-    }
-    seekbarTooltipListenerController?.abort();
-    seekbarTooltipListenerController = new AbortController();
+  let seekbarListenerController;
+  function installSeekbarListeners({ lyrics, start, end }) {
+    const duration = end - start;
+
+    seekbarListenerController?.abort();
+    seekbarListenerController = new AbortController();
+
     seekbarInput.addEventListener(
       "mousemove",
       (event) => {
         const rect = seekbarInput.getBoundingClientRect();
-        const time = duration * ((event.clientX - rect.x) / rect.width);
+        const time = start + duration * ((event.clientX - rect.x) / rect.width);
         const line = lyrics.find((l, i) => time >= l.start && time < l.end);
         const language = languages[line?.lang];
         tooltip.classList.toggle("active", !!language);
@@ -1660,15 +1659,40 @@
         tooltip.style.top = rect.y - tooltip.offsetHeight + "px";
         tooltip.style.left = event.pageX - tooltip.offsetWidth / 2 + "px";
       },
-      { signal: seekbarTooltipListenerController.signal }
+      { signal: seekbarListenerController.signal }
     );
+
     seekbarInput.addEventListener(
       "mouseleave",
       () => {
         tooltip.classList.toggle("active", false);
       },
-      { signal: seekbarTooltipListenerController.signal }
+      { signal: seekbarListenerController.signal }
     );
+
+    seekbarInput.addEventListener(
+      "input",
+      () => {
+        seekToPercentage(Number.parseInt(seekbarInput.value), false);
+      },
+      { signal: seekbarListenerController.signal }
+    );
+
+    seekbarInput.addEventListener(
+      "change",
+      () => {
+        seekToPercentage(Number.parseInt(seekbarInput.value), true);
+      },
+      { signal: seekbarListenerController.signal }
+    );
+
+    function seekToPercentage(percentage, allowSeekAhead) {
+      const seconds = start + duration * (percentage / 100);
+      currentPlayer?.seekTo(seconds, allowSeekAhead);
+      if (!allowSeekAhead) {
+        seekbar.style.setProperty("--seek", percentage);
+      }
+    }
   }
 
   const loadYouTubeAPI = (() => {
