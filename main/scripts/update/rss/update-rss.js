@@ -27,7 +27,7 @@ async function rewriteRSS({ rss, notes, siteDir }) {
 
   const ch = cheerio.load(rss, { xml: true });
 
-  let oldestTime = -Infinity;
+  let oldestTime = Infinity;
   ch("item > pubDate").each(function (_, el) {
     oldestTime = Math.min(oldestTime, Date.parse(ch(el).text()));
   });
