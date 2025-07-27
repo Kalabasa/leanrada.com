@@ -14,7 +14,7 @@ import { tryWrite } from "./util/try-write.mjs";
 import { readWares } from "./wares/read-wares.mjs";
 import { fetchGuestbookData } from "./guestbook/fetch-guestbook-data.js";
 import { createGuestbookCard } from "../../site/guestbook/guestbook-card.js";
-import { populateReactions } from "./notes/populate-reactions.mjs";
+import { populateStats } from "./notes/populate-stats.mjs";
 
 const { siteDir } = initScript();
 
@@ -44,7 +44,7 @@ async function main() {
           maxSmartSuggestions: 3,
           maxSuggestions: 4,
         });
-        await populateReactions({ notes, existingNotes });
+        await populateStats({ notes, existingNotes });
         return notes;
       })().catch(fallback("notes"))
     ),

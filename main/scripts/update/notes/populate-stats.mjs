@@ -11,7 +11,7 @@ const UPDATE_INTERVAL = 7 * 24 * 60 * 60_000;
 // don't smash the server
 let pendingFetch = Promise.resolve();
 
-export async function populateReactions({ notes, existingNotes }) {
+export async function populateStats({ notes, existingNotes }) {
   await Promise.all(
     notes
       .filter((note) => note.public)
@@ -21,24 +21,30 @@ export async function populateReactions({ notes, existingNotes }) {
         );
 
         if (
-          existingNote?.reactions &&
-          existingNote.reactions._lastUpdated + UPDATE_INTERVAL > Date.now()
+          existingNote?.stats &&
+          existingNote.stats._lastUpdated + UPDATE_INTERVAL > Date.now()
         ) {
-          note.reactions = existingNote.reactions;
+          note.stats = existingNote.stats;
           return;
         }
 
-        const reactions = {};
+        const stats = {};
         await Promise.all(
+          async () => {
+            stats.views = await (pendingFetch = pendingFetch.then(() =>
+              fetchHits(note.href)
+            ));
+          },
           reactionTypes.map(async (type) => {
             const pagePath = eventName(note.href, type);
-            reactions[type] = await (pendingFetch = pendingFetch.then(() =>
+            stats[type] = await (pendingFetch = pendingFetch.then(() =>
               fetchHits(pagePath)
             ));
           })
         );
-        note.reactions = reactions;
-        note.reactions._lastUpdated = Date.now();
+
+        note.stats = stats;
+        note.stats._lastUpdated = Date.now();
       })
   );
   return notes;
