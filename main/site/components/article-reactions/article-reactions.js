@@ -1,4 +1,18 @@
-customElements.define(
+export const reactionTypes = ["bubble", "heart", "sun", "cloud", "fire"];
+const reactionState = reactionTypes.reduce((acc, type) => {
+  acc[type] = 0;
+
+  if (globalThis.sessionStorage) {
+    const cached = globalThis.sessionStorage.getItem(sessionCacheKey(type));
+    try {
+      if (cached) acc[type] = parseInt(cached, 10) || 0;
+    } catch {}
+  }
+
+  return acc;
+}, {});
+
+globalThis.customElements?.define(
   "article-reactions",
   class ArticleReactions extends HTMLElement {
     constructor() {
@@ -212,10 +226,14 @@ customElements.define(
         const increment = async () => {
           if (!(await loadedData)) return;
 
+          reactionState[type]++;
+          window.sessionStorage.setItem(
+            sessionCacheKey(type),
+            reactionState[type]
+          );
           window.goatcounter.count(eventVars(type));
-          reactionData[type]++;
 
-          this.renderCount(type, reactionData[type]);
+          this.renderCount(type, reactionState[type]);
         };
 
         for (const button of this.querySelectorAll(`.reaction-${type}-btn`)) {
@@ -262,36 +280,21 @@ customElements.define(
       }
     }
 
-    // todo: prerender counts so they don't depend on the client lib
     async loadData() {
-      const timeout = Symbol();
       try {
-        await Promise.race([
-          waitFor(() => window.goatcounter?.count != null),
-          delay(8000).finally(() => {
-            throw timeout;
-          }),
-        ]);
-        await Promise.all(
-          reactionTypes.map(async (type, i) => {
-            this.renderCount(type, "");
+        const { loadNote } = await import("/notes/index-loader.js");
+        const result = await loadNote(window.location.pathname);
 
-            await delay(Math.random() * 2000);
+        if (!result?.note?.reactions) throw new Error("Missing reaction data");
 
-            const eventURL = window.goatcounter.url(eventVars(type));
-            const pagePath = new URL(eventURL).searchParams.get("p");
-            if (!pagePath) throw new Error("Invalid eventURL!");
+        for (const type of reactionTypes) {
+          const count = result.note.reactions[type];
+          reactionState[type] = Math.max(reactionState[type], count);
+          this.renderCount(type, reactionState[type] || "");
+        }
 
-            const hits = await getHits(pagePath);
-            reactionData[type] = hits;
-
-            this.renderCount(type, hits > 0 ? hits : "");
-          })
-        );
         return true;
       } catch (error) {
-        if (error !== timeout) throw error;
-
         for (const type of reactionTypes) {
           this.renderCount(type, "-");
         }
@@ -306,22 +309,6 @@ customElements.define(
   }
 );
 
-const reactionTypes = ["bubble", "heart", "sun", "cloud", "fire"];
-const reactionData = {};
-
-async function getHits(pagePath) {
-  try {
-    const res = await fetch(
-      `https://kalabasa.goatcounter.com/counter/${pagePath}.json`,
-      { mode: "cors" }
-    );
-    const data = await res.json();
-    return parseInt(data.count.replaceAll(/\D/g, ""));
-  } catch (err) {
-    return 0;
-  }
-}
-
 // returns goatcounter vars object
 function eventVars(reactionType) {
   return {
@@ -331,23 +318,17 @@ function eventVars(reactionType) {
   };
 }
 
-function eventName(pagePath, reactionType) {
+export function eventName(pagePath, reactionType) {
   const url = new URL(pagePath, "https://leanrada.com");
   const id = url.pathname;
   return `reaction-${reactionType}-${id}`;
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sessionCacheKey(reactionType) {
+  const url = new URL(window.location.href);
+  return "cached-" + eventName(url.pathname, reactionType);
 }
 
-function waitFor(condition) {
-  return new Promise((resolve) => {
-    const interval = setInterval(() => {
-      if (condition()) {
-        clearInterval(interval);
-        resolve(true);
-      }
-    }, 100);
-  });
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

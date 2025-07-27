@@ -88,13 +88,19 @@ export async function readNotes(siteDir) {
     .concat(staticIndex)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const existingNotes = JSON.parse(
+    await fs.readFile(
+      path.resolve(siteDir, "notes", "index.generated.combined.json")
+    )
+  );
+
   console.log(
     "Notes:",
     combinedNotes.length,
     "References:",
     noteReferences.size
   );
-  return { notes: combinedNotes, noteReferences };
+  return { notes: combinedNotes, noteReferences, existingNotes };
 }
 
 function multimapAdd(map, key, value) {

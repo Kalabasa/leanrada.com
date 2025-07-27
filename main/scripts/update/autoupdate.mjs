@@ -14,6 +14,7 @@ import { tryWrite } from "./util/try-write.mjs";
 import { readWares } from "./wares/read-wares.mjs";
 import { fetchGuestbookData } from "./guestbook/fetch-guestbook-data.js";
 import { createGuestbookCard } from "../../site/guestbook/guestbook-card.js";
+import { populateReactions } from "./notes/populate-reactions.mjs";
 
 const { siteDir } = initScript();
 
@@ -32,16 +33,21 @@ main();
 async function main() {
   console.group("Loading data...");
   const [notes, wares, guestbook, hits, ghContribs, soRep] = await Promise.all([
-    optional("notes", async () => {
-      const { notes, noteReferences } = await readNotes(siteDir);
-      populateSuggestions({
-        notes,
-        noteReferences,
-        maxSmartSuggestions: 3,
-        maxSuggestions: 4,
-      });
-      return notes;
-    }),
+    optional("notes", () =>
+      (async () => {
+        const { notes, noteReferences, existingNotes } = await readNotes(
+          siteDir
+        );
+        populateSuggestions({
+          notes,
+          noteReferences,
+          maxSmartSuggestions: 3,
+          maxSuggestions: 4,
+        });
+        await populateReactions({ notes, existingNotes });
+        return notes;
+      })().catch(fallback("notes"))
+    ),
     optional("wares", () => readWares(siteDir)),
     optional("guestbook", () =>
       fetchGuestbookData(0).catch(fallback("guestbook"))
