@@ -85,27 +85,13 @@ customElements.define(
     }
 
     async loadSuggestions() {
-      const { loadNotesIndex, loadNote } = await import(
-        "/notes/index-loader.js"
-      );
-
-      // TODO: Remove else branch when loadNote has propagated
-      if (loadNote) {
-        const result = await loadNote(window.location.pathname);
-        if (!result) return [];
-        return result.note.suggestions.map((suggestion) => ({
-          ...suggestion,
-          meta: result.index.find((item) => item.href === suggestion.href),
-        }));
-      } else {
-        const index = await loadNotesIndex();
-        const myHref = window.location.pathname;
-        const note = index.find((item) => item.href === myHref);
-        return (note?.suggestions ?? []).map((suggestion) => ({
-          ...suggestion,
-          meta: index.find((item) => item.href === suggestion.href),
-        }));
-      }
+      const { loadNote } = await import("/notes/index-loader.js");
+      const result = await loadNote(window.location.pathname);
+      if (!result) return [];
+      return result.note.suggestions.map((suggestion) => ({
+        ...suggestion,
+        meta: result.index.find((item) => item.href === suggestion.href),
+      }));
     }
   }
 );
