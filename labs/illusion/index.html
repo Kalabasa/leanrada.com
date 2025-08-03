@@ -1,0 +1,69 @@
+<canvas id="hexCanvas" width="900" height="450"></canvas>
+<script>
+  const canvas = document.getElementById("hexCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  const spacing = width / 10;
+  const angle = Math.PI / 6;
+  const dx = spacing;
+  const dy = Math.tan(angle) * dx;
+  const thickness = spacing * 0.05;
+
+  ctx.strokeStyle = "#999";
+  ctx.lineWidth = thickness;
+
+  for (let x = 0; x <= width; x += dx) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + dx / 2, 0);
+    ctx.lineTo(x + dx / 2, height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + height / Math.tan(angle), height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x - height / Math.tan(angle), height);
+    ctx.stroke();
+  }
+
+  for (let y = dy; y <= height; y += dy) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y + Math.tan(angle) * width);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(width, y);
+    ctx.lineTo(0, y + Math.tan(angle) * width);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "#fff";
+  ctx.fillStyle = "#000";
+  ctx.lineWidth = thickness * 0.3;
+  const radius = thickness * 0.7;
+
+  let even = false;
+  for (let x = 0; x <= width; x += dx * 0.5) {
+    even = !even;
+    for (let y = even ? dy : dy * 1.5; y <= height; y += dy) {
+      if (Math.random() < 0.5) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius, radius, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+  }
+</script>
