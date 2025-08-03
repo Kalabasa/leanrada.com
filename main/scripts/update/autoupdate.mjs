@@ -102,8 +102,16 @@ function optional(name, getter) {
 function fallback(name) {
   return (thrown) => {
     console.error(`Error loading data for '${name}':`, thrown.message);
-    console.error(thrown.cause ?? thrown);
-    return undefined;
+
+    const isOnlyOption = Object.values(options).every(
+      (option) => option.name === name || !option.enable
+    );
+    if (isOnlyOption) {
+      throw thrown;
+    } else {
+      console.error(thrown.cause ?? thrown);
+      return undefined;
+    }
   };
 }
 
