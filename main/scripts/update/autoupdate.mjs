@@ -102,7 +102,7 @@ function optional(name, getter) {
 function fallback(name) {
   return (thrown) => {
     console.error(`Error loading data for '${name}':`, thrown.message);
-    console.error(thrown.cause);
+    console.error(thrown.cause ?? thrown);
     return undefined;
   };
 }

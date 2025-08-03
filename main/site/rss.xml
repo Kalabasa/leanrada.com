@@ -7,6 +7,225 @@
     <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title><![CDATA[Making my GitHub heatmap widget]]></title>
+      <link><![CDATA[https://leanrada.com/notes/github-heatmap-widget/?ref=rss]]></link>
+      <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/github-heatmap-widget/?ref=rss]]></guid>
+      <pubDate>Mon, 04 Aug 2025 00:00:00 GMT</pubDate>
+      <description><![CDATA[
+<p><em>For RSS readers: This article contains interactive content available on the <a href="https://leanrada.com/notes/github-heatmap-widget/?ref=rss">original post on leanrada.com</a>.</em></p>
+
+<p>This post is about how I made the GitHub heatmap widget on my site.</p>
+
+<p>Here’s the raw, live WebComponent <code>&lt;gh-contribs&gt;</code> by the way:</p>
+<card-box>
+  <pre>Interactive content: <a href="https://leanrada.com/notes/github-heatmap-widget/?ref=rss">Visit the post to interact with this content.</a>
+Alternative name: Gh Contribs</pre>
+</card-box>
+<h2>Scraping the data</h2>
+
+<p>First, I had to scrape the heatmap data. I don’t know if there’s a proper API, but I found an endpoint that renders an HTML partial of what I wanted.</p>
+
+<p>As far as I know, the GitHub website today works using partial HTMLs to update its UI without reloading the whole page. I think this endpoint populates the contribution graph section of the profile page.</p>
+
+<p>The endpoint that returns a user’s contribution graph is <a href="https://github.com/users/Kalabasa/contributions" target="_blank"><code>https://github.com/users/{username}/contributions</code></a>. I presume the user has to have contribution stats public. This undocumented API could also break at any time. 😬</p>
+
+<figure>
+  <img src="https://leanrada.com/notes/github-heatmap-widget/contributions-html.png?ref=rss" loading="lazy" width="932" height="741">
+  <figcaption>The response HTML for my github.com/users/Kalabasa/contributions</figcaption>
+</figure>
+
+<p>Loading this endpoint gives you an unstyled piece of HTML containing an HTML table of contribution data and other UI. The table cells are invisible because of the lack of styles! When embedded in the profile page, it inherits the appropriate styling in context.</p>
+
+<img alt="styled contribution table" src="https://leanrada.com/notes/github-heatmap-widget/contributions-styled.png?ref=rss" loading="lazy" width="741" height="204">
+
+<p>The first column is the weekday label, and the rest of the cells seem to represent a single day each. The data is encoded in the HTML that presents the data! This reminds me of <a href="https://htmx.org/essays/hateoas/" target="_blank">Hypermedia as the Engine of Application State</a>. html = data.</p>
+
+<pre><code>&lt;tbody&gt;
+&lt;tr style="height: 10px"&gt;
+  &lt;td class="ContributionCalendar-label" style="position: relative"&gt;
+    &lt;span class="sr-only"&gt;Monday&lt;/span&gt;
+    &lt;span aria-hidden="true" style="clip-path: None; position: absolute; bottom: -3px"&gt;
+      Mon
+    &lt;/span&gt;
+  &lt;/td&gt;
+  &lt;td
+    tabindex="0"
+    data-ix="0"
+    aria-selected="false"
+    aria-describedby="contribution-graph-legend-level-2"
+    style="width: 10px"
+    data-date="2024-08-05"
+    id="contribution-day-component-1-0"
+    data-level="2"
+    role="gridcell"
+    data-view-component="true"
+    class="ContributionCalendar-day"&gt;
+  &lt;/td&gt;
+  &lt;td
+    tabindex="0"
+    data-ix="1"
+    aria-selected="false"
+    aria-describedby="contribution-graph-legend-level-1"
+    style="width: 10px"
+    data-date="2024-08-12"
+    id="contribution-day-component-1-1"
+    data-level="1"
+    role="gridcell"
+    data-view-component="true"
+    class="ContributionCalendar-day"&gt;
+  &lt;/td&gt;
+  &lt;td
+    tabindex="0"
+    data-ix="2"
+    aria-selected="false"
+    aria-describedby="contribution-graph-legend-level-2"
+    style="width: 10px"
+    data-date="2024-08-19"
+    id="contribution-day-component-1-2"
+    data-level="2"
+    role="gridcell"
+    data-view-component="true"
+    class="ContributionCalendar-day"&gt;
+  &lt;/td&gt;
+  <!--...--></code></pre>
+
+<p>What I was looking for here was the <code>data-level</code> attribute on each cell. It contains a coarse integer value that indicates the activity level for the day.</p>
+
+<p>Coupled with the <code>data-date</code> attribute, it became rather easy to scrape this data! Instead of keeping track of columns and rows, I just go through each <code>data-date</code> and <code>data-level</code> as a (date,level) data point.</p>
+
+<p>Here’s my parse function using <a href="https://cheerio.js.org/" target="_blank">cheerio</a>, a jQuery clone for Node.js.</p>
+
+<pre><code>const res = await fetch(
+  "https://github.com/users/Kalabasa/contributions");
+let data = parseContribs(await res.text());
+
+/**
+ * Parses a GitHub contribution calendar HTML string and extracts contribution data.
+ *
+ * @param {string} html - The HTML string containing the GitHub contribution calendar.
+ * @returns {{ date: Date, level: number }[]} Array of contribution objects with date and activity level.
+ * @throws {Error} If the contribution calendar table cannot be found in the HTML.
+ */
+function parseContribs(html) {
+  const ch = cheerio.load(html);
+  const chTable = ch("table.ContributionCalendar-grid");
+  if (!chTable.length) throw new Error("Can't find table.");
+  const chDays = chTable.find("[data-date]");
+  const data = chDays
+    .map((_, el) =&gt; {
+      const chDay = ch(el);
+      const date = new Date(chDay.attr("data-date"));
+      const level = parseInt(chDay.attr("data-level"), 10);
+      return { date, level };
+    })
+    .get();
+  return data;
+}</code></pre>
+
+
+This data is scraped at regular intervals, reformatted into a grid, and saved into a compact JSON format for later consumption and rendering by the WebComponent on the client.
+
+
+<pre><code>// gh-contribs.json
+[
+  [1,2,1,2,2,1,1],
+  [0,1,0,2,0,1,0],
+  [1,1,1,1,1,1,0],
+  [0,1,0,0,1,1,0],
+  [0,0,1,0,0,0]
+]</code></pre>
+
+<h2>Rendering the data</h2>
+
+<p>The reason why the data is reformatted into a grid like that is to make the rendering logic straightforward. The data is structured so that it can be directly converted into HTML without thinking in dates and weeks that are in the original data.</p>
+
+<p>Here are the current JSON and WebComponent side by side. Each row in the data gets directly rendered as a column in the component.</p>
+<auto-grid>
+  <code-block language="js">
+    <pre><code>
+      <pre>Interactive content: <a href="https://leanrada.com/notes/github-heatmap-widget/?ref=rss">Visit the post to interact with this content.</a>
+Alternative name: Inline script</pre>
+    </code></pre>
+  </code-block>
+  <pre>Interactive content: <a href="https://leanrada.com/notes/github-heatmap-widget/?ref=rss">Visit the post to interact with this content.</a>
+Alternative name: Gh Contribs</pre>
+</auto-grid>
+<p>As such, <code>&lt;gh-contribs&gt;</code>’s initialisation logic is really simple:</p>
+
+<pre><code>const contribs = await fetch(
+  "path/to/gh-contribs.json"
+).then((res) =&gt; res.json());
+
+let htmlString = "";
+for (const col of contribs) {
+  for (const level of col) {
+    htmlString += html`&lt;div data-level="${level}"&gt;${level}&lt;/div&gt;`;
+  }
+}
+this.innerHTML = htmlString;</code></pre>
+
+
+Add some CSS and it’s done:
+
+
+<pre><code>gh-contribs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, auto);
+  gap: 12px;
+  div {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    background: #222c2c;
+    color: transparent;
+    &amp;::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #54f8c1;
+    }
+    &amp;[data-level="0"]::after {
+      opacity: 0;
+    }
+    &amp;[data-level="1"]::after {
+      opacity: 0.3;
+    }
+    &amp;[data-level="2"]::after {
+      opacity: 0.6;
+    }
+    &amp;[data-level="3"]::after {
+      opacity: 1;
+    }
+  }
+}</code></pre>
+
+<h2>Why not use the original HTML?</h2>
+
+<p>Why not just embed the contributions HTML from GitHub? Slice the relevant <code>&lt;tr&gt;</code>s and <code>&lt;td&gt;</code>s…? Why parse the original HTML table, convert it to JSON, then render it as HTML again?</p>
+
+<p>The main reason to do [HTML → JSON → HTML] is to remain flexible. As you know, that endpoint is undocumented. Also, depending on the HTML structure of the original is risky. Risk of breakage, risk of unwanted content, etc.</p>
+
+<p>This way, I can change how I get the data without refactoring the WebComponent. I could go [<strong>GitHub API</strong> → JSON → HTML] or [<strong>local git script</strong> → JSON → HTML] or whatever.</p>
+
+<p>It also works the other end. I actually rewrote this widget recently (from statically-generated HTML into a WebComponent) without having to change the scraper script or the JSON data structure.</p>
+
+<h2>Final touches</h2>
+
+<p>The WebComponent renders just the grid itself for flexibility. This let me use it in different ways, like with an icon and heading as in the home page.</p>
+<card-box>
+  <h4>
+    <img src="https://leanrada.com/icons/github.png?ref=rss" alt="" loading="lazy" width="16" height="16">
+    my github<br>heatmap
+  </h4>
+  <pre>Interactive content: <a href="https://leanrada.com/notes/github-heatmap-widget/?ref=rss">Visit the post to interact with this content.</a>
+Alternative name: Gh Contribs</pre>
+</card-box>
+<p>Here’s the <a href="https://leanrada.com/components/gh-contribs/gh-contribs.js?ref=rss" target="_blank">source code for this WebComponent</a> if you’re interested.</p>
+]]></description>
+    </item>
+
+    <item>
       <title><![CDATA[Vibecoding Lima Gang, web-based map visualization]]></title>
       <link><![CDATA[https://leanrada.com/notes/vibecoding-lima-gang/?ref=rss]]></link>
       <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/vibecoding-lima-gang/?ref=rss]]></guid>
@@ -3568,195 +3787,6 @@ Alternative text: Lily58 keyboard layout diagram
             <guid isPermaLink="true">https://leanrada.com/notes/my-personalised-keyboard?ref=rss</guid>
             <pubDate>Fri, 01 Dec 2023 00:00:00 GMT</pubDate>
         </item>
-        <item>
-            <title><![CDATA[Baybayin calligraphy generator]]></title>
-            <description><![CDATA[
-<h1 id="guhitkudlit">GuhitKudlit</h1>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="preview" src="https://leanrada.com/wares/guhit-kudlit/pakita.png?ref=rss">
-
-<h2 id="baybayin-calligraphy-generator">Baybayin calligraphy generator</h2>
-
-<p><a target="_blank" href="https://leanrada.com/guhit-kudlit/">GuhitKudlit<span>🡵</span></a> is a webapp that generates <em>baybayin</em> calligraphy.</p>
-
-<p><a target="_blank" href="https://en.wikipedia.org/wiki/Baybayin">Baybayin<span>🡵</span></a> is an ancient writing system used in the Philippines, mostly for the Tagalog language. I’ve always been fascinated by Philippine languages, and this project was just another fruit of that curiosity.</p>
-<aside>
-              <div>
-                <div>Project details</div>
-                <a target="_blank" tag="a" href="https://leanrada.com/guhit-kudlit/">
-                  Open the app
-                </a>
-              </div>
-              <div>
-                <div>
-                  <div>released</div>
-                  <div>2023</div>
-                </div>
-                <div>
-                  <div>role</div>
-                  <div>creator</div>
-                </div>
-                <div>
-                  <div>platform</div>
-                  <div>Web</div>
-                </div>
-                <div>
-                  <div>tech</div>
-                  <div>JS</div>
-                </div>
-              </div>
-            </aside>
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="Generated baybayin calligraphy of the word ‘guhit’" src="https://leanrada.com/wares/guhit-kudlit/guhit.png?ref=rss" caption="Output of GuhitKudlit for the word ‘guhit’">
-<span>Output of GuhitKudlit for the word ‘guhit’</span>
-<p>The name comes from <em>‘guhit’</em> meaning line or drawing, and <em>‘kudlit’</em> meaning tick or small mark.</p>
-
-<p>You see, baybayin is an <a target="_blank" href="https://en.wikipedia.org/wiki/Abugida">abugida<span>🡵</span></a> and in baybayin, the <em>kudlit</em> is used to signify the vowel of a character.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="chart of baybayin characters" src="https://leanrada.com/wares/guhit-kudlit/baybayin-chart.png?ref=rss" caption="Chart of baybayin characters from Wikimedia">
-<span>Chart of baybayin characters from Wikimedia</span>
-<p>The program is divided into two functions: <strong>transliteration</strong> and <strong>calligraphy</strong>. The transliteration process converts ASCII input to baybayin glyphs, and the calligraphy function draws those glyphs onto the canvas using the <a target="_blank" href="https://p5js.org/">p5.js library<span>🡵</span></a>.</p>
-
-<h2 id="transliteration">Transliteration</h2>
-
-<p>The transliteration algorithm that converts ASCII text to baybayin glyphs is quite simple (or should I say, simplistic?). It processes the input letter-by-letter, and produces output one syllable at a time.</p>
-
-<video muted="" autoplay="" loop="" playsinline="" aria-label="video of transliteration" alt="video of transliteration" data-src="/wares/guhit-kudlit/transliteration.mp4">
-                <source src="https://leanrada.com/wares/guhit-kudlit/transliteration.mp4?ref=rss">
-
-                Video: video of transliteration | Source: /wares/guhit-kudlit/transliteration.mp4
-
-              </video>
-
-<p>This works great for Tagalog words, not so much for English which has arbitrary rules on syllables &amp; pronunciation. Thus, the converter was only intended to primarily work in Tagalog.</p>
-
-<p>For example, Tagalog doesn’t have a letter for the “j” sound (Compare Japanese, which has no direct “L” sound). The transliteration function deliberately does not handle these cases to avoid misspellings and false assumptions. If you attempt to put in foreign letters, an error will stop you.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="screenshot of error message, saying 'Cannot unambiguously convert this letter. There is no direct baybayin equivalent for the said letter. You can write it first in the Tagalog alphabet (abakada).'" src="https://leanrada.com/wares/guhit-kudlit/ceres.png?ref=rss">
-
-<p>One thing I’ve noticed in other baybayin converters online was that their outputs were <em>opaque</em>. That is, if you can’t read baybayin, you can’t verify the output. This would sometimes trick people into getting silly mispelled tattoos and stuff. While that’s their fault for being ignorant, we can do better.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="example of syllabication. tilapia, ti-la-pi-ya" src="https://leanrada.com/wares/guhit-kudlit/tilapia.png?ref=rss">
-
-<p>GuhitKudlit makes the transliteration process transparent by showing the resulting syllabication, which one-to-one maps to baybayin glyphs. This should allow users to double-check their results and make adjustments.</p>
-
-<p>The module had a single-file test suite:</p>
-
-<pre><code><span>import</span> <span>{</span> baybayin <span>}</span> <span>from</span> <span>"./baybay.mjs"</span><span>;</span>
-
-<span>// Karaniwan</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"aso"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"a"</span><span>,</span> <span>"su"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"pusa"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"pu"</span><span>,</span> <span>"sa"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"araw"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"a"</span><span>,</span> <span>"da"</span><span>,</span> <span>"w"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"elepante"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"i"</span><span>,</span> <span>"li"</span><span>,</span> <span>"pa"</span><span>,</span> <span>"n"</span><span>,</span> <span>"ti"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"bantay"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"ba"</span><span>,</span> <span>"n"</span><span>,</span> <span>"ta"</span><span>,</span> <span>"y"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"daan"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"da"</span><span>,</span> <span>"a"</span><span>,</span> <span>"n"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"doon"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"du"</span><span>,</span> <span>"u"</span><span>,</span> <span>"n"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"biik"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"bi"</span><span>,</span> <span>"i"</span><span>,</span> <span>"k"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"kailan"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"ka"</span><span>,</span> <span>"i"</span><span>,</span> <span>"la"</span><span>,</span> <span>"n"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"baon"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"ba"</span><span>,</span> <span>"u"</span><span>,</span> <span>"n"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"baul"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"ba"</span><span>,</span> <span>"u"</span><span>,</span> <span>"l"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"kain"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"ka"</span><span>,</span> <span>"i"</span><span>,</span> <span>"n"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"upuan"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"u"</span><span>,</span> <span>"pu"</span><span>,</span> <span>"a"</span><span>,</span> <span>"n"</span><span>]</span><span>)</span><span>;</span>
-
-<span>// Di normal na baybay</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"tilapia"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"ti"</span><span>,</span> <span>"la"</span><span>,</span> <span>"pi"</span><span>,</span> <span>"ya"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"durian"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"du"</span><span>,</span> <span>"di"</span><span>,</span> <span>"ya"</span><span>,</span> <span>"n"</span><span>]</span><span>)</span><span>;</span>
-
-<span>// Bigkas na iba sa baybay</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"ng"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"na"</span><span>,</span> <span>"ng"</span><span>]</span><span>)</span><span>;</span>
-<span>dapat</span><span>(</span><span>baybayin</span><span>(</span><span>"mga"</span><span>)</span><span>)</span><span>.</span><span>ay</span><span>(</span><span>[</span><span>"ma"</span><span>,</span> <span>"nga"</span><span>]</span><span>)</span><span>;</span>
-<span>// ...</span></code></pre>
-
-<p>(Yes, I wrote all the code for this project in Tagalog)</p>
-
-<p>The transliteration process is just one half of the program. It took me a a while to code it, but what I really wanted to make was the drawing algorithm. While transliteration is essential for a good user experience, the real show starts with the calligraphy algorithm.</p>
-
-<h2 id="calligraphy">Calligraphy</h2>
-
-<p>Once we have a sequence of baybayin glyphs, we can start drawing them on the canvas.</p>
-
-<p>The calligraphy algorithm goes like this (heavily simplified):</p>
-
-<ol start="0">
-              <li>A brush head is simulated in 2D space. It has position, size, velocity, pressure, and other properties.</li>
-              <li>The brush is continuously pulled along the canvas following the strokes of the current glyph. This simulation mimics natural movement and momentum.</li>
-              <li>When the current glyph is finished, the brush head moves down the next available space to start drawing the next glyph, and so on.</li>
-            </ol>
-
-<video muted="" autoplay="" loop="" playsinline="" aria-label="video of calligraphy algorithm in action" alt="video of calligraphy algorithm in action" data-src="/wares/guhit-kudlit/calligraphy.mp4">
-                <source src="https://leanrada.com/wares/guhit-kudlit/calligraphy.mp4?ref=rss">
-
-                Video: video of calligraphy algorithm in action | Source: /wares/guhit-kudlit/calligraphy.mp4
-
-              </video>
-
-<p>There are four preset calligraphy styles. These variations are created by changing the parameters of the brush simulation, like acceleration, pressure, etc.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="screenshot of different calligraphy styles" src="https://leanrada.com/wares/guhit-kudlit/styles.png?ref=rss" caption="Different styles starting from top-left, clockwise: Modern, Classic, Dry brush, Chisel tip">
-<span>Different styles starting from top-left, clockwise: Modern, Classic, Dry brush, Chisel tip</span>
-<p>To define the vertices or waypoints that the brush head would follow, I started by decomposing baybayin into individual strokes and identified the common structural elements.</p>
-
-<p>You know how Latin characters have something called “typography anatomy”? Things like ascenders, descenders, stems, bars, etc? These are elements common across Latin letters, like how the loop in ‘b’ is the same loop as in ‘p’, just with a different stem.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="Elements of Latin typography, partial anatomy" src="https://leanrada.com/wares/guhit-kudlit/latin-parts.png?ref=rss">
-
-<p>Well, I tried to decompose baybayin in a similar way. A big inspiration came from others who have done the same before, like <a target="_blank" href="https://nordenx.blogspot.com/2014/04/saving-baybayin-through-technology.html">Nordenx<span>🡵</span></a>. However, for my specific purpose of constructing baybayin forms programmatically, my decomposition strategy is more about the reuse of common elements.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="Elements of Baybayin typography, partial anatomy" src="https://leanrada.com/wares/guhit-kudlit/baybayin-parts.png?ref=rss">
-
-<p>Here’s a partial list of the typographical building blocks that I ended up with:</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="My version of elements of Baybayin typography" src="https://leanrada.com/wares/guhit-kudlit/baybayin-elements.png?ref=rss">
-
-<p>The decomposition is more apparent in code:</p>
-
-<pre><code><span>const</span> talaguhitan <span>=</span> <span>{</span>
-  <span>"a"</span><span>:</span> <span>[</span>
-    <span>...</span>guhitYa<span>,</span>
-    <span>[</span>guhitTuwid<span>,</span> <span>0.0</span><span>,</span> <span>0.4</span><span>,</span> <span>0.2</span><span>,</span> <span>0.4</span><span>,</span> <span>0.05</span><span>,</span> <span>-</span><span>0.05</span><span>,</span> <span>PUTOL</span><span>]</span><span>,</span>
-  <span>]</span><span>,</span>
-  <span>"i"</span><span>:</span> <span>[</span>
-    <span>[</span>guhitAlon<span>,</span> <span>0.0</span><span>,</span> <span>0.2</span><span>,</span> <span>1.0</span><span>,</span> <span>0.2</span><span>,</span> <span>0.0</span><span>,</span> <span>0.1</span><span>,</span> <span>PUTOL</span><span>]</span><span>,</span>
-    <span>[</span>guhitUlap<span>,</span> <span>0.0</span><span>,</span> <span>0.5</span><span>,</span> <span>1.0</span><span>,</span> <span>0.5</span><span>,</span> <span>0.0</span><span>,</span> <span>0.2</span><span>,</span> <span>PUTOL</span><span>]</span><span>,</span>
-  <span>]</span><span>,</span>
-  <span>"u"</span><span>:</span> <span>[</span>
-    <span>[</span>guhitIlog<span>,</span> <span>0.3</span><span>,</span> <span>0.0</span><span>,</span> <span>0.3</span><span>,</span> <span>1.0</span><span>,</span> <span>0.4</span><span>,</span> <span>0.0</span><span>,</span> <span>PUTOL</span><span>]</span><span>,</span>
-  <span>]</span><span>,</span>
-  <span>"b"</span><span>:</span> <span>[</span>
-    <span>[</span>guhitBundok<span>,</span> <span>0.0</span><span>,</span> <span>0.8</span><span>,</span> <span>0.5</span><span>,</span> <span>0.2</span><span>,</span> <span>1.0</span><span>,</span> <span>0.7</span><span>,</span> <span>0.1</span><span>,</span> <span>0.1</span><span>]</span><span>,</span>
-    <span>[</span>guhitUlap<span>,</span> <span>DUGTONG</span><span>,</span> <span>DUGTONG</span><span>,</span> <span>0.05</span><span>,</span> <span>0.7</span><span>,</span> <span>0.0</span><span>,</span> <span>0.3</span><span>,</span> <span>PUTOL</span><span>]</span><span>,</span>
-  <span>]</span><span>,</span>
-  <span>// ...</span></code></pre>
-
-<p>In the above code, baybayin glyphs (represented by Latin character keys) are defined by an array of elements. The numbers next to each element are parameters that vary the position &amp; form of the element.</p>
-
-<p>Looking at <em>‘b’</em> (ᜊ), we can see that it’s composed of a <code>guhitBundok</code> connected (<code>DUGTONG</code>) to a <code>guhitUlap</code> below it. (“guhit” means stroke in this case)</p>
-
-<pre><code><span>"b"</span><span>:</span> <span>[</span>
-  <span>[</span>guhitBundok<span>,</span> <span>0.0</span><span>,</span> <span>0.8</span><span>,</span> <span>0.5</span><span>,</span> <span>0.2</span><span>,</span> <span>1.0</span><span>,</span> <span>0.7</span><span>,</span> <span>0.1</span><span>,</span> <span>0.1</span><span>]</span><span>,</span>
-  <span>[</span>guhitUlap<span>,</span> <span>DUGTONG</span><span>,</span> <span>DUGTONG</span><span>,</span> <span>0.05</span><span>,</span> <span>0.7</span><span>,</span> <span>0.0</span><span>,</span> <span>0.3</span><span>,</span> <span>PUTOL</span><span>]</span><span>,</span>
-<span>]</span><span>,</span></code></pre>
-
-<p>Sometimes a character can even reuse another character, like <em>‘a’</em> (ᜀ) which is just <em>‘ya’</em> (ᜌ) with an extra <code>guhitTuwid</code> (straight stroke).</p>
-
-<pre><code><span>"a"</span><span>:</span> <span>[</span>
-  <span>...</span>guhitYa<span>,</span>
-  <span>[</span>guhitTuwid<span>,</span> <span>0.0</span><span>,</span> <span>0.4</span><span>,</span> <span>0.2</span><span>,</span> <span>0.4</span><span>,</span> <span>0.05</span><span>,</span> <span>-</span><span>0.05</span><span>,</span> <span>PUTOL</span><span>]</span><span>,</span>
-<span>]</span><span>,</span></code></pre>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="Baybayin of the word ‘nagpaambon’" src="https://leanrada.com/wares/guhit-kudlit/nagpaambon.png?ref=rss" caption="Decomposition of baybayin in the word ᜈᜄ᜕ᜉᜀᜋ᜕ᜊᜓᜈ᜕ (‘nagpaambon’, ‘made something be rained on’)">
-<span>Decomposition of baybayin in the word ᜈᜄ᜕ᜉᜀᜋ᜕ᜊᜓᜈ᜕ (‘nagpaambon’, ‘made something be rained on’)</span>
-<p>You probably have inferred that these vertices are hardcoded, so the resulting calligraphy is not as dynamic as you might expect. One quick fix I added was to slightly warp them in certain directions with a bit of randomness, but it’s not great. This is something I could improve upon in a future iteration — e.g., make the brush movement purposeful, or arrange vertices with respect to other vertices across the whole word.</p>
-
-<h2 id="end-note">End note</h2>
-
-<p>This was a project that was hastily launched as a proof-of-concept. It was fun, but the codebase got quite spaghetti. The concept seems mildly successful, since it is now getting regular visitors (though, I have no idea what they actually do with it, I haven’t seen an output of this in the wild). Anyway, since this webapp looks useful, I intend to rewrite it with a better and more dynamic calligraphy algorithm. Maybe.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" alt="Generated baybayin calligraphy of the word ‘padayon’" src="https://leanrada.com/wares/guhit-kudlit/padayon.png?ref=rss" caption="This post wouldn’t be complete without writing the now-clichéd word ‘padayon’ in baybayin.">
-<span>This post wouldn’t be complete without writing the now-clichéd word ‘padayon’ in baybayin.</span>]]></description>
-            <link>https://leanrada.com/wares/guhit-kudlit?ref=rss</link>
-            <guid isPermaLink="true">https://leanrada.com/wares/guhit-kudlit?ref=rss</guid>
-            <pubDate>Mon, 30 Oct 2023 00:00:00 GMT</pubDate>
-        </item>
+        
   </channel>
 </rss>

@@ -29,19 +29,19 @@ export async function populateStats({ notes, existingNotes }) {
         }
 
         const stats = {};
-        await Promise.all(
-          async () => {
+        await Promise.all([
+          (async () => {
             stats.views = await (pendingFetch = pendingFetch.then(() =>
               fetchHits(note.href)
             ));
-          },
-          reactionTypes.map(async (type) => {
+          })(),
+          ...reactionTypes.map(async (type) => {
             const pagePath = eventName(note.href, type);
             stats[type] = await (pendingFetch = pendingFetch.then(() =>
               fetchHits(pagePath)
             ));
-          })
-        );
+          }),
+        ]);
 
         note.stats = stats;
         note.stats._lastUpdated = Date.now();

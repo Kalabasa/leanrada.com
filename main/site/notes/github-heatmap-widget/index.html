@@ -1,0 +1,259 @@
+<!doctype html>
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="canonical" href="/notes/github-heatmap-widget/">
+<link rel="stylesheet" href="/common.css"></link>
+<script defer src="/common.js"></script>
+
+<title>Making my GitHub heatmap widget</title>
+
+<site-header></site-header>
+
+<content-header>
+  <h1>Making my GitHub heatmap widget</h1>
+</content-header>
+
+<blog-post-info>
+  <time datetime="2025-08-04">04 Aug 2025</time>
+  · 7 min read
+</blog-post-info>
+
+<tag-row>
+  <tag-chip title="html"></tag-chip>
+  <tag-chip title="js"></tag-chip>
+  <tag-chip title="µpost"></tag-chip>
+</tag-row>
+
+<main class="prose">
+  
+<p>This post is about how I made the GitHub heatmap widget on my site.</p>
+
+<p>Here’s the raw, live WebComponent <code>&lt;gh-contribs&gt;</code> by the way:</p>
+
+<card-box>
+  <gh-contribs></gh-contribs>
+</card-box>
+
+<h2>Scraping the data</h2>
+
+<p>First, I had to scrape the heatmap data. I don’t know if there’s a proper API, but I found an endpoint that renders an HTML partial of what I wanted.</p>
+
+<p>As far as I know, the GitHub website today works using partial HTMLs to update its UI without reloading the whole page. I think this endpoint populates the contribution graph section of the profile page.</p>
+
+<p>The endpoint that returns a user’s contribution graph is <a href="https://github.com/users/Kalabasa/contributions" target="_blank"><code>https://github.com/users/{username}/contributions</code></a>. I presume the user has to have contribution stats public. This undocumented API could also break at any time. 😬</p>
+
+<figure>
+  <img src="contributions-html.png" loading="lazy" width="932" height="741" style="--lqip:174819">
+  <figcaption>The response HTML for my github.com/users/Kalabasa/contributions</figcaption>
+</figure>
+
+<p>Loading this endpoint gives you an unstyled piece of HTML containing an HTML table of contribution data and other UI. The table cells are invisible because of the lack of styles! When embedded in the profile page, it inherits the appropriate styling in context.</p>
+
+<img alt="styled contribution table" src="contributions-styled.png" loading="lazy" width="741" height="204" style="--lqip:174619">
+
+<p>The first column is the weekday label, and the rest of the cells seem to represent a single day each. The data is encoded in the HTML that presents the data! This reminds me of <a href="https://htmx.org/essays/hateoas/" target="_blank">Hypermedia as the Engine of Application State</a>. html = data.</p>
+
+<code-block language="html">
+  <pre><code>&lt;tbody>
+&lt;tr style="height: 10px">
+  &lt;td class="ContributionCalendar-label" style="position: relative">
+    &lt;span class="sr-only">Monday&lt;/span>
+    &lt;span aria-hidden="true" style="clip-path: None; position: absolute; bottom: -3px">
+      Mon
+    &lt;/span>
+  &lt;/td>
+  &lt;td
+    tabindex="0"
+    data-ix="0"
+    aria-selected="false"
+    aria-describedby="contribution-graph-legend-level-2"
+    style="width: 10px"
+    data-date="2024-08-05"
+    id="contribution-day-component-1-0"
+    data-level="2"
+    role="gridcell"
+    data-view-component="true"
+    class="ContributionCalendar-day">
+  &lt;/td>
+  &lt;td
+    tabindex="0"
+    data-ix="1"
+    aria-selected="false"
+    aria-describedby="contribution-graph-legend-level-1"
+    style="width: 10px"
+    data-date="2024-08-12"
+    id="contribution-day-component-1-1"
+    data-level="1"
+    role="gridcell"
+    data-view-component="true"
+    class="ContributionCalendar-day">
+  &lt;/td>
+  &lt;td
+    tabindex="0"
+    data-ix="2"
+    aria-selected="false"
+    aria-describedby="contribution-graph-legend-level-2"
+    style="width: 10px"
+    data-date="2024-08-19"
+    id="contribution-day-component-1-2"
+    data-level="2"
+    role="gridcell"
+    data-view-component="true"
+    class="ContributionCalendar-day">
+  &lt;/td>
+  <!--...--></code></pre>
+</code-block>
+
+<p>What I was looking for here was the <code>data-level</code> attribute on each cell. It contains a coarse integer value that indicates the activity level for the day.</p>
+
+<p>Coupled with the <code>data-date</code> attribute, it became rather easy to scrape this data! Instead of keeping track of columns and rows, I just go through each <code>data-date</code> and <code>data-level</code> as a (date,level) data point.</p>
+
+<p>Here’s my parse function using <a href="https://cheerio.js.org/" target="_blank">cheerio</a>, a jQuery clone for Node.js.</p>
+
+<code-block language="js">
+  <pre><code>const res = await fetch(
+  "https://github.com/users/Kalabasa/contributions");
+let data = parseContribs(await res.text());
+
+/**
+ * Parses a GitHub contribution calendar HTML string and extracts contribution data.
+ *
+ * @param {string} html - The HTML string containing the GitHub contribution calendar.
+ * @returns {{ date: Date, level: number }[]} Array of contribution objects with date and activity level.
+ * @throws {Error} If the contribution calendar table cannot be found in the HTML.
+ */
+function parseContribs(html) {
+  const ch = cheerio.load(html);
+  const chTable = ch("table.ContributionCalendar-grid");
+  if (!chTable.length) throw new Error("Can't find table.");
+  const chDays = chTable.find("[data-date]");
+  const data = chDays
+    .map((_, el) => {
+      const chDay = ch(el);
+      const date = new Date(chDay.attr("data-date"));
+      const level = parseInt(chDay.attr("data-level"), 10);
+      return { date, level };
+    })
+    .get();
+  return data;
+}</code></pre>
+</code-block>
+
+This data is scraped at regular intervals, reformatted into a grid, and saved into a compact JSON format for later consumption and rendering by the WebComponent on the client.
+
+<code-block language="js">
+  <pre><code>// gh-contribs.json
+[
+  [1,2,1,2,2,1,1],
+  [0,1,0,2,0,1,0],
+  [1,1,1,1,1,1,0],
+  [0,1,0,0,1,1,0],
+  [0,0,1,0,0,0]
+]</code></pre>
+</code-block>
+
+<h2>Rendering the data</h2>
+
+<p>The reason why the data is reformatted into a grid like that is to make the rendering logic straightforward. The data is structured so that it can be directly converted into HTML without thinking in dates and weeks that are in the original data.</p>
+
+<p>Here are the current JSON and WebComponent side by side. Each row in the data gets directly rendered as a column in the component.</p>
+
+<auto-grid style="--colwidth:20ch; --gap:3">
+  <code-block language="js">
+    <pre><code>
+      <script>
+        const code = document.currentScript.parentElement;
+        fetch("/components/gh-contribs/gh-contribs.json", { cache: "force-cache" })
+          .then((res) => res.json())
+          .then(json => JSON.stringify(json)
+            .replaceAll(/(?<=[[,\]])([[\]])/g,
+              (ch) => "\n" + (ch === "[" ? "  " : "") + ch))
+          .catch(e => "Error loading JSON!")
+          .then(text => code.textContent = text);
+      </script>
+    </code></pre>
+  </code-block>
+  <gh-contribs></gh-contribs>
+</auto-grid>
+
+<p>As such, <code>&lt;gh-contribs></code>’s initialisation logic is really simple:</p>
+
+<code-block language="js">
+  <pre><code>const contribs = await fetch(
+  "path/to/gh-contribs.json"
+).then((res) => res.json());
+
+let htmlString = "";
+for (const col of contribs) {
+  for (const level of col) {
+    htmlString += html`&lt;div data-level="${level}">${level}&lt;/div>`;
+  }
+}
+this.innerHTML = htmlString;</code></pre>
+</code-block>
+
+Add some CSS and it’s done:
+
+<code-block language="css">
+  <pre><code>gh-contribs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, auto);
+  gap: 12px;
+  div {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    background: #222c2c;
+    color: transparent;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #54f8c1;
+    }
+    &[data-level="0"]::after {
+      opacity: 0;
+    }
+    &[data-level="1"]::after {
+      opacity: 0.3;
+    }
+    &[data-level="2"]::after {
+      opacity: 0.6;
+    }
+    &[data-level="3"]::after {
+      opacity: 1;
+    }
+  }
+}</code></pre>
+</code-block>
+
+<h2>Why not use the original HTML?</h2>
+
+<p>Why not just embed the contributions HTML from GitHub? Slice the relevant <code>&lt;tr></code>s and <code>&lt;td></code>s&hellip;? Why parse the original HTML table, convert it to JSON, then render it as HTML again?</p>
+
+<p>The main reason to do [HTML → JSON → HTML] is to remain flexible. As you know, that endpoint is undocumented. Also, depending on the HTML structure of the original is risky. Risk of breakage, risk of unwanted content, etc.</p>
+
+<p>This way, I can change how I get the data without refactoring the WebComponent. I could go [<strong>GitHub API</strong> → JSON → HTML] or [<strong>local git script</strong> → JSON → HTML] or whatever.</p>
+
+<p>It also works the other end. I actually rewrote this widget recently (from statically-generated HTML into a WebComponent) without having to change the scraper script or the JSON data structure.</p>
+
+<h2>Final touches</h2>
+
+<p>The WebComponent renders just the grid itself for flexibility. This let me use it in different ways, like with an icon and heading as in the home page.</p>
+
+<card-box style="max-width:200px">
+  <h4 class="icon-and-text-line" style="margin-top:0">
+    <img class="invert pixelated md-icon" src="/icons/github.png" alt="" loading="lazy" width="16" height="16" />
+    my github<br />heatmap
+  </h4>
+  <gh-contribs></gh-contribs>
+</card-box>
+
+<p>Here’s the <a href="/components/gh-contribs/gh-contribs.js" target="_blank">source code for this WebComponent</a> if you’re interested.</p>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
