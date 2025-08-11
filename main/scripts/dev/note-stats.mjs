@@ -60,3 +60,34 @@ console.table(
       };
     })
 );
+
+console.table(
+  validNotes
+    .filter((n) => n.stats.views >= 400)
+    .toSorted((a, b) => {
+      const ra =
+        a.stats.bubble +
+        a.stats.heart +
+        a.stats.sun +
+        a.stats.cloud +
+        a.stats.fire;
+      const rb =
+        b.stats.bubble +
+        b.stats.heart +
+        b.stats.sun +
+        b.stats.cloud +
+        b.stats.fire;
+      return rb / b.stats.views - ra / a.stats.views;
+    })
+    .slice(0, 10)
+    .map((n) => {
+      const s = n.stats;
+      return {
+        rankedByReactionRate: n.title,
+        "rate%":
+          Math.floor(
+            ((s.bubble + s.heart + s.sun + s.cloud + s.fire) / s.views) * 100_00
+          ) / 1_00,
+      };
+    })
+);
