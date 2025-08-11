@@ -6,7 +6,7 @@ import {
 import { promisify } from "node:util";
 const execAsync = promisify(exec);
 
-const UPDATE_INTERVAL = 7 * 24 * 60 * 60_000;
+const UPDATE_INTERVAL = 4 * 24 * 60 * 60_000;
 
 // don't smash the server
 let pendingFetch = Promise.resolve();
@@ -22,7 +22,7 @@ export async function populateStats({ notes, existingNotes }) {
 
         if (
           existingNote?.stats &&
-          existingNote.stats._lastUpdated + UPDATE_INTERVAL > Date.now()
+          existingNote.stats._nextUpdate > Date.now()
         ) {
           note.stats = existingNote.stats;
           return;
@@ -31,20 +31,21 @@ export async function populateStats({ notes, existingNotes }) {
         const stats = {};
         await Promise.all([
           (async () => {
-            stats.views = await (pendingFetch = pendingFetch.then(() =>
-              fetchHits(note.href)
-            ));
+            stats.views = await (pendingFetch = pendingFetch
+              .then(() => delay(1000))
+              .then(() => fetchHits(note.href)));
           })(),
           ...reactionTypes.map(async (type) => {
             const pagePath = eventName(note.href, type);
-            stats[type] = await (pendingFetch = pendingFetch.then(() =>
-              fetchHits(pagePath)
-            ));
+            stats[type] = await (pendingFetch = pendingFetch
+              .then(() => delay(1000))
+              .then(() => fetchHits(pagePath)));
           }),
         ]);
 
         note.stats = stats;
-        note.stats._lastUpdated = Date.now();
+        note.stats._nextUpdate =
+          Date.now() + Math.floor(UPDATE_INTERVAL * (1 + Math.random()));
       })
   );
   return notes;
@@ -55,7 +56,7 @@ async function fetchHits(pagePath) {
     const url = `https://kalabasa.goatcounter.com/counter/${pagePath}.json`;
     console.log(`curling ${url}...`);
     const { stdout } = await execAsync(`curl -s ${url}`, {
-      encoding: "ascii",
+      encoding: "utf-8",
     });
     const data = JSON.parse(stdout);
     const count = parseInt(data.count.replace(/\D/g, ""), 10) || 0;
@@ -65,4 +66,8 @@ async function fetchHits(pagePath) {
     console.error(error);
     throw error;
   }
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
