@@ -4,41 +4,74 @@ let source;
 let controlPanel;
 let trackMutations = false;
 
+readFileFromNetwork().then(() => {
+  maybeInitEdit();
+});
 initControlPanel();
 
 function initControlPanel() {
   controlPanel = document.createElement("div");
-  controlPanel.style.position = "fixed";
-  controlPanel.style.left = "12px";
-  controlPanel.style.bottom = "12px";
-  controlPanel.style.background = "#640";
-  controlPanel.style.color = "#fff";
-  controlPanel.style.padding = "12px";
-  controlPanel.style.borderRadius = "6px";
-  controlPanel.style.fontFamily = "system-ui";
-  controlPanel.style.zIndex = "calc(1 * infinity)";
-  controlPanel.innerHTML = `
-    <button class="editBtn">Edit</button>
-    <button class="saveBtn" disabled>Save</button>
+  controlPanel.id = "controlPanel";
+  controlPanel.innerHTML = html`
+    <button class="saveBtn">💾</button>
     <span>${getFilePath()}</span>
+    <style>
+      #controlPanel {
+        position: fixed;
+        left: 12px;
+        bottom: 12px;
+        background: #354;
+        color: #fff;
+        border-radius: 6px;
+        overflow: hidden;
+        font-family: system-ui;
+        z-index: calc(1 * infinity);
+        button {
+          background: transparent;
+          border: none;
+          border-right: 2px #9994 groove;
+          padding: 12px;
+          cursor: pointer;
+          text-shadow: 1px 0 #fff, -1px 0 #fff, 0 1px #fff, 0 -1px #fff,
+            1px 1px #fff, -1px 1px #fff, 1px -1px #fff, -1px -1px #fff;
+          &:hover {
+            background: #fff2;
+          }
+        }
+        span {
+          padding: 12px;
+        }
+      }
+      *:hover:not(:has(:hover), :focus) {
+        outline: 1px #afd dotted;
+      }
+      [contenteditable]:focus {
+        outline: 1px #0f9 dotted;
+      }
+    </style>
   `;
 
-  const editBtn = controlPanel.querySelector(".editBtn");
-  const saveBtn = controlPanel.querySelector(".saveBtn");
-
-  editBtn.addEventListener("click", async () => {
-    editBtn.disabled = true;
-    saveBtn.disabled = false;
-    await readFile();
-    initMutationObserver();
-    initSelection();
-  });
+  const [saveBtn, filePathSpan] = controlPanel.children;
 
   saveBtn.addEventListener("click", () => {
-    saveFile();
+    toast({
+      message: "Select the site root",
+      color: "#090",
+    });
+    setTimeout(() => {
+      saveFile();
+    }, 200);
   });
 
   document.body.appendChild(controlPanel);
+}
+
+function maybeInitEdit() {
+  if (maybeInitEdit.hasRun) return;
+  maybeInitEdit.hasRun = true;
+  initMutationObserver();
+  initSelection();
+  trackMutations = true;
 }
 
 async function openDirectory() {
@@ -48,11 +81,10 @@ async function openDirectory() {
   });
 }
 
-async function readFile() {
-  const fileHandle = await getFileHandle();
-  const file = await fileHandle.getFile();
-  source = await file.text();
-  trackMutations = true;
+async function readFileFromNetwork() {
+  if (source) return;
+  const res = await fetch(".");
+  source = await res.text();
 }
 
 async function saveFile() {
@@ -91,25 +123,59 @@ function initMutationObserver() {
     }
     console.log(mutations);
 
-    const childReplacements = new Set();
+    const childReplacements = new Map();
     const textReplacements = new Map();
 
-    for (const mutation of mutations) {
-      if (mutation.target.isConnected) {
-        if (!document.activeElement.contains(mutation.target)) continue;
-        if (controlPanel.contains(mutation.target)) continue;
-      }
+    nextMutation: for (const mutation of mutations) {
+      if (!mutation.target.isConnected) continue;
+      if (!document.activeElement.contains(mutation.target)) continue;
+      if (controlPanel.contains(mutation.target)) continue;
 
       switch (mutation.type) {
         case "childList":
-          childReplacements.add({ target: mutation.target });
+          {
+            const { target, addedNodes, previousSibling, nextSibling } =
+              mutation;
+
+            if (previousSibling && !target.contains(previousSibling)) continue;
+            if (nextSibling && !target.contains(nextSibling)) continue;
+            for (const node of addedNodes) {
+              if (!target.contains(node)) continue nextMutation;
+            }
+
+            const entry = childReplacements.get(target);
+            if (entry) {
+              const childNodes = Array.from(target.childNodes);
+              entry.previousSibling =
+                previousSibling &&
+                entry.previousSibling &&
+                (childNodes.indexOf(previousSibling) <
+                childNodes.indexOf(entry.previousSibling)
+                  ? previousSibling
+                  : entry.previousSibling);
+              entry.nextSibling =
+                nextSibling &&
+                entry.nextSibling &&
+                (childNodes.indexOf(nextSibling) >
+                childNodes.indexOf(entry.nextSibling)
+                  ? nextSibling
+                  : entry.nextSibling);
+            } else {
+              childReplacements.set(target, {
+                target,
+                previousSibling,
+                nextSibling,
+              });
+            }
+          }
           break;
         case "characterData":
-          // merge mutations for same target
-          const target = mutation.target;
-          const oldValue =
-            textReplacements.get(target)?.oldValue ?? mutation.oldValue;
-          textReplacements.set(target, { oldValue, target });
+          {
+            const { target } = mutation;
+            const oldValue =
+              textReplacements.get(target)?.oldValue ?? mutation.oldValue;
+            textReplacements.set(target, { oldValue, target });
+          }
           break;
         case "attributes":
           if (mutation.attributeName === "contenteditable") continue;
@@ -119,29 +185,45 @@ function initMutationObserver() {
       }
     }
 
-    let result;
-    try {
-      for (const cr of childReplacements) {
-        for (const [textTarget] of textReplacements.entries()) {
-          if (cr.target.contains(textTarget)) {
-            textReplacements.delete(textTarget);
+    for (const replacements of [textReplacements, childReplacements]) {
+      for (const r of replacements.values()) {
+        for (
+          let node = r.target.parentElement;
+          node != null;
+          node = node.parentElement
+        ) {
+          if (childReplacements.has(node)) {
+            replacements.delete(r.target);
+            break;
           }
         }
-        replaceChildren(cr);
       }
+    }
 
+    try {
+      for (const cr of childReplacements.values()) {
+        applyChange({
+          parent: cr.target,
+          previousSibling: cr.previousSibling,
+          nextSibling: cr.nextSibling,
+        });
+      }
       for (const tr of textReplacements.values()) {
-        result = replaceText(tr);
-        if (!result.ok) throw new Error("Edit failed");
+        applyChange({
+          parent: tr.target.parentElement,
+          previousSibling: tr.target.previousSibling,
+          nextSibling: tr.target.nextSibling,
+          textNode: tr.target,
+          oldTextValue: tr.oldValue,
+        });
       }
     } catch (e) {
-      if (result && !result.ok) {
-        let message = "Edit failed!";
-        if (result.notFound) {
-          message += " Element not in source.";
-        }
-        toast({ message, color: "darkred" });
+      console.error(e);
+      let message = "Edit failed!";
+      if (e instanceof SourceNotFoundError) {
+        message += " Element not in source (dynamic element?)";
       }
+      toast({ message, color: "darkred" });
     }
   });
 
@@ -156,29 +238,47 @@ function initMutationObserver() {
 }
 
 function initSelection() {
+  let lastSelection = null;
+
   document.addEventListener("mousedown", ({ target }) => {
-    if (target === document.body) return;
-    if (controlPanel.contains(target)) return;
+    if (!isEditable(target)) return;
+    if (lastSelection === target) return;
+
+    if (lastSelection) {
+      lastSelection.contentEditable = false;
+      refreshFromSource(lastSelection);
+    }
+    lastSelection = null;
+
     refreshFromSource(target, "inner");
   });
 
   document.addEventListener("click", ({ target }) => {
-    if (target === document.body) return;
-    if (controlPanel.contains(target)) return;
+    if (!isEditable(target)) return;
+    if (lastSelection === target) return;
+
+    if (lastSelection) {
+      lastSelection.contentEditable = false;
+      refreshFromSource(lastSelection);
+    }
+    lastSelection = target;
+
     target.contentEditable = true;
     target.focus();
-    target.addEventListener(
-      "blur",
-      () => {
-        target.contentEditable = false;
-        refreshFromSource(target);
-      },
-      { once: true }
-    );
   });
 }
 
+function isEditable(node) {
+  return (
+    document.body !== node &&
+    document.body.contains(node) &&
+    !controlPanel.contains(node)
+  );
+}
+
 function refreshFromSource(element, scope = "outer") {
+  if (!element.isConnected) return;
+
   trackMutations = false;
 
   const sourceElement = findSourceElementTag(source, getPath(element));
@@ -207,7 +307,7 @@ function toast({ message, color = "#000000", durationMs = 5000 }) {
   const element = document.createElement("div");
   element.textContent = message;
   element.style.position = "fixed";
-  element.style.top = "12px";
+  element.style.bottom = "calc(12px * 4 + 1lh)";
   element.style.left = "12px";
   element.style.background = color;
   element.style.color = "#fff";
@@ -226,130 +326,152 @@ function toast({ message, color = "#000000", durationMs = 5000 }) {
   }, durationMs);
 }
 
-function replaceChildren({ target }) {
+function applyChange({
+  parent,
+  previousSibling,
+  nextSibling,
+  textNode,
+  oldTextValue,
+}) {
   // Find parent in source by path
-  const parentPath = getPath(target);
-  const parent = findSourceElementTag(source, parentPath);
-  if (!parent) return { ok: false, notFound: true };
+  const parentPath = getPath(parent);
+  console.log("replaceChildren", {
+    parent,
+    previousSibling,
+    nextSibling,
+    parentPath,
+  });
+  const parentTag = findSourceElementTag(source, parentPath);
+  if (!parentTag) throw new SourceNotFoundError();
 
-  const contextStartIndex = parent.innerStartIndex;
-  const contextEndIndex = parent.innerEndIndex;
-  const contextSource = source.slice(contextStartIndex, contextEndIndex);
-
-  if (contextSource === target.innerHTML) return;
-
-  const prefix = longestCommonPrefix(contextSource, target.innerHTML);
-  const suffix = longestCommonSuffix(contextSource, target.innerHTML);
-  const oldContent = contextSource.slice(
-    prefix.length,
-    contextSource.length - suffix.length
-  );
-  const newContent = target.innerHTML.slice(
-    prefix.length,
-    target.innerHTML.length - suffix.length
-  );
-
-  const result = tryContextualReplace(
-    contextSource,
-    prefix,
-    suffix,
-    oldContent,
-    newContent
-  );
-
-  if (result.ok) {
-    source =
-      source.slice(0, contextStartIndex) +
-      result.output +
-      source.slice(contextEndIndex);
-    console.groupCollapsed(
-      source.slice(contextStartIndex - 50, contextEndIndex + 50)
-    );
-    console.log(source);
-    console.groupEnd();
-  }
-
-  return result;
-}
-
-function getNodeSource(source, node) {
-  if (node.nodeType === Node.ELEMENT_NODE) {
-    const sourceElement = findSourceElementTag(source, nextSibling);
-    if (!sourceElement) throw new Error("Not found!");
-    return source.slice(sourceElement.startIndex, sourceElement.endIndex);
-  } else if (node.nodeType === Node.TEXT_NODE) {
-    return node.data;
-  } else {
-    throw new Error("Unsupported node type: " + node.nodeType);
-  }
-}
-
-function replaceText({ oldValue, target }) {
-  console.log("applyTextMutation", { oldValue, target });
-  // Find parent in source by path
-  const parentPath = getPath(target.parentElement);
-  const parent = findSourceElementTag(source, parentPath);
-  if (!parent) return { ok: false, notFound: true };
-
-  // Find specific text segment within parent
   const parentSource = source.slice(
-    parent.innerStartIndex,
-    parent.innerEndIndex
+    parentTag.innerStartIndex,
+    parentTag.innerEndIndex
   );
-  let textStartIndex = parent.innerStartIndex;
-  let textEndIndex = parent.innerEndIndex;
-  const previousElementSiblings = countPrevElementSiblings(target);
-  for (const tag of walkSourceTags(parentSource)) {
-    if (tag.level !== 1) continue;
-    if (!tag.open && tag.childIndex === previousElementSiblings - 1) {
-      textStartIndex = parent.innerStartIndex + tag.sourceEndIndex;
+
+  // Find edited content and surrounding context from DOM
+  const prevElement = find(
+    previousSibling,
+    (n) => n.previousSibling,
+    (n) => n.nodeType === Node.ELEMENT_NODE
+  );
+  const nextElement = find(
+    nextSibling,
+    (n) => n.nextSibling,
+    (n) => n.nodeType === Node.ELEMENT_NODE
+  );
+
+  let content = ""; // edited content
+  let elementsBefore = 0; // number of elements before edited content
+  let elementsAfter = 0; // number of elements after edited content
+  let region = prevElement ? "before" : "content";
+  for (const child of parent.childNodes) {
+    if (child === nextElement) region = "after";
+    switch (region) {
+      case "after":
+        if (child.nodeType === Node.ELEMENT_NODE) elementsAfter++;
+        break;
+      case "content":
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          content += child.outerHTML;
+        } else if (child.nodeType === Node.TEXT_NODE) {
+          content += child.data;
+        }
+        break;
+      case "before":
+        if (child.nodeType === Node.ELEMENT_NODE) elementsBefore++;
+        break;
     }
-    if (!tag.end && tag.childIndex === previousElementSiblings) {
-      textEndIndex = parent.innerStartIndex + tag.sourceIndex;
+    if (child === prevElement) region = "content";
+  }
+
+  // Find edited content and surrounding context from source
+  const sourceElementCount =
+    ([...walkSourceTags(parentSource)].filter((tag) => tag.level === 0).at(-1)
+      ?.childIndex ?? -1) + 1;
+  let sourceEditStart = 0;
+  let sourceEditEnd = parentSource.length;
+  for (const tag of walkSourceTags(parentSource)) {
+    if (tag.level > 0) continue;
+    if (!tag.open && tag.childIndex === elementsBefore - 1) {
+      sourceEditStart = tag.sourceEndIndex;
+    }
+    if (!tag.end && sourceElementCount - tag.childIndex === elementsAfter) {
+      sourceEditEnd = tag.sourceIndex;
     }
   }
-  const textSource = source.slice(textStartIndex, textEndIndex);
 
-  // Find matching surrounding text
-  const suffix = longestCommonSuffix(oldValue, target.data);
-  const prefix = longestCommonPrefix(oldValue, target.data).slice(
-    0,
-    Math.min(oldValue.length, target.data.length) - suffix.length
+  let oldContent = parentSource.slice(sourceEditStart, sourceEditEnd);
+  if (oldContent === content) return;
+
+  const commonPrefix = longestCommonPrefix(oldContent, content);
+  const commonSuffix = longestCommonSuffix(oldContent, content);
+
+  content = content.slice(
+    commonPrefix.length,
+    content.length - commonSuffix.length
   );
-  const oldContent = oldValue.slice(
-    prefix.length,
-    oldValue.length - suffix.length
+
+  oldContent = oldContent.slice(
+    commonPrefix.length,
+    oldContent.length - commonSuffix.length
   );
-  const newContent = target.data.slice(
-    prefix.length,
-    target.data.length - suffix.length
-  );
+
+  const prefix = parentSource.slice(0, sourceEditStart) + commonPrefix;
+  const suffix = commonSuffix + parentSource.slice(sourceEditEnd);
 
   const result = tryContextualReplace(
-    textSource,
+    parentSource,
     prefix,
     suffix,
     oldContent,
-    newContent
+    content
   );
 
-  if (result.ok) {
-    source =
-      source.slice(0, textStartIndex) +
-      result.output +
-      source.slice(textEndIndex);
-    console.groupCollapsed(
-      source.slice(textStartIndex - 50, textEndIndex + 50)
-    );
-    console.log(source);
-    console.groupEnd();
-  }
+  source =
+    source.slice(0, parentTag.innerStartIndex) +
+    result +
+    source.slice(parentTag.innerEndIndex);
 
-  return result;
+  console.groupCollapsed(
+    source.slice(
+      parentTag.innerStartIndex + sourceEditStart - 20,
+      parentTag.innerStartIndex +
+        sourceEditEnd +
+        content.length -
+        oldContent.length +
+        20
+    )
+  );
+  console.log(source);
+  console.groupEnd();
+}
+
+function find(object, next, predicate) {
+  if (object && predicate(object)) return object;
+  return object && find(next(object), next, predicate);
+}
+
+function longestCommonPrefix(a, b) {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return a.slice(0, i);
+}
+
+function longestCommonSuffix(a, b) {
+  let i = 0;
+  while (
+    i < a.length &&
+    i < b.length &&
+    a[a.length - 1 - i] === b[b.length - 1 - i]
+  ) {
+    i++;
+  }
+  return a.slice(a.length - i);
 }
 
 function tryContextualReplace(
-  textSource,
+  source,
   prefix,
   suffix,
   oldContent,
@@ -361,13 +483,11 @@ function tryContextualReplace(
     suffix,
     oldContent,
     newContent,
-    textSource,
+    source,
   });
 
-  const preIndices = prefix ? [...allIndexOf(prefix, textSource)] : [0];
-  const sufIndices = suffix
-    ? [...allIndexOf(suffix, textSource)]
-    : [textSource.length];
+  const preIndices = prefix ? [...allIndexOf(prefix, source)] : [0];
+  const sufIndices = suffix ? [...allIndexOf(suffix, source)] : [source.length];
 
   if (preIndices.length === 1 || sufIndices.length === 1) {
     const spliceStart =
@@ -378,14 +498,10 @@ function tryContextualReplace(
       sufIndices.length === 1
         ? sufIndices[0]
         : preIndices[0] + prefix.length + oldContent.length;
-    if (oldContent === textSource.slice(spliceStart, spliceEnd)) {
-      return {
-        ok: true,
-        output:
-          textSource.slice(0, spliceStart) +
-          newContent +
-          textSource.slice(spliceEnd),
-      };
+    if (oldContent === source.slice(spliceStart, spliceEnd)) {
+      return (
+        source.slice(0, spliceStart) + newContent + source.slice(spliceEnd)
+      );
     }
   }
 
@@ -405,7 +521,7 @@ function tryContextualReplace(
             ? suffix.slice(0, Math.floor(suffix.length * 0.5))
             : suffix;
         const shorterContext = tryContextualReplace(
-          textSource,
+          source,
           shorterPrefix,
           shorterSuffix,
           oldContent,
@@ -416,7 +532,7 @@ function tryContextualReplace(
       }
     }
 
-    for (const entityMatch of textSource.matchAll(/&(\w+);/g)) {
+    for (const entityMatch of source.matchAll(/&(\w+);/g)) {
       const entityName = entityMatch[1];
       const entityText = decodeHTMLEntity(entityName);
       const encodedPrefix = prefix.replaceAll(
@@ -429,7 +545,7 @@ function tryContextualReplace(
       );
       if (prefix !== encodedPrefix || suffix !== encodedSuffix) {
         const encodedContext = tryContextualReplace(
-          textSource,
+          source,
           encodedPrefix,
           encodedSuffix,
           oldContent,
@@ -445,7 +561,7 @@ function tryContextualReplace(
       const normalizedSuffix = textToHTML(suffix);
       if (prefix !== normalizedPrefix || suffix !== normalizedSuffix) {
         const normalizedContext = tryContextualReplace(
-          textSource,
+          source,
           normalizedPrefix,
           normalizedSuffix,
           oldContent,
@@ -457,20 +573,24 @@ function tryContextualReplace(
     }
   }
 
-  console.error({ textSource, prefix, suffix, oldContent, newContent });
+  console.error({ source, prefix, suffix, oldContent, newContent });
 
-  return {
-    ok: false,
-    notFound: preIndices.length === 0 && sufIndices.length === 0,
-    prefixAmbiguous: preIndices.length > 1,
-    suffixAmbiguous: sufIndices.length > 1,
-  };
+  if (preIndices.length === 0 && sufIndices.length === 0) {
+    throw new ContextNotFoundError();
+  } else {
+    throw new AmbiguousContextError();
+  }
 }
 
-function getPath(element) {
+function getPath(element, root = null) {
+  if (!element.isConnected) {
+    throw new Error("Cannot get path for disconnected element.");
+  }
+
   const path = [];
   while (
-    element?.parentElement &&
+    element &&
+    element != root &&
     element.tagName !== "HEAD" &&
     element.tagName !== "BODY"
   ) {
@@ -556,13 +676,15 @@ function* walkSourceTags(source) {
     const parentName = currentPath.at(-1).parentTag?.name;
     const implicitEnd = open && implicitTagEndings[parentName]?.includes(name);
 
-    if (end || implicitEnd) {
-      let popped;
-      do {
-        popped = currentPath.pop();
-      } while (
-        !(isVoid || (popped.parentTag.open && popped.parentTag.name === name))
+    if (end) {
+      const lastOpen = currentPath.findLastIndex(
+        (s) => s.parentTag?.name === name
       );
+      if (lastOpen >= 0) {
+        currentPath.length = lastOpen;
+      }
+    } else if (implicitEnd) {
+      currentPath.pop();
     }
 
     if (!end) currentPath.at(-1).index++;
@@ -584,18 +706,6 @@ function* walkSourceTags(source) {
   }
 }
 
-function countPrevElementSiblings(element) {
-  let previousElementSiblings = 0;
-  for (
-    let s = element;
-    s.previousElementSibling;
-    s = s.previousElementSibling
-  ) {
-    previousElementSiblings++;
-  }
-  return previousElementSiblings;
-}
-
 function isVoidElement(tagName) {
   const key = "_" + tagName;
   if (isVoidElement[key] == null) {
@@ -614,6 +724,7 @@ function isVoidElement(tagName) {
   return isVoidElement[key];
 }
 
+// [key] element can be ended by an open [value] tag
 const implicitTagEndings = {
   LI: ["LI"],
   DT: ["DT", "DD"],
@@ -682,20 +793,6 @@ function* allIndexOf(needle, haystack) {
   } while (position < haystack.length);
 }
 
-function longestCommonPrefix(a, b) {
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) i++;
-  return a.slice(0, i);
-}
-
-function longestCommonSuffix(a, b) {
-  let i = 0;
-  while (
-    i < a.length &&
-    i < b.length &&
-    a[a.length - 1 - i] === b[b.length - 1 - i]
-  ) {
-    i++;
-  }
-  return a.slice(a.length - i);
-}
+class SourceNotFoundError extends Error {}
+class ContextNotFoundError extends Error {}
+class AmbiguousContextError extends Error {}
