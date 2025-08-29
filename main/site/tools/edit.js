@@ -61,15 +61,7 @@ function initControlPanel() {
 
   const [saveBtn, lockBtn, filePathSpan] = controlPanel.children;
 
-  saveBtn.addEventListener("click", () => {
-    toast({
-      message: "Select the site root",
-      color: "#090",
-    });
-    setTimeout(() => {
-      saveFile();
-    }, 200);
-  });
+  saveBtn.addEventListener("click", uiSave);
 
   lockBtn.addEventListener("click", () => {
     locked = !locked;
@@ -82,7 +74,30 @@ function initControlPanel() {
     });
   });
 
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "s") {
+      e.preventDefault();
+      uiSave();
+    }
+  });
+
   document.body.appendChild(controlPanel);
+}
+
+function uiSave() {
+  if (!dirHandle) {
+    toast({
+      message: "Select the site root",
+      color: "#090",
+    });
+  }
+  setTimeout(async () => {
+    await saveFile();
+    toast({
+      message: "Saved!",
+      color: "#090",
+    });
+  }, 200);
 }
 
 function maybeInitEdit() {
@@ -221,6 +236,7 @@ function initMutationObserver() {
 
     try {
       for (const cr of childReplacements.values()) {
+        reformat(cr);
         applyChange({
           parent: cr.target,
           previousSibling: cr.previousSibling,
@@ -254,6 +270,50 @@ function initMutationObserver() {
     characterData: true,
     characterDataOldValue: true,
   });
+}
+
+function reformat(cr) {
+  if (cr.target.tagName !== "MAIN") return;
+
+  const firstElement = find(
+    cr.previousSibling ? cr.previousSibling.nextSibling : cr.target.firstChild,
+    (n) => n.nextSibling,
+    (n) =>
+      (!cr.nextSibling ||
+        n.compareDocumentPosition(cr.nextSibling) ===
+          Node.DOCUMENT_POSITION_FOLLOWING) &&
+      n.nodeType === Node.ELEMENT_NODE
+  );
+
+  const lastElement = find(
+    cr.nextSibling ? cr.nextSibling.previousSibling : cr.target.lastChild,
+    (n) => n.previousSibling,
+    (n) =>
+      (!cr.previousSibling ||
+        n.compareDocumentPosition(cr.previousSibling) ===
+          Node.DOCUMENT_POSITION_PRECEDING) &&
+      n.nodeType === Node.ELEMENT_NODE
+  );
+
+  if (firstElement?.tagName === "P" && firstElement.previousElementSibling) {
+    const hasBlankLineBefore =
+      firstElement.previousSibling &&
+      firstElement.previousSibling.nodeType === Node.TEXT_NODE &&
+      firstElement.previousSibling.data.endsWith("\n\n");
+    if (!hasBlankLineBefore) {
+      firstElement.before(document.createTextNode("\n\n"));
+    }
+  }
+
+  if (lastElement?.tagName === "P" && lastElement.previousElementSibling) {
+    const hasBlankLineAfter =
+      lastElement.nextSibling &&
+      lastElement.nextSibling.nodeType === Node.TEXT_NODE &&
+      lastElement.nextSibling.data.endsWith("\n\n");
+    if (!hasBlankLineAfter) {
+      lastElement.after(document.createTextNode("\n\n"));
+    }
+  }
 }
 
 function initSelection() {
@@ -794,7 +854,7 @@ const implicitTagEndings = {
 function textToHTML(text) {
   textToHTML.stagingElement =
     textToHTML.stagingElement ?? document.createElement("div");
-  textToHTML.stagingElement.innerText = text;
+  textToHTML.stagingElement.textContent = text;
   return textToHTML.stagingElement.innerHTML;
 }
 
@@ -802,7 +862,7 @@ function decodeHTMLEntity(name) {
   decodeHTMLEntity.stagingElement =
     decodeHTMLEntity.stagingElement ?? document.createElement("div");
   decodeHTMLEntity.stagingElement.innerHTML = "&" + name + ";";
-  return decodeHTMLEntity.stagingElement.innerText;
+  return decodeHTMLEntity.stagingElement.textContent;
 }
 
 function* allIndexOf(needle, haystack) {

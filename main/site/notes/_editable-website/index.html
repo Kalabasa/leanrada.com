@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/common.css">
+<script defer src="/common.js"></script>
+
+<title>Editing my website directly in my browser</title>
+
+<site-header></site-header>
+
+<blog-header>
+  <h1>Editing my website directly in my browser</h1>
+  <img src="hero.jpg" alt="" loading="lazy">
+</blog-header>
+
+<blog-post-info-template>
+  <time datetime="1970-01-01">01 Jan 1970</time>
+  · 1 min read
+</blog-post-info-template>
+
+<tag-row>
+  <tag-chip title="essay"></tag-chip>
+</tag-row>
+
+<main class="prose">
+
+<p>This website is editable.</p>
+
+<p>If you add <a href="?edit"><code>?edit</code></a> to the URL of any page on this site, it will activate edit mode.</p>
+
+<video src="preview.mp4" autoplay muted></video>
+
+<p><i>You</i> can't save it of course; you don't have access to my files. But I can via the Web's File System API. I'm able to edit my site via my site.</p>
+
+<p>In fact, the text on this article was primarily written using this page!</p>
+
+<p><b>But why?</b></p>
+
+<p>Mainly for fun, but this was a long time goal of mine ever since I rewrote my site in vanilla HTML.</p>
+
+<p>When I rewrote my site in vanilla HTML, build step was gone. The build step was the main blocker from having the HTML editable since you have to unbuild it to save it back.</p>
+
+<p>The HTML file could become the authoring platform, in addition to being the publishing medium as well as the coding medium..</p>
+
+<p><i>(diagram)</i></p>
+
+<p>I'm going back to basics on this one.</p>
+
+<p>CMS -&gt; the file system<br>Frontmatter -&gt; read data already in markup, &lt;meta&gt;, &lt;title&gt;, &lt;time&gt;<br>✌️“WYSIWYG”✌️ editor -&gt; HTML page + ?editt<br>Advanced editor -&gt; HTML source<br>Widgets -&gt; JS</p>
+
+
+
+<p>That in itself doesn't mean anything for you readers, but it would make my writing experience much smoother. My thoughts could flow directly into the page unhindered. I already felt some freedom when I removed my build step and added live reload, because the feedback loop was much faster. Now, writing directly in the page eliminates the feedback loop at all. No more switching between multiple applications.</p>
+
+<p><b>Content Editable</b></p>
+
+<p>I turns out, browsers support editing HTML natively via the contenteditable attribute. Just set this on any element and it becomes editable.</p>
+
+<p>Formatting options are lacking though, and browser implementations are different. I  I can always go back to my code editor.</p>
+
+<p>With contenteditable, the browser is doing the heavy lifting. However, that's not all of it.</p>
+
+<p><b>DOM vs Source</b></p>
+
+<p>When I said no build step I lied. Well, not really. You see, there's still an inherent compilation step that is happening inside the browser. This is parsing the HTML into the DOM. What you actually see and interact with is the DOM.</p>
+
+<p>(diagram of actual predicament)</p>
+
+<p>Editing within the page means editing the DOM, not the source itself. Going from DOM to source is much harderd than converting source to DOM.</p>
+
+<p>Just saving body.innerHTML into a file won't work, because it would mess up my manual HTML formatting. (Prettier sucks for HTML)</p>
+
+<p>It also will mess up things like dynamic elements (innerHTML saves a snapshot of the DOM), breaking interactive HTML and custom elements.</p>
+
+<p><b>Algorithm</b></p>
+
+
+
+<p>So, I made an algorithm to patch the source according to changes made in the DOM.</p>
+
+<p>It starts with MutationObserver. Btw, MutationObserver sucks for detecting changes / diffs.</p>
+
+<p>Contextual find and replace.</p>
+
+<p>Preserves formatting, avoids overwriting dynamic elements.</p>
+
+<p><b>Reflections</b></p>
+
+<p>It's not perfect. It's full of edge cases, but I can always fall back to editing the source. The good thing about this is I can switch to either workflow any time because in the end I'm working on the same file.</p>
+
+<p>I first imagined using this for doing the final edits before publishing a post, but I actually can write the whole text of the post this way.</p>
+
+<p>I imagine writing the main text in the browser, then going into the HTML to insert media, mark up code or note boxes and other formatting, and to code interactive sections.</p>
+
+<p>In the future, I think I would like to add more formatting options, maybe use Quill. Inserting images.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
