@@ -2,6 +2,7 @@ let dirHandle;
 let fileHandle;
 let source;
 let controlPanel;
+let locked = false;
 let trackMutations = false;
 
 readFileFromNetwork().then(() => {
@@ -14,9 +15,11 @@ function initControlPanel() {
   controlPanel.id = "controlPanel";
   controlPanel.innerHTML = html`
     <button class="saveBtn">💾</button>
+    <button class="lockBtn">🔓</button>
     <span>${getFilePath()}</span>
     <style>
       #controlPanel {
+        display: flex;
         position: fixed;
         left: 12px;
         bottom: 12px;
@@ -44,6 +47,11 @@ function initControlPanel() {
       }
       *:hover:not(:has(:hover), :focus) {
         outline: 1px #afd dotted;
+        &#controlPanel,
+        #controlPanel &,
+        .editLocked & {
+          outline: none;
+        }
       }
       [contenteditable]:focus {
         outline: 1px #0f9 dotted;
@@ -51,7 +59,7 @@ function initControlPanel() {
     </style>
   `;
 
-  const [saveBtn, filePathSpan] = controlPanel.children;
+  const [saveBtn, lockBtn, filePathSpan] = controlPanel.children;
 
   saveBtn.addEventListener("click", () => {
     toast({
@@ -61,6 +69,17 @@ function initControlPanel() {
     setTimeout(() => {
       saveFile();
     }, 200);
+  });
+
+  lockBtn.addEventListener("click", () => {
+    locked = !locked;
+    trackMutations = !locked;
+    lockBtn.textContent = locked ? "🔒" : "🔓";
+    document.documentElement.classList.toggle("editLocked", locked);
+    toast({
+      message: locked ? "Locked from editing" : "Editing",
+      color: locked ? "#960" : "#090",
+    });
   });
 
   document.body.appendChild(controlPanel);
@@ -241,6 +260,7 @@ function initSelection() {
   let lastSelection = null;
 
   document.addEventListener("mousedown", ({ target }) => {
+    if (locked) return;
     if (!isEditable(target)) return;
     if (lastSelection === target) return;
 
@@ -254,6 +274,7 @@ function initSelection() {
   });
 
   document.addEventListener("click", ({ target }) => {
+    if (locked) return;
     if (!isEditable(target)) return;
     if (lastSelection === target) return;
 
@@ -375,7 +396,7 @@ function applyChange({
         if (child.nodeType === Node.ELEMENT_NODE) {
           content += child.outerHTML;
         } else if (child.nodeType === Node.TEXT_NODE) {
-          content += child.data;
+          content += textToHTML(child.data);
         }
         break;
       case "before":
