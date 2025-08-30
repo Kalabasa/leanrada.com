@@ -52,6 +52,11 @@ export async function rewriteCanonicalHref({ dryRun = false, htmlFilePath }) {
   const existingRelCanonical = ch("link[rel=canonical]");
   const href = getHref(htmlFilePath);
 
+  if (path.basename(href).startsWith("_")) {
+    console.warn(`❌ Current path is temporary: ${href}`);
+    return;
+  }
+
   await rewrite({
     htmlFilePath,
     setup(rewriter) {

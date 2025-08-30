@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="/notes/editing-website-in-browser/">
 <link rel="stylesheet" href="/common.css">
 <script defer src="/common.js"></script>
 
@@ -10,13 +11,13 @@
 
 <blog-header>
   <h1>Editing my website directly in the browser</h1>
-  <img src="hero.jpg" alt="" loading="lazy">
+  <img src="hero.jpg" alt="" loading="lazy" width="1200" height="800" style="--lqip:-338334">
 </blog-header>
 
-<blog-post-info-template>
-  <time datetime="1970-01-01">01 Jan 1970</time>
-  · 1 min read
-</blog-post-info-template>
+<blog-post-info>
+  <time datetime="2025-09-01">01 Sep 2025</time>
+  · 10 min read
+</blog-post-info>
 
 <tag-row>
   <tag-chip title="html"></tag-chip>
@@ -27,7 +28,9 @@
 
 <p>This website is editable!</p>
 
-<p>If you add <a href="?edit"><code>?edit</code></a> to any URL on this site, it activates <strong>edit mode</strong>. In this mode, you can edit text and apply basic formatting to any element. Of course, you won’t be able to save changes without having write access to my files. But I can save it and update my copy of the source via the Web <a href="https://developer.chrome.com/docs/capabilities/web-apis/file-system-access" target="_blank"><strong>File System API</strong></a>.</p>
+<p>If you add <a href="?edit"><code>?edit</code></a> to any URL on this site, it activates <strong>edit mode</strong>. In this mode, you can edit text and apply basic formatting to any element.</p>
+
+<p>Of course, you won’t be able to save changes without having write access to my files, but I can. Using the Web <a href="https://developer.chrome.com/docs/capabilities/web-apis/file-system-access" target="_blank"><strong>File System API</strong></a>, it can update my local copy of the website’s source code.</p>
 
 <window-decor title="leanrada.com/notes/vanilla-web-rewrite/?edit">
   <video src="preview.mp4" autoplay muted></video>
@@ -41,11 +44,11 @@
 
 <p>As usual, I made this mainly for fun. But having a WYSIWYG (what-you-see-is-what-you-get) editor for my posts has been a long time goal ever since I <a href="/notes/vanilla-web-rewrite/" target="_blank">rewrote my site in vanilla HTML</a>.</p>
 
-<p>After I moved away from a static site generator, the need for an extra transformational build step disappeared, allowing the raw HTML source to be directly served and edited in the client. This unlocks many <a href="https://developer.chrome.com/docs/devtools/workspaces" target="_blank">things</a>!</p>
+<p>After I moved away from a static site generator, the need for an extra transformational build step disappeared, allowing the raw HTML source to be directly served in the client. This unlocks many <a href="https://developer.chrome.com/docs/devtools/workspaces" target="_blank">things</a>!</p>
 
 <p>The HTML file can now act as the editing platform, in addition to being the coding and authoring medium, and of course, the publishing medium.</p>
 
-<p><i>(insert context diagram)</i></p>
+<img src="html-3.png" loading="lazy" width="450" height="300" style="--lqip:174819">
 
 <p>We're sticking with standards with this one. I’ve noticed that this has been the tendency of my personal use of Web tech.</p>
 
@@ -79,21 +82,21 @@
 
 <h2>Content, editable</h2>
 
-<p>Browsers support editing HTML natively via the <code>contenteditable</code> attribute. Set this attribute on any element and it becomes editable. It’s a barebones way to get a WYSIWYG editor in HTML. This is what I’m using as of publish time.</p>
+<p>Browsers support editing HTML natively via the <code>contenteditable</code> attribute. Set this attribute on any element and it becomes editable. It’s a barebones way to get a WYSIWYG editor in HTML. This is what I’m using as of time of writing.</p>
 
-<p><code>contenteditable</code> formatting options are limited though, and browser implementations vary. For advanced edits, I could always go back to my text editor.</p>
+<p><code>contenteditable</code> formatting options are limited though, and browser implementations vary. It’s good enough for my use case.</p>
 
 <p>Whether <code>contenteditable</code> is good <a href="https://medium.engineering/why-contenteditable-is-terrible-122d8a40e480" target="_blank">or terrible</a> &mdash; or whether a third-party WYSIWYG HTML editor could work better &mdash; was a minor detail in the bigger picture. The real problem was the <em>Document Object Model</em>&hellip;</p>
 
 <h2>DOM vs source</h2>
 
-<p>When I said no build step I kinda lied. You see, there's still an inherent compilation step that happens <em>inside the browser</em>. This step is parsing the HTML into the <strong>Document Object Model</strong>, or the DOM. The DOM is what you actually see and interact with on a webpage.</p>
+<p>When I said no build step I kinda lied. You see, there's still an inherent compilation step that happens <em>inside the browser</em>. This step is parsing the HTML into the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction" target="_blank"><strong>Document Object Model</strong></a>, or the <strong>DOM</strong>. The DOM essentially are the elements that you actually interact with on a webpage.</p>
 
-<p>(diagram of actual predicament)</p>
-
-<p>Editing from within the page means editing the DOM, not the HTML source code itself. Saving the corresponding edits into the source is not very straightforward.</p>
+<p>Editing from within the page means editing the DOM, not the HTML source code itself. Saving the corresponding edits into the source was not very straightforward.</p>
 
 <p>This is simply because HTML to DOM is one way. And no, <code>innerHTML</code>/<code>outerHTML</code> is not the inverse operation.</p>
+
+<img src="dom.png" loading="lazy" width="450" height="300" style="--lqip:174819">
 
 <p>For example, simply saving <code>html.outerHTML</code> to a file won’t work, because <code>outerHTML</code> (or any DOM introspection method, for that matter) takes a snapshot of the current state of the DOM, including <em>dynamically rendered elements</em>. This would break interactive elements and custom elements in the source, as the rendered elements would incorrectly overwrite the original markup.</p>
 
@@ -101,9 +104,9 @@
 
 <h2>The algorithm</h2>
 
-<p>So I made an algorithm to patch the source according to changes made in the DOM. What it does is listen for changes in the DOM, and tries to identify the ‘smallest’ patch needed to update the source.</p>
+<p>So I made an algorithm to patch the source according to changes made in the DOM. What it does is listen for changes in the DOM tree, and tries to identify the ‘smallest’ textual patch needed to update the source.</p>
 
-<p>It starts with the <strong><a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank">MutationObserver API</a></strong>. MutationObserver lets the code respond to changes in the DOM. For each change, the API provides the relevant node(s), as well as the surrounding unchanged siblings.</p>
+<p>It starts with the <strong><a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank">MutationObserver API</a></strong>. MutationObserver lets the code respond to changes in the DOM. For each change, the API provides the relevant node(s), as well as the two surrounding unchanged siblings.</p>
 
 <box-note>
   <details>
@@ -111,7 +114,7 @@
 
     <p>It only provides coarse details about each change, not like a detailed diff. Also, a single user interaction (say, pressing the Enter key) could cause multiple mutations to fire (the Enter key causes a &lt;p> to be inserted, then a &lt;br> inside the p). Some mutations also end up cancelling each other in the same callback or across multiple callbacks (e.g. span that is added and removed immediately). The exact order and amount of effects also vary by browser.</p>
 
-    <p>My workaround was to collapse multiple mutations into one logical change per resulting element.</p>
+    <p>My workaround was to collapse multiple mutations into one logical change per resulting subtree.</p>
   </details>
 </box-note>
 
@@ -183,9 +186,9 @@ getPositionInSource(element: Element, source: string) {
 
 <p>You can check out the <a href="https://leanrada.com/tools/edit.js" target="_blank">code for the edit mode</a> for more details! Note: This script was made specifically for myself and my site.</p>
 
-<h2>Retrospect and prospect</h2>
+<h2>Retrospect, prospect</h2>
 
-<p>The algorithm doesn’t have to be perfect; I can always fall back to editing the source if certain things don’t work. The good thing about this is I can switch to either workflow any time because in the end I'm working on the same HTML file.</p>
+<p>The algorithm doesn’t have to be perfect; I can always fall back to editing the source if certain things don’t work. The good thing about this is I can switch to either method any time because in the end I'm working on the same HTML file.</p>
 
 <p>When I first imagined this solution, I thought I would only be using it to do the final edits just before publishing a post, but here I am actually writing a whole post.</p>
 
@@ -193,16 +196,16 @@ getPositionInSource(element: Element, source: string) {
 
 <p>In the future, think I’d like to add more formatting options and UI for inserting code blocks, media, lists, headings, etc. Maybe use <a href="https://quilljs.com/" target="_blank">Quill</a> or something?</p>
 
-<p>The top thing I would love to have is inserting hyperlinks. During my final passes on a post, I like to sprinkle hyperlinks to interesting terms, even if just to link the <a href="https://www.wikipedia.org/" target="_blank">Wikipedia</a> entry.</p>
+<p>The top thing I would love to have is inserting hyperlinks. During final passes on a post, I like to sprinkle hyperlinks on interesting terms, even if just to link the <a href="https://www.wikipedia.org/" target="_blank">Wikipedia</a> entry.</p>
 
-<p>I’ll post about any improvements I make along the way. This could be a series! I mean, it already kind of is!</p>
+<p>I’ll post about any improvements I make along the way. This could be a series! I mean, it already kind of is:</p>
 
 <ol>
   <li><a href="/notes/vanilla-web-rewrite/">Rewriting my site in vanilla web</a>
   <li><a href="/notes/simple-live-reload/">Simple live reload for developing static sites</a>
   <li><a href="."><script>document.currentScript.replaceWith(document.title)</script></a> 📍(this post)
   <li>[future formatting feature?]
-  <li>
+  <li>[edit CSS? JS?]
 </ol>
 
 </main>
