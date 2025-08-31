@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+echo "This will run autoupdate and commit changes..."
+
 cd "$(dirname "$0")"/../..
 pwd
 
