@@ -1,0 +1,159 @@
+<!doctype html>
+<meta charset="utf-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+<link rel="canonical" href="/wares/wikaraoke/">
+<link rel="stylesheet" href="/common.css"></link>
+<script defer="" src="/common.js"></script>
+
+<title>Wikaraoke</title>
+
+<site-header></site-header>
+
+<main appearance="prose">
+
+<h1>Wikaraoke</h1>
+
+<img alt="preview" src="preview.png" loading="lazy" width="600" height="400" style="--lqip:154155"></img>
+
+<project-info-card>
+  <strong>Project details</strong>
+  <a href="https://leanrada.com/wikaraoke/" target="_blank">Open the app</a>
+  <dl>
+    <dt>released</dt><dd>2025</dd>
+    <dt>role</dt><dd>creator</dd>
+    <dt>platform</dt><dd>Web</dd>
+    <dt>tech</dt><dd>HTML, JS, CSS, PixiJS, YouTube</dd>
+  </dl>
+</project-info-card>
+
+<h2>Philippine multilingual music visualiser</h2>
+
+<p><strong>“Wikaraoke”</strong> stems from <i>wika</i> (meaning ‘language’) and <i>karaoke</i> (music presented in a way to facilitate sing-alongs). Filipinos love karaoke. Not me though, but I do love music and languages.</p>
+
+<p>The Philippines has over 120 languages. Tagalog, Cebuano, Ilokano, Hiligaynon, Kapampangan, and many more. Since my native tongue is Tagalog/Filipino, the national language of the country, I’ve had very little exposure to other Philippine languages &mdash; just enough to barely comprehend a few words here and there in tiny sentences in Kapampangan, Cebuano, or Bikol.</p>
+
+<p>Even though I don’t really understand other Philippine languages, I can still enjoy music in these languages. Based on the fact that songs outside of the lingua franca still reach widespread popularity in the Philippines, sometimes even topping the charts, I know that I’m not alone. As one would say, music breaks barriers.</p>
+
+<p><strong>Wikaraoke</strong> is a map-based lyric visualiser for multilingual Philippine music. It’s like karaoke visuals, but overlaid on top of a map, highlighting the main regions where languages in a song are spoken.</p>
+
+<h2>Karaoke with a map&hellip;</h2>
+
+<p>Wikaraoke features a curated set of multilingual songs. When you choose a song, it starts playing using an embedded YouTube player (which saved me the trouble of hosting the audio files themselves).</p>
+
+<p>Lyrics would appear on the map in sync with the music from the YouTube player. Each line of music is associated with a language, floating beside the corresponding region while the it lights up.</p>
+
+<prose-bleed>
+  <window-decor title="ILY ILY | Wikaraoke">
+    <img alt="screenshot with lyrics lighting up" src="lyric.png" loading="lazy" width="1280" height="800" style="--lqip:158251"></img>
+  </window-decor>
+</prose-bleed>
+
+<p>It’s fun to see some of the hyperlingual songs light up different parts of the country.</p>
+
+<p>To symbolise music breaking barriers, each line of language sends a colorful shockwave radiating from its region unhindered by borders, terrain, or sea.</p>
+
+<figure>
+  <video controls src="bhu.mp4#t=0.8" alt="video of lyrics lighting up"></video>
+  <figcaption>
+    Excerpt of <a href="https://leanrada.com/wikaraoke/#bini_b_hu_u_r" target="_blank">BINI - B HU U R</a>.
+  </figcaption>
+</figure>
+
+<p>Annotating the lyrics with language metadata has been one of the most time-consuming parts of making this. As I’m not super familiar with any of the Philippine languages besides my native one, it took a good amount of research to accurately annotate each line with the language it’s in.</p>
+
+<p>Even though LLMs were supposed to be ‘language calculators’ (?), I haven’t had luck in getting ChatGPT to automatically label each lyric with the correct language. It would’ve been an ideal use-case but I don’t think these languages are well represented in their datasets to begin with.</p>
+
+<p>Each language is represented by a unique colour, so annotating a song is like colouring the song’s progress bar in the right colours from start to end. Sounds <em>fun</em>, right?</p>
+
+<img alt="screenshot of the seekbar" src="seek.png" loading="lazy" width="397" height="84" style="--lqip:158251"></img>
+
+<p>But an even more fun exercise was fine-tuning lyric timings so they appear on screen in time with the singing. This is important, as good lyric timing complements the audio visualisation part.</p>
+
+<h2>The audio visualisation part</h2>
+
+<p>The map visualisation responds to the audio, not just the timed lyrics. It flashes and moves with the beat.</p>
+
+<figure>
+  <video controls src="day.mp4#t=0.8" alt="video of visualisation reacting to sound"></video>
+  <figcaption>
+    Excerpt of <a href="https://leanrada.com/wikaraoke/#alamat_dayang" target="_blank">Alamat - Dayang</a>.
+  </figcaption>
+</figure>
+
+<p>Since I can’t actually host the audio files (because copyright), I just hosted the analysis files that were derived from the audio. Only the audio analysis data is necessary for the audio-reactive visualisation, after all.</p>
+
+<p>I used a Python script to analyse each of the YouTube videos’ audio tracks to compile a sequence of interesting aural ‘events’. These are basically instructions for the visualisation for when to react and by how much.</p>
+
+<code-block language="js">
+  <pre><code>// audio event data
+// { t: time, d: decibels, f: frequency bucket }
+{"t":17.845,"d":-5.37,"f":"M"},
+{"t":18.03,"d":-11.73,"f":"L"},
+{"t":18.506,"d":-11.64,"f":"L"},
+{"t":18.506,"d":-11.75,"f":"M"},
+{"t":18.797,"d":-14.14,"f":"H"},
+{"t":18.843,"d":-9.24,"f":"M"},
+{"t":18.855,"d":-9.92,"f":"L"},
+{"t":19.482,"d":-9.34,"f":"M"},
+{"t":19.83,"d":-12.46,"f":"L"},
+// ...</code></pre>
+</code-block>
+
+<p>The script runs frequency analysis over time (Fourier transform thingy over time windows) and detects peaks in each of the low, mid, and high frequency ranges to produce this data.</p>
+
+<p>This analysis was done offline and the resulting data is saved as JSON and hosted on the website.</p>
+
+<p>It’s somewhat of an inefficient encoding, but it works. In a way, the online visualisation has been pre-compiled or pre-baked, or however you want to call it, reacting to the music without actually having access to the audio signal itself.</p>
+
+<h2>Multilinguality metric</h2>
+
+<p>There’s an option to order the song list by <em>Multilingualism</em>.</p>
+
+<img alt="list ordered by multilingualism" src="multil.png" loading="lazy" width="690" height="1008" style="--lqip:174635"></img>
+
+<p>To be able to sort songs by multilingualism, multilinguality has to be quantified. So I made it up. Basically, I defined it as how diverse a song is in terms of the languages it uses.</p>
+
+<p>Mathematically, the multilinguality of a song was based on <a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)" target="_blank">Shannon entropy</a> (which has also been the basis of certain biodiversity measures).</p>
+
+<box-note>
+  <p>Let <code>w<sub>i</sub></code> be the number of unique words for language <code>i</code> from 1 to <code>n</code>, and <code>W</code> be the total count <code>w<sub>1</sub> + w<sub>2</sub> + ... + w<sub>n</sub></code>.
+
+  <p>We can compute the proportion (probability) of each language:</p>
+
+  <p><code>p<sub>i</sub> = w<sub>i</sub> / W</code></p>
+
+  <p>And so, the Shannon entropy, the Multilinguality is:</p>
+
+  <p><code>M = -w<sub>1</sub> ln(w<sub>1</sub>) - w<sub>2</sub> ln(w<sub>2</sub>) - ... - w<sub>n</sub> ln(w<sub>n</sub>)</code></p>
+</box-note>
+
+<p>This entropy value quantifies the diversity of language usage within a song. A higher value means more languages used and/or more balanced usage within the song (more multilingual). A lower value means one or few languages dominate the song (less multilingual). A value of zero means a monolingual song.</p>
+
+<p>Based on the ordering in the screenshot above, I’d say it’s a decent measure!</p>
+
+<h2>Publishing</h2>
+
+<p>I realised that this isn’t a very interactive kind of application. Once you start playing, further interaction is optional.<p>
+
+<p>The visualisation could be published as a prerecorded video file and enjoyed by others without having to run the webapp itself!</p>
+
+<p>I think posting lyric visualisation videos on YouTube or some other social media would be part of this project. The deliverables are not just the webapp itself.</p>
+
+<p>For this purpose of sharing to social media, I added a fullscreen mode that hides the UI. I’ve used this mode to record the videos in this page.</p>
+
+<figure>
+  <prose-bleed>
+    <window-decor title="Porque | Wikaraoke">
+      <img src="fullscreen.png" loading="lazy" width="1280" height="720" style="--lqip:92459"></img>
+    </window-decor>
+  </prose-bleed>
+  <figcaption>Fullscreen mode</figcaption>
+</figure>
+
+<p>As of writing I haven’t made any YouTube videos yet, so stay tuned! Meanwhile, <a href="https://leanrada.com/wikaraoke/" target="_blank">check out the app yourself!</a></p>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
