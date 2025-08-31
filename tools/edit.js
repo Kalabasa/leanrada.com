@@ -248,8 +248,6 @@ function initMutationObserver() {
           parent: tr.target.parentElement,
           previousSibling: tr.target.previousSibling,
           nextSibling: tr.target.nextSibling,
-          textNode: tr.target,
-          oldTextValue: tr.oldValue,
         });
       }
     } catch (e) {
@@ -407,13 +405,7 @@ function toast({ message, color = "#000000", durationMs = 5000 }) {
   }, durationMs);
 }
 
-function applyChange({
-  parent,
-  previousSibling,
-  nextSibling,
-  textNode,
-  oldTextValue,
-}) {
+function applyChange({ parent, previousSibling, nextSibling }) {
   // Find parent in source by path
   const parentPath = getPath(parent);
   console.log("replaceChildren", {
@@ -485,34 +477,18 @@ function applyChange({
   let oldContent = parentSource.slice(sourceEditStart, sourceEditEnd);
   if (oldContent === content) return;
 
-  const commonPrefix = longestCommonPrefix(oldContent, content);
-  const commonSuffix = longestCommonSuffix(oldContent, content);
-
-  content = content.slice(
-    commonPrefix.length,
-    content.length - commonSuffix.length
-  );
-
-  oldContent = oldContent.slice(
-    commonPrefix.length,
-    oldContent.length - commonSuffix.length
-  );
-
-  const prefix = parentSource.slice(0, sourceEditStart) + commonPrefix;
-  const suffix = commonSuffix + parentSource.slice(sourceEditEnd);
-
-  const result = tryContextualReplace(
-    parentSource,
-    prefix,
-    suffix,
+  // TODO: ignore common prefix and suffix between content and oldContent (considering denormalized forms, e.g. HTML entities)
+  console.log({
+    previous: parentSource.slice(0, sourceEditStart),
+    next: parentSource.slice(sourceEditEnd),
     oldContent,
-    content
-  );
+    content,
+  });
 
   source =
-    source.slice(0, parentTag.innerStartIndex) +
-    result +
-    source.slice(parentTag.innerEndIndex);
+    source.slice(0, parentTag.innerStartIndex + sourceEditStart) +
+    content +
+    source.slice(parentTag.innerStartIndex + sourceEditEnd);
 
   console.groupCollapsed(
     source.slice(
@@ -549,118 +525,6 @@ function longestCommonSuffix(a, b) {
     i++;
   }
   return a.slice(a.length - i);
-}
-
-function tryContextualReplace(
-  source,
-  prefix,
-  suffix,
-  oldContent,
-  newContent,
-  state = { lateral: false, depth: 0 }
-) {
-  console.log({
-    prefix,
-    suffix,
-    oldContent,
-    newContent,
-    source,
-  });
-
-  const preIndices = prefix ? [...allIndexOf(prefix, source)] : [0];
-  const sufIndices = suffix ? [...allIndexOf(suffix, source)] : [source.length];
-
-  if (preIndices.length === 1 || sufIndices.length === 1) {
-    const spliceStart =
-      preIndices.length === 1
-        ? preIndices[0] + prefix.length
-        : sufIndices[0] - oldContent.length;
-    const spliceEnd =
-      sufIndices.length === 1
-        ? sufIndices[0]
-        : preIndices[0] + prefix.length + oldContent.length;
-    if (oldContent === source.slice(spliceStart, spliceEnd)) {
-      return (
-        source.slice(0, spliceStart) + newContent + source.slice(spliceEnd)
-      );
-    }
-  }
-
-  // Try refining context in different ways
-  if (state.depth < 100) {
-    if (!state.lateral) {
-      if (
-        (preIndices.length === 0 && prefix.length >= 2) ||
-        (sufIndices.length === 0 && suffix.length >= 2)
-      ) {
-        const shorterPrefix =
-          preIndices.length === 0
-            ? prefix.slice(Math.ceil(prefix.length * 0.5))
-            : prefix;
-        const shorterSuffix =
-          sufIndices.length === 0
-            ? suffix.slice(0, Math.floor(suffix.length * 0.5))
-            : suffix;
-        const shorterContext = tryContextualReplace(
-          source,
-          shorterPrefix,
-          shorterSuffix,
-          oldContent,
-          newContent,
-          { ...state, depth: state.depth + 1 }
-        );
-        if (shorterContext.ok) return shorterContext;
-      }
-    }
-
-    for (const entityMatch of source.matchAll(/&(\w+);/g)) {
-      const entityName = entityMatch[1];
-      const entityText = decodeHTMLEntity(entityName);
-      const encodedPrefix = prefix.replaceAll(
-        entityText,
-        "&" + entityName + ";"
-      );
-      const encodedSuffix = suffix.replaceAll(
-        entityText,
-        "&" + entityName + ";"
-      );
-      if (prefix !== encodedPrefix || suffix !== encodedSuffix) {
-        const encodedContext = tryContextualReplace(
-          source,
-          encodedPrefix,
-          encodedSuffix,
-          oldContent,
-          newContent,
-          { ...state, depth: state.depth + 1, lateral: true }
-        );
-        if (encodedContext.ok) return encodedContext;
-      }
-    }
-
-    if (state.depth === 0) {
-      const normalizedPrefix = textToHTML(prefix);
-      const normalizedSuffix = textToHTML(suffix);
-      if (prefix !== normalizedPrefix || suffix !== normalizedSuffix) {
-        const normalizedContext = tryContextualReplace(
-          source,
-          normalizedPrefix,
-          normalizedSuffix,
-          oldContent,
-          newContent,
-          { ...state, depth: state.depth + 1, lateral: true }
-        );
-        if (normalizedContext.ok) return normalizedContext;
-      }
-    }
-  }
-
-  console.error({ source, prefix, suffix, oldContent, newContent });
-
-  if (preIndices.length === 0 && sufIndices.length === 0) {
-    throw new ContextNotFoundError();
-  } else {
-    throw new AmbiguousContextError();
-  }
 }
 
 function getPath(element, root = null) {
@@ -858,22 +722,4 @@ function textToHTML(text) {
   return textToHTML.stagingElement.innerHTML;
 }
 
-function decodeHTMLEntity(name) {
-  decodeHTMLEntity.stagingElement =
-    decodeHTMLEntity.stagingElement ?? document.createElement("div");
-  decodeHTMLEntity.stagingElement.innerHTML = "&" + name + ";";
-  return decodeHTMLEntity.stagingElement.textContent;
-}
-
-function* allIndexOf(needle, haystack) {
-  let position = -1;
-  do {
-    position = haystack.indexOf(needle, position + 1);
-    if (position === -1) break;
-    yield position;
-  } while (position < haystack.length);
-}
-
 class SourceNotFoundError extends Error {}
-class ContextNotFoundError extends Error {}
-class AmbiguousContextError extends Error {}
