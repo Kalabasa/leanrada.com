@@ -317,31 +317,35 @@ function reformat(cr) {
 function initSelection() {
   let lastSelection = null;
 
-  document.addEventListener("mousedown", ({ target }) => {
-    if (locked) return;
-    if (!isEditable(target)) return;
-    if (lastSelection === target) return;
-
+  function resetLastSelection() {
     if (lastSelection) {
       lastSelection.contentEditable = false;
       refreshFromSource(lastSelection);
     }
     lastSelection = null;
+  }
+
+  document.addEventListener("mousedown", ({ target }) => {
+    if (locked) return;
+    if (!isEditable(target)) return;
+    if (lastSelection === target) return;
+
+    resetLastSelection();
+
+    if (locked) return;
 
     refreshFromSource(target, "inner");
   });
 
   document.addEventListener("click", ({ target }) => {
-    if (locked) return;
     if (!isEditable(target)) return;
     if (lastSelection === target) return;
 
-    if (lastSelection) {
-      lastSelection.contentEditable = false;
-      refreshFromSource(lastSelection);
-    }
-    lastSelection = target;
+    resetLastSelection();
 
+    if (locked) return;
+
+    lastSelection = target;
     target.contentEditable = true;
     target.focus();
   });
