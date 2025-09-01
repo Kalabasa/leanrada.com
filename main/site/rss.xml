@@ -7,6 +7,201 @@
     <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title><![CDATA[Editing my website directly in the browser]]></title>
+      <link><![CDATA[https://leanrada.com/notes/editing-website-in-browser/?ref=rss]]></link>
+      <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/editing-website-in-browser/?ref=rss]]></guid>
+      <pubDate>Mon, 01 Sep 2025 00:00:00 GMT</pubDate>
+      <description><![CDATA[
+<p>This website is editable!</p>
+
+<p>If you add <a href="https://leanrada.com/notes/editing-website-in-browser/?edit=&amp;ref=rss"><code>?edit</code></a> to any URL on this site, it activates <strong>edit mode</strong>. In this mode, you can edit text and apply basic formatting to any element.</p>
+
+<p>Of course, you won’t be able to save changes without having write access to my files, but I can. Using the Web <a href="https://developer.chrome.com/docs/capabilities/web-apis/file-system-access" target="_blank"><strong>File System API</strong></a>, it can update my local copy of the website’s source code.</p>
+<window-decor title="leanrada.com/notes/vanilla-web-rewrite/?edit">
+  <video src="https://leanrada.com/notes/editing-website-in-browser/preview.mp4?ref=rss" autoplay="" muted="" loop=""></video>
+</window-decor>
+<p>In short, I can edit my site via my site. In fact, this article was written this way!</p>
+
+<p>It’s still rough in some cases, but the solution is usable.</p>
+
+<h2>But why?</h2>
+
+<p>As usual, I made this mainly for fun. But having a WYSIWYG (what-you-see-is-what-you-get) editor for my posts has been a long time goal ever since I <a href="https://leanrada.com/notes/vanilla-web-rewrite?ref=rss" target="_blank">rewrote my site in vanilla HTML</a>.</p>
+
+<p>After I moved away from a static site generator, the need for an extra transformational build step disappeared, allowing the raw HTML source to be directly served in the client. This unlocked a path to source editing in the client! As well as other basic&nbsp;<a href="https://developer.chrome.com/docs/devtools/workspaces" target="_blank">things</a>&nbsp;for free.</p>
+
+<p>The HTML file can now act as the editing platform, in addition to being the coding and authoring medium, and of course, the publishing medium.</p>
+
+<img src="https://leanrada.com/notes/editing-website-in-browser/html-3.png?ref=rss" loading="lazy" width="450" height="300">
+
+<p>We're sticking with standards with this one. I’ve noticed that this has been the tendency of my personal use of Web tech.</p>
+<prose-table>
+  <table>
+    <tbody><tr>
+      <th>Instead of…
+      </th><th>I use
+    </th></tr><tr>
+      <td>CMS
+      </td><td>the file system
+    </td></tr><tr>
+      <td>frontmatter
+      </td><td>read data already in the markup,<br>
+        <code>&lt;meta&gt;</code>, <code>&lt;title&gt;</code>, <code>&lt;time&gt;</code>, <code>&lt;tag-chip&gt;</code>s
+    </td></tr><tr>
+      <td>WYSIWYG editor
+      </td><td>editable HTML page
+    </td></tr><tr>
+      <td>Advanced editor (?)
+      </td><td>text editor (edit HTML code)
+    </td></tr><tr>
+      <td>Widgets (??)
+      </td><td>JavaScript
+  </td></tr></tbody></table>
+</prose-table>
+<p>Anyway, these things don’t really impact visitors and readers of this site. It’s more about my writing and authoring experience. Thoughts can now go directly into the page the way it’s gonna be read.</p>
+
+<p>I already felt a bit of that improved flow when I removed the build step and added a <a href="https://leanrada.com/notes/simple-live-reload?ref=rss" target="_blank">live reload script</a>, minimising the development feedback loop. With direct editing, feedback loop is instant — no more switching between the text editor and the browser! It’s been extremely valuable during the proofreading and editing phase.</p>
+
+<h2>Content, editable</h2>
+
+<p>Browsers support editing HTML natively via the <code>contenteditable</code> attribute. Set this attribute on any element and it becomes editable. It’s a barebones way to get a WYSIWYG editor in HTML. This is what I’m using as of time of writing.</p>
+
+<p><code>contenteditable</code> formatting options are limited though, and browser implementations vary. Not a problem for now.</p>
+
+<p>Whether <code>contenteditable</code> was good <a href="https://medium.engineering/why-contenteditable-is-terrible-122d8a40e480" target="_blank">or terrible</a>&nbsp;was a minor detail in the bigger picture. The real problem was the <em>Document Object Model</em>…</p>
+
+<h2>DOM vs source</h2>
+
+<p>When I said no build step I kinda lied. You see, there's still an inherent compilation step that happens <em>inside the browser</em>. This step is the parsing of HTML into the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction" target="_blank"><strong>Document Object Model</strong></a>, or the <strong>DOM</strong>. The “DOM” essentially are the elements that you actually interact with on a webpage.</p>
+<box-note>Technically, the DOM is the interface to the elements themselves. For general purposes, <em>the interface is the abstraction</em>.</box-note>
+<p>The contenteditable editor edits the DOM, not the HTML source code itself. I needed to somehow save the corresponding DOM edits into the source. It was not very straightforward.</p>
+
+<img src="https://leanrada.com/notes/editing-website-in-browser/dom.png?ref=rss" loading="lazy" width="450" height="300">
+
+<p>HTML to DOM conversion is one way. DOM to source HTML would be another thing. And no, <code>innerHTML</code>/<code>outerHTML</code> is not the exact inverse operation.</p>
+
+<p>For example, simply saving <code>html.outerHTML</code> to a file won’t work, because <code>outerHTML</code> (or any DOM introspection method, for that matter) takes a snapshot of the current state of the DOM, including <em>dynamically rendered elements</em>. This would break interactive elements and custom elements in the source, as the rendered elements would incorrectly overwrite the original markup.</p>
+
+<p>Saving the generated <code>outerHTML</code> directly would also mess up any manual formatting that I make in the source code, collapsing whitespaces and forcing HTML entities. <small>(I don’t use Prettier; it produces invalid HTML)</small></p>
+
+<h2>Solution: source patching</h2>
+
+<p>So I made an algorithm to patch the source according to changes made in the DOM. What it does is listen for changes in the DOM tree, and tries to identify the ‘smallest’ textual patch needed to update the source.</p>
+
+<p>It starts with the <strong><a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank">MutationObserver API</a></strong>. MutationObserver lets the code respond to changes in the DOM. For each change, the API provides the relevant node(s), as well as the two surrounding unchanged siblings.</p>
+<box-note>
+  <details>
+    <summary>Btw, the MutationObserver API has been <a href="https://github.com/whatwg/dom/issues/1105" target="_blank">somewhat</a> <a href="https://github.com/whatwg/dom/issues/1111" target="_blank">unwieldy</a>.</summary>
+
+    <p>It only provides coarse details about each change, not like a detailed diff. Also, a single user interaction (say, pressing the Enter key) could cause multiple mutations to fire (the Enter key causes a &lt;p&gt; to be inserted, then a &lt;br&gt; inside the p). Some mutations also end up cancelling each other in the same callback or across multiple callbacks (e.g. span that is added and removed immediately). The exact order and amount of effects also vary by browser.</p>
+
+    <p>My workaround was to collapse multiple mutations into one logical change per resulting subtree.</p>
+  </details>
+</box-note>
+<p>The idea is to update the relevant part of the source without changing the rest. To do this, it finds two anchor points around the mutation. These two points must remain stable throughout the mutation in both DOM and source. Only the content between them are replaced.</p>
+
+<p>So for each change, the steps are:</p>
+
+<ol>
+  <li>Find the unchanged element before the change.
+  </li><li>Find the unchanged element after the change.
+  </li><li>Use their <em>positions in source</em> as boundaries.
+  </li><li>Splice the source <em>between the two boundaries</em> with the updated HTML.
+</li></ol>
+
+<img src="https://leanrada.com/notes/editing-website-in-browser/splice.png?ref=rss" loading="lazy">
+
+<p>Then there’s the subproblem of mapping the position of the boundary elements in the source code. Extracting the position of any given DOM element in the source code is a bit more involved:</p>
+
+<ol>
+  <li>Get the element’s ‘address’, or its path in the DOM (unique steps from the root to the element).
+  </li><li>Scan the source HTML, tag by tag, keeping track of your current ‘address’ by identifying opening and closing tags.
+  </li><li>Compare the current tag’s path-in-source against the element’s path-in-DOM.
+  </li><li>If paths match, then the current tag corresponds to the element!
+</li></ol>
+<card-box>
+  <details>
+    <summary>
+      <code>getPositionInSource</code> pseudocode
+    </summary>
+
+    <code-block>
+      <pre><code>/** Gets the position of the given Element in the source code */
+getPositionInSource(element: Element, source: string) {
+  // Get the DOM path of the target
+  domPath: Element = [];
+  while (element) {
+    domPath.unshift(element);
+    element = element.parentElement;
+  }
+
+  let startIndex, endIndex;
+
+  sourcePath = [];
+  //                 match all HTML tags
+  for (tag of source.matchAll(/&lt;\/?[a-z0-9-]+/gi)) {
+    // Note: does not handle void elements and optional end tags
+    if (isOpenTag(tag)) {
+      sourcePath.push(tag);
+
+      if (matchPath(domPath, sourcePath)) {
+        // Source path and DOM path matches!
+        // This is the target element's opening tag
+        startIndex = tag.index;
+      }
+    } else { // is a closing tag
+      if (matchPath(domPath, sourcePath)) {
+        // Source path and DOM path matches!
+        // This is the target element's closing tag
+        endIndex = source.indexOf("&gt;", tag.index);
+        return { startIndex, endIndex };
+      }
+
+      sourcePath.pop();
+    }
+  }
+}
+</code></pre>
+    </code-block>
+
+    <p>Handling void elements (e.g. <code>&lt;input&gt;</code>) and optional end tags (e.g. <code>&lt;li&gt;</code>s with no end tags) require a bit more logic to keep the current path accurate, but the main idea remains the same.</p>
+  </details>
+</card-box>
+<p>The main algorithm can be described as basically a contextual find-and-replace. Instead of searching for the text to be replaced, it finds the surrounding text and replaces the content in the middle.</p>
+
+<p>This preserves the source code’s original formatting and avoids overwriting dynamic elements! Yay!</p>
+
+<p>There’s still a lot of room for improvement. My current issue is that it’s converting nearby HTML entities to rendered versions (e.g. <code>'&amp;hellip;'</code> to <code>'…'</code>). I think I’d need to implement a more fine-grained editing within an individual text node to solve that.</p>
+
+<p>There are probably a bunch more edges cases that I haven’t discovered, but hey it works well enough to write the text you’re reading!</p>
+
+<p>You can check out the <a href="https://leanrada.com/tools/edit.js" target="_blank">code for the edit mode</a> for more details! Note: This script was made specifically for myself and my site.</p>
+
+<h2>Thoughts</h2>
+
+<p>The algorithm doesn’t have to be perfect; I can always fall back to editing the source if certain things don’t work. A good thing about this is that I can switch to either method any time because in the end I'm working on the same HTML file.</p>
+
+<p>When I first imagined this solution, I thought I would only be using it to do the final edits just before publishing a post, but here I am actually writing a whole post.</p>
+
+<p>I can now imagine a workflow where I write the main text in the browser, then go into the HTML to insert media, mark up code blocks, custom elements, and other formatting. And of course, I’d use a code editor to code the interactive sections that I enjoy adding to my posts.</p>
+
+<p>In the future, think I’d like to add more formatting options and UI for inserting code blocks, media, lists, headings, etc. Maybe use <a href="https://quilljs.com/" target="_blank">Quill</a> or something?</p>
+
+<p>The top thing I would love to have is inserting hyperlinks. During final passes on a post, I like to sprinkle hyperlinks on interesting terms, even if just to link the <a href="https://www.wikipedia.org/" target="_blank">Wikipedia</a> entry.</p>
+
+<p>I’ll post about any improvements I make along the way. This could be a series! I mean, it already kind of is:</p>
+
+<ol>
+  <li><a href="https://leanrada.com/notes/vanilla-web-rewrite?ref=rss">Rewriting my site in vanilla web</a>
+  </li><li><a href="https://leanrada.com/notes/simple-live-reload?ref=rss">Simple live reload for developing static sites</a>
+  </li><li>📍<a href="https://leanrada.com/notes/editing-website-in-browser?ref=rss"><strong>(this post)</strong></a>
+  </li><li>[future formatting feature?]
+  </li><li>[edit CSS? JS?]
+</li></ol>
+]]></description>
+    </item>
+
+    <item>
       <title><![CDATA[Making my GitHub heatmap widget]]></title>
       <link><![CDATA[https://leanrada.com/notes/github-heatmap-widget/?ref=rss]]></link>
       <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/github-heatmap-widget/?ref=rss]]></guid>
@@ -3277,516 +3472,7 @@ GuhitKudlit - Baybayin calligraphy generator
             <guid isPermaLink="true">https://leanrada.com/notes/2023-review?ref=rss</guid>
             <pubDate>Mon, 25 Dec 2023 00:00:00 GMT</pubDate>
         </item>
-        <item>
-            <title><![CDATA[My personalised 55% split keyboard]]></title>
-            <description><![CDATA[<p><em>For RSS readers: This article contains interactive content available on the <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">original post on leanrada.com</a>.</em></p>
-
-<p>I’ve been using my <a target="_blank" href="https://github.com/kata0510/Lily58"><strong>Lily58 split keyboard</strong><span>🡵</span></a> for more than a year now. It’s a compact 58-key split keyboard with column-staggered keys, 55% the size of a standard 104-key keyboard.</p>
-
-<p>Thanks to the open-source firmware/framework <a target="_blank" href="https://qmk.fm/">QMK<span>🡵</span></a>, I customised it and programmed it to my satisfaction. I figured now’s a good time to post about my layout so far.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/my-personalised-keyboard/photo.jpg?ref=rss" caption="The keyboard in question">
-<span>The keyboard in question</span>
-<h2 id="quick-rundown">Quick rundown</h2>
-
-<p><strong>Hardware:</strong> Split keyboard with 58 keys in total. A 32×128 pixel OLED screen on each half. Both halves are connected by wire, and the whole thing is wired USB-C to the computer.</p>
-
-<p><strong>Software:</strong> It runs the QMK firmware, which I used to implement 7-8 layers and several custom functions. I customised the heck out of my keyboard’s firmware.</p>
-
-<h2 id="the-basics">The basics</h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram
-  Left hand:
-    〔Esc 〕〔 ⌃[ 〕〔 ⌃] 〕〔⌃⇧Tab〕〔⌃Tab〕〔    〕
-    〔 ?  〕〔 q  〕〔 w  〕〔 f  〕〔 p  〕〔 b  〕
-    〔Tab 〕〔 a  〕〔 r  〕〔 s  〕〔 t  〕〔 g  〕
-    〔 +  〕〔 z  〕〔 x  〕〔 c  〕〔 d  〕〔 v  〕
-    〔 ⌃  〕〔L(s)〕〔 ❖  〕〔 ␣  〕〔 ◆  〕
-  Right hand:
-    〔L(e)〕〔Wksp←〕〔Wksp↑〕〔Wksp↓〕〔Wksp→〕〔 ⌫  〕
-    〔 j  〕〔 l  〕〔 u  〕〔 y  〕〔 =  〕〔 '  〕
-    〔 m  〕〔 n  〕〔 e  〕〔 i  〕〔 o  〕〔 ↵  〕
-    〔 k  〕〔 h  〕〔 .  〕〔 ,  〕〔 /  〕〔 -  〕
-    〔 ◆  〕〔 ␣  〕〔L(n)〕〔L(#)〕〔L(f)〕</pre>
-
-<p>This is the <em>base layer</em> of my keyboard, where all the typing happens primarily.</p>
-
-<p>Largely in the middle lies the alphabet. Instead of the usual QWERTY layout, it’s in a layout called <a target="_blank" href="https://colemakmods.github.io/mod-dh/"><strong>Colemak-DH</strong><span>🡵</span></a>. It took some time to get used to but I appreciate how easier it was for typing (in English), as the most common letters are in the home row.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔Esc 〕〔 ⌃[ 〕〔 ⌃] 〕〔⌃⇧Tab〕〔⌃Tab〕〔    〕
-    〔 ?  〕〘 q  〙〘 w  〙〘 f  〙〘 p  〙〘 b  〙
-    〔Tab 〕〘 a  〙〘 r  〙〘 s  〙〘 t  〙〘 g  〙
-    〔 +  〕〘 z  〙〘 x  〙〘 c  〙〘 d  〙〘 v  〙
-    〔 ⌃  〕〔L(s)〕〔 ❖  〕〔 ␣  〕〔 ◆  〕
-  Right hand:
-    〔L(e)〕〔Wksp←〕〔Wksp↑〕〔Wksp↓〕〔Wksp→〕〔 ⌫  〕
-    〘 j  〙〘 l  〙〘 u  〙〘 y  〙〘 =  〙〔 '  〕
-    〘 m  〙〘 n  〙〘 e  〙〘 i  〙〘 o  〙〔 ↵  〕
-    〘 k  〙〘 h  〙〘 .  〙〘 ,  〙〘 /  〙〔 -  〕
-    〔 ◆  〕〔 ␣  〕〔L(n)〕〔L(#)〕〔L(f)〕</pre>
-Alphabetic input
-<p>The alphabet is flanked by the familiar <kbd>Esc</kbd>, <kbd>⌫</kbd>, <kbd>↵</kbd>, and <kbd>Tab</kbd> keys, only to be punctuated by some of the common <em>punctuations</em>.</p>
-
-<p>The bottom row gives access to hidden <em>layers</em> which can be activated by holding down the layer <kbd>L(*)</kbd> keys. More on layers later.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔Esc 〕〔 ⌃[ 〕〔 ⌃] 〕〔⌃⇧Tab〕〔⌃Tab〕〔    〕
-    〔 ?  〕〔 q  〕〔 w  〕〔 f  〕〔 p  〕〔 b  〕
-    〔Tab 〕〔 a  〕〔 r  〕〔 s  〕〔 t  〕〔 g  〕
-    〔 +  〕〔 z  〕〔 x  〕〔 c  〕〔 d  〕〔 v  〕
-    〘 ⌃  〙〘L(s)〙〘 ❖  〙〘 ␣  〙〔 ◆  〕
-  Right hand:
-    〔L(e)〕〔Wksp←〕〔Wksp↑〕〔Wksp↓〕〔Wksp→〕〔 ⌫  〕
-    〔 j  〕〔 l  〕〔 u  〕〔 y  〕〔 =  〕〔 '  〕
-    〔 m  〕〔 n  〕〔 e  〕〔 i  〕〔 o  〕〔 ↵  〕
-    〔 k  〕〔 h  〕〔 .  〕〔 ,  〕〔 /  〕〔 -  〕
-    〔 ◆  〕〘 ␣  〙〘L(n)〙〘L(#)〙〘L(f)〙</pre>
-Layer keys, <em>Space</em><kbd>␣</kbd> bar, and primary modifiers <code>Control</code>/<code>Command</code>
-<p>The top row is where it gets interesting. Here we have <em>single-key shortcuts</em>.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔Esc 〕〘 ⌃[ 〙〘 ⌃] 〙〘⌃⇧Tab〙〘⌃Tab〙〔    〕
-    〔 ?  〕〔 q  〕〔 w  〕〔 f  〕〔 p  〕〔 b  〕
-    〔Tab 〕〔 a  〕〔 r  〕〔 s  〕〔 t  〕〔 g  〕
-    〔 +  〕〔 z  〕〔 x  〕〔 c  〕〔 d  〕〔 v  〕
-    〔 ⌃  〕〔L(s)〕〔 ❖  〕〔 ␣  〕〔 ◆  〕
-  Right hand:
-    〔L(e)〕〘Wksp←〙〘Wksp↑〙〘Wksp↓〙〘Wksp→〙〔 ⌫  〕
-    〔 j  〕〔 l  〕〔 u  〕〔 y  〕〔 =  〕〔 '  〕
-    〔 m  〕〔 n  〕〔 e  〕〔 i  〕〔 o  〕〔 ↵  〕
-    〔 k  〕〔 h  〕〔 .  〕〔 ,  〕〔 /  〕〔 -  〕
-    〔 ◆  〕〔 ␣  〕〔L(n)〕〔L(#)〕〔L(f)〕</pre>
-Top row: shortcuts
-<p>On the left hand top row we have “universal” shortcuts for navigating within an application: Back, Forward, Previous tab, and Next tab.</p>
-
-<video muted="" autoplay="" loop="" playsinline="" caption="Using the application navigation keys." data-src="/notes/my-personalised-keyboard/appnav.mp4">
-                <source src="https://leanrada.com/notes/my-personalised-keyboard/appnav.mp4?ref=rss">
-
-                Video: | Source: /notes/my-personalised-keyboard/appnav.mp4
-
-              </video>
-<span>Using the application navigation keys.</span>
-<ul>
-              <li><kbd>⌃[</kbd> - Back</li>
-              <li><kbd>⌃]</kbd> - Forward</li>
-              <li><kbd>⌃⇧Tab</kbd> - Previous tab</li>
-              <li><kbd>⌃Tab</kbd> - Next tab</li>
-            </ul>
-
-<p>They’re compatible with most web browsers and code editors. Really handy when surfing the web or when tracing code across multiple files.</p>
-
-<p>On the other <em>hand</em>, we have <kbd>Wksp←</kbd> and <kbd>Wksp→</kbd>, shortcuts for switching between workspaces (a.k.a. spaces and virtual desktops in macOS and Windows, respectively).</p>
-
-<video muted="" autoplay="" loop="" playsinline="" aria-label="demo video of using the workspace switcher keys" alt="demo video of using the workspace switcher keys" data-src="/notes/my-personalised-keyboard/wksp.mp4">
-                <source src="https://leanrada.com/notes/my-personalised-keyboard/wksp.mp4?ref=rss">
-
-                Video: demo video of using the workspace switcher keys | Source: /notes/my-personalised-keyboard/wksp.mp4
-
-              </video>
-
-<p><kbd>Wksp↑</kbd> and <kbd>Wksp↓</kbd> are bound to desktop-specific actions like Exposé in macOS. I don’t actually remember their exact purposes because they’re not consistent across OSes.</p>
-
-<h2 id="home-row-modifiers">Home row modifiers</h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔Esc 〕〔 ⌃[ 〕〔 ⌃] 〕〔⌃⇧Tab〕〔⌃Tab〕〔    〕
-    〔 ?  〕〔 q  〕〔 w  〕〔 f  〕〔 p  〕〔 b  〕
-    〔Tab 〕〘a/⇧ 〙〘r/⌘ 〙〘s/⌥ 〙〘t/⌃ 〙〔 g  〕
-    〔 +  〕〔 z  〕〔 x  〕〔 c  〕〔 d  〕〔 v  〕
-    〔 ⌃  〕〔L(s)〕〔 ❖  〕〔 ␣  〕〔 ◆  〕
-  Right hand:
-    〔L(e)〕〔Wksp←〕〔Wksp↑〕〔Wksp↓〕〔Wksp→〕〔 ⌫  〕
-    〔 j  〕〔 l  〕〔 u  〕〔 y  〕〔 =  〕〔 '  〕
-    〔 m  〕〘n/⌃ 〙〘e/⌥ 〙〘i/⌘ 〙〘o/⇧ 〙〔 ↵  〕
-    〔 k  〕〔 h  〕〔 .  〕〔 ,  〕〔 /  〕〔 -  〕
-    〔 ◆  〕〔 ␣  〕〔L(n)〕〔L(#)〕〔L(f)〕</pre>
-Tap/Hold dual purpose home row keys
-<p>The home row on the keyboard is where the fingers rest by default. As such, the home row on my keyboard serves a second purpose besides alphabetic input. Some of them can be held down to activate <em>modifiers</em> such as <code>Control</code>, <code>Alt</code>, and <code>Super</code>.</p>
-
-<p>For example, the key <kbd>a</kbd> activates <code>Shift</code> when held down, while a tap produces the letter <code>a</code>.</p>
-
-<p>Home row modifiers make keyboard shortcuts much more comfortable, in contrast to the awkward contortions you have to perform on regular keyboards.</p>
-
-<p>This makes use of the <a target="_blank" href="https://docs.qmk.fm/#/mod_tap"><strong>Mod-Tap</strong><span>🡵</span></a> feature from the QMK framework, a.k.a. Tap/Hold keys.</p>
-
-<p><span>The home row mods, among other things, were inspired by the famous <a target="_blank" href="https://github.com/manna-harbour/miryoku"><strong>Miryoku</strong><span>🡵</span></a> layout. Credits to Manna Harbour for designing the Miryoku layout.</span></p>
-
-<h2 id="layers">Layers</h2>
-
-<p>I use <strong>layers</strong> due to the limited number of physical keys on the keyboard. Inputs such as numbers and symbols have to be organised into separate layers. I can switch between these layers either through dedicated layer keys or programmatically.</p>
-
-<p>Here are the layers I ended up with:</p>
-
-<ol>
-              <li>Alphabet (Default)</li>
-              <li><img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/shift_layer_oled.png?ref=rss"> Shifted alphabet (Uppercase)</li>
-              <li><img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/symbol_layer_oled.png?ref=rss"> Symbols</li>
-              <li><img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/navigation_layer_oled.png?ref=rss"> Navigation / manipulation</li>
-              <li><img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/number_layer_oled.png?ref=rss"> Numbers</li>
-              <li><img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/function_layer_oled.png?ref=rss"> Functions</li>
-              <li><img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/emoji_layer_oled.png?ref=rss"> Emojis</li>
-            </ol>
-
-<p><span>Btw, the OLED screen is programmed to show the current layer.</span></p>
-
-<p>Let’s dive into each layer in the following sections. 🤿</p>
-
-<h2 id="shift-layer-">Shift layer <img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/shift_layer_oled.png?ref=rss"></h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram
-  Left hand:
-    〔Esc 〕〔 ~  〕〔 @  〕〔 #  〕〔 %  〕〔    〕
-    〔 !  〕〔 Q  〕〔 W  〕〔 F  〕〔 P  〕〔 B  〕
-    〔Tab 〕〔 A  〕〔 R  〕〔 S  〕〔 T  〕〔 G  〕
-    〔    〕〔 Z  〕〔 X  〕〔 C  〕〔 D  〕〔 V  〕
-    〔    〕〔    〕〔    〕〔 ⇧  〕〔    〕
-  Right hand:
-    〔    〕〔 ^  〕〔 &amp;  〕〔 |  〕〔 \  〕〔 ⌫  〕
-    〔 J  〕〔 L  〕〔 U  〕〔 Y  〕〔 _  〕〔 "  〕
-    〔 M  〕〔 N  〕〔 E  〕〔 I  〕〔 O  〕〔 ↵  〕
-    〔 K  〕〔 H  〕〔 :  〕〔 ;  〕〔 *  〕〔    〕
-    〔    〕〔 ␣  〕〔    〕〔    〕〔    〕</pre>
-Interactive diagram! Click the highlighted <kbd>⇧</kbd> layer activation key above to toggle between the base layer and the Shift layer.
-<p>The <strong>Shift layer</strong> is just a shifted or uppercase version of the base layer. You know, like when you hold <em>Shift</em> on a regular keyboard! This layer is activated by holding down the left <em>Space</em> key <kbd>␣</kbd> instead of the <em>Shift</em> key. It’s another Tap/Hold key. Tapping <em>Space</em> <kbd>␣</kbd> inputs a <em>space character</em>, while holding it activates the Shift layer.</p>
-
-<p>Some of my shifted punctuations differ from their counterparts in a regular QWERTY keyboard. Like how <kbd>?</kbd> shifts into <kbd>!</kbd>, <kbd>.</kbd> to <kbd>:</kbd>, <kbd>,</kbd> to <kbd>;</kbd>, etc…</p>
-
-<p><span>I used this great <a target="_blank" href="https://getreuer.info/posts/keyboards/custom-shift-keys/index.html"><strong>Custom Shift Keys</strong> library<span>🡵</span></a> from Pascal Getreuer to customise the shifted values.</span></p>
-
-<h2 id="symbols-">Symbols <img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/symbol_layer_oled.png?ref=rss"></h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〘    〙〘    〙〘    〙〘    〙〘    〙〘    〙
-    〘 `  〙〘 \  〙〘 $  〙〘 {  〙〘 }  〙〘    〙
-    〘 &lt;  〙〘 =  〙〘 -  〙〘 (  〙〘 )  〙〘 &gt;  〙
-    〘    〙〘    〙〘    〙〘 [  〙〘 ]  〙〘    〙
-    〔    〕〘L(s)〙〔    〕〔    〕〔    〕
-  Right hand:
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〘 ⌃  〙〘 ⌥  〙〘 ⌘  〙〘 ⇧  〙〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕</pre>
-
-<p>The <strong>Symbol layer</strong> is activated by holding the dedicated <em>Symbol layer key</em> <kbd>L(s)</kbd> with the left thumb. Matching the thumb, the symbols are laid out on the left-hand side only. The right-hand side defaults to home row mods.</p>
-
-<p>There’s a bit of special programming that I added for this layer. The parentheses, brackets, braces, and angle brackets — or the "enclosure" keys — have a nifty little shortcut in them for a smoother coding experience.</p>
-
-<video muted="" autoplay="" loop="" playsinline="" caption="Caret repositioning in brackets" data-src="/notes/my-personalised-keyboard/closing-bracket-reposition.mp4">
-                <source src="https://leanrada.com/notes/my-personalised-keyboard/closing-bracket-reposition.mp4?ref=rss">
-
-                Video: | Source: /notes/my-personalised-keyboard/closing-bracket-reposition.mp4
-
-              </video>
-<span>Caret repositioning in brackets</span>
-<p>What it does exactly is it lets me automatically reposition the caret or cursor inside the brackets without the need for arrow keys. The arrow keys are on a separate layer, and layer-switching has an overhead.</p>
-
-<p>The trigger for it is simple: if I still have the opening symbol’s key held down as I release the closing symbol’s key, it repositions. Otherwise, it types normally. This way I can control whether I want to quickly reposition or not.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: interactive simulation of bracket keyboard input</pre>
-Demo! You’ll need a keyboard for this.<br>To trigger caret repositioning, hold <kbd>1</kbd>, press <kbd>2</kbd>, release <kbd>2</kbd>, before releasing <kbd>1</kbd>. It’s a reversing motion, mirroring the cursor’s movements.
-<h2 id="navigation-">Navigation <img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/navigation_layer_oled.png?ref=rss"></h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〘 ⇧  〙〘 ⌘  〙〘 ⌥  〙〘 ⌃  〙〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〘    〙〘    〙〘    〙〘⇧Tab〙〘Tab 〙〘 ⌫  〙
-    〘 W⌫ 〙〘 W← 〙〘WSel〙〘    〙〘 W→ 〙〘    〙
-    〘 ⌦  〙〘 ←  〙〘 ↑  〙〘 ↓  〙〘 →  〙〘 ↵  〙
-    〘    〙〘Home〙〘PgUp〙〘PgDn〙〘End 〙〘    〙
-    〔    〕〔    〕〘L(n)〙〔    〕〔    〕</pre>
-
-<p>The <strong>Navigation / manipulation layer</strong> provides the arrow keys, page navigation keys, and word navigation, all on the right side. Some text manipulation functions are here as well. This layer is especially useful when editing text.</p>
-
-<p>On the home row sit the arrow keys. These probably are among the the most used keys ever.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔 ⇧  〕〔 ⌘  〕〔 ⌥  〕〔 ⌃  〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〔    〕〔    〕〔    〕〔⇧Tab〕〔Tab 〕〔 ⌫  〕
-    〔 W⌫ 〕〔 W← 〕〔WSel〕〔    〕〔 W→ 〕〔    〕
-    〔 ⌦  〕〘 ←  〙〘 ↑  〙〘 ↓  〙〘 →  〙〔 ↵  〕
-    〔    〕〔Home〕〔PgUp〕〔PgDn〕〔End 〕〔    〕
-    〔    〕〔    〕〔L(n)〕〔    〕〔    〕</pre>
-
-<p><span>Yes, the Up and Down arrows are in that order — opposite of Vim style. I think it’s more logical this way.</span></p>
-
-<p>Above the arrow keys are the <em>word navigation</em> keys. These operate on <em>words</em> rather than individual letters.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔 ⇧  〕〔 ⌘  〕〔 ⌥  〕〔 ⌃  〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〔    〕〔    〕〔    〕〔⇧Tab〕〔Tab 〕〔 ⌫  〕
-    〘 W⌫ 〙〘 W← 〙〘WSel〙〘    〙〘 W→ 〙〔    〕
-    〔 ⌦  〕〔 ←  〕〔 ↑  〕〔 ↓  〕〔 →  〕〔 ↵  〕
-    〔    〕〔Home〕〔PgUp〕〔PgDn〕〔End 〕〔    〕
-    〔    〕〔    〕〔L(n)〕〔    〕〔    〕</pre>
-
-<p>The <kbd>W←</kbd> and <kbd>W→</kbd> keys, for instance, let you move the cursor one word at a time.</p>
-
-<video muted="" autoplay="" loop="" playsinline="" caption="Moving the cursor, one word at a time" data-src="/notes/my-personalised-keyboard/word-jump.mp4">
-                <source src="https://leanrada.com/notes/my-personalised-keyboard/word-jump.mp4?ref=rss">
-
-                Video: | Source: /notes/my-personalised-keyboard/word-jump.mp4
-
-              </video>
-<span>Moving the cursor, one word at a time</span>
-<p>Word navigation works by using a lesser-known feature native to most desktop operating systems, which does exactly that — jumping to the next or previous word. On macOS, it’s the keyboard shortcuts <code>Option+Left</code> and <code>Option+Right</code>. On Linux, <code>Control+Left</code> and <code>Control+Right</code>. Depending on the current OS, these shortcuts are mapped to the word navigation <kbd>W←</kbd> and <kbd>W→</kbd> keys.</p>
-
-<p>One of the other word keys is the <strong>Select Word</strong> <kbd>WSel</kbd> key, which selects the current word under the caret.</p>
-
-<video muted="" autoplay="" loop="" playsinline="" aria-label="Word selection demo" alt="Word selection demo" data-src="/notes/my-personalised-keyboard/word-sel.mp4">
-                <source src="https://leanrada.com/notes/my-personalised-keyboard/word-sel.mp4?ref=rss">
-
-                Video: Word selection demo | Source: /notes/my-personalised-keyboard/word-sel.mp4
-
-              </video>
-
-<p>The <em>Select Word</em> key itself is just a macro. It’s composed of the following sequence of keystrokes:</p>
-
-<ol>
-              <li><kbd>W←</kbd></li>
-              <li><kbd>W→</kbd></li>
-              <li>Hold <code>Shift</code></li>
-              <li><kbd>W←</kbd></li>
-              <li>Release <code>Shift</code></li>
-            </ol>
-
-<p>Which results in a selection spanning the nearest word boundaries around the caret. There are edge cases with this macro (literally), but they’re not that annoying. This macro has been extremely useful.</p>
-
-<p>The <strong>Delete Word</strong> <kbd>W⌫</kbd> key is just the <em>Select Word</em> macro + <em>Backspace</em> <kbd>⌫</kbd>.</p>
-
-<p>These word navigation functions greatly increase text and code editing efficiency.</p>
-
-<h2 id="numbers-">Numbers <img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/number_layer_oled.png?ref=rss"></h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram
-  Left hand:
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔 ⇧  〕〔 ⌘  〕〔 ⌥  〕〔 ⌃  〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〔    〕〔    〕〔    〕〔 *  〕〔 /  〕〔 ⌫  〕
-    〔    〕〔    〕〔 7  〕〔 8  〕〔 9  〕〔 -  〕
-    〔    〕〔 0  〕〔 4  〕〔 5  〕〔 6  〕〔 ↵  〕
-    〔    〕〔 +  〕〔 1  〕〔 2  〕〔 3  〕〔 .  〕
-    〔    〕〔    〕〔    〕〔L(#)〕〔    〕</pre>
-
-<p>This layer contains numbers and some arithmetic operators laid out like a numpad on the right hand side. Convenient when doing calculations. Nothing special here.</p>
-
-<h2 id="functions-">Functions <img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/function_layer_oled.png?ref=rss"></h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram
-  Left hand:
-    〔    〕〔QWERTY〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔Linux〕〔    〕〔macOS〕〔    〕
-    〔    〕〔 ⇧  〕〔 ⌘  〕〔 ⌥  〕〔 ⌃  〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〔    〕〔    〕〔🔉- 〕〔🔊+ 〕〔🔅- 〕〔🔆+ 〕
-    〔    〕〔    〕〔 ⏮️ 〕〔 ⏯️ 〕〔PrtScr〕〔 ⏭️ 〕
-    〔    〕〔 🔇 〕〔FB0 〕〔FB1 〕〔FB2 〕〔FB3 〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔L(f)〕</pre>
-
-<p>The <strong>Function layer</strong> contains “functions”, or things that do stuff instead of inputting text. Volume buttons, brightness buttons, media controls, you name it.</p>
-
-<p>And of course, the <em>Function</em> keys themselves (i.e., <code>F1</code>, <code>F2</code>, <code>F3</code>, …, <code>F12</code>) can be accessed from this layer, but they’re a <em>bit</em> hidden. The Function keys are entered through the four bit keys <kbd>FB0</kbd>, <kbd>FB1</kbd>, <kbd>FB2</kbd>, and <kbd>FB3</kbd> in a <em>bitwise</em> manner.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔    〕〔QWERTY〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔Linux〕〔    〕〔macOS〕〔    〕
-    〔    〕〔 ⇧  〕〔 ⌘  〕〔 ⌥  〕〔 ⌃  〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〔    〕〔    〕〔🔉- 〕〔🔊+ 〕〔🔅- 〕〔🔆+ 〕
-    〔    〕〔    〕〔 ⏮️ 〕〔 ⏯️ 〕〔PrtScr〕〔 ⏭️ 〕
-    〔    〕〔 🔇 〕〘FB0 〙〘FB1 〙〘FB2 〙〘FB3 〙
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔L(f)〕</pre>
-
-<p>To illustrate the Function keys’ <strong>bitwise input method</strong>, take <code>F10</code> as an example. The number <strong>10</strong> equals 2<sup><strong>1</strong></sup>&nbsp;+&nbsp;2<sup><strong>3</strong></sup>, corresponding to bits 1 and 3. Therefore, to input <code>F10</code>, you simultaneously press the bit 1 key <kbd>FB1</kbd> and the bit 3 key <kbd>FB3</kbd>!</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: interactive simulation of bitwise keyboard input</pre>
-Demo! Here, the bit keys are mapped to QWER. You’ll need a keyboard for this.
-<p>More details and demos in <a target="_blank" href="https://leanrada.com/notes/developing-bitwise-input-method?ref=rss">this post about how the bitwise input works</a>.</p>
-
-<p>On the left side we have the OS switchers, providing the <kbd>macOS</kbd> &amp; <kbd>Linux</kbd> modes. The selected OS determines a lot of things, such as the primary modifier (either <code>Control</code> or <code>Command</code>) and some desktop shortcuts.</p>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram with highlighted keys
-  Left hand:
-    〔    〕〘QWERTY〙〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〘Linux〙〘    〙〘macOS〙〔    〕
-    〔    〕〔 ⇧  〕〔 ⌘  〕〔 ⌥  〕〔 ⌃  〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〔    〕〔    〕〔🔉- 〕〔🔊+ 〕〔🔅- 〕〔🔆+ 〕
-    〔    〕〔    〕〔 ⏮️ 〕〔 ⏯️ 〕〔PrtScr〕〔 ⏭️ 〕
-    〔    〕〔 🔇 〕〔FB0 〕〔FB1 〕〔FB2 〕〔FB3 〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔L(f)〕</pre>
-
-<p>I don’t use Windows, so I didn’t support it.</p>
-
-<p>Finally, the <kbd>QWERTY</kbd> button. Its function should be obvious enough, but we’ll get to that later.</p>
-
-<h2 id="emojis-">Emojis <img alt="" src="https://leanrada.com/notes/my-personalised-keyboard/emoji_layer_oled.png?ref=rss"></h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram
-  Left hand:
-    〔Cancel〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔 😭 〕〔 👋 〕〔 🥺 〕〔 🎉 〕〔    〕
-    〔    〕〔 😂 〕〔 😃 〕〔 🙂 〕〔 🤔 〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕〔    〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕
-  Right hand:
-    〔L(e)〕〔 ‘  〕〔 ’  〕〔 “  〕〔 ”  〕〔 ❌  〕
-    〔    〕〔 👈 〕〔 ☝  〕〔 👇 〕〔 👉 〕〔 👍 〕
-    〔    〕〔 ←  〕〔 ↑  〕〔 ↓  〕〔 →  〕〔 ✔  〕
-    〔    〕〔 ⬅  〕〔 ⬆  〕〔 ⬇  〕〔 ➡  〕〔 ✅  〕
-    〔    〕〔    〕〔    〕〔    〕〔    〕</pre>
-
-<p>Yep, an <strong>Emoji layer</strong>! 😃 <span>⬅ I typed that with my keyboard!</span> And other useful Unicode symbols.</p>
-
-<p>I mapped the emojis so they line up with the base layer. For instance, 🎉 is on the same position as <kbd>p</kbd>, which can stand for “party”. 👋 on <kbd>w</kbd>ave. 🤔 on <kbd>t</kbd>hink. <code>✔</code> on <code>Enter</code>, and so on. Meanwhile, the arrow symbols correspond to the arrow keys in the Navigation layer.</p>
-
-<p>The Emoji layer works a bit differently. It’s a <a target="_blank" href="https://docs.qmk.fm/#/one_shot_keys">one-shot layer<span>🡵</span></a> in QMK terms. That is, you don’t have to hold down the layer key <kbd>L(e)</kbd> to keep the layer active. It stays active until you select an emoji or you cancel. This allows the Emoji layer key to be tucked in the top corner without sacrificing comfort.</p>
-
-<p>Being a one-shot layer also opens up the possibility of a new gesture, <em>double tap</em>. I’ve set it so that double tapping the Emoji key launches the desktop-level <strong>emoji picker</strong> for all of my other emoji needs.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/my-personalised-keyboard/emoji-picker.png?ref=rss" caption="macOS Character Viewer (left) and Linux-based emoji-picker (right)">
-<span>macOS Character Viewer (left) and Linux-based emoji-picker (right)</span>
-<p>On macOS, it’s <code>Command+Control+Space</code> to bring up Character Viewer. On Windows (hypothetically), that’d be <code>Super+.</code> for the “emoji keyboard”. On Linux there is no standard emoji picker, so I installed one and bound it to some arbitrary shortcut. I’m not liking how the Linux one looks, but it’s what it is.</p>
-
-<h2 id="oled-📺">OLED 📺</h2>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/my-personalised-keyboard/oled.jpg?ref=rss" alt="close-up photo of the OLED screen">
-
-<p>I drew and implemented my own graphics for the keyboard’s built-in OLED. You’ve seen some of them from the examples above. The OLED shows the current active layer, the current OS mode, and any active modifiers.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/my-personalised-keyboard/legend.png?ref=rss" alt="OLED icons legend">
-
-<p>It has been a struggle to make legible tile graphics at a very low resolution, but I think they turned out fine for my purposes.</p>
-
-<h2 id="layer-lock-🔒">Layer lock 🔒</h2>
-
-<p>Sometimes it gets tiring to hold down a layer key for long. Like when browsing a web page, I would want to have Page Down and Page Up readily accessible.</p>
-
-<p><em>Layer Lock</em> to the rescue. I used another of Getreuer’s modular QMK libraries, the <a target="_blank" href="https://getreuer.info/posts/keyboards/layer-lock/index.html"><strong>Layer Lock library</strong><span>🡵</span></a>, which was really easy to plug in.</p>
-
-<h2 id="gaming-mode--qwerty-🎮">Gaming mode / QWERTY 🎮</h2>
-
-<pre>Interactive content: <a href="https://leanrada.com/notes/my-personalised-keyboard?ref=rss">Visit the website to play with interactive content!</a>
-Alternative text: Lily58 keyboard layout diagram
-  Left hand:
-    〔Esc 〕〔 1  〕〔 2  〕〔 3  〕〔 4  〕〔 5  〕
-    〔 `  〕〔 Q  〕〔 W  〕〔 E  〕〔 R  〕〔 T  〕
-    〔Tab 〕〔 A  〕〔 S  〕〔 D  〕〔 F  〕〔 G  〕
-    〔 ⇧  〕〔 Z  〕〔 X  〕〔 C  〕〔 V  〕〔 B  〕
-    〔 ⌃  〕〔 ⌥  〕〔 ❖  〕〔 ␣  〕〔    〕
-  Right hand:
-    〔 6  〕〔 7  〕〔 8  〕〔 9  〕〔 0  〕〔 ⌫  〕
-    〔 Y  〕〔 U  〕〔 I  〕〔 O  〕〔 P  〕〔 -  〕
-    〔 H  〕〔 J  〕〔 K  〕〔 L  〕〔 ↑  〕〔 ↵  〕
-    〔 N  〕〔 M  〕〔 .  〕〔 ←  〕〔 ↓  〕〔 →  〕
-    〔Cancel〕〔 ␣  〕〔 ◆  〕〔    〕〔Chat〕</pre>
-
-<p>I play video games on my computer. Games almost always default to a QWERTY layout, and I couldn’t be bothered to remap the keybindings to my own keyboard layout.</p>
-
-<p>Thus, <strong>QWERTY mode</strong>.</p>
-
-<p>The interesting bit here is the <kbd>Chat</kbd> key, which temporarily activates the base layer for the purpose of chatting in-game. Upon sending a message (on <code>Enter</code>), it reverts back to QWERTY mode so I can get back to the action in no time.</p>
-
-<p>It’s not perfect. When gaming with a mouse, I don’t have access to the right half of the keyboard, as it becomes either too far or inconvenient to reach. It’s a problem if, say, I needed to press the number <kbd>6</kbd> to activate the 6th item in my inventory.</p>
-
-<p>Often I end up remapping keybindings anyway, just to fit them within the left half.</p>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>Programming my keyboard was definitely worth it. You see, I get wrist and upper back pain sometimes. Part of the job, I guess. It helps to have a split keyboard, so I can position my arms and hands in a natural position.</p>
-
-<h3 id="ergonomics">Ergonomics</h3>
-
-<p>In a regular keyboard, you kinda squeeze your hands together, and the wrists insists on twisting which plants the seeds of suffering and despair. That wouldn’t be a problem if each hand has its own separate half of the keyboard as in a split keyboard.</p>
-
-<img srcset="" sizes="" spec="100% [664) 664" loading="lazy" width="100%" data-placeholder="" src="https://leanrada.com/notes/my-personalised-keyboard/desk.jpg?ref=rss" caption="My desk setup.">
-<span>My desk setup.</span>
-<p>The distance between both halves can also be <span aria-label="widened">&nbsp;w&nbsp;i&nbsp;d&nbsp;e&nbsp;n&nbsp;e&nbsp;d&nbsp;</span> which, in turn, widens my shoulders and counters the slouch of the upper back. <em>Fight the slouch, to fight the ouch</em>. It also helps that overall finger movement is reduced, thanks to the customised keyboard layout.</p>
-
-<h3 id="layout">Layout</h3>
-
-<p>It wasn’t easy adjusting to a completely new keyboard layout. I even made <a target="_blank" href="https://leanrada.com/notes/my-personalised-keyboard/layers.pdf?ref=rss">cheatsheets</a> for my own reference. I only got comfortable with it after about 2 months of daily use. Today, I still don’t type as fast as I was before with QWERTY, and I don’t think I ever will be, but I choose comfort over speed. :)</p>
-
-<p>A lot of people say they found it difficult to come back to a regular QWERTY keyboard (like when using a laptop away from their desks), but I did not find it difficult myself. Somehow, I retained my QWERTY muscle memory. I’m guessing it’s because I used a completely different layout, Colemak, on my split keyboard so my brain didn’t confuse it with my existing QWERTY pathways.</p>
-
-<p>It’s also interesting that I struggled typing with QWERTY on <em>this</em> keyboard (I used QWERTY at first before trying Colemak). And that it was easier to learn Colemak than relearn QWERTY on this keyboard.</p>
-
-<p>I think it’s like how you don’t confuse using a mouse with using a touchpad — <em>they’re different pathways</em>. So my advice is to use a completely different layout when trying out a new ortholinear or split keyboard.</p>
-
-<h3 id="fun">Fun</h3>
-
-<p>There’s a fun aspect to it too. Well, if tinkering with a keyboard and optimising it is your idea of fun… I knew I was going to like having a programmable keyboard because of my experience with the Steam Controller which was a kind of a programmable controller in a sense. I might have overdone it with the layers, but in the end it works for me.</p>
-
-<p>As a bonus, I get to practice my C programming skills!</p>
-
-<p>tl;dr:</p>
-
-<ul>
-              <li>Comfort 👍</li>
-              <li>Speed ❌</li>
-              <li>Efficiency ✅</li>
-              <li>“Fun” ✅</li>
-              <li>Coding practice ✅</li>
-            </ul>
-]]></description>
-            <link>https://leanrada.com/notes/my-personalised-keyboard?ref=rss</link>
-            <guid isPermaLink="true">https://leanrada.com/notes/my-personalised-keyboard?ref=rss</guid>
-            <pubDate>Fri, 01 Dec 2023 00:00:00 GMT</pubDate>
-        </item>
+        
         
   </channel>
 </rss>
