@@ -556,10 +556,8 @@ function autoLoadGlobalComponents() {
   }
 }
 
-if (window.location.hostname === "localhost") {
-  if (window.location.search.match(/[?&]edit\b/)) {
-    import("/tools/edit.js");
-  } else {
-    import("https://kalabasa.github.io/simple-live-reload/script.js");
-  }
+if (window.location.search.match(/[?&]edit\b/)) {
+  import("/tools/edit.js");
+} else if (window.location.hostname === "localhost") {
+  import("https://kalabasa.github.io/simple-live-reload/script.js");
 }
