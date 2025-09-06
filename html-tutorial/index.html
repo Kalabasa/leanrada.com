@@ -3,24 +3,64 @@
 <meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>How to make lumpia</title>
+<script>
+  const init = Symbol("init");
+  function scriptParent() {
+    return document.currentScript.parentElement;
+  }
+  const easeInOutQuad = x => x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  window.addEventListener("DOMContentLoaded", () => {
+    document.querySelector("section:not([hidden])")[init]();
+  });
+</script>
+<style>
+  * {
+    user-select: none;
+  }
+</style>
 
-<section>
+<!--------------------------------------------- Intro --------------------------------------------->
+
+<section hidden>
   <h1>How to make lumpia</h1>
   <p>Your content here</p>
   <button>Start making lumpia</button>
+  <script>
+    scriptParent()[init] = function() {
+      this.querySelector("button")
+        .addEventListener("click", e => {
+          e.preventDefault();
+          this.hidden = true;
+          this.nextElementSibling.hidden = false;
+          this.nextElementSibling[init]();
+        });
+    };
+  </script>
 </section>
 
-<section id="combining">
-  <img id="onion" src="onion.png">
-  <img id="garlic" src="garlic.png">
-  <img id="carrot" src="carrot.png">
-  <img id="parsley" src="parsley.png">
-  <img id="ground-pork" src="ground-pork.png">
-  <img id="egg" src="egg.png">
-  <img id="toyo" src="toyo.png">
-  <img id="salt" src="salt.png">
-  <img id="pepper" src="pepper.png">
-  <img id="bowl" src="bowl.png">
+<!------------------------------------------- Combining ------------------------------------------>
+
+<section>
+  <div class="ingredient-space">
+    <div><img src="onion.png" data-ingredient="drag" data-chop-to="chopped-onion.png"></div>
+    <div><img src="garlic.png" data-ingredient="drag" data-chop-to="chopped-garlic.png"></div>
+    <div><img src="carrot.png" data-ingredient="drag" data-chop-to="chopped-carrot.png"></div>
+    <div><img src="parsley.png" data-ingredient="drag" data-chop-to="chopped-parsley.png"></div>
+    <div><img src="ground-pork.png" data-ingredient="drag"></div>
+    <div><img src="egg.png" data-ingredient="drag" data-drop="egg-content.png" data-remain="egg-shell.png"></div>
+    <div><img src="toyo.png" data-ingredient="drag" data-drop="toyo-drop.png" data-remain="toyo.png"></div>
+    <div><img src="salt.png" data-ingredient="drag" data-drop="salt-drop.png" data-remain="salt.png"></div>
+    <div><img src="pepper.png" data-ingredient="drag" data-drop="pepper-drop.png" data-remain="pepper.png"></div>
+  </div>
+  <div class="work-space">
+    <div data-chop-board="wood">
+      <img src="chop-board.png">
+    </div>
+    <div data-bowl="bowl">
+      <img src="bowl.png">
+    </div>
+  </div>
   <ul>
     <li>Onion
     <li>Garlic
@@ -31,13 +71,315 @@
     <li>Toyo
     <li>Salt
     <li>Pepper
-  <ul>
+  </ul>
+  <button hidden>Wrap</button>
+  <style>
+    @scope {
+      :scope {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(600px, 800px));
+        grid-template-areas: "ingredient-space work-space";
+        place-content: center;
+        place-items: center;
+      }
+      .ingredient-space {
+        grid-area: ingredient-space;
+        display: flex;
+        flex-wrap: wrap;
+        place-content: center;
+        gap: 50px;
+        max-width: 600px;
+        > * {
+          width: 100px;
+          height: 100px;
+        }
+      }
+      .work-space {
+        grid-area: work-space;
+        display: flex;
+        justify-content: center;
+        align-items: end;
+        gap: 50px;
+      }
+      [data-ingredient] {
+        display: block;
+        position: relative;
+        width: 100px;
+        height: 100px;
+        transition: opacity 1s ease;
+        &[data-ingredient="drag"] {
+          cursor: grab;
+        }
+        &.dragging {
+          position: absolute;
+          cursor: grabbing;
+          z-index: calc(1 * infinity);
+        }
+      }
+      [data-chop-board] {
+        display: grid;
+        place-items: center;
+        width: 300px;
+        height: 200px;
+        > * {
+          grid-area: 1 / 1 / -1 / -1;
+          max-width: 100%;
+        }
+      }
+      [data-bowl] {
+        display: grid;
+        place-items: center;
+        width: 300px;
+        height: 300px;
+        &[data-bowl="mix"] {
+          cursor: grab;
+        }
+        > :first-child {
+          transition: scale 0.1s;
+        }
+        > * {
+          grid-area: 1 / 1 / -1 / -1;
+          max-width: 100%;
+        }
+        > [data-ingredient] {
+          animation: ingredient-in-bowl 0.3s ease-in forwards;
+          pointer-events: none;
+        }
+      }
+      @keyframes ingredient-in-bowl {
+        60% {
+          opacity: 1;
+          translate: 0 -10px;
+        }
+        to {
+          scale: 0.6;
+          opacity: 0;
+        }
+      }
+    }
+  </style>
+  <script>
+    scriptParent()[init] = function() {
+      let state = "combine";
+      const bowl = this.querySelector("[data-bowl]");
+      const chopBoard = this.querySelector("[data-chop-board]");
+      const button = this.querySelector("button");
+      let dragging = null;
+      let dragOffsetX = 0;
+      let dragOffsetY = 0;
+      let mixProgress = 0;
+
+      function updateState() {
+        switch(state) {
+          case "combine":
+            if (countIngredientsInBowl() === 9) {
+              state = "mix";
+              bowl.dataset.bowl = "mix";
+            }
+            break;
+          case "mix":
+            if (mixProgress >= 1) {
+              state = "done";
+              button.hidden = false;
+            }
+            break;
+        }
+      }
+
+      button.addEventListener("click", e => {
+        e.preventDefault();
+        this.hidden = true;
+        this.nextElementSibling.hidden = false;
+        this.nextElementSibling[init]();
+      });
+
+      this.addEventListener("mousedown", e => {
+        if (state === "combine" && e.target.dataset.ingredient === "drag") {
+          dragging = e.target;
+          dragOffsetX = e.offsetX;
+          dragOffsetY = e.offsetY;
+          dragging.classList.add("dragging");
+          drag(e);
+        }
+        if (state === "mix" && bowl.contains(e.target)) {
+          dragging = bowl;
+          dragOffsetX = e.offsetX;
+          dragOffsetY = e.offsetY;
+        }
+        if (e.target.tagName !== "BUTTON") {
+          e.preventDefault();
+        }
+      }, { capture: true });
+
+      document.addEventListener("mousemove", e => {
+        if (dragging === bowl) {
+          mix(Math.hypot(dragOffsetX - e.offsetX, dragOffsetY - e.offsetY));
+          dragOffsetX = e.offsetX;
+          dragOffsetY = e.offsetY;
+          updateState();
+        } else if (dragging) {
+          drag(e);
+        }
+      });
+
+      document.addEventListener("mouseup", e => {
+        if (dragging === bowl) {
+          dragging = null;
+          bowl.firstElementChild.style.removeProperty("scale");
+        } else if (dragging) {
+          const ingredient = dragging;
+          dragging = null;
+
+          const bowlRect = bowl.getBoundingClientRect();
+          const chopBoardRect = chopBoard.getBoundingClientRect();
+          
+          const droppedInBowl =
+          e.clientX >= bowlRect.x && e.clientX < bowlRect.right &&
+          e.clientY >= bowlRect.y && e.clientY < bowlRect.bottom;
+          
+          const droppedInChopBoard =
+          e.clientX >= chopBoardRect.x && e.clientX < chopBoardRect.right &&
+          e.clientY >= chopBoardRect.y && e.clientY < chopBoardRect.bottom;
+          
+          if (droppedInChopBoard && ingredient.dataset.chopTo && !chopBoard.querySelector("[data-ingredient]")) {
+            const chopTo = ingredient.dataset.chopTo;
+            delete ingredient.dataset.chopTo;
+            transferElement(ingredient, chopBoard)
+            chop(ingredient, chopTo);
+          } else if (droppedInBowl && !ingredient.dataset.chopTo) {
+            if (ingredient.dataset.remain) {
+              ingredient.dataset.ingredient = "done";
+
+              const drop = ingredient.cloneNode();
+              drop.src = ingredient.dataset.drop;
+              bowl.appendChild(drop);
+              transferElement(drop, bowl);
+
+              ingredient.src = ingredient.dataset.remain;
+              transferElement(ingredient);
+            } else {
+              ingredient.dataset.ingredient = "done";
+              transferElement(ingredient, bowl);
+            }
+            renderBowlOnDrop();
+          } else {
+            transferElement(ingredient);
+          }
+        }
+      });
+
+      function renderBowlOnDrop() {
+        bowl.animate([
+          { scale: "1 1", translate: "0 0" },
+          { scale: "1.15 0.9", translate: "0 8%", offset: 0.15 },
+          { scale: "0.95 1.05", translate: "0 -4%", offset: 0.5 },
+          { scale: "1 1", translate: "0 0" },
+        ], {
+          duration: 500,
+          easing: "ease-in-out",
+        });
+
+        const ingredientCount = countIngredientsInBowl();
+        // TODO: Update bowl sprite
+      }
+
+      function countIngredientsInBowl() {
+        return Array.from(bowl.querySelectorAll("[data-ingredient]")).length;
+      }
+
+      let chopExperience = 0;
+      function chop(ingredient, chopTo) {
+        const chops = 4;
+        const chopDuration = 150 + (200 / (chopExperience + 1));
+        chopExperience++;
+
+        ingredient.style.pointerEvents = "none";
+
+        chopBoard.animate([
+          { scale: "1 1", translate: "0 0" },
+          { scale: "1.04 0.96", translate: "0 0", offset: 0.1 },
+          { scale: "0.99 1.01", translate: "0 0", offset: 0.3 },
+          { scale: "1 1", translate: "0 0" },
+        ], {
+          delay: 25,
+          duration: chopDuration,
+          easing: "ease-out",
+          iterations: chops,
+        });
+
+        ingredient.animate([
+          { scale: "1 1", translate: "0 0" },
+          { scale: "1.4 0.8", translate: "0 10%", offset: 0.05 },
+          { scale: "0.95 1", translate: "0 0", offset: 0.3 },
+          { scale: "1 1", translate: "0 0" },
+        ], {
+          duration: chopDuration,
+          easing: "ease-out",
+          iterations: chops,
+        });
+        
+        setTimeout(() => {
+          ingredient.style.removeProperty("pointer-events");
+          ingredient.src = chopTo;
+        }, chopDuration * (chops - 1));
+      }
+
+      function mix(movement) {
+        mixProgress += movement * 0.0005;
+        bowl.firstElementChild.style.scale = [
+          1 + Math.sin(mixProgress * 40) * 0.03,
+          1 + Math.cos(mixProgress * 40) * 0.03,
+        ].join(" ");
+      }
+
+      function drag(mouseEvent) {
+        dragging.style.left = mouseEvent.clientX - dragOffsetX + "px";
+        dragging.style.top = mouseEvent.clientY - dragOffsetY + "px";
+      }
+
+      function transferElement(el, newParent = null) {
+        return new Promise(resolve => {
+          const origin = el.getBoundingClientRect();
+          el.classList.remove("dragging");
+          el.style.removeProperty("left");
+          el.style.removeProperty("top");
+          el.style.pointerEvents = "none";
+          newParent?.appendChild(el);
+          const dest = el.getBoundingClientRect();
+
+          const dist = Math.hypot(origin.x - dest.x, origin.y - dest.y);
+          const startTime = Date.now();
+          const endTime = startTime + 100 + dist * 0.2;
+
+          animate();
+          function animate() {
+            if (Date.now() > endTime) {
+              el.style.removeProperty("left");
+              el.style.removeProperty("top");
+              el.style.removeProperty("pointer-events");
+              updateState();
+              resolve();
+            } else {
+              const t = (Date.now() - startTime) / (endTime - startTime);
+              el.style.left = (origin.x - dest.x) * easeInOutQuad(1 - t) + "px";
+              el.style.top = (origin.y - dest.y) * easeInOutQuad(1 - t) + "px";
+              requestAnimationFrame(animate);
+            }
+          }
+        });
+      }
+    };
+  </script>
 </section>
 
-<section id="wrapping">
+<!------------------------------------------- Wrapping ------------------------------------------->
+
+<section hidden>
   <canvas></canvas>
 </section>
 
-<section id="frying">
+<!-------------------------------------------- Frying -------------------------------------------->
+
+<section hidden>
   <canvas></canvas>
 </section>
