@@ -5,6 +5,68 @@
 <link rel="stylesheet" href="/common.css">
 <script defer src="/common.js"></script>
 
+<style>
+  .clear-tag-button {
+    margin: 1em 0;
+    display: none;
+  }
+
+  :not(:hover,:focus-within) .unsearched {
+    opacity: 0.3;
+    filter: contrast(0.5);
+  }
+
+  #tags-list {
+    display: inline-flex;
+    flex-wrap: wrap;
+    a {
+      padding: 2mm 0.5em;
+    }
+  }
+  #tags-list:has(a:hover) a:not(:hover) {
+    opacity: 0.3;
+  }
+
+  notes-list:not(.search) {
+    li {
+      animation: note-row-enter 0.4s var(--ease) backwards;
+      animation-delay: calc(pow(sibling-index(), 0.4) * 300ms - 500ms);
+    }
+    tag-chip {
+      animation: note-tag-enter 0.2s ease-out backwards;
+      animation-delay: calc(0.6s + (sibling-index() - 1) * 100ms);
+    }
+  }
+
+  @keyframes note-row-enter {
+    0% {
+      filter: brightness(8);
+      clip-path: xywh(0 0 100% 0);
+      translate: 0 50%;
+    }
+    100% {
+      filter: brightness(1);
+      clip-path: xywh(0 0 100% 100%);
+      translate: 0 0;
+    }
+  }
+
+  @keyframes note-tag-enter {
+    0% {
+      opacity: 0;
+    }
+    40% {
+      opacity: 1;
+    }
+    0%, 40% {
+      filter: brightness(8);
+    }
+    100% {
+      filter: brightness(1);
+    }
+  }
+</style>
+
 <title>Notes</title>
 
 <site-header></site-header>
@@ -372,6 +434,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     const searchTag = new URL(location.href).searchParams.get("tag");
     if (searchTag) {
+      document.querySelector("notes-list").classList.add("search");
       for (const clearTagButton of document.querySelectorAll(".clear-tag-button")) {
         clearTagButton.style.display = "inline-block";
       }
@@ -407,26 +470,3 @@
     }
   }
 </script>
-
-<style>
-  .clear-tag-button {
-    margin: 1em 0;
-    display: none;
-  }
-
-  :not(:hover,:focus-within) .unsearched {
-    opacity: 0.3;
-    filter: contrast(0.5);
-  }
-
-  #tags-list {
-    display: inline-flex;
-    flex-wrap: wrap;
-    a {
-      padding: 2mm 0.5em;
-    }
-  }
-  #tags-list:has(a:hover) a:not(:hover) {
-    opacity: 0.3;
-  }
-</style>
