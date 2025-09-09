@@ -4,6 +4,10 @@ customElements.define(
     constructor() {
       super();
 
+      Array.from(this.children).forEach((card, index) => {
+        card.style.setProperty("--feature-card-index", index);
+      });
+
       this.innerHTML = html`
         <div class="card-carousel-btn-container">
           <button

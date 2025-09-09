@@ -4,6 +4,7 @@ export function renderFeatureCard({
   media = undefined,
   title,
   description,
+  animation = true,
 }) {
   const mediaElement = renderMediaElement({
     media,
@@ -11,7 +12,7 @@ export function renderFeatureCard({
   });
 
   return html`
-    <feature-card ${attrs}>
+    <feature-card ${attrs}${animation ? "" : " no-anim"}>
       <a href="${href}">
         ${mediaElement}
         <hgroup>

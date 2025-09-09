@@ -837,7 +837,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: calc(var(--gap, 1) * 6px);
-    
+
     > * {
       flex: 1 1 var(--colwidth);
     }
@@ -1019,7 +1019,9 @@
       position: relative;
       gap: 6px;
       padding: var(--item-padding);
-      padding-right: calc(var(--item-padding) + var(--time-width) + var(--item-padding));
+      padding-right: calc(
+        var(--item-padding) + var(--time-width) + var(--item-padding)
+      );
       font-weight: bold;
       color: var(--text-clr);
       text-decoration: none;
@@ -1238,28 +1240,37 @@
       }
     }
 
-    & {
+    &:not([no-anim]) {
+      --feature-card-delay-factor: pow(var(--feature-card-index, 0), 0.6);
+      --feature-card-delay: calc(var(--feature-card-delay-factor) * 0.6s);
       img,
       video,
       media-placeholder,
       a::after {
-        animation: feature-card-img-enter 0.6s var(--ease) backwards;
+        animation: feature-card-img-enter 0.9s var(--feature-card-delay)
+          var(--ease) backwards;
       }
       h1 {
-        animation: feature-card-title-enter 0.3s 0.15s var(--ease) backwards;
+        animation: feature-card-title-enter 0.3s
+          calc(var(--feature-card-delay) + 0.15s) var(--ease) backwards;
       }
       hgroup em {
-        animation: feature-card-title-enter 0.3s 0.25s var(--ease) backwards;
+        animation: feature-card-title-enter 0.3s
+          calc(var(--feature-card-delay) + 0.25s) var(--ease) backwards;
       }
       p {
-        animation: feature-card-description-enter 0.4s 0.6s ease-out backwards;
+        animation: feature-card-description-enter 0.4s
+          calc(var(--feature-card-delay) + 0.6s) ease-out backwards;
       }
     }
   }
 
   @keyframes feature-card-img-enter {
     0% {
-      clip-path: xywh(0 0 0 100% round var(--card-border-radius));
+      clip-path: xywh(0 0 0 calc(100% - 71px) round var(--card-border-radius));
+    }
+    60% {
+      clip-path: xywh(0 0 100% calc(100% - 71px) round var(--card-border-radius));
     }
     100% {
       clip-path: xywh(0 0 100% 100% round var(--card-border-radius));
