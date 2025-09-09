@@ -338,8 +338,11 @@
     margin: 150px auto;
   }
 
-  .start-from-top .content-columns {
-    animation: section-appear 0.2s 1s backwards;
+  .content-columns {
+    animation: section-appear 0.2s backwards;
+    .start-from-top & {
+      animation-delay: 1s;
+    }
   }
   @keyframes section-appear {
     from {
@@ -536,6 +539,13 @@
     }
   }
 </style>
+<noscript>
+  <style>
+    .content-columns {
+      animation: none;
+    }
+  </style>
+</noscript>
 
 <div class="great-time-counter">
   you now have <span id="great-time-num">0</span> great time(s)
@@ -769,11 +779,12 @@
 <site-footer nobg></site-footer>
 
 <script>
+  document.body.classList.toggle("start-from-top", window.scrollY < 100);
+
   window.addEventListener("load", () => {
     const yayIcon = document.querySelector(".home-circle-icon");
     const greatTimeContainer = document.querySelector(".great-time-counter");
     const greatTimeNum = document.getElementById("great-time-num");
-    document.body.classList.toggle("start-from-top", window.scrollY < 100);
 
     let sayTime = 0;
     const ipa = document.querySelector(".ipa");
