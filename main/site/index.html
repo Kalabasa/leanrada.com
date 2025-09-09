@@ -12,11 +12,21 @@
 <section class="header">
   <div class="header-content">
     <div class="header-circle title-font">
-      <nebula-animation
-        class="nebula"
-        palette="#e79907 #bf1852 #4d4aff #0ad591"
-        mouse
-      ></nebula-animation>
+      <script>
+        const circAnimCount = sessionStorage.getItem("circle-animation-count") ?? 0;
+        sessionStorage.setItem("circle-animation-count", parseInt(circAnimCount) + 1);
+        const element = ["nebula-animation", "hex-animation"][circAnimCount % 2];
+        let palette = ["#e79907", "#bf1852", "#4d4aff", "#0ad591", /* extra colors */ "#a4b600", "#0069af", "#9e2d00"];
+        palette = palette.concat(palette).slice(
+          circAnimCount % 4,
+          (circAnimCount % 4) + (3 + (circAnimCount + 1) % 2)
+        );
+        document.currentScript.outerHTML = `<${element}
+          class="circle-animation"
+          palette="${palette.join(" ")}"
+          mouse
+        ></${element}>`;
+      </script>
       <div class="header-circle-text header-circle-text-big">
         <script>
           function renderCircleText(radiusVh, angleStepDeg, text) {
@@ -157,7 +167,7 @@
     }
   }
 
-  .nebula {
+  .circle-animation {
     position: absolute;
     left: 0;
     top: 0;

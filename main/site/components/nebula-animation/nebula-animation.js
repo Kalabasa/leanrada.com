@@ -204,11 +204,9 @@
               animation: nebula-element-fade 0.5s linear,
                 nebula-noise-x 0.16s steps(2, jump-start) infinite,
                 nebula-noise-y 0.48s steps(3, jump-start) infinite;
-            }
-            @supports (mix-blend-mode: overlay) {
-              .nebula-noise {
-                mix-blend-mode: overlay;
-                opacity: 0.2;
+              @supports (mix-blend-mode: overlay) {
+                  mix-blend-mode: overlay;
+                  opacity: 0.2;
               }
             }
             @keyframes nebula-noise-x {
