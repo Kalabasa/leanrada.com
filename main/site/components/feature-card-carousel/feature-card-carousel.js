@@ -4,9 +4,20 @@ customElements.define(
     constructor() {
       super();
 
-      Array.from(this.children).forEach((card, index) => {
-        card.style.setProperty("--feature-card-index", index);
-      });
+      const hash = s => [...s].reduce((h,c) => (h*31 + c.charCodeAt(0))|0, 0);
+      const id = hash(window.location.pathname);
+      const seenKey = `seen-feature-card-carousel-intro-${id}`;
+      const featureCards = Array.from(this.querySelectorAll("feature-card"));
+      if (sessionStorage.getItem(seenKey)) {
+        featureCards.forEach((card) => {
+          card.toggleAttribute("no-anim", true);
+        });
+      } else {
+        sessionStorage.setItem(seenKey, "been there done that");
+        featureCards.forEach((card, index) => {
+          card.style.setProperty("--feature-card-index", index);
+        });
+      }
 
       this.innerHTML = html`
         <div class="card-carousel-btn-container">
