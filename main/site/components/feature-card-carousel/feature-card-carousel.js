@@ -5,7 +5,7 @@ customElements.define(
       super();
 
       const hash = s => [...s].reduce((h,c) => (h*31 + c.charCodeAt(0))|0, 0);
-      const id = hash(window.location.pathname);
+      const id = hash(window.location.pathname).toString(36);
       const seenKey = `seen-feature-card-carousel-intro-${id}`;
       const featureCards = Array.from(this.querySelectorAll("feature-card"));
       if (sessionStorage.getItem(seenKey)) {
