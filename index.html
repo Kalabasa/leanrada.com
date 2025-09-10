@@ -338,8 +338,11 @@
     margin: 150px auto;
   }
 
-  .start-from-top .content-columns {
-    animation: section-appear 0.2s 1s backwards;
+  .content-columns {
+    animation: section-appear 0.2s backwards;
+    .start-from-top & {
+      animation-delay: 1s;
+    }
   }
   @keyframes section-appear {
     from {
@@ -536,6 +539,13 @@
     }
   }
 </style>
+<noscript>
+  <style>
+    .content-columns {
+      animation: none;
+    }
+  </style>
+</noscript>
 
 <div class="great-time-counter">
   you now have <span id="great-time-num">0</span> great time(s)
@@ -588,7 +598,7 @@
     <img class="pixelated lg-icon" src="/icons/pot.png" alt="" loading="lazy" width="16" height="16" />
     <h2>Some things I've built</h2>
     <fixed-grid>
-      <feature-card>
+      <feature-card no-anim>
         <a href="/wares/wikawik/">
           <img src="/wares/wikawik/media/wikawik.jpg" loading="lazy" width="1200" height="1200" style="--lqip:154330" />
           <hgroup>
@@ -603,7 +613,7 @@
         </a>
       </feature-card>
 
-      <feature-card>
+      <feature-card no-anim>
         <a href="/wares/dimensions/">
           <img src="/wares/dimensions/media/dimensions_0.jpg" loading="lazy" width="800" height="800" style="--lqip:83676" />
           <hgroup>
@@ -618,7 +628,7 @@
         </a>
       </feature-card>
 
-      <feature-card>
+      <feature-card no-anim>
         <a href="/wares/miniforts/">
           <img src="/wares/miniforts/media/miniforts_thumb.png" loading="lazy" width="2560" height="1387" style="--lqip:174756" />
           <hgroup>
@@ -769,11 +779,12 @@
 <site-footer nobg></site-footer>
 
 <script>
+  document.body.classList.toggle("start-from-top", window.scrollY < 100);
+
   window.addEventListener("load", () => {
     const yayIcon = document.querySelector(".home-circle-icon");
     const greatTimeContainer = document.querySelector(".great-time-counter");
     const greatTimeNum = document.getElementById("great-time-num");
-    document.body.classList.toggle("start-from-top", window.scrollY < 100);
 
     let sayTime = 0;
     const ipa = document.querySelector(".ipa");
