@@ -500,10 +500,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ["code-block"],
       ["feature-card-carousel"],
       ["gh-contribs"],
+      ["hex-animation"],
       ["map-flight"],
       ["nebula-animation"],
       ["now-playing"],
       ["now-reading"],
+      ["pulse-animation"],
       ["right-now"],
     ];
 
