@@ -416,15 +416,18 @@
       z-index: 1;
     }
   }
-  card-box[appearance=bento-image] {
+  card-box[appearance=bento-cat] {
     position: relative;
     padding: 0;
 
     img {
-      object-fit: cover;
+      object-fit: contain;
       width: 100%;
       height: 100%;
       border-radius: 6px;
+      filter: brightness(0) invert(70%);
+      transition-property: transform, filter;
+      transition: 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
     }
     span {
       position: absolute;
@@ -433,6 +436,23 @@
       padding: 6px;
       border-radius: 6px;
       background: var(--bg-clr);
+      transition: opacity 0.2s ease;
+    }
+    span:last-of-type {
+      opacity: 0;
+    }
+
+    &:hover, &:focus-within {
+      img {
+        filter: brightness(1);
+        transform: scale(1.1) translate(0, 5%);
+      }
+      span:first-of-type {
+        opacity: 0;
+      }
+      span:last-of-type {
+        opacity: 1;
+      }
     }
   }
 
@@ -758,9 +778,10 @@
       my music
     </card-box>
   </a>
-  <card-box appearance="bento-image">
-    <img src="/cat.jpg" alt="Cat" loading="lazy" width="600" height="300" style="--lqip:158307" />
-    <span>🐱 my cat</span>
+  <card-box appearance="bento-cat" tabindex="0">
+    <img src="/cat.png" alt="Cat" loading="lazy" width="395" height="397" />
+    <span>who’s that?</span>
+    <span>😺 my cat!</span>
   </card-box>
   <card-box class="bento-tall bento-map">
     <map-flight bgsrc="/components/map-flight/syd.png" destination></map-flight>
