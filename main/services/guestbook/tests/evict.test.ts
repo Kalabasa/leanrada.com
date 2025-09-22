@@ -29,38 +29,38 @@ assert(
 
 // Test medium-age entries (30 days to 1 year old)
 assert(
-  "Medium-age entries 1+ weeks apart should be kept",
+  "Medium-age entries 1+ months apart should be kept",
   !shouldEvictSnapshot(
     getTime("2024-09-15T00:00:00Z"),
-    getTime("2024-09-07T00:00:00Z"),
+    getTime("2024-08-01T00:00:00Z"),
     NOW
   )
 );
 
 assert(
-  "Medium-age entries <1 week apart should be evicted",
+  "Medium-age entries <1 month apart should be evicted",
   shouldEvictSnapshot(
     getTime("2024-09-15T00:00:00Z"),
-    getTime("2024-09-09T00:00:00Z"),
+    getTime("2024-09-01T00:00:00Z"),
     NOW
   )
 );
 
 // Test old entries (> 1 year old)
 assert(
-  "Old entries 2+ months apart should be kept",
+  "Old entries 1+ years apart should be kept",
   !shouldEvictSnapshot(
-    getTime("2023-05-01T00:00:00Z"),
     getTime("2023-03-01T00:00:00Z"),
+    getTime("2022-03-01T00:00:00Z"),
     NOW
   )
 );
 
 assert(
-  "Old entries <2 months apart should be evicted",
+  "Old entries <1 year apart should be evicted",
   shouldEvictSnapshot(
     getTime("2023-05-01T00:00:00Z"),
-    getTime("2023-03-15T00:00:00Z"),
+    getTime("2022-09-01T00:00:00Z"),
     NOW
   )
 );
@@ -76,10 +76,10 @@ assert(
 );
 
 assert(
-  "Entries exactly 1 year old use weekly retention",
+  "Entries exactly 1 year old use monthly retention",
   !shouldEvictSnapshot(
     getTime("2024-03-13T10:00:00Z"), // Exactly 1 year old
-    getTime("2024-03-06T10:00:00Z"), // 1 week before
+    getTime("2024-02-12T10:00:00Z"), // 1 week before
     NOW
   )
 );

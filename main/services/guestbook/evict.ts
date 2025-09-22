@@ -10,8 +10,8 @@ const THRESHOLDS = {
 // Retention frequencies
 const RETENTION_FREQUENCY = {
   DAILY: MS_PER_DAY, // Keep 1 per day
-  WEEKLY: 7 * MS_PER_DAY, // Keep 1 per week
-  BI_MONTHLY: 2 * 30 * MS_PER_DAY, // Keep 1 per 2 months
+  MONTHLY: 30 * MS_PER_DAY, // Keep 1 per monh
+  YEARLY: 12 * 30 * MS_PER_DAY, // Keep 1 per year
 } as const;
 
 /**
@@ -19,8 +19,8 @@ const RETENTION_FREQUENCY = {
  *
  * Retention policy:
  * - Entries < 30 days old: Keep max 1 per day
- * - Entries 30 days to 1 year old: Keep max 1 per week
- * - Entries > 1 year old: Keep max 1 per 2 months
+ * - Entries 30 days to 1 year old: Keep max 1 per month
+ * - Entries > 1 year old: Keep max 1 per year
  *
  * @param snapshotTime - Timestamp of the snapshot being evaluated
  * @param lastSnapshotTime - Timestamp of the last snapshot we decided to keep
@@ -44,9 +44,9 @@ export function shouldEvictSnapshot(
   if (age <= THRESHOLDS.RECENT) {
     requiredGap = RETENTION_FREQUENCY.DAILY;
   } else if (age <= THRESHOLDS.MEDIUM) {
-    requiredGap = RETENTION_FREQUENCY.WEEKLY;
+    requiredGap = RETENTION_FREQUENCY.MONTHLY;
   } else {
-    requiredGap = RETENTION_FREQUENCY.BI_MONTHLY;
+    requiredGap = RETENTION_FREQUENCY.YEARLY;
   }
 
   // Evict if this snapshot is too close to the last kept snapshot
