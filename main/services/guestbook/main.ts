@@ -95,9 +95,9 @@ async function handleGet(request: Request, env: Env, ctx: ExecutionContext) {
     (getRequest.page + 1) * GET_PAGE_SIZE
   );
 
-  let responseJSON = "";
+  let responseJSON = "[";
   for await (const messageJSON of messagesJSON) {
-    responseJSON += responseJSON.length === 0 ? "[" : ",";
+    responseJSON += responseJSON.length === 1 ? "" : ",";
     responseJSON += messageJSON;
   }
   responseJSON += "]";
