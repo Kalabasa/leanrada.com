@@ -15,7 +15,7 @@ const RETENTION_FREQUENCY = {
 } as const;
 
 /**
- * Determines whether a snapshot should be evicted from the cache based on its age.
+ * Determines whether a snapshot should be evicted based on its age.
  *
  * Retention policy:
  * - Entries < 30 days old: Keep max 1 per day
