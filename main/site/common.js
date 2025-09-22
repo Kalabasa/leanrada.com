@@ -497,6 +497,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["article-footer"],
       ["blog-header"],
       ["bump-tally"],
+      ["code-animation"],
       ["code-block"],
       ["feature-card-carousel"],
       ["gh-contribs"],
