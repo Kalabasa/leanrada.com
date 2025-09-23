@@ -75,7 +75,7 @@
 
         const diameter = Math.max(canvas.width, canvas.height);
         for (let r = diameter / 2; r > 0; r -= diameter * 0.06) {
-          const rt = r * 0.03 - t * 0.06;
+          const rt = r * 0.03 - t * 0.15;
           const p = noise.get(0, rt, t * 0.01) * 2;
           const q = noise.get(2, rt * 2, t * 0.001) * 2;
           const paletteIndex = Math.floor(paletteLength * p);
