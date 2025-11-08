@@ -1646,6 +1646,7 @@
       tooltip.style.setProperty("--color", color);
       const rect = el.getBoundingClientRect();
       tooltip.style.top = rect.y - tooltip.offsetHeight + "px";
+      tooltip.style.removeProperty("translate");
       if (anchor === "element") {
         tooltip.style.left =
           rect.x + (rect.width - tooltip.offsetWidth) / 2 + "px";
@@ -1657,6 +1658,7 @@
     if (anchor !== "element") {
       el.addEventListener("mousemove", (event) => {
         if (tooltip.classList.contains("active")) {
+          tooltip.style.removeProperty("translate");
           tooltip.style.left = event.pageX - tooltip.offsetWidth / 2 + "px";
         }
       });
@@ -1729,6 +1731,8 @@
       tooltip.textContent = language.name;
       tooltip.style.setProperty("--color", language.color);
     }
+    tooltip.style.removeProperty("top");
+    tooltip.style.removeProperty("left");
     tooltip.style.translate = [
       rect.x + rect.width * normalizedPosition - tooltip.offsetWidth / 2 + "px",
       rect.y - tooltip.offsetHeight + "px",
