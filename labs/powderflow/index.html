@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      overflow: hidden;
+      height: 100%;
+      display: grid;
+      place-content: center;
+    }
+    canvas {
+      display: block;
+      transform: scale(0.75);
+    }
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+<script>
+const BILLBOARD_SIZE = 100;
+const BILLBOARD_DENSITY = 0.003;
+const SPEED_ALPHA = 2.8;
+const NOISE_SCALE = 0.004;
+const NOISE_TIME = 0.0001;
+const FORCE_SCALE = 3;
+const DAMPING = 0.82;
+const BROWNIAN = 0.05;
+
+const BILLBOARDS = 20;
+const ALPHA_BUCKETS = 16;
+
+const billboardsPool = [];
+let particles = [];
+let t = 0;
+
+class Particle {
+  constructor() {
+    this.id = particles.length;
+    this.x = random(width);
+    this.y = random(height);
+    this.vx = 0;
+    this.vy = 0;
+    this.life = 400;
+    this.billboardIndex = Math.floor(random(BILLBOARDS));
+  }
+
+  step() {
+    const speed = Math.hypot(this.vx, this.vy);
+    this.life -= 1 + 0.5 / (0.01 + speed);
+    if (this.x < 0) this.life = 0;
+    if (this.y < 0) this.life = 0;
+    if (this.x > width) this.life = 0;
+    if (this.y > height) this.life = 0;
+    if (this.life <= 0) return;
+
+    const nx = this.x * NOISE_SCALE;
+    const ny = this.y * NOISE_SCALE;
+
+    const ax = (noise(nx, ny, t) - 0.5) * FORCE_SCALE;
+    const ay = (noise(nx + 2, ny + 2, 2 - t) - 0.5) * FORCE_SCALE;
+
+    this.vx += ax + BROWNIAN * (random() * 2 - 1);
+    this.vy += ay + BROWNIAN * (random() * 2 - 1);
+
+    this.vx *= DAMPING;
+    this.vy *= DAMPING;
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    const alpha = Math.min(1, speed / SPEED_ALPHA);
+    const alphaIndex = Math.round(alpha * (ALPHA_BUCKETS - 1));
+    const span = BILLBOARD_SIZE * Math.min(1, 0.1 + speed / SPEED_ALPHA);
+    image(
+      billboardsPool[this.billboardIndex][alphaIndex],
+      Math.floor(this.x - span / 2),
+      Math.floor(this.y - span / 2),
+      span,
+      span,
+      Math.floor((BILLBOARD_SIZE - span) / 2),
+      Math.floor((BILLBOARD_SIZE - span) / 2),
+      span,
+      span,
+      COVER,
+    );
+  }
+}
+
+function makeBillboard() {
+  const g = createGraphics(BILLBOARD_SIZE, BILLBOARD_SIZE);
+  g.clear();
+  g.stroke(200, 240, 255);
+  g.strokeWeight(1);
+
+  const population = BILLBOARD_DENSITY * (BILLBOARD_SIZE * BILLBOARD_SIZE);
+  if (population > 1000) throw '2big';
+  for (let i = 0; i < population; i++) {
+    const ox = BILLBOARD_SIZE * random();
+    const oy = BILLBOARD_SIZE * random();
+    g.point(ox, oy);
+  }
+
+  const alphas = [];
+  for (let i = 0; i < ALPHA_BUCKETS; i++) {
+    const a = createGraphics(BILLBOARD_SIZE, BILLBOARD_SIZE);
+    a.tint(255, Math.floor(255 * (i + 1) / ALPHA_BUCKETS));
+    a.image(g, 0, 0, BILLBOARD_SIZE, BILLBOARD_SIZE, 0, 0, BILLBOARD_SIZE, BILLBOARD_SIZE);
+    alphas.push(a);
+  }
+  return alphas;
+}
+
+function setup() {
+  createCanvas(...canvasSize());
+  pixelDensity(Math.min(window.devicePixelRatio, 2));
+  noiseDetail(6, 0.5);
+
+  for (let i = 0; i < BILLBOARDS; i++) {
+    billboardsPool.push(makeBillboard());
+  }
+
+  setupParticles();
+}
+
+function draw() {
+  blendMode(BLEND);
+  background(0, 25, 30);
+  t += NOISE_TIME * deltaTime;
+
+  blendMode(ADD);
+  for (let i = 0; i < particles.length; i++) {
+    particles[i].step();
+  }
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    if (particles[i].life <= 0) particles.splice(i, 1);
+  }
+
+  while (particles.length < targetParticleCount()) {
+    particles.push(new Particle());
+  }
+}
+
+function windowResized() {
+  resizeCanvas(...canvasSize());
+  setupParticles();
+}
+
+function canvasSize() {
+  return [
+    Math.min(900, window.innerWidth),
+    Math.min(900, window.innerHeight),
+  ];
+}
+
+function setupParticles() {
+  particles.length = 0;
+  const num = targetParticleCount();
+  for (let i = 0; i < num; i++) {
+    const p = new Particle();
+    p.life = i % p.life;
+    particles.push(p);
+  }
+}
+
+function targetParticleCount() {
+  return 0.003 * (width * height);
+}
+</script>
+</body>
+</html>
