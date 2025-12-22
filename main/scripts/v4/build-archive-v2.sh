@@ -44,6 +44,7 @@ rm -rf update-archive-worktree/build/threejs/utils
 rm -rf update-archive-worktree/build/underscore/modules
 rm -rf update-archive-worktree/build/underscore/patches
 rm -rf update-archive-worktree/build/underscore/test-treeshake
+find update-archive-worktree/build -type f \( -name package.json -o -name package-lock.json \) -delete
 
 # Remove files exceeding Cloudflare's per-file size limit
 find update-archive-worktree -type f -size +26M -exec rm -v {} \;
