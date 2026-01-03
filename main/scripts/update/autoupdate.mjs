@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import fs from "node:fs";
 import path from "node:path";
 import { indent, reindent } from "./format/format.mjs";
 import { initScript } from "./lib/script.mjs";
@@ -21,6 +22,7 @@ const { siteDir } = initScript();
 const dryRun = process.argv.includes("--dry-run");
 const options = parseOptionArgs([
   "notes",
+  "notes-stats",
   "wares",
   "guestbook",
   "hits",
@@ -44,7 +46,9 @@ async function main() {
           maxSmartSuggestions: 3,
           maxSuggestions: 4,
         });
-        await populateStats({ notes, existingNotes });
+        if (options["notes-stats"].enable) {
+          await populateStats({ notes, existingNotes });
+        }
         return notes;
       })().catch(fallback("notes"))
     ),
@@ -206,54 +210,62 @@ async function updateNotesIndexHTML({ notes }) {
 
   const notesListIndent = 1;
 
-  let list = notes.filter((item) => item.public);
-  if (process.env.NODE_ENV === "development") {
-    list = notes
-      .filter((item) => !item.public)
-      .map((item) => ({
-        ...item,
-        date: String(new Date().getFullYear() + 1),
-        tags: ["✎hidden", ...item.tags],
-      }))
-      .concat(list);
-  }
+  const modes = new Set(["production", process.env.NODE_ENV]);
+  for (let mode of modes) {
+    let list = notes.filter((item) => item.public);
+    if (mode === "development") {
+      list = notes
+        .filter((item) => !item.public)
+        .map((item) => ({
+          ...item,
+          date: String(new Date().getFullYear() + 1),
+          tags: ["✎hidden", ...item.tags],
+        }))
+        .concat(list);
+    }
 
-  list.sort((a, b) => new Date(b.date) - new Date(a.date));
+    list.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  await rewrite({
-    htmlFilePath: path.resolve(siteDir, "notes", "index.html"),
-    setup(rewriter) {
-      rewriter.on("notes-list#notes", {
-        element(element) {
-          let innerHTML = "";
-          let year = -1;
+    const prodHtmlFilePath = path.resolve(siteDir, "notes", "index.html");
+    const devHtmlFilePath = path.resolve(siteDir, "notes", "index.dev.html");
+    if (mode === "development") {
+      fs.cpSync(prodHtmlFilePath, devHtmlFilePath, { force: true });
+    }
+    await rewrite({
+      htmlFilePath: mode === "development" ? devHtmlFilePath : prodHtmlFilePath,
+      setup(rewriter) {
+        rewriter.on("notes-list#notes", {
+          element(element) {
+            let innerHTML = "";
+            let year = -1;
 
-          for (const item of list) {
-            const itemYear = new Date(item.date).getFullYear();
-            if (year !== itemYear) {
-              if (year >= 0) {
-                innerHTML += `\n${indent(notesListIndent + 1)}</ul>`;
+            for (const item of list) {
+              const itemYear = new Date(item.date).getFullYear();
+              if (year !== itemYear) {
+                if (year >= 0) {
+                  innerHTML += `\n${indent(notesListIndent + 1)}</ul>`;
+                }
+                year = itemYear;
+                innerHTML +=
+                  `\n${indent(notesListIndent + 1)}<h3>${year}</h3>` +
+                  `\n${indent(notesListIndent + 1)}<ul>`;
               }
-              year = itemYear;
-              innerHTML +=
-                `\n${indent(notesListIndent + 1)}<h3>${year}</h3>` +
-                `\n${indent(notesListIndent + 1)}<ul>`;
+              innerHTML += reindent(
+                renderNoteListItem(item, "no-year"),
+                notesListIndent + 2
+              );
             }
-            innerHTML += reindent(
-              renderNoteListItem(item, "no-year"),
-              notesListIndent + 2
-            );
-          }
 
-          innerHTML +=
-            `\n${indent(notesListIndent + 1)}</ul>` +
-            `\n${indent(notesListIndent)}`;
-          element.setInnerContent(innerHTML, { html: true });
-        },
-      });
-    },
-    dryRun,
-  });
+            innerHTML +=
+              `\n${indent(notesListIndent + 1)}</ul>` +
+              `\n${indent(notesListIndent)}`;
+            element.setInnerContent(innerHTML, { html: true });
+          },
+        });
+      },
+      dryRun,
+    });
+    }
 }
 
 async function updateGuestbookIndexHTML({ guestbook }) {

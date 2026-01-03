@@ -1,9 +1,10 @@
 export const reactionTypes = ["bubble", "heart", "sun", "cloud", "fire"];
+
 const reactionState = reactionTypes.reduce((acc, type) => {
   acc[type] = 0;
 
-  if (globalThis.sessionStorage) {
-    const cached = globalThis.sessionStorage.getItem(sessionCacheKey(type));
+  if (typeof window !== "undefined" && window.sessionStorage) {
+    const cached = window.sessionStorage.getItem(sessionCacheKey(type));
     try {
       if (cached) acc[type] = parseInt(cached, 10) || 0;
     } catch {}
