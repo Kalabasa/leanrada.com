@@ -2,14 +2,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/common.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tagalog&display=swap" rel="stylesheet">
 <script defer src="/common.js"></script>
 
-<title>Baybayin abugida input method in hardware</title>
+<style>
+  i[baybay] {
+    display: inline-block;
+    padding: 0px 6px;
+    font-family: "Noto Sans Tagalog";
+    background: #5A1D01;
+    border-radius: 6px;
+    font-weight: bold;
+    font-style: normal;
+  }
+  kbd {
+    display: inline-block;
+    padding: 0px 6px;
+    border: solid 1px #666;
+    border-bottom-width: 3px;
+    border-radius: 6px;
+  }
+</style>
+
+<title>Baybayin abugida input method on keyboard hardware</title>
 
 <site-header></site-header>
 
 <blog-header>
-  <h1>Baybayin abugida input method in hardware</h1>
+  <h1>Baybayin abugida input method on keyboard hardware</h1>
   <img src="hero.jpg" alt="" loading="lazy">
 </blog-header>
 
@@ -25,7 +47,94 @@
 
 <main class="prose">
   
-<p>Hello world!</p>
+<p>I implemented an input method to write an ancient writing system called ‘Baybayin’ using a hardware keyboard via the QMK firmware.</p>
+
+<h2>A writing system?</h2>
+
+<p><a href="https://en.wikipedia.org/wiki/Baybayin" target="_blank">Baybayin</a> is a writing system in which a consonant-vowel sequence is generally written as one letter; it is an <strong>abugida</strong>. For example, the syllable <i>‘ta’</i> would be written as one letter, <i baybay>ᜆ</i>. By default, letters have an inherent vowel which is ‘a’. To indicate a different vowel, a diacritic (<i>kudlit</i>) is added above or below the glyph. For example, <i>‘ti’</i> would be <i baybay>ᜆᜒ</i> and <i>‘tu’</i> would be <i baybay>ᜆᜓ</i>.</p>
+
+<p>A ‘vowel-killer’ diacritic (<a href="https://en.wikipedia.org/wiki/Virama" target="_blank">virama</a>) is also a common feature &mdash; or complication &mdash; in abugidas. In Baybayin for example, just <i>‘t’</i> would be <i baybay>ᜆ᜕</i>. An example of a full word in Baybayin is <i baybay>ᜆᜆ᜕ᜎᜓ</i> or <i>‘tatlo’</i>, meaning the number three.</p>
+
+<box-note> There are two variants of the virama (vowel-killer) in Baybayin. <i>‘t’</i> could be written as either <i baybay>ᜆ᜔</i> (with a small cross at the bottom) or <i baybay>ᜆ᜕</i> (a curved slash). For readability, I'm using the latter variant.</box-note>
+
+<h2>Input design</h2>
+
+<p>There are many ways to design an input method for this writing system on a keyboard. We could assign every possible symbol combination its own key, given enough keys. But there are 60 total possible combinations. For comparison, the Latin alphabet A-Z only has 26 letters. Input layers (hold the Shift or Fn key) could help &mdash; after all, the Latin alphabet actually has 52 total glyphs, counting both upper and lowercase.</p>
+
+screenshot mockup
+
+<p>Or we could assign only the base letters (15 keys) and 3 extra keys for diacritics. This would be a pretty efficient layout, and it’s the one used by Google’s mobile keyboard Gboard.</p>
+
+screenshot of Gboard
+
+<p>However, both of these options would require learning a whole new keyboard layout, wasting years of Latin alphabet-based muscle memory.</p>
+
+<p>I wanted to type in romanised alphabet, like romaji for Japanese or pinyin for Chinese. Then the keyboard’s programmed firmware would convert keystrokes into baybayin outputs. This presents a slight challenge since one keypress would no longer directly correspond to one character.</p>
+
+<h2>Solution</h2>
+
+<p>I implemented this via QMK running on the keyboard hardware. It’s a pretty basic solution, just a bunch of if-elses and variables. Unlike romaji, I don’t need to maintain a buffer or trie or whatever data structure. It only needs to know about the last pressed key. <small>OK, it’s a buffer of length 1.</small></p>
+
+<code-block language="clike">
+  <pre><code>void on_key_press(uint16_t keycode) {
+  if (is_consonant(keycode)) {
+    // Special case /ŋ/ (ng) is one letter ᜅ
+    if (prev_keycode == KC_N && keycode == KC_G) {
+      backspace(); // delete virama
+      backspace(); // delete 'ᜈ' / 'n'
+      send_unicode("ᜅ");
+      send_unicode(VIRAMA);
+    } else {
+      send_unicode(get_baybayin_unicode(keycode));
+      // Entering a consonant will always include a virama
+      // Any vowel entered after this would need to delete the virama
+      send_unicode(VIRAMA);
+    }
+  } else { // keycode is vowel
+    if (is_consonant(prev_keycode)) {
+      if (keycode == KC_A) {
+        backspace(); // delete virama
+      } else if (keycode == KC_I || keycode == KC_E) {
+        backspace(); // delete virama
+        send_unicode("ᜒ"); // combines with previous char
+      } else if (keycode == KC_U || keycode == KC_O) {
+        backspace(); // delete virama
+        send_unicode("ᜓ"); // combines with previous char
+      }
+    } else { // prev_keycode is vowel
+      send_unicode(get_baybayin_unicode(keycode));
+    }
+  }
+  prev_keycode = keycode;
+}</code></pre>
+</code-block>
+
+<p>The way Unicode (<a href="https://www.unicode.org/charts/nameslist/n_1700.html" target="_blank">Tagalog Unicode block</a>) implemented Baybayin made this solution pretty straightforward. The vowel-modifier diacritics are combining characters, which means they can just be outputted right after the base character and the word processing application on the computer is what actually renders them as one combined character. In a way, one keypress still corresponds to one output character, except for a few special cases.</p>
+
+<h2>Special case ‘NG’</h2>
+
+<p>One special case is the letter <i baybay>ᜅ</i>, representing the consonant /ŋ/. In English this sound is represented by two letters <i>‘ng’</i>. This breaks the mapping of 2 Latin letters to one syllable to 1 Baybayin letter. Or 1 consonant to 1 Baybayin base letter. E.g., <i>‘tanga’</i>, written as <i baybay>ᜆᜅ</i> (which means ‘idiot’, pardon the example; I’m trying to minimise introducing letters). This special case is solved by a specific if clause and a couple of <em>backtracks</em>.</p>
+
+<h2>Backtracking</h2>
+
+<p>Backtracking is a thing because, by default, <strong>the virama must always be output after typing a consonant</strong>. When the user presses a consonant, we don’t know whether they’re going to stop typing or continue the syllable, at that point. But the base letter has an inherent vowel! Only after the next key is pressed can we be sure but then we may have to backtrack the virama. Sending a virtual Backspace signal (undistinguishable from a real Backspace keypress) fixes this.</p>
+
+animation of backtracking
+
+<p>So pressing the <kbd>T</kbd> key should not output just the base letter <i baybay>ᜆ</i>, but the letter + virama <i baybay>ᜆ᜕</i> at once. If you actually press <kbd>A</kbd>, a Backspace erases the virama, leaving <i baybay>ᜆ</i>, and the machine moves on to the next syllable. If you had pressed <kbd>I</kbd>, a Backspace erases the virama, and the I vowel diacritic <span>ᜒ</span> is sent, producing <i baybay>ᜆᜒ</i>. Because of the inherent vowel, the backtracking design seems to be a common solution in other romanised abugida input methods as well, such as <a href="https://anjal.net/" target="_blank">Anjal</a>, a romanised input method for Tamil.</p>
+
+<h2>Why not a software IME?</h2>
+
+<p>Not that I often need to write Baybayin, but implementing this on the hardware makes it portable. It lives in my keyboard. I could plug my keyboard into any computer that supports arbitrary Unicode input and not have to install anything.</p>
+
+<h2>Generalisability to other abugidas</h2>
+
+<p>Baybayin is a relatively simple script. Other abugidas have vowel marks <em>preceding</em> the consonant. etc etc</p>
+
+<h2>Futher reading</h2>
+
+https://www.unicode.org/events/utw/2023/talks/abugida/
+https://elangocheran.com/2022/02/14/redesigning-an-input-method-for-an-abugida-script/
 
 </main>
 
