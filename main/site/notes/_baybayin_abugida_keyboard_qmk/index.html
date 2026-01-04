@@ -10,12 +10,19 @@
 <style>
   i[baybay] {
     display: inline-block;
-    padding: 0px 6px;
+    padding: 3px 8px;
+    line-height: normal;
     font-family: "Noto Sans Tagalog";
-    background: #5A1D01;
+    background: #f203;
     border-radius: 6px;
     font-weight: bold;
     font-style: normal;
+    rt {
+      position: relative;
+      bottom: 0.1em;
+      font-weight: normal;
+      font-size: 70%;
+    }
   }
   kbd {
     display: inline-block;
@@ -47,94 +54,456 @@
 
 <main class="prose">
   
-<p>I implemented an input method to write an ancient writing system called ‘Baybayin’ using a hardware keyboard via the QMK firmware.</p>
+<p>For fun, I implemented an input method to write an abugida writing system called ‘Baybayin’ using a hardware keyboard via the QMK firmware.</p>
 
 <h2>A writing system?</h2>
 
-<p><a href="https://en.wikipedia.org/wiki/Baybayin" target="_blank">Baybayin</a> is a writing system in which a consonant-vowel sequence is generally written as one letter; it is an <strong>abugida</strong>. For example, the syllable <i>‘ta’</i> would be written as one letter, <i baybay>ᜆ</i>. By default, letters have an inherent vowel which is ‘a’. To indicate a different vowel, a diacritic (<i>kudlit</i>) is added above or below the glyph. For example, <i>‘ti’</i> would be <i baybay>ᜆᜒ</i> and <i>‘tu’</i> would be <i baybay>ᜆᜓ</i>.</p>
+<p><a href="https://en.wikipedia.org/wiki/Baybayin" target="_blank">Baybayin</a> is an ancient writing system in which a consonant-vowel sequence is generally written as one letter; it is an <strong>abugida</strong>. For example, the syllable <i>‘ta’</i> would be written as one letter, <i baybay>ᜆ</i>. By default, letters have an inherent vowel which is /a/. To indicate a different vowel, a diacritic (<i>kudlit</i>) is added above or below the glyph. So <i>‘ti’</i> would be <i baybay>ᜆᜒ</i> and <i>‘tu’</i> would be <i baybay>ᜆᜓ</i>.</p>
 
-<p>A ‘vowel-killer’ diacritic (<a href="https://en.wikipedia.org/wiki/Virama" target="_blank">virama</a>) is also a common feature &mdash; or complication &mdash; in abugidas. In Baybayin for example, just <i>‘t’</i> would be <i baybay>ᜆ᜕</i>. An example of a full word in Baybayin is <i baybay>ᜆᜆ᜕ᜎᜓ</i> or <i>‘tatlo’</i>, meaning the number three.</p>
+<figure>
+  <img src="wikipedia-table.png">
+  <figcaption>Chart from Wikipedia
+</figure>
+
+<p>A ‘vowel-killer’ diacritic (<a href="https://en.wikipedia.org/wiki/Virama" target="_blank">virama</a>) is also a common feature &mdash; or complication &mdash; in abugidas. In Baybayin for example, just <i>‘t’</i> would be <i baybay>ᜆ᜕</i>. An example of a full word in Baybayin is <i baybay><ruby>ᜆ<rt>ta</rt>ᜆ᜕<rt>t</rt>ᜎᜓ<rt>lo</rt><rp>(tatlo)</rp></ruby></i>, meaning the number three. <small>(btw, I’m using the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/ruby" target="_blank"><code>&lt;ruby&gt;</code></a> element to annotate Baybayin symbols in this post, similar to furigana for Japanese.)</small></p>
 
 <box-note> There are two variants of the virama (vowel-killer) in Baybayin. <i>‘t’</i> could be written as either <i baybay>ᜆ᜔</i> (with a small cross at the bottom) or <i baybay>ᜆ᜕</i> (a curved slash). For readability, I'm using the latter variant.</box-note>
 
 <h2>Input design</h2>
 
-<p>There are many ways to design an input method for this writing system on a keyboard. We could assign every possible symbol combination its own key, given enough keys. But there are 60 total possible combinations. For comparison, the Latin alphabet A-Z only has 26 letters. Input layers (hold the Shift or Fn key) could help &mdash; after all, the Latin alphabet actually has 52 total glyphs, counting both upper and lowercase.</p>
+<p>There are many ways to design an input method for this writing system on a keyboard. One, we could assign every possible symbol combination its own key, given enough keys. But there are 60 total possible combinations. For comparison, the Latin alphabet A-Z only has 26 letters.</p>
 
-screenshot mockup
+<p>Layer or modes could help (hold the Shift or Fn key) &mdash; after all, the Latin alphabet actually has 52 total symbols, counting both upper and lowercase.</p>
 
-<p>Or we could assign only the base letters (15 keys) and 3 extra keys for diacritics. This would be a pretty efficient layout, and it’s the one used by Google’s mobile keyboard Gboard.</p>
+<figure>
+  <img src="every-combination.png">
+  <figcaption>In this design, pressing Shift would change the vowel endings.
+</figure>
 
-screenshot of Gboard
+<p>Or we could assign only the base letters (17 keys) and 3 extra keys for diacritics. This would be a pretty efficient layout, and it’s the one used by Google’s mobile keyboard Gboard.</p>
 
-<p>However, both of these options would require learning a whole new keyboard layout, wasting years of Latin alphabet-based muscle memory.</p>
+<figure>
+  <img src="gboard.png">
+  <figcaption>Gboard Baybayin layout
+</figure>
 
-<p>I wanted to type in romanised alphabet, like romaji for Japanese or pinyin for Chinese. Then the keyboard’s programmed firmware would convert keystrokes into baybayin outputs. This presents a slight challenge since one keypress would no longer directly correspond to one character.</p>
+<p>However, both of the above would require learning a whole new keyboard layout, wasting years of Latin alphabet-based muscle memory.</p>
 
-<h2>Solution</h2>
+<p>What if I wanted to type in romanised alphabet, like romaji for Japanese or pinyin for Chinese? What if the keyboard can be programmed to convert keystrokes directly into Baybayin outputs? Implementing this on the hardware presents a nice challenge as one keypress would no longer directly correspond to one character.</p>
 
-<p>I implemented this via QMK running on the keyboard hardware. It’s a pretty basic solution, just a bunch of if-elses and variables. Unlike romaji, I don’t need to maintain a buffer or trie or whatever data structure. It only needs to know about the last pressed key. <small>OK, it’s a buffer of length 1.</small></p>
+<h2>My solution</h2>
+
+<p>I implemented this via QMK running on my keyboard’s hardware. It’s a pretty basic solution, just a bunch of if-elses and variables. Unlike romaji, I don’t need to maintain a buffer or trie or whatever data structure. It only needs to know about the last pressed key. <small>Well, it’s a buffer of length 1.</small></p>
 
 <code-block language="clike">
   <pre><code>void on_key_press(uint16_t keycode) {
-  if (is_consonant(keycode)) {
-    // Special case /ŋ/ (ng) is one letter ᜅ
-    if (prev_keycode == KC_N && keycode == KC_G) {
-      backspace(); // delete virama
-      backspace(); // delete 'ᜈ' / 'n'
-      send_unicode("ᜅ");
-      send_unicode(VIRAMA);
-    } else {
-      send_unicode(get_baybayin_unicode(keycode));
-      // Entering a consonant will always include a virama
-      // Any vowel entered after this would need to delete the virama
-      send_unicode(VIRAMA);
-    }
-  } else { // keycode is vowel
-    if (is_consonant(prev_keycode)) {
-      if (keycode == KC_A) {
-        backspace(); // delete virama
-      } else if (keycode == KC_I || keycode == KC_E) {
-        backspace(); // delete virama
-        send_unicode("ᜒ"); // combines with previous char
-      } else if (keycode == KC_U || keycode == KC_O) {
-        backspace(); // delete virama
-        send_unicode("ᜓ"); // combines with previous char
-      }
-    } else { // prev_keycode is vowel
-      send_unicode(get_baybayin_unicode(keycode));
-    }
+  bool curr_cons = is_consonant(keycode);
+  bool prev_cons = is_consonant(prev_keycode);
+
+  // Special case: N + G => ᜅ
+  if (prev_keycode == KEYCODE_N && keycode == KEYCODE_G) {
+    backspace(); // Delete virama
+    backspace(); // Delete ᜈ / N
+    send_unicode("ᜅ᜕");
   }
+  // Vowel following consonant: remove virama, maybe add diacritic
+  else if (!curr_cons && prev_cons) {
+    backspace(); // Delete virama
+
+    if (keycode == KEYCODE_I || keycode == KEYCODE_E) {
+      send_unicode("ᜒ");
+    } else if (keycode == KEYCODE_U || keycode == KEYCODE_O) {
+      send_unicode("ᜓ");
+    }
+    // KEYCODE_A emits nothing
+  }
+  // Consonant: with virama by default
+  else if (curr_cons) {
+    send_unicode(get_baybayin_unicode(keycode));
+    send_unicode("᜕");
+  }
+  // Vowel not after consonant
+  else {
+    send_unicode(get_baybayin_unicode(keycode));
+  }
+
   prev_keycode = keycode;
 }</code></pre>
 </code-block>
 
-<p>The way Unicode (<a href="https://www.unicode.org/charts/nameslist/n_1700.html" target="_blank">Tagalog Unicode block</a>) implemented Baybayin made this solution pretty straightforward. The vowel-modifier diacritics are combining characters, which means they can just be outputted right after the base character and the word processing application on the computer is what actually renders them as one combined character. In a way, one keypress still corresponds to one output character, except for a few special cases.</p>
+<h2>Unicode encoding</h2>
 
-<h2>Special case ‘NG’</h2>
+<p>The way the Unicode Consortium designed the encoding of the <a href="https://www.unicode.org/charts/nameslist/n_1700.html" target="_blank">Tagalog (Baybayin) Unicode block</a> made this solution pretty straightforward. The vowel-modifier diacritics are <strong>combining characters</strong>, which means they can just be outputted separately, right after the base character. Precomposed consonant-vowel symbols aren’t encoded. The word processing application on the computer is what actually renders that sequence of characters as one combined symbol.</p>
 
-<p>One special case is the letter <i baybay>ᜅ</i>, representing the consonant /ŋ/. In English this sound is represented by two letters <i>‘ng’</i>. This breaks the mapping of 2 Latin letters to one syllable to 1 Baybayin letter. Or 1 consonant to 1 Baybayin base letter. E.g., <i>‘tanga’</i>, written as <i baybay>ᜆᜅ</i> (which means ‘idiot’, pardon the example; I’m trying to minimise introducing letters). This special case is solved by a specific if clause and a couple of <em>backtracks</em>.</p>
+<pre style="text-align: center; font-size: 200%"><code>ᜆ +  ᜕ = ᜆ᜕</code></pre>
+
+<p>In a way, one keypress still corresponds to one output character, except for a few special cases.</p>
+
+<h2>Special case: N + G</h2>
+
+<p>One special case is the letter <i baybay>ᜅ</i>, representing the consonant /ŋ/. In English this sound is represented by two letters <i>‘ng’</i>. This romanisation breaks the rule of 1 consonant alphabet letter to 1 Baybayin base letter. For example, <i>‘ngiti’</i> (meaning ‘smile’) is written as <i baybay><ruby>ᜅᜒ<rt>ngi</rt>ᜆᜒ<rt>ti</rt></ruby></i>. This special case is solved by <em>backtracking:</em> sending a virtual Backspace signal to the computer to erase the previous N.</p>
 
 <h2>Backtracking</h2>
 
-<p>Backtracking is a thing because, by default, <strong>the virama must always be output after typing a consonant</strong>. When the user presses a consonant, we don’t know whether they’re going to stop typing or continue the syllable, at that point. But the base letter has an inherent vowel! Only after the next key is pressed can we be sure but then we may have to backtrack the virama. Sending a virtual Backspace signal (undistinguishable from a real Backspace keypress) fixes this.</p>
+<p>Backtracking is a thing because, by default, <strong>the virama must always be output after typing a consonant</strong>. When the user presses a consonant, we don’t know whether they’re going to stop typing or continue the syllable, at that point. But the base letter has an inherent vowel! Only after the next key is pressed can we be sure but then we may have to backtrack the virama.</p>
 
-animation of backtracking
+<figure>
+  <card-box>
+    Input
+    <textarea>TATLO</textarea>
+    Rendered output
+    <output><ruby>ᜆ<rt>ta</rt>ᜆ᜕<rt>t</rt>ᜎᜓ<rt>lo</rt></ruby></output>
+    Reported sequence with backtracking indicators
+    <div></div>
+    <style>
+      @scope {
+        :scope {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        textarea, output {
+          height: 60px;
+          padding: 12px;
+          box-sizing: border-box;
+          background: transparent;
+          border: solid 1px #888;
+          border-radius: 6px;
+        }
+        textarea {
+          font-size: 150%;
+          text-transform: uppercase;
+          resize: none;
+          color: inherit;
+        }
+        output {
+          display: block;
+          font-size: 175%;
+          line-height: 1;
+        }
+        div {
+          min-height: 60px;
+        }
+        .emit {
+          position: relative;
+          display: inline-grid;
+          place-content: center;
+          font-size: 150%;
+          margin-right: 6px;
+          width: 60px;
+          height: 60px;
+          max-width: 60px;
+          text-overflow: clip;
+          overflow: hidden;
+          line-height: normal;
+          border-radius: 6px;
+          box-sizing: border-box;
+          vertical-align: middle;
+          border: solid 1px #888;
+          animation: emit 4s both;
+          &.diacritic {
+            font-size: 200%;
+            background: #024;
+          }
+          &.backspace {
+            font-size: 200%;
+            background: #400;
+          }
+          &.backtracked {
+            border-color: #444;
+            &::after {
+              content: "";
+              position: absolute;
+              inset: calc(50% - 1.5px) 0;
+              background: #c00;
+              animation: 0.1s strikethrough forwards;
+            }
+          }
+        }
+        @keyframes emit {
+          from {
+            translate: 0 -30px;
+            opacity: 0;
+            width: 60px;
+            margin-right: 6px;
+          }
+          5%, 90% {
+            translate: 0 0;
+            opacity: 1;
+            width: 60px;
+            margin-right: 6px;
+          }
+          to {
+            opacity: 0;
+            width: 0;
+            margin-right: 0;
+          }
+        }
+        @keyframes strikethrough {
+          from {
+            left: 100%;
+          }
+        }
+      }
+    </style>
+    <script>
+      const parent = document.currentScript.parentElement;
+      document.addEventListener("DOMContentLoaded", () => {
+        const [input, output, report] = parent.children;
+        const ruby = output.firstElementChild;
 
-<p>So pressing the <kbd>T</kbd> key should not output just the base letter <i baybay>ᜆ</i>, but the letter + virama <i baybay>ᜆ᜕</i> at once. If you actually press <kbd>A</kbd>, a Backspace erases the virama, leaving <i baybay>ᜆ</i>, and the machine moves on to the next syllable. If you had pressed <kbd>I</kbd>, a Backspace erases the virama, and the I vowel diacritic <span>ᜒ</span> is sent, producing <i baybay>ᜆᜒ</i>. Because of the inherent vowel, the backtracking design seems to be a common solution in other romanised abugida input methods as well, such as <a href="https://anjal.net/" target="_blank">Anjal</a>, a romanised input method for Tamil.</p>
+        const onBackspace = () => {
+          // indicate backtracked outputs
+          let lastChild = report.lastElementChild;
+          while (lastChild && (lastChild.classList.contains("backspace") || lastChild.classList.contains("backtracked"))) {
+            lastChild = lastChild.previousElementSibling;
+          }
+          lastChild?.classList.add("backtracked");
+          
+          showEmit("⌫");
+
+          // erase last char of ruby (ignoring annotations)
+          ruby.textContent = Array.from(ruby.childNodes)
+            .filter(node => node.nodeType === Node.TEXT_NODE)
+            .map(node => node.textContent)
+            .join("")
+            .slice(0, -1);
+          updateRubyAnnotations(ruby);
+        };
+        const onEmit = (char) => {
+          showEmit(char === " " ? "␣" : char);
+          ruby.append(char);
+          updateRubyAnnotations(ruby);
+        };
+        const { onKey, resetListener } = createListener({ onBackspace, onEmit });
+
+        function updateRubyAnnotations(ruby) {
+          for (const rt of ruby.querySelectorAll("rt")) {
+            rt.remove();
+          }
+          const text = ruby.textContent;
+          ruby.replaceChildren();
+
+          const letterRegex = /.\p{M}?/gu;
+          let match;
+          console.log("LOOP", text);
+          while ((match = letterRegex.exec(text)) !== null) {
+            const [baybayinChar] = match;
+            console.log(baybayinChar);
+
+            const rt = document.createElement("rt");
+            rt.textContent = romanFromBaybayin(baybayinChar[0]);
+            if (baybayinChar.length > 1) {
+              const diacritic = baybayinChar[1];
+              if (diacritic === "ᜒ") {
+                rt.textContent += "i";
+              } else if (diacritic === "ᜓ") {
+                rt.textContent += "u";
+              }
+            } else {
+              rt.textContent += "a";
+            }
+
+            ruby.append(baybayinChar, rt);
+          }
+        }
+
+        const reset = () => {
+          input.value = "";
+          ruby.replaceChildren();
+          resetListener();
+        };
+
+        input.addEventListener("keydown", event => {
+          if (event.ctrlKey || event.altKey || event.metaKey) {
+            return;
+          }
+          if (onKey(event.key)) {
+            if (event.key === " ") {
+              onEmit(event.key);
+            } else {
+              event.preventDefault();
+            }
+          }
+          if (event.key === "Backspace" || event.key === "Delete") {
+            reset();
+          }
+        });
+
+        const examples = [
+          "ma",
+          "li",
+          "ng",
+          "limang mali",
+        ];
+        let exampleIndex = 0;
+        async function runExamples() {
+          if (document.activeElement === input) return;
+          reset();
+          await new Promise(r => setTimeout(r, 500));
+          for (const letter of examples[exampleIndex]) {
+            if (document.activeElement === input) return;
+            const passthrough = onKey(letter);
+            input.value += letter;
+            await new Promise(r => setTimeout(r, passthrough ? 500 : 1500));
+          }
+          exampleIndex = (exampleIndex + 1) % examples.length;
+          setTimeout(runExamples, 2000);
+        }
+
+        input.addEventListener("focus", () => {
+          reset();
+        });
+        input.addEventListener("blur", () => {
+          runExamples();
+        });
+        runExamples();
+
+        function showEmit(name) {
+          const el = document.createElement("span");
+          el.className = "emit";
+          switch (name) {
+            case "ᜒ":
+            case "ᜓ":
+            case "᜕":
+              el.className += " diacritic";
+              break;
+            case "⌫":
+              el.className += " backspace";
+              break;
+          }
+          el.textContent = name;
+          report.appendChild(el);
+          if (report.childElementCount > 9) {
+            report.firstElementChild.remove();
+          }
+          setTimeout(() => el.remove(), 4000);
+        }
+
+        function romanFromBaybayin(baybayinChar) {
+          switch (baybayinChar) {
+            case 'ᜀ': return 'a';
+            case 'ᜊ': return 'b';
+            case 'ᜃ': return 'k';
+            case 'ᜇ': return 'd';
+            case 'ᜁ': return 'i';
+            case 'ᜄ': return 'g';
+            case 'ᜑ': return 'h';
+            case 'ᜎ': return 'l';
+            case 'ᜋ': return 'm';
+            case 'ᜈ': return 'n';
+            case 'ᜅ': return 'ng';
+            case 'ᜂ': return 'u';
+            case 'ᜉ': return 'p';
+            case 'ᜐ': return 's';
+            case 'ᜆ': return 't';
+            case 'ᜏ': return 'w';
+            case 'ᜌ': return 'y';
+            default: return '';
+          }
+        }
+      });
+    </script>
+  </card-box>
+  <figcaption>This simulation is interactive; you can type your own inputs!
+</figure>
+
+<p>So pressing, say, the <kbd>T</kbd> key should not output just the base letter <i baybay>ᜆ</i>, but the letter + virama <i baybay>ᜆ᜕</i> at once. If you actually press <kbd>A</kbd>, a Backspace erases the virama, leaving <i baybay>ᜆ</i> / <i>‘ta’</i>, and the machine moves on to the next syllable. If you had pressed <kbd>I</kbd>, a Backspace erases the virama, and the I vowel diacritic <span>ᜒ</span> is sent, producing <i baybay>ᜆᜒ</i> / <i>‘ti’</i>.</p>
+
+<p>Because of the inherent vowel in most abugidas, a backtracking design seems to be used in other romanised abugida input methods as well, such as <a href="https://anjal.net/" target="_blank">Anjal</a>, a romanised input method for Tamil.</p>
 
 <h2>Why not a software IME?</h2>
 
-<p>Not that I often need to write Baybayin, but implementing this on the hardware makes it portable. It lives in my keyboard. I could plug my keyboard into any computer that supports arbitrary Unicode input and not have to install anything.</p>
+<p>Not that I often need to write Baybayin, but implementing this on the hardware makes it portable. It lives in my keyboard. I could plug my keyboard into any computer that supports arbitrary Unicode input* and not have to install anything.</p>
 
-<h2>Generalisability to other abugidas</h2>
+<h2>Can this be generalised to other abugidas?</h2>
 
-<p>Baybayin is a relatively simple script. Other abugidas have vowel marks <em>preceding</em> the consonant. etc etc</p>
+<p>Baybayin is a relatively simple script.</p>
+
+<h2>How does a keyboard even output Unicode?</h2>
+
+<p>Technically, it can’t. It requires a certain understanding from the host OS. You know the Alt codes in Windows where you can summon any character by their code number? The keyboard basically types that sequence of keystrokes when we say ‘send unicode’, neatly abstracted into a function call. This abstraction is all done by QMK, supporting Windows, Linux, and Mac’s Unicode input method.</p>
 
 <h2>Futher reading</h2>
 
 https://www.unicode.org/events/utw/2023/talks/abugida/
 https://elangocheran.com/2022/02/14/redesigning-an-input-method-for-an-abugida-script/
+
+<script>
+  function createListener({ onBackspace, onEmit }) {
+    let prev_key = null;
+
+    function onKey(key) {
+      const baybayin = get_baybayin_unicode(key);
+      if (!baybayin) {
+        prev_key = null;
+        return true;
+      }
+
+      const curr_cons = is_consonant(key);
+      const prev_cons = is_consonant(prev_key);
+
+      if (prev_key == "n" && key == "g") {
+        onBackspace();
+        onBackspace();
+        onEmit("ᜅ");
+        onEmit("᜕");
+      }
+      else if (!curr_cons && prev_cons) {
+        onBackspace();
+
+        if (key == "i" || key == "e") {
+          onEmit("ᜒ");
+        } else if (key == "u" || key == "o") {
+          onEmit("ᜓ");
+        }
+      }
+      else if (curr_cons) {
+        onEmit(baybayin);
+        onEmit("᜕");
+      }
+      else {
+        onEmit(baybayin);
+      }
+
+      prev_key = key;
+      return false;
+    }
+
+    function resetListener() {
+      prev_key = null;
+    }
+
+    return { onKey, resetListener };
+  }
+  function get_baybayin_unicode(key) {
+    return {
+      a: 'ᜀ',
+      b: 'ᜊ',
+      k: 'ᜃ',
+      d: 'ᜇ',
+      e: 'ᜁ',
+      g: 'ᜄ',
+      h: 'ᜑ',
+      i: 'ᜁ',
+      l: 'ᜎ',
+      m: 'ᜋ',
+      n: 'ᜈ',
+      ng: 'ᜅ',
+      o: 'ᜂ',
+      p: 'ᜉ',
+      r: 'ᜇ',
+      s: 'ᜐ',
+      t: 'ᜆ',
+      u: 'ᜂ',
+      w: '󠁷ᜏ',
+      y: 'ᜌ',
+    }[key];
+  }
+  function is_consonant(key) {
+    return "bkdghlmnprstwy".includes(key);
+  }
+</script>
 
 </main>
 
