@@ -3,6 +3,25 @@ customElements.define(
   class FeatureCardCarousel extends HTMLElement {
     constructor() {
       super();
+      
+      const noAnimations = this.hasAttribute("no-anim");
+      const featureCards = Array.from(this.querySelectorAll("feature-card"));
+
+      const hash = s => [...s].reduce((h,c) => (h*31 + c.charCodeAt(0))|0, 0);
+      const id = hash(window.location.pathname).toString(36);
+      const seenKey = `seen-feature-card-carousel-intro-${id}`;
+      const wasReloaded = performance.getEntriesByType("navigation")[0]?.type === "reload";
+      
+      if (!noAnimations && (wasReloaded || !sessionStorage.getItem(seenKey))) {
+        sessionStorage.setItem(seenKey, "been there done that");
+        featureCards.forEach((card, index) => {
+          card.style.setProperty("--feature-card-index", index);
+        });
+      } else {
+        featureCards.forEach((card) => {
+          card.toggleAttribute("no-anim", true);
+        });
+      }
 
       this.innerHTML = html`
         <div class="card-carousel-btn-container">

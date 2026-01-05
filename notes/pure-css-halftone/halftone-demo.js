@@ -316,45 +316,45 @@
   );
 })();
 
-function onChangeHalftoneDemoEnabled() {
-  getHalftoneDemoBox(event.currentTarget)?.classList.toggle(
+function onChangeHalftoneDemoEnabled(event) {
+  getHalftoneDemo(event.currentTarget)?.classList.toggle(
     "halftone-disabled",
     !event.currentTarget.checked
   );
 }
 
-function onChangeHalftoneDemoSeparateK() {
-  getHalftoneDemoBox(event.currentTarget)?.classList.toggle(
+function onChangeHalftoneDemoSeparateK(event) {
+  getHalftoneDemo(event.currentTarget)?.classList.toggle(
     "halftone-separate-k",
     event.currentTarget.checked
   );
 }
 
 function onInputHalftoneDemoSize(event) {
-  getHalftoneDemoBox(event.currentTarget)?.style.setProperty(
+  getHalftoneDemo(event.currentTarget)?.style.setProperty(
     "--halftone-size",
     event.currentTarget.value + "px"
   );
 }
 
 function onInputHalftoneDemoBleed(event) {
-  getHalftoneDemoBox(event.currentTarget)?.style.setProperty(
+  getHalftoneDemo(event.currentTarget)?.style.setProperty(
     "--halftone-bleed",
     event.currentTarget.value
   );
 }
 
 function onInputHalftoneDemoRotation(event) {
-  getHalftoneDemoBox(event.currentTarget)?.style.setProperty(
+  getHalftoneDemo(event.currentTarget)?.style.setProperty(
     "--halftone-rotation",
     event.currentTarget.value + "deg"
   );
 }
 
 const halftoneDemoBoxCacheKey = Symbol();
-function getHalftoneDemoBox(from) {
+function getHalftoneDemo(from) {
   if (!(halftoneDemoBoxCacheKey in from)) {
-    const selector = ".halftone-demo-box";
+    const selector = "halftone-demo";
 
     let found = null;
     let current = from;

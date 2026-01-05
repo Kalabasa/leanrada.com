@@ -497,13 +497,16 @@ document.addEventListener("DOMContentLoaded", () => {
       ["article-footer"],
       ["blog-header"],
       ["bump-tally"],
+      ["code-animation"],
       ["code-block"],
       ["feature-card-carousel"],
       ["gh-contribs"],
+      ["hex-animation"],
       ["map-flight"],
       ["nebula-animation"],
       ["now-playing"],
       ["now-reading"],
+      ["pulse-animation"],
       ["right-now"],
     ];
 
@@ -556,10 +559,8 @@ function autoLoadGlobalComponents() {
   }
 }
 
-if (window.location.hostname === "localhost") {
-  if (window.location.search.match(/[?&]edit\b/)) {
-    import("/tools/edit.js");
-  } else {
-    import("https://kalabasa.github.io/simple-live-reload/script.js");
-  }
+if (window.location.search.match(/[?&]edit\b/)) {
+  import("/tools/edit.js");
+} else if (window.location.hostname === "localhost") {
+  import("https://kalabasa.github.io/simple-live-reload/script.js");
 }

@@ -1,9 +1,10 @@
 export const reactionTypes = ["bubble", "heart", "sun", "cloud", "fire"];
+
 const reactionState = reactionTypes.reduce((acc, type) => {
   acc[type] = 0;
 
-  if (globalThis.sessionStorage) {
-    const cached = globalThis.sessionStorage.getItem(sessionCacheKey(type));
+  if (typeof window !== "undefined" && window.sessionStorage) {
+    const cached = window.sessionStorage.getItem(sessionCacheKey(type));
     try {
       if (cached) acc[type] = parseInt(cached, 10) || 0;
     } catch {}
@@ -282,15 +283,25 @@ globalThis.customElements?.define(
 
     async loadData() {
       try {
-        const { loadNote } = await import("/notes/index-loader.js");
-        const result = await loadNote(window.location.pathname);
-
-        if (!result?.note?.stats) throw new Error("Missing reaction data");
-
-        for (const type of reactionTypes) {
-          const count = result.note.stats[type];
-          reactionState[type] = Math.max(reactionState[type], count);
-          this.renderCount(type, reactionState[type] || "");
+        if (window.location.pathname.startsWith("/notes/")) {
+          const { loadNote } = await import("/notes/index-loader.js");
+          const result = await loadNote(window.location.pathname);
+          if (!result?.note?.stats) throw new Error("Missing reaction data");
+          for (const type of reactionTypes) {
+            const count = result.note.stats[type] || 0;
+            reactionState[type] = Math.max(reactionState[type], count);
+            this.renderCount(type, reactionState[type] || "");
+          }
+        } else {
+          await Promise.all(
+            reactionTypes.map(async (type) => {
+              const count = await fetchHits(
+                eventName(window.location.pathname, type)
+              );
+              reactionState[type] = Math.max(reactionState[type], count);
+              this.renderCount(type, reactionState[type] || "");
+            })
+          );
         }
 
         return true;
@@ -308,6 +319,21 @@ globalThis.customElements?.define(
     }
   }
 );
+
+async function fetchHits(pagePath) {
+  try {
+    const url = `https://kalabasa.goatcounter.com/counter/${pagePath}.json`;
+    const res = await fetch(url, { encoding: "utf-8" });
+    if (res.status === 404) return 0;
+    const data = await res.json();
+    const count = parseInt(data.count.replace(/\D/g, ""), 10) || 0;
+    return count;
+  } catch (error) {
+    console.error("Fetching reactions failed!");
+    console.error(error);
+    throw error;
+  }
+}
 
 // returns goatcounter vars object
 function eventVars(reactionType) {

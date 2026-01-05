@@ -16,7 +16,7 @@
 
 <blog-post-info>
   <time datetime="2025-09-01">01 Sep 2025</time>
-  · 10 min read
+  · 11 min read
 </blog-post-info>
 
 <tag-row>
@@ -32,9 +32,11 @@
 
 <p>Of course, you won’t be able to save changes without having write access to my files, but I can. Using the Web <a href="https://developer.chrome.com/docs/capabilities/web-apis/file-system-access" target="_blank"><strong>File System API</strong></a>, it can update my local copy of the website’s source code.</p>
 
-<window-decor title="leanrada.com/notes/vanilla-web-rewrite/?edit">
-  <video src="preview.mp4" autoplay muted></video>
-</window-decor>
+<prose-bleed>
+  <window-decor title="leanrada.com/notes/vanilla-web-rewrite/?edit">
+    <video src="preview.mp4" autoplay muted loop></video>
+  </window-decor>
+</prose-bleed>
 
 <p>In short, I can edit my site via my site. In fact, this article was written this way!</p>
 
@@ -44,7 +46,7 @@
 
 <p>As usual, I made this mainly for fun. But having a WYSIWYG (what-you-see-is-what-you-get) editor for my posts has been a long time goal ever since I <a href="/notes/vanilla-web-rewrite/" target="_blank">rewrote my site in vanilla HTML</a>.</p>
 
-<p>After I moved away from a static site generator, the need for an extra transformational build step disappeared, allowing the raw HTML source to be directly served in the client. This unlocks many <a href="https://developer.chrome.com/docs/devtools/workspaces" target="_blank">things</a>!</p>
+<p>After I moved away from a static site generator, the need for an extra transformational build step disappeared, allowing the raw HTML source to be directly served in the client. This unlocked a path to source editing in the client! As well as other basic&nbsp;<a href="https://developer.chrome.com/docs/devtools/workspaces" target="_blank">things</a>&nbsp;for free.</p>
 
 <p>The HTML file can now act as the editing platform, in addition to being the coding and authoring medium, and of course, the publishing medium.</p>
 
@@ -76,33 +78,35 @@
   </table>
 </prose-table>
 
-<p>These things don’t really impact visitors and readers of this site. It’s more about my writing and authoring experience. Thoughts can now go directly into the page the way it’s gonna be read.</p>
+<p>Anyway, these things don’t really impact visitors and readers of this site. It’s more about my writing and authoring experience. Thoughts can now go directly into the page the way it’s gonna be read.</p>
 
-<p>I already felt a bit of that improved flow when I removed the build step and added a <a href="/notes/simple-live-reload/" target="_blank">live reload script</a>, thus minimising the feedback loop. With direct editing, feedback loop is instant — no more switching between the text editor and the browser! It’s been extremely valuable during the proofreading and editing phase.</p>
+<p>I already felt a bit of that improved flow when I removed the build step and added a <a href="/notes/simple-live-reload/" target="_blank">live reload script</a>, minimising the development feedback loop. With direct editing, feedback loop is instant — no more switching between the text editor and the browser! It’s been extremely valuable during the proofreading and editing phase.</p>
 
 <h2>Content, editable</h2>
 
 <p>Browsers support editing HTML natively via the <code>contenteditable</code> attribute. Set this attribute on any element and it becomes editable. It’s a barebones way to get a WYSIWYG editor in HTML. This is what I’m using as of time of writing.</p>
 
-<p><code>contenteditable</code> formatting options are limited though, and browser implementations vary. It’s good enough for my use case.</p>
+<p><code>contenteditable</code> formatting options are limited though, and browser implementations vary. Not a problem for now.</p>
 
-<p>Whether <code>contenteditable</code> is good <a href="https://medium.engineering/why-contenteditable-is-terrible-122d8a40e480" target="_blank">or terrible</a> &mdash; or whether a third-party WYSIWYG HTML editor could work better &mdash; was a minor detail in the bigger picture. The real problem was the <em>Document Object Model</em>&hellip;</p>
+<p>Whether <code>contenteditable</code> was good <a href="https://medium.engineering/why-contenteditable-is-terrible-122d8a40e480" target="_blank">or terrible</a>&nbsp;was a minor detail in the bigger picture. The real problem was the <em>Document Object Model</em>&hellip;</p>
 
 <h2>DOM vs source</h2>
 
-<p>When I said no build step I kinda lied. You see, there's still an inherent compilation step that happens <em>inside the browser</em>. This step is parsing the HTML into the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction" target="_blank"><strong>Document Object Model</strong></a>, or the <strong>DOM</strong>. The DOM essentially are the elements that you actually interact with on a webpage.</p>
+<p>When I said no build step I kinda lied. You see, there's still an inherent compilation step that happens <em>inside the browser</em>. This step is the parsing of HTML into the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction" target="_blank"><strong>Document Object Model</strong></a>, or the <strong>DOM</strong>. The “DOM” essentially are the elements that you actually interact with on a webpage.</p>
 
-<p>Editing from within the page means editing the DOM, not the HTML source code itself. Saving the corresponding edits into the source was not very straightforward.</p>
+<box-note>Technically, the DOM is the interface to the elements themselves. For general purposes, <em>the interface is the abstraction</em>.</box-note>
 
-<p>This is simply because HTML to DOM is one way. And no, <code>innerHTML</code>/<code>outerHTML</code> is not the inverse operation.</p>
+<p>The contenteditable editor edits the DOM, not the HTML source code itself. I needed to somehow save the corresponding DOM edits into the source. It was not very straightforward.</p>
 
 <img src="dom.png" loading="lazy" width="450" height="300" style="--lqip:174819">
 
+<p>HTML to DOM conversion is one way. DOM to source HTML would be another thing. And no, <code>innerHTML</code>/<code>outerHTML</code> is not the exact inverse operation.</p>
+
 <p>For example, simply saving <code>html.outerHTML</code> to a file won’t work, because <code>outerHTML</code> (or any DOM introspection method, for that matter) takes a snapshot of the current state of the DOM, including <em>dynamically rendered elements</em>. This would break interactive elements and custom elements in the source, as the rendered elements would incorrectly overwrite the original markup.</p>
 
-<p>Saving the generated <code>outerHTML</code> directly would also mess up any manual formatting that I make in the source code. <small>(I don’t use Prettier; it produces invalid HTML)</small></p>
+<p>Saving the generated <code>outerHTML</code> directly would also mess up any manual formatting that I make in the source code, collapsing whitespaces and forcing HTML entities. <small>(I don’t use Prettier; it produces invalid HTML)</small></p>
 
-<h2>The algorithm</h2>
+<h2>Solution: source patching</h2>
 
 <p>So I made an algorithm to patch the source according to changes made in the DOM. What it does is listen for changes in the DOM tree, and tries to identify the ‘smallest’ textual patch needed to update the source.</p>
 
@@ -118,15 +122,26 @@
   </details>
 </box-note>
 
-<p>For each change, the unchanged elements surrounding the change are obtained and their corresponding positions in the source code are extracted via <em>DOM paths</em>. These serve as anchors for the patch.</p>
+<p>The idea is to update the relevant part of the source without changing the rest. To do this, it finds two anchor points around the mutation. These two points must remain stable throughout the mutation in both DOM and source. Only the content between them are replaced.</p>
 
-<p>Extracting the position of any given DOM element in the source code is relatively simple:</p>
+<p>So for each change, the steps are:</p>
 
 <ol>
-  <li>Get the path in the DOM,
-  <li>Scan the source for opening closing HTML tags, keeping track of the current path-in-source,
-  <li>Match the current path-in-source against the path-in-DOM.
-  <li>If paths match, then the current tag in source corresponds to the target element!
+  <li>Find the unchanged element before the change.
+  <li>Find the unchanged element after the change.
+  <li>Use their <em>positions in source</em> as boundaries.
+  <li>Splice the source <em>between the two boundaries</em> with the updated HTML.
+</ol>
+
+<img src="splice.png" loading="lazy" width="600" height="400" style="--lqip:174819">
+
+<p>Then there’s the subproblem of mapping the position of the boundary elements in the source code. Extracting the position of any given DOM element in the source code is a bit more involved:</p>
+ 
+<ol>
+  <li>Get the element’s ‘address’, or its path in the DOM (unique steps from the root to the element).
+  <li>Scan the source HTML, tag by tag, keeping track of your current ‘address’ by identifying opening and closing tags.
+  <li>Compare the current tag’s path-in-source against the element’s path-in-DOM.
+  <li>If paths match, then the current tag corresponds to the element!
 </ol>
 
 <card-box>
@@ -173,26 +188,28 @@ getPositionInSource(element: Element, source: string) {
 }
 </code></pre>
     </code-block>
+
+    <p>Handling void elements (e.g. <code>&lt;input></code>) and optional end tags (e.g. <code>&lt;li></code>s with no end tags) require a bit more logic to keep the current path accurate, but the main idea remains the same.</p>
   </details>
 </card-box>
 
-<p>It’s basically contextual find-and-replace. Instead of searching for the text to be replaced, it finds the surrounding text and replaces the content in the middle.</p>
+<p>The main algorithm can be described as basically a contextual find-and-replace. Instead of searching for the text to be replaced, it finds the surrounding text and replaces the content in the middle.</p>
 
-<p>This preserves the source code’s formatting and avoids overwriting dynamic elements, exactly what I wanted.</p>
+<p>This preserves the source code’s original formatting and avoids overwriting dynamic elements! Yay!</p>
 
-<p>There’s still a lot of room for improvement. My current issue is that it’s converting nearby HTML entities to rendered versions (e.g. <code>&amp;hellip;</code> to <code>&hellip;</code>). I think I’d need to implement a more fine-grained editing within text nodes to solve that.</p>
+<p>There’s still a lot of room for improvement. My current issue is that it’s converting nearby HTML entities to rendered versions (e.g. <code>'&amp;hellip;'</code> to <code>'&hellip;'</code>). I think I’d need to implement a more fine-grained editing within an individual text node to solve that.</p>
 
 <p>There are probably a bunch more edges cases that I haven’t discovered, but hey it works well enough to write the text you’re reading!</p>
 
 <p>You can check out the <a href="https://leanrada.com/tools/edit.js" target="_blank">code for the edit mode</a> for more details! Note: This script was made specifically for myself and my site.</p>
 
-<h2>Retrospect, prospect</h2>
+<h2>Thoughts</h2>
 
-<p>The algorithm doesn’t have to be perfect; I can always fall back to editing the source if certain things don’t work. The good thing about this is I can switch to either method any time because in the end I'm working on the same HTML file.</p>
+<p>The algorithm doesn’t have to be perfect; I can always fall back to editing the source if certain things don’t work. A good thing about this is that I can switch to either method any time because in the end I'm working on the same HTML file.</p>
 
 <p>When I first imagined this solution, I thought I would only be using it to do the final edits just before publishing a post, but here I am actually writing a whole post.</p>
 
-<p>I can now imagine a workflow where I write the main text in the browser, then go into the HTML to insert media, mark up code blocks, custom elements, and other formatting, and to code the interactive sections that I love making.</p>
+<p>I can now imagine a workflow where I write the main text in the browser, then go into the HTML to insert media, mark up code blocks, custom elements, and other formatting. And of course, I’d use a code editor to code the interactive sections that I enjoy adding to my posts.</p>
 
 <p>In the future, think I’d like to add more formatting options and UI for inserting code blocks, media, lists, headings, etc. Maybe use <a href="https://quilljs.com/" target="_blank">Quill</a> or something?</p>
 
@@ -203,7 +220,7 @@ getPositionInSource(element: Element, source: string) {
 <ol>
   <li><a href="/notes/vanilla-web-rewrite/">Rewriting my site in vanilla web</a>
   <li><a href="/notes/simple-live-reload/">Simple live reload for developing static sites</a>
-  <li><a href="."><script>document.currentScript.replaceWith(document.title)</script></a> 📍(this post)
+  <li>📍<a href="."><strong>(this post)</strong></a>
   <li>[future formatting feature?]
   <li>[edit CSS? JS?]
 </ol>

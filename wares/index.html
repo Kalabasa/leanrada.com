@@ -287,6 +287,24 @@
 
 <site-footer></site-footer>
 
+<script>
+  const featureCards = Array.from(document.querySelectorAll("feature-card"));
+
+  const seenWaresIntro = "seen-wares-intro";
+  const wasReloaded = performance.getEntriesByType("navigation")[0]?.type === "reload";
+  
+  if (wasReloaded || !sessionStorage.getItem(seenWaresIntro)) {
+    sessionStorage.setItem(seenWaresIntro, "been there done that");
+    featureCards.forEach((card, index) => {
+      card.style.setProperty("--feature-card-index", index);
+    });
+  } else {
+    featureCards.forEach((card) => {
+      card.toggleAttribute("no-anim", true);
+    });
+  }
+</script>
+
 <style>
   project-item {
     display: block;

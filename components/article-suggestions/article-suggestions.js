@@ -9,6 +9,7 @@ customElements.define(
 
       const placeholder = renderFeatureCard({
         attrs: `class="article-suggestions-placeholder"`,
+        animation: false,
         href: "#",
         title: "▮▮▮▮▮▮▮▮▮▮▮▮",
         description:
@@ -70,6 +71,7 @@ customElements.define(
         );
         const reason = renderReason(suggestion.reason);
         fragment.innerHTML += renderFeatureCard({
+          animation: false,
           media: suggestion.meta.media,
           href: suggestion.meta.href,
           title: suggestion.meta.title,

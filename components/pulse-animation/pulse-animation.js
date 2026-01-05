@@ -6,21 +6,16 @@
     import("/lib/mouse_position.mjs").then((m) => m.mousePosition);
 
   customElements.define(
-    "nebula-animation",
-    class NebulaAnimation extends HTMLElement {
+    "pulse-animation",
+    class PulseAnimation extends HTMLElement {
       #canvas = null;
       #context = null;
       #noise = null;
 
-      #gridWidth = 30;
-      #gridHeight = 30;
       #palette = ["#ffffff"];
 
-      #cellWidth = 1; // placeholder
-      #cellHeight = 1; // placeholder
-
       #useMouse = false;
-      #mouseCell = null;
+      #mousePos = null;
 
       #lastT = 0;
 
@@ -31,9 +26,7 @@
       }
 
       #getT() {
-        const t = (Date.now() * 12) / 1000;
-        // make it smoother while interacting
-        return this.#mouseCell ? t : Math.floor(t);
+        return Math.round((Date.now() * 12) / 1000);
       }
 
       /**
@@ -44,17 +37,12 @@
         const t = this.#getT();
         if (t <= this.#lastT) return;
 
-        const alpha = 1 - Math.pow(1 - 0.016, t - this.#lastT);
+        const alpha = 1 - Math.pow(1 - 0.8, t - this.#lastT);
         this.#lastT = t;
 
         const noise = this.#noise;
-        const gridWidth = this.#gridWidth;
-        const gridHeight = this.#gridHeight;
         const palette = this.#palette;
-        const cellWidth = this.#cellWidth;
-        const cellHeight = this.#cellHeight;
-        const halfGridWidth = gridWidth / 2;
-        const halfGridHeight = gridHeight / 2;
+        const paletteLength = palette.length;
 
         if (!noise) {
           return;
@@ -62,7 +50,7 @@
 
         if (this.#useMouse) {
           getMousePosition().then(({ x, y }) => {
-            this.#mouseCell = null;
+            this.#mousePos = null;
             const bounds = canvas.getBoundingClientRect();
             if (
               bounds.left < x &&
@@ -70,50 +58,63 @@
               bounds.top < y &&
               y < bounds.bottom
             ) {
-              this.#mouseCell = {
-                x: (x - bounds.x) / cellWidth,
-                y: (y - bounds.y) / cellHeight,
+              this.#mousePos = {
+                x: x - bounds.x,
+                y: y - bounds.y,
               };
             }
           });
         }
 
-        const paletteLength = palette.length;
-        const xScale = 0.14 + Math.sin(t * 0.03) * 0.06;
-        const yScale = 0.14 + Math.cos(t * 0.05) * 0.06;
+        context.save();
+        context.globalCompositeOperation = "source-over";
+        const a = (alpha * 224).toString(16).padStart(2, "0");
+        context.fillStyle = `#444444${a}`;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.restore();
 
-        for (let i = 0; i < gridWidth; i++) {
-          for (let j = 0; j < gridHeight; j++) {
-            const mouseProximity =
-              this.#mouseCell == null
-                ? 0
-                : 1 -
-                  sigmoid(
-                    Math.hypot(i - this.#mouseCell.x, j - this.#mouseCell.y) - 3
-                  );
+        const diameter = Math.max(canvas.width, canvas.height);
+        for (let r = diameter / 2; r > 0; r -= diameter * 0.06) {
+          const rt = r * 0.03 - t * 0.15;
+          const p = noise.get(0, rt, t * 0.01) * 2;
+          const q = noise.get(2, rt * 2, t * 0.001) * 2;
+          const paletteIndex = Math.floor(paletteLength * p);
+          const rgb = palette[paletteIndex];
+          const a = Math.floor(Math.max(alpha, q) * (this.#mousePos ? 36 : 18))
+            .toString(16)
+            .padStart(2, "0");
 
-            const xy = [
-              1000 + (i - halfGridWidth) * xScale + Math.sin(t * 0.01) * 2,
-              1000 +
-                (j - halfGridHeight) * yScale +
-                Math.cos(t * 0.007) * 2 +
-                -mouseProximity,
-            ];
-            const p1 = noise.get(...xy, t * 0.03);
-            const p2 = noise.get(...xy, t * 0.03 + 0.5);
-            // for some reason, this library's output range is [0,0.5], so this averages to [0,1]
-            const p = p1 + p2;
+          const pxn = noise.get(0, 0, t * 0.08) * 2;
+          const pyn = noise.get(1, 1, t * 0.08) * 2;
+          const pullX = this.#mousePos ? this.#mousePos.x : canvas.width * pxn;
+          const pullY = this.#mousePos ? this.#mousePos.y : canvas.height * pyn;
+          const pullStr = (0.5 - r / diameter) * (this.#mousePos ? 2 : 0.2);
+          const cx = (canvas.width / 2) * (1 - pullStr) + pullX * pullStr;
+          const cy = (canvas.height / 2) * (1 - pullStr) + pullY * pullStr;
 
-            const paletteIndex = Math.floor(paletteLength * p);
-
-            const rgb = palette[paletteIndex];
-            const a = Math.floor(Math.max(alpha, mouseProximity) * 255)
-              .toString(16)
-              .padStart(2, "0");
-
-            context.fillStyle = `${rgb}${a}`;
-            context.fillRect(i, j, 1, 1);
-          }
+          context.beginPath();
+          this.#context.globalCompositeOperation = "source-over";
+          context.ellipse(
+            cx + (Math.random() * 2 - 1) * r * 0.05,
+            cy + (Math.random() * 2 - 1) * r * 0.05,
+            r + (Math.random() * 2 - 1) * r * 0.05,
+            r + (Math.random() * 2 - 1) * r * 0.05,
+            0,
+            0,
+            2 * Math.PI
+          );
+          this.#context.globalCompositeOperation = "overlay";
+          context.ellipse(
+            cx + (Math.random() * 2 - 1) * r * 0.3,
+            cy + (Math.random() * 2 - 1) * r * 0.3,
+            r + (Math.random() * 2 - 1) * r * 0.3,
+            r + (Math.random() * 2 - 1) * r * 0.3,
+            0,
+            0,
+            2 * Math.PI
+          );
+          context.fillStyle = `${rgb}${a}`;
+          context.fill();
         }
       }
 
@@ -132,13 +133,8 @@
 
         // initialize
         if (!this.#context) {
-          this.#cellWidth = Math.ceil(canvas.offsetWidth / this.#gridWidth);
-          this.#cellHeight = Math.ceil(canvas.offsetHeight / this.#gridHeight);
-          canvas.width = this.#gridWidth;
-          canvas.height = this.#gridHeight;
-          canvas.style.filter += ` blur(${
-            Math.min(this.#cellWidth, this.#cellHeight) * 1.25
-          }px)`;
+          canvas.width = canvas.offsetWidth;
+          canvas.height = canvas.offsetHeight;
           this.#context = canvas.getContext("2d");
         }
 
@@ -154,30 +150,20 @@
       connectedCallback() {
         this.#useMouse = this.hasAttribute("mouse");
 
-        const gridWidth = this.getAttribute("width");
-        if (gridWidth) {
-          this.#gridWidth = Number.parseInt(gridWidth);
-        }
-
-        const gridHeight = this.getAttribute("height");
-        if (gridHeight) {
-          this.#gridHeight = Number.parseInt(gridHeight);
-        }
-
         const paletteAttr = this.getAttribute("palette");
         if (paletteAttr) {
           this.#palette = paletteAttr.split(" ");
         }
 
         this.innerHTML = html`
-          <canvas style="filter: contrast(1.5)"></canvas>
+          <canvas></canvas>
           <div></div>
         `;
 
         appendStyle(
           this.tagName,
           html`<style>
-            nebula-animation {
+            pulse-animation {
               position: relative;
 
               &::before {
@@ -185,7 +171,7 @@
                 transition: opacity 2s ease-in;
               }
             }
-            nebula-animation > canvas {
+            pulse-animation > canvas {
               width: 100%;
               height: 100%;
               opacity: 1;
@@ -196,17 +182,18 @@
                 opacity: 0;
               }
             }
-            nebula-animation > div {
+            pulse-animation > div {
               position: absolute;
               inset: 0;
-              background: url("/components/nebula-animation/noise.png");
-              opacity: 0.1;
+              background: url("/components/pulse-animation/noise.png");
+              opacity: 0.15;
               animation: nebula-element-fade 0.5s linear,
-                nebula-noise-x 0.16s steps(2, jump-start) infinite,
-                nebula-noise-y 0.48s steps(3, jump-start) infinite;
+                nebula-noise-x 0.167s steps(2, jump-start) infinite,
+                nebula-noise-y 0.5s steps(3, jump-start) infinite;
+
               @supports (mix-blend-mode: overlay) {
-                  mix-blend-mode: overlay;
-                  opacity: 0.2;
+                mix-blend-mode: overlay;
+                opacity: 0.3;
               }
             }
             @keyframes nebula-noise-x {
@@ -220,8 +207,8 @@
               }
             }
             @media (prefers-reduced-motion) {
-              nebula-animation > canvas,
-              nebula-animation > div {
+              pulse-animation > canvas,
+              pulse-animation > div {
                 display: none;
               }
             }

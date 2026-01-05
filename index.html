@@ -12,11 +12,21 @@
 <section class="header">
   <div class="header-content">
     <div class="header-circle title-font">
-      <nebula-animation
-        class="nebula"
-        palette="#e79907 #bf1852 #4d4aff #0ad591"
-        mouse
-      ></nebula-animation>
+      <script>
+        const circAnimCount = sessionStorage.getItem("circle-animation-count") ?? 0;
+        sessionStorage.setItem("circle-animation-count", parseInt(circAnimCount) + 1);
+        const element = ["nebula-animation", "hex-animation", "pulse-animation", "code-animation"][circAnimCount % 4];
+        let palette = ["#e79907", "#bf1852", "#4d4aff", "#0ad591", /* extra colors */ "#a4b600", "#0069af", "#9e2d00"];
+        palette = palette.concat(palette).slice(
+          circAnimCount % 4,
+          (circAnimCount % 4) + (3 + (circAnimCount + 1) % 2)
+        );
+        document.currentScript.outerHTML = `<${element}
+          class="circle-animation"
+          palette="${palette.join(" ")}"
+          mouse
+        ></${element}>`;
+      </script>
       <div class="header-circle-text header-circle-text-big">
         <script>
           function renderCircleText(radiusVh, angleStepDeg, text) {
@@ -116,7 +126,7 @@
     box-sizing: content-box;
     margin: 0vh 2vh;
     border-radius: 50%;
-    background: #bf1852;
+    background: radial-gradient(closest-side, #bf1852 calc(100% - 1.4px), transparent calc(100% - 0.7px));
     shape-outside: circle(calc(50% + 1vh));
     text-align: initial;
     overflow: hidden;
@@ -157,7 +167,7 @@
     }
   }
 
-  .nebula {
+  .circle-animation {
     position: absolute;
     left: 0;
     top: 0;
@@ -338,8 +348,11 @@
     margin: 150px auto;
   }
 
-  .start-from-top .content-columns {
-    animation: section-appear 0.2s 1s backwards;
+  .content-columns {
+    animation: section-appear 0.2s backwards;
+    .start-from-top & {
+      animation-delay: 1s;
+    }
   }
   @keyframes section-appear {
     from {
@@ -403,15 +416,18 @@
       z-index: 1;
     }
   }
-  card-box[appearance=bento-image] {
+  card-box[appearance=bento-cat] {
     position: relative;
     padding: 0;
 
     img {
-      object-fit: cover;
+      object-fit: contain;
       width: 100%;
       height: 100%;
       border-radius: 6px;
+      filter: brightness(0) invert(70%);
+      transition-property: transform, filter;
+      transition: 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
     }
     span {
       position: absolute;
@@ -420,6 +436,23 @@
       padding: 6px;
       border-radius: 6px;
       background: var(--bg-clr);
+      transition: opacity 0.2s ease;
+    }
+    span:last-of-type {
+      opacity: 0;
+    }
+
+    &:hover, &:focus-within {
+      img {
+        filter: brightness(1);
+        transform: scale(1.1) translate(0, 5%);
+      }
+      span:first-of-type {
+        opacity: 0;
+      }
+      span:last-of-type {
+        opacity: 1;
+      }
     }
   }
 
@@ -536,6 +569,13 @@
     }
   }
 </style>
+<noscript>
+  <style>
+    .content-columns {
+      animation: none;
+    }
+  </style>
+</noscript>
 
 <div class="great-time-counter">
   you now have <span id="great-time-num">0</span> great time(s)
@@ -548,11 +588,26 @@
     <notes-list id="latest-notes">
       <ul>
         <li>
+          <a href="/notes/baybayin_abugida_keyboard_qmk/">
+            <strong>Implementing a Baybayin abugida input method on keyboard hardware</strong>
+            <tag-chip title="c"></tag-chip>
+            <tag-chip title="keyboard"></tag-chip>
+            <time datetime="2026-01-05">5 Jan 2026</time>
+          </a>
+        </li>
+        <li>
+          <a href="/notes/editing-website-in-browser/">
+            <strong>Editing my website directly in the browser</strong>
+            <tag-chip title="html"></tag-chip>
+            <tag-chip title="js"></tag-chip>
+            <time datetime="2025-09-01">1 Sept 2025</time>
+          </a>
+        </li>
+        <li>
           <a href="/notes/github-heatmap-widget/">
             <strong>Making my GitHub heatmap widget</strong>
             <tag-chip title="html"></tag-chip>
             <tag-chip title="js"></tag-chip>
-            <tag-chip title="µpost"></tag-chip>
             <time datetime="2025-08-04">4 Aug 2025</time>
           </a>
         </li>
@@ -561,19 +616,6 @@
             <strong>Vibecoding a web-based map visualization</strong>
             <tag-chip title="ai"></tag-chip>
             <time datetime="2025-06-13">13 Jun 2025</time>
-          </a>
-        </li>
-        <li>
-          <a href="/notes/my-own-rss-reader/">
-            <strong>My own RSS reader</strong>
-            <time datetime="2025-05-15">15 May 2025</time>
-          </a>
-        </li>
-        <li>
-          <a href="/notes/simple-live-reload/">
-            <strong>Simple live reload for developing static sites</strong>
-            <tag-chip title="js"></tag-chip>
-            <time datetime="2025-04-18">18 Apr 2025</time>
           </a>
         </li>
       </ul>
@@ -588,7 +630,7 @@
     <img class="pixelated lg-icon" src="/icons/pot.png" alt="" loading="lazy" width="16" height="16" />
     <h2>Some things I've built</h2>
     <fixed-grid>
-      <feature-card>
+      <feature-card no-anim>
         <a href="/wares/wikawik/">
           <img src="/wares/wikawik/media/wikawik.jpg" loading="lazy" width="1200" height="1200" style="--lqip:154330" />
           <hgroup>
@@ -603,7 +645,7 @@
         </a>
       </feature-card>
 
-      <feature-card>
+      <feature-card no-anim>
         <a href="/wares/dimensions/">
           <img src="/wares/dimensions/media/dimensions_0.jpg" loading="lazy" width="800" height="800" style="--lqip:83676" />
           <hgroup>
@@ -618,7 +660,7 @@
         </a>
       </feature-card>
 
-      <feature-card>
+      <feature-card no-anim>
         <a href="/wares/miniforts/">
           <img src="/wares/miniforts/media/miniforts_thumb.png" loading="lazy" width="2560" height="1387" style="--lqip:174756" />
           <hgroup>
@@ -705,7 +747,7 @@
   <a href="/notes/">
     <card-box>
       <img class="pixelated lg-icon" src="/icons/glasses.png" alt="" loading="lazy" width="16" height="16" />
-      <span><span data-rewrite="noteCount">33</span> notes</span>
+      <span><span data-rewrite="noteCount">35</span> notes</span>
     </card-box>
   </a>
   <a href="/wares/">
@@ -738,9 +780,10 @@
       my music
     </card-box>
   </a>
-  <card-box appearance="bento-image">
-    <img src="/cat.jpg" alt="Cat" loading="lazy" width="600" height="300" style="--lqip:158307" />
-    <span>🐱 my cat</span>
+  <card-box appearance="bento-cat" tabindex="0">
+    <img src="/cat.png" alt="Cat" loading="lazy" width="395" height="397" />
+    <span>who’s that?</span>
+    <span>😺 my cat!</span>
   </card-box>
   <card-box class="bento-tall bento-map">
     <map-flight bgsrc="/components/map-flight/syd.png" destination></map-flight>
@@ -753,7 +796,7 @@
   </card-box>
   <card-box>
     <div>hit counter</div>
-    <bump-tally data-rewrite="hits">149854</bump-tally>
+    <bump-tally data-rewrite="hits">164156</bump-tally>
   </card-box>
   <card-box><now-reading></now-reading></card-box>
   <a href="/misc/">
@@ -769,11 +812,12 @@
 <site-footer nobg></site-footer>
 
 <script>
+  document.body.classList.toggle("start-from-top", window.scrollY < 100);
+
   window.addEventListener("load", () => {
     const yayIcon = document.querySelector(".home-circle-icon");
     const greatTimeContainer = document.querySelector(".great-time-counter");
     const greatTimeNum = document.getElementById("great-time-num");
-    document.body.classList.toggle("start-from-top", window.scrollY < 100);
 
     let sayTime = 0;
     const ipa = document.querySelector(".ipa");
