@@ -13,7 +13,7 @@
     padding: 3px 8px;
     line-height: normal;
     font-family: "Noto Sans Tagalog";
-    background: #f203;
+    background: #f202;
     border-radius: 6px;
     font-weight: bold;
     font-style: normal;
@@ -26,7 +26,8 @@
   }
   kbd {
     display: inline-block;
-    padding: 0px 6px;
+    padding: 0px 3px;
+    line-height: normal;
     border: solid 1px #666;
     border-bottom-width: 3px;
     border-radius: 6px;
@@ -54,35 +55,35 @@
 
 <main class="prose">
   
-<p>For fun, I implemented an input method to write Baybayin (an abugida writing system) using a hardware keyboard. This was implemented on top of the QMK firmware/framework. <small>Banner photo lifted from Reddit <a href="https://www.reddit.com/r/MechanicalKeyboards/comments/fesl6p/gc60_x_baybayin_keycaps/" target="_blank">u/HumanzDude</a>. This post is about an actual Baybayin keyboard implementation though, not QWERTY with arbitrary Baybayin keycaps.</small></p>
+<p>I made an input method to write Baybayin, a syllable-based writing system, using Roman letters on a hardware keyboard. <small>Banner photo lifted from a <a href="https://www.reddit.com/r/MechanicalKeyboards/comments/fesl6p/gc60_x_baybayin_keycaps/" target="_blank">Reddit post</a> showing Baybayin keycaps. This post is about a real Baybayin keyboard though.</small></p>
 
 <h2>The writing system</h2>
 
-<p><a href="https://en.wikipedia.org/wiki/Baybayin" target="_blank">Baybayin</a> is an ancient writing system in which a consonant-vowel sequence is written as one letter &mdash; it is an <strong>abugida</strong>. For example, the syllable <i>‘ta’</i> would be written as <i baybay>ᜆ</i>. By default, letters have an inherent vowel which is /a/. To indicate a different vowel, a diacritic is added above or below the letter. So <i>‘ti’</i> would be <i baybay>ᜆᜒ</i> and <i>‘tu’</i> would be <i baybay>ᜆᜓ</i>.</p>
+<p><a href="https://en.wikipedia.org/wiki/Baybayin" target="_blank">Baybayin</a> is an ancient writing system in which a consonant-vowel syllable is written as one letter &mdash; it is an <strong>abugida</strong>. By default, letters have an inherent vowel which is /a/. To indicate a different vowel, a dot is added above or below the letter.</p>
 
-<prose-bleed>
-  <figure>
-    <img src="wikipedia-table.png" loading="lazy" width="1055" height="710" style="--lqip:174627">
-    <figcaption>Chart from Wikipedia
-  </figure>
-</prose-bleed>
-    
-<p>A ‘vowel-killer’ diacritic (<a href="https://en.wikipedia.org/wiki/Virama" target="_blank"><strong>virama</strong></a>) is also a common feature in abugidas found in South and Southeast Asia. In Baybayin for example, <i>‘ta’</i> / <i baybay>ᜆ</i> without the <i>‘a’</i>, just <i>‘t’</i> would be <i baybay>ᜆ᜕</i>. An example of a full word in Baybayin is <i baybay><ruby>ᜆ<rt>ta</rt>ᜆ᜕<rt>t</rt>ᜎᜓ<rt>lo</rt><rp>(tatlo)</rp></ruby></i>, which means the number three. <small>(btw, I’m using the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/ruby" target="_blank"><code>&lt;ruby&gt;</code></a> element to annotate Baybayin symbols in this post, similar to furigana for Japanese.)</small></p>
+<ol>
+  <li><i baybay><ruby>ᜃ<rp> (</rp><rt>ka</rt><rp>)</rp></ruby></i>: The base letter on its own is the consonant plus the vowel <i>‘a’</i>.
+  <li><i baybay><ruby>ᜃᜒ<rp> (</rp><rt>ki</rt><rp>)</rp></ruby></i>: A dot above makes it end with <i>‘i’</i> / <i>‘e’</i>.
+  <li><i baybay><ruby>ᜃᜓ<rp> (</rp><rt>ku</rt><rp>)</rp></ruby></i>: A dot below makes it end with <i>‘u’</i> / <i>‘o’</i>.
+  <li><i baybay><ruby>ᜃ᜕<rp> (</rp><rt>k</rt><rp>)</rp></ruby></i>: A slash cancels the vowel (see <a href="https://en.wikipedia.org/wiki/Virama" target="_blank"><strong>virama</strong></a>).
+</ol>
 
-<box-note> There are two variants of the virama (vowel-killer) in modern Baybayin. <i>‘t’</i> could be written as either <i baybay>ᜆ᜔</i> (with a small cross at the bottom) or <i baybay>ᜆ᜕</i> (a curved slash). For readability, I'm using the latter variant.</box-note>
+<p>An example of a full word is <i baybay><ruby>ᜆ<rt>ta</rt>ᜆ᜕<rt>t</rt>ᜎᜓ<rt>lo</rt><rp>(tatlo)</rp></ruby></i>, which means the number three.</p>
+
+<box-note><strong>HTML tip:</strong> I’m using the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/ruby" target="_blank"><code>&lt;ruby&gt;</code></a> element to annotate Baybayin pronunciation in this post, similar to furigana for Japanese.</box-note>
 
 <h2>Input design</h2>
 
-<p>There are many ways to design an input method for this writing system on a keyboard. First, we could have one key for each letter. Assign every possible letter-diacritic combination its own key. There’d be a total of 63 resulting letters. For comparison, the Latin alphabet A-Z only has 26 letters.</p>
+<p>There are many ways to design an input method for this writing system on a keyboard. The most straightforward would be to have a key for each letter. Assign every possible letter-diacritic combination its own key. There’d be a total of 63 resulting letters, which is a bit too much for a keyboard. For comparison, the Latin alphabet A-Z only has 26 letters.</p>
 
-<p>Layer or modes could help, accessed by holding the Shift or Fn key &mdash; after all, the Latin alphabet actually has 52 total symbols, counting both upper and lowercase.</p>
+<p>Layer or modes could help, accessed by holding the <kbd>Shift</kbd> or <kbd>Fn</kbd> key &mdash; after all, the Latin alphabet actually has 52 distinct symbols, counting both upper and lowercase.</p>
 
 <figure>
   <img src="every-combination.png" loading="lazy" width="824" height="353" style="--lqip:524131">
   <figcaption>In this design, pressing Shift would change the vowel endings.
 </figure>
 
-<p>Or we could assign only the 17 base letters and the 3 diacritics for a total of 20 keys for input. This would be a pretty efficient layout, and it’s the one used by Google’s mobile keyboard Gboard. Some logic on top of this would be required to combine diacritics and letters.</p>
+<p>Or we could assign only the 17 base letters and the 3 vowel diacritics for a total of 20 keys for input. This would be a pretty efficient layout, and it’s the one used by Google’s mobile keyboard Gboard. Some logic on top of this would be required to combine diacritics and letters.</p>
 
 <figure>
   <img src="gboard.png" loading="lazy" width="1080" height="1028" style="--lqip:174819">
@@ -91,47 +92,66 @@
 
 <p>However, both of the above would require learning a whole new keyboard layout, wasting years of Latin alphabet-based muscle memory. For me who primarily uses the Latin alphabet for typing, this is worth considering.</p>
 
-<p>Let’s say I wanted to type in romanised alphabet, like romaji for Japanese or pinyin for Chinese. What if the keyboard can be programmed to convert keystrokes directly into Baybayin outputs? Implementing this on the hardware presents a nice challenge as one keypress would no longer directly correspond to one character.</p>
+<p>Let’s say I wanted to type in romanised alphabet, like romaji for Japanese or pinyin for Chinese. What if the keyboard itself can be programmed to convert keystrokes directly into Baybayin outputs? Implementing this on the hardware presents a nice challenge; one keypress would no longer directly correspond to one character.</p>
 
 <h2>My solution</h2>
 
-<p>I implemented this with QMK, flashed to my keyboard’s microcontroller. It’s a pretty basic solution, just a bunch of if-elses and variables. No need for a buffer or a trie or whatever data structure. It only needs to know about the last pressed key. <small>Well, it’s a buffer of length 1.</small></p>
+<p>I implemented this on top of a <a href="https://qmk.fm/" target="_blank">QMK</a> firmware base, making use of its neat Unicode API. It’s a pretty basic solution, just a bunch of if-elses and variables. We don’t need a buffer or a trie or whatever data structure. It only needs to know about the last pressed key. <small>Well, it’s a buffer of length 1.</small></p>
 
 <code-block language="clike">
   <pre><code>void on_key_press(uint16_t keycode) {
-  bool curr_cons = is_consonant(keycode);
-  bool prev_cons = is_consonant(prev_keycode);
+  bool curr_cons  = is_consonant(keycode);
+  bool prev_cons  = is_consonant(prev_keycode);
+  bool curr_vowel = !curr_cons;
+  // special case for NG
+  bool is_ng = prev_keycode == KEYCODE_N && keycode == KEYCODE_G;
 
-  // Special case: N + G => ᜅ
-  if (prev_keycode == KEYCODE_N && keycode == KEYCODE_G) {
-    backspace(); // Delete virama
-    backspace(); // Delete ᜈ / N
-    send_unicode("ᜅ᜕");
+  // standalone vowel
+  if (curr_vowel && !prev_cons) {
+    send_unicode(get_baybayin_unicode(keycode));
   }
-  // Vowel following consonant: remove virama, maybe add diacritic
-  else if (!curr_cons && prev_cons) {
-    backspace(); // Delete virama
+  // initial consonant
+  else if (curr_cons && !is_ng) {
+    send_unicode(get_baybayin_unicode(keycode));
+    send_unicode("᜕"); // virama, because no vowel initially
+  }
+  // vowel after consonant
+  else if (curr_vowel && prev_cons) {
+    backspace(); // remove the initial virama
 
     if (keycode == KEYCODE_I || keycode == KEYCODE_E) {
       send_unicode("ᜒ");
     } else if (keycode == KEYCODE_U || keycode == KEYCODE_O) {
       send_unicode("ᜓ");
     }
-    // KEYCODE_A emits nothing
+    // KEYCODE_A emits nothing since /a/ is the default vowel
   }
-  // Consonant: with virama by default
-  else if (curr_cons) {
-    send_unicode(get_baybayin_unicode(keycode));
+  // NG digraph
+  else { // is_ng
+    // replace previous N with the letter for NG
+    backspace(); // remove virama
+    backspace(); // remove ᜈ
+    send_unicode("ᜅ");
     send_unicode("᜕");
-  }
-  // Vowel not after consonant
-  else {
-    send_unicode(get_baybayin_unicode(keycode));
   }
 
   prev_keycode = keycode;
 }</code></pre>
 </code-block>
+
+<p>The code shown here is just the core loop for readability. Not shown is how to handle interference from other keys such as Backspace and Arrow keys and other housekeeping.</p>
+
+<h2>Housekeeping</h2>
+
+<p>Whenever a non-alphabet key is pressed, I just reset all state and skip further processing. This solves keyboard shortcuts: if I press <kbd>Ctrl</kbd> + <kbd>S</kbd> I want to save, not output <i baybay><ruby>ᜐ᜕<rt>s</rt></ruby></i>.</p>
+
+<p>This also solves a stale <code>prev_keycode</code>. When you press <kbd>Backspace</kbd> for example, <code>prev_keycode</code> is no longer accurate. A buffer would actually help here, but it’d unnecessarily complicate the code. Cursor movement keys <kbd>←</kbd>, <kbd>→</kbd>, or any other non-letter key for that matter, <kbd>1</kbd>, <kbd>.</kbd>, <kbd>F2</kbd>, etc.; all reset state.</p>
+
+<p>This cannot catch any state-invalidating actions that happen outside the keyboard, like selecting text with the mouse! A timeout takes care of these cases. After a short time without typing, state is reset.</p>
+
+<p>Essentially, we only want to convert into Baybayin when continuously typing sequences of letters. Otherwise, it should behave like a regular keyboard.</p>
+
+<p>The full working code is in <a href="https://github.com/Kalabasa/qmk_firmware/blob/2be68c4e8dc3977aaef1037d82d29ed8a59db903/keyboards/lily58/keymaps/Kalabasa/features/baybayin.c" target="_blank">my QMK fork on GitHub</a>.</p>
 
 <h2>Unicode encoding</h2>
 
@@ -143,13 +163,13 @@
 
 <h2>Special case: N + G</h2>
 
-<p>One special case is the letter <i baybay>ᜅ</i>, representing the consonant /ŋ/. In English this sound is represented by two letters <i>‘ng’</i>. This romanisation breaks the rule of 1 Roman consonant letter to 1 Baybayin base letter. For example, <i>‘ngiti’</i> (meaning ‘smile’) is written as <i baybay><ruby>ᜅᜒ<rt>ngi</rt>ᜆᜒ<rt>ti</rt></ruby></i>. This special case is solved by <em>backtracking:</em> sending a virtual Backspace signal to the computer to erase the previous N.</p>
+<p>One special case is the letter <i baybay>ᜅ</i>, representing the consonant /ŋ/. In English this sound is represented by two letters <i>‘ng’</i>. This romanisation breaks the rule of 1 Roman consonant letter to 1 Baybayin base letter. For example, <i>‘ngiti’</i> (meaning ‘smile’) is written as <i baybay><ruby>ᜅᜒ<rt>ngi</rt>ᜆᜒ<rt>ti</rt></ruby></i>. This special case is solved by <em>backtracking:</em> sending a signal to the computer to erase the previous N.</p>
 
 <h2>Backtracking</h2>
 
-<p>Backtracking is a thing because, by default, <strong>the virama must always be output after typing a consonant</strong>. This is because when the user presses a consonant, we don’t know yet whether they’re going to type a syllable or stop at that point. Since base letters have an inherent vowel, we must immediately kill the vowel with a virama when typing a consonant. Only after the next key is pressed can we be sure, but we may have to backtrack the virama then.</p>
+<p>To backtrack, we just send a virtual Backspace to the computer. Coming from the keyboard, it will be indistinguishable from a real Backspace keypress.</p>
 
-<p>To backtrack, we just send a Backspace to the computer. Coming from the keyboard, it will be indistinguishable from a real Backspace press.</p>
+<p>Backtracking is a thing because, by default, <strong>the virama must always be output after typing a consonant</strong>. This is because when the user presses a consonant, we don’t know yet whether they’re going to type a syllable or stop at that point. Since base letters have an inherent vowel, we must immediately kill the vowel with a virama whenever a consonant is typed. Only after the next key is pressed can we be sure what to do with it, and we may have to backtrack the virama then.</p>
 
 <p>The following simulation illustrates how the keyboard-based solution handles backtracking:</p>
 
@@ -449,23 +469,73 @@
   <figcaption>This simulation is interactive; you can type your own inputs!
 </figure>
 
-<p>So pressing, say, the <kbd>T</kbd> key should not output just the base letter <i baybay>ᜆ</i>, but the letter + virama <i baybay>ᜆ᜕</i> at once. If you actually wanted to type <i>‘ta’</i>, pressing <kbd>A</kbd> next outputs a Backspace, erasing the virama and leaving <i baybay>ᜆ</i> / <i>‘ta’</i>. If you had pressed <kbd>I</kbd>, a Backspace erases the virama and the I vowel diacritic <span>ᜒ</span> is sent, producing <i baybay>ᜆᜒ</i> / <i>‘ti’</i>.</p>
+<p>So pressing, say, the <kbd>M</kbd> key should not output just the base letter <i baybay><ruby>ᜋ<rp> (</rp><rt>ma</rt><rp>)</rp></ruby></i>, but the letter + virama <i baybay>ᜋ᜕</i> at once. If you press <kbd>A</kbd> next, it would <em>actually output a Backspace</em>, erasing the virama and leaving <i baybay><ruby>ᜋ<rp> (</rp><rt>ma</rt><rp>)</rp></ruby></i> as inteded. If you had pressed <kbd>I</kbd>, a Backspace is sent along with the I vowel diacritic <span>ᜒ</span>, producing <i baybay><ruby>ᜋᜒ<rp> (</rp><rt>mi</rt><rp>)</rp></ruby></i>.</p>
 
-<p>Because of the inherent vowel in most abugidas, a backtracking design seems to be used in other romanised abugida input methods as well, such as <a href="https://anjal.net/" target="_blank">Anjal</a>, a romanised input method for Tamil.</p>
+<p>Because of the inherent vowel in most abugidas, a backtracking design seems to be used in other romanised input methods as well, such as <a href="https://anjal.net/" target="_blank">Anjal</a>, a romanised input method for Tamil.</p>
+
+<h2>Why not a buffer instead of backtracking?</h2>
+
+<p>Buffering keystrokes would remove the need to backtrack outputs, at the cost of responsiveness. In that setup, pressing a consonant produces no glyph at all until the following key disambiguates the syllable and flushes the output. Loss of immediate visual feedback makes the keyboard feel unresponsive and breaks the rhythm of typing.</p>
+
+<div>
+  <b>Input buffering demonstration!</b>
+  <input placeholder="type syllables">
+  <style>
+    @scope {
+      input {
+        font-size: 150%;
+        border: solid 1px currentColor;
+        border-radius: 18px;
+        width: 100%;
+        height: 3em;
+        padding: 0 1em;
+        box-sizing: border-box;
+        background: transparent;
+      }
+    }
+  </style>
+  <script>
+    const input = document.currentScript.parentElement.querySelector("input");
+    let buffer = "";
+    const flush = () => {
+      input.value += buffer;
+      buffer = "";
+    };
+    input.addEventListener("beforeinput", event => {
+      if (event.data) {
+        buffer += event.data;
+        event.preventDefault();
+        if ("aeiou".includes(buffer[0])) {
+          flush();
+        } else if (buffer.length > 1) {
+          input.value += buffer[0];
+          buffer = buffer.slice(1);
+        }
+      } else {
+        flush();
+      }
+    });
+    input.addEventListener("blur", flush);
+  </script>
+</div>
+
+<p>One of the downsides of a hardware-based solution is that we can only communicate via keycodes<sup>1</sup>. A software-based input method <em>editor</em> (IME) doesn’t have these restrictions; it can easily <em>edit</em> the string, access the undo stack, get the currently selected text, and more. This eliminates the need for aggressive state invalidation and timeouts. There are pros and cons.</p>
 
 <h2>Why not implement a software IME?</h2>
 
-<p>Because I did it for fun!</p>
+<p>Because it’s more fun to hack on keyboard firmware!</p>
 
-<p>More seriously, implementing this on the hardware makes it portable. Not that I often need to write Baybayin, but I use multiple computers with a KVM switch. Software input methods are very OS- and/or application-dependent. This input method lives in my keyboard. I could plug my keyboard into any computer that supports arbitrary Unicode input<sup>1</sup> and not have to install or reimplement anything.</p>
+<p>More seriously, implementing this on the hardware makes it portable. Not that I often need to write Baybayin, but I use multiple computers with a KVM switch. Software input methods are very OS- or application-dependent. (On Linux, it depends on even more things, such as your desktop environment, GTK or QT, X or Wayland, you name it.) <em>This</em> input method lives in <em>my</em> keyboard. I could plug my keyboard into any computer that supports arbitrary Unicode input<sup>1</sup> and not have to install or reimplement anything.</p>
 
-<p>Someone did <a href="https://inurwansah.my.id/2021/04/17/philippine-scripts-keyboard-for-linux/" target="_blank">make an input method for Baybayin</a> and other Philippine scripts for Linux (<a href="https://github.com/Ilhamkang/Phillippines-input-method" target="_blank">Github</a>).</p>
+<box-note>Someone did <a href="https://inurwansah.my.id/2021/04/17/philippine-scripts-keyboard-for-linux/" target="_blank">make an input method for Baybayin</a> and other Philippine scripts for Linux (<a href="https://github.com/Ilhamkang/Phillippines-input-method" target="_blank">Github</a>).</box-note>
 
 <h2><sup>1</sup>How does a keyboard even output Unicode?</h2>
 
-<p>Technically, it can’t. It requires certain understanding with the computer OS. You know the Alt codes in Windows where you can summon any character by their code number? The keyboard basically types that sequence of keystrokes in quick succession when we say ‘send unicode’, neatly abstracted into a function call. This abstraction is all done by QMK, supporting Windows, Linux, and Mac’s Unicode input method.</p>
+<p>Technically, it can’t. It requires a certain understanding with the computer OS.</p>
 
-<p>To enter <i baybay>ᜀ</i> (U+1700) on Linux for example, the keyboard sends the following key events in sequence: Hold <kbd>Ctrl</kbd>. Hold <kbd>Shift</kbd>. <kbd>U</kbd>. <kbd>1</kbd>. <kbd>7</kbd>. <kbd>0</kbd>. <kbd>0</kbd>. <kbd>Enter</kbd>. Release <kbd>Ctrl</kbd>. Release <kbd>Shift</kbd></p>
+<p>You know the Alt codes in Windows where you can summon any character by their code number? The keyboard basically types that sequence of keystrokes in quick succession when we say ‘send unicode’. This abstraction is all done by QMK, supporting Windows, Linux, and Mac’s Unicode input method.</p>
+
+<p>To enter <code>U+1700</code> on Linux for example, the keyboard rapidly sends the following keystrokes in order: Hold <kbd>Ctrl</kbd>. Hold <kbd>Shift</kbd>. <kbd>U</kbd>. <kbd>1</kbd>. <kbd>7</kbd>. <kbd>0</kbd>. <kbd>0</kbd>. <kbd>Enter</kbd>. Release <kbd>Ctrl</kbd>. Release <kbd>Shift</kbd>. This outputs a <i baybay>ᜀ</i>.</p>
 
 <p>With all of the above logic, when I type <kbd>T</kbd><kbd>A</kbd>, the actual keycodes sent are: <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>U</kbd><kbd>1</kbd><kbd>7</kbd><kbd>0</kbd><kbd>6</kbd><kbd>Enter</kbd><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>U</kbd><kbd>1</kbd><kbd>7</kbd><kbd>1</kbd><kbd>5</kbd><kbd>Enter</kbd><kbd>Backspace</kbd></p>
 
@@ -473,9 +543,9 @@
 
 <h2>Can this be generalised to other abugidas?</h2>
 
-<p>Baybayin is a relatively simple script, so the implementation here might be on the simpler side. Complications might come in the form of consonant clusters, different orderings of glyphs, or different ways to join letters.</p>
+<p>Baybayin is a relatively simple script, so the implementation here might be on the simpler side. Complications might come in the form of consonant clusters or different ways to join glyphs.</p>
 
-<p>The implementation depends entirely on the Unicode encoding of the script. From what I’ve seen, many other abugidas have been designed in a similar way having vowels encoded as combining characters that modify base consonants. So there’s probably a common pattern of implementation.</p>
+<p>The implementation depends heavily on the Unicode encoding of the script. From what I’ve seen, many other abugidas have been designed in a similar way having vowels encoded as combining characters that modify base consonants. So there’s probably a common pattern of implementation.</p>
 
 <p>See also</p>
 
