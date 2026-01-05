@@ -137,7 +137,7 @@ async function renderItem({ note, url, componentNames, siteDir }) {
   });
 
   const interactiveElements = content.find(
-    interactiveTags.concat("iframe", "script:not([src])").join(",")
+    interactiveTags.concat("iframe", "script:not([src])", "[data-rss=interactive]").join(",")
   );
 
   if (interactiveElements.length > 0) {

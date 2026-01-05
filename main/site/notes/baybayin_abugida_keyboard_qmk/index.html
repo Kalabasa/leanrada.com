@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="/notes/baybayin_abugida_keyboard_qmk/">
 <link rel="stylesheet" href="/common.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,8 +45,8 @@
 </blog-header>
 
 <blog-post-info>
-  <time datetime="2026-01-05">05 Jan 2026</time>
-  · 15 min read
+  <time datetime="2026-01-05">06 Jan 2026</time>
+  · 19 min read
 </blog-post-info>
 
 <tag-row>
@@ -65,7 +66,7 @@
   <li><i baybay><ruby>ᜃ<rp> (</rp><rt>ka</rt><rp>)</rp></ruby></i>: The base letter on its own is the consonant plus the vowel <i>‘a’</i>.
   <li><i baybay><ruby>ᜃᜒ<rp> (</rp><rt>ki</rt><rp>)</rp></ruby></i>: A dot above makes it end with <i>‘i’</i> / <i>‘e’</i>.
   <li><i baybay><ruby>ᜃᜓ<rp> (</rp><rt>ku</rt><rp>)</rp></ruby></i>: A dot below makes it end with <i>‘u’</i> / <i>‘o’</i>.
-  <li><i baybay><ruby>ᜃ᜕<rp> (</rp><rt>k</rt><rp>)</rp></ruby></i>: A slash cancels the vowel (see <a href="https://en.wikipedia.org/wiki/Virama" target="_blank"><strong>virama</strong></a>).
+  <li><i baybay><ruby>ᜃ᜕<rp> (</rp><rt>k</rt><rp>)</rp></ruby></i>: A slash cancels the vowel (it’s called a <a href="https://en.wikipedia.org/wiki/Virama" target="_blank"><strong>virama</strong></a>).
 </ol>
 
 <p>An example of a full word is <i baybay><ruby>ᜆ<rt>ta</rt>ᜆ᜕<rt>t</rt>ᜎᜓ<rt>lo</rt><rp>(tatlo)</rp></ruby></i>, which means the number three.</p>
@@ -96,7 +97,9 @@
 
 <h2>My solution</h2>
 
-<p>I implemented this on top of a <a href="https://qmk.fm/" target="_blank">QMK</a> firmware base, making use of its neat Unicode API. It’s a pretty basic solution, just a bunch of if-elses and variables. We don’t need a buffer or a trie or whatever data structure. It only needs to know about the last pressed key. <small>Well, it’s a buffer of length 1.</small></p>
+<p>I implemented this on top of a <a href="https://qmk.fm/" target="_blank">QMK</a> firmware base, making use of its neat Unicode API. This runs my keyboard’s microcontroller.</p>
+
+<p>It’s a pretty basic solution, just a bunch of if-elses and variables. We don’t need a buffer or a trie or whatever data structure. It only needs to know about the last pressed key. <small>Well, it’s a buffer of length 1.</small></p>
 
 <code-block language="clike">
   <pre><code>void on_key_press(uint16_t keycode) {
@@ -169,7 +172,7 @@
 
 <p>To backtrack, we just send a virtual Backspace to the computer. Coming from the keyboard, it will be indistinguishable from a real Backspace keypress.</p>
 
-<p>Backtracking is a thing because, by default, <strong>the virama must always be output after typing a consonant</strong>. This is because when the user presses a consonant, we don’t know yet whether they’re going to type a syllable or stop at that point. Since base letters have an inherent vowel, we must immediately kill the vowel with a virama whenever a consonant is typed. Only after the next key is pressed can we be sure what to do with it, and we may have to backtrack the virama then.</p>
+<p>Backtracking is a thing mainly because the virama (‘vowel-killer’) is always output after typing a consonant. This is because when the user presses a consonant, we don’t know yet whether they’re going to type a syllable or stop at that point. <strong>Since base letters have an inherent vowel, we must immediately kill the inherent vowel with a virama when typing consonants.</strong> Only the next key will decide &mdash; we can backtrack the virama by then.</p>
 
 <p>The following simulation illustrates how the keyboard-based solution handles backtracking:</p>
 
@@ -215,7 +218,7 @@
           flex-wrap: wrap;
           gap: 1em;
           text-align: center;
-          height: 90px;
+          min-height: 90px;
         }
         sequence {
           min-height: 60px;
@@ -226,8 +229,9 @@
           place-content: center;
           font-size: 150%;
           margin-right: 6px;
+          margin-bottom: 6px;
           width: 60px;
-          height: 60px;
+          min-height: 60px;
           max-width: 60px;
           line-height: normal;
           border-radius: 6px;
@@ -323,7 +327,8 @@
             const [baybayinChar] = match;
 
             const rt = document.createElement("rt");
-            rt.textContent = romanFromBaybayin(baybayinChar[0]);
+            const roman = romanFromBaybayin(baybayinChar[0]);
+            rt.textContent = roman;
             if (baybayinChar.length > 1) {
               const diacritic = baybayinChar[1];
               if (diacritic === "ᜒ") {
@@ -331,7 +336,7 @@
               } else if (diacritic === "ᜓ") {
                 rt.textContent += "u";
               }
-            } else {
+            } else if (isConsonant(roman)) {
               rt.textContent += "a";
             }
 
@@ -352,11 +357,7 @@
             return;
           }
           if (onKey(event.key)) {
-            if (event.key === " ") {
-              onEmit(event.key);
-            } else {
-              event.preventDefault();
-            }
+            event.preventDefault();
           }
           if (event.key === "Backspace" || event.key === "Delete") {
             reset();
@@ -364,12 +365,9 @@
         });
 
         const examples = [
-          "ma",
-          "li",
-          "ng",
           "mata",
           "lima",
-          "ngiti",
+          "tatlo",
         ];
         let exampleIndex = 0;
         let exampleTimer = null;
@@ -469,15 +467,15 @@
   <figcaption>This simulation is interactive; you can type your own inputs!
 </figure>
 
-<p>So pressing, say, the <kbd>M</kbd> key should not output just the base letter <i baybay><ruby>ᜋ<rp> (</rp><rt>ma</rt><rp>)</rp></ruby></i>, but the letter + virama <i baybay>ᜋ᜕</i> at once. If you press <kbd>A</kbd> next, it would <em>actually output a Backspace</em>, erasing the virama and leaving <i baybay><ruby>ᜋ<rp> (</rp><rt>ma</rt><rp>)</rp></ruby></i> as inteded. If you had pressed <kbd>I</kbd>, a Backspace is sent along with the I vowel diacritic <span>ᜒ</span>, producing <i baybay><ruby>ᜋᜒ<rp> (</rp><rt>mi</rt><rp>)</rp></ruby></i>.</p>
+<p>So pressing, say, the <kbd>M</kbd> key should not output just the base letter <i baybay><ruby>ᜋ<rp> (</rp><rt>ma</rt><rp>)</rp></ruby></i>, but the letter + virama <i baybay>ᜋ᜕</i> at once. If you press <kbd>A</kbd> next, it would <em>actually output a Backspace</em>, erasing the virama and leaving <i baybay><ruby>ᜋ<rp> (</rp><rt>ma</rt><rp>)</rp></ruby></i> as intended. If you had pressed <kbd>I</kbd>, a Backspace is sent along with the I vowel diacritic <span>ᜒ</span>, producing <i baybay><ruby>ᜋᜒ<rp> (</rp><rt>mi</rt><rp>)</rp></ruby></i>.</p>
 
 <p>Because of the inherent vowel in most abugidas, a backtracking design seems to be used in other romanised input methods as well, such as <a href="https://anjal.net/" target="_blank">Anjal</a>, a romanised input method for Tamil.</p>
 
 <h2>Why not a buffer instead of backtracking?</h2>
 
-<p>Buffering keystrokes would remove the need to backtrack outputs, at the cost of responsiveness. In that setup, pressing a consonant produces no glyph at all until the following key disambiguates the syllable and flushes the output. Loss of immediate visual feedback makes the keyboard feel unresponsive and breaks the rhythm of typing.</p>
+<p>Buffering keystrokes would remove the need to backtrack outputs, at the cost of responsiveness. In that setup, pressing a consonant would produce no glyph at all until the following key disambiguates the syllable and flushes the output. Loss of immediate visual feedback would make the keyboard feel unresponsive and breaks the rhythm of typing.</p>
 
-<div>
+<div data-rss="interactive" alt="input buffering demonstration">
   <b>Input buffering demonstration!</b>
   <input placeholder="type syllables">
   <style>
@@ -519,7 +517,7 @@
   </script>
 </div>
 
-<p>One of the downsides of a hardware-based solution is that we can only communicate via keycodes<sup>1</sup>. A software-based input method <em>editor</em> (IME) doesn’t have these restrictions; it can easily <em>edit</em> the string, access the undo stack, get the currently selected text, and more. This eliminates the need for aggressive state invalidation and timeouts. There are pros and cons.</p>
+<p>One of the downsides of a hardware-based solution is that we can only communicate via keycodes<sup>1</sup>. A software-based input method <em>editor</em> (IME) doesn’t have these restrictions; it can easily <em>edit</em> the string, access the undo stack, get the currently selected text, and more. This would eliminate the need for aggressive state invalidation and timeouts. There are pros and cons.</p>
 
 <h2>Why not implement a software IME?</h2>
 
