@@ -286,7 +286,7 @@ globalThis.customElements?.define(
         if (window.location.pathname.startsWith("/notes/")) {
           const { loadNote } = await import("/notes/index-loader.js");
           const result = await loadNote(window.location.pathname);
-          if (!result?.note?.stats) throw new Error("Missing reaction data");
+          if (!result?.note?.stats) return false;
           for (const type of reactionTypes) {
             const count = result.note.stats[type] || 0;
             reactionState[type] = Math.max(reactionState[type], count);
@@ -306,6 +306,8 @@ globalThis.customElements?.define(
 
         return true;
       } catch (error) {
+        console.error(error);
+
         for (const type of reactionTypes) {
           this.renderCount(type, "-");
         }
