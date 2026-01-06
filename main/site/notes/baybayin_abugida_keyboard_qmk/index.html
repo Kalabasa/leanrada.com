@@ -3,17 +3,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="/notes/baybayin_abugida_keyboard_qmk/">
 <link rel="stylesheet" href="/common.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tagalog&display=swap" rel="stylesheet">
 <script defer src="/common.js"></script>
 
 <style>
+  @font-face {
+    font-family: "Tagalog";
+    font-style: normal;
+    font-weight: 400;
+    src: url("/fonts/tagalog/NotoSansTagalog-Regular.ttf") format("truetype");
+    unicode-range: U+1700-171F, U+1735-1736, U+200C-200D, U+25CC;
+  }
+
+  main {
+    font-family: var(--reading-font, sans-serif), "Tagalog";
+  }
+  code {
+    font-family: var(--default-font, monospace), "Tagalog";
+  }
+
   i[baybay] {
     display: inline-block;
     padding: 3px 8px;
     line-height: normal;
-    font-family: "Noto Sans Tagalog";
     background: #f202;
     border-radius: 6px;
     font-weight: bold;
@@ -116,16 +127,16 @@
   // initial consonant
   else if (curr_cons && !is_ng) {
     send_unicode(get_baybayin_unicode(keycode));
-    send_unicode("᜕"); // virama, because no vowel initially
+    send_unicode("◌᜕"); // virama, because no vowel initially
   }
   // vowel after consonant
   else if (curr_vowel && prev_cons) {
     backspace(); // remove the initial virama
 
     if (keycode == KEYCODE_I || keycode == KEYCODE_E) {
-      send_unicode("ᜒ");
+      send_unicode("◌ᜒ");
     } else if (keycode == KEYCODE_U || keycode == KEYCODE_O) {
-      send_unicode("ᜓ");
+      send_unicode("◌ᜓ");
     }
     // KEYCODE_A emits nothing since /a/ is the default vowel
   }
@@ -135,7 +146,7 @@
     backspace(); // remove virama
     backspace(); // remove ᜈ
     send_unicode("ᜅ");
-    send_unicode("᜕");
+    send_unicode("◌᜕");
   }
 
   prev_keycode = keycode;
@@ -160,7 +171,7 @@
 
 <p>The way the Unicode Consortium designed the encoding of the <a href="https://www.unicode.org/charts/nameslist/n_1700.html" target="_blank">Tagalog (Baybayin) Unicode block</a> made this solution pretty straightforward. The vowel-modifier diacritics are <strong>combining characters</strong>, which means they can just be output separately, right after the base character. There are no precomposed consonant-vowel symbols.</p>
 
-<pre style="text-align: center; font-size: 200%"><code>ᜆ +  ᜕ = ᜆ᜕</code></pre>
+<pre style="text-align: center; font-size: 200%"><code>ᜆ + ◌᜕ = ᜆ᜕</code></pre>
 
 <p>The word processing application or text renderer on the computer is what actually renders that sequence of characters as one combined symbol. In a way, one keypress still corresponds to one output character, except for a few special cases.</p>
 
@@ -240,11 +251,9 @@
           background: #222;
           animation: emit 0.1s backwards;
           &.diacritic {
-            font-size: 200%;
             background: #124;
           }
           &.backspace {
-            font-size: 200%;
             background: #411;
           }
           &.backtracked {
@@ -416,18 +425,21 @@
           const rt = document.createElement("rt");
           switch (name) {
             case "ᜒ":
-              rt.innerHTML = 'a→i';
+              ruby.prepend("◌");
+              rt.innerHTML = "a→i";
               break;
             case "ᜓ":
-              rt.innerHTML = 'a→u';
+              ruby.prepend("◌");
+              rt.innerHTML = "a→u";
               break;
             case "᜕":
-              rt.innerHTML = '<del>a</del>';
+              ruby.prepend("◌");
+              rt.innerHTML = "<del>a</del>";
               break;
             default:
               const roman = romanFromBaybayin(name);
               if (roman) {
-                rt.textContent = isConsonant(roman) ? roman + 'a' : roman;
+                rt.textContent = isConsonant(roman) ? roman + "a" : roman;
               }
               break;
           }
