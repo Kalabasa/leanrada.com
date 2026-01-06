@@ -11,7 +11,7 @@ const UPDATE_INTERVAL = 4 * 24 * 60 * 60_000;
 // don't smash the server
 let pendingFetch = Promise.resolve();
 
-export async function populateStats({ notes, existingNotes }) {
+export async function populateStats({ enable, notes, existingNotes }) {
   await Promise.all(
     notes
       .filter((note) => note.public)
@@ -22,7 +22,7 @@ export async function populateStats({ notes, existingNotes }) {
 
         if (
           existingNote?.stats &&
-          existingNote.stats._nextUpdate > Date.now()
+          (!enable || existingNote.stats._nextUpdate > Date.now())
         ) {
           note.stats = existingNote.stats;
           return;

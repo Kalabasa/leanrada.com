@@ -46,9 +46,11 @@ async function main() {
           maxSmartSuggestions: 3,
           maxSuggestions: 4,
         });
-        if (options["notes-stats"].enable) {
-          await populateStats({ notes, existingNotes });
-        }
+        await populateStats({
+          enable: options["notes-stats"].enable,
+          notes,
+          existingNotes,
+        });
         return notes;
       })().catch(fallback("notes"))
     ),
