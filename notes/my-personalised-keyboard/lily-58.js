@@ -1176,9 +1176,9 @@
           ).toString(16);
     switch (os.value) {
       case "linux":
-        return ["⌃⇧u", ...unicodeHex.split(""), "Enter"];
+        return ["⌃⇧", "u", ...unicodeHex.split(""), "Enter"];
       case "macos":
-        return ["⌥", "+", ...unicodeHex.split("")];
+        return ["⇧⌥", "=", ...unicodeHex.split("")];
       default:
         throw new Error("invalid os value", os);
     }
