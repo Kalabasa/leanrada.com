@@ -108,7 +108,7 @@ async function renderItem({ note, url, componentNames, siteDir }) {
     .concat(componentNames)
     .filter((tag) => !tag.includes("code-block"));
 
-  let content = ch("main.prose");
+  let content = ch("main");
   if (!content) {
     console.error("No content for page:", title);
     throw new Error("No content!");

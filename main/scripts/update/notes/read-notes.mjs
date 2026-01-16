@@ -45,7 +45,7 @@ export async function readNotes(siteDir) {
           })
           .toArray();
 
-        const content = ch("main.prose");
+        const content = ch("main");
         if (!content) {
           console.error("No content for page:", title);
           throw new Error("No content!");

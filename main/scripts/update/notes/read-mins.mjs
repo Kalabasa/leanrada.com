@@ -10,7 +10,7 @@ export async function rewriteReadMins({ dryRun = false, htmlFilePath }) {
   const info = ch("blog-post-info");
   if (!info) throw new Error("No <blog-post-info>!");
 
-  const content = ch("main.prose");
+  const content = ch("main");
   if (!content) throw new Error("No content!");
 
   const text = content.text();
