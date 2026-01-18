@@ -42,7 +42,10 @@ export function populateSuggestions({
       if (!other.href.startsWith("/notes/")) continue;
       if (item.public && !other.public) continue;
       if (item.suggestions.every((s) => s.href !== other.href)) {
-        item.suggestions.push({ href: other.href, reason: "next" });
+        const otherDate = new Date(other.date);
+        const newLocal = new Date(item.date);
+        const reason = otherDate < newLocal ? "older" : "next";
+        item.suggestions.push({ href: other.href, reason });
       }
     }
   }

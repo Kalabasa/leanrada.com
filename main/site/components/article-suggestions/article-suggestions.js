@@ -101,12 +101,13 @@ customElements.define(
 function renderReason(reason) {
   switch (reason) {
     case "ref":
-      return "Linked with this post";
+      return "Related post";
     case "tag":
-      return "Based on common tags";
+      return "Related tags";
+    case "older":
+      return "Older post";
     case "next":
-      return "Next post";
     default:
-      return "";
+      return "Next post";
   }
 }
