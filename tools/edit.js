@@ -45,7 +45,7 @@ function initControlPanel() {
           padding: 12px;
         }
       }
-      *:hover:not(:has(:hover), :focus) {
+      :not(:has(:focus) *):hover {
         outline: 1px #afd dotted;
         &#controlPanel,
         #controlPanel &,
@@ -54,7 +54,7 @@ function initControlPanel() {
         }
       }
       [contenteditable]:focus {
-        outline: 1px #0f9 dotted;
+        outline: 1px #f00 dotted;
       }
     </style>
   `;
@@ -326,29 +326,38 @@ function initSelection() {
   }
 
   document.addEventListener("mousedown", ({ target }) => {
-    if (locked) return;
-    if (!isEditable(target)) return;
-    if (lastSelection === target) return;
+    const typingTarget = findTypingTarget(target);
+    console.log({lastSelection, target, typingTarget});
+
+    if (!isEditable(typingTarget)) return;
+    if (lastSelection === typingTarget) return;
 
     resetLastSelection();
 
     if (locked) return;
 
-    refreshFromSource(target, "inner");
+    refreshFromSource(typingTarget, "inner");
   });
 
-  document.addEventListener("click", ({ target }) => {
-    if (!isEditable(target)) return;
-    if (lastSelection === target) return;
+  document.addEventListener("mouseup", ({ target }) => {
+    const typingTarget = findTypingTarget(target);
+    console.log({lastSelection, target, typingTarget});
+
+    if (!isEditable(typingTarget)) return;
+    if (lastSelection === typingTarget) return;
 
     resetLastSelection();
 
     if (locked) return;
 
-    lastSelection = target;
-    target.contentEditable = true;
-    target.focus();
+    lastSelection = typingTarget;
+    typingTarget.contentEditable = true;
+    typingTarget.focus();
   });
+}
+
+function findTypingTarget(node) {
+  return node.closest(":has(p):not(:has(main))") ?? node;
 }
 
 function isEditable(node) {
