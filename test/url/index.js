@@ -1,14 +1,18 @@
-const http = require("http");
-const fs = require("fs/promises");
+const fs = require("node:fs/promises");
+const path = require("node:path");
+const childProcess = require("node:child_process");
 const cheerio = require("cheerio");
-const path = require("path");
 
-const ORIGIN = "http://localhost:8000";
+const port = 4567
+const origin = "http://localhost:" + port;
+
+snapshot();
 
 async function snapshot() {
+  let devServer;
   try {
-    console.log("Crawl Report\n============");
-    
+    devServer = await setupDevServer(devServer);
+
     const seedUrlsPath = path.join(__dirname, "seed");
     const snapshotPath = path.join(__dirname, 'snapshot');
 
@@ -25,19 +29,17 @@ async function snapshot() {
     while (queue.length > 0) {
       const urlPath = queue.shift();
 
-      if (visited.has(urlPath)) {
-        continue;
-      }
+      if (visited.has(urlPath)) continue;
       visited.add(urlPath);
       
-      const currentPageUrl = new URL(urlPath, ORIGIN).href;
-      console.log(`\nCrawling: ${currentPageUrl}`);
+      const currentPageUrl = new URL(urlPath, origin).href;
+      console.log(`crawl: ${currentPageUrl}`);
 
-      const { statusCode, body } = await fetchUrl(currentPageUrl);
-      results.set(urlPath, statusCode);
+      const { status, text } = await fetchUrl(currentPageUrl);
+      results.set(urlPath, status);
 
-      if (statusCode === 200 && body) {
-        const $ = cheerio.load(body);
+      if (status === 200 && text) {
+        const $ = cheerio.load(text);
 
         const base = $("base").attr("href");
         const baseUrl = base ? new URL(base, currentPageUrl).href : currentPageUrl;
@@ -48,17 +50,17 @@ async function snapshot() {
           const absoluteUrl = new URL(href, baseUrl);
           const resolvedPath = absoluteUrl.pathname + absoluteUrl.search; // No fragment
 
-          let logMessage = `  Found ${tagName}: href="${href}" -> Resolved: ${absoluteUrl.href}`;
+          let logMessage = `  <${tagName} href="${href}"> : ${absoluteUrl.href}`;
 
-          if (absoluteUrl.origin === ORIGIN) {
+          if (absoluteUrl.origin === origin) {
             if (!visited.has(resolvedPath)) {
               queue.push(resolvedPath);
-              logMessage += " (Queued)";
+              logMessage += " (queued)";
             } else {
-              logMessage += " (Skipped - Already Visited)";
+              logMessage += " (skipped - visited)";
             }
           } else {
-            logMessage += " (Skipped - External)";
+            logMessage += " (skipped - external)";
           }
           console.log(logMessage);
         });
@@ -70,26 +72,41 @@ async function snapshot() {
       .map(([url, code]) => `${code} ${url}`);
     await fs.writeFile(snapshotPath, lines.join("\n"));
     console.log(`\nSnapshot created successfully with ${results.size} URLs.`);
-
-  } catch (error)
-   {
-    console.error("An error occurred:", error);
+  } catch (error) {
+    console.error(error);
     process.exit(1);
+  } finally {
+    devServer?.kill();
   }
 }
 
-const fetchUrl = (url) => {
-  return new Promise((resolve) => {
-    const req = http.request(url, (res) => {
-      let body = "";
-      res.on("data", chunk => body += chunk);
-      res.on("end", () => resolve({ statusCode: res.statusCode, body }));
-    });
-    req.on("error", () => {
-      resolve({ statusCode: "ERROR", body: "" });
-    });
-    req.end();
-  });
+async function fetchUrl(url) {
+  try {
+    const res = await fetch(url);
+    return {
+      status: res.status,
+      text: await res.text(),
+    };
+  } catch (e) {
+    console.error(e);
+    return { status: "ERR", text: "" };
+  }
 };
 
-snapshot();
+async function setupDevServer(devServer) {
+  const devServerReady = Promise.withResolvers();
+
+  devServer = childProcess.spawn("node", ["lat", "dev", `--port=${port}`, "main"]);
+  devServer.stdout.on("data", data => {
+    if (data.toString().includes(origin)) {
+      devServerReady.resolve();
+    }
+  });
+
+  const devServerTmeout = setTimeout(() => devServerReady.resolve(), 5000);
+  await devServerReady;
+  clearTimeout(devServerTmeout);
+
+  await new Promise(r => setTimeout(r, 100));
+  return devServer;
+}
