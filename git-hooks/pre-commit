@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
+# Metadata checks
+# ===============
+
 ALLOWED_FIELDS="Orientation ImageWidth ImageHeight ThumbnailOffset ThumbnailLength XResolution YResolution ResolutionUnit ColorSpace YCbCrPositioning BitsPerSample Compression PhotometricInterpretation SamplesPerPixel ExifVersion SubfileType Copyright Rss"
-
 FOUND_METADATA=0
-
 FILES=$(git diff --cached --name-only --diff-filter=ACM)
-
 for FILE in $FILES; do
     if [ -f "$FILE" ]; then
         META=$(exiftool -s -EXIF:all -XMP:all "$FILE" | sed -e "s/^\([[:alnum:]]*\).*/\1/g" | grep -vE "$(echo $ALLOWED_FIELDS | tr " " "|")")
@@ -17,10 +17,18 @@ for FILE in $FILES; do
         fi
     fi
 done
-
 if [ $FOUND_METADATA -eq 1 ]; then
     echo "🚫 Commit blocked due to sensitive metadata."
     exit 1
+fi
+
+# Automated tests
+# ===============
+
+node test/url >git-hooks/pre-commit.log 2>&1
+if ! git diff --quiet -- test/url/snapshot; then
+  echo "🚫 URL snapshot files changed. Commit aborted."
+  exit 1
 fi
 
 exit 0

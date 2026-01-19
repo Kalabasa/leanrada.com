@@ -1,11 +1,11 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const childProcess = require("node:child_process");
-const cheerio = require("cheerio");
 
 const port = 4567
 const origin = "http://localhost:" + port;
 
+const shouldLog = !process.stdout.isTTY;
 snapshot();
 
 async function snapshot() {
@@ -22,48 +22,53 @@ async function snapshot() {
       .split("\n").filter(Boolean)
       .map(line => line.split(" ", 2)[1]).filter(Boolean);
 
-    const queue = [...snapshotUrls, ...seedUrls];
+    const queue = new Map([...snapshotUrls, ...seedUrls].map(value => [value, value]));
     const visited = new Set();
     const results = new Map();
 
-    while (queue.length > 0) {
-      const urlPath = queue.shift();
+    const baseHrefRegex = makeHrefRegex(["base"]);
+    const hrefRegex = makeHrefRegex(["a", "link"]);
+
+    // OPTIMISATION: SHARED RESULT OBJECT. DO NOT USE CONCURRENTLY!
+    const SHARED_result = {};
+
+    while (queue.size > 0) {
+      const urlPath = queue.keys().next().value;
+      queue.delete(urlPath);
 
       if (visited.has(urlPath)) continue;
       visited.add(urlPath);
       
       const currentPageUrl = new URL(urlPath, origin).href;
-      console.log(`crawl: ${currentPageUrl}`);
+      if (shouldLog) console.log(`crawl: ${currentPageUrl}`);
 
-      const { status, text } = await fetchUrl(currentPageUrl);
-      results.set(urlPath, status);
+      await fetchUrl(currentPageUrl, SHARED_result);
+      results.set(urlPath, SHARED_result.status);
 
-      if (status === 200 && text) {
-        const $ = cheerio.load(text);
+      if (SHARED_result.status === 200 && SHARED_result.text) {
+        baseHrefRegex.lastIndex = 0;
+        const baseHref = getMatchHref(baseHrefRegex.exec(SHARED_result.text));
+        const baseUrl = baseHref ? new URL(baseHref, currentPageUrl).href : currentPageUrl;
 
-        const base = $("base").attr("href");
-        const baseUrl = base ? new URL(base, currentPageUrl).href : currentPageUrl;
-
-        $("a[href], area[href], link[rel='canonical'][href]").each((i, el) => {
-          const href = $(el).attr("href");
-          const tagName = el.tagName.toLowerCase();
+        const hrefMatches = SHARED_result.text.matchAll(hrefRegex);
+        for (const m of hrefMatches) {
+          const href = getMatchHref(m);
           const absoluteUrl = new URL(href, baseUrl);
           const resolvedPath = absoluteUrl.pathname + absoluteUrl.search; // No fragment
 
-          let logMessage = `  <${tagName} href="${href}"> : ${absoluteUrl.href}`;
-
+          let extraLog = "";
           if (absoluteUrl.origin === origin) {
             if (!visited.has(resolvedPath)) {
-              queue.push(resolvedPath);
-              logMessage += " (queued)";
+              queue.set(resolvedPath, resolvedPath);
+              if (shouldLog) extraLog = " (queued)";
             } else {
-              logMessage += " (skipped - visited)";
+              if (shouldLog) extraLog = " (skipped - visited)";
             }
           } else {
-            logMessage += " (skipped - external)";
+            if (shouldLog) extraLog = " (skipped - external)";
           }
-          console.log(logMessage);
-        });
+          if (shouldLog) console.log(`  ${href} : ${absoluteUrl.href}${extraLog}`);
+        }
       }
     }
 
@@ -71,42 +76,76 @@ async function snapshot() {
       .sort(([urlA,], [urlB,]) => urlA.localeCompare(urlB, "en"))
       .map(([url, code]) => `${code} ${url}`);
     await fs.writeFile(snapshotPath, lines.join("\n"));
-    console.log(`\nSnapshot created successfully with ${results.size} URLs.`);
+    if (shouldLog) console.log(`\nSnapshot created successfully with ${results.size} URLs.`);
+
+    devServer?.kill();
+    devServer?.unref();
+    process.exit(0); // Don't wait for setTimeouts
   } catch (error) {
     console.error(error);
-    process.exit(1);
-  } finally {
     devServer?.kill();
+    devServer?.unref();
+    process.exit(1);
   }
 }
 
-async function fetchUrl(url) {
+function makeHrefRegex(tagNames) {
+  const tags = tagNames.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  return new RegExp(
+    `<(?:${tags})\\b[^>]*?\\bhref\\s*?=\\s*?(?:"([^"]*?)"|'([^']*?)'|([^\\s>]+?))`,
+    'gi'
+  );
+}
+
+function getMatchHref(match) {
+  return match && (match[1] ?? match[2] ?? match[3]);
+}
+
+async function fetchUrl(url, result = {}) {
+  const abortController = new AbortController();
   try {
-    const res = await fetch(url);
-    return {
-      status: res.status,
-      text: await res.text(),
-    };
-  } catch (e) {
-    console.error(e);
-    return { status: "ERR", text: "" };
+    let attempts = 5;
+    while (attempts > 0) {
+      try {
+        const res = await fetch(url, { signal: abortController.signal });
+        const isHtml = res.headers.get("Content-Type")?.startsWith("text/html");
+        result.status = res.status;
+        result.text = isHtml ? await res.text() : "";
+        return result;
+      } catch (e) {
+        attempts--;
+        await delay(100);
+      }
+    }
+    result.status = "ERR";
+    result.text = "";
+    return result;
+  } finally {
+    abortController.abort();
   }
-};
+}
 
 async function setupDevServer(devServer) {
   const devServerReady = Promise.withResolvers();
 
-  devServer = childProcess.spawn("node", ["lat", "dev", `--port=${port}`, "main"]);
+  devServer = childProcess.spawn("node", ["lat", "dev", `--port=${port}`, "main"], {
+    detached: true,
+  });
   devServer.stdout.on("data", data => {
     if (data.toString().includes(origin)) {
       devServerReady.resolve();
     }
   });
+  devServer.stderr.on("data", data => {
+    console.error("[SERVER]", data.toString());
+  });
 
-  const devServerTmeout = setTimeout(() => devServerReady.resolve(), 5000);
-  await devServerReady;
-  clearTimeout(devServerTmeout);
+  await Promise.race([devServerReady, delay(5000)]);
 
-  await new Promise(r => setTimeout(r, 100));
+  await delay(50);
   return devServer;
+}
+
+function delay(ms) {
+  return new Promise(r => setTimeout(r, ms))
 }
