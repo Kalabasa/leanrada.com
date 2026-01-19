@@ -15,3 +15,7 @@ export function colorQuote(str) {
 export function colorError(str) {
   return chalk.redBright(str);
 }
+
+export function colorVerbose(str) {
+  return chalk.dim(str);
+}
