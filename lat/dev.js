@@ -3,7 +3,7 @@ import fs from "node:fs";
 import express from "express";
 import { getProjects } from "./util/get_projects.js";
 import path from "node:path";
-import { colorInfo, colorVerbose } from "./util/colors.js";
+import { colorError, colorInfo, colorVerbose } from "./util/colors.js";
 
 export function runDevServer(port) {
   const projects = getProjects().sort(
@@ -18,7 +18,7 @@ export function runDevServer(port) {
       sitePathPrefix,
       path.resolve(sitePathPrefix, "*"),
     ];
-    app.get(route, (req, res) => {
+    app.get(route, (req, res, next) => {
       const reqPath = normalizeReqPath(req.path);
 
       let siteRelPath = path.relative(
@@ -26,22 +26,25 @@ export function runDevServer(port) {
         decodeURIComponent(reqPath)
       );
 
-      try {
-        if (fs.statSync(getFsPath(project, siteRelPath)).isDirectory()) {
-          siteRelPath = path.relative(
-            sitePathPrefix,
-            path.join(reqPath, "index.html")
-          );
+      if (fs.statSync(getFsPath(project, siteRelPath), { throwIfNoEntry: false })?.isDirectory()) {
+        siteRelPath = path.relative(
+          sitePathPrefix,
+          path.join(reqPath, "index.html")
+        );
+      }
+
+      res.sendFile(getFsPath(project, siteRelPath), (err) => {
+        if (err) {
+          res.sendStatus(404);
+          if (req.method !== "HEAD") {
+            console.log(colorInfo(req.method), req.path, colorError("404"));
+          }
+        } else {
+          if (req.method !== "HEAD") {
+            console.log(colorInfo(req.method), req.path, colorVerbose(siteRelPath));
+          }
         }
-      } catch (e) {
-        console.log(e);
-      }
-
-      if (req.method !== "HEAD") {
-        console.log(colorInfo(req.method), req.path, colorVerbose(siteRelPath));
-      }
-
-      res.sendFile(getFsPath(project, siteRelPath));
+      });
     });
   }
 
