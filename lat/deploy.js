@@ -98,7 +98,9 @@ function generateCommands({
               .startsWith("..")
         )
         .map((project) => "/" + project.sitePathPrefix),
-      targetProject.excludePattern,
+      ...(Array.isArray(targetProject.excludePattern)
+        ? targetProject.excludePattern
+        : [targetProject.excludePattern]),
     ]
       .filter((path) => path)
       .map((path) => ` --exclude '${path}'`)
