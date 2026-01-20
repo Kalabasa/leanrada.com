@@ -75,7 +75,7 @@ async function snapshot() {
     const lines = Array.from(results.entries())
       .sort(([urlA,], [urlB,]) => urlA.localeCompare(urlB, "en"))
       .map(([url, code]) => `${code} ${url}`);
-    await fs.writeFile(snapshotPath, lines.join("\n"));
+    await fs.writeFile(snapshotPath, lines.join("\n") + "\n");
     if (shouldLog) console.log(`\nSnapshot created successfully with ${results.size} URLs.`);
 
     devServer?.kill();
