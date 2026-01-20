@@ -26,8 +26,8 @@ async function snapshot() {
     const visited = new Set();
     const results = new Map();
 
-    const baseHrefRegex = makeHrefRegex(["base"]);
-    const hrefRegex = makeHrefRegex(["a", "link"]);
+    const baseHrefRegex = makeHrefRegex("base");
+    const hrefRegex = makeHrefRegex();
 
     // OPTIMISATION: SHARED RESULT OBJECT. DO NOT USE CONCURRENTLY!
     const SHARED_result = {};
@@ -89,10 +89,10 @@ async function snapshot() {
   }
 }
 
-function makeHrefRegex(tagNames) {
-  const tags = tagNames.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+function makeHrefRegex(tagName) {
+  const prefix = tagName ? `<(?:${tagName})\\s+?` : `<[^>]+?\\b`;
   return new RegExp(
-    `<(?:${tags})\\b[^>]*?\\bhref\\s*?=\\s*?(?:"([^"]*?)"|'([^']*?)'|([^\\s>]+?))`,
+    `${prefix}href\\s*?=\\s*?(?:"([^"]*?)"|'([^']*?)'|([^\\s"'=<>\`]+?))`,
     'gi'
   );
 }
