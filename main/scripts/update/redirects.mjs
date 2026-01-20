@@ -11,6 +11,7 @@ const { siteDir } = initScript();
 // [from, to?]
 const redirects = [
   ["works", "wares/"],
+  ["works/miniforts", "wares/miniforts/"],
   ["works/miniforts.html", "wares/miniforts/"],
 ];
 
@@ -22,7 +23,6 @@ async function main() {
   let expandedRedirects = new Map();
 
   for (const [from, to] of redirects) {
-    console.log(path.resolve(siteDir, to));
     const toFiles = glob.sync(path.resolve(siteDir, to));
 
     if (!toFiles.length) {
@@ -73,11 +73,11 @@ async function main() {
         console.log("Generating redirect for", chalk.yellow(from));
         console.log("            pointing to", chalk.cyan(to));
 
-        const html = `<meta http-equiv="refresh" content="0; url=/${to}">`;
+        const html = `<link rel="canonical" href="/${to}"><meta http-equiv="refresh" content="0; url=/${to}">`;
 
-        const isFromIndexFile = from.endsWith("/index.html");
+        const isFromHtmlFile = from.endsWith(".html");
 
-        const outPath = path.resolve(siteDir, from, isFromIndexFile ? "" : "index.html");
+        const outPath = path.resolve(siteDir, from, isFromHtmlFile ? "" : "index.html");
         const outDir = path.dirname(outPath);
         if (dryRun) {
           const cwd = process.cwd();
@@ -88,10 +88,7 @@ async function main() {
           ));
         } else {
           await fs.promises.mkdir(outDir, { recursive: true });
-          await Promise.all([
-            fs.promises.writeFile(path.resolve(outDir, ".generated"), ""),
-            fs.promises.writeFile(outPath, html)
-          ]);
+          await fs.promises.writeFile(outPath, html);
         }
       })
   );
