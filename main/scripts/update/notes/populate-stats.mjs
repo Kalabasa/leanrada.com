@@ -21,10 +21,10 @@ export async function populateStats({ enable, notes, existingNotes }) {
         );
 
         if (
-          existingNote?.stats &&
-          (!enable || existingNote.stats._nextUpdate > Date.now())
+          !enable ||
+          existingNote?.stats?._nextUpdate > Date.now()
         ) {
-          note.stats = existingNote.stats;
+          note.stats = existingNote?.stats;
           return;
         }
 

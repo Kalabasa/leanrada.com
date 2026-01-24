@@ -35,6 +35,7 @@ export function runDevServer(port) {
 
       res.sendFile(getFsPath(project, siteRelPath), (err) => {
         if (err) {
+          res.statusCode = 404;
           res.end();
           if (req.method !== "HEAD") {
             console.log(colorInfo(req.method), req.path, colorError("404"));

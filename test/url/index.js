@@ -129,6 +129,7 @@ async function setupDevServer(devServer) {
   const devServerReady = Promise.withResolvers();
 
   devServer = childProcess.spawn("node", ["lat", "dev", `--port=${port}`, "main"], {
+    cwd: path.resolve(__dirname, "..", ".."),
     detached: true,
   });
   devServer.stdout.on("data", data => {
