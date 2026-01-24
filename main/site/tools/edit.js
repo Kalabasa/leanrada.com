@@ -270,6 +270,12 @@ function initMutationObserver() {
   });
 }
 
+/**
+ * @param {Object} cr 
+ * @param {HTMLElement} cr.target
+ * @param {Node|null} cr.previousSibling
+ * @param {Node|null} cr.nextSibling
+ */
 function reformat(cr) {
   if (cr.target.tagName !== "MAIN") return;
 
