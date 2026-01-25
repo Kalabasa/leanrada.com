@@ -7,6 +7,139 @@
     <atom:link href="https://leanrada.com/rss.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title><![CDATA[Cool URLs don’t change with snapshot testing]]></title>
+      <link><![CDATA[https://leanrada.com/notes/cool-urls-with-snapshot-testing/?ref=rss]]></link>
+      <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/cool-urls-with-snapshot-testing/?ref=rss]]></guid>
+      <pubDate>Sun, 25 Jan 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[
+<p>I wrote automated tests to keep track of my site’s URLs and prevent links from breaking.</p>
+
+<p>When I reorganised my site, I changed a lot of URLs and broke some inbound links. Now that more and more sites have started linking to my site, I don’t want to inadvertently break links again.</p>
+<blockquote><a href="https://www.w3.org/Provider/Style/URI" target="_blank">Cool URIs don't change</a><cite>Tim Berners-Lee (1998)</cite></blockquote>
+<p>This post is NOT about <em>how</em> to implement <a href="https://thehistoryoftheweb.com/cool-urls-mean-something/" target="_blank">‘cool URLs’</a>. Too many ways to do that depending on the site’s setup and the site’s philosophy even. Rather, this post is about ensuring cool URLs — a <i>contract</i> to guarantee that published URLs continue to work. It doesn’t matter <em>how</em> your specific site implementation fulfil that contract.</p>
+
+<p>There already exists a contract: a <em>social contract</em> when you publish a webpage. Other people can link to your URL on their sites, and you can link to other people’s content on your site in return. And we expect these inbound and outbound links to work, otherwise the World Wide Web would be pretty boring to browse.</p>
+
+<p>A stronger contract is to treat URLs as a public API. Once published, it becomes an interface other people depend on. Changing it is a breaking change, just like changing a function signature.</p>
+
+<p>If it’s an API, can we perhaps run automated tests against it?</p>
+
+<h2>Testing URLs automatically</h2>
+
+<p>Your website could be a static site, a Java Spring Boot thing, or a PHP server, it doesn’t matter as long as it serves HTML over HTTP.</p>
+
+<p>Essentially, the test is to fetch each URL off a list of known URLs and check expected responses.</p>
+
+<pre><code>test.each([
+  ['/', 200],
+  ['/about', 200],
+  ['/about/', 200],
+  ['/signin', 301, '/login'],
+  ['/news', 302, '/en-US/news'],
+  ['/api/ping', 204],
+  ['/dashboard', 403],
+  ['/secret', 404],
+])('%s %i', async (path, status, location) =&gt; {
+  const res = await fetch(base + path, { redirect: 'manual' });
+  expect(res.status).toBe(status);
+  if (location) expect(res.headers.get('location')).toBe(location);
+});</code></pre>
+
+<p>But manually writing a test case for every URL would be a pain. Updating tests is also tedious. This is where snapshot testing comes in.</p>
+
+<h2>Snapshot testing</h2>
+
+<p>The easiest way to do this is via <a href="https://jestjs.io/docs/snapshot-testing" target="_blank">snapshot testing</a> (or <a href="https://ro-che.info/articles/2017-12-04-golden-tests" target="_blank">golden tests</a>).</p>
+
+<p>Snapshot testing takes a record of the system’s behaviour and saves that as a baseline or ‘golden file’ against which future versions of the system are compared.</p>
+
+<p>In my case, the snapshot is the set of URLs my site serves. A ‘snap’ involves a <a href="https://en.wikipedia.org/wiki/Web_crawler" target="_blank">crawler</a> gathering all the URLs and writing them to a text file. Unlike snapshot testing approaches that inline values in the test code, I prefer to keep this snapshot as a separate artifact so changes can be reviewed more easily.</p>
+
+<pre><code>/
+/about/
+/notes/
+/wares/
+/wares/pong-ai/
+...and so on...
+</code></pre>
+
+<p>Then when I make refactors or any code change, I can run the crawler again and compare the snapshots. Any difference to the baseline is treated as a breaking change unless explicitly approved.</p>
+
+<p>The interesting part is using git to turn that comparison into an enforced check.</p>
+
+<h2>Snapshot testing with git</h2>
+
+<p>With git, I don’t actually need to ‘write tests’ or use a testing framework.</p>
+
+<p>git is the testing framework.</p>
+
+<ul>
+  <li>To run tests, run the crawler and check the <a href="https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---exit-code" target="_blank">exit code</a> of <code>git diff --quiet -- path/to/snapshot</code>.
+  </li><li>To debug failures, <code>git diff</code> can show me the <span>expected</span> and <span>actual</span> values, just like a testing framework.
+  </li><li>To approve changes to the baseline, I commit the snapshot file.
+</li></ul>
+
+<p>Preventing accidental changes is the real goal, so a <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks" target="_blank">pre-commit hook</a> is set up to abort commits when the snapshot contains an unapproved change.</p>
+
+<pre><code># pre-commit
+./tests/my-crawler &gt;git-hooks/pre-commit.log 2&gt;&amp;1
+if ! git diff --quiet -- tests/url-snapshot; then
+  echo "URL snapshot file changed. Commit aborted."
+  exit 1
+fi</code></pre>
+
+<p>With this, any change to URLs must be intentional, like with public APIs. It’s like URLs as versioned public API.</p>
+
+<p>If I wanted to restructure my site again, I now have a way to check how existing URLs would have been taken care of (e.g. redirected).</p>
+
+<p>As a bonus, this also helps prevent me from accidentally publishing draft posts (which I’ve done a few times)!</p>
+
+<h2>Other notes</h2>
+
+<ul>
+  <li>
+    It’s like Page Indexing tracking in Google Search Console.
+    <figure>
+      <img src="https://leanrada.com/notes/cool-urls-with-snapshot-testing/google-search-console.png?ref=rss" alt="Screenshot of Google Search Console showing indexed URLs" loading="lazy" width="904" height="360">
+      <figcaption>This used to tell me when a URL suddenly goes 404 or something.</figcaption>
+    </figure>
+  </li>
+  <li>
+    Status code can be included in the snapshot so it can explicitly keep track of unreachable URLs (which by definition, won’t be crawled).
+    <code-block language="text">
+      <pre><code>200 /
+200 /about/
+200 /notes/
+200 /wares/
+404 /portfolio/
+...and so on...</code></pre>
+    </code-block>
+  </li>
+  <li>The crawler can even use the snapshot itself as starting points for the crawl, instead of starting from just the root <code>/</code>. This way, the snapshot does not forget URLs. Once published, a URL is either a 200 or a 404. It’s like bookmarking every page on your site.</li>
+  <li>This could be extended to track other page properties as well, such as the canonical URL. Anything that is often overlooked or auto-generated that you might want to review before deploying.</li>
+</ul>
+
+<h2>Applicability to different kinds of websites (in order)</h2>
+
+<p>For static <strong>plain HTML</strong> sites like mine, it’s probably not going to be very useful. URLs change only when you move HTML files around. No surprises here. But since I tend to forget about things and refactor stuff for the fun of it, this will still be a good thing as a self-imposed rule for future me (<i>a contract with myself?</i>).</p>
+<box-note>I have broken the CSS on this site countless times due to CSS refactors. I’ve been meaning to do <em>visual</em> snapshot testing to keep refactors at bay but visual snapshot testing is noisy, not to mention slow. Definitely not a pre-commit thing.</box-note>
+<p>On the other hand, for sites made with <a href="https://en.wikipedia.org/wiki/Static_site_generator" target="_blank">static site builders</a>, explicitly reviewing changes to site structure could be better than relying on assumptions about the internal route-generation logic of the site generator. This is if you’re not already checking in the generated files in source control, at which point the URL snapshot is kinda redundant.</p>
+
+<p>For a complex site with <strong>servers</strong>, rewrite rules, frameworks, or proxies, a version of this snapshotting routine could be set up to help prevent unwanted changes, but it couldn’t be git-based anymore if you have database-driven or otherwise dynamic URLs.</p>
+
+<p>Sites based on client-side routing won’t work at all, unless the crawler is more advanced and can execute JS (hard).</p>
+
+<h2>Closing notes</h2>
+
+<p>Treats URLs as versioned, reviewable artifacts. Once published, they stop being an implementation detail and start being something you should consciously maintain.</p>
+
+<p>URL mappings are often treated as emergent properties of a web server (nested routes? wildcard routes?) or a site generator’s build system. An explicit exhaustive URL listing makes them more tangible.</p>
+
+<p>I wrote a lot about testing and APIs and philosophy but in the end it’s basically a crawler sitemap + git. :D</p>
+]]></description>
+    </item>
+
+    <item>
       <title><![CDATA[Implementing a Baybayin abugida input method on keyboard hardware]]></title>
       <link><![CDATA[https://leanrada.com/notes/baybayin_abugida_keyboard_qmk/?ref=rss]]></link>
       <guid isPermaLink="true"><![CDATA[https://leanrada.com/notes/baybayin_abugida_keyboard_qmk/?ref=rss]]></guid>
@@ -3423,139 +3556,7 @@ This card is live ;)<br>That’s my current max streak.
             <guid isPermaLink="true">https://leanrada.com/notes/get-duolingo-streak?ref=rss</guid>
             <pubDate>Wed, 07 Feb 2024 00:00:00 GMT</pubDate>
         </item>
-        <item>
-            <title><![CDATA[Writing a single-file website with Rust]]></title>
-            <description><![CDATA[
-<p>At the company I work for, there is something called a “professional education leave”, which lets me take a day off to learn something new or attend conferences or whatever professional education means. I took the opportunity to learn the <a target="_blank" href="https://www.rust-lang.org/"><strong>Rust</strong><span>🡵</span></a> programming language.</p>
-
-<p>I didn’t want to follow tutorials, so I thought of a project to learn with, which ended up being “make a single-file website web server”. It was inspired by the article <a target="_blank" href="https://j3s.sh/thought/my-website-is-one-binary.html"><strong>my website is one binary</strong> by j3s<span>🡵</span></a>.</p>
-
-<h2 id="rust-first-impressions">Rust first impressions</h2>
-
-<pre><code>fn <span>main</span><span>(</span><span>)</span> <span>{</span>
-  println<span>!</span><span>(</span><span>"Hello World!"</span><span>)</span><span>;</span>
-<span>}</span></code></pre>
-
-<p>My first impression was that it is a mature programming language that is crazy about compile-time stuff. For example, the above <code>println!</code> call is a <em>macro</em>, which expands to something more verbose… Apparently, with macros you can also make full-blown <a target="_blank" href="https://doc.rust-lang.org/rust-by-example/macros/dsl.html">DSL<span>🡵</span></a>s that are directly embedded in Rust code.</p>
-
-<p>The <code>rustc</code> compiler’s error messages were very good.</p>
-
-<p>I think I haven’t really dived deep enough to discover the standout features that I keep hearing about like memory management safety. So unfortunately I didn’t get the hype at this time.</p>
-
-<h2 id="building-a-web-server">Building a web server</h2>
-
-<p>The standard Rust library provides a TCP module, but no HTTP one. So it’s a level lower than NodeJS, which is understandable.</p>
-
-<p>I didn’t want to implement the HTTP protocol, so I searched for an HTTP library.</p>
-
-<p>I found <a target="_blank" href="https://github.com/tomaka/rouille"><strong>rouille</strong><span>🡵</span></a>, a web micro-framework. I installed it via <code>cargo</code> which is like <code>npm</code> but for Rust.</p>
-
-<p>It was really easy to get it set up and running.</p>
-
-<p>For starters, I made two pages: <code>/</code> and <code>/about</code>.</p>
-
-<pre><code><span>// main.rs</span>
-use rouille<span>:</span><span>:</span>Response<span>;</span>
-use rouille<span>:</span><span>:</span>router<span>;</span>
-
-mod pages <span>{</span>
-  pub mod index<span>;</span>
-  pub mod about<span>;</span>
-<span>}</span>
-
-fn <span>main</span><span>(</span><span>)</span> <span>{</span>
-  rouille<span>:</span><span>:</span><span>start_server</span><span>(</span><span>"0.0.0.0:8080"</span><span>,</span> move <span>|</span>request<span>|</span> <span>{</span>
-    let response <span>=</span> router<span>!</span><span>(</span>request<span>,</span>
-      <span>(</span>GET<span>)</span> <span>(</span><span>/</span><span>)</span> <span>=</span><span>&gt;</span> <span>{</span>
-        pages<span>:</span><span>:</span>index<span>:</span><span>:</span><span>page</span><span>(</span>request<span>)</span>
-      <span>}</span><span>,</span>
-
-      <span>(</span>GET<span>)</span> <span>(</span><span>/</span>about<span>)</span> <span>=</span><span>&gt;</span> <span>{</span>
-        pages<span>:</span><span>:</span>about<span>:</span><span>:</span><span>page</span><span>(</span>request<span>)</span>
-      <span>}</span><span>,</span>
-
-      _ <span>=</span><span>&gt;</span> Response<span>:</span><span>:</span><span>empty_404</span><span>(</span><span>)</span>
-    <span>)</span><span>;</span>
-
-    <span>return</span> response<span>;</span>
-  <span>}</span><span>)</span><span>;</span>
-<span>}</span></code></pre>
-
-<p>Notice the <code>router!</code> macro! Apparently it allows me to write <code>GET</code> and the routes <code>/</code> and <code>/about</code> plainly into code. Those aren’t strings! Nor are they Rust keywords! It’s macro magic. It’s even more magical than Kotlin’s lambdas. I think this is a powerful but dangerous tool which could make learning Rust codebases harder. I like it though. Instead of parsing these routes at runtime, errors can be caught at compile time.</p>
-
-<h2 id="rust-modules">Rust modules</h2>
-
-<p>One little snag was that Rust’s module system was a little confusing, coming from ES6 where everything is explicit.</p>
-
-<p>In Rust, modules map to files. Module naming and hierarchy follows the filesystem structure.</p>
-
-<p>I didn’t fully understand modules properly but it seems that I can use the <code>mod</code> keyword to import modules. And that was enough knowledge to proceed with the project.</p>
-
-<p>In the above code I separated the code that renders the pages into separate files in <code>pages/index.rs</code> and <code>pages/about.rs</code>. To import them in the main file, I had this declaration at the top:</p>
-
-<pre><code>mod pages <span>{</span>
-  pub mod index<span>;</span>
-  pub mod about<span>;</span>
-<span>}</span></code></pre>
-
-<p>As I defined a top-level <code>page()</code> function in each of these files, calling them from the main file would be something like this: <code>pages::index::page(request)</code>.</p>
-
-<h2 id="rendering-html">Rendering HTML</h2>
-
-<p>The top-level <code>page</code> functions simply return static HTML <code>Response</code>s for now.</p>
-
-<p>Here’s one that handles the root <code>/</code> route:</p>
-
-<pre><code><span>// pages/index.rs</span>
-use rouille<span>:</span><span>:</span>Request<span>;</span>
-use rouille<span>:</span><span>:</span>Response<span>;</span>
-
-pub fn <span>page</span><span>(</span>_request<span>:</span> <span>&amp;</span>Request<span>)</span> <span>-</span><span>&gt;</span> Response <span>{</span>
-  <span>return</span> Response<span>:</span><span>:</span><span>html</span><span>(</span>r#"<span>&lt;</span><span>!</span>doctype html<span>&gt;</span>
-    <span>&lt;</span>title<span>&gt;</span>Tiny site<span>&lt;</span><span>/</span>title<span>&gt;</span>
-    <span>&lt;</span>h1<span>&gt;</span>Hello<span>,</span> world<span>!</span><span>&lt;</span><span>/</span>h1<span>&gt;</span>
-    <span>&lt;</span>p<span>&gt;</span>Welcome to my tiny site<span>!</span><span>&lt;</span><span>/</span>p<span>&gt;</span>
-    <span>&lt;</span>a href<span>=</span><span>"/about"</span><span>&gt;</span>About<span>&lt;</span><span>/</span>a<span>&gt;</span>
-  "#<span>)</span><span>;</span>
-<span>}</span></code></pre>
-
-<p>Which renders this page:</p>
-<iframe srcdoc="
-<!doctype html>
-<title>Tiny site</title>
-<h1>Hello, world!</h1>
-<p>Welcome to my tiny site!</p>
-<a href=&quot;/about&quot;>About</a>
-<base href=&quot;about:blank&quot;/>">
-            </iframe>
-<p>To avoid repetitively escaping double quotes in HTML, I used the raw string literal which looks <code>r#"something like this"#</code> to write the HTML response in Rust.</p>
-
-<h2 id="html-templates--components">HTML templates / components</h2>
-
-<p>I haven’t done this, but I imagine components or “includes” can be implemented by simply calling component functions normally and concatenating the resulting HTML fragments together. Nothing fancy required, for a tiny website.</p>
-
-<p>I wonder if there are templating systems that take advantage of Rust’s compile-time macros. A quick search revealed a lot of them. In fact, that seems to be the “Rust way” of doing HTML templates. One example is <a target="_blank" href="https://maud.lambda.xyz/">Maud<span>🡵</span></a>:</p>
-
-<pre><code>html<span>!</span> <span>{</span>
-  article data<span>-</span>index<span>=</span><span>"12345"</span> <span>{</span>
-    h1 <span>{</span> <span>"My blog"</span> <span>}</span>
-    tag<span>-</span>cloud <span>{</span> <span>"pinkie pie pony cute"</span> <span>}</span>
-  <span>}</span>
-<span>}</span></code></pre>
-
-<p>That looks a lot like Jetpack Compose in Kotlin. Seems like fun way to write HTML. I fear I might be taken by a strange mood and convert my entire website into Rust. I guess paid hosting for non-static sites would be a good deterrent.</p>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>That was a nice dip into Rust. I’m still interested in the hyped-up features like memory management but I guess an HTML web server wouldn’t need much of those things after all. Maybe the next Rust learning exercise would be something like a small video game. Now that’s something that would require memory management and algorithms.</p>
-
-<p>Here’s the repo for my tiny web server in Rust: <a target="_blank" href="https://github.com/Kalabasa/tala"><strong>github.com/Kalabasa/tala</strong><span>🡵</span></a>.
-            </p>
-]]></description>
-            <link>https://leanrada.com/notes/single-file-website-rust?ref=rss</link>
-            <guid isPermaLink="true">https://leanrada.com/notes/single-file-website-rust?ref=rss</guid>
-            <pubDate>Sat, 30 Dec 2023 00:00:00 GMT</pubDate>
-        </item>
+        
         
         
         
