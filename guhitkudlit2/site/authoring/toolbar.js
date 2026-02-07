@@ -312,7 +312,7 @@ export function Toolbar({
           <${Input}
             type="range"
             min="1"
-            max="60"
+            max="100"
             step="1"
             onInput=${action(
               (event) =>
@@ -321,22 +321,6 @@ export function Toolbar({
                 ))
             )}
             value=${trajectoryParams.lookaheadTime}
-          />
-        </label>
-        <label class="authoringToolbarField">
-          <${LabelText}>Iterations<//>
-          <${Input}
-            type="range"
-            min="1"
-            max="4"
-            step="1"
-            onInput=${action(
-              (event) =>
-                (trajectoryParams.iterations = Number(
-                  event.currentTarget.value
-                ))
-            )}
-            value=${trajectoryParams.iterations}
           />
         </label>
       <//>

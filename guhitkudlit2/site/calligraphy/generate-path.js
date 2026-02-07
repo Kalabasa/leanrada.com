@@ -20,17 +20,17 @@
  *  velErrorWeight: number,
  *  accelErrorWeight: number,
  *  lookaheadTime: number,
- *  iterations: number,
  * }} TrajectoryParams
  */
 
+import { DEBUG } from "../app/flags.js";
+
 /** @type {TrajectoryParams} */
 export const defaultTrajectoryParams = Object.freeze({
-  posErrorWeight: 0.5,
-  velErrorWeight: 0.95,
-  accelErrorWeight: 1,
-  lookaheadTime: 3,
-  iterations: 1,
+  posErrorWeight: 0.1,
+  velErrorWeight: 0.1,
+  accelErrorWeight: 0.1,
+  lookaheadTime: 100,
 });
 
 /**
@@ -81,17 +81,27 @@ function* generateStroke(sequence, params) {
     jerk: { x: 0, y: 0 },
   };
 
-  let emergencyLimit = 10000;
+  let emergencyLimit = 20_000;
 
   const nodeTimes = generateNodeTimes(sequence);
 
-  const step = 0.5;
   while (pen.t < nodeTimes[sequence.length - 1]) {
     optimizeTrajectory(pen, sequence, nodeTimes, params);
+
+    const step =
+      10 +
+      20 *
+        (Math.hypot(pen.vel.x, pen.vel.y) +
+          (pen.vel.x * pen.accel.x + pen.vel.y * pen.accel.y) /
+            (1e-9 + Math.hypot(pen.accel.x, pen.accel.y)));
     integrate(pen, step);
-    const debug = {
-      pen: structuredClone(pen),
-    };
+
+    let debug = undefined;
+    if (DEBUG) {
+      debug = { pen: structuredClone(pen) };
+      pen.errors.length = 0;
+    }
+
     yield { ...pen.pos, debug };
 
     if (emergencyLimit-- < 0) throw new Error("Too many iterations!");
@@ -108,7 +118,7 @@ function generateNodeTimes(nodes) {
   let t = 0;
   for (const node of nodes) {
     if (lastNode) {
-      t += Math.hypot(node.x - lastNode.x, node.y - lastNode.y) / 30;
+      t += Math.hypot(node.x - lastNode.x, node.y - lastNode.y);
     }
     nodeTimes.push(t);
     lastNode = node;
@@ -123,60 +133,73 @@ function generateNodeTimes(nodes) {
  * @param {TrajectoryParams} params
  */
 function optimizeTrajectory(pen, nodes, nodeTimes, params) {
-  const tempNode = {};
+  let tempNode = {};
+  let totalIterations = 0;
+  let prevNodeIndex = 0;
 
-  for (let i = 0; i < Math.min(params.iterations, 10); i++) {
-    let jerkX = 0;
-    let jerkY = 0;
+  const extrapolatedPen = structuredClone(pen);
+  const maxT = Math.min(
+    pen.t + params.lookaheadTime,
+    nodeTimes[nodes.length - 1],
+  );
 
-    const extrapolatedPen = structuredClone(pen);
+  while (extrapolatedPen.t < maxT) {
+    // find current node
+    while (nodeTimes[prevNodeIndex + 1] < extrapolatedPen.t) prevNodeIndex++;
+    if (prevNodeIndex + 1 >= nodes.length) return;
 
-    const step = 1.0;
-    const maxT = Math.min(
-      pen.t + params.lookaheadTime,
-      nodeTimes[nodes.length - 1]
+    const dt = 1;
+    integrate(extrapolatedPen, dt);
+
+    // find current node after integration
+    while (nodeTimes[prevNodeIndex + 1] < extrapolatedPen.t) prevNodeIndex++;
+    if (prevNodeIndex + 1 >= nodes.length) return;
+
+    const extrapolatedNode = lerpNode(
+      nodes[prevNodeIndex],
+      nodes[prevNodeIndex + 1],
+      (extrapolatedPen.t - nodeTimes[prevNodeIndex]) /
+        (nodeTimes[prevNodeIndex + 1] - nodeTimes[prevNodeIndex]),
+      tempNode,
     );
-    let prevNodeIndex = 0;
 
-    for (let t = extrapolatedPen.t + step; t <= maxT; t += step) {
-      while (t > nodeTimes[prevNodeIndex + 1]) prevNodeIndex++;
-      if (prevNodeIndex + 1 >= nodes.length) continue;
+    const error = calculateError(extrapolatedPen.pos, extrapolatedNode);
 
-      const interpolatedNode = lerpNode(
-        nodes[prevNodeIndex],
-        nodes[prevNodeIndex + 1],
-        (t - nodeTimes[prevNodeIndex]) /
-          (nodeTimes[prevNodeIndex + 1] - nodeTimes[prevNodeIndex]),
-        tempNode
-      );
+    const posXError = error.x;
+    const posYError = error.y;
+    const targetVelX = (params.posErrorWeight * posXError) / dt;
+    const targetVelY = (params.posErrorWeight * posYError) / dt;
+    const velXError = targetVelX - extrapolatedPen.vel.x;
+    const velYError = targetVelY - extrapolatedPen.vel.y;
+    const targetAccelX = (params.velErrorWeight * velXError) / dt;
+    const targetAccelY = (params.velErrorWeight * velYError) / dt;
+    const accelXError = targetAccelX - extrapolatedPen.accel.x;
+    const accelYError = targetAccelY - extrapolatedPen.accel.y;
+    const targetJerkX = (params.accelErrorWeight * accelXError) / dt;
+    const targetJerkY = (params.accelErrorWeight * accelYError) / dt;
+    const jerkXError = targetJerkX - extrapolatedPen.jerk.x;
+    const jerkYError = targetJerkY - extrapolatedPen.jerk.y;
 
-      const dt = t - extrapolatedPen.t;
+    totalIterations++;
+    extrapolatedPen.jerk.x =
+      (jerkXError + extrapolatedPen.jerk.x * totalIterations) /
+      (totalIterations + 1);
+    extrapolatedPen.jerk.y =
+      (jerkYError + extrapolatedPen.jerk.y * totalIterations) /
+      (totalIterations + 1);
 
-      integrate(extrapolatedPen, dt);
-
-      const error = calculateError(extrapolatedPen.pos, interpolatedNode);
-
-      const posXError = error.x;
-      const posYError = error.y;
-      const targetVelX = (params.posErrorWeight * posXError) / dt;
-      const targetVelY = (params.posErrorWeight * posYError) / dt;
-      const velXError = targetVelX - extrapolatedPen.vel.x;
-      const velYError = targetVelY - extrapolatedPen.vel.y;
-      const targetAccelX = (params.velErrorWeight * velXError) / dt;
-      const targetAccelY = (params.velErrorWeight * velYError) / dt;
-      const accelXError = targetAccelX - extrapolatedPen.accel.x;
-      const accelYError = targetAccelY - extrapolatedPen.accel.y;
-      const targetJerkX = (params.accelErrorWeight * accelXError) / dt;
-      const targetJerkY = (params.accelErrorWeight * accelYError) / dt;
-      const jerkXError = targetJerkX - extrapolatedPen.jerk.x;
-      const jerkYError = targetJerkY - extrapolatedPen.jerk.y;
-
-      pen.jerk.x += jerkXError;
-      pen.jerk.y += jerkYError;
-      extrapolatedPen.jerk.x += jerkXError;
-      extrapolatedPen.jerk.y += jerkYError;
+    if (DEBUG) {
+      pen.errors = pen.errors ?? [];
+      pen.errors.push(error);
     }
   }
+
+  pen.jerk.x =
+    (pen.jerk.x + extrapolatedPen.jerk.x * totalIterations) /
+    (totalIterations + 1);
+  pen.jerk.y =
+    (pen.jerk.y + extrapolatedPen.jerk.y * totalIterations) /
+    (totalIterations + 1);
 }
 
 /**
@@ -186,6 +209,11 @@ function optimizeTrajectory(pen, nodes, nodeTimes, params) {
 function calculateError(pos, target) {
   const deltaX = target.x - pos.x;
   const deltaY = target.y - pos.y;
+  // TODO control points
+  return {
+    x: deltaX,
+    y: deltaY,
+  };
 
   const localControlX = target.controlX - target.x;
   const localControlY = target.controlY - target.y;
@@ -197,13 +225,14 @@ function calculateError(pos, target) {
   const radiusX =
     (halfHeight * halfWidth) /
     Math.sqrt(
-      (halfWidth * Math.cos(-angle)) ** 2 + (halfHeight * Math.sin(-angle)) ** 2
+      (halfWidth * Math.cos(-angle)) ** 2 +
+        (halfHeight * Math.sin(-angle)) ** 2,
     );
   const radiusY =
     (halfWidth * halfHeight) /
     Math.sqrt(
       (halfHeight * Math.cos(-angle + Math.PI / 2)) ** 2 +
-        (halfWidth * Math.sin(-angle + Math.PI / 2)) ** 2
+        (halfWidth * Math.sin(-angle + Math.PI / 2)) ** 2,
     );
 
   return {
@@ -358,7 +387,7 @@ export function* toNodeSequence(pathGraph, edges) {
     visited.add(currentNodeID);
 
     const neighbors = getEdgesWithNode(currentNodeID).flatMap((edge) =>
-      edge.nodes.filter((nodeID) => !visited.has(nodeID))
+      edge.nodes.filter((nodeID) => !visited.has(nodeID)),
     );
     if (neighbors.length > 1) throw new Error("Invalid graph structure");
     currentNodeID = neighbors[0];
