@@ -104,7 +104,7 @@ function drawDebugPath(context, stroke) {
         vertex.x + debug.pen.vel.x + error.x,
         vertex.y + debug.pen.vel.y + error.y,
       );
-      context.strokeStyle = "#f003";
+      context.strokeStyle = `rgba(255,0,0,${0.05 + 0.05 * error.alpha})`;
       context.stroke();
     }
   }

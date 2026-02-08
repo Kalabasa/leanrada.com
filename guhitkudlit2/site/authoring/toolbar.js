@@ -280,8 +280,8 @@ export function Toolbar({
           <${Input}
             type="range"
             min="0"
-            max="1"
-            step="0.01"
+            max="0.1"
+            step="0.001"
             onInput=${action(
               (event) =>
                 (trajectoryParams.velErrorWeight = Number(
@@ -296,8 +296,8 @@ export function Toolbar({
           <${Input}
             type="range"
             min="0"
-            max="1"
-            step="0.01"
+            max="0.01"
+            step="0.0001"
             onInput=${action(
               (event) =>
                 (trajectoryParams.accelErrorWeight = Number(
@@ -312,7 +312,7 @@ export function Toolbar({
           <${Input}
             type="range"
             min="1"
-            max="100"
+            max="200"
             step="1"
             onInput=${action(
               (event) =>

@@ -90,10 +90,13 @@ function* generateStroke(sequence, params) {
 
     const step =
       10 +
-      20 *
-        (Math.hypot(pen.vel.x, pen.vel.y) +
-          (pen.vel.x * pen.accel.x + pen.vel.y * pen.accel.y) /
-            (1e-9 + Math.hypot(pen.accel.x, pen.accel.y)));
+      Math.min(
+        10 *
+          (Math.hypot(pen.vel.x, pen.vel.y) +
+            (pen.vel.x * pen.accel.x + pen.vel.y * pen.accel.y) /
+              (1e-9 + Math.hypot(pen.accel.x, pen.accel.y))),
+        0.01 * (nodeTimes[sequence.length - 1] - pen.t),
+      );
     integrate(pen, step);
 
     let debug = undefined;
@@ -134,7 +137,7 @@ function generateNodeTimes(nodes) {
  */
 function optimizeTrajectory(pen, nodes, nodeTimes, params) {
   let tempNode = {};
-  let totalIterations = 0;
+  let totalWeight = 0;
   let prevNodeIndex = 0;
 
   const extrapolatedPen = structuredClone(pen);
@@ -180,26 +183,26 @@ function optimizeTrajectory(pen, nodes, nodeTimes, params) {
     const jerkXError = targetJerkX - extrapolatedPen.jerk.x;
     const jerkYError = targetJerkY - extrapolatedPen.jerk.y;
 
-    totalIterations++;
+    const weight = 10 * dt / Math.abs(extrapolatedPen.t - pen.t);
     extrapolatedPen.jerk.x =
-      (jerkXError + extrapolatedPen.jerk.x * totalIterations) /
-      (totalIterations + 1);
+      (jerkXError + extrapolatedPen.jerk.x * totalWeight) /
+      (weight + totalWeight);
     extrapolatedPen.jerk.y =
-      (jerkYError + extrapolatedPen.jerk.y * totalIterations) /
-      (totalIterations + 1);
+      (jerkYError + extrapolatedPen.jerk.y * totalWeight) /
+      (weight + totalWeight);
+    totalWeight += weight;
 
     if (DEBUG) {
       pen.errors = pen.errors ?? [];
-      pen.errors.push(error);
+      pen.errors.push({
+        ...error,
+        alpha: weight,
+      });
     }
   }
 
-  pen.jerk.x =
-    (pen.jerk.x + extrapolatedPen.jerk.x * totalIterations) /
-    (totalIterations + 1);
-  pen.jerk.y =
-    (pen.jerk.y + extrapolatedPen.jerk.y * totalIterations) /
-    (totalIterations + 1);
+  pen.jerk.x = extrapolatedPen.jerk.x;
+  pen.jerk.y = extrapolatedPen.jerk.y;
 }
 
 /**
