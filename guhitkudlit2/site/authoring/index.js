@@ -81,7 +81,7 @@ function exportGlyphs() {
     edges: glyph.edges.map(({ nodes }) => ({ nodes })),
   }));
   downloadString(
-    "export default = " + JSON.stringify(glyphs),
+    "export default " + JSON.stringify(glyphs),
     "text/json",
     "glyph-map.js"
   );
