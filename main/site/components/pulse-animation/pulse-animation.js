@@ -165,19 +165,14 @@
           html`<style>
             pulse-animation {
               position: relative;
-
-              &::before {
-                opacity: 0;
-                transition: opacity 2s ease-in;
-              }
             }
             pulse-animation > canvas {
               width: 100%;
               height: 100%;
               opacity: 1;
-              animation: nebula-element-fade 2s linear;
+              animation: pulse-element-fade 2s linear;
             }
-            @keyframes nebula-element-fade {
+            @keyframes pulse-element-fade {
               from {
                 opacity: 0;
               }
@@ -187,21 +182,21 @@
               inset: 0;
               background: url("/components/pulse-animation/noise.png");
               opacity: 0.15;
-              animation: nebula-element-fade 0.5s linear,
-                nebula-noise-x 0.167s steps(2, jump-start) infinite,
-                nebula-noise-y 0.5s steps(3, jump-start) infinite;
+              animation: pulse-element-fade 0.5s linear,
+                pulse-noise-x 0.167s steps(2, jump-start) infinite,
+                pulse-noise-y 0.5s steps(3, jump-start) infinite;
 
               @supports (mix-blend-mode: overlay) {
                 mix-blend-mode: overlay;
                 opacity: 0.3;
               }
             }
-            @keyframes nebula-noise-x {
+            @keyframes pulse-noise-x {
               to {
                 background-position-x: 100px;
               }
             }
-            @keyframes nebula-noise-y {
+            @keyframes pulse-noise-y {
               to {
                 background-position-y: 100px;
               }
@@ -243,9 +238,5 @@
       noise.perlin_amp_falloff = 1;
       return noise;
     })());
-  }
-
-  function sigmoid(x) {
-    return 1 / (1 + Math.exp(-x));
   }
 })();

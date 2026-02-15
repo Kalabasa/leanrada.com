@@ -22,19 +22,20 @@
 <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
 <script>
 const BILLBOARD_SIZE = 100;
-const BILLBOARD_DENSITY = 0.003;
+const BILLBOARD_DENSITY = 0.004;
 const SPEED_ALPHA = 2.8;
-const NOISE_SCALE = 0.004;
+const NOISE_SCALE = 0.002;
 const NOISE_TIME = 0.0001;
 const FORCE_SCALE = 3;
 const DAMPING = 0.82;
 const BROWNIAN = 0.05;
 
-const BILLBOARDS = 20;
+const BILLBOARDS = 10;
 const ALPHA_BUCKETS = 16;
 
 const billboardsPool = [];
 let particles = [];
+let staticNoises = [];
 let t = 0;
 
 class Particle {
@@ -60,8 +61,8 @@ class Particle {
     const nx = this.x * NOISE_SCALE;
     const ny = this.y * NOISE_SCALE;
 
-    const ax = (noise(nx, ny, t) - 0.5) * FORCE_SCALE;
-    const ay = (noise(nx + 2, ny + 2, 2 - t) - 0.5) * FORCE_SCALE;
+    const ax = (noise(nx, ny, t * NOISE_TIME) - 0.5) * FORCE_SCALE;
+    const ay = (noise(nx + 2, ny + 2, 2 - t * NOISE_TIME) - 0.5) * FORCE_SCALE;
 
     this.vx += ax + BROWNIAN * (random() * 2 - 1);
     this.vy += ay + BROWNIAN * (random() * 2 - 1);
@@ -72,9 +73,9 @@ class Particle {
     this.x += this.vx;
     this.y += this.vy;
 
-    const alpha = Math.min(1, speed / SPEED_ALPHA);
+    const alpha = Math.min(1, (speed / SPEED_ALPHA) ** 0.5);
     const alphaIndex = Math.round(alpha * (ALPHA_BUCKETS - 1));
-    const span = BILLBOARD_SIZE * Math.min(1, 0.1 + speed / SPEED_ALPHA);
+    const span = BILLBOARD_SIZE * Math.min(1, 0.2 + (speed / SPEED_ALPHA) ** 2);
     image(
       billboardsPool[this.billboardIndex][alphaIndex],
       Math.floor(this.x - span / 2),
@@ -124,12 +125,13 @@ function setup() {
   }
 
   setupParticles();
+  setupNoiseOverlay();
 }
 
 function draw() {
   blendMode(BLEND);
   background(0, 25, 30);
-  t += NOISE_TIME * deltaTime;
+  t += deltaTime;
 
   blendMode(ADD);
   for (let i = 0; i < particles.length; i++) {
@@ -143,11 +145,32 @@ function draw() {
   while (particles.length < targetParticleCount()) {
     particles.push(new Particle());
   }
+
+  drawStaticNoise();
+}
+
+function drawStaticNoise() {
+  blendMode(ADD);
+  const staticNoise = staticNoises[Math.floor(t * 0.02) % staticNoises.length];
+  const staticNoiseWidth = staticNoise.width;
+  const staticNoiseHeight = staticNoise.height;
+  for (let x = 0; x < 4; x++) {
+    for (let y = 0; y < 4; y++) {
+      image(
+        staticNoise,
+        x * staticNoiseWidth,
+        y * staticNoiseHeight,
+        staticNoiseWidth,
+        staticNoiseHeight
+      );
+    }
+  }
 }
 
 function windowResized() {
   resizeCanvas(...canvasSize());
   setupParticles();
+  setupNoiseOverlay();
 }
 
 function canvasSize() {
@@ -169,6 +192,33 @@ function setupParticles() {
 
 function targetParticleCount() {
   return 0.003 * (width * height);
+}
+
+function setupNoiseOverlay() {
+  staticNoises.length = 0;
+
+  const w = Math.ceil(width / 4);
+  const h = Math.ceil(height / 4);
+  const d = pixelDensity();
+
+  for (let n = 0; n < 6; n++) {
+    const g = createGraphics(w, h);
+    g.pixelDensity(d);
+    g.loadPixels();
+
+    for (let i = 0; i < g.pixels.length; i += 4) {
+      const v = (Math.random() ** 16) * 48;
+      g.pixels[i] = v;
+      g.pixels[i + 1] = v;
+      g.pixels[i + 2] = v;
+      g.pixels[i + 3] = 255;
+    }
+
+    g.updatePixels();
+    staticNoises.push(g);
+  }
+
+  staticNoiseIndex = 0;
 }
 </script>
 </body>
