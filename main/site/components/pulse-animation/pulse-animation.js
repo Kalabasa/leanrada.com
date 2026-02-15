@@ -68,8 +68,8 @@
 
         context.save();
         context.globalCompositeOperation = "source-over";
-        const a = (alpha * 224).toString(16).padStart(2, "0");
-        context.fillStyle = `#444444${a}`;
+        const a = Math.floor(alpha * (3 * (this.#mousePos ? 1.5 : 1))).toString(16).padStart(2, "0");
+        context.fillStyle = `#222222${a}`;
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.restore();
 
@@ -80,7 +80,7 @@
           const q = noise.get(2, rt * 2, t * 0.001) * 2;
           const paletteIndex = Math.floor(paletteLength * p);
           const rgb = palette[paletteIndex];
-          const a = Math.floor(Math.max(alpha, q) * (this.#mousePos ? 36 : 18))
+          const a = Math.floor(alpha * q * (32 * (this.#mousePos ? 1.2 : 1)))
             .toString(16)
             .padStart(2, "0");
 
@@ -93,7 +93,6 @@
           const cy = (canvas.height / 2) * (1 - pullStr) + pullY * pullStr;
 
           context.beginPath();
-          this.#context.globalCompositeOperation = "source-over";
           context.ellipse(
             cx + (Math.random() * 2 - 1) * r * 0.05,
             cy + (Math.random() * 2 - 1) * r * 0.05,
@@ -103,7 +102,11 @@
             0,
             2 * Math.PI
           );
-          this.#context.globalCompositeOperation = "overlay";
+          this.#context.globalCompositeOperation = "source-over";
+          context.fillStyle = `${rgb}${a}`;
+          context.fill();
+
+          context.beginPath();
           context.ellipse(
             cx + (Math.random() * 2 - 1) * r * 0.3,
             cy + (Math.random() * 2 - 1) * r * 0.3,
@@ -113,6 +116,7 @@
             0,
             2 * Math.PI
           );
+          this.#context.globalCompositeOperation = "overlay";
           context.fillStyle = `${rgb}${a}`;
           context.fill();
         }

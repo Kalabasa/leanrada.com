@@ -8,8 +8,8 @@
   const PARTICLE_DENSITY = 0.004;
   const BILLBOARD_SIZE = 100;
   const BILLBOARD_DENSITY = 0.008;
-  const SPEED_ALPHA = 4;
-  const SPEED_SPAN = 8;
+  const SPEED_ALPHA = 3;
+  const SPEED_SPAN = 6;
   const NOISE_SCALE = 0.004;
   const NOISE_TIME = 0.0001;
   const FORCE_SCALE = 1;
@@ -54,8 +54,8 @@
         const mdx = mousePos.x - this.x;
         const mdy = mousePos.y - this.y;
         const md = mdx * mdx + mdy * mdy;
-        const mpf = 1 / (1 + md * 0.2);
-        const mvf = 1 / (1 + md ** 0.5 * 0.5);
+        const mpf = 1 / (1 + md * 0.5);
+        const mvf = 1 / (1 + md ** 0.5 * 1.5);
         ax += (mousePos.x - this.x) * mpf + (mouseVel.x - this.vx) * mvf;
         ay += (mousePos.y - this.y) * mpf + (mouseVel.y - this.vy) * mvf;
       }
