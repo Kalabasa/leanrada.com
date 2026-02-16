@@ -68,8 +68,8 @@
 
         context.save();
         context.globalCompositeOperation = "source-over";
-        const a = (alpha * 224).toString(16).padStart(2, "0");
-        context.fillStyle = `#444444${a}`;
+        const a = Math.floor(alpha * (3 * (this.#mousePos ? 1.5 : 1))).toString(16).padStart(2, "0");
+        context.fillStyle = `#222222${a}`;
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.restore();
 
@@ -80,7 +80,7 @@
           const q = noise.get(2, rt * 2, t * 0.001) * 2;
           const paletteIndex = Math.floor(paletteLength * p);
           const rgb = palette[paletteIndex];
-          const a = Math.floor(Math.max(alpha, q) * (this.#mousePos ? 36 : 18))
+          const a = Math.floor(alpha * q * (32 * (this.#mousePos ? 1.2 : 1)))
             .toString(16)
             .padStart(2, "0");
 
@@ -93,7 +93,6 @@
           const cy = (canvas.height / 2) * (1 - pullStr) + pullY * pullStr;
 
           context.beginPath();
-          this.#context.globalCompositeOperation = "source-over";
           context.ellipse(
             cx + (Math.random() * 2 - 1) * r * 0.05,
             cy + (Math.random() * 2 - 1) * r * 0.05,
@@ -103,7 +102,11 @@
             0,
             2 * Math.PI
           );
-          this.#context.globalCompositeOperation = "overlay";
+          this.#context.globalCompositeOperation = "source-over";
+          context.fillStyle = `${rgb}${a}`;
+          context.fill();
+
+          context.beginPath();
           context.ellipse(
             cx + (Math.random() * 2 - 1) * r * 0.3,
             cy + (Math.random() * 2 - 1) * r * 0.3,
@@ -113,6 +116,7 @@
             0,
             2 * Math.PI
           );
+          this.#context.globalCompositeOperation = "overlay";
           context.fillStyle = `${rgb}${a}`;
           context.fill();
         }
@@ -165,19 +169,14 @@
           html`<style>
             pulse-animation {
               position: relative;
-
-              &::before {
-                opacity: 0;
-                transition: opacity 2s ease-in;
-              }
             }
             pulse-animation > canvas {
               width: 100%;
               height: 100%;
               opacity: 1;
-              animation: nebula-element-fade 2s linear;
+              animation: pulse-element-fade 2s linear;
             }
-            @keyframes nebula-element-fade {
+            @keyframes pulse-element-fade {
               from {
                 opacity: 0;
               }
@@ -187,21 +186,21 @@
               inset: 0;
               background: url("/components/pulse-animation/noise.png");
               opacity: 0.15;
-              animation: nebula-element-fade 0.5s linear,
-                nebula-noise-x 0.167s steps(2, jump-start) infinite,
-                nebula-noise-y 0.5s steps(3, jump-start) infinite;
+              animation: pulse-element-fade 0.5s linear,
+                pulse-noise-x 0.167s steps(2, jump-start) infinite,
+                pulse-noise-y 0.5s steps(3, jump-start) infinite;
 
               @supports (mix-blend-mode: overlay) {
                 mix-blend-mode: overlay;
                 opacity: 0.3;
               }
             }
-            @keyframes nebula-noise-x {
+            @keyframes pulse-noise-x {
               to {
                 background-position-x: 100px;
               }
             }
-            @keyframes nebula-noise-y {
+            @keyframes pulse-noise-y {
               to {
                 background-position-y: 100px;
               }
@@ -243,9 +242,5 @@
       noise.perlin_amp_falloff = 1;
       return noise;
     })());
-  }
-
-  function sigmoid(x) {
-    return 1 / (1 + Math.exp(-x));
   }
 })();
