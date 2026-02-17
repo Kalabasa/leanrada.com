@@ -1,0 +1,428 @@
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    place-content: center;
+    background: black;
+    color: #ccc;
+    font-family: sans-serif;
+    --spring-easing: linear(
+      0, 0.15 3.3%, 1 12.2%, 0.842 15.4%, 0.792 18.9%, 0.823 22.1%, 1 31.1%, 0.967,
+      0.957 37.7%, 1 49.9%, 1
+    );
+  }
+
+  .container {
+    position: relative;
+    background: #0d0d10;
+    padding: var(--dot);
+    border-radius: calc(var(--dot) * 0.5);
+    will-change: transform;
+    transform: scale(0.9);
+    cursor: wait;
+    --dot: 15px;
+    --duration: 0.4s;
+    --dot-delay-factor: 0.015s;
+    transition: transform 0.4s;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: calc(var(--dot) * 0.5);
+      border: solid calc(var(--dot) * 0.1) #bef2;
+      box-shadow: inset 0 calc(var(--dot) * -8) calc(var(--dot) * 8) #acf4;
+    }
+
+    &:hover {
+      transform: scale(1);
+      --duration: 2s;
+      --dot-delay-factor: 0.075s;
+    }
+  }
+
+  .row {
+    text-wrap: nowrap;
+    will-change: contents;
+  }
+
+  .dot {
+    display: inline-block;
+    position: relative;
+    margin: calc(var(--dot) * 0.05);
+    width: var(--dot);
+    height: var(--dot);
+    clip-path: polygon(75% 0, 75% 15%, 85% 25%, 100% 25%, 100% 100%, 0 100%, 0 0);
+    --dot-duration: calc(var(--duration) * (1.0 + var(--dot-quality) * 0.5));
+    --flip-duration: calc(var(--dot-duration) * 0.074);
+    --dot-delay: calc(var(--dot-index) * var(--dot-delay-factor));
+    --opacity-duration: calc(var(--flip-duration) * 0.2);
+    --opacity-delay: calc(var(--dot-delay) + var(--flip-duration) - var(--opacity-duration) * 0.5);
+    transition: transform var(--dot-duration) var(--dot-delay) var(--spring-easing);
+
+    &::before {
+      content: '';
+      display: block;
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      opacity: 1;
+      border-bottom: solid calc(var(--dot) * 0.1) #234;
+      background-image: linear-gradient(to top right, #246,#141414 33%);
+      background-size: 300% 300%;
+      background-position: 100% 0%;
+      transition:
+        background-position var(--flip-duration) calc(var(--dot-delay) + var(--flip-duration)) ease-in-out,
+        opacity var(--opacity-duration) var(--opacity-delay);
+    }
+
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      opacity: 0;
+      border-right: solid calc(var(--dot) * 0.15) #efc;
+      background-image: linear-gradient(to top right, #784, #cd6);
+      background-size: 150% 150%;
+      background-position: 0% 100%;
+      transition:
+        background-position var(--flip-duration) var(--dot-delay) ease-in-out,
+        opacity var(--opacity-duration) var(--opacity-delay);
+    }
+
+    &.on {
+      transform: rotate3d(1, 1, 0, 0.5turn);
+      &::before {
+        opacity: 0;
+        background-position: 0% 100%;
+        transition-delay: var(--dot-delay), var(--opacity-delay);
+      }
+      &::after {
+        opacity: 1;
+        background-position: 100% 0%;
+        transition-delay: calc(var(--dot-delay) + var(--flip-duration)), var(--opacity-delay);
+      }
+    }
+  }
+</style>
+<body>
+  <div style="opacity:0.5; display:flex; justify-content: space-between;">
+    <label><input type="checkbox">sound</label>
+    <span>touch for slow motion</span>
+  </div>
+  <script>
+
+    const container = document.createElement("div");
+    container.classList.add("container");
+    document.body.append(container);
+    const width = 28;
+    const height = 16;
+    container.innerHTML = ('<div class="row">' + '<div class="dot"></div>'.repeat(width) + '</div>').repeat(height);
+    container.querySelectorAll('.row').forEach(row => {
+      row.querySelectorAll('.dot').forEach((dot, index) => {
+        dot.style.setProperty('--dot-index', index);
+        dot.style.setProperty('--dot-quality', Math.random());
+      });
+    });
+
+    function render(data) {
+      container.querySelectorAll('.dot').forEach((dot, index) => {
+        dot.classList.toggle('on', data[index]);
+      });
+    }
+
+    const soundCheckbox = document.querySelector("input");
+    const flipSoundPool = Array.from({ length: height * 6 }, () => {
+      const flipSound = new Audio("./flip.ogg");
+      flipSound.preservesPitch = false;
+      return flipSound;
+    });
+    let slow = false;
+    let windowFocused = true;
+    let soundIndex = 0;
+    flipSoundPool[soundIndex].load();
+    flipSoundPool[soundIndex].volume = 0;
+    container.addEventListener("transitionstart", event => {
+      if (event.target === container) return;
+      if (soundCheckbox.checked && windowFocused) {
+        const flipSound = flipSoundPool[soundIndex];
+        flipSound.playbackRate = (slow ? 0.2 : 1) * (1 + Math.random() * 0.05);
+        flipSound.volume = Math.min(1, flipSound.volume + 0.002);
+        flipSound.play();
+        const nextIndex = (soundIndex + 1) % flipSoundPool.length;
+        requestAnimationFrame(() => {
+          flipSoundPool[nextIndex].volume = 0;
+          soundIndex = nextIndex;
+        });
+      }
+    });
+    container.addEventListener("mouseover", () => { slow = true });
+    container.addEventListener("mouseout", () => { slow = false });
+    window.addEventListener("focus", () => { windowFocused = true });
+    window.addEventListener("blur", () => { windowFocused = false });
+
+    setTimeout(run);
+
+    async function run() {
+      await new Promise(r => setTimeout(r, 1000));
+      while (true) {
+        for (const frame of frames) {
+          render(typeof frame === 'function' ? frame() : frame);
+          await new Promise(r => setTimeout(r, 4000));
+        }
+        shuffle(frames);
+      }
+    }
+
+    const digits = [
+      [ // 0
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 1
+        [ 0, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 1, 1, 1, 1, 0, ],
+        [ 1, 1, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, ],
+      ],
+      [ // 2
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 0, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 0, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 3
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 0, 0, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 0, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 4
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 0, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 0, 1, 1, 0, 0, 0, ],
+        [ 1, 1, 0, 0, 1, 1, 0, 0, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 5
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 0, 1, 1, 1, 0, 0, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 6
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 1, 1, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 0, 1, 1, 1, 0, 0, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 0, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 8
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 7
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 1, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 0, 1, 1, 0, 0, ],
+        [ 0, 0, 0, 0, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 0, 0, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 1, 1, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 0, 0, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 0, 0, 0, 0, 0, ],
+        [ 0, 1, 1, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 0, 0, 0, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+      [ // 9
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 0, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 1, 0, 0, 1, 1, 1, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 1, 0, ],
+        [ 0, 0, 1, 1, 1, 0, 1, 1, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 1, 1, 0, ],
+        [ 1, 1, 0, 0, 0, 1, 1, 0, 0, ],
+        [ 0, 1, 1, 1, 1, 1, 1, 0, 0, ],
+        [ 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+        [ 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+      ],
+    ];
+
+    function createNumberFrame(number) {
+      const buffer = Array.from({ length: height }, () => []);
+      for (const char of String(number)) {
+        const digit = char.charCodeAt(0) - /* '0' */ 48;
+        digits[digit].forEach((row, index) => {
+          buffer[index].push(...row);
+        });
+      }
+      const frame = Array.from({ length: width * height }, (_, i) => {
+        const x = i % width;
+        const y = Math.floor(i / width);
+        return buffer[y]?.[x] ?? 0;
+      });
+      return frame;
+    }
+
+    function createCheckers(tile) {
+      return Array.from({ length: width * height }, (_, i) => {
+        const x = i % width;
+        const y = Math.floor(i / width);
+        return Math.floor(x / tile) % 2 !== Math.floor(y / tile) % 2;
+      });
+    }
+
+    const frames = [
+      createNumberFrame(333),
+      [ // Bondi swimmer
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 
+        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 
+        1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 
+        0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 
+        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 
+        1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 
+        0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 
+        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 
+        1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+      ],
+      () => createNumberFrame(100 + Math.floor(Math.random() * 500)),
+      () => createCheckers(2),
+      () => createCheckers(4),
+      () => createNumberFrame('000'),
+    ];
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = array[i];
+          array[i] = array[j];
+          array[j] = temp;
+      }
+    }
+  </script>
+</body>
