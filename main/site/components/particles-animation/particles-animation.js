@@ -5,6 +5,7 @@
   const getMousePosition = () =>
     import("/lib/mouse_position.mjs").then((m) => m.mousePosition);
 
+  const TARGET_FPS = 60;
   const PARTICLE_DENSITY = 0.0025;
   const BILLBOARD_SIZE = 128;
   const BILLBOARD_DENSITY = 0.009;
@@ -35,7 +36,7 @@
       this.billboardIndex = Math.floor(this.p5.random(BILLBOARDS));
     }
 
-    step(t, billboardsPool, mousePos = null, mouseVel = null, saturation = 1) {
+    step(t, billboardsPool, mousePos = null, mouseVel = null, saturation = 1, goodQuality = true) {
       const p5 = this.p5;
       const speed = Math.hypot(this.vx, this.vy);
       this.life -= 1 + 0.5 / (0.01 + speed);
@@ -66,7 +67,7 @@
       this.x += this.vx;
       this.y += this.vy;
 
-      const alpha = Math.min(1, speed / SPEED_ALPHA);
+      const alpha = Math.min(1, (speed / SPEED_ALPHA) * (goodQuality ? 1 : 2));
       const idx = Math.round(alpha * (ALPHA_BUCKETS - 1));
       const span = Math.min(
         BILLBOARD_SIZE * Math.max(1 - saturation, Math.min(1, 0.15 + 0.85 * (speed / SPEED_SPAN) ** 2)),
@@ -112,6 +113,7 @@
       #particles = [];
       #targetCount = 50;
       #t = 0;
+      #quality = 1;
 
       connectedCallback() {
         const paletteAttr = this.getAttribute("palette");
@@ -167,13 +169,13 @@
       }
 
       #setupObservers() {
-        this.#intersectionObserver = new IntersectionObserver((entries) => {
+        this.#intersectionObserver = new IntersectionObserver(async (entries) => {
           for (const e of entries) {
             if (e.target !== this) continue;
             if (this.#isVisible !== e.isIntersecting) {
               this.#isVisible = e.isIntersecting;
               if (this.#isVisible) {
-                this.#start();
+                await this.#start();
                 this.#p5.loop();
               } else {
                 this.#p5.noLoop();
@@ -219,7 +221,7 @@
       }
 
       #getTargetParticleCount(p5) {
-        const performance = Math.min(1, p5.frameRate() / 60);
+        const performance = Math.min(1, p5.frameRate() / TARGET_FPS);
         return Math.ceil(1 + PARTICLE_DENSITY * (p5.width * p5.height) * performance ** 2);
       }
 
@@ -239,7 +241,7 @@
 
         const sketch = (p5) => {
           p5.setup = () => {
-            p5.frameRate(60);
+            p5.frameRate(TARGET_FPS);
 
             this.#canvas = p5.createCanvas(this.clientWidth, this.clientHeight).elt;
             p5.pixelDensity(Math.min(window.devicePixelRatio, 2));
@@ -251,19 +253,27 @@
 
           p5.draw = () => {
             this.#t += p5.deltaTime;
-            const saturation = this.#particles.length / (PARTICLE_DENSITY * (p5.width * p5.height));
+            const performance = p5.frameRate() / TARGET_FPS;
+            if (this.#quality > 0 && performance < 0.8) {
+              this.#quality -= 0.1;
+            } else if (this.#quality <= 1 && performance >= 1) {
+              this.#quality += 0.01;
+            }
+            const goodQuality = this.#quality >= 1;
+
             const paletteTime = this.#t * PALETTE_TIME;
             const colorHex = this.#palette[Math.floor(paletteTime) % this.#palette.length];
             const backgroundAlpha = Math.min(255, 2 + Math.floor(6 * (1 + Math.cos((paletteTime + 0.5) * Math.PI * 2))));
             p5.blendMode(p5.BLEND);
             p5.background(colorHex + backgroundAlpha.toString(16).padStart(2, "0"));
-            p5.blendMode(p5.OVERLAY);
-            p5.background(colorHex + "08");
-            p5.background(0, 0, 0, 8);
-            p5.blendMode(p5.BLEND);
+            if (goodQuality) p5.blendMode(p5.OVERLAY);
+            p5.background(colorHex + (goodQuality ? "08" : "04"));
+            p5.background(0, 0, 0, goodQuality ? 8 : 4);
+            if (goodQuality) p5.blendMode(p5.BLEND);
             p5.background(0, 0, 0, 4);
 
-            p5.blendMode(p5.ADD);
+            const saturation = this.#particles.length / (PARTICLE_DENSITY * (p5.width * p5.height));
+            if (goodQuality) p5.blendMode(p5.ADD);
             this.#particles = this.#particles.filter(
               pt => pt.step(
                 this.#t,
@@ -271,6 +281,7 @@
                 this.#mousePos,
                 this.#mouseVel,
                 saturation,
+                goodQuality,
               )
             );
 
