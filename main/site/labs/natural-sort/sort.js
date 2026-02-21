@@ -36,7 +36,9 @@ const anchors = [
   ["lowest", "highest"],
   ["weakest", "strongest"],
   ["slow", "fast"],
-  ["coldest", "hottest"],
+  ["coldest", "colder"],
+
+  ["smile", "laugh"],
 ];
 
 const anchorVecs = await Promise.all(
@@ -49,30 +51,34 @@ const anchorVecs = await Promise.all(
 );
 
 export async function wordSort(list) {
+  console.group('wordSort');
+  console.log(list);
   list.forEach(item => {
     if (typeof item !== "string") throw new TypeError("strings only");
   });
 
   const vecs = await Promise.all(list.map(w => data.find(w, true)));
+  vecs.forEach(v => normalize(v));
 
   const topAnchorVecs = anchorVecs
-    .map(vec => {
-      const scores = vecs.map(v => dot(v, vec));
+    .map(anchorVec => {
+      const scores = vecs.map(v => dot(v, anchorVec));
       const min = Math.min(...scores);
       const max = Math.max(...scores);
-      return { vec, spread: max - min };
+      return { anchorVec, spread: max - min };
     })
     .sort((a, b) => b.spread - a.spread)
-    .slice(0, 3)
-    .map(x => x.vec);
+    .slice(0, 4)
+    .map(o => o.anchorVec);
 
-  console.log("top anchorVecs");
+  console.group("top anchorVecs");
   const orderVec = average(topAnchorVecs);
   for (let i = 0; i < anchors.length; i++) {
     if (topAnchorVecs.includes(anchorVecs[i])) {
       console.log('vec(', ...anchors[i], ') * avg(topAnchorVecs)', dot(anchorVecs[i], orderVec));
     }
   }
+  console.groupEnd();
   normalize(orderVec);
 
   const mean = average(vecs);
@@ -83,34 +89,53 @@ export async function wordSort(list) {
   const v2 = variance(centered, pc2);
   const varianceRatio = v1 / v2;
 
-  console.log("pc1 * pc2", dot(pc1, pc2));
   console.log("pc1 * orderVec", dot(pc1, orderVec));
   console.log("pc2 * orderVec", dot(pc2, orderVec));
 
   const linearProjections = {};
   vecs.forEach((v, i) => linearProjections[list[i]] = dot(orderVec, v));
-  console.log("projected onto orderVec", linearProjections);
+  console.log("linearProjections", linearProjections);
 
-  const planarProjections = centered.map(v => ({
-    x: dot(v, pc1),
-    y: dot(v, pc2),
-  }));
+  const planarProjections = centered.map(v => ([
+    dot(v, pc1),
+    dot(v, pc2),
+  ]));
+  const magnitudes = planarProjections.map(p => Math.hypot(...p));
+  const farthestIdx = magnitudes.indexOf(Math.max(...magnitudes));
+
   const angularProjections = {}
-  vecs.forEach((v, i) => angularProjections[list[i]] = Math.atan2(planarProjections[i].y, planarProjections[i].x));
+  vecs.forEach((v, i) => {
+    let angle = Math.atan2(...subtract(planarProjections[i].slice(), planarProjections[farthestIdx]));
+    // normalize to [0, 2π]
+    if (angle < 0) angle += Math.PI * 2;
+    angularProjections[list[i]] = angle;
+  });
+  console.log('angularProjections', angularProjections);
 
-  const varianceThreshold = 2;
+  // const greedyRank = greedySort(list, vecs, orderVec);
+
+  const varianceThreshold = 1.3;
   console.log({varianceRatio, varianceThreshold});
-  const projections = varianceRatio > varianceThreshold ? linearProjections : angularProjections;
+  const projections = varianceRatio > varianceThreshold && Math.abs(dot(pc1, orderVec)) > 0.4
+    ? linearProjections : angularProjections;
   console.log("using", projections === angularProjections ? "angular" : "linear", "projections");
+  // const projections = greedyRank;
   const comparator = (a, b) => projections[a] - projections[b];
+  console.log('>', list.toSorted(comparator));
+  console.groupEnd();
   return {
     comparator,
     toSorted: () => list.toSorted(comparator),
     sort: () => list.sort(comparator),
+    debug: {
+      linearProjections,
+      planarProjections,
+      angularProjections,
+    }
   }
 }
 
-function powerIteration(matrix, excludeVecs = [], iters = 100) {
+function powerIteration(matrix, excludeVecs = [], iters = 50) {
   let vec = new Array(matrix[0].length).fill(0).map(() => Math.random() - 0.5);
 
   for (let i = 0; i < iters; i++) {
@@ -136,6 +161,31 @@ function powerIteration(matrix, excludeVecs = [], iters = 100) {
 function variance(vectors, dir) {
   const projected = vectors.map(v => dot(v, dir));
   return projected.reduce((sum, v) => sum + v * v, 0) / vectors.length;
+}
+
+function greedySort(list, vecs, orderVec) {
+  const scores = vecs.map(v => dot(v, orderVec));
+  const startIdx = scores.indexOf(Math.min(...scores));
+
+  const visited = list.map(() => false);
+  visited[startIdx] = true;
+  const path = [startIdx];
+
+  while (path.length < list.length) {
+    const currentIdx = path.at(-1);
+    let nearest = -1, minDist = Infinity;
+
+    for (let i = 0; i < vecs.length; i++) {
+      if (visited[i]) continue;
+      const dist = dot(normalize(vecs[i].slice()), normalize(vecs[currentIdx].slice()));
+      if (dist < minDist) { minDist = dist; nearest = i; }
+    }
+
+    visited[nearest] = true;
+    path.push(nearest);
+  }
+
+  return Object.fromEntries(path.map((idx, rank) => [list[idx], rank]));
 }
 
 function average(vectors) {
