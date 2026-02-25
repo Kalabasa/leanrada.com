@@ -5,12 +5,13 @@
  * - simple: count all items on screen
  * - mixed: two emoji types, count only one
  * - flash: items appear briefly then hide, count from memory
+ * - moving: items bounce around while you count
  */
 export function countGame(api) {
   const c = api.complexity;
   const bgHue = api.random(360);
 
-  const variants = ['simple', 'mixed', 'flash'];
+  const variants = ['simple', 'mixed', 'flash', 'moving'];
   const variant = variants[Math.floor(api.random(variants.length))];
 
   const allEmoji = ['🍎','🍊','🌟','🔵','🟢','🐱','🐶','🎈','🍕','💎','🌸','🔥','⚡','🍬','🎯'];
@@ -29,12 +30,15 @@ export function countGame(api) {
   const areaH = api.height * 0.45;
   const areaTop = api.height * 0.1;
 
+  const moveSpeed = variant === 'moving' ? 15 + c * 10 : 0;
+
   const items = [];
   for (let i = 0; i < total; i++) {
     items.push({
       emoji: i < targetCount ? targetEmoji : distractorEmoji,
       x: margin + api.random(areaW),
       y: areaTop + api.random(areaH),
+      angle: api.random(Math.PI * 2),
     });
   }
   // Shuffle
@@ -72,6 +76,19 @@ export function countGame(api) {
       const showItems = api.time < flashDuration;
       if (showItems) {
         for (const item of items) {
+          // Motion (moving variant only)
+          if (moveSpeed > 0) {
+            item.x += Math.cos(item.angle) * moveSpeed * (api.dt / 1000);
+            item.y += Math.sin(item.angle) * moveSpeed * (api.dt / 1000);
+            if (item.x < margin || item.x > api.width - margin) {
+              item.angle = Math.PI - item.angle;
+              item.x = Math.max(margin, Math.min(api.width - margin, item.x));
+            }
+            if (item.y < areaTop || item.y > areaTop + areaH) {
+              item.angle = -item.angle;
+              item.y = Math.max(areaTop, Math.min(areaTop + areaH, item.y));
+            }
+          }
           const pulse = 1 + 0.06 * api.pulse;
           api.emoji(item.emoji, item.x, item.y, 36 * pulse);
         }

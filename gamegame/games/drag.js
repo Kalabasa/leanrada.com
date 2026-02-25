@@ -106,7 +106,7 @@ export function dragGame(api) {
       ballY = y;
 
       for (const w of walls) {
-        if (api.dist(ballX, ballY, w.x, w.y) < w.r + 20) {
+        if (api.dist(ballX, ballY, w.x, w.y) < w.r) {
           resetBall();
           return;
         }
