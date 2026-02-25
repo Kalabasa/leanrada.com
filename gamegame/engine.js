@@ -4,22 +4,34 @@
 // Beat Clock (global, persists across games)
 // ============================================================
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
 
 let globalBpm = 120;
-let globalBeatStart = 0; // audioCtx.currentTime when beat 0 started
+let globalBeatStart = 0; // audioCtx.currentTime when current BPM segment started
+let accumulatedBeats = 0; // beats accumulated before current BPM segment
 let beatClockStarted = false;
 
 let timerMultiplier = 1.0; // user-facing multiplier (for future "hard mode" etc)
 
-function setBpm(bpm) { globalBpm = bpm; }
+function getBpm() { return globalBpm; }
+function setBpm(bpm) {
+  if (beatClockStarted && bpm !== globalBpm) {
+    accumulatedBeats = getGlobalBeat();
+    globalBeatStart = audioCtx.currentTime;
+  }
+  globalBpm = bpm;
+}
 function getTimerMultiplier() { return timerMultiplier; }
 function setTimerMultiplier(m) { timerMultiplier = m; }
 
 function getGlobalBeat() {
   if (!beatClockStarted) return 0;
   const elapsed = audioCtx.currentTime - globalBeatStart;
-  return (elapsed / 60) * globalBpm;
+  return accumulatedBeats + (elapsed / 60) * globalBpm;
 }
 
 function startBeatClock() {
@@ -33,11 +45,16 @@ function beatsToMs(beats) {
   return (beats / globalBpm) * 60000;
 }
 
+/** Convert a global beat number to audioCtx.currentTime */
+function beatToTime(b) {
+  return globalBeatStart + ((b - accumulatedBeats) / globalBpm) * 60;
+}
+
 /** audioCtx.currentTime of the next beat boundary */
 function nextBeatTime() {
   const beat = getGlobalBeat();
-  const nextBeat = Math.ceil(beat + 0.01); // small epsilon to avoid landing on current
-  return globalBeatStart + (nextBeat / globalBpm) * 60;
+  const nextBeat = Math.ceil(beat + 0.01);
+  return beatToTime(nextBeat);
 }
 
 /** ms until the next beat boundary */
@@ -53,6 +70,23 @@ let drumsScheduledUntil = 0;
 let drumLoopTimer = null;
 let drumsMuted = false;
 let bassRoot = 110;
+let drumBus = null;
+
+function getDrumBus() {
+  if (!drumBus) {
+    drumBus = ensureAudioCtx().createGain();
+    drumBus.connect(audioCtx.destination);
+  }
+  return drumBus;
+}
+
+function resetDrumBus() {
+  if (drumBus) {
+    drumBus.disconnect();
+    drumBus = null;
+  }
+  drumsScheduledUntil = getGlobalBeat();
+}
 
 function muteDrums() { drumsMuted = true; }
 function unmuteDrums() { drumsMuted = false; }
@@ -71,7 +105,7 @@ function scheduleDrums() {
   const scheduleTo = beatNow + (globalBpm / 60) * lookAhead + 2; // schedule 2 beats ahead
 
   for (let b = Math.max(Math.ceil(drumsScheduledUntil * 2) / 2, 0); b < scheduleTo; b += 0.5) {
-    const t = globalBeatStart + (b / globalBpm) * 60;
+    const t = beatToTime(b);
     if (t < now - 0.01) continue;
     const beatInBar = ((b % 4) + 4) % 4;
 
@@ -102,7 +136,7 @@ function playDrum(t, type) {
     gain.gain.setValueAtTime(0.3, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(getDrumBus());
     osc.start(t);
     osc.stop(t + 0.2);
   } else if (type === 'snare') {
@@ -114,7 +148,7 @@ function playDrum(t, type) {
     gain.gain.setValueAtTime(0.15, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(getDrumBus());
     osc.start(t);
     osc.stop(t + 0.1);
     // Noise component
@@ -125,7 +159,7 @@ function playDrum(t, type) {
     gain2.gain.setValueAtTime(0.08, t);
     gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
     osc2.connect(gain2);
-    gain2.connect(audioCtx.destination);
+    gain2.connect(getDrumBus());
     osc2.start(t);
     osc2.stop(t + 0.08);
   } else if (type === 'hat') {
@@ -136,7 +170,7 @@ function playDrum(t, type) {
     gain.gain.setValueAtTime(0.03, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(getDrumBus());
     osc.start(t);
     osc.stop(t + 0.05);
   }
@@ -283,7 +317,13 @@ export function createEngine(slide, onEnd) {
     // Beat
     get beat() { return getGlobalBeat(); },
     get bpm() { return globalBpm; },
+    /** Complexity, starts at 0, unbounded. Set by index before game init. */
+    complexity: 0,
     get beatFrac() { return getGlobalBeat() % 1; },
+    /** Sharp attack on beat, quick decay. 1→0. Usage: size * (1 + 0.2 * api.pulse) */
+    get pulse() {
+      return Math.exp(-(getGlobalBeat() % 1) * 6);
+    },
     onBeat(fn) { beatCallbacks.push(fn); },
 
     // Game control
@@ -452,6 +492,7 @@ export function createEngine(slide, onEnd) {
   return {
     /** Start running a game definition */
     run(def) {
+      if (rafId) cancelAnimationFrame(rafId);
       gameDef = def;
       startBeatClock();
       changeBassRoot();
@@ -470,7 +511,7 @@ export function createEngine(slide, onEnd) {
     /** Show result overlay */
     showResult(result) {
       const won = result === 'win';
-      resultEl.textContent = won ? 'NICE!' : 'TOO SLOW';
+      resultEl.textContent = won ? 'NICE!' : 'TOO BAD';
       resultEl.style.background = won ? 'rgba(0,200,100,0.3)' : 'rgba(200,0,50,0.3)';
       resultEl.classList.add('visible');
     },
@@ -492,7 +533,7 @@ export function createEngine(slide, onEnd) {
   };
 }
 
-function pauseAudio() { audioCtx.suspend(); }
-function resumeAudio() { audioCtx.resume(); }
+function pauseAudio() { if (audioCtx) audioCtx.suspend(); }
+function resumeAudio() { ensureAudioCtx().resume(); }
 
-export { sound, getGlobalBeat, globalBpm, msUntilNextBeat, beatsToMs, setBpm, getTimerMultiplier, setTimerMultiplier, pauseAudio, resumeAudio, muteDrums, unmuteDrums };
+export { sound, getGlobalBeat, getBpm, msUntilNextBeat, beatsToMs, setBpm, getTimerMultiplier, setTimerMultiplier, pauseAudio, resumeAudio, muteDrums, unmuteDrums };

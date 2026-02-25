@@ -18,8 +18,11 @@ Single-page app, no build step, no external dependencies. Vanilla JS + Canvas2D 
 index.html      — shell (timer, sidebar, bottom bar, game loop, transitions)
 engine.js       — canvas API, beat clock, drums, input handling, sound
 games/
-  tap.js        — tap N times (emoji + beat pulse)
   drag.js       — drag emoji to target
+  dodge.js      — dodge falling obstacles
+  parry.js      — parry timed attacks
+  oddoneout.js  — find the different emoji
+  split.js      — split a shape at a target ratio
 ```
 
 ### Engine (`engine.js`)
@@ -39,7 +42,7 @@ export function myGame(api) {
 
     draw(api) {
       api.clear('#222');
-      const pulse = 1 + 0.1 * Math.sin(api.beatFrac * Math.PI * 2);
+      const pulse = 1 + 0.2 * api.pulse;
       api.emoji('🐱', x, 200, 64 * pulse);
       api.fill('#fff');
       api.text('Catch!', api.width / 2, 50, 24);
@@ -77,6 +80,7 @@ gameTypes.push(myGame);
 - `beat` — global beat as float (e.g. 3.7)
 - `bpm` — current tempo
 - `beatFrac` — fractional part of beat (0-1), for pulse animations
+- `pulse` — sharp attack on beat with quick decay (1→0), e.g. `size * (1 + 0.2 * api.pulse)`
 - `onBeat(fn)` — callback on each beat boundary
 
 **Helpers:**

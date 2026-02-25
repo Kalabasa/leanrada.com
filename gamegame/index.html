@@ -76,85 +76,99 @@
   }
   #timer-text.urgent { color: #ff4444; }
 
-  /* --- Sidebar --- */
-  #sidebar {
+  /* --- Pause button --- */
+  #btn-pause {
     position: fixed;
+    top: 12px;
     right: 12px;
-    bottom: 80px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    z-index: 100;
-  }
-  .sb-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .sb-btn:active { transform: scale(0.9); }
-  .sb-icon {
-    width: 44px;
-    height: 44px;
+    z-index: 300;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(4px);
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
-    backdrop-filter: blur(4px);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  .sb-icon.liked { background: rgba(255,60,80,0.5); }
-  .sb-label { font-size: 0.65rem; opacity: 0.7; }
-  .sb-count { font-size: 0.75rem; font-weight: 600; }
+  #btn-pause:active { transform: scale(0.9); }
 
-  /* --- Bottom bar --- */
-  #bottombar {
+  /* --- Pause menu --- */
+  #pause-menu {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    display: flex;
+    inset: 0;
+    z-index: 400;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: none;
+    flex-direction: column;
     align-items: center;
-    padding: 0 16px;
-    background: linear-gradient(transparent, rgba(0,0,0,0.8));
-    z-index: 100;
+    justify-content: center;
+    gap: 24px;
   }
-  #game-info { flex: 1; }
-  #game-title { font-size: 0.9rem; font-weight: 600; }
-  #game-author { font-size: 0.75rem; opacity: 0.6; }
-  #music-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.1);
+  #pause-menu.visible { display: flex; }
+  #pause-menu h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .pause-btn {
+    width: 200px;
+    padding: 14px 0;
     border-radius: 12px;
-    padding: 6px 12px;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  #music-pill .note { animation: spin 2s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #music-marquee { max-width: 120px; overflow: hidden; }
-  #music-marquee span {
-    display: inline-block;
-    animation: marquee 5s linear infinite;
+  .pause-btn:active { background: rgba(255,255,255,0.2); }
+
+  /* --- Title screen --- */
+  #title-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+  #title-screen.hidden { display: none; }
+  #title-screen h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
+  #title-screen p {
+    font-size: 1rem;
+    opacity: 0.5;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.15; }
+  }
+
 </style>
 </head>
 <body>
+
+<div id="title-screen">
+  <h1>gamegame</h1>
+  <p>tap to start</p>
+</div>
 
 <div id="timer-wrap">
   <div id="timer-bar-bg"><div id="timer-bar"></div></div>
@@ -166,45 +180,23 @@
   <div class="slide" id="next"></div>
 </div>
 
-<div id="sidebar">
-  <button class="sb-btn" id="btn-like">
-    <div class="sb-icon" id="like-icon">&#x2764;</div>
-    <div class="sb-count" id="like-count">0</div>
-  </button>
-  <button class="sb-btn" id="btn-comment">
-    <div class="sb-icon">&#x1F4AC;</div>
-    <div class="sb-count">0</div>
-  </button>
-  <button class="sb-btn" id="btn-save">
-    <div class="sb-icon">&#x1F516;</div>
-    <div class="sb-label">Save</div>
-  </button>
-  <button class="sb-btn" id="btn-share">
-    <div class="sb-icon">&#x21A9;</div>
-    <div class="sb-label">Share</div>
-  </button>
-  <button class="sb-btn" id="btn-skip">
-    <div class="sb-icon" style="font-size:1.5rem">&#x25B7;</div>
-    <div class="sb-label">Skip</div>
-  </button>
+<button id="btn-pause">&#x23F8;</button>
+
+<div id="pause-menu">
+  <h2>PAUSED</h2>
+  <button class="pause-btn" id="pause-resume">Resume</button>
+  <button class="pause-btn" id="pause-skip">Skip</button>
 </div>
 
-<div id="bottombar">
-  <div id="game-info">
-    <div id="game-title"></div>
-    <div id="game-author"></div>
-  </div>
-  <div id="music-pill">
-    <span class="note">&#x266A;</span>
-    <div id="music-marquee"><span>lo-fi beats to game to &nbsp; &nbsp; lo-fi beats to game to &nbsp; &nbsp;</span></div>
-  </div>
-</div>
 
 <script type="module">
-import { createEngine, msUntilNextBeat, beatsToMs, setBpm, pauseAudio, resumeAudio, muteDrums, unmuteDrums } from './engine.js';
-import { tapGame } from './games/tap.js';
+import { createEngine, msUntilNextBeat, beatsToMs, getBpm, setBpm, pauseAudio, resumeAudio, muteDrums, unmuteDrums } from './engine.js';
 import { dragGame } from './games/drag.js';
 import { dodgeGame } from './games/dodge.js';
+import { parryGame } from './games/parry.js';
+import { oddOneOutGame } from './games/oddoneout.js';
+import { splitGame } from './games/split.js';
+import { countGame } from './games/count.js';
 
 // --- Universal Timer (pausable) ---
 const timerBar = document.getElementById('timer-bar');
@@ -293,20 +285,51 @@ window.addEventListener('focus', () => {
   resumeTimer();
 });
 
-// --- Sidebar ---
-let liked = false;
-let likeCount = 0;
+// --- Pause ---
+let paused = false;
+const pauseMenu = document.getElementById('pause-menu');
 
-document.getElementById('btn-like').addEventListener('pointerdown', (e) => {
+function togglePause() {
+  if (paused) {
+    paused = false;
+    pauseMenu.classList.remove('visible');
+    resumeAudio();
+    resumeTimer();
+  } else {
+    paused = true;
+    pauseMenu.classList.add('visible');
+    pauseTimer();
+    pauseAudio();
+  }
+}
+
+document.getElementById('btn-pause').addEventListener('pointerdown', (e) => {
   e.stopPropagation();
-  liked = !liked;
-  likeCount += liked ? 1 : -1;
-  document.getElementById('like-icon').classList.toggle('liked', liked);
-  document.getElementById('like-count').textContent = likeCount;
+  togglePause();
 });
-['btn-comment', 'btn-save', 'btn-share'].forEach(id => {
-  document.getElementById(id).addEventListener('pointerdown', (e) => {
-    e.stopPropagation();
+
+document.getElementById('pause-resume').addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
+  if (paused) togglePause();
+});
+
+document.getElementById('pause-skip').addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
+  if (paused) {
+    paused = false;
+    pauseMenu.classList.remove('visible');
+    resumeAudio();
+  }
+  if (!activeEngine) return;
+  stopTimer();
+  activeEngine.cleanup();
+  activeEngine = null;
+  gameIndex++;
+  transition(() => {
+    const tmp = currentEl.id;
+    currentEl.id = nextEl.id;
+    nextEl.id = tmp;
+    startGame();
   });
 });
 
@@ -315,27 +338,10 @@ const currentEl = document.getElementById('current');
 const nextEl = document.getElementById('next');
 
 let gameIndex = 0;
+let winCount = 0;
 let activeEngine = null;
 
-const gameTypes = [tapGame, dragGame, dodgeGame];
-const gameTitles = [
-  'Tap Frenzy', 'Drag Drop', 'Quick Fingers', 'Ball Chase',
-  'Speed Tap', 'Target Practice', 'Flick It', 'Touch Rush'
-];
-const authors = ['@gamegame_ai', '@tapmaster_3000', '@minigame_bot', '@quickplay_ai'];
-
-function updateBottomBar() {
-  document.getElementById('game-title').textContent =
-    gameTitles[Math.floor(Math.random() * gameTitles.length)];
-  document.getElementById('game-author').textContent =
-    authors[Math.floor(Math.random() * authors.length)];
-  liked = false;
-  likeCount = Math.floor(Math.random() * 500) + 10;
-  document.getElementById('like-icon').classList.remove('liked');
-  document.getElementById('like-count').textContent = likeCount;
-  document.getElementById('btn-comment').querySelector('.sb-count').textContent =
-    Math.floor(Math.random() * 50);
-}
+const gameTypes = [dragGame, dodgeGame, parryGame, oddOneOutGame, splitGame, countGame];
 
 function transition(callback) {
   const h = window.innerHeight;
@@ -357,7 +363,12 @@ function transition(callback) {
 
 function endGame(result, _score) {
   stopTimer();
-  muteDrums();
+  if (result === 'win') {
+    winCount++;
+    setBpm(Math.min(180, getBpm() + 3));
+  } else {
+    winCount = Math.max(0, winCount - 1);
+  }
   if (activeEngine) {
     activeEngine.showResult(result);
     activeEngine.sound[result === 'win' ? 'win' : 'lose']();
@@ -383,7 +394,6 @@ function endGame(result, _score) {
 }
 
 function startGame() {
-  updateBottomBar();
   const gameFn = gameTypes[Math.floor(Math.random() * gameTypes.length)];
   currentEl.style.transform = 'translateY(0)';
   nextEl.style.transform = `translateY(${window.innerHeight}px)`;
@@ -392,43 +402,45 @@ function startGame() {
   nextEl.innerHTML = '';
   nextEl.style.background = '#111';
 
-  // BPM ramps every game: 120 → 180, +5 per game
-  setBpm(Math.min(180, 120 + gameIndex * 5));
-  unmuteDrums();
-
   // Create engine for this game
   const engine = createEngine(currentEl, endGame);
   activeEngine = engine;
 
   // Init game — pass the api so games can use drawing helpers in setup
+  engine.api.complexity = Math.pow(winCount, 1.5) * 0.1;
   const gameDef = gameFn(engine.api);
   const durationMs = engine.getDurationMs(gameDef.duration);
   const timeoutResult = gameDef.timeoutResult || 'lose';
+  const title = gameDef.title || '';
 
-  // Run the game loop
-  engine.run(gameDef);
+  // Show title card for 2 beats, then start the game
+  const titleMs = beatsToMs(2);
+  const titleDef = {
+    draw(api) {
+      api.clear('#111');
+      const pulse = 1 + 0.15 * api.pulse;
+      api.fill('#fff');
+      api.push();
+      api.translate(api.width / 2, api.height / 2);
+      api.scale(pulse);
+      api.text(title, 0, 0, 32);
+      api.pop();
+    },
+  };
+  engine.run(titleDef);
 
-  // Start countdown timer
-  startTimer(durationMs, () => endGame(timeoutResult, timeoutResult === 'win' ? 1 : 0));
+  setTimeout(() => {
+    if (activeEngine !== engine) return; // skipped
+    engine.run(gameDef);
+    startTimer(durationMs, () => endGame(timeoutResult, timeoutResult === 'win' ? 1 : 0));
+  }, titleMs);
 }
 
-// --- Skip ---
-document.getElementById('btn-skip').addEventListener('pointerdown', (e) => {
-  e.stopPropagation();
-  if (!activeEngine) return;
-  stopTimer();
-  activeEngine.cleanup();
-  activeEngine = null;
-  gameIndex++;
-  transition(() => {
-    const tmp = currentEl.id;
-    currentEl.id = nextEl.id;
-    nextEl.id = tmp;
-    startGame();
-  });
-});
-
-startGame();
+document.getElementById('title-screen').addEventListener('click', () => {
+  resumeAudio();
+  document.getElementById('title-screen').classList.add('hidden');
+  startGame();
+}, { once: true });
 </script>
 </body>
 </html>

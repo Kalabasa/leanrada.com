@@ -1,42 +1,97 @@
 /**
- * Drag Game — drag an emoji to a target
+ * Drag — drag an emoji to a target
+ *
+ * Variants (one per play):
+ * - simple: static target, just drag there
+ * - moving: target drifts around
+ * - walls: obstacles block the path
+ * - multi: deliver multiple times
  */
 export function dragGame(api) {
-  const targetX = api.width * (0.15 + api.random(0.7));
-  const targetY = api.height * (0.15 + api.random(0.5));
+  const c = api.complexity;
+  const bgHue = api.random(360);
+
+  const ballEmoji = ['🐱', '🐶', '🐝', '🚀', '🧲', '🐸', '🦊', '🐧'][Math.floor(api.random(8))];
+  const targetEmoji = ['🧶', '🦴', '🌸', '🌙', '🔩', '🪺', '💎', '⭐'][Math.floor(api.random(8))];
+
+  // Pick ONE variant
+  const variants = ['simple', 'moving', 'walls', 'multi'];
+  const variant = variants[Math.floor(api.random(variants.length))];
+
+  const numDeliveries = variant === 'multi' ? 2 + Math.floor(c * 0.5) : 1;
+  const driftSpeed = variant === 'moving' ? 20 + c * 25 : 0;
+  const numWalls = variant === 'walls' ? 1 + Math.floor(c * 1.5) : 0;
+
+  let delivered = 0;
+  let dragging = false;
   let ballX = api.width / 2;
   let ballY = api.height * 0.8;
-  let dragging = false;
 
-  const themes = [
-    { ball: '🐱', target: '🧶', bg: 280 },
-    { ball: '🐶', target: '🦴', bg: 30 },
-    { ball: '🐝', target: '🌸', bg: 50 },
-    { ball: '🚀', target: '🌙', bg: 230 },
-    { ball: '🧲', target: '🔩', bg: 200 },
-  ];
-  const theme = themes[Math.floor(api.random(themes.length))];
+  let targetX = api.width * (0.15 + api.random(0.7));
+  let targetY = api.height * (0.15 + api.random(0.4));
+  let driftAngle = api.random(Math.PI * 2);
+
+  // Generate walls
+  const walls = [];
+  for (let i = 0; i < numWalls; i++) {
+    walls.push({
+      x: api.width * (0.1 + api.random(0.8)),
+      y: api.height * (0.2 + api.random(0.4)),
+      r: 25 + api.random(20),
+    });
+  }
+
+  function resetBall() {
+    ballX = api.width / 2;
+    ballY = api.height * 0.8;
+    targetX = api.width * (0.15 + api.random(0.7));
+    targetY = api.height * (0.15 + api.random(0.4));
+    driftAngle = api.random(Math.PI * 2);
+    dragging = false;
+  }
 
   return {
-    duration: 6, // beats
+    title: variant === 'multi' ? `Deliver ${numDeliveries}x!` : 'Drag to target!',
+    duration: 6 + (numDeliveries - 1) * 2,
 
     draw(api) {
-      api.clear(`hsl(${theme.bg}, 35%, 12%)`);
+      api.clear(`hsl(${bgHue}, 35%, 12%)`);
 
-      api.fill('rgba(255,255,255,0.4)');
-      api.text('Drag to the target!', api.width / 2, 50, 18);
+      // Drift
+      if (driftSpeed > 0) {
+        driftAngle += api.dt * 0.001;
+        targetX += Math.cos(driftAngle) * driftSpeed * (api.dt / 1000);
+        targetY += Math.sin(driftAngle) * driftSpeed * (api.dt / 1000);
+        const m = 50;
+        if (targetX < m || targetX > api.width - m) driftAngle = Math.PI - driftAngle;
+        if (targetY < m || targetY > api.height * 0.65) driftAngle = -driftAngle;
+        targetX = Math.max(m, Math.min(api.width - m, targetX));
+        targetY = Math.max(m, Math.min(api.height * 0.65, targetY));
+      }
 
-      const tPulse = 1 + 0.15 * Math.sin(api.beatFrac * Math.PI * 2);
+      // Walls
+      for (const w of walls) {
+        api.emoji('🧱', w.x, w.y, w.r * 1.5);
+      }
+
+      // Target
+      const tPulse = 1 + 0.2 * api.pulse;
       api.push();
       api.translate(targetX, targetY);
       api.scale(tPulse);
       api.stroke('rgba(255,255,255,0.3)', 2);
       api.circle(0, 0, 45);
-      api.emoji(theme.target, 0, 0, 48);
+      api.emoji(targetEmoji, 0, 0, 48);
       api.pop();
 
-      api.emoji(theme.ball, ballX, ballY, dragging ? 56 : 48);
+      // Counter
+      if (numDeliveries > 1) {
+        api.fill('rgba(255,255,255,0.4)');
+        api.text(`${delivered}/${numDeliveries}`, api.width / 2, api.height * 0.92, 18);
+      }
 
+      // Ball
+      api.emoji(ballEmoji, ballX, ballY, dragging ? 56 : 48);
       api.stroke('rgba(255,255,255,0.08)', 1);
       api.line(ballX, ballY, targetX, targetY);
     },
@@ -49,9 +104,22 @@ export function dragGame(api) {
       if (!dragging) return;
       ballX = x;
       ballY = y;
-      if (api.dist(ballX, ballY, targetX, targetY) < 40) {
+
+      for (const w of walls) {
+        if (api.dist(ballX, ballY, w.x, w.y) < w.r + 20) {
+          resetBall();
+          return;
+        }
+      }
+
+      if (api.dist(ballX, ballY, targetX, targetY) < 45) {
+        delivered++;
         api.sound.tap();
-        api.win();
+        if (delivered >= numDeliveries) {
+          api.win();
+        } else {
+          resetBall();
+        }
       }
     },
 
