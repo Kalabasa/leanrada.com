@@ -68,8 +68,8 @@ export function oddOneOutGame(api) {
   }
 
   // Variant-specific intensity
-  const moveSpeed = variant === 'moving' ? (10 + c * 15) : 0;
-  const blinkRate = variant === 'blink' ? (1 + c * 0.5) : 0;
+  const moveSpeed = variant === 'moving' ? 10 : 0;
+  const blinkRate = variant === 'blink' ? 1 : 0;
 
   let tapped = false;
 

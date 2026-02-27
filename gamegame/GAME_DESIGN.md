@@ -15,6 +15,7 @@ Endless feed of microgames. Win → complexity goes up, BPM goes up. Lose → co
 ## Complexity, not difficulty
 - `api.complexity` is unbounded (0 → ∞), grows super-linearly with wins
 - Complexity means **more to think about**, not more precision required
+- Complexity does not mean speed.
 - The game is on a touch screen — inputs should be lenient (fat tap targets, generous hitboxes, forgiving timing windows)
 - Challenge comes from **fast thinking**: scanning a bigger grid, tracking more objects, parsing a harder fraction
 - Never punish imprecise fingers. Punish slow brains.
@@ -43,7 +44,6 @@ Endless feed of microgames. Win → complexity goes up, BPM goes up. Lose → co
 - Your game should be **instantly winnable** at c=0 — a new player sees it and gets it in <1 second
 - At c=1, it should take a moment of thought — scan, track, calculate
 - At c=5+, it should feel overwhelming but still technically possible
-- Use `c` as a continuous parameter in formulas, not `if (c > 2) items = 20`
 - **Use diminishing returns** for quantities that could become impossible. Linear `1 + c * 2` becomes a wall. Use `log2(1 + c)` or `sqrt(c)` so the game always gets harder but never becomes literally unwinnable. There must always be a gap to dodge through, a moment to think, a way to win.
 - Test your game at c=0, c=1, c=5, c=10 to make sure it scales sensibly and is always technically winnable
 
@@ -51,7 +51,6 @@ Endless feed of microgames. Win → complexity goes up, BPM goes up. Lose → co
 - Game content (emoji, ratios, grids, attack patterns) should be **generated**, not picked from curated lists
 - Complexity scaling should be a continuous function, not if/else tiers
 - One algorithm that naturally produces simple content at c=0 and chaotic content at c=10
-- If you're writing `if (c < 0.5) ... else ...`, you're doing it wrong. Use `c` as a parameter to a formula.
 
 ## Variation dimensions
 

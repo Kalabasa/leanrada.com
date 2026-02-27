@@ -38,7 +38,7 @@ export function dodgeGame(api) {
       api.clear(`hsl(${bgHue}, 30%, 10%)`);
 
       spawnTimer += api.dt;
-      const spawnInterval = (60000 / api.bpm) / 2;
+      const spawnInterval = (60000 / api.bpm) * 2;
       while (spawnTimer > spawnInterval) {
         spawnTimer -= spawnInterval;
         for (let i = 0; i < spawnCount; i++) {

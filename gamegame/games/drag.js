@@ -19,8 +19,8 @@ export function dragGame(api) {
   const variant = variants[Math.floor(api.random(variants.length))];
 
   const numDeliveries = variant === 'multi' ? 2 + Math.floor(c * 0.5) : 1;
-  const driftSpeed = variant === 'moving' ? 20 + c * 25 : 0;
-  const numWalls = variant === 'walls' ? 1 + Math.floor(c * 1.5) : 0;
+  const driftSpeed = variant === 'moving' ? 20 : 0;
+  const numWalls = variant === 'walls' ? Math.min(8, 1 + Math.floor(c * 0.5)) : 0;
 
   let delivered = 0;
   let dragging = false;

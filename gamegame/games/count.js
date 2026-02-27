@@ -30,7 +30,7 @@ export function countGame(api) {
   const areaH = api.height * 0.45;
   const areaTop = api.height * 0.1;
 
-  const moveSpeed = variant === 'moving' ? 15 + c * 10 : 0;
+  const moveSpeed = variant === 'moving' ? 15 : 0;
 
   const items = [];
   for (let i = 0; i < total; i++) {

@@ -35,7 +35,7 @@ export function matchGame(api) {
   const optionY = api.height * 0.6;
   const radius = Math.min(api.width * 0.35, 150);
   let spinAngle = 0;
-  const spinSpeed = variant === 'spinning' ? (1 + c * 0.3) : 0;
+  const spinSpeed = variant === 'spinning' ? 1 : 0;
   let growScale = variant === 'growing' ? 0 : 1;
   let swapTimer = 0;
   const swapInterval = variant === 'swap' ? Math.max(400, 1200 - c * 100) : Infinity;
