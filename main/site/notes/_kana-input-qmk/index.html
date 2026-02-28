@@ -437,7 +437,7 @@ kana[2] = 0x80 | (codepoint & 0b00111111);</code></pre>
 </main>
 
 <article-footer></article-footer>
-
+w
 <site-footer></site-footer>
 <style>
   .hover-char {
@@ -445,20 +445,20 @@ kana[2] = 0x80 | (codepoint & 0b00111111);</code></pre>
     cursor: pointer;
   }
   .highlight-vowel {
-    background: #ff02;
-    color: #fff;
+    background: #f0f2;
+    color: #f8f;
   }
   .highlight-x-row {
     background: #00f2;
-    color: #fff;
+    color: #bbf;
   }
   .highlight-youon {
-    background: #0ff2;
-    color: #fff;
+    background: #ff02;
+    color: #ff8;
   }
   .highlight-small {
-    background: #f0f2;
-    color: #fff;
+    background: #0ff2;
+    color: #8ff;
   }
   .highlight-hover {
     background: #fff;
@@ -500,7 +500,12 @@ kana[2] = 0x80 | (codepoint & 0b00111111);</code></pre>
       rules: {}, // "vowel"|"xRow"|"youon"|"small" -> span
     };
 
-    // --- DOM helpers ---
+    function makeSpan(text) {
+      const sp = document.createElement("span");
+      sp.textContent = text;
+      return sp;
+    }
+
     function walkText(root) {
       const nodes = [];
       const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -509,108 +514,61 @@ kana[2] = 0x80 | (codepoint & 0b00111111);</code></pre>
       return nodes;
     }
 
-    function replaceTN(node, parts) {
-      // parts: [{text, cls?, data?}]
-      const frag = document.createDocumentFragment();
-      const els = [];
-      for (const p of parts) {
-        if (p.cls) {
-          const sp = document.createElement("span");
-          sp.className = p.cls;
-          if (p.data) Object.assign(sp.dataset, p.data);
-          sp.textContent = p.text;
-          frag.appendChild(sp);
-          els.push(sp);
-        } else {
-          frag.appendChild(document.createTextNode(p.text));
-          els.push(null);
-        }
-      }
-      node.parentNode.replaceChild(frag, node);
-      return els;
-    }
-
-    function wrapTN(node, cls) {
-      const sp = document.createElement("span");
-      sp.className = cls;
-      sp.textContent = node.textContent;
-      node.parentNode.replaceChild(sp, node);
-      return sp;
-    }
-
     // --- Process text nodes ---
     let rowCount = 0;
 
     for (const node of walkText(codeEl)) {
+      // assume at most one line
       const txt = node.textContent;
 
       // 1. Column header vowels: line containing "A I U E O"
-      if (/A\s+I\s+U\s+E\s+O/.test(txt)) {
-        const parts = [];
-        for (let i = 0; i < txt.length; i++) {
-          const vi = VOWELS.indexOf(txt[i]);
-          const isolated =
-            vi >= 0 &&
-            (i === 0 || /[\s\/]/.test(txt[i - 1])) &&
-            (i + 1 >= txt.length || /[\s\/]/.test(txt[i + 1]));
-          if (isolated) {
-            parts.push({ text: txt[i], cls: "km-col", data: { vi } });
-          } else {
-            if (parts.length && !parts[parts.length - 1].cls)
-              parts[parts.length - 1].text += txt[i];
-            else parts.push({ text: txt[i] });
-          }
-        }
-        const els = replaceTN(node, parts);
-        parts.forEach((p, i) => {
-          if (p.cls === "km-col") spans.columnLabels[p.data.vi] = els[i];
-        });
+      const cm = txt.match(/^(.*?\/\/\s+)(A)(\s+)(I)(\s+)(U)(\s+)(E)(\s+)(O)(.*)$/s);
+      if (cm) {
+        node.replaceWith(...cm.slice(1).map((s, i) => {
+          if (i % 2 === 0) return s;
+          const sp = makeSpan(s);
+          spans.columnLabels[(i - 1) / 2] = sp;
+          return sp;
+        }));
         continue;
       }
 
       // 2. Row string: "XXXXX" (5 cells between quotes)
       //    Most syntax highlighters keep the whole string token in one text node.
-      const m = txt.match(/^"(.{5})"$/) || txt.match(/^"(.{5})"$/);
+      const m = txt.match(/^"(.{5})"$/);
       if (m && rowCount < ROW_KEYS.length) {
         const rowKey = ROW_KEYS[rowCount++];
-        const parts = [
-          { text: txt[0] }, // opening quote
-          ...[...m[1]].map((ch, i) => ({
-            text: ch,
-            cls: "km-cell",
-            data: { rowKey, ci: i },
-          })),
-          { text: txt[txt.length - 1] }, // closing quote
-        ];
-        const els = replaceTN(node, parts);
-        spans.cells[rowKey] = els.slice(1, 6); // the 5 cell spans
+        const cellSpans = [...m[1]].map(makeSpan);
+        spans.cells[rowKey] = cellSpans;
+        node.replaceWith(txt[0], ...cellSpans, txt[txt.length - 1]);
         continue;
       }
 
       // 3. Row label in trailing comment: // A (vowel), // B, // X (small vowels), etc.
-      const lm = txt.match(/^(\/\/\s*)([A-Z]{1,2})\b/);
+      const lm = txt.match(/^(\/\/\s*)([A-Z]{1,5})(.*)$/s);
       if (lm && ROW_KEYS.includes(lm[2])) {
-        const key = lm[2];
-        const cut = lm[1].length;
-        const els = replaceTN(node, [
-          { text: txt.slice(0, cut) },
-          { text: key, cls: "km-lbl", data: { rowKey: key } },
-          { text: txt.slice(cut + key.length) },
-        ]);
-        spans.rowLabels[key] = els[1];
+        const sp = makeSpan(lm[2]);
+        spans.rowLabels[lm[2]] = sp;
+        node.replaceWith(lm[1], sp, lm[3]);
         continue;
       }
 
       // 4. Special-case rule comments
       const ruleMap = [
-        ["vowel", /Vowels are the same/i],
-        ["xRow", /XA.*mapped to small/i],
-        ["youon", /indicates youon/i],
-        ["small", /indicates.*small vowel/i],
+        ["vowel", /^(.*?)(Vowels are the same.*)$/i],
+        ["xRow", /^(.*?)(XA.*?mapped to small.*)$/i],
+        ["youon", /^(.*?)(Ｙ indicates.*)$/i],
+        ["small", /^(.*?)(Ｓ indicates.*)$/i],
       ];
       for (const [key, re] of ruleMap) {
-        if (re.test(txt)) {
-          spans.rules[key] = wrapTN(node, "km-rule");
+        if (spans.rules[key]) continue;
+        const m = txt.match(re);
+        console.log(txt, re);
+        if (m) {
+          console.log(m);
+          const sp = makeSpan(m[2]);
+          spans.rules[key] = sp;
+          node.replaceWith(m[1], sp);
           break;
         }
       }
@@ -645,7 +603,7 @@ kana[2] = 0x80 | (codepoint & 0b00111111);</code></pre>
     }
 
     for (const [rowKey, cells] of Object.entries(spans.cells)) {
-      cells.forEach((span, i) => {
+      cells.forEach((span, ci) => {
         const ch = span.textContent ?? "";
 
         let spanClass;
@@ -663,9 +621,24 @@ kana[2] = 0x80 | (codepoint & 0b00111111);</code></pre>
         }
         span.classList.add("hover-char");
 
-        span.addEventListener("mouseenter", () => onHover(span, rowKey, i));
+        span.addEventListener("mouseenter", () => onHover(span, rowKey, ci));
         span.addEventListener("mouseleave", clearHover);
       });
+    }
+    
+    const ruleCells = {
+      vowel: Object.entries(spans.cells).filter(([rk]) => VOWEL_ROW_KEYS.has(rk)).flatMap(([, c]) => c),
+      xRow:  spans.cells["X"] ?? [],
+      youon: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｙ"),
+      small: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｓ"),
+    };
+
+    for (const [key, ruleSpan] of Object.entries(spans.rules)) {
+      ruleSpan.addEventListener("mouseenter", () => {
+        ruleSpan.classList.add("highlight-hover");
+        ruleCells[key].forEach(sp => sp.classList.add("highlight-hover"));
+      });
+      ruleSpan.addEventListener("mouseleave", clearHover);
     }
   }
 </script>
