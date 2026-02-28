@@ -23,7 +23,6 @@
 </tag-row>
 
 <main appearance="prose">
-
 <p>I implemented a Japanese input method on my keyboard firmware.</p>
 
 <p>This is used to write in katakana and hiragana (syllable-based writing systems for Japanese) using Roman letters on my keyboard.</p>
@@ -32,11 +31,11 @@
 
 <h2>How kana works</h2>
 
-<p>Kana are syllabaries, writing systems in which a consonant-vowel <em>syllable</em> is written as one character.</p>
+<p>Kana are syllabaries, writing systems where a consonant-vowel syllable is written as a single character.</p>
 
-<p>A way to type kana on ‘regular’ keyboards is <strong>romaji</strong>, using Roman letters to output kana symbols. E.g. <em>sushi</em> = <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>.</p>
+<p>A common way to type kana on a regular keyboard is <strong>romaji</strong>, using Roman letters to produce kana. For example, <em>sushi</em> = <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>.</p>
 
-<p>We can lay it out in a grid with vowels as columns and consonants as rows.</p>
+<p>We can lay this out in a table with vowels as columns and consonants as rows:</p>
 
 <prose-table>
   <table>
@@ -78,13 +77,13 @@
   </table>
 </prose-table>
 
-<p>This tabular representation inspired the core idea behind my implementation.</p>
+<p>This tabular structure inspired the core idea behind my implementation.</p>
 
 <h2>The map</h2>
 
-<p>The core idea was a 2D lookup table. Since program space is severely limited on a keyboard firmware, I thought it’d be good to represent all of romaji rules in a table.</p>
+<p>The core idea is a 2D lookup table. Since program space is severely limited in keyboard firmware, I wanted to represent all romaji rules in a single compact table.</p>
 
-<p>Columns in the lookup table are the five vowels. But rows include all possible letters in order to generalise the logic, accomodate vowels, and more.</p>
+<p>Columns are the five vowels. Rows cover every Roman letter, including those that don’t make sense for Japanese, to keep the indexing logic simple and generalised.</p>
 
 <code-block language="clike">
   <pre><code>static char MAP[ROW_COUNT][5*3] = {
@@ -118,27 +117,29 @@
 };</code></pre>
 </code-block>
 
-<p>Every Roman letter gets a row in the map even if it doesn’t make sense for kana. This makes the indexing logic simple. Since <a href="https://www.kenkoonwong.com/blog/usb-hid-key-press-report/#a-table-of-usage-id" target="_blank">keycodes</a> are assigned alphabetically in a contiguous block, we can use pointer arithmetic <code>MAP[pressed_keycode - keycode(‘a’)]</code> to look up the row for any letter. The offset is just the letter’s position in the alphabet.</p>
+<p>Every letter in the alphabet has a row in the map even if it isn't used for kana to make indexing simple. Since <a href="https://www.kenkoonwong.com/blog/usb-hid-key-press-report/#a-table-of-usage-id" target="_blank">keycodes</a> are assigned alphabetically in a contiguous block, we can use pointer arithmetic <code>MAP[pressed_keycode - keycode('a')]</code> to look up the row for any pressed key. The offset is just the letter's position in the alphabet.</p>
 
-<p>For letter combinations that don’t really make sense in Japanese writing, like he sequence <code>Q,A</code>, let’s mark them with <code>？</code> in the map <em>for now</em>. More on special values later.</p>
-
-<code-block language="clike">
-  <pre><code>  "？？く？？", // Q</code></pre>
-</code-block>
-
-<p>The <code>X</code> row is reused to input small vowels ぁぃぅぇぉ (there is no ‘<em>x</em>’ consonant in the Japanese language).</p>
+<p>For letter combinations that don't map to anything in Japanese, like <code>Q,A</code>, let’s mark them with <code>？</code> for now. More on special values later.</p>
 
 <code-block language="clike">
-  <pre><code>  "ぁぃぅぇぉ", // X (small vowels)</code></pre>
+  <pre><code>// A I U E O
+  "？？く？？", // Q</code></pre>
 </code-block>
 
-<p>Those are the basics of the map lookup design. But you might be wondering how this 2D map of Unicode chars even works in C. What about endianness? Doesn’t Unicode use variable length encoding? How would a 2D table of variable-length characters work?</p>
+<p>The <code>X</code> row is reused to input small vowels ぁぃぅぇぉ (there is no <em>x</em> consonant in Japanese).</p>
+
+<code-block language="clike">
+  <pre><code>// A I U E O
+  "ぁぃぅぇぉ", // X (small vowels)</code></pre>
+</code-block>
+
+<p>Those are the basics of the map lookup. But you might be wondering how a 2D table of Unicode characters even works in C. What about endianness? Doesn't Unicode use variable-length encoding? How would indexing into that work?</p>
 
 <h2>UTF-8</h2>
 
-<p>First of all, the Unicode API of the <a href="https://qmk.fm/" target="_blank">QMK</a> keyboard firmware framework that I’m using only works with UTF-8, so I’m restricted to that encoding when sending codes from the keyboard to the computer.</p>
+<p>The <a href="https://qmk.fm/" target="_blank">QMK</a> firmware framework I'm using only supports UTF-8 for Unicode output, so that's the encoding I needed to work with.</p>
 
-<p>UTF-8 is a variable-length encoding spanning the full 21-bit Unicode range <code>U+0000</code>&ndash;<code>U+10FFFF</code>. The number of bytes used depends on the character:</p>
+<p>UTF-8 is a variable-length encoding spanning the full 21-bit Unicode range <code>U+0000</code>&ndash;<code>U+10FFFF</code>. The number of bytes each character takes up depends on the character range:</p>
 
 <prose-table>
   <table>
@@ -161,45 +162,53 @@
   </table>
 </prose-table>
 
-<p><a href="https://www.utf8-chartable.de/unicode-utf8-table.pl?start=12352&number=192&view=2" target="_blank">Kana characters</a> are in the <code>U+3040</code>&ndash;<code>U+30FF</code> range, falling within the 3-byte range, so any kana character is always <strong>3 bytes</strong> in UTF-8.</p>
+<p><a href="https://www.utf8-chartable.de/unicode-utf8-table.pl?start=12352&number=192&view=2" target="_blank">Kana characters</a> fall in the <code>U+3040</code>&ndash;<code>U+30FF</code> range, so every kana character is exactly <strong>3 bytes</strong> in UTF-8.</p>
 
-<p>This means every row in the map, containing 5 kana characters, is consistently 15 bytes long.</p>
-
-<p>Every kana character can then be directly addressable by simple index arithmetic!</p>
+<p>This means every row in the map, which is 5 kana characters, is consistently 15 bytes long, so any character can be addressed with simple index arithmetic!</p>
 
 <code-block language="clike">
-  <pre><code>// kana_ptr points to the kana character (3 bytes long)
+  <pre><code>// kana_ptr points to the kana character (3 bytes)
 char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
 </code-block>
 
-<p>Getting a pointer to <code>"<ruby>す<rt>su</rt></ruby>"</code>, for example, is simply <code>&MAP['s' - 'a'][2 * 3]</code>.</p>
+<p>Getting a pointer to <ruby>す<rt>su</rt></ruby>, for example, is simply <code>&MAP['s' - 'a'][2 * 3]</code>.</p>
 
-<p>Finally, to send a kana character with QMK:</p>
+<p>Finally, to send a kana character in QMK from a consonant and vowel keypress:</p>
 
 <code-block language="clike">
-  <pre><code>// Get pointer to the kana character
+  <pre><code>// Get indices
+uint letter_index = prev_letter_keycode - KC_A;
+uint vowel_index = vowel_index_for(curr_letter_keycode);
+// Get pointer to the kana character
 char* kana_ptr = &MAP[letter_index][vowel_index * 3];
-// Copy 3 bytes to null-terminated buffer
+// Copy 3 bytes into a null-terminated buffer
 static char buf[4] = "\0\0\0\0";
 strncpy(buf, kana_ptr, 3);
-// QMK function to send unicode accepts
-// the null-terminated UTF-8 string
-send_unicode_string(buf);
-</code></pre>
+// Send as a null-terminated UTF-8 string
+send_unicode_string(buf);</code></pre>
 </code-block>
 
-<h2>Special rules</h2>
+<h2>Independent vowels</h2>
 
-<p>Romaji doesn’t always neatly map 2 letters to one kana char. For example, the <em>shi</em> in <em>sushi</em> is 1 char: the ‘し’ in <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>. That’s 3 letters to one char.</p>
-
-<h2>ch and sh</h2>
-
-<p>The main issue is that English sometimes uses 2 letters to represent a single sound. These include the sounds <em>sh</em> and <em>ch</em>. A simple fix is to treat these sounds as proper consonants, and then map raw <code>S,H</code> and <code>C,H</code> key sequences to the virtual consonants. These new rows are appended at the end without affecting the indexing logic of the real letters.</p>
+<p>It’s not always a consonant-vowel pair. If the last letter wasn’t a consonant, then we can skip the whole syllable processing logic and just output the vowel symbol directly: <code>MAP[letter_index][0]</code>. <small>By the way, the table can also tell whether a letter is a consonant or a vowel. There’s no separate list of consonants.</small></p>
 
 <code-block language="clike">
   <pre><code>static char MAP[ROW_COUNT][5*3] = {
   // A I U E O
-  "あああああ", // A (vowel)
+  "あああああ", // A (vowel)</code></pre>
+</code-block>
+
+<h2>Special rules</h2>
+
+<p>Romaji doesn't always map two letters to one kana. For example, <em>shi</em> in <em>sushi</em> is three letters but a single character: the し in <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>.</p>
+
+<h3>ch and sh</h3>
+
+<p>English sometimes uses two letters for a single sound, like <em>sh</em> and <em>ch</em>. The fix is to treat these as proper consonants and map the key sequences <code>S,H</code> and <code>C,H</code> to extra ‘virtual consonant’ rows appended at the end of the table. This doesn’t affect the indexing of the real letter rows.</p>
+
+<code-block language="clike">
+  <pre><code>static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
   // &vellip;
   "ざじずぜぞ", // Z
   [ROW_EXTRA_CH] = "？ち？？？",
@@ -207,15 +216,15 @@ send_unicode_string(buf);
 };</code></pre>
 </code-block>
 
-<p>With this we can type shi and chi to output し and ち.</p>
+<p>How it works is by typing, say <code>S,H</code>, the algorithm would set the ‘previous letter’ variable to <code>ROW_EXTRA_SH</code> instead of the literal <code>'H'</code>. Then the next vowel’s lookups would look into the <em>SH</em> row instead of the <code>H</code> row.</p>
 
-<h2>kya kyu kyo</h2>
+<p>With this, typing <em>shi</em> outputs し and <em>chi</em> outputs ち as expected.</p>
 
-<p>There are also cases where 2 letters map to 2 chars. For example, <em>ja</em> is two kana chars: じゃ (<ruby>じ<rt>ji</rt></ruby> + small <ruby>や<rt>ya</rt></ruby>).</p>
+<h3>kya, kyu, kyo</h3>
 
-<p>Similarly, <em>ju</em> is じゅ and <em>jo</em> is じょ. This class of sounds is called yōon, where a syllable ending in <em>i</em> bends into a <em>ya</em>, <em>yu</em>, or <em>yo</em> sound.</p>
+<p>Some sounds map two Roman letters to two kana characters. For example, <em>ja</em> is じゃ (<ruby>じ<rt>ji</rt></ruby> + small <ruby>や<rt>ya</rt></ruby>). Similarly, <em>ju</em> → じゅ and <em>jo</em> → じょ. This class of sounds is called <em>yōon</em>, where a syllable ending in <em>i</em> blends into a <em>ya</em>, <em>yu</em>, or <em>yo</em> sound.</p>
 
-<p>These get a special symbol in the map to mark special handling. Here, let’s use fullwidth Ｙ (still 3 bytes):</p>
+<p>These get a special marker in the table. Here, it’s a fullwidth Ｙ (also 3 bytes) to signal special handling:</p>
 
 <code-block language="clike">
   <pre><code>static char MAP[ROW_COUNT][5*3] = {
@@ -231,43 +240,432 @@ send_unicode_string(buf);
 };</code></pre>
 </code-block>
 
-<p>When a lookup returns Ｙ, we output the consonant + i, then the small ya, yu, or yo char, which is stored in an extra row.</p>
+<p>Note that this rule integrates with the CH and SH rows/rules seamlessly.</p>
 
-<p>All in all, that means:
-  if (MAP[letter_index][vowel_index * 3] equals "Ｙ") {
-    send(MAP[letter_index][vowel_index_for("I") * 3]);
-    send(MAP[ROW_EXTRA_YOUON][vowel_index * 3]);
-  }
-</p>
+<p>When a lookup returns Ｙ, we output the consonant's <em>i</em> form, then the small ya/yu/yo from the extra row:</p>
 
-<h2>fa fi fe fo</h2>
+<code-block language="clike">
+  <pre><code>if (match(&MAP[letter_index][vowel_index * 3], "Ｙ")) {
+  send_kana_char(&MAP[letter_index][vowel_offset(KC_I)]);
+  send_kana_char(&MAP[ROW_EXTRA_YOUON][vowel_index * 3]);
+}</code></pre>
+</code-block>
 
-blah blah
+<p>That’s not all. We also need to catch the three-letter yōons, such as <em>nya</em>, <em>nyu</em>, and <em>nyo</em>:</p>
 
-<h2>Other special cases, not in the map</h2>
+<code-block language="clike">
+  <pre><code>if (
+  is_consonant(prev_prev_ keycode)
+  && prev_consonant == KC_Y
+  && !empty(&MAP[ROW_EXTRA_YOUON][vowel_offset(curr_vowel)])
+) {
+  send_kana_char(
+    &MAP[prev_prev_keycode - KC_A][vowel_offset(KC_I)]);
+  send_kana_char(
+    &MAP[ROW_EXTRA_YOUON][vowel_offset(curr_vowel)]);
+}</code></pre>
+</code-block>
 
-<p>three letter specials tsu → つ, dzu → づ</p>
+<p>With this, we can type:</p>
 
-<p>Double consonants output small っ</p>
+<prose-table>
+  <table>
+    <tr>
+      <td>ja
+      <td>じゃ
+    <tr>
+      <td>nya
+      <td>にゃ
+    <tr>
+      <td>kyo
+      <td>きょ
+    <tr>
+      <td>chu
+      <td>ちゅ
+    <tr>
+      <td>sha
+      <td>しゃ
+  </table>
+</prose-table>
 
-<p>Standalone n → ん, with n' to disambiguate before vowels</p>
+<h3>fa, fi, fe, fo</h3>
 
-<h2>Basic flow</h2>
+<p>Japanese has no native <em>fa</em>, <em>fi</em>, <em>fe</em>, or <em>fo</em> sounds, only <em>fu</em> (ふ). These foreign sounds are approximated by combining ふ with a small vowel: <em>fa</em> → ふぁ, <em>fi</em> → ふぃ, and so on.</p>
 
-<p>Since much of the logic is encoded in the map, the keypress processing logic should be straightforward. Pressing a vowel always triggers a lookup. The lookup is based on the last pressed key (if it was a consonant).</p>
+<p>We can mark these cases with the special value <code>Ｓ</code>:</p>
+
+<code-block language="clike">
+  <pre><code>// A I U E O
+  "ＳＳふＳＳ", // F</code></pre>
+</code-block>
+
+<p>When a lookup returns <code>Ｓ</code>, we need to find the base syllable for that row. Find the column that isn't marked special. For the F row that's <ruby>ふ<rt>fu</rt></ruby>. We then output that base syllable followed by the small vowel from the <code>X</code> row:</p>
+
+<code-block language="clike">
+  <pre><code>if (match(&MAP[letter_index][vowel_index * 3], "Ｓ")) {
+  uint16_t base_vowel = get_base_vowel(prev_keycode, curr_keycode);
+  send_kana_char(
+    &MAP[prev_keycode - KC_A][vowel_offset(base_vowel)]);
+  send_kana_char(
+    &MAP[ROW_SMALL_VOWELS][vowel_offset(curr_keycode)]);
+}</code></pre>
+</code-block>
+
+<p>The same mechanism handles other borrowed sounds like <em>va</em> → ゔぁ and <em>di</em> → でぃ, which are also marked with <code>Ｓ</code> in their respective rows.</p>
+
+<p>This completes the generalised lookup table for romaji:</p>
+
+<code-block language="clike">
+  <pre><code id="map">// A-Z mapped to kana in UTF-8.
+//
+// Since kana is a syllabary, it's a 2D map:
+//   1. Rows map to one Roman letter in ASCII order.
+//   2. Columns map to vowels A, I, U, E, O, in that order.
+//   3. Thus, a syllable is a row-column pair.
+//
+// Every char takes up exactly 3 bytes (due to UTF-8 encoding of chars in this range U+3040..U+30FF).
+// Thus it's possible address any syllable by its letter-vowel pair.
+// - MAP[letter_idx][vowel_idx * 3]
+//
+// Special cases:
+// - Vowels are the same for all columns
+// - XA, XI, XU, XE, XO are mapped to small vowel kana
+// - Ｙ indicates youon (never in the I column)
+// - Ｓ indicates additional small vowel must be used
+static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  "あああああ", // A (vowel)
+  "ばびぶべぼ", // B
+  "ＹちＹＳＹ", // C
+  "だＳづでど", // D
+  "えええええ", // E (vowel)
+  "ＳＳふＳＳ", // F
+  "がぎぐげご", // G
+  "はひふへほ", // H
+  "いいいいい", // I (vowel)
+  "ＹじＹＳＹ", // J
+  "かきくけこ", // K
+  "らりるれろ", // L
+  "まみむめも", // M
+  "なにぬねの", // N
+  "おおおおお", // O (vowel)
+  "ぱぴぷぺぽ", // P
+  "ＳＳくＳＳ", // Q
+  "らりるれろ", // R
+  "さしすせそ", // S
+  "たＳつてと", // T
+  "ううううう", // U (vowel)
+  "ＳＳゔＳＳ", // V
+  "わＳうＳを", // W
+  "ぁぃぅぇぉ", // X (small vowels)
+  "やいゆえよ", // Y
+  "ざじずぜぞ", // Z
+  [ROW_EXTRA_YOUON] = "ゃ　ゅ　ょ",
+  [ROW_EXTRA_CH]    = "ＹちＹＳＹ",
+  [ROW_EXTRA_SH]    = "ＹしＹＳＹ",
+};
+
+// enum helps keep track of virtual letter rows and total size
+enum {
+  ROW_EXTRA_YOUON = 'z' - 'a' + 1,
+  ROW_EXTRA_CH,
+  ROW_EXTRA_SH,
+  ROW_COUNT
+};</code></pre>
+</code-block>
+
+<h2>Actual special cases</h2>
+
+<p>Some rules don't fit neatly into the 2D map and are handled separately in logic.</p>
+
+<h3>Three-letter sequences</h3>
+
+<p>A couple kana can be resolved three specific Roman letters. The only cases are: <em>tsu</em> → つ and <em>dzu</em> → づ. I wasn’t able to find a general pattern that fit the rest so these are detected explicitly before checking the map. If the input matches a known three-letter sequence, we skip the lookup and output the character directly.</p>
+
+<h3>Double consonants</h3>
+
+<p>In romaji, a doubled consonant indicates a kind of a glottal stop written as small っ. For example, <em>nikki</em> → <ruby>に<rt>ni</rt>っ<rt></rt>き<rt>ki</rt></ruby>. When the same consonant is pressed twice in a row, we output っ and continue processing the second keypress normally.</p>
+
+<h3>Standalone n</h3>
+
+<p>N (ん) is the only kana consonant that can stand alone without a vowel. But this creates an ambiguity: typing <em>na</em> should produce な, not ん + あ. The solution is to buffer the <em>n</em> and wait for the next keypress. If a vowel or <em>y</em> follows, we proceed with the normal map lookup. If another consonant follows, or the user types <em>n'</em> explicitly, we output ん and move on.</p>
 
 <h2>Katakana via Shift</h2>
-<!-- Holding Shift converts hiragana output to katakana -->
-<!-- Done by adding the Unicode offset between あ and ア -->
-<!-- UTF-8 re-encoding in place — only the last two bytes change -->
+
+<p>Holding Shift while typing converts the output to katakana instead of hiragana. Since the hiragana and katakana Unicode blocks share the same internal order, can can just offset the hiragana by a certain amount to get katakana. Just like adding <code>('A' - 'a')</code> to an ASCII lowercase letter gives you the corresponding uppercase letter, adding an offset of <code>(L'ア' - L'あ')</code> code points to any hiragana maps it to katakana.</p>
+
+<p>Problem is we’re working with UTF-8, not code points directly. A two-way conversion is needed to do the offset in code point space:</p>
+
+<code-block language="clike">
+  <pre><code>// decode UTF-8
+uint32_t codepoint = ((kana[1] & 0b00111111) << 6) | (kana[2] & 0b00111111);
+// do the shift
+codepoint += (uint32_t)L'ア' - (uint32_t)L'あ';
+// encode back to UTF-8
+kana[1] = 0x80 | ((codepoint >> 6) & 0b00111111);
+kana[2] = 0x80 | (codepoint & 0b00111111);</code></pre>
+</code-block>
 
 <h2>The typing feel</h2>
-<!-- Immediate feedback: consonant keys emit the Roman letter right away -->
-<!-- When the vowel arrives, backspace the Roman letter and replace with kana -->
-<!-- 2-second timeout resets state if you pause mid-syllable -->
+
+<p>An inherent awkwardness in romaji input (<a href="/notes/baybayin_abugida_keyboard_qmk/">and other syllable-based Roman input methods</a>) is you only know which kana to output once the final vowel is pressed. Waiting silently, buffering consonants until then would make the keyboard feel unresponsive.</p>
+
+<p>The solution is to emit the Roman letter immediately on each consonant keypress, giving instant feedback. When the vowel arrives, we backspace over the previous consonants and replace it with the final kana:</p>
+
+<code-block language="clike">
+  <pre><code>// in my keypress processing logic
+} else if (curr_cons) {
+  tap_code(curr_keycode); // emit Roman letter immediately
+} else if (prev_cons && curr_vowel) {
+  syllable_t syllable = process_syllable(prev_prev_cons, prev_cons, curr_vowel);
+  // delete Roman letter(s)
+  while (syllable.backspaces-- > 0) tap_code(KC_BACKSPACE); 
+  send_kana_unicode(...);
+}</code></pre>
+</code-block>
+
+<p>For multi-letter combinations like <em>sh</em> or <em>tsu</em>, multiple backspaces are issued accordingly. If you pause mid-syllable for more than 2 seconds, the state resets, abandoning the buffered consonant, and the next keypress starts fresh.</p>
+
+<h2>Why not implement a software IME?</h2>
+
+<a href="/notes/baybayin_abugida_keyboard_qmk/#why-not-ime">Answered here.</a>
+
+<h2>Source code</h2>
+
+<a href="https://github.com/Kalabasa/qmk_firmware/blob/f0cb372db52c313aa7d1d411088dbfd0bbe47c07/keyboards/lily58/keymaps/Kalabasa/features/kana.c" target="_blank">My QMK fork on GitHub</a>
 
 </main>
 
 <article-footer></article-footer>
 
 <site-footer></site-footer>
+<style>
+  .hover-char {
+    color: #fff;
+    cursor: pointer;
+  }
+  .highlight-vowel {
+    background: #ff02;
+    color: #fff;
+  }
+  .highlight-x-row {
+    background: #00f2;
+    color: #fff;
+  }
+  .highlight-youon {
+    background: #0ff2;
+    color: #fff;
+  }
+  .highlight-small {
+    background: #f0f2;
+    color: #fff;
+  }
+  .highlight-hover {
+    background: #fff;
+    color: #000;
+  }
+</style>
+<script>
+  initWhenReady(document.getElementById("map"));
+
+  function initWhenReady(codeEl) {
+    // If already syntax highlighted (spans present), run immediately
+    if (hasSyntaxHighlighting(codeEl)) {
+      makeMapInteractive(codeEl);
+      return;
+    }
+    // Otherwise wait for the highlighter to inject spans
+    const observer = new MutationObserver(() => {
+      if (hasSyntaxHighlighting(codeEl)) {
+        observer.disconnect();
+        makeMapInteractive(codeEl);
+      }
+    });
+    observer.observe(codeEl, { childList: true, subtree: true });
+  }
+
+  function hasSyntaxHighlighting(codeEl) {
+    return codeEl.querySelector("span");
+  }
+
+  function makeMapInteractive(codeEl) {
+    const VOWELS = ["A", "I", "U", "E", "O"];
+    const ROW_KEYS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "YOUON", "CH", "SH"];
+    const VOWEL_ROW_KEYS = new Set(["A", "E", "I", "O", "U"]);
+
+    const spans = {
+      columnLabels: [], // [spanA, spanI, spanU, spanE, spanO]
+      cells: {}, // rowKey -> [span x 5]
+      rowLabels: {}, // rowKey -> span
+      rules: {}, // "vowel"|"xRow"|"youon"|"small" -> span
+    };
+
+    // --- DOM helpers ---
+    function walkText(root) {
+      const nodes = [];
+      const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = w.nextNode())) nodes.push(n);
+      return nodes;
+    }
+
+    function replaceTN(node, parts) {
+      // parts: [{text, cls?, data?}]
+      const frag = document.createDocumentFragment();
+      const els = [];
+      for (const p of parts) {
+        if (p.cls) {
+          const sp = document.createElement("span");
+          sp.className = p.cls;
+          if (p.data) Object.assign(sp.dataset, p.data);
+          sp.textContent = p.text;
+          frag.appendChild(sp);
+          els.push(sp);
+        } else {
+          frag.appendChild(document.createTextNode(p.text));
+          els.push(null);
+        }
+      }
+      node.parentNode.replaceChild(frag, node);
+      return els;
+    }
+
+    function wrapTN(node, cls) {
+      const sp = document.createElement("span");
+      sp.className = cls;
+      sp.textContent = node.textContent;
+      node.parentNode.replaceChild(sp, node);
+      return sp;
+    }
+
+    // --- Process text nodes ---
+    let rowCount = 0;
+
+    for (const node of walkText(codeEl)) {
+      const txt = node.textContent;
+
+      // 1. Column header vowels: line containing "A I U E O"
+      if (/A\s+I\s+U\s+E\s+O/.test(txt)) {
+        const parts = [];
+        for (let i = 0; i < txt.length; i++) {
+          const vi = VOWELS.indexOf(txt[i]);
+          const isolated =
+            vi >= 0 &&
+            (i === 0 || /[\s\/]/.test(txt[i - 1])) &&
+            (i + 1 >= txt.length || /[\s\/]/.test(txt[i + 1]));
+          if (isolated) {
+            parts.push({ text: txt[i], cls: "km-col", data: { vi } });
+          } else {
+            if (parts.length && !parts[parts.length - 1].cls)
+              parts[parts.length - 1].text += txt[i];
+            else parts.push({ text: txt[i] });
+          }
+        }
+        const els = replaceTN(node, parts);
+        parts.forEach((p, i) => {
+          if (p.cls === "km-col") spans.columnLabels[p.data.vi] = els[i];
+        });
+        continue;
+      }
+
+      // 2. Row string: "XXXXX" (5 cells between quotes)
+      //    Most syntax highlighters keep the whole string token in one text node.
+      const m = txt.match(/^"(.{5})"$/) || txt.match(/^"(.{5})"$/);
+      if (m && rowCount < ROW_KEYS.length) {
+        const rowKey = ROW_KEYS[rowCount++];
+        const parts = [
+          { text: txt[0] }, // opening quote
+          ...[...m[1]].map((ch, i) => ({
+            text: ch,
+            cls: "km-cell",
+            data: { rowKey, ci: i },
+          })),
+          { text: txt[txt.length - 1] }, // closing quote
+        ];
+        const els = replaceTN(node, parts);
+        spans.cells[rowKey] = els.slice(1, 6); // the 5 cell spans
+        continue;
+      }
+
+      // 3. Row label in trailing comment: // A (vowel), // B, // X (small vowels), etc.
+      const lm = txt.match(/^(\/\/\s*)([A-Z]{1,2})\b/);
+      if (lm && ROW_KEYS.includes(lm[2])) {
+        const key = lm[2];
+        const cut = lm[1].length;
+        const els = replaceTN(node, [
+          { text: txt.slice(0, cut) },
+          { text: key, cls: "km-lbl", data: { rowKey: key } },
+          { text: txt.slice(cut + key.length) },
+        ]);
+        spans.rowLabels[key] = els[1];
+        continue;
+      }
+
+      // 4. Special-case rule comments
+      const ruleMap = [
+        ["vowel", /Vowels are the same/i],
+        ["xRow", /XA.*mapped to small/i],
+        ["youon", /indicates youon/i],
+        ["small", /indicates.*small vowel/i],
+      ];
+      for (const [key, re] of ruleMap) {
+        if (re.test(txt)) {
+          spans.rules[key] = wrapTN(node, "km-rule");
+          break;
+        }
+      }
+    }
+
+    spans.rules.vowel.classList.add("highlight-vowel");
+    spans.rules.xRow.classList.add("highlight-x-row");
+    spans.rules.youon.classList.add("highlight-youon");
+    spans.rules.small.classList.add("highlight-small");
+
+    function clearHover() {
+      codeEl
+        .querySelectorAll(".highlight-hover")
+        .forEach((el) => el.classList.remove("highlight-hover"));
+    }
+
+    function onHover(span, rowKey, ci) {
+      clearHover();
+      const ch = span.textContent || "";
+      span.classList.add("highlight-hover");
+      spans.columnLabels[ci].classList.add("highlight-hover");
+      spans.rowLabels[rowKey].classList.add("highlight-hover");
+      if (VOWEL_ROW_KEYS.has(rowKey)) {
+        spans.rules.vowel.classList.add("highlight-hover");
+      } else if (rowKey === "X") {
+        spans.rules.xRow.classList.add("highlight-hover");
+      } else if (ch === "Ｙ") {
+        spans.rules.youon.classList.add("highlight-hover");
+      } else if (ch === "Ｓ") {
+        spans.rules.small.classList.add("highlight-hover");
+      }
+    }
+
+    for (const [rowKey, cells] of Object.entries(spans.cells)) {
+      cells.forEach((span, i) => {
+        const ch = span.textContent ?? "";
+
+        let spanClass;
+        if (VOWEL_ROW_KEYS.has(rowKey)) {
+          spanClass = "highlight-vowel";
+        } else if (rowKey === "X") {
+          spanClass = "highlight-x-row";
+        } else if (ch === "Ｙ") {
+          spanClass = "highlight-youon";
+        } else if (ch === "Ｓ") {
+          spanClass = "highlight-small";
+        }
+        if (spanClass) {
+          span.classList.add(spanClass);
+        }
+        span.classList.add("hover-char");
+
+        span.addEventListener("mouseenter", () => onHover(span, rowKey, i));
+        span.addEventListener("mouseleave", clearHover);
+      });
+    }
+  }
+</script>
