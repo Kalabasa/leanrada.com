@@ -23,14 +23,248 @@
 </tag-row>
 
 <main appearance="prose">
-  
-<p>Input method to write in katakana and hiragana, syllable-based writing system, using Roman letters on a hardware keyboard.</p>
 
-<h2>The writing system</h2>
+<p>I implemented a Japanese input method on my keyboard firmware.</p>
 
-<p>Kana are writing systems used to write Japanese in which a consonant-vowel <em>syllable</em> is written as one letter &mdash; they are <strong>syllabaries</strong>.</p>
+<p>This is used to write in katakana and hiragana (syllable-based writing systems for Japanese) using Roman letters on my keyboard.</p>
 
+(insert video here)
 
+<h2>How kana works</h2>
+
+<p>Kana are syllabaries, writing systems in which a consonant-vowel <em>syllable</em> is written as one character.</p>
+
+<p>A way to type kana on ‘regular’ keyboards is <strong>romaji</strong>, using Roman letters to output kana symbols. E.g. <em>sushi</em> = <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>.</p>
+
+<p>We can lay it out in a grid with vowels as columns and consonants as rows.</p>
+
+<prose-table>
+  <table>
+    <tr>
+      <th>
+      <th><em>A</em>
+      <th><em>I</em>
+      <th><em>U</em>
+      <th><em>E</em>
+      <th><em>O</em>
+    <tr>
+      <th><em>K</em>
+      <td>か
+      <td>き
+      <td>く
+      <td>け
+      <td>こ
+    <tr>
+      <th><em>S</em>
+      <td>さ
+      <td>し
+      <td>す
+      <td>せ
+      <td>そ
+    <tr>
+      <th><em>T</em>
+      <td>た
+      <td>ち
+      <td>つ
+      <td>て
+      <td>と
+    <tr>
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+  </table>
+</prose-table>
+
+<p>This tabular representation inspired the core idea behind my implementation.</p>
+
+<h2>The map</h2>
+
+<p>The core idea was a 2D lookup table. Since program space is severely limited on a keyboard firmware, I thought it’d be good to represent all of romaji rules in a table.</p>
+
+<p>Columns in the lookup table are the five vowels. But rows include all possible letters in order to generalise the logic, accomodate vowels, and more.</p>
+
+<code-block language="clike">
+  <pre><code>static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  "あああああ", // A (vowel)
+  "ばびぶべぼ", // B
+  "？ち？？？", // C
+  "だ？づでど", // D
+  "えええええ", // E (vowel)
+  "？？ふ？？", // F
+  "がぎぐげご", // G
+  "はひふへほ", // H
+  "いいいいい", // I (vowel)
+  "？じ？？？", // J
+  "かきくけこ", // K
+  "らりるれろ", // L
+  "まみむめも", // M
+  "なにぬねの", // N
+  "おおおおお", // O (vowel)
+  "ぱぴぷぺぽ", // P
+  "？？く？？", // Q
+  "らりるれろ", // R
+  "さしすせそ", // S
+  "た？つてと", // T
+  "ううううう", // U (vowel)
+  "？？ゔ？？", // V
+  "わ？う？を", // W
+  "ぁぃぅぇぉ", // X (small vowels)
+  "やいゆえよ", // Y
+  "ざじずぜぞ", // Z
+};</code></pre>
+</code-block>
+
+<p>Every Roman letter gets a row in the map even if it doesn’t make sense for kana. This makes the indexing logic simple. Since <a href="https://www.kenkoonwong.com/blog/usb-hid-key-press-report/#a-table-of-usage-id" target="_blank">keycodes</a> are assigned alphabetically in a contiguous block, we can use pointer arithmetic <code>MAP[pressed_keycode - keycode(‘a’)]</code> to look up the row for any letter. The offset is just the letter’s position in the alphabet.</p>
+
+<p>For letter combinations that don’t really make sense in Japanese writing, like he sequence <code>Q,A</code>, let’s mark them with <code>？</code> in the map <em>for now</em>. More on special values later.</p>
+
+<code-block language="clike">
+  <pre><code>  "？？く？？", // Q</code></pre>
+</code-block>
+
+<p>The <code>X</code> row is reused to input small vowels ぁぃぅぇぉ (there is no ‘<em>x</em>’ consonant in the Japanese language).</p>
+
+<code-block language="clike">
+  <pre><code>  "ぁぃぅぇぉ", // X (small vowels)</code></pre>
+</code-block>
+
+<p>Those are the basics of the map lookup design. But you might be wondering how this 2D map of Unicode chars even works in C. What about endianness? Doesn’t Unicode use variable length encoding? How would a 2D table of variable-length characters work?</p>
+
+<h2>UTF-8</h2>
+
+<p>First of all, the Unicode API of the <a href="https://qmk.fm/" target="_blank">QMK</a> keyboard firmware framework that I’m using only works with UTF-8, so I’m restricted to that encoding when sending codes from the keyboard to the computer.</p>
+
+<p>UTF-8 is a variable-length encoding spanning the full 21-bit Unicode range <code>U+0000</code>&ndash;<code>U+10FFFF</code>. The number of bytes used depends on the character:</p>
+
+<prose-table>
+  <table>
+    <thead>
+      <tr>
+        <th>Unicode character
+        <th>Bytes in UTF-8
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>U+0000</code>&ndash;<code>U+007F</code>
+        <td>1
+      <tr>
+        <td><code>U+0080</code>&ndash;<code>U+07FF</code>
+        <td>2
+      <tr>
+        <td><code>U+0800</code>&ndash;<code>U+FFFF</code>
+        <td>3
+    </tbody>
+  </table>
+</prose-table>
+
+<p><a href="https://www.utf8-chartable.de/unicode-utf8-table.pl?start=12352&number=192&view=2" target="_blank">Kana characters</a> are in the <code>U+3040</code>&ndash;<code>U+30FF</code> range, falling within the 3-byte range, so any kana character is always <strong>3 bytes</strong> in UTF-8.</p>
+
+<p>This means every row in the map, containing 5 kana characters, is consistently 15 bytes long.</p>
+
+<p>Every kana character can then be directly addressable by simple index arithmetic!</p>
+
+<code-block language="clike">
+  <pre><code>// kana_ptr points to the kana character (3 bytes long)
+char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
+</code-block>
+
+<p>Getting a pointer to <code>"<ruby>す<rt>su</rt></ruby>"</code>, for example, is simply <code>&MAP['s' - 'a'][2 * 3]</code>.</p>
+
+<p>Finally, to send a kana character with QMK:</p>
+
+<code-block language="clike">
+  <pre><code>// Get pointer to the kana character
+char* kana_ptr = &MAP[letter_index][vowel_index * 3];
+// Copy 3 bytes to null-terminated buffer
+static char buf[4] = "\0\0\0\0";
+strncpy(buf, kana_ptr, 3);
+// QMK function to send unicode accepts
+// the null-terminated UTF-8 string
+send_unicode_string(buf);
+</code></pre>
+</code-block>
+
+<h2>Special rules</h2>
+
+<p>Romaji doesn’t always neatly map 2 letters to one kana char. For example, the <em>shi</em> in <em>sushi</em> is 1 char: the ‘し’ in <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>. That’s 3 letters to one char.</p>
+
+<h2>ch and sh</h2>
+
+<p>The main issue is that English sometimes uses 2 letters to represent a single sound. These include the sounds <em>sh</em> and <em>ch</em>. A simple fix is to treat these sounds as proper consonants, and then map raw <code>S,H</code> and <code>C,H</code> key sequences to the virtual consonants. These new rows are appended at the end without affecting the indexing logic of the real letters.</p>
+
+<code-block language="clike">
+  <pre><code>static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  "あああああ", // A (vowel)
+  // &vellip;
+  "ざじずぜぞ", // Z
+  [ROW_EXTRA_CH] = "？ち？？？",
+  [ROW_EXTRA_SH] = "？し？？？",
+};</code></pre>
+</code-block>
+
+<p>With this we can type shi and chi to output し and ち.</p>
+
+<h2>kya kyu kyo</h2>
+
+<p>There are also cases where 2 letters map to 2 chars. For example, <em>ja</em> is two kana chars: じゃ (<ruby>じ<rt>ji</rt></ruby> + small <ruby>や<rt>ya</rt></ruby>).</p>
+
+<p>Similarly, <em>ju</em> is じゅ and <em>jo</em> is じょ. This class of sounds is called yōon, where a syllable ending in <em>i</em> bends into a <em>ya</em>, <em>yu</em>, or <em>yo</em> sound.</p>
+
+<p>These get a special symbol in the map to mark special handling. Here, let’s use fullwidth Ｙ (still 3 bytes):</p>
+
+<code-block language="clike">
+  <pre><code>static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  // &vellip;
+  "ＹちＹ？Ｙ", // C
+  // &vellip;
+  "ＹじＹ？Ｙ", // J
+  // &vellip;
+  [ROW_EXTRA_CH]    = "ＹちＹ？Ｙ",
+  [ROW_EXTRA_SH]    = "ＹしＹ？Ｙ",
+  [ROW_EXTRA_YOUON] = "ゃ　ゅ　ょ",
+};</code></pre>
+</code-block>
+
+<p>When a lookup returns Ｙ, we output the consonant + i, then the small ya, yu, or yo char, which is stored in an extra row.</p>
+
+<p>All in all, that means:
+  if (MAP[letter_index][vowel_index * 3] equals "Ｙ") {
+    send(MAP[letter_index][vowel_index_for("I") * 3]);
+    send(MAP[ROW_EXTRA_YOUON][vowel_index * 3]);
+  }
+</p>
+
+<h2>fa fi fe fo</h2>
+
+blah blah
+
+<h2>Other special cases, not in the map</h2>
+
+<p>three letter specials tsu → つ, dzu → づ</p>
+
+<p>Double consonants output small っ</p>
+
+<p>Standalone n → ん, with n' to disambiguate before vowels</p>
+
+<h2>Basic flow</h2>
+
+<p>Since much of the logic is encoded in the map, the keypress processing logic should be straightforward. Pressing a vowel always triggers a lookup. The lookup is based on the last pressed key (if it was a consonant).</p>
+
+<h2>Katakana via Shift</h2>
+<!-- Holding Shift converts hiragana output to katakana -->
+<!-- Done by adding the Unicode offset between あ and ア -->
+<!-- UTF-8 re-encoding in place — only the last two bytes change -->
+
+<h2>The typing feel</h2>
+<!-- Immediate feedback: consonant keys emit the Roman letter right away -->
+<!-- When the vowel arrives, backspace the Roman letter and replace with kana -->
+<!-- 2-second timeout resets state if you pause mid-syllable -->
 
 </main>
 
