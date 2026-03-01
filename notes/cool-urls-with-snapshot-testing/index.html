@@ -1,0 +1,162 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="/notes/cool-urls-with-snapshot-testing/">
+<link rel="stylesheet" href="/common.css">
+<script defer src="/common.js"></script>
+
+<title>Cool URLs don’t change with snapshot testing</title>
+
+<site-header></site-header>
+
+<content-header>
+  <h1>Cool URLs don’t change with snapshot testing</h1>
+</content-header>
+
+<blog-post-info>
+  <time datetime="2026-01-25">25 Jan 2026</time>
+  · 8 min read
+</blog-post-info>
+
+<main appearance="prose">
+  
+<p>I wrote automated tests to keep track of my site’s URLs and prevent links from breaking.</p>
+
+<p>When I reorganised my site, I changed a lot of URLs and broke some inbound links. Now that more and more sites have started linking to my site, I don’t want to inadvertently break links again.</p>
+
+<blockquote><a href="https://www.w3.org/Provider/Style/URI" target="_blank">Cool URIs don't change</a><cite>Tim Berners-Lee (1998)</cite></blockquote>
+
+<p>This post is NOT about <em>how</em> to implement <a href="https://thehistoryoftheweb.com/cool-urls-mean-something/" target="_blank">‘cool URLs’</a>. Too many ways to do that depending on the site’s setup and the site’s philosophy even. Rather, this post is about ensuring cool URLs &mdash; a <i>contract</i> to guarantee that published URLs continue to work. It doesn’t matter <em>how</em> your specific site implementation fulfil that contract.</p>
+
+<p>There already exists a contract: a <em>social contract</em> when you publish a webpage. Other people can link to your URL on their sites, and you can link to other people’s content on your site in return. And we expect these inbound and outbound links to work, otherwise the World Wide Web would be pretty boring to browse.</p>
+
+<p>A stronger contract is to treat URLs as a public API. Once published, it becomes an interface other people depend on. Changing it is a breaking change, just like changing a function signature.</p>
+
+<p>If it’s an API, can we perhaps run automated tests against it?</p>
+
+<h2>Testing URLs automatically</h2>
+
+<p>Your website could be a static site, a Java Spring Boot thing, or a PHP server, it doesn’t matter as long as it serves HTML over HTTP.</p>
+
+<p>Essentially, the test is to fetch each URL off a list of known URLs and check expected responses.</p>
+
+<code-block language="js">
+  <pre><code>test.each([
+  ['/', 200],
+  ['/about', 200],
+  ['/about/', 200],
+  ['/signin', 301, '/login'],
+  ['/news', 302, '/en-US/news'],
+  ['/api/ping', 204],
+  ['/dashboard', 403],
+  ['/secret', 404],
+])('%s %i', async (path, status, location) => {
+  const res = await fetch(base + path, { redirect: 'manual' });
+  expect(res.status).toBe(status);
+  if (location) expect(res.headers.get('location')).toBe(location);
+});</code></pre>
+</code-block>
+
+<p>But manually writing a test case for every URL would be a pain. Updating tests is also tedious. This is where snapshot testing comes in.</p>
+
+<h2>Snapshot testing</h2>
+
+<p>The easiest way to do this is via <a href="https://jestjs.io/docs/snapshot-testing" target="_blank">snapshot testing</a> (or <a href="https://ro-che.info/articles/2017-12-04-golden-tests" target="_blank">golden tests</a>).</p>
+
+<p>Snapshot testing takes a record of the system’s behaviour and saves that as a baseline or ‘golden file’ against which future versions of the system are compared.</p>
+
+<p>In my case, the snapshot is the set of URLs my site serves. A ‘snap’ involves a <a href="https://en.wikipedia.org/wiki/Web_crawler" target="_blank">crawler</a> gathering all the URLs and writing them to a text file. Unlike snapshot testing approaches that inline values in the test code, I prefer to keep this snapshot as a separate artifact so changes can be reviewed more easily.</p>
+
+<code-block language="text">
+  <pre><code>/
+/about/
+/notes/
+/wares/
+/wares/pong-ai/
+...and so on...
+</code></pre>
+</code-block>
+
+<p>Then when I make refactors or any code change, I can run the crawler again and compare the snapshots. Any difference to the baseline is treated as a breaking change unless explicitly approved.</p>
+
+<p>The interesting part is using git to turn that comparison into an enforced check.</p>
+
+<h2>Snapshot testing with git</h2>
+
+<p>With git, I don’t actually need to ‘write tests’ or use a testing framework.</p>
+
+<p>git is the testing framework.</p>
+
+<ul>
+  <li>To run tests, run the crawler and check the <a href="https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---exit-code" target="_blank">exit code</a> of <code>git diff --quiet -- path/to/snapshot</code>.
+  <li>To debug failures, <code>git diff</code> can show me the <span style="color:red">expected</span> and <span style="color:lime">actual</span> values, just like a testing framework.
+  <li>To approve changes to the baseline, I commit the snapshot file.
+</ul>
+
+<p>Preventing accidental changes is the real goal, so a <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks" target="_blank">pre-commit hook</a> is set up to abort commits when the snapshot contains an unapproved change.</p>
+
+<code-block language="py">
+  <pre><code># pre-commit
+./tests/my-crawler >git-hooks/pre-commit.log 2>&1
+if ! git diff --quiet -- tests/url-snapshot; then
+  echo "URL snapshot file changed. Commit aborted."
+  exit 1
+fi</code></pre>
+</code-block>
+
+<p>With this, any change to URLs must be intentional, like with public APIs. It’s like URLs as versioned public API.</p>
+
+<p>If I wanted to restructure my site again, I now have a way to check how existing URLs would have been taken care of (e.g. redirected).</p>
+
+<p>As a bonus, this also helps prevent me from accidentally publishing draft posts (which I’ve done a few times)!</p>
+
+<h2>Other notes</h2>
+
+<ul>
+  <li>
+    It’s like Page Indexing tracking in Google Search Console.
+    <figure>
+      <img src="google-search-console.png" alt="Screenshot of Google Search Console showing indexed URLs" loading="lazy" width="904" height="360" style="--lqip:108067">
+      <figcaption>This used to tell me when a URL suddenly goes 404 or something.</figcaption>
+    </figure>
+  </li>
+  <li>
+    Status code can be included in the snapshot so it can explicitly keep track of unreachable URLs (which by definition, won’t be crawled).
+    <code-block language="text">
+      <pre><code>200 /
+200 /about/
+200 /notes/
+200 /wares/
+404 /portfolio/
+...and so on...</code></pre>
+    </code-block>
+  </li>
+  <li>The crawler can even use the snapshot itself as starting points for the crawl, instead of starting from just the root <code>/</code>. This way, the snapshot does not forget URLs. Once published, a URL is either a 200 or a 404. It’s like bookmarking every page on your site.</li>
+  <li>This could be extended to track other page properties as well, such as the canonical URL. Anything that is often overlooked or auto-generated that you might want to review before deploying.</li>
+</ul>
+
+<h2>Applicability to different kinds of websites (in order)</h2>
+
+<p>For static <strong>plain HTML</strong> sites like mine, it’s probably not going to be very useful. URLs change only when you move HTML files around. No surprises here. But since I tend to forget about things and refactor stuff for the fun of it, this will still be a good thing as a self-imposed rule for future me (<i>a contract with myself?</i>).</p>
+
+<box-note>I have broken the CSS on this site countless times due to CSS refactors. I’ve been meaning to do <em>visual</em> snapshot testing to keep refactors at bay but visual snapshot testing is noisy, not to mention slow. Definitely not a pre-commit thing.</box-note>
+
+<p>On the other hand, for sites made with <a href="https://en.wikipedia.org/wiki/Static_site_generator" target="_blank">static site builders</a>, explicitly reviewing changes to site structure could be better than relying on assumptions about the internal route-generation logic of the site generator. This is if you’re not already checking in the generated files in source control, at which point the URL snapshot is kinda redundant.</p>
+
+<p>For a complex site with <strong>servers</strong>, rewrite rules, frameworks, or proxies, a version of this snapshotting routine could be set up to help prevent unwanted changes, but it couldn’t be git-based anymore if you have database-driven or otherwise dynamic URLs.</p>
+
+<p>Sites based on client-side routing won’t work at all, unless the crawler is more advanced and can execute JS (hard).</p>
+
+<h2>Closing notes</h2>
+
+<p>Treats URLs as versioned, reviewable artifacts. Once published, they stop being an implementation detail and start being something you should consciously maintain.</p>
+
+<p>URL mappings are often treated as emergent properties of a web server (nested routes? wildcard routes?) or a site generator’s build system. An explicit exhaustive URL listing makes them more tangible.</p>
+
+<p>I wrote a lot about testing and APIs and philosophy but in the end it’s basically a crawler sitemap + git. :D</p>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>

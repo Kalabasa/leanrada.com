@@ -1,0 +1,1094 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="/notes/kana-input-qmk/">
+<link rel="stylesheet" href="/common.css">
+<script defer src="/common.js"></script>
+
+<title>Japanese typing in QMK firmware</title>
+
+<site-header></site-header>
+
+<blog-header>
+  <h1>Japanese typing in QMK firmware</h1>
+  <img src="hero.jpg" alt="" loading="lazy" width="1000" height="600" style="--lqip:-108115">
+</blog-header>
+
+<blog-post-info>
+  <time datetime="2026-03-02">02 Mar 2026</time>
+  · 21 min read
+</blog-post-info>
+
+<tag-row>
+  <tag-chip title="c"></tag-chip>
+  <tag-chip title="keyboard"></tag-chip>
+</tag-row>
+
+<main appearance="prose">
+
+<p>Implemented a Japanese input method in my keyboard firmware (based on <a href="https://qmk.fm/" target="_blank">QMK</a>).</p>
+
+<p>It’s used to write in <em>katakana</em> and <em>hiragana</em> (syllable-based writing systems for Japanese) using Roman / Latin letters on my keyboard.</p>
+
+<video autoplay muted playsinline loop src="demo.mp4"></video>
+
+<h2>How kana works</h2>
+
+<p>Hiragana and katakana (collectively <a href="https://en.wikipedia.org/wiki/Kana" target="_blank"><em>kana</em></a>) are syllabaries, writing systems where a consonant-vowel syllable is written as a single character.</p>
+
+<p>A common way to type kana on a regular keyboard is <a href="http://japanese-lesson.com/characters/romaji/index.html" target="_blank"><strong>romaji</strong></a>, using Roman letters to produce kana. For example, <em>sushi</em> = <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>.</p>
+
+<p>Kana are usually organised as a table with vowels as columns and consonants as rows:</p>
+
+<prose-table>
+  <table>
+    <tr>
+      <th>
+      <th><em>A</em>
+      <th><em>I</em>
+      <th><em>U</em>
+      <th><em>E</em>
+      <th><em>O</em>
+    <tr>
+      <th><em>K</em>
+      <td><ruby>か<rt>ka</rt></ruby>
+      <td><ruby>き<rt>ki</rt></ruby>
+      <td><ruby>く<rt>ku</rt></ruby>
+      <td><ruby>け<rt>ke</rt></ruby>
+      <td><ruby>こ<rt>ko</rt></ruby>
+    <tr>
+      <th><em>S</em>
+      <td><ruby>さ<rt>sa</rt></ruby>
+      <td><ruby>し<rt>si/shi</rt></ruby>
+      <td><ruby>す<rt>su</rt></ruby>
+      <td><ruby>せ<rt>se</rt></ruby>
+      <td><ruby>そ<rt>so</rt></ruby>
+    <tr>
+      <th><em>T</em>
+      <td><ruby>た<rt>ta</rt></ruby>
+      <td><ruby>ち<rt>ti/chi</rt></ruby>
+      <td><ruby>つ<rt>tu/tsu</rt></ruby>
+      <td><ruby>て<rt>te</rt></ruby>
+      <td><ruby>と<rt>to</rt></ruby>
+    <tr>
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+      <td>&vellip;
+  </table>
+</prose-table>
+
+<p>This tabular structure inspired the core idea behind my implementation.</p>
+
+<h2>The map</h2>
+
+<p>The core idea is a 2D lookup table. Since flash memory (program space) is severely limited on keyboard microcontrollers, I wanted to represent all romaji rules in a single compact table.</p>
+
+<p>Columns are the five vowels. Rows cover every Roman letter, including those that don’t make sense for Japanese, to keep the indexing logic simple and generalised.</p>
+
+<code-block language="clike">
+  <pre><code class="interactive-map">static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  "あああああ", // A (vowel)
+  "ばびぶべぼ", // B
+  "？ち？？？", // C
+  "だ？づでど", // D
+  "えええええ", // E (vowel)
+  "？？ふ？？", // F
+  "がぎぐげご", // G
+  "はひふへほ", // H
+  "いいいいい", // I (vowel)
+  "？じ？？？", // J
+  "かきくけこ", // K
+  "らりるれろ", // L
+  "まみむめも", // M
+  "なにぬねの", // N
+  "おおおおお", // O (vowel)
+  "ぱぴぷぺぽ", // P
+  "？？く？？", // Q
+  "らりるれろ", // R
+  "さしすせそ", // S
+  "た？つてと", // T
+  "ううううう", // U (vowel)
+  "？？ゔ？？", // V
+  "わ？う？を", // W
+  "ぁぃぅぇぉ", // X (small vowels)
+  "やいゆえよ", // Y
+  "ざじずぜぞ", // Z
+};</code></pre>
+</code-block>
+
+<p><small>Some of these code examples are interactive!</small></p>
+
+<p>Every letter in the alphabet has a row in the map even if it isn't used for kana to make indexing simple. Since <a href="https://www.kenkoonwong.com/blog/usb-hid-key-press-report/#a-table-of-usage-id" target="_blank">keycodes</a> are assigned alphabetically in a contiguous block, we can use pointer arithmetic <code>MAP[pressed_keycode - keycode('a')]</code> to index the row for any pressed letter key. The offset is just the letter's position in the alphabet.</p>
+
+<p>For letter combinations that don't map to anything in Japanese, like <code>Q,A</code>, let’s mark them with <code>？</code> for now. More on special values later.</p>
+
+<code-block language="clike">
+  <pre><code>// A I U E O
+  "？？く？？", // Q</code></pre>
+</code-block>
+
+<p>The <code>X</code> row is reused to input small vowels ぁぃぅぇぉ (there is no <em>x</em> consonant in Japanese).</p>
+
+<code-block language="clike">
+  <pre><code>// A I U E O
+  "ぁぃぅぇぉ", // X (small vowels)</code></pre>
+</code-block>
+
+<p>Those are the basics of the map lookup. Essentially, a typed consonant and a vowel give us the character for that syllable.</p>
+
+<p>But you might be wondering how a 2D table of Unicode characters even works in practice. What about endianness? Doesn't Unicode use variable-length encoding? How would indexing into that work?</p>
+
+<h2>UTF-8</h2>
+
+<p>The <a href="https://qmk.fm/" target="_blank">QMK</a> firmware framework only supports UTF-8 for Unicode output, so that's the encoding I needed to work with.</p>
+
+<p>UTF-8 is a variable-length encoding spanning the full 21-bit Unicode range <code>U+0000</code>&ndash;<code>U+10FFFF</code>. The number of bytes each character takes up depends on the character range:</p>
+
+<prose-table>
+  <table>
+    <thead>
+      <tr>
+        <th>Unicode character
+        <th>Bytes in UTF-8
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>U+0000</code>&ndash;<code>U+007F</code>
+        <td>1
+      <tr>
+        <td><code>U+0080</code>&ndash;<code>U+07FF</code>
+        <td>2
+      <tr>
+        <td><code>U+0800</code>&ndash;<code>U+FFFF</code>
+        <td>3
+    </tbody>
+  </table>
+</prose-table>
+
+<p><a href="https://www.utf8-chartable.de/unicode-utf8-table.pl?start=12352&number=192&view=2" target="_blank">Kana characters fall in the <code>U+3040</code> to <code>U+30FF</code> range</a>, so every kana character is exactly <strong>3 bytes</strong> in UTF-8.</p>
+
+<p>This means every row in the map, which is 5 kana characters, is consistently 15 bytes long. The table is evenly laid out in memory! Any character can be addressed with simple index arithmetic:</p>
+
+<code-block language="clike">
+  <pre><code>// kana_ptr points to the kana character (3 bytes)
+char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
+</code-block>
+
+<p>Getting a pointer to <ruby>く<rt>ku</rt></ruby>, for example, is simply <code>&MAP['k' - 'a'][2 * 3]</code>, where 2 is the vowel index of <code>U</code>.</p>
+
+<h3 class="center-text">Byte layout of MAP</h3>
+
+<figure data-rss="interactive" alt="MAP byte layout illustration">
+  <style>
+    @scope {
+      :scope {
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        line-height: 1.8;
+      }
+      table {
+        margin: auto;
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+      tr > :first-child {
+        text-align: right;
+        padding-right: 18px;
+      }
+      :has(.hover) {
+        th {
+          opacity: 0.2;
+        }
+        td {
+          opacity: 0.6;
+        }
+      }
+      code {
+        font-weight: normal;
+        font-style: italic;
+        font-family: var(--default-font, monospace);
+        font-size: 85%;
+      }
+      .ellip {
+        padding-top: 6px;
+        padding-bottom: 6px;
+        opacity: 0.4 !important;
+        font-weight: lighter;
+        font-size: 150%;
+        &:first-child {
+          text-align: right;
+        }
+      }
+      th {
+        text-align: left;
+        font-weight: bold;
+        opacity: 0.4;
+        &.hover {
+          opacity: 1;
+        }
+      }
+      thead th {
+        padding: 0;
+      }
+      tbody th {
+        padding-top: 18px;
+      }
+      td {
+        text-wrap: nowrap;
+        padding: 0;
+        &.hover {
+          opacity: 1;
+        }
+      }
+      td code {
+        display: inline-block;
+        width: calc(100% / 3);
+        padding: 0 3px;
+        border: solid 1px rgba(from currentColor r g b / 0.2);
+        box-sizing: border-box;
+      }
+      td.hover code {
+        background: rgba(from var(--clr0-dark) r g b / 0.8);
+      }
+      td ruby {
+        opacity: 0.4;
+        font-weight: bold;
+      }
+      td.hover ruby {
+        opacity: 1;
+      }
+      figcaption {
+        display: grid;
+        place-content: center;
+        margin: 18px auto 0;
+        font-weight: bold;
+        font-style: italic;
+        font-size: 120%;
+        text-align: left;
+        min-height: 80px;
+        min-height: 2lh;
+      }
+      .literal {
+        color: #abe338;
+      }
+      .number {
+        color: #00e0e0;
+      }
+      .function {
+        color: #ffd700;
+      }
+      .comment {
+        font-weight: bold;
+        opacity: 0.4;
+      }
+    }
+  </style>
+  <table></table>
+  <figcaption></figcaption>
+  <script>
+    {
+      const figure = document.currentScript.closest("figure");
+      const table = figure.querySelector("table");
+      const caption = figure.querySelector("figcaption");
+
+      const vowels = ["A", "I", "U", "E", "O"];
+
+      const rows = [
+        makeRow("a", [
+          makeCell("あ", "a"),
+          makeCell("あ", "a"),
+          makeCell("あ", "a"),
+          makeCell("あ", "a"),
+          makeCell("あ", "a"),
+        ]),
+        makeRow("b", [
+          makeCell("ば", "ba"),
+          makeCell("び", "bi"),
+          makeCell("ぶ", "bu"),
+          makeCell("べ", "be"),
+          makeCell("ぼ", "bo"),
+        ]),
+        makeRow("k", [
+          makeCell("か", "ka"),
+          makeCell("き", "ki"),
+          makeCell("く", "ku"),
+          makeCell("け", "ke"),
+          makeCell("こ", "ko"),
+        ]),
+        makeRow("l", [
+          makeCell("ら", "ra"),
+          makeCell("り", "ri"),
+          makeCell("る", "ru"),
+          makeCell("れ", "re"),
+          makeCell("ろ", "ro"),
+        ]),
+        makeRow("m", [
+          makeCell("ま", "ma"),
+          makeCell("み", "mi"),
+          makeCell("む", "mu"),
+          makeCell("め", "me"),
+          makeCell("も", "mo"),
+        ]),
+        makeRow("z", [
+          makeCell("ざ", "za"),
+          makeCell("じ", "zi"),
+          makeCell("ず", "zu"),
+          makeCell("ぜ", "ze"),
+          makeCell("ぞ", "zo"),
+        ]),
+      ];
+
+      function makeRow(key, cells) {
+        return { key: key.toUpperCase(), letterIndex: key.codePointAt(0) - "a".codePointAt(0), cells };
+      }
+
+      function makeCell(kana, romaji) {
+        const bytes = Array.from(new TextEncoder().encode(kana), byte => byte.toString(16).toUpperCase().padStart(2, "0"));
+        return { kana, romaji, bytes };
+      }
+
+      const colHeaders = [];
+
+      const thead = table.createTHead();
+      const headerRow = thead.insertRow();
+      headerRow.insertCell(); // corner
+      vowels.forEach((vowel, vowelIndex) => {
+        const th = document.createElement("th");
+        th.innerHTML = `${vowel}<br><code>row[${vowelIndex * 3}]</code>`;
+        colHeaders.push(th);
+        headerRow.appendChild(th);
+      });
+
+      const defaultCaption = caption.textContent = "Hover a character to see its address!";
+
+      const tbody = table.createTBody();
+      let lastLetterIndex = 0;
+      rows.forEach((row) => {
+        if (lastLetterIndex + 1 < row.letterIndex) {
+          insertEllipRow();
+        }
+        lastLetterIndex = row.letterIndex;
+
+        const tr = tbody.insertRow();
+        const th = document.createElement("th");
+        th.innerHTML = `${row.key}<br><code>row=MAP[${row.letterIndex}]</code>`;
+        tr.appendChild(th);
+        row.cells.forEach((cell, vowelIndex) => {
+          const td = tr.insertCell();
+          td.innerHTML = `<ruby>${cell.kana}<rt>${cell.romaji}</rt></ruby><br>${cell.bytes
+            .map((b) => `<code>${b}</code>`)
+            .join("")}`;
+          const captionValue = `<code>`
+            + `MAP[<span class="literal">'${row.key.toLowerCase()}'</span> - <span class="literal">'a'</span>][<span class="number">${vowelIndex}</span> * <span class="number">3</span>] `
+            + `<span class="comment">// MAP[${row.letterIndex}][${vowelIndex * 3}]</span>`
+            + `<br>`
+            + `<span class="function">strncpy</span>(buf, &amp;MAP[<span class="number">${row.letterIndex}</span>][<span class="number">${vowelIndex * 3}</span>], <span class="number">3</span>) `
+            + `<span class="comment">// "${cell.kana}"</span>`
+            + `</code>`
+          td.addEventListener("mouseenter", () => {
+            colHeaders[vowelIndex].classList.add("hover");
+            th.classList.add("hover");
+            td.classList.add("hover");
+            caption.innerHTML = captionValue;
+          });
+          td.addEventListener("mouseleave", () => {
+            colHeaders[vowelIndex].classList.remove("hover");
+            th.classList.remove("hover");
+            td.classList.remove("hover");
+            caption.textContent = defaultCaption;
+          });
+        });
+      });
+
+      function insertEllipRow() {
+        const tr = tbody.insertRow();
+        const columnCount = thead.querySelector("tr").childElementCount;
+        for (let i = 0; i < columnCount; i++) {
+          const td = tr.insertCell();
+          td.classList.add("ellip");
+          td.innerHTML = "&vellip;";
+        }
+      }
+    }
+  </script>
+</figure>
+
+<p>Finally, to send a kana character in QMK from a consonant and vowel keypress:</p>
+
+<code-block language="clike">
+  <pre><code>// Get indices
+uint letter_index = prev_letter_keycode - KC_A;
+uint vowel_index = vowel_index_for(curr_letter_keycode);
+// Get pointer to the kana character
+char* kana_ptr = &MAP[letter_index][vowel_index * 3];
+// Copy 3 bytes into a null-terminated buffer
+static char buf[4] = "\0\0\0\0";
+strncpy(buf, kana_ptr, 3);
+// Send as a null-terminated UTF-8 string
+send_unicode_string(buf);</code></pre>
+</code-block>
+
+<h2>Independent vowels</h2>
+
+<p>It’s not always a consonant-vowel pair. If the last typed letter wasn’t a consonant, then the current syllable is just a vowel and we can skip the whole syllable processing logic and just output the vowel symbol directly: <code>MAP[letter_index][0]</code>. <small>By the way, we can also use the table to tell whether a letter is a consonant or a vowel. There’s no separate hardcoded list of consonants.</small></p>
+
+<code-block language="clike">
+  <pre><code class="interactive-map">static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  "あああああ", // A ← vowels, just output any of these</code></pre>
+</code-block>
+
+<h2>Special rules</h2>
+
+<p>Romaji doesn't always map two letters to one kana. For example, <em>shi</em> in <em>sushi</em> is three letters but a single character (the し in <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>). There are a few of these special rules.</p>
+
+<h3>ch and sh</h3>
+
+<p>Sometimes two letters represent a single ‘consonant’, like <em>sh</em> and <em>ch</em>. The fix is to resolve the key sequences <code>S,H</code> and <code>C,H</code> to extra ‘virtual consonant’ rows appended at the end of the table. This doesn’t affect the indexing of the real letter rows.</p>
+
+<code-block language="clike">
+  <pre><code class="interactive-map">static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  // &vellip;
+  "ざじずぜぞ", // Z
+  [ROW_EXTRA_CH] = "？ち？？？",
+  [ROW_EXTRA_SH] = "？し？？？",
+};</code></pre>
+</code-block>
+
+<p>With this, typing <em>shi</em> outputs し and <em>chi</em> outputs ち as expected.</p>
+
+<h3>ja, ju, jo</h3>
+
+<p>Some sounds map two Roman letters to two kana characters. For example, <em>ja</em> is <span style="text-wrap:nowrap">じゃ</span> (<ruby>じ<rt>ji</rt></ruby> + small <ruby>や<rt>ya</rt></ruby>). Similarly, <em>ju</em> and <em>jo</em> become <span style="text-wrap:nowrap">じゅ</span> and <span style="text-wrap:nowrap">じょ</span>, respectively. This class of sounds is called <a href="https://www.sljfaq.org/afaq/youon.html" target="_blank"><em>yōon</em></a>, where a syllable ending in <em>i</em> blends into a <em>ya</em>, <em>yu</em>, or <em>yo</em> sound.</p>
+
+<p>These get a special marker in the table. Here, it’s a fullwidth Ｙ (also 3 bytes) to signal special handling:</p>
+
+<code-block language="clike">
+  <pre><code class="interactive-map">static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  // &vellip;
+  "ＹちＹ？Ｙ", // C
+  // &vellip;
+  "ＹじＹ？Ｙ", // J
+  // &vellip;
+  [ROW_EXTRA_CH]    = "ＹちＹ？Ｙ",
+  [ROW_EXTRA_SH]    = "ＹしＹ？Ｙ",
+  [ROW_EXTRA_YOUON] = "ゃ　ゅ　ょ",
+};</code></pre>
+</code-block>
+
+<p>The small ya/yu/yo are stored in an extra row (in columns A, U, and O, respectively).</p>
+
+<p>Note how the Ｙ rule integrates in the CH and SH rows seamlessly. Rule synergy!</p>
+
+<p>When a lookup returns Ｙ, we know it’s a yōon form. Output the consonant's <em>i</em> form then the vowel’s corresponding small ya/yu/yo:</p>
+
+<code-block language="clike">
+  <pre><code>if (match(&MAP[letter_index][vowel_index * 3], "Ｙ")) {
+  send_kana_char(&MAP[letter_index][vowel_offset(KC_I)]);
+  send_kana_char(&MAP[ROW_EXTRA_YOUON][vowel_index * 3]);
+}</code></pre>
+</code-block>
+
+<p>That’s not all. We also need to catch the three-letter yōons, such as <em>nya</em>, <em>nyu</em>, and <em>nyo</em>:</p>
+
+<code-block language="clike">
+  <pre><code>if (
+  is_consonant(prev_prev_ keycode)
+  && prev_consonant == KC_Y
+  && !empty(&MAP[ROW_EXTRA_YOUON][vowel_offset(curr_vowel)])
+) {
+  send_kana_char(
+    &MAP[prev_prev_keycode - KC_A][vowel_offset(KC_I)]);
+  send_kana_char(
+    &MAP[ROW_EXTRA_YOUON][vowel_offset(curr_vowel)]);
+}</code></pre>
+</code-block>
+
+<p>With this, we can type:</p>
+
+<prose-table>
+  <table>
+    <tr>
+      <td>ja
+      <td>じゃ
+    <tr>
+      <td>nya
+      <td>にゃ
+    <tr>
+      <td>kyo
+      <td>きょ
+    <tr>
+      <td>chu
+      <td>ちゅ
+    <tr>
+      <td>sha
+      <td>しゃ
+  </table>
+</prose-table>
+
+<h3>fa, fi, fe, fo</h3>
+
+<p>Japanese has no native <em>fa</em>, <em>fi</em>, <em>fe</em>, or <em>fo</em> sounds, only <em>fu</em> (ふ). These foreign sounds are approximated by combining ふ with a small vowel. For example, <em>fa</em>, <em>fi</em>, and <em>fe</em> become <span style="text-wrap:nowrap">ふぁ</span>, <span style="text-wrap:nowrap">ふぃ</span>, and <span style="text-wrap:nowrap">ふぇ</span>, respectively (<span style="text-wrap:nowrap">ファ</span>, <span style="text-wrap:nowrap">フィ</span>, and <span style="text-wrap:nowrap">フェ</span> in katakana).</p>
+
+<p>We can mark these cases with the special value <code>Ｓ</code> in the map:</p>
+
+<code-block language="clike">
+  <pre><code class="interactive-map">// A I U E O
+  "ＳＳふＳＳ", // F</code></pre>
+</code-block>
+
+<p>When a lookup returns <code>Ｓ</code>, we need to find the base syllable for that row. Find the column that isn't marked special. For the F row that's the sole <ruby>ふ<rt>fu</rt></ruby>. We then output that base syllable followed by the small vowel from the <code>X</code> row:</p>
+
+<code-block language="clike">
+  <pre><code>if (match(&MAP[letter_index][vowel_index * 3], "Ｓ")) {
+  uint16_t base_vowel = get_base_vowel(prev_keycode, curr_keycode);
+  send_kana_char(
+    &MAP[prev_keycode - KC_A][vowel_offset(base_vowel)]);
+  send_kana_char(
+    &MAP[ROW_SMALL_VOWELS][vowel_offset(curr_keycode)]);
+}</code></pre>
+</code-block>
+
+<p>The same mechanism handles other borrowed sounds like <em>va</em> → ゔぁ and <em>di</em> → でぃ, which are also marked with <code>Ｓ</code> in their respective rows.</p>
+
+<p>Thus completes the generalised lookup table for romaji.</p>
+
+<h2>Final lookup table</h2>
+
+<code-block language="clike">
+  <pre><code class="interactive-map">// A-Z mapped to kana in UTF-8.
+//
+// Since kana is a syllabary, it's a 2D map:
+//   1. Rows map to one Roman letter in ASCII order.
+//   2. Columns map to vowels A, I, U, E, O, in that order.
+//   3. Thus, a syllable is a row-column pair.
+//
+// Every char takes up exactly 3 bytes.
+// Thus it's possible address any syllable by its letter-vowel pair.
+// - MAP[letter_idx][vowel_idx * 3]
+//
+// Special cases:
+// - Vowels are the same for all columns
+// - XA, XI, XU, XE, XO are mapped to small vowel kana
+// - Ｙ indicates youon (never in the I column)
+// - Ｓ indicates additional small vowel must be used
+static char MAP[ROW_COUNT][5*3] = {
+  // A I U E O
+  "あああああ", // A (vowel)
+  "ばびぶべぼ", // B
+  "ＹちＹＳＹ", // C
+  "だＳづでど", // D
+  "えええええ", // E (vowel)
+  "ＳＳふＳＳ", // F
+  "がぎぐげご", // G
+  "はひふへほ", // H
+  "いいいいい", // I (vowel)
+  "ＹじＹＳＹ", // J
+  "かきくけこ", // K
+  "らりるれろ", // L
+  "まみむめも", // M
+  "なにぬねの", // N
+  "おおおおお", // O (vowel)
+  "ぱぴぷぺぽ", // P
+  "ＳＳくＳＳ", // Q
+  "らりるれろ", // R
+  "さしすせそ", // S
+  "たＳつてと", // T
+  "ううううう", // U (vowel)
+  "ＳＳゔＳＳ", // V
+  "わＳうＳを", // W
+  "ぁぃぅぇぉ", // X (small vowels)
+  "やいゆえよ", // Y
+  "ざじずぜぞ", // Z
+  [ROW_EXTRA_YOUON] = "ゃ　ゅ　ょ",
+  [ROW_EXTRA_CH]    = "ＹちＹＳＹ",
+  [ROW_EXTRA_SH]    = "ＹしＹＳＹ",
+};
+
+// enum helps keep track of virtual letter rows and total size
+enum {
+  ROW_EXTRA_YOUON = 'z' - 'a' + 1,
+  ROW_EXTRA_CH,
+  ROW_EXTRA_SH,
+  ROW_COUNT
+};</code></pre>
+</code-block>
+
+<p>Hover over the above highlighted code to see connections!</p>
+
+<h2>Actual special cases</h2>
+
+<p>Some rules don't fit neatly into the 2D map and are handled separately in logic.</p>
+
+<h3>Three-letter sequences</h3>
+
+<p>A couple kana can be resolved three specific Roman letters. The only cases are: <em>tsu</em> and <em>dzu</em> for つ
+and づ. I wasn’t able to find a general pattern that fit the rest so these are detected explicitly before checking the map. If the input matches a known three-letter sequence, we skip the lookup and output the character directly.</p>
+
+<h3>Double consonants</h3>
+
+<p>In romaji, a doubled consonant indicates a kind of a glottal stop written as small っ. For example, <em>nikki</em> → <ruby>に<rt>ni</rt>っ<rt></rt>き<rt>ki</rt></ruby>. When the same consonant is pressed twice in a row, we output っ and continue processing the second keypress normally.</p>
+
+<h3>Standalone n</h3>
+
+<p>N (ん) is the only kana consonant that can stand alone without a vowel. But this creates an ambiguity: typing <em>na</em> should produce <ruby>な<rt>na</rt></ruby>, not <ruby>ん<rt>n</rt></ruby> + <ruby>あ<rt>a</rt></ruby>. The solution is to buffer the <em>n</em> and wait for the next keypress. If a vowel or <em>y</em> follows, we proceed with the normal map lookup. If another consonant follows, or the user types <em>n'</em> explicitly, we output ん and move on.</p>
+
+<h2>Katakana via Shift</h2>
+
+<p>Holding Shift while typing converts the output to katakana instead of hiragana. Since the hiragana and katakana Unicode blocks share the same internal order, can can just offset the hiragana value by a certain amount to get katakana. Just like adding <code>('A' - 'a')</code> to an ASCII lowercase letter gives you the corresponding uppercase letter, adding an offset of <code>(L'ア' - L'あ')</code> code points to any hiragana maps it to katakana.</p>
+
+<p>Problem is we’re working with UTF-8, not code points directly. A two-way conversion is needed to do the offset in code point space:</p>
+
+<code-block language="clike">
+  <pre><code>// converts one UTF-8 hiragana character to katakana in place
+function to_katakana(char* kana) {
+  // decode UTF-8 (the first byte will be unchanged)
+  uint32_t codepoint = ((kana[1] & 0b00111111) << 6)
+                      | (kana[2] & 0b00111111);
+  // hiragana to katakana offset
+  codepoint += (uint32_t)L'ア' - (uint32_t)L'あ';
+  // encode back to UTF-8
+  kana[1] = 0x80 | ((codepoint >> 6) & 0b00111111);
+  kana[2] = 0x80 | ( codepoint       & 0b00111111);
+}</code></pre>
+</code-block>
+
+<h2>The typing feel</h2>
+
+<p>An inherent awkwardness in romaji input (<a href="/notes/baybayin_abugida_keyboard_qmk/">and other syllable-based Roman input methods</a>) is you only know which kana to output once the next vowel is pressed. Buffering consonants until the next vowel makes the keyboard feel unresponsive. This is especially true when the input method lives in the hardware, not on the computer software.</p>
+
+<p>The solution is to emit the Roman letter immediately on each consonant keypress, giving instant feedback. When the vowel arrives, we backspace over the previous consonants and replace it with the final kana:</p>
+
+<code-block language="clike">
+  <pre><code>// in my keypress processing logic
+} else if (curr_cons) {
+  tap_code(curr_keycode); // emit Roman letter immediately
+} else if (prev_cons && curr_vowel) {
+  syllable_t syllable =
+    process_syllable(prev_prev_cons, prev_cons, curr_vowel);
+  // delete Roman letter(s)
+  while (syllable.backspaces-- > 0) tap_code(KC_BACKSPACE); 
+  send_kana_unicode(...);
+}</code></pre>
+</code-block>
+
+<p>For multi-letter combinations like <em>sh</em> or <em>tsu</em>, multiple backspaces are issued accordingly. If you pause mid-syllable for more than 2 seconds, the state resets, abandoning the buffered consonant, and the next keypress starts fresh.</p>
+
+<h2>The main looker upper</h2>
+
+<p>Finally, the <code>process_syllable()</code> function is what runs all of the above rules against the lookup table. Reading the code provides a nice overview of all the rules in this input method implementation:</p>
+
+<code-block language="clike">
+  <pre><code>// called when prev_keycode is a consonant and curr_keycode is a vowel
+// returns the identified syllable
+syllable_t process_syllable(void) {
+  bool preprev_cons = is_consonant(preprev_keycode);
+  syllable_t result;
+  result.backspaces = 0;
+
+  // three-letter combinations
+  if (preprev_cons) {
+    if (match("tsu")) { // つ
+      result.backspaces += 2;
+      result.consonant_kc = KC_T;
+      result.vowel_kc = curr_keycode;
+      result.extra_char_ptr = NULL;
+      return result;
+    } else if (match("dzu")) { // づ
+      result.backspaces += 2;
+      result.consonant_kc = KC_D;
+      result.vowel_kc = curr_keycode;
+      result.extra_char_ptr = NULL;
+      return result;
+    }
+
+    // ひゃ,にゅ,きょ,...
+    if (preprev_cons && prev_keycode == KC_Y) {
+      result.backspaces += 2;
+      result.consonant_kc = preprev_keycode;
+      result.vowel_kc = KC_I;
+      result.extra_char_ptr = &MAP[ROW_EXTRA_YOUON][vowel_offset(curr_keycode)];
+      return result;
+    }
+
+    // Map C+H and S+H to the CH/SH rows in the map
+    if (preprev_keycode == KC_C && prev_keycode == KC_H) {
+      result.backspaces += 1;
+      preprev_keycode = 0;
+      // not a 'keycode' anymore, just an index 
+      prev_keycode = KC_A + ROW_EXTRA_CH;
+    } else if (preprev_keycode == KC_S && prev_keycode == KC_H) {
+      result.backspaces += 1;
+      preprev_keycode = 0;
+      prev_keycode = KC_A + ROW_EXTRA_SH;
+    }
+  } // end three-letter combinations
+
+  // じゃ,じゅ,じょ
+  if (is_youon(prev_keycode, curr_keycode)) {
+    result.backspaces += 1;
+    result.consonant_kc = prev_keycode;
+    result.vowel_kc = KC_I;
+    result.extra_char_ptr = &MAP[ROW_EXTRA_YOUON][vowel_offset(curr_keycode)];
+    return result;
+  }
+
+  // ファ,ヴァ,ジェ,...
+  if (is_small_vowel(prev_keycode, curr_keycode)) {
+    result.backspaces += 1;
+    result.consonant_kc = prev_keycode;
+    result.vowel_kc = get_base_vowel(prev_keycode, curr_keycode);
+    result.extra_char_ptr = &MAP[ROW_SMALL_VOWELS][vowel_offset(curr_keycode)];
+    return result;
+  }
+
+  // a regular syllable
+  result.backspaces += 1;
+  result.consonant_kc = prev_keycode; // must be consonant
+  result.vowel_kc = curr_keycode; // must be vowel
+  result.extra_char_ptr = NULL;
+  return result;
+}</code></pre>
+</code-block>
+
+<h2>Why not implement a software IME?</h2>
+
+<a href="/notes/baybayin_abugida_keyboard_qmk/#why-not-ime">Answered here.</a>
+
+<h2>Source code</h2>
+
+<a href="https://github.com/Kalabasa/qmk_firmware/blob/97bae401a89ac29bd4dba7acdc2da834e43e3e9c/keyboards/lily58/keymaps/Kalabasa/features/kana.c" target="_blank">My QMK fork on GitHub (GPL)</a>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
+
+<style>
+  .hover-char {
+    position: relative;
+    outline: solid 0.5px #fff2;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .highlight-vowel {
+    background: #f0f2;
+    color: #f8f;
+  }
+  .highlight-x-row {
+    background: #00f2;
+    color: #bbf;
+  }
+  .highlight-youon {
+    background: #ff02;
+    color: #ff8;
+  }
+  .highlight-small {
+    background: #0ff2;
+    color: #8ff;
+  }
+  .highlight-hover {
+    background: #fff;
+    color: #000;
+  }
+  .highlight-active {
+    background: var(--clr1);
+    color: #000;
+  }
+  .code-popup {
+    view-transition-name: code-popup;
+    margin: 3px;
+    padding: 12px;
+    inset: auto;
+    bottom: calc(anchor(top));
+    justify-self: anchor-center;
+    border: none;
+    outline: solid 1px var(--bg-clr);
+    background: var(--card-clr);
+    border-radius: var(--card-border-radius);
+    font-size: 80%;
+    pointer-events: none;
+    .input {
+      color: var(--clr1);
+      font-weight: bold;
+    }
+    .output {
+      color: var(--clr0-light);
+      font-weight: bold;
+      font-size: 120%;
+    }
+  }
+</style>
+
+<script>
+  {
+    for (const codeEl of document.querySelectorAll(".interactive-map")) {
+      initWhenReady(codeEl);
+    }
+
+    function initWhenReady(codeEl) {
+      if (hasSyntaxHighlighting(codeEl)) {
+        makeMapInteractive(codeEl);
+        return;
+      }
+      const observer = new MutationObserver(() => {
+        if (hasSyntaxHighlighting(codeEl)) {
+          observer.disconnect();
+          makeMapInteractive(codeEl);
+        }
+      });
+      observer.observe(codeEl, { childList: true, subtree: true });
+    }
+
+    function hasSyntaxHighlighting(codeEl) {
+      return codeEl.querySelector("span");
+    }
+
+    function makeMapInteractive(codeEl) {
+      const vowels = ["A", "I", "U", "E", "O"];
+      const allowedRowLabels = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "YOUON", "CH", "SH"];
+
+      const spans = {
+        columnLabels: [], // [spanA, spanI, spanU, spanE, spanO]
+        cells: [], // row -> [span x 5]
+        rowLabels: [], // row -> span
+        rules: {}, // "vowel"|"xRow"|"youon"|"small" -> span
+      };
+      const rowLabels = [];
+
+      function makeSpan(text) {
+        const sp = document.createElement("span");
+        sp.textContent = text;
+        return sp;
+      }
+
+      function walkText(root) {
+        const nodes = [];
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let n;
+        while ((n = w.nextNode())) nodes.push(n);
+        return nodes;
+      }
+
+      let rowCount = 0;
+      let rowLabelCount = 0;
+      let columnLabelsSeen = false;
+      for (const node of walkText(codeEl)) {
+        // assume text is at most one line (one node per line due to syntax highlighter)
+        // (otherwise this needs to be split)
+        const text = node.textContent;
+
+        const columnVowelHeaderMatch = text.match(/^(.*?\/\/\s+)(A)(\s+)(I)(\s+)(U)(\s+)(E)(\s+)(O)(.*)$/s);
+        if (columnVowelHeaderMatch) {
+          columnLabelsSeen = true;
+          node.replaceWith(...columnVowelHeaderMatch.slice(1).map((s, i) => {
+            if (i % 2 === 0) return s;
+            const sp = makeSpan(s);
+            spans.columnLabels[(i - 1) / 2] = sp;
+            return sp;
+          }));
+          continue;
+        }
+
+        if (columnLabelsSeen) {
+          const rowMatch = text.match(/^"(.{5})"$/);
+          if (rowMatch) {
+            const cellSpans = Array.from(rowMatch[1], makeSpan);
+            spans.cells[rowCount++] = cellSpans;
+            node.replaceWith(text[0], ...cellSpans, text[text.length - 1]);
+            continue;
+          }
+
+          const rowLabelMatch = text.match(/^(.*?(?:\/\/\s*|ROW_EXTRA_))([A-Z]+)\b(.*)$/s);
+          if (rowLabelMatch && !spans.rowLabels[rowLabelMatch[2]] && allowedRowLabels.includes(rowLabelMatch[2])) {
+            const i = rowLabelCount++;
+            rowLabels[i] = rowLabelMatch[2];
+            const span = makeSpan(rowLabelMatch[2]);
+            spans.rowLabels[i] = span;
+            node.replaceWith(rowLabelMatch[1], span, rowLabelMatch[3]);
+            continue;
+          }
+        } else {
+          const ruleRegexps = [
+            ["vowel", /^(.*?)(Vowels are the same.*)$/i],
+            ["xRow", /^(.*?)(XA.*?mapped to small.*)$/i],
+            ["youon", /^(.*?)(Ｙ indicates.*)$/i],
+            ["small", /^(.*?)(Ｓ indicates.*)$/i],
+          ];
+          for (const [key, re] of ruleRegexps) {
+            if (spans.rules[key]) continue;
+            const m = text.match(re);
+            if (m) {
+              const sp = makeSpan(m[2]);
+              spans.rules[key] = sp;
+              node.replaceWith(m[1], sp);
+              break;
+            }
+          }
+        }
+      }
+
+      spans.rules.vowel?.classList.add("highlight-vowel");
+      spans.rules.xRow?.classList.add("highlight-x-row");
+      spans.rules.youon?.classList.add("highlight-youon");
+      spans.rules.small?.classList.add("highlight-small");
+
+      function clearHover() {
+        codeEl
+          .querySelectorAll(".highlight-hover")
+          .forEach((el) => el.classList.remove("highlight-hover"));
+      }
+
+      function onHover(span, row, col) {
+        clearHover();
+        const ch = getCellText(span);
+        span.classList.add("highlight-hover");
+        spans.rowLabels[row].classList.add("highlight-hover");
+        spans.columnLabels[col].classList.add("highlight-hover");
+        if (vowels.includes(rowLabels[row])) {
+          spans.rules.vowel?.classList.add("highlight-hover");
+        } else if (rowLabels[row] === "X") {
+          spans.rules.xRow?.classList.add("highlight-hover");
+        } else if (ch === "Ｙ") {
+          spans.rules.youon?.classList.add("highlight-hover");
+        } else if (ch === "Ｓ") {
+          spans.rules.small?.classList.add("highlight-hover");
+        }
+      }
+
+      function onClick(span, row, col) {
+        const runWithTransition = document.startViewTransition.bind(document) ?? ((f) => f());
+        runWithTransition(() => {
+          const className = "code-popup";
+
+          const rowLabel = getCellText(spans.rowLabels[row]);
+          const colLabel = getCellText(spans.columnLabels[col]);
+          if (!rowLabel || !colLabel) return;
+
+          const removeActiveHighlights = () => {
+            document.querySelectorAll(".highlight-active").forEach(el =>
+              el.classList.remove("highlight-active")
+            );
+          };
+          removeActiveHighlights();
+          span.classList.add("highlight-active");
+          spans.rowLabels[row].classList.add("highlight-active");
+          spans.columnLabels[col].classList.add("highlight-active");
+
+          const instanceID = (Math.random() * 1e4).toString(16).slice(0, 3);
+          const popup = document.querySelector(`.${className}`) ?? document.createElement("dialog");
+          popup.dataset.instance = instanceID;
+          popup.classList.add(className);
+          popup.popover = "manual";
+
+          const rowHTML = `<span class="input">${rowLabel}</span>`;
+          const colHTML = vowels.includes(rowLabel) ? colLabel : `<span class="input">${colLabel}</span>`;
+
+          const ch = getCellText(span);
+          let lines = [`MAP[${rowHTML}][${colHTML}] → ${ch}`];
+          if (ch === "？" || ch === "　") {
+            // nothing
+          } else if (ch === "Ｙ") {
+            const consChar = getCellText(spans.cells[row][/*I*/1]);
+            const smallYChar = "ゃ ゅ ょ"[col];
+            lines.push(`MAP[${rowHTML}][I]     → ${consChar}`);
+            lines.push(`MAP[YOUON][${colHTML}] → ${smallYChar}`);
+            lines.push(`send(<span class="output">${consChar}${smallYChar}</span>)`);
+          } else if (ch === "Ｓ") {
+            const baseVowelIndex = getBaseVowelIndexForSmall(row, col)
+            const consChar = getCellText(spans.cells[row][baseVowelIndex]);
+            const smallVowelChar = "ぁぃぅぇぉ"[col];
+            lines.push(`MAP[${rowHTML}][${getCellText(spans.columnLabels[baseVowelIndex])}] → ${consChar}`);
+            lines.push(`MAP[X][${colHTML}] → ${smallVowelChar}`);
+            lines.push(`send(<span class="output">${consChar}${smallVowelChar}</span>)`);
+          } else {
+            lines.push(`send(<span class="output">${ch}</span>)`);
+          }
+          popup.innerHTML = lines.join("<br>");
+
+          span.appendChild(popup);
+          popup.showPopover({ source: span });
+
+          const cleanup = () => {
+            if (popup.dataset.instance === instanceID) {
+              runWithTransition(() => {
+                removeActiveHighlights();
+                popup.remove();
+              });
+            }
+          };
+          popup.addEventListener("click", cleanup);
+          setTimeout(cleanup, 4_000);
+        });
+      }
+      
+      function getBaseVowelIndexForSmall(row, col) {
+        for (const testVowel of "IEUOA") {
+          const testVowelIndex = vowels.indexOf(testVowel);
+          if (testVowelIndex === col) continue;
+          const testChar = getCellText(spans.cells[row][testVowelIndex]);
+          if (testChar !== "Ｓ" && testChar !== "Ｙ" && testChar !== "？") {
+            return testVowelIndex;
+          }
+        }
+        throw new Error("invalid row");
+      }
+
+      const ruleCells = {
+        vowel: Array.from(spans.cells.filter((r, row) => vowels.includes(rowLabels[row])).flatMap(r => r)),
+        xRow:  spans.cells[rowLabels.indexOf("X")] ?? [],
+        youon: Array.from(spans.cells.flatMap(r => r).filter(sp => sp.textContent === "Ｙ")),
+        small: Array.from(spans.cells.flatMap(r => r).filter(sp => sp.textContent === "Ｓ")),
+      };
+
+      for (const [row, cells] of spans.cells.entries()) {
+        cells.forEach((span, col) => {
+          const ch = getCellText(span);
+
+          let spanClass;
+          if (spans.rules.vowel && ruleCells.vowel.includes(span)) {
+            spanClass = "highlight-vowel";
+          } else if (spans.rules.xRow && ruleCells.xRow.includes(span)) {
+            spanClass = "highlight-x-row";
+          } else if (spans.rules.youon && ruleCells.youon.includes(span)) {
+            spanClass = "highlight-youon";
+          } else if (spans.rules.small && ruleCells.small.includes(span)) {
+            spanClass = "highlight-small";
+          }
+          if (spanClass) {
+            span.classList.add(spanClass);
+          }
+          span.classList.add("hover-char");
+
+          span.addEventListener("mouseenter", () => onHover(span, row, col));
+          span.addEventListener("mouseleave", clearHover);
+          span.addEventListener("click", () => onClick(span, row, col));
+        });
+      }
+
+      function getCellText(span) {
+        return Array.from(span.childNodes)
+          .filter(node => node.nodeType === Node.TEXT_NODE)
+          .map(node => node.textContent)
+          .join('')
+          .slice(0, 5);
+      }
+      
+      for (const [key, ruleSpan] of Object.entries(spans.rules)) {
+        ruleSpan.addEventListener("mouseenter", () => {
+          ruleSpan.classList.add("highlight-hover");
+          ruleCells[key].forEach(sp => sp.classList.add("highlight-hover"));
+        });
+        ruleSpan.addEventListener("mouseleave", clearHover);
+      }
+    }
+  }
+</script>

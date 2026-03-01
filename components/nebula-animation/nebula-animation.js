@@ -180,6 +180,7 @@
             nebula-animation {
               position: relative;
 
+              /* hide placeholder (defined in common.css) */
               &::before {
                 opacity: 0;
                 transition: opacity 2s ease-in;

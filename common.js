@@ -506,6 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["nebula-animation"],
       ["now-playing"],
       ["now-reading"],
+      ["particles-animation"],
       ["pulse-animation"],
       ["right-now"],
     ];
