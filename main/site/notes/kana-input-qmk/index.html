@@ -1,33 +1,36 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="/notes/kana-input-qmk/">
 <link rel="stylesheet" href="/common.css">
 <script defer src="/common.js"></script>
 
-<title>Untitled</title>
+<title>Japanese typing in QMK firmware</title>
 
 <site-header></site-header>
 
 <blog-header>
-  <h1>This is the title</h1>
-  <img src="hero.jpg" alt="" loading="lazy">
+  <h1>Japanese typing in QMK firmware</h1>
+  <img src="hero.jpg" alt="" loading="lazy" width="1000" height="600" style="--lqip:-108115">
 </blog-header>
 
-<blog-post-info-template>
-  <time datetime="1970-01-01">01 Jan 1970</time>
-  · 1 min read
-</blog-post-info-template>
+<blog-post-info>
+  <time datetime="2026-01-01">02 Mar 2026</time>
+  · 20 min read
+</blog-post-info>
 
 <tag-row>
-  <tag-chip title="essay"></tag-chip>
+  <tag-chip title="keyboard"></tag-chip>
+  <tag-chip title="c"></tag-chip>
 </tag-row>
 
 <main appearance="prose">
-<p>I implemented a Japanese input method on my keyboard firmware.</p>
 
-<p>This is used to write in <em>katakana</em> and <em>hiragana</em> (syllable-based writing systems for Japanese) using Roman letters on my keyboard.</p>
+<p>Implemented a Japanese input method in my keyboard firmware (based on <a href="https://qmk.fm/" target="_blank">QMK</a>).</p>
 
-(insert video here)
+<p>It’s used to write in <em>katakana</em> and <em>hiragana</em> (syllable-based writing systems for Japanese) using Roman / Latin letters on my keyboard.</p>
+
+<video autoplay muted playsinline loop src="demo.mp4"></video>
 
 <h2>How kana works</h2>
 
@@ -81,7 +84,7 @@
 
 <h2>The map</h2>
 
-<p>The core idea is a 2D lookup table. Since program space is severely limited in keyboard firmware, I wanted to represent all romaji rules in a single compact table.</p>
+<p>The core idea is a 2D lookup table. Since flash memory (program space) is severely limited on keyboard microcontrollers, I wanted to represent all romaji rules in a single compact table.</p>
 
 <p>Columns are the five vowels. Rows cover every Roman letter, including those that don’t make sense for Japanese, to keep the indexing logic simple and generalised.</p>
 
@@ -117,6 +120,8 @@
 };</code></pre>
 </code-block>
 
+<p><small>Some of these code examples are interactive!</small></p>
+
 <p>Every letter in the alphabet has a row in the map even if it isn't used for kana to make indexing simple. Since <a href="https://www.kenkoonwong.com/blog/usb-hid-key-press-report/#a-table-of-usage-id" target="_blank">keycodes</a> are assigned alphabetically in a contiguous block, we can use pointer arithmetic <code>MAP[pressed_keycode - keycode('a')]</code> to index the row for any pressed letter key. The offset is just the letter's position in the alphabet.</p>
 
 <p>For letter combinations that don't map to anything in Japanese, like <code>Q,A</code>, let’s mark them with <code>？</code> for now. More on special values later.</p>
@@ -139,7 +144,7 @@
 
 <h2>UTF-8</h2>
 
-<p>The <a href="https://qmk.fm/" target="_blank">QMK</a> firmware framework I'm using only supports UTF-8 for Unicode output, so that's the encoding I needed to work with.</p>
+<p>The <a href="https://qmk.fm/" target="_blank">QMK</a> firmware framework only supports UTF-8 for Unicode output, so that's the encoding I needed to work with.</p>
 
 <p>UTF-8 is a variable-length encoding spanning the full 21-bit Unicode range <code>U+0000</code>&ndash;<code>U+10FFFF</code>. The number of bytes each character takes up depends on the character range:</p>
 
@@ -177,7 +182,7 @@ char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
 
 <h3 class="center-text">Byte layout of MAP</h3>
 
-<figure data-interactive="MAP byte layout illustration">
+<figure data-rss="interactive" alt="MAP byte layout illustration">
   <style>
     @scope {
       :scope {
@@ -291,7 +296,7 @@ char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
       const table = figure.querySelector("table");
       const caption = figure.querySelector("figcaption");
 
-      const VOWELS = ["A", "I", "U", "E", "O"];
+      const vowels = ["A", "I", "U", "E", "O"];
 
       const rows = [
         makeRow("a", [
@@ -343,8 +348,7 @@ char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
       }
 
       function makeCell(kana, romaji) {
-        const bytes = [...new TextEncoder().encode(kana)]
-          .map(byte => byte.toString(16).toUpperCase().padStart(2, "0"));
+        const bytes = Array.from(new TextEncoder().encode(kana), byte => byte.toString(16).toUpperCase().padStart(2, "0"));
         return { kana, romaji, bytes };
       }
 
@@ -353,7 +357,7 @@ char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
       const thead = table.createTHead();
       const headerRow = thead.insertRow();
       headerRow.insertCell(); // corner
-      VOWELS.forEach((vowel, vowelIndex) => {
+      vowels.forEach((vowel, vowelIndex) => {
         const th = document.createElement("th");
         th.innerHTML = `${vowel}<br><code>row[${vowelIndex * 3}]</code>`;
         colHeaders.push(th);
@@ -379,17 +383,18 @@ char* kana_ptr = &MAP[letter_index][vowel_index * 3];</code></pre>
           td.innerHTML = `<ruby>${cell.kana}<rt>${cell.romaji}</rt></ruby><br>${cell.bytes
             .map((b) => `<code>${b}</code>`)
             .join("")}`;
+          const captionValue = `<code>`
+            + `MAP[<span class="literal">'${row.key.toLowerCase()}'</span> - <span class="literal">'a'</span>][<span class="number">${vowelIndex}</span> * <span class="number">3</span>] `
+            + `<span class="comment">// MAP[${row.letterIndex}][${vowelIndex * 3}]</span>`
+            + `<br>`
+            + `<span class="function">strncpy</span>(buf, &amp;MAP[<span class="number">${row.letterIndex}</span>][<span class="number">${vowelIndex * 3}</span>], <span class="number">3</span>) `
+            + `<span class="comment">// "${cell.kana}"</span>`
+            + `</code>`
           td.addEventListener("mouseenter", () => {
             colHeaders[vowelIndex].classList.add("hover");
             th.classList.add("hover");
             td.classList.add("hover");
-            caption.innerHTML = `<code>`
-              + `MAP[<span class="literal">'${row.key.toLowerCase()}'</span> - <span class="literal">'a'</span>][<span class="number">${vowelIndex}</span> * <span class="number">3</span>] `
-              + `<span class="comment">// MAP[${row.letterIndex}][${vowelIndex * 3}]</span>`
-              + `<br>`
-              + `<span class="function">strncpy</span>(buf, &amp;MAP[<span class="number">${row.letterIndex}</span>][<span class="number">${vowelIndex * 3}</span>], <span class="number">3</span>) `
-              + `<span class="comment">// "${cell.kana}"</span>`
-              + `</code>`;
+            caption.innerHTML = captionValue;
           });
           td.addEventListener("mouseleave", () => {
             colHeaders[vowelIndex].classList.remove("hover");
@@ -766,8 +771,10 @@ syllable_t process_syllable(void) {
 <article-footer></article-footer>
 
 <site-footer></site-footer>
+
 <style>
   .hover-char {
+    position: relative;
     outline: solid 0.5px #fff2;
     border-radius: 2px;
     cursor: pointer;
@@ -792,182 +799,290 @@ syllable_t process_syllable(void) {
     background: #fff;
     color: #000;
   }
+  .highlight-active {
+    background: var(--clr1);
+    color: #000;
+  }
+  .code-popup {
+    view-transition-name: code-popup;
+    margin: 3px;
+    padding: 12px;
+    inset: auto;
+    bottom: calc(anchor(top));
+    justify-self: anchor-center;
+    border: none;
+    outline: solid 1px var(--bg-clr);
+    background: var(--card-clr);
+    border-radius: var(--card-border-radius);
+    font-size: 80%;
+    pointer-events: none;
+    .input {
+      color: var(--clr1);
+      font-weight: bold;
+    }
+    .output {
+      color: var(--clr0-light);
+      font-weight: bold;
+      font-size: 120%;
+    }
+  }
 </style>
 
 <script>
-  for (const codeEl of document.querySelectorAll(".interactive-map")) {
-    initWhenReady(codeEl);
-  }
-
-  function initWhenReady(codeEl) {
-    // If already syntax highlighted (spans present), run immediately
-    if (hasSyntaxHighlighting(codeEl)) {
-      makeMapInteractive(codeEl);
-      return;
+  {
+    for (const codeEl of document.querySelectorAll(".interactive-map")) {
+      initWhenReady(codeEl);
     }
-    // Otherwise wait for the highlighter to inject spans
-    const observer = new MutationObserver(() => {
+
+    function initWhenReady(codeEl) {
       if (hasSyntaxHighlighting(codeEl)) {
-        observer.disconnect();
         makeMapInteractive(codeEl);
+        return;
       }
-    });
-    observer.observe(codeEl, { childList: true, subtree: true });
-  }
-
-  function hasSyntaxHighlighting(codeEl) {
-    return codeEl.querySelector("span");
-  }
-
-  function makeMapInteractive(codeEl) {
-    const VOWELS = ["A", "I", "U", "E", "O"];
-    const ROW_KEYS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "YOUON", "CH", "SH"];
-    const VOWEL_ROW_KEYS = new Set(["A", "E", "I", "O", "U"]);
-
-    const spans = {
-      columnLabels: [], // [spanA, spanI, spanU, spanE, spanO]
-      cells: {}, // rowKey -> [span x 5]
-      rowLabels: {}, // rowKey -> span
-      rules: {}, // "vowel"|"xRow"|"youon"|"small" -> span
-    };
-
-    function makeSpan(text) {
-      const sp = document.createElement("span");
-      sp.textContent = text;
-      return sp;
-    }
-
-    function walkText(root) {
-      const nodes = [];
-      const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-      let n;
-      while ((n = w.nextNode())) nodes.push(n);
-      return nodes;
-    }
-
-    // --- Process text nodes ---
-    let rowCount = 0;
-
-    for (const node of walkText(codeEl)) {
-      // assume at most one line
-      const txt = node.textContent;
-
-      // 1. Column header vowels: line containing "A I U E O"
-      const cm = txt.match(/^(.*?\/\/\s+)(A)(\s+)(I)(\s+)(U)(\s+)(E)(\s+)(O)(.*)$/s);
-      if (cm) {
-        node.replaceWith(...cm.slice(1).map((s, i) => {
-          if (i % 2 === 0) return s;
-          const sp = makeSpan(s);
-          spans.columnLabels[(i - 1) / 2] = sp;
-          return sp;
-        }));
-        continue;
-      }
-
-      // 2. Row string: "XXXXX" (5 cells between quotes)
-      //    Most syntax highlighters keep the whole string token in one text node.
-      const m = txt.match(/^"(.{5})"$/);
-      if (m && rowCount < ROW_KEYS.length) {
-        const rowKey = ROW_KEYS[rowCount++];
-        const cellSpans = [...m[1]].map(makeSpan);
-        spans.cells[rowKey] = cellSpans;
-        node.replaceWith(txt[0], ...cellSpans, txt[txt.length - 1]);
-        continue;
-      }
-
-      // 3. Row label in trailing comment: // A (vowel), // B, // X (small vowels), etc.
-      const lm = txt.match(/^(\/\/\s*)([A-Z]{1,5})(.*)$/s);
-      if (lm && ROW_KEYS.includes(lm[2])) {
-        const sp = makeSpan(lm[2]);
-        spans.rowLabels[lm[2]] = sp;
-        node.replaceWith(lm[1], sp, lm[3]);
-        continue;
-      }
-
-      // 4. Special-case rule comments
-      const ruleMap = [
-        ["vowel", /^(.*?)(Vowels are the same.*)$/i],
-        ["xRow", /^(.*?)(XA.*?mapped to small.*)$/i],
-        ["youon", /^(.*?)(Ｙ indicates.*)$/i],
-        ["small", /^(.*?)(Ｓ indicates.*)$/i],
-      ];
-      for (const [key, re] of ruleMap) {
-        if (spans.rules[key]) continue;
-        const m = txt.match(re);
-        if (m) {
-          const sp = makeSpan(m[2]);
-          spans.rules[key] = sp;
-          node.replaceWith(m[1], sp);
-          break;
+      const observer = new MutationObserver(() => {
+        if (hasSyntaxHighlighting(codeEl)) {
+          observer.disconnect();
+          makeMapInteractive(codeEl);
         }
-      }
-    }
-
-    spans.rules.vowel?.classList.add("highlight-vowel");
-    spans.rules.xRow?.classList.add("highlight-x-row");
-    spans.rules.youon?.classList.add("highlight-youon");
-    spans.rules.small?.classList.add("highlight-small");
-
-    function clearHover() {
-      codeEl
-        .querySelectorAll(".highlight-hover")
-        .forEach((el) => el.classList.remove("highlight-hover"));
-    }
-
-    function onHover(span, rowKey, ci) {
-      clearHover();
-      const ch = span.textContent || "";
-      span.classList.add("highlight-hover");
-      spans.columnLabels[ci].classList.add("highlight-hover");
-      spans.rowLabels[rowKey].classList.add("highlight-hover");
-      if (VOWEL_ROW_KEYS.has(rowKey)) {
-        spans.rules.vowel?.classList.add("highlight-hover");
-      } else if (rowKey === "X") {
-        spans.rules.xRow?.classList.add("highlight-hover");
-      } else if (ch === "Ｙ") {
-        spans.rules.youon?.classList.add("highlight-hover");
-      } else if (ch === "Ｓ") {
-        spans.rules.small?.classList.add("highlight-hover");
-      }
-    }
-
-    for (const [rowKey, cells] of Object.entries(spans.cells)) {
-      cells.forEach((span, ci) => {
-        const ch = span.textContent ?? "";
-
-        let spanClass;
-        if (VOWEL_ROW_KEYS.has(rowKey) && spans.rules.vowel) {
-          spanClass = "highlight-vowel";
-        } else if (rowKey === "X" && spans.rules.xRow) {
-          spanClass = "highlight-x-row";
-        } else if (ch === "Ｙ" && spans.rules.youon) {
-          spanClass = "highlight-youon";
-        } else if (ch === "Ｓ" && spans.rules.small) {
-          spanClass = "highlight-small";
-        }
-        if (spanClass) {
-          span.classList.add(spanClass);
-        }
-        span.classList.add("hover-char");
-
-        span.addEventListener("mouseenter", () => onHover(span, rowKey, ci));
-        span.addEventListener("mouseleave", clearHover);
       });
+      observer.observe(codeEl, { childList: true, subtree: true });
     }
-    
-    const ruleCells = {
-      vowel: Object.entries(spans.cells).filter(([rk]) => VOWEL_ROW_KEYS.has(rk)).flatMap(([, c]) => c),
-      xRow:  spans.cells["X"] ?? [],
-      youon: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｙ"),
-      small: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｓ"),
-    };
 
-    for (const [key, ruleSpan] of Object.entries(spans.rules)) {
-      ruleSpan.addEventListener("mouseenter", () => {
-        ruleSpan.classList.add("highlight-hover");
-        ruleCells[key].forEach(sp => sp.classList.add("highlight-hover"));
-      });
-      ruleSpan.addEventListener("mouseleave", clearHover);
+    function hasSyntaxHighlighting(codeEl) {
+      return codeEl.querySelector("span");
+    }
+
+    function makeMapInteractive(codeEl) {
+      const vowels = ["A", "I", "U", "E", "O"];
+      const rowKeys = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "YOUON", "CH", "SH"];
+
+      const spans = {
+        columnLabels: [], // [spanA, spanI, spanU, spanE, spanO]
+        cells: {}, // rowKey -> [span x 5]
+        rowLabels: {}, // rowKey -> span
+        rules: {}, // "vowel"|"xRow"|"youon"|"small" -> span
+      };
+
+      function makeSpan(text) {
+        const sp = document.createElement("span");
+        sp.textContent = text;
+        return sp;
+      }
+
+      function walkText(root) {
+        const nodes = [];
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let n;
+        while ((n = w.nextNode())) nodes.push(n);
+        return nodes;
+      }
+
+      let rowCount = 0;
+      let columnLabelsSeen = false;
+      for (const node of walkText(codeEl)) {
+        // assume text is at most one line (one node per line due to syntax highlighter)
+        // (otherwise this needs to be split)
+        const text = node.textContent;
+
+        const columnVowelHeaderMatch = text.match(/^(.*?\/\/\s+)(A)(\s+)(I)(\s+)(U)(\s+)(E)(\s+)(O)(.*)$/s);
+        if (columnVowelHeaderMatch) {
+          columnLabelsSeen = true;
+          node.replaceWith(...columnVowelHeaderMatch.slice(1).map((s, i) => {
+            if (i % 2 === 0) return s;
+            const sp = makeSpan(s);
+            spans.columnLabels[(i - 1) / 2] = sp;
+            return sp;
+          }));
+          continue;
+        }
+
+        if (columnLabelsSeen) {
+          const rowMatch = text.match(/^"(.{5})"$/);
+          if (rowMatch && rowCount < rowKeys.length) {
+            const rowKey = rowKeys[rowCount++];
+            const cellSpans = Array.from(rowMatch[1], makeSpan);
+            spans.cells[rowKey] = cellSpans;
+            node.replaceWith(text[0], ...cellSpans, text[text.length - 1]);
+            continue;
+          }
+
+          const rowLabelMatch = text.match(/^(.*?(?:\/\/\s*|ROW_EXTRA_))([A-Z]+)\b(.*)$/s);
+          if (rowLabelMatch && !spans.rowLabels[rowLabelMatch[2]] && rowKeys.includes(rowLabelMatch[2])) {
+            const span = makeSpan(rowLabelMatch[2]);
+            spans.rowLabels[rowLabelMatch[2]] = span;
+            node.replaceWith(rowLabelMatch[1], span, rowLabelMatch[3]);
+            continue;
+          }
+        } else {
+          const ruleRegexps = [
+            ["vowel", /^(.*?)(Vowels are the same.*)$/i],
+            ["xRow", /^(.*?)(XA.*?mapped to small.*)$/i],
+            ["youon", /^(.*?)(Ｙ indicates.*)$/i],
+            ["small", /^(.*?)(Ｓ indicates.*)$/i],
+          ];
+          for (const [key, re] of ruleRegexps) {
+            if (spans.rules[key]) continue;
+            const m = text.match(re);
+            if (m) {
+              const sp = makeSpan(m[2]);
+              spans.rules[key] = sp;
+              node.replaceWith(m[1], sp);
+              break;
+            }
+          }
+        }
+      }
+
+      spans.rules.vowel?.classList.add("highlight-vowel");
+      spans.rules.xRow?.classList.add("highlight-x-row");
+      spans.rules.youon?.classList.add("highlight-youon");
+      spans.rules.small?.classList.add("highlight-small");
+
+      function clearHover() {
+        codeEl
+          .querySelectorAll(".highlight-hover")
+          .forEach((el) => el.classList.remove("highlight-hover"));
+      }
+
+      function onHover(span, rowKey, vi) {
+        clearHover();
+        const ch = getCellText(span);
+        span.classList.add("highlight-hover");
+        spans.rowLabels[rowKey].classList.add("highlight-hover");
+        spans.columnLabels[vi].classList.add("highlight-hover");
+        if (vowels.includes(rowKey)) {
+          spans.rules.vowel?.classList.add("highlight-hover");
+        } else if (rowKey === "X") {
+          spans.rules.xRow?.classList.add("highlight-hover");
+        } else if (ch === "Ｙ") {
+          spans.rules.youon?.classList.add("highlight-hover");
+        } else if (ch === "Ｓ") {
+          spans.rules.small?.classList.add("highlight-hover");
+        }
+      }
+
+      function onClick(span, rowKey, vi) {
+        const runWithTransition = document.startViewTransition.bind(document) ?? ((f) => f());
+        runWithTransition(() => {
+          const className = "code-popup";
+
+          const rowLabel = getCellText(spans.rowLabels[rowKey]);
+          const columnLabel = getCellText(spans.columnLabels[vi]);
+          if (!rowLabel || !columnLabel) return;
+
+          const removeActiveHighlights = () => {
+            document.querySelectorAll(".highlight-active").forEach(el =>
+              el.classList.remove("highlight-active")
+            );
+          };
+          removeActiveHighlights();
+          span.classList.add("highlight-active");
+          spans.rowLabels[rowKey].classList.add("highlight-active");
+          spans.columnLabels[vi].classList.add("highlight-active");
+
+          const instanceID = (Math.random() * 1e4).toString(16).slice(0, 3);
+          const popup = document.querySelector(`.${className}`) ?? document.createElement("dialog");
+          popup.dataset.instance = instanceID;
+          popup.classList.add(className);
+          popup.popover = "manual";
+
+          const rowHTML = `<span class="input">${rowLabel}</span>`;
+          const columnHTML = vowels.includes(rowKey) ? columnLabel : `<span class="input">${columnLabel}</span>`;
+
+          const ch = getCellText(span);
+          let lines = [`MAP[${rowHTML}][${columnHTML}] → ${ch}`];
+          if (ch === "Ｙ") {
+            const consChar = getCellText(spans.cells[rowKey][/*I*/1]);
+            const smallYChar = getCellText(spans.cells.YOUON[vi]);
+            lines.push(`MAP[${rowHTML}][I]     → ${consChar}`);
+            lines.push(`MAP[YOUON][${columnHTML}] → ${smallYChar}`);
+            lines.push(`send(<span class="output">${consChar}${smallYChar}</span>)`);
+          } else if (ch === "Ｓ") {
+            const baseVowelIndex = getBaseVowelIndexForSmall(rowKey, vi)
+            const consChar = getCellText(spans.cells[rowKey][baseVowelIndex]);
+            const smallVowelChar = getCellText(spans.cells.X[vi]);
+            lines.push(`MAP[${rowHTML}][${getCellText(spans.columnLabels[baseVowelIndex])}] → ${consChar}`);
+            lines.push(`MAP[X][${columnHTML}] → ${smallVowelChar}`);
+            lines.push(`send(<span class="output">${consChar}${smallVowelChar}</span>)`);
+          } else {
+            lines.push(`send(<span class="output">${ch}</span>)`);
+          }
+          popup.innerHTML = lines.join("<br>");
+
+          span.appendChild(popup);
+          popup.showPopover({ source: span });
+
+          const cleanup = () => {
+            if (popup.dataset.instance === instanceID) {
+              runWithTransition(() => {
+                removeActiveHighlights();
+                popup.remove();
+              });
+            }
+          };
+          popup.addEventListener("click", cleanup);
+          setTimeout(cleanup, 4_000);
+        });
+      }
+      
+      function getBaseVowelIndexForSmall(rowKey, vi) {
+        for (const testVowel of "IEUOA") {
+          const testVowelIndex = vowels.indexOf(testVowel);
+          const testChar = getCellText(spans.cells[rowKey][testVowelIndex]);
+          if (testChar !== "Ｓ" && testChar !== "Ｙ") {
+            return testVowelIndex;
+          }
+        }
+        throw new Error("invalid row");
+      }
+
+      for (const [rowKey, cells] of Object.entries(spans.cells)) {
+        cells.forEach((span, vi) => {
+          const ch = getCellText(span);
+
+          let spanClass;
+          if (vowels.includes(rowKey) && spans.rules.vowel) {
+            spanClass = "highlight-vowel";
+          } else if (rowKey === "X" && spans.rules.xRow) {
+            spanClass = "highlight-x-row";
+          } else if (ch === "Ｙ" && spans.rules.youon) {
+            spanClass = "highlight-youon";
+          } else if (ch === "Ｓ" && spans.rules.small) {
+            spanClass = "highlight-small";
+          }
+          if (spanClass) {
+            span.classList.add(spanClass);
+          }
+          span.classList.add("hover-char");
+
+          span.addEventListener("mouseenter", () => onHover(span, rowKey, vi));
+          span.addEventListener("mouseleave", clearHover);
+          span.addEventListener("click", () => onClick(span, rowKey, vi));
+        });
+      }
+
+      function getCellText(span) {
+        return Array.from(span.childNodes)
+          .filter(node => node.nodeType === Node.TEXT_NODE)
+          .map(node => node.textContent)
+          .join('')
+          .slice(0, 5);
+      }
+      
+      const ruleCells = {
+        vowel: Object.entries(spans.cells).filter(([rk]) => vowels.includes(rk)).flatMap(([, c]) => c),
+        xRow:  spans.cells["X"] ?? [],
+        youon: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｙ"),
+        small: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｓ"),
+      };
+
+      for (const [key, ruleSpan] of Object.entries(spans.rules)) {
+        ruleSpan.addEventListener("mouseenter", () => {
+          ruleSpan.classList.add("highlight-hover");
+          ruleCells[key].forEach(sp => sp.classList.add("highlight-hover"));
+        });
+        ruleSpan.addEventListener("mouseleave", clearHover);
+      }
     }
   }
 </script>
