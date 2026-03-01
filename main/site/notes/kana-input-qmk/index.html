@@ -15,13 +15,13 @@
 </blog-header>
 
 <blog-post-info>
-  <time datetime="2026-01-01">02 Mar 2026</time>
-  · 20 min read
+  <time datetime="2026-03-02">02 Mar 2026</time>
+  · 21 min read
 </blog-post-info>
 
 <tag-row>
-  <tag-chip title="keyboard"></tag-chip>
   <tag-chip title="c"></tag-chip>
+  <tag-chip title="keyboard"></tag-chip>
 </tag-row>
 
 <main appearance="prose">
@@ -438,21 +438,21 @@ send_unicode_string(buf);</code></pre>
 <p>It’s not always a consonant-vowel pair. If the last typed letter wasn’t a consonant, then the current syllable is just a vowel and we can skip the whole syllable processing logic and just output the vowel symbol directly: <code>MAP[letter_index][0]</code>. <small>By the way, we can also use the table to tell whether a letter is a consonant or a vowel. There’s no separate hardcoded list of consonants.</small></p>
 
 <code-block language="clike">
-  <pre><code>static char MAP[ROW_COUNT][5*3] = {
+  <pre><code class="interactive-map">static char MAP[ROW_COUNT][5*3] = {
   // A I U E O
-  "あああああ", // ← vowels, just output any of these chars</code></pre>
+  "あああああ", // A ← vowels, just output any of these</code></pre>
 </code-block>
 
 <h2>Special rules</h2>
 
-<p>Romaji doesn't always map two letters to one kana. For example, <em>shi</em> in <em>sushi</em> is three letters but a single character: the し in <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>.</p>
+<p>Romaji doesn't always map two letters to one kana. For example, <em>shi</em> in <em>sushi</em> is three letters but a single character (the し in <ruby>す<rt>su</rt>し<rt>shi</rt></ruby>). There are a few of these special rules.</p>
 
 <h3>ch and sh</h3>
 
 <p>Sometimes two letters represent a single ‘consonant’, like <em>sh</em> and <em>ch</em>. The fix is to resolve the key sequences <code>S,H</code> and <code>C,H</code> to extra ‘virtual consonant’ rows appended at the end of the table. This doesn’t affect the indexing of the real letter rows.</p>
 
 <code-block language="clike">
-  <pre><code>static char MAP[ROW_COUNT][5*3] = {
+  <pre><code class="interactive-map">static char MAP[ROW_COUNT][5*3] = {
   // A I U E O
   // &vellip;
   "ざじずぜぞ", // Z
@@ -470,7 +470,7 @@ send_unicode_string(buf);</code></pre>
 <p>These get a special marker in the table. Here, it’s a fullwidth Ｙ (also 3 bytes) to signal special handling:</p>
 
 <code-block language="clike">
-  <pre><code>static char MAP[ROW_COUNT][5*3] = {
+  <pre><code class="interactive-map">static char MAP[ROW_COUNT][5*3] = {
   // A I U E O
   // &vellip;
   "ＹちＹ？Ｙ", // C
@@ -485,7 +485,7 @@ send_unicode_string(buf);</code></pre>
 
 <p>The small ya/yu/yo are stored in an extra row (in columns A, U, and O, respectively).</p>
 
-<p>Note that the Ｙ rule integrates in the CH and SH rows seamlessly.</p>
+<p>Note how the Ｙ rule integrates in the CH and SH rows seamlessly. Rule synergy!</p>
 
 <p>When a lookup returns Ｙ, we know it’s a yōon form. Output the consonant's <em>i</em> form then the vowel’s corresponding small ya/yu/yo:</p>
 
@@ -540,7 +540,7 @@ send_unicode_string(buf);</code></pre>
 <p>We can mark these cases with the special value <code>Ｓ</code> in the map:</p>
 
 <code-block language="clike">
-  <pre><code>// A I U E O
+  <pre><code class="interactive-map">// A I U E O
   "ＳＳふＳＳ", // F</code></pre>
 </code-block>
 
@@ -854,14 +854,15 @@ syllable_t process_syllable(void) {
 
     function makeMapInteractive(codeEl) {
       const vowels = ["A", "I", "U", "E", "O"];
-      const rowKeys = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "YOUON", "CH", "SH"];
+      const allowedRowLabels = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "YOUON", "CH", "SH"];
 
       const spans = {
         columnLabels: [], // [spanA, spanI, spanU, spanE, spanO]
-        cells: {}, // rowKey -> [span x 5]
-        rowLabels: {}, // rowKey -> span
+        cells: [], // row -> [span x 5]
+        rowLabels: [], // row -> span
         rules: {}, // "vowel"|"xRow"|"youon"|"small" -> span
       };
+      const rowLabels = [];
 
       function makeSpan(text) {
         const sp = document.createElement("span");
@@ -878,6 +879,7 @@ syllable_t process_syllable(void) {
       }
 
       let rowCount = 0;
+      let rowLabelCount = 0;
       let columnLabelsSeen = false;
       for (const node of walkText(codeEl)) {
         // assume text is at most one line (one node per line due to syntax highlighter)
@@ -898,18 +900,19 @@ syllable_t process_syllable(void) {
 
         if (columnLabelsSeen) {
           const rowMatch = text.match(/^"(.{5})"$/);
-          if (rowMatch && rowCount < rowKeys.length) {
-            const rowKey = rowKeys[rowCount++];
+          if (rowMatch) {
             const cellSpans = Array.from(rowMatch[1], makeSpan);
-            spans.cells[rowKey] = cellSpans;
+            spans.cells[rowCount++] = cellSpans;
             node.replaceWith(text[0], ...cellSpans, text[text.length - 1]);
             continue;
           }
 
           const rowLabelMatch = text.match(/^(.*?(?:\/\/\s*|ROW_EXTRA_))([A-Z]+)\b(.*)$/s);
-          if (rowLabelMatch && !spans.rowLabels[rowLabelMatch[2]] && rowKeys.includes(rowLabelMatch[2])) {
+          if (rowLabelMatch && !spans.rowLabels[rowLabelMatch[2]] && allowedRowLabels.includes(rowLabelMatch[2])) {
+            const i = rowLabelCount++;
+            rowLabels[i] = rowLabelMatch[2];
             const span = makeSpan(rowLabelMatch[2]);
-            spans.rowLabels[rowLabelMatch[2]] = span;
+            spans.rowLabels[i] = span;
             node.replaceWith(rowLabelMatch[1], span, rowLabelMatch[3]);
             continue;
           }
@@ -944,15 +947,15 @@ syllable_t process_syllable(void) {
           .forEach((el) => el.classList.remove("highlight-hover"));
       }
 
-      function onHover(span, rowKey, vi) {
+      function onHover(span, row, col) {
         clearHover();
         const ch = getCellText(span);
         span.classList.add("highlight-hover");
-        spans.rowLabels[rowKey].classList.add("highlight-hover");
-        spans.columnLabels[vi].classList.add("highlight-hover");
-        if (vowels.includes(rowKey)) {
+        spans.rowLabels[row].classList.add("highlight-hover");
+        spans.columnLabels[col].classList.add("highlight-hover");
+        if (vowels.includes(rowLabels[row])) {
           spans.rules.vowel?.classList.add("highlight-hover");
-        } else if (rowKey === "X") {
+        } else if (rowLabels[row] === "X") {
           spans.rules.xRow?.classList.add("highlight-hover");
         } else if (ch === "Ｙ") {
           spans.rules.youon?.classList.add("highlight-hover");
@@ -961,14 +964,14 @@ syllable_t process_syllable(void) {
         }
       }
 
-      function onClick(span, rowKey, vi) {
+      function onClick(span, row, col) {
         const runWithTransition = document.startViewTransition.bind(document) ?? ((f) => f());
         runWithTransition(() => {
           const className = "code-popup";
 
-          const rowLabel = getCellText(spans.rowLabels[rowKey]);
-          const columnLabel = getCellText(spans.columnLabels[vi]);
-          if (!rowLabel || !columnLabel) return;
+          const rowLabel = getCellText(spans.rowLabels[row]);
+          const colLabel = getCellText(spans.columnLabels[col]);
+          if (!rowLabel || !colLabel) return;
 
           const removeActiveHighlights = () => {
             document.querySelectorAll(".highlight-active").forEach(el =>
@@ -977,8 +980,8 @@ syllable_t process_syllable(void) {
           };
           removeActiveHighlights();
           span.classList.add("highlight-active");
-          spans.rowLabels[rowKey].classList.add("highlight-active");
-          spans.columnLabels[vi].classList.add("highlight-active");
+          spans.rowLabels[row].classList.add("highlight-active");
+          spans.columnLabels[col].classList.add("highlight-active");
 
           const instanceID = (Math.random() * 1e4).toString(16).slice(0, 3);
           const popup = document.querySelector(`.${className}`) ?? document.createElement("dialog");
@@ -987,22 +990,24 @@ syllable_t process_syllable(void) {
           popup.popover = "manual";
 
           const rowHTML = `<span class="input">${rowLabel}</span>`;
-          const columnHTML = vowels.includes(rowKey) ? columnLabel : `<span class="input">${columnLabel}</span>`;
+          const colHTML = vowels.includes(rowLabel) ? colLabel : `<span class="input">${colLabel}</span>`;
 
           const ch = getCellText(span);
-          let lines = [`MAP[${rowHTML}][${columnHTML}] → ${ch}`];
-          if (ch === "Ｙ") {
-            const consChar = getCellText(spans.cells[rowKey][/*I*/1]);
-            const smallYChar = getCellText(spans.cells.YOUON[vi]);
+          let lines = [`MAP[${rowHTML}][${colHTML}] → ${ch}`];
+          if (ch === "？" || ch === "　") {
+            // nothing
+          } else if (ch === "Ｙ") {
+            const consChar = getCellText(spans.cells[row][/*I*/1]);
+            const smallYChar = "ゃ ゅ ょ"[col];
             lines.push(`MAP[${rowHTML}][I]     → ${consChar}`);
-            lines.push(`MAP[YOUON][${columnHTML}] → ${smallYChar}`);
+            lines.push(`MAP[YOUON][${colHTML}] → ${smallYChar}`);
             lines.push(`send(<span class="output">${consChar}${smallYChar}</span>)`);
           } else if (ch === "Ｓ") {
-            const baseVowelIndex = getBaseVowelIndexForSmall(rowKey, vi)
-            const consChar = getCellText(spans.cells[rowKey][baseVowelIndex]);
-            const smallVowelChar = getCellText(spans.cells.X[vi]);
+            const baseVowelIndex = getBaseVowelIndexForSmall(row, col)
+            const consChar = getCellText(spans.cells[row][baseVowelIndex]);
+            const smallVowelChar = "ぁぃぅぇぉ"[col];
             lines.push(`MAP[${rowHTML}][${getCellText(spans.columnLabels[baseVowelIndex])}] → ${consChar}`);
-            lines.push(`MAP[X][${columnHTML}] → ${smallVowelChar}`);
+            lines.push(`MAP[X][${colHTML}] → ${smallVowelChar}`);
             lines.push(`send(<span class="output">${consChar}${smallVowelChar}</span>)`);
           } else {
             lines.push(`send(<span class="output">${ch}</span>)`);
@@ -1025,29 +1030,37 @@ syllable_t process_syllable(void) {
         });
       }
       
-      function getBaseVowelIndexForSmall(rowKey, vi) {
+      function getBaseVowelIndexForSmall(row, col) {
         for (const testVowel of "IEUOA") {
           const testVowelIndex = vowels.indexOf(testVowel);
-          const testChar = getCellText(spans.cells[rowKey][testVowelIndex]);
-          if (testChar !== "Ｓ" && testChar !== "Ｙ") {
+          if (testVowelIndex === col) continue;
+          const testChar = getCellText(spans.cells[row][testVowelIndex]);
+          if (testChar !== "Ｓ" && testChar !== "Ｙ" && testChar !== "？") {
             return testVowelIndex;
           }
         }
         throw new Error("invalid row");
       }
 
-      for (const [rowKey, cells] of Object.entries(spans.cells)) {
-        cells.forEach((span, vi) => {
+      const ruleCells = {
+        vowel: Array.from(spans.cells.filter((r, row) => vowels.includes(rowLabels[row])).flatMap(r => r)),
+        xRow:  spans.cells[rowLabels.indexOf("X")] ?? [],
+        youon: Array.from(spans.cells.flatMap(r => r).filter(sp => sp.textContent === "Ｙ")),
+        small: Array.from(spans.cells.flatMap(r => r).filter(sp => sp.textContent === "Ｓ")),
+      };
+
+      for (const [row, cells] of spans.cells.entries()) {
+        cells.forEach((span, col) => {
           const ch = getCellText(span);
 
           let spanClass;
-          if (vowels.includes(rowKey) && spans.rules.vowel) {
+          if (spans.rules.vowel && ruleCells.vowel.includes(span)) {
             spanClass = "highlight-vowel";
-          } else if (rowKey === "X" && spans.rules.xRow) {
+          } else if (spans.rules.xRow && ruleCells.xRow.includes(span)) {
             spanClass = "highlight-x-row";
-          } else if (ch === "Ｙ" && spans.rules.youon) {
+          } else if (spans.rules.youon && ruleCells.youon.includes(span)) {
             spanClass = "highlight-youon";
-          } else if (ch === "Ｓ" && spans.rules.small) {
+          } else if (spans.rules.small && ruleCells.small.includes(span)) {
             spanClass = "highlight-small";
           }
           if (spanClass) {
@@ -1055,9 +1068,9 @@ syllable_t process_syllable(void) {
           }
           span.classList.add("hover-char");
 
-          span.addEventListener("mouseenter", () => onHover(span, rowKey, vi));
+          span.addEventListener("mouseenter", () => onHover(span, row, col));
           span.addEventListener("mouseleave", clearHover);
-          span.addEventListener("click", () => onClick(span, rowKey, vi));
+          span.addEventListener("click", () => onClick(span, row, col));
         });
       }
 
@@ -1069,13 +1082,6 @@ syllable_t process_syllable(void) {
           .slice(0, 5);
       }
       
-      const ruleCells = {
-        vowel: Object.entries(spans.cells).filter(([rk]) => vowels.includes(rk)).flatMap(([, c]) => c),
-        xRow:  spans.cells["X"] ?? [],
-        youon: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｙ"),
-        small: Object.values(spans.cells).flatMap(c => c).filter(sp => sp.textContent === "Ｓ"),
-      };
-
       for (const [key, ruleSpan] of Object.entries(spans.rules)) {
         ruleSpan.addEventListener("mouseenter", () => {
           ruleSpan.classList.add("highlight-hover");
