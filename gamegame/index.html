@@ -54,6 +54,17 @@
     z-index: 10;
   }
   .slide-result.visible { opacity: 1; }
+  .slide-title {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    background: #111;
+    z-index: 10;
+  }
 
   /* --- Universal Timer --- */
   #timer-wrap {
@@ -208,7 +219,7 @@
 
 
 <script type="module">
-import { createEngine, msUntilNextBeat, beatsToMs, getBpm, setBpm, pauseAudio, resumeAudio, muteDrums, unmuteDrums } from './engine.js';
+import { createEngine, msUntilNextBeat, beatsToMs, getBpm, setBpm, initAudio, muteDrums, unmuteDrums } from './engine.js';
 import { dragGame } from './games/drag.js';
 import { dodgeGame } from './games/dodge.js';
 import { parryGame } from './games/parry.js';
@@ -217,92 +228,37 @@ import { splitGame } from './games/split.js';
 import { countGame } from './games/count.js';
 import { matchGame } from './games/match.js';
 
-// --- Universal Timer (pausable) ---
+// --- Timer bar display (reads from activeEngine) ---
+const timer = document.getElementById('timer-wrap');
 const timerBar = document.getElementById('timer-bar');
 const timerText = document.getElementById('timer-text');
-let timerRaf = null;
-let timerStart = 0;
-let timerDuration = 0;
-let timerElapsed = 0; // tracks elapsed across pauses
-let timerOnExpire = null;
-let timerRunning = false;
-let timerPaused = false;
 
-function startTimer(durationMs, onExpire) {
-  stopTimer();
-  timerDuration = durationMs;
-  timerElapsed = 0;
-  timerStart = performance.now();
-  timerOnExpire = onExpire;
-  timerRunning = true;
-  timerPaused = false;
-  timerBar.classList.remove('urgent');
-  timerText.classList.remove('urgent');
-  timerBar.style.background = '#fff';
-  tickTimer();
-}
-
-function tickTimer() {
-  if (!timerRunning || timerPaused) return;
-  const now = performance.now();
-  const elapsed = timerElapsed + (now - timerStart);
-  const remaining = Math.max(0, timerDuration - elapsed);
-  const frac = remaining / timerDuration;
-  timerBar.style.width = (frac * 100) + '%';
-  timerText.textContent = (remaining / 1000).toFixed(1);
-  if (frac < 0.25) {
-    timerBar.classList.add('urgent');
-    timerText.classList.add('urgent');
+function tickTimerBar() {
+  if (activeEngine) {
+    const remaining = activeEngine.timeRemainingMs;
+    const duration = activeEngine.gameDurationMs;
+    if (duration) {
+      const frac = duration > 0 ? remaining / duration : 1;
+      timerBar.style.width = (frac * 100) + '%';
+      timerText.textContent = (remaining / 1000).toFixed(1);
+      timerBar.classList.toggle('urgent', frac < 0.25);
+      timerText.classList.toggle('urgent', frac < 0.25);
+      timer.style.visibility = 'visible';
+    } else {
+      timer.style.visibility = 'hidden';
+    }
   }
-  if (remaining <= 0) {
-    timerRunning = false;
-    if (timerOnExpire) timerOnExpire();
-    return;
-  }
-  timerRaf = requestAnimationFrame(tickTimer);
+  requestAnimationFrame(tickTimerBar);
 }
-
-function pauseTimer() {
-  if (!timerRunning || timerPaused) return;
-  timerPaused = true;
-  timerElapsed += performance.now() - timerStart;
-  if (timerRaf) cancelAnimationFrame(timerRaf);
-  timerRaf = null;
-}
-
-function resumeTimer() {
-  if (!timerRunning || !timerPaused) return;
-  timerPaused = false;
-  timerStart = performance.now();
-  tickTimer();
-}
-
-function stopTimer() {
-  timerRunning = false;
-  timerPaused = false;
-  if (timerRaf) cancelAnimationFrame(timerRaf);
-  timerRaf = null;
-  timerOnExpire = null;
-}
+requestAnimationFrame(tickTimerBar);
 
 // --- Pause/Resume on visibility change ---
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    pauseTimer();
-    pauseAudio();
-  } else {
-    resumeAudio();
-    resumeTimer();
-  }
+  if (document.hidden) activeEngine?.pause();
+  else activeEngine?.resume();
 });
-window.addEventListener('blur', () => {
-  pauseTimer();
-  pauseAudio();
-});
-window.addEventListener('focus', () => {
-  resumeAudio();
-  resumeTimer();
-});
+window.addEventListener('blur', () => activeEngine?.pause());
+window.addEventListener('focus', () => activeEngine?.resume());
 
 // --- Pause ---
 let paused = false;
@@ -312,13 +268,11 @@ function togglePause() {
   if (paused) {
     paused = false;
     pauseMenu.classList.remove('visible');
-    resumeAudio();
-    resumeTimer();
+    activeEngine?.resume();
   } else {
     paused = true;
     pauseMenu.classList.add('visible');
-    pauseTimer();
-    pauseAudio();
+    activeEngine?.pause();
   }
 }
 
@@ -340,7 +294,6 @@ document.getElementById('pause-skip').addEventListener('pointerdown', (e) => {
     resumeAudio();
   }
   if (!activeEngine) return;
-  stopTimer();
   activeEngine.cleanup();
   activeEngine = null;
   gameIndex++;
@@ -381,7 +334,6 @@ function transition(callback) {
 }
 
 function endGame(result, _score) {
-  stopTimer();
   if (result === 'win') {
     winCount++;
     setBpm(Math.min(180, getBpm() + 3));
@@ -389,8 +341,13 @@ function endGame(result, _score) {
     winCount = Math.max(0, winCount - 1);
   }
   if (activeEngine) {
-    activeEngine.showResult(result);
     activeEngine.sound[result === 'win' ? 'win' : 'lose']();
+    const won = result === 'win';
+    const resultEl = document.createElement('div');
+    resultEl.className = 'slide-result visible';
+    resultEl.textContent = won ? 'NICE!' : 'TOO BAD';
+    resultEl.style.background = won ? 'rgba(0,200,100,0.3)' : 'rgba(200,0,50,0.3)';
+    currentEl.appendChild(resultEl);
   }
 
   // Wait for next beat, then one more beat for the result to breathe, then transition on a beat
@@ -425,38 +382,25 @@ function startGame() {
   const engine = createEngine(currentEl, endGame);
   activeEngine = engine;
 
-  // Init game — pass the api so games can use drawing helpers in setup
+  // Init game
   engine.api.complexity = Math.pow(winCount, 1.5) * 0.1;
   const gameDef = gameFn(engine.api);
-  const durationMs = engine.getDurationMs(gameDef.duration);
-  const timeoutResult = gameDef.timeoutResult || 'lose';
-  const title = gameDef.title || '';
 
-  // Show title card for 2 beats, then start the game
+  // Show title overlay for 2 beats, then start the game
   const titleMs = beatsToMs(2);
-  const titleDef = {
-    draw(api) {
-      api.clear('#111');
-      const pulse = 1 + 0.15 * api.pulse;
-      api.fill('#fff');
-      api.push();
-      api.translate(api.width / 2, api.height / 2);
-      api.scale(pulse);
-      api.text(title, 0, 0, 32);
-      api.pop();
-    },
-  };
-  engine.run(titleDef);
+  const titleEl = document.createElement('div');
+  titleEl.className = 'slide-title';
+  titleEl.textContent = gameDef.title || '';
+  currentEl.appendChild(titleEl);
 
   setTimeout(() => {
-    if (activeEngine !== engine) return; // skipped
+    titleEl.remove();
     engine.run(gameDef);
-    startTimer(durationMs, () => endGame(timeoutResult, timeoutResult === 'win' ? 1 : 0));
   }, titleMs);
 }
 
 document.getElementById('title-screen').addEventListener('click', () => {
-  resumeAudio();
+  initAudio();
   document.getElementById('title-screen').classList.add('hidden');
   startGame();
 }, { once: true });

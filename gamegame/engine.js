@@ -15,8 +15,6 @@ let globalBeatStart = 0; // audioCtx.currentTime when current BPM segment starte
 let accumulatedBeats = 0; // beats accumulated before current BPM segment
 let beatClockStarted = false;
 
-let timerMultiplier = 1.0; // user-facing multiplier (for future "hard mode" etc)
-
 function getBpm() { return globalBpm; }
 function setBpm(bpm) {
   if (beatClockStarted && bpm !== globalBpm) {
@@ -25,8 +23,6 @@ function setBpm(bpm) {
   }
   globalBpm = bpm;
 }
-function getTimerMultiplier() { return timerMultiplier; }
-function setTimerMultiplier(m) { timerMultiplier = m; }
 
 function getGlobalBeat() {
   if (!beatClockStarted) return 0;
@@ -62,6 +58,7 @@ function msUntilNextBeat() {
   return Math.max(0, (nextBeatTime() - audioCtx.currentTime) * 1000);
 }
 
+// TODO Move to music.js
 // ============================================================
 // Music — procedural beat-locked drums
 // ============================================================
@@ -258,19 +255,16 @@ const sound = {
 // ============================================================
 
 export function createEngine(slide, onEnd) {
+  // TODO extract drawing to graphics.js
   // Canvas setup
   const canvas = document.createElement('canvas');
   canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
   slide.innerHTML = '';
   slide.appendChild(canvas);
 
-  // Result overlay (kept in DOM above canvas)
-  const resultEl = document.createElement('div');
-  resultEl.className = 'slide-result';
-  slide.appendChild(resultEl);
-
   const ctx = canvas.getContext('2d');
 
+  // TODO extract drawing to graphics.js
   function resize() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = canvas.clientWidth * dpr;
@@ -279,35 +273,38 @@ export function createEngine(slide, onEnd) {
   }
   resize();
 
-  const w = () => canvas.clientWidth;
-  const h = () => canvas.clientHeight;
+  const STATE_INIT = 'init';
+  const STATE_RUNNING = 'running';
+  const STATE_PAUSED = 'paused';
+  const STATE_ENDED = 'ended';
 
-  // State
-  let ended = false;
-  let gameTime = 0;
-  let lastFrameTime = 0;
-  let frameCount = 0;
-  let rafId = null;
+  const RESULT_WIN = 'win';
+  const RESULT_LOSE = 'lose';
+
+  let state = STATE_INIT;
   let gameDef = null;
-  let beatCallbacks = [];
-  let lastBeatInt = -1;
+  let gameTimeMs = 0;
+  let lastFrameTime = 0;
+  let lastBeatNumber = -1;
 
+  const events = new EventTarget();
+
+  // TODO extract drawing to graphics.js
   // Drawing state
   let fillStyle = '#fff';
   let strokeStyle = '#fff';
   let lineWidth = 2;
 
   function end(result, score) {
-    if (ended) return;
-    ended = true;
+    if (state == STATE_ENDED) return;
+    state = STATE_ENDED;
     onEnd(result, score);
   }
 
-  // --- Drawing API ---
   const api = {
     // Dimensions
-    get width() { return w(); },
-    get height() { return h(); },
+    get width() { return (() => canvas.clientWidth)(); },
+    get height() { return (() => canvas.clientHeight)(); },
 
     // Time
     time: 0,
@@ -324,20 +321,21 @@ export function createEngine(slide, onEnd) {
     get pulse() {
       return Math.exp(-(getGlobalBeat() % 1) * 6);
     },
-    onBeat(fn) { beatCallbacks.push(fn); },
+    onBeat(fn) { events.addEventListener("beat", fn) },
 
     // Game control
-    win(score) { end('win', score ?? 1); },
-    lose(score) { end('lose', score ?? 0); },
-    score(n) { end('win', n); },
+    win(score) { end(RESULT_WIN, score ?? 1); },
+    lose(score) { end(RESULT_LOSE, score ?? 0); },
+    score(n) { end(RESULT_WIN, n); },
 
     // Sound
     sound,
 
+    // TODO extract drawing to graphics.js
     // Drawing
     clear(color = '#000') {
       ctx.fillStyle = color;
-      ctx.fillRect(0, 0, w(), h());
+      ctx.fillRect(0, 0, (() => canvas.clientWidth)(), (() => canvas.clientHeight)());
     },
 
     fill(color) {
@@ -426,7 +424,7 @@ export function createEngine(slide, onEnd) {
   }
 
   function onPointerDown(e) {
-    if (ended) return;
+    if (state === STATE_ENDED) return;
     e.preventDefault();
     pointerDown = true;
     const [x, y] = getXY(e);
@@ -436,7 +434,7 @@ export function createEngine(slide, onEnd) {
   }
 
   function onPointerMove(e) {
-    if (ended || !pointerDown) return;
+    if (state === STATE_ENDED || !pointerDown) return;
     e.preventDefault();
     const [x, y] = getXY(e);
     const dx = x - lastPointerX;
@@ -447,7 +445,7 @@ export function createEngine(slide, onEnd) {
   }
 
   function onPointerUp(e) {
-    if (ended) return;
+    if (state === STATE_ENDED) return;
     pointerDown = false;
     const [x, y] = getXY(e);
     gameDef?.onRelease?.(x, y);
@@ -460,71 +458,77 @@ export function createEngine(slide, onEnd) {
 
   // --- Game loop ---
   function tick(now) {
-    if (ended) return;
     if (lastFrameTime === 0) lastFrameTime = now;
     const dt = now - lastFrameTime;
     lastFrameTime = now;
-    gameTime += dt;
-    frameCount++;
+    gameTimeMs += dt;
 
-    api.time = gameTime;
+    api.time = gameTimeMs;
     api.dt = dt;
-    api.frame = frameCount;
 
     // Beat callbacks
-    const currentBeatInt = Math.floor(getGlobalBeat());
-    if (currentBeatInt > lastBeatInt && lastBeatInt >= 0) {
-      beatCallbacks.forEach(fn => fn(currentBeatInt));
+    const currentBeatNumber = Math.floor(getGlobalBeat());
+    if (currentBeatNumber > lastBeatNumber && lastBeatNumber >= 0) {
+      events.dispatchEvent(new BeatEvent(currentBeatNumber));
     }
-    lastBeatInt = currentBeatInt;
+    lastBeatNumber = currentBeatNumber;
 
     // Reset draw state each frame
     fillStyle = '#fff';
     strokeStyle = null;
     lineWidth = 2;
 
-    gameDef?.draw?.(api);
+    gameDef.draw(api);
 
-    rafId = requestAnimationFrame(tick);
+    if (gameTimeMs >= beatsToMs(gameDef.duration)) {
+      const timeoutResult = gameDef.timeoutResult ?? RESULT_LOSE;
+      end(timeoutResult, timeoutResult === RESULT_WIN ? 1 : 0);
+    }
+
+    requestAnimationFrame(tick);
   }
 
   // --- Public engine interface ---
   return {
     /** Start running a game definition */
     run(def) {
-      if (rafId) cancelAnimationFrame(rafId);
+      state = STATE_RUNNING;
       gameDef = def;
       startBeatClock();
       changeBassRoot();
-      lastBeatInt = Math.floor(getGlobalBeat());
+      lastBeatNumber = Math.floor(getGlobalBeat());
       lastFrameTime = 0;
-      gameTime = 0;
-      frameCount = 0;
-      rafId = requestAnimationFrame(tick);
+      gameTimeMs = 0;
+      requestAnimationFrame(tick);
     },
 
-    /** Duration in ms (converted from beats, scaled by timer multiplier) */
-    getDurationMs(beats) {
-      return beatsToMs(beats) * timerMultiplier;
+    pause() {
+      if (state !== STATE_RUNNING) return;
+      state = STATE_PAUSED;
+      pauseAudio();
     },
 
-    /** Show result overlay */
-    showResult(result) {
-      const won = result === 'win';
-      resultEl.textContent = won ? 'NICE!' : 'TOO BAD';
-      resultEl.style.background = won ? 'rgba(0,200,100,0.3)' : 'rgba(200,0,50,0.3)';
-      resultEl.classList.add('visible');
+    resume() {
+      if (state !== STATE_PAUSED) return;
+      state = STATE_RUNNING;
+      lastFrameTime = 0;
+      requestAnimationFrame(tick);
+      resumeAudio();
     },
+
+    get timeRemainingMs() {
+      return gameDef ? Math.max(0, beatsToMs(gameDef.duration) - gameTimeMs) : 0;
+    },
+
+    get gameDurationMs() { return gameDef ? beatsToMs(gameDef.duration) : 0 },
 
     /** Tear down everything */
     cleanup() {
-      ended = true;
-      if (rafId) cancelAnimationFrame(rafId);
+      state = STATE_ENDED;
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerUp);
-      beatCallbacks = [];
       gameDef?.cleanup?.();
     },
 
@@ -533,7 +537,15 @@ export function createEngine(slide, onEnd) {
   };
 }
 
+function initAudio() { ensureAudioCtx().resume(); }
 function pauseAudio() { if (audioCtx) audioCtx.suspend(); }
-function resumeAudio() { ensureAudioCtx().resume(); }
+function resumeAudio() { if (audioCtx) audioCtx.resume(); }
 
-export { sound, getGlobalBeat, getBpm, msUntilNextBeat, beatsToMs, setBpm, getTimerMultiplier, setTimerMultiplier, pauseAudio, resumeAudio, muteDrums, unmuteDrums };
+export { sound, getGlobalBeat, getBpm, msUntilNextBeat, beatsToMs, setBpm, initAudio, muteDrums, unmuteDrums };
+
+class BeatEvent extends Event {
+  constructor(beatNumber) {
+    super("beat");
+    this.beatNumber = beatNumber;
+  }
+}
