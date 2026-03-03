@@ -117,7 +117,7 @@ export function countGame(api) {
         if (x > bx && x < bx + btnW && y > btnY && y < btnY + btnW) {
           answered = true;
           if (answers[i] === targetCount) {
-            api.sound.tap();
+            api.soundTap();
             api.win();
           } else {
             api.lose();

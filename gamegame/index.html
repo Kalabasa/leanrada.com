@@ -219,7 +219,8 @@
 
 
 <script type="module">
-import { createEngine, msUntilNextBeat, beatsToMs, getBpm, setBpm, initAudio, muteDrums, unmuteDrums } from './engine.js';
+import { createEngine } from './engine/engine.js';
+import { msUntilNextBeat, beatsToMs, getBpm, setBpm, initAudio, soundWin, soundLose } from './engine/music.js';
 import { dragGame } from './games/drag.js';
 import { dodgeGame } from './games/dodge.js';
 import { parryGame } from './games/parry.js';
@@ -310,7 +311,7 @@ const currentEl = document.getElementById('current');
 const nextEl = document.getElementById('next');
 
 let gameIndex = 0;
-let winCount = 0;
+let netWinCount = 0;
 let activeEngine = null;
 
 const gameTypes = [dragGame, dodgeGame, parryGame, oddOneOutGame, splitGame, countGame, matchGame];
@@ -333,15 +334,15 @@ function transition(callback) {
   }, 420);
 }
 
-function endGame(result, _score) {
+function endGame(result) {
   if (result === 'win') {
-    winCount++;
+    netWinCount++;
     setBpm(Math.min(180, getBpm() + 3));
   } else {
-    winCount = Math.max(0, winCount - 1);
+    netWinCount = Math.max(0, netWinCount - 1);
   }
   if (activeEngine) {
-    activeEngine.sound[result === 'win' ? 'win' : 'lose']();
+    (result === 'win' ? soundWin : soundLose)();
     const won = result === 'win';
     const resultEl = document.createElement('div');
     resultEl.className = 'slide-result visible';
@@ -383,7 +384,7 @@ function startGame() {
   activeEngine = engine;
 
   // Init game
-  engine.api.complexity = Math.pow(winCount, 1.5) * 0.1;
+  engine.api.complexity = Math.pow(netWinCount, 1.5) * 0.1;
   const gameDef = gameFn(engine.api);
 
   // Show title overlay for 2 beats, then start the game

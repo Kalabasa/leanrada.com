@@ -122,7 +122,7 @@ export function splitGame(api) {
 
       const target = cuts[currentCut];
       if (Math.abs(dragPos - target.value) < tolerance) {
-        api.sound.tap();
+        api.soundTap();
         currentCut++;
         if (currentCut >= numCuts) {
           decided = true;

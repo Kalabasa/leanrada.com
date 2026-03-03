@@ -106,7 +106,7 @@ export function matchGame(api) {
       if (closest && closestDist < size * 1.2) {
         tapped = true;
         if (closest.emoji === targetEmoji) {
-          api.sound.tap();
+          api.soundTap();
           api.win();
         } else {
           api.lose();

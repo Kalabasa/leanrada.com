@@ -141,7 +141,7 @@ export function parryGame(api) {
             api.lose();
           } else {
             atk.state = 'parried';
-            api.sound.tap();
+            api.soundTap();
           }
           break;
         }

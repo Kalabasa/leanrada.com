@@ -125,7 +125,7 @@ export function oddOneOutGame(api) {
       if (closest >= 0 && closestDist < baseSize * 1.2) {
         tapped = true;
         if (closest === oddIndex) {
-          api.sound.tap();
+          api.soundTap();
           api.win();
         } else {
           api.lose();

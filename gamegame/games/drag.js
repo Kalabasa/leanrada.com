@@ -114,7 +114,7 @@ export function dragGame(api) {
 
       if (api.dist(ballX, ballY, targetX, targetY) < 45) {
         delivered++;
-        api.sound.tap();
+        api.soundTap();
         if (delivered >= numDeliveries) {
           api.win();
         } else {
