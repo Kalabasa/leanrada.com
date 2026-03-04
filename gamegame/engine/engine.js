@@ -1,5 +1,6 @@
 // gamegame engine — game loop, input, api
 
+// TODO shouldn't import from music, only Music instance
 import {
   getGlobalBeat,
   getBpm,
@@ -12,7 +13,7 @@ import {
   soundPlay,
   soundWin,
   soundLose,
-} from "./music.js";
+} from "./music/sequencer.js";
 import { createCanvas } from "./graphics.js";
 
 export const STATE_INIT = "init";

@@ -1,6 +1,6 @@
 # gamegame
 
-TikTok for games. AI-generated microgames in an infinite feed.
+TikTok for games. Infinite feed of microgames — chiptune music, pixel art, tight controls.
 
 ## Concept
 
@@ -10,22 +10,31 @@ TikTok for games. AI-generated microgames in an infinite feed.
 - Global beat clock drives music, timer, animations — everything syncs
 - Games are meant to be AI-generated for infinite content
 
+## Style
+
+**Chiptune + pixel art.** Synthesized drums (white noise + oscillator), funky 16th-note groove with swing, pentatonic key that changes per game. Sprites are pixel art images, not emoji.
+
 ## Architecture
 
 Single-page app, no build step, no external dependencies. Vanilla JS + Canvas2D + Web Audio.
 
 ```
-index.html      — shell (timer, sidebar, bottom bar, game loop, transitions)
-engine.js       — canvas API, beat clock, drums, input handling, sound
+index.html       — shell (timer, pause, game loop, transitions)
+engine/
+  engine.js      — canvas API, beat clock, input handling, game loop
+  music.js       — beat clock, funk groove, chiptune SFX
+  graphics.js    — Canvas2D drawing API
 games/
-  drag.js       — drag emoji to target
-  dodge.js      — dodge falling obstacles
-  parry.js      — parry timed attacks
-  oddoneout.js  — find the different emoji
-  split.js      — split a shape at a target ratio
+  drag.js        — drag object to target
+  dodge.js       — dodge falling obstacles
+  parry.js       — parry timed attacks
+  oddoneout.js   — find the different one
+  split.js       — split a shape at a target ratio
+  count.js       — count objects
+  match.js       — match pairs
 ```
 
-### Engine (`engine.js`)
+### Engine (`engine/engine.js`)
 
 Creates a canvas per game, runs the update loop, provides a p5-like drawing API.
 
@@ -38,12 +47,14 @@ export function myGame(api) {
   let x = api.width / 2;
 
   return {
-    duration: 8,  // in beats (not ms!) — scales with BPM
+    title: 'My Game',
+    duration: 8,        // in beats (not ms!) — scales with BPM
+    timeoutResult: 'lose', // 'win' or 'lose' (default: 'lose')
 
     draw(api) {
       api.clear('#222');
       const pulse = 1 + 0.2 * api.pulse;
-      api.emoji('🐱', x, 200, 64 * pulse);
+      api.circle(x, 200, 32 * pulse);
       api.fill('#fff');
       api.text('Catch!', api.width / 2, 50, 24);
     },
@@ -59,7 +70,7 @@ export function myGame(api) {
 Then register in `index.html`:
 ```js
 import { myGame } from './games/my-game.js';
-gameTypes.push(myGame);
+// add to gameTypes array
 ```
 
 #### API reference
@@ -74,49 +85,54 @@ gameTypes.push(myGame);
 **Time:**
 - `time` — elapsed game time (ms)
 - `dt` — frame delta (ms)
-- `frame` — frame count
 
 **Beat:**
 - `beat` — global beat as float (e.g. 3.7)
 - `bpm` — current tempo
-- `beatFrac` — fractional part of beat (0-1), for pulse animations
-- `pulse` — sharp attack on beat with quick decay (1→0), e.g. `size * (1 + 0.2 * api.pulse)`
+- `beatFrac` — fractional part of beat (0–1)
+- `pulse` — sharp attack on beat, quick decay (1→0). Usage: `size * (1 + 0.2 * api.pulse)`
 - `onBeat(fn)` — callback on each beat boundary
 
 **Helpers:**
 - `dist(x1, y1, x2, y2)`, `lerp(a, b, t)`, `map(v, inMin, inMax, outMin, outMax)`, `random(min?, max?)`
+- `complexity` — float starting at 0, grows with win streak. Use to scale difficulty.
 
 **Game control:**
-- `win()`, `lose()`, `score(n)`
+- `win()`, `lose()`
 
 **Sound:**
-- `sound.tap()` — UI blip
-- `sound.play(freq, dur, type?)` — custom tone
+- `soundTap()` — in-tune UI blip (pentatonic scale)
+- `soundPlay(freq, dur, type?)` — custom tone
+- `soundWin()`, `soundLose()` — called automatically, but available manually
 
 ### Beat clock
 
 - Global BPM (starts 120), continuous across games
 - Duration in beats: `8 beats @ 120bpm = 4s`, `8 beats @ 160bpm = 3s`
-- Drives: music (procedural drums), timer, game animations
-- BPM can ramp up over session = natural difficulty curve
+- BPM increases by 3 each win (max 180) — natural difficulty curve
+- Drives: music, timer bar, game animations
 
-### Music
+### Music (`engine/music.js`)
 
-Procedural beat-locked drums via Web Audio, never stops between games:
-- Kick on 1 & 3, snare on 2 & 4, hi-hat on eighths
-- Bass root changes per game
+Procedural chiptune funk, never stops between games:
+- **Groove:** 16th-note grid with ~18% swing
+- **Drums:** white noise + oscillator synthesis (kick, snare + wires, ghost notes, open/closed hats)
+- **Bass:** syncopated sawtooth bass line following chord changes
+- **Chord chops:** staccato off-beat stabs on the "and" of 2 and 4
+- **Melody riffs:** short syncopated phrases every 2 bars
+- **Key:** major pentatonic, root changes per game (`changeBassRoot()`)
+- **Win/lose SFX:** melodic riffs + drum accents in the current key
 
 ### What AI generates vs engine provides
 
-**Engine provides:** canvas drawing, emoji rendering, shapes, drums, beat clock, sound primitives, input handling, timer, transitions
+**Engine provides:** canvas drawing, shapes, beat clock, sound, input handling, timer, transitions, complexity scaling
 
-**AI generates:** game logic — a `draw()` function + input handlers + win/lose conditions, composing from the engine toolkit
+**AI generates:** game logic — `draw()` + input handlers + win/lose conditions, composing from the engine toolkit
 
 ## TODO
 
-- BPM ramping over session
+- Pixel art sprites (replacing emoji)
 - More game types
 - AI game generation
-- Scoring / streak tracking
-- Pause on tab hide / resume
+- Scoring / streak display
 - Real share/save/comment functionality

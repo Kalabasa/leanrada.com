@@ -220,7 +220,8 @@
 
 <script type="module">
 import { createEngine } from './engine/engine.js';
-import { msUntilNextBeat, beatsToMs, getBpm, setBpm, initAudio, soundWin, soundLose } from './engine/music.js';
+// TODO shouldn't import from music, only Music instance
+import { msUntilNextBeat, beatsToMs, getBpm, setBpm, initAudio, soundWin, soundLose, getAudioCtx } from './engine/music/sequencer.js';
 import { RESULT_WIN, RESULT_LOSE } from './engine/engine.js';
 import { dragGame } from './games/drag.js';
 import { dodgeGame } from './games/dodge.js';
@@ -342,8 +343,9 @@ function endGame(result) {
   } else {
     netWinCount = Math.max(0, netWinCount - 1);
   }
+  let melodyEnd = null;
   if (activeEngine) {
-    (result === RESULT_WIN ? soundWin : soundLose)();
+    melodyEnd = (result === RESULT_WIN ? soundWin : soundLose)();
     const won = result === RESULT_WIN;
     const resultEl = document.createElement('div');
     resultEl.className = 'slide-result visible';
@@ -352,23 +354,25 @@ function endGame(result) {
     currentEl.appendChild(resultEl);
   }
 
-  // Wait for next beat, then one more beat for the result to breathe, then transition on a beat
-  const waitForBeat = msUntilNextBeat();
-  const oneBeat = beatsToMs(1);
+  // Slide animation (420ms) ends at melodyEnd; start it 420ms before that
+  const SLIDE_MS = 420;
+  const msUntilMelodyEnd = melodyEnd != null
+    ? Math.max(0, (melodyEnd - getAudioCtx().currentTime) * 1000)
+    : beatsToMs(2);
+  const slideStartDelay = Math.max(0, msUntilMelodyEnd - SLIDE_MS);
+  const cleanupDelay = Math.max(0, slideStartDelay - 50); // cleanup just before slide
   setTimeout(() => {
     if (activeEngine) { activeEngine.cleanup(); activeEngine = null; }
-    // Transition on the NEXT beat after the result
-    const transitionWait = msUntilNextBeat();
-    setTimeout(() => {
-      gameIndex++;
-      transition(() => {
-        const tmp = currentEl.id;
-        currentEl.id = nextEl.id;
-        nextEl.id = tmp;
-        startGame();
-      });
-    }, transitionWait);
-  }, waitForBeat + oneBeat);
+  }, cleanupDelay);
+  setTimeout(() => {
+    gameIndex++;
+    transition(() => {
+      const tmp = currentEl.id;
+      currentEl.id = nextEl.id;
+      nextEl.id = tmp;
+      startGame();
+    });
+  }, slideStartDelay);
 }
 
 function startGame() {

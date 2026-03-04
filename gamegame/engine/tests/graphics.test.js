@@ -1,8 +1,39 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import './mocks.js';
+// Shared browser mocks for tests
 
-const { createCanvas } = await import('../engine/graphics.js');
+globalThis.window = {
+  devicePixelRatio: 1,
+};
+let rafCallback = null;
+globalThis.requestAnimationFrame = (fn) => { rafCallback = fn; };
+globalThis.setTimeout = () => {};
+globalThis.EventTarget = EventTarget;
+globalThis.Event = Event;
+globalThis.document = {
+  createElement: () => ({
+    style: {},
+    clientWidth: 400,
+    clientHeight: 600,
+    getContext: () => ({
+      setTransform: () => {}, fillRect: () => {}, save: () => {}, restore: () => {},
+      beginPath: () => {}, arc: () => {}, fill: () => {}, stroke: () => {},
+      strokeRect: () => {}, moveTo: () => {}, lineTo: () => {},
+      fillText: () => {}, translate: () => {}, rotate: () => {}, scale: () => {},
+    }),
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    innerHTML: '',
+    appendChild: () => {},
+  }),
+};
+
+export function tickRaf(ms) {
+  if (rafCallback) { const fn = rafCallback; rafCallback = null; fn(ms); }
+}
+
+const { createCanvas } = await import('../graphics.js');
 
 function makeSlide() {
   return { innerHTML: '', appendChild: () => {} };
