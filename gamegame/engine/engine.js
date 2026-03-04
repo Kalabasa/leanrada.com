@@ -15,20 +15,20 @@ import {
 } from "./music.js";
 import { createCanvas } from "./graphics.js";
 
+export const STATE_INIT = "init";
+export const STATE_RUNNING = "running";
+export const STATE_PAUSED = "paused";
+export const STATE_ENDED = "ended";
+
+export const RESULT_WIN = "win";
+export const RESULT_LOSE = "lose";
+
 // ============================================================
 // Engine — creates canvas, runs game loop, provides API
 // ============================================================
 
 export function createEngine(slide, onEnd) {
   const { canvas, drawing, resetDrawState } = createCanvas(slide);
-
-  const STATE_INIT = "init";
-  const STATE_RUNNING = "running";
-  const STATE_PAUSED = "paused";
-  const STATE_ENDED = "ended";
-
-  const RESULT_WIN = "win";
-  const RESULT_LOSE = "lose";
 
   let state = STATE_INIT;
   let gameDef = null;

@@ -1,3 +1,5 @@
+import { RESULT_WIN } from '../engine/engine.js';
+
 /**
  * Parry — deflect incoming attacks with well-timed taps
  *
@@ -80,7 +82,7 @@ export function parryGame(api) {
   return {
     title: variant === 'feints' ? 'Parry real ones!' : 'Parry!',
     duration,
-    timeoutResult: 'win',
+    timeoutResult: RESULT_WIN,
 
     draw(api) {
       localBeat += (api.dt / 60000) * api.bpm;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { tickRaf } from './mocks.js';
 
 const { initAudio, beatsToMs } = await import('../engine/music.js');
-const { createEngine } = await import('../engine/engine.js');
+const { createEngine, RESULT_WIN, RESULT_LOSE } = await import('../engine/engine.js');
 initAudio();
 
 function makeSlide() {
@@ -21,7 +21,7 @@ test('win() calls onEnd with win result', () => {
   const engine = createEngine(makeSlide(), (r) => { result = r; });
   engine.run({ duration: 8, draw(api) { api.win(); } });
   tick(engine, 0);
-  assert.equal(result, 'win');
+  assert.equal(result, RESULT_WIN);
 });
 
 test('lose() calls onEnd with lose result', () => {
@@ -29,7 +29,7 @@ test('lose() calls onEnd with lose result', () => {
   const engine = createEngine(makeSlide(), (r) => { result = r; });
   engine.run({ duration: 8, draw(api) { api.lose(); } });
   tick(engine, 0);
-  assert.equal(result, 'lose');
+  assert.equal(result, RESULT_LOSE);
 });
 
 test('onEnd fires only once even if win called multiple times', () => {
@@ -48,16 +48,16 @@ test('game times out with lose when duration exceeded', () => {
   engine.run({ duration: 8, draw() {} });
   tick(engine, 1000);                       // frame 1: gameTimeMs = 0
   tick(engine, 1000 + beatsToMs(8) + 1);   // frame 2: gameTimeMs = duration+1
-  assert.equal(result, 'lose');
+  assert.equal(result, RESULT_LOSE);
 });
 
 test('game times out with win when timeoutResult is win', () => {
   let result = null;
   const engine = createEngine(makeSlide(), (r) => { result = r; });
-  engine.run({ duration: 8, timeoutResult: 'win', draw() {} });
+  engine.run({ duration: 8, timeoutResult: RESULT_WIN, draw() {} });
   tick(engine, 1000);
   tick(engine, 1000 + beatsToMs(8) + 1);
-  assert.equal(result, 'win');
+  assert.equal(result, RESULT_WIN);
 });
 
 test('game does not end before duration', () => {

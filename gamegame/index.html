@@ -221,6 +221,7 @@
 <script type="module">
 import { createEngine } from './engine/engine.js';
 import { msUntilNextBeat, beatsToMs, getBpm, setBpm, initAudio, soundWin, soundLose } from './engine/music.js';
+import { RESULT_WIN, RESULT_LOSE } from './engine/engine.js';
 import { dragGame } from './games/drag.js';
 import { dodgeGame } from './games/dodge.js';
 import { parryGame } from './games/parry.js';
@@ -335,15 +336,15 @@ function transition(callback) {
 }
 
 function endGame(result) {
-  if (result === 'win') {
+  if (result === RESULT_WIN) {
     netWinCount++;
     setBpm(Math.min(180, getBpm() + 3));
   } else {
     netWinCount = Math.max(0, netWinCount - 1);
   }
   if (activeEngine) {
-    (result === 'win' ? soundWin : soundLose)();
-    const won = result === 'win';
+    (result === RESULT_WIN ? soundWin : soundLose)();
+    const won = result === RESULT_WIN;
     const resultEl = document.createElement('div');
     resultEl.className = 'slide-result visible';
     resultEl.textContent = won ? 'NICE!' : 'TOO BAD';

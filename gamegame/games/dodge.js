@@ -1,3 +1,5 @@
+import { RESULT_WIN } from '../engine/engine.js';
+
 /**
  * Dodge — survive by avoiding falling objects
  *
@@ -32,7 +34,7 @@ export function dodgeGame(api) {
   return {
     title: 'Dodge!',
     duration: 8,
-    timeoutResult: 'win',
+    timeoutResult: RESULT_WIN,
 
     draw(api) {
       api.clear(`hsl(${bgHue}, 30%, 10%)`);
