@@ -249,6 +249,7 @@
       import { createMusic } from "./engine/music/sequencer.js";
 
       const music = createMusic();
+      import { mockGame } from "./tests/browser/mock_game.js";
       import { dragGame } from "./games/drag.js";
       import { dodgeGame } from "./games/dodge.js";
       import { parryGame } from "./games/parry.js";
@@ -362,15 +363,17 @@
       let activeEngine = null;
       let activeTitleTimeout = null;
 
-      const gameTypes = [
-        dragGame,
-        dodgeGame,
-        parryGame,
-        oddOneOutGame,
-        splitGame,
-        countGame,
-        matchGame,
-      ];
+      const gameTypes = location.search.includes('mock')
+        ? [mockGame]
+        : [
+            dragGame,
+            dodgeGame,
+            parryGame,
+            oddOneOutGame,
+            splitGame,
+            countGame,
+            matchGame,
+          ];
 
       function nextGame() {
         transition(() => {
