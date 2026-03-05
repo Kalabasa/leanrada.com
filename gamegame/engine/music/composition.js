@@ -1,5 +1,5 @@
 // gamegame composition — scales, chords, bar patterns, riff builders
-// Pure musical knowledge: no AudioContext, no scheduling.
+// Pure musical knowledge: no AudioContext, no scheduling. All dt in beats.
 
 // ============================================================
 // Scale / Key
@@ -8,9 +8,58 @@
 const PENTATONIC = [0, 2, 4, 7, 9]; // major pentatonic semitone intervals
 const ROOT_FREQS = [110, 123.47, 130.81, 146.83, 164.81, 174.61, 196]; // A2..G3
 
+// ============================================================
+// Bar pattern definitions
+// ============================================================
+// 16th-note positions (0–15) per 4-beat bar. dt = position / 4 beats.
+
+const BARS = {
+  main_a: {
+    kick:     new Set([0, 3, 6, 10, 11]),
+    snare:    new Set([4, 12]),
+    ghost:    new Set([5, 7, 13]),
+    hat:      new Set([0, 2, 4, 6, 8, 10, 12, 14]),
+    open_hat: new Set([6, 14]),
+    bass:     new Map([[0, 0], [3, 0], [6, 2], [8, 0], [11, 4], [13, 0]]),
+    chop:     new Set([6, 14]),
+    riff:     true,
+  },
+  main_b: {
+    kick:     new Set([0, 8, 11, 14]),
+    snare:    new Set([4, 12]),
+    ghost:    new Set([2, 6, 10]),
+    hat:      new Set([0, 2, 4, 6, 8, 10, 12, 14]),
+    open_hat: new Set([2, 10]),
+    bass:     new Map([[0, 0], [6, 1], [8, 2], [11, 0], [14, 3]]),
+    chop:     new Set([2, 10]),
+    riff:     false,
+  },
+  win: {
+    kick:     new Set([0, 8]),
+    snare:    new Set([4]),
+    ghost:    new Set([]),
+    hat:      new Set([0, 2, 4, 6, 8, 10]),
+    open_hat: new Set([6]),
+    bass:     new Map([]),
+    chop:     new Set([]),
+    riff:     false,
+  },
+  lose: {
+    kick:     new Set([0]),
+    snare:    new Set([4, 10]),
+    ghost:    new Set([6]),
+    hat:      new Set([0, 4, 8]),
+    open_hat: new Set([]),
+    bass:     new Map([]),
+    chop:     new Set([]),
+    riff:     false,
+  },
+};
+
 export function createComposition() {
   let scaleNotes = [];
   let chordIndex = 0;
+  let mainBarCount = 0; // tracks main bar count for riff cadence and a/b alternation
 
   function changeBassRoot() {
     const root = ROOT_FREQS[Math.floor(Math.random() * ROOT_FREQS.length)];
@@ -40,83 +89,123 @@ export function createComposition() {
     return [root, root + 2, root + 4];
   }
 
-  function advanceChord() {
-    chordIndex++;
+  // ============================================================
+  // Bar builders — return Event[] with dt in beats
+  // ============================================================
+
+  function buildDrumEvents(bar) {
+    const events = [];
+    for (const s16 of bar.kick)     events.push({ type: 'kick',     dt: s16 / 4 });
+    for (const s16 of bar.snare)    events.push({ type: 'snare',    dt: s16 / 4 });
+    for (const s16 of bar.ghost)    events.push({ type: 'ghost',    dt: s16 / 4 });
+    for (const s16 of bar.open_hat) events.push({ type: 'open_hat', dt: s16 / 4 });
+    // Hat only where open_hat isn't
+    for (const s16 of bar.hat) {
+      if (!bar.open_hat.has(s16)) events.push({ type: 'hat', dt: s16 / 4 });
+    }
+    return events;
   }
 
-  // ============================================================
-  // Event builders — return arrays of event objects
-  // Callers add `t` offset as needed.
-  // ============================================================
+  function buildBassEvents(bar) {
+    const events = [];
+    const chordRoot = getCurrentChordRoot();
+    for (const [s16, scaleOffset] of bar.bass) {
+      events.push({ type: 'bass', dt: s16 / 4, freq: getScaleNote(chordRoot + scaleOffset) });
+    }
+    return events;
+  }
 
-  /** Groove riff: 4-note syncopated melody at bar start. Returns tone events. */
-  function buildRiff(bpm) {
+  function buildChopEvents(bar) {
+    const events = [];
+    const notes = getCurrentChordNotes();
+    const oct = 5;
+    const freqs = notes.map(ni => getScaleNote(oct + ni));
+    for (const s16 of bar.chop) {
+      events.push({ type: 'chop', dt: s16 / 4, freqs });
+    }
+    return events;
+  }
+
+  function buildRiff() {
     if (!scaleNotes.length) return [];
-    const s16 = (60 / bpm) * 0.25;
     const chordRoot = getCurrentChordRoot();
     const oct = 8;
-    const offsets = [0, 1, 3, 4];
+    const offsets = [0, 1, 3, 4]; // 16th positions
     const pool = [0, 1, 2, 3, 4].map(i => chordRoot + i);
     return offsets.map((o, i) => {
       const ni = pool[Math.min(i + Math.floor(Math.random() * 2), pool.length - 1)];
       return {
-        type: 'tone', dt: o * s16,
+        type: 'tone', dt: o / 4,
         freq: getScaleNote(oct + ni),
-        dur: s16 * 1.8, wave: 'sine', vol: 0.1, bus: 'drum',
+        dur: 1.8 / 4, wave: 'sine', vol: 0.1, bus: 'drum',
       };
     });
   }
 
-  /** Win riff: ascending 4-note phrase. */
-  function buildWinRiff(bpm) {
+  function buildWinRiff() {
     if (!scaleNotes.length) return [];
-    const eighth = (60 / bpm) / 2;
     const chordRoot = getCurrentChordRoot();
     const oct = 7;
     return [chordRoot, chordRoot + 2, chordRoot + 4, chordRoot + 5].map((ni, i) => ({
-      type: 'tone', dt: i * eighth,
+      type: 'tone', dt: i * 0.5,
       freq: getScaleNote(oct + ni),
-      dur: eighth, wave: 'sine', vol: 0.15,
+      dur: 0.5, wave: 'sine', vol: 0.15,
     }));
   }
 
-  /** Lose riff: descending 3-note phrase. */
-  function buildLoseRiff(bpm) {
+  function buildLoseRiff() {
     if (!scaleNotes.length) return [];
-    const eighth = (60 / bpm) / 2;
     const chordRoot = getCurrentChordRoot();
     const oct = 6;
     return [chordRoot + 3, chordRoot + 1, chordRoot].map((ni, i) => ({
-      type: 'tone', dt: i * eighth,
+      type: 'tone', dt: i * 0.5,
       freq: getScaleNote(oct + ni),
-      dur: eighth * 1.8, wave: 'sawtooth', vol: 0.1,
+      dur: 0.9, wave: 'sawtooth', vol: 0.1,
     }));
   }
 
-  /** Roll: 4 crescendo snare hits ending at `endT`. Returns roll_hit events with absolute `t`. */
-  function buildRoll(endT, bpm) {
-    const s16 = (60 / bpm) * 0.25;
+  function buildRoll(barDur) {
+    // 4 crescendo snare hits ending at barDur beats
     return [0, 1, 2, 3].map(i => ({
       type: 'roll_hit',
-      t: endT - (4 - i) * s16,
+      dt: barDur - (4 - i) / 4,
       step: i,
     }));
   }
 
-  /** Bass note event (dt = offset from bar start). */
-  function buildBassNote(scaleOffset, bpm) {
-    const chordRoot = getCurrentChordRoot();
-    return {
-      type: 'bass',
-      freq: getScaleNote(chordRoot + scaleOffset),
-    };
-  }
+  // ============================================================
+  // Public API
+  // ============================================================
 
-  /** Chord chop events at a single time. */
-  function buildChop() {
-    const notes = getCurrentChordNotes();
-    const oct = 5;
-    return [{ type: 'chop', freqs: notes.map(ni => getScaleNote(oct + ni)) }];
+  /** Build all events for a bar section. Advances chord and internal state. */
+  function buildBar(section) {
+    const events = [];
+
+    if (section === 'main') {
+      const barKey = (mainBarCount % 2 === 0) ? 'main_a' : 'main_b';
+      const bar = BARS[barKey];
+      chordIndex++;
+      events.push(...buildDrumEvents(bar));
+      events.push(...buildBassEvents(bar));
+      events.push(...buildChopEvents(bar));
+      if (bar.riff) {
+        events.push(...buildRiff());
+      }
+      mainBarCount++;
+    } else if (section === 'win') {
+      const bar = BARS.win;
+      chordIndex++;
+      events.push(...buildDrumEvents(bar));
+      events.push(...buildWinRiff());
+      events.push(...buildRoll(4));
+    } else if (section === 'lose') {
+      const bar = BARS.lose;
+      chordIndex++;
+      events.push(...buildDrumEvents(bar));
+      events.push(...buildLoseRiff());
+    }
+
+    return events;
   }
 
   /** Tap sound: random note from upper half of scale. */
@@ -124,66 +213,12 @@ export function createComposition() {
     if (!scaleNotes.length) return [];
     const idx = Math.floor(scaleNotes.length / 2) +
       Math.floor(Math.random() * Math.ceil(scaleNotes.length / 2));
-    return [{ type: 'tone', dt: 0, freq: getScaleNote(idx), dur: 0.08, wave: 'square', vol: 0.1 }];
+    return [{ type: 'tone', dt: 0, freq: getScaleNote(idx), dur: 0.04, wave: 'square', vol: 0.1 }];
   }
 
-  // TODO Do not expose individual elements, only bars.
   return {
     changeBassRoot,
-    getScaleNote,
-    advanceChord,
-    buildRiff,
-    buildWinRiff,
-    buildLoseRiff,
-    buildRoll,
-    buildBassNote,
-    buildChop,
+    buildBar,
     buildTap,
   };
 }
-
-// ============================================================
-// Bar pattern definitions
-// ============================================================
-// 16th-note positions (0–15) per 4-beat bar.
-
-export const BARS = {
-  main_a: {
-    kick:     new Set([0, 3, 6, 10, 11]),
-    snare:    new Set([4, 12]),
-    ghost:    new Set([5, 7, 13]),
-    hat:      new Set([0, 2, 4, 6, 8, 10, 12, 14]),
-    open_hat: new Set([6, 14]),
-    bass:     new Map([[0, 0], [3, 0], [6, 2], [8, 0], [11, 4], [13, 0]]),
-    chop:     new Set([6, 14]),
-    riff:     true,
-  },
-  main_b: {
-    kick:     new Set([0, 8, 11, 14]),
-    snare:    new Set([4, 12]),
-    ghost:    new Set([2, 6, 10]),
-    hat:      new Set([0, 2, 4, 6, 8, 10, 12, 14]),
-    open_hat: new Set([2, 10]),
-    bass:     new Map([[0, 0], [6, 1], [8, 2], [11, 0], [14, 3]]),
-    chop:     new Set([2, 10]),
-    riff:     false,
-  },
-  win: {
-    kick:     new Set([0, 8]),
-    snare:    new Set([4]),
-    ghost:    new Set([]),
-    hat:      new Set([0, 2, 4, 6, 8, 10]),
-    open_hat: new Set([6]),
-    bass:     new Map([]),
-    chop:     new Set([]),
-  },
-  lose: {
-    kick:     new Set([0]),
-    snare:    new Set([4, 10]),
-    ghost:    new Set([6]),
-    hat:      new Set([0, 4, 8]),
-    open_hat: new Set([]),
-    bass:     new Map([]),
-    chop:     new Set([]),
-  },
-};

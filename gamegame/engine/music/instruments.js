@@ -4,14 +4,11 @@ let audioCtx = null;
 let drumBus = null;
 let noiseBuffer = null;
 
-export function initAudio() {
+export function initInstruments() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioCtx.resume();
 }
-export function pauseAudio() { if (audioCtx) audioCtx.suspend(); }
-export function resumeAudio() { if (audioCtx) audioCtx.resume(); }
-export function getAudioCtx() { return audioCtx; }
-export function now() { return audioCtx ? audioCtx.currentTime : 0; }
+export function now() { return audioCtx ? audioCtx.currentTime * 1000 : 0; }
 
 function getDrumBus() {
   if (!drumBus) {
@@ -53,10 +50,11 @@ export function createInstrument() {
   return { playEvent };
 }
 
-/** Play a synthesized event. Accepts event objects from the composition/sequencer layer. */
+/** Play a synthesized event. Accepts event objects from the composition/sequencer layer. t and dur are in ms. */
 export function playEvent(e) {
   if (!audioCtx) return;
-  const { t } = e;
+  const t = e.t / 1000;
+  e = { ...e, t, ...(e.dur !== undefined ? { dur: e.dur / 1000 } : {}) };
 
   switch (e.type) {
     case 'kick': {

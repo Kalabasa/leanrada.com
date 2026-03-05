@@ -131,7 +131,7 @@ export function parryGame(api) {
       }
     },
 
-    onTap(_x, _y) {
+    onTap() {
       if (!alive) return;
 
       for (const atk of attacks) {

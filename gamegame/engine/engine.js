@@ -1,19 +1,5 @@
 // gamegame engine — game loop, input, api
 
-// TODO shouldn't import from music, only Music instance
-import {
-  getGlobalBeat,
-  getBpm,
-  startBeatClock,
-  changeBassRoot,
-  beatsToMs,
-  pauseAudio,
-  resumeAudio,
-  soundTap,
-  soundPlay,
-  soundWin,
-  soundLose,
-} from "./music/sequencer.js";
 import { createCanvas } from "./graphics.js";
 
 export const STATE_INIT = "init";
@@ -28,7 +14,7 @@ export const RESULT_LOSE = "lose";
 // Engine — creates canvas, runs game loop, provides API
 // ============================================================
 
-export function createEngine(slide, onEnd) {
+export function createEngine(slide, onEnd, music) {
   const { canvas, drawing, resetDrawState } = createCanvas(slide);
 
   let state = STATE_INIT;
@@ -48,7 +34,7 @@ export function createEngine(slide, onEnd) {
   // TODO class instead of Object.create()
   class API {
     get bpm() {
-      return getBpm();
+      return music.getBpm();
     }
     // ...
   }
@@ -61,23 +47,23 @@ export function createEngine(slide, onEnd) {
     // Beat
     bpm: {
       get() {
-        return getBpm();
+        return music.getBpm();
       },
     },
     beat: {
       get() {
-        return getGlobalBeat();
+        return music.getGlobalBeat();
       },
     },
     beatFrac: {
       get() {
-        return getGlobalBeat() % 1;
+        return music.getGlobalBeat() % 1;
       },
     },
     /** Sharp attack on beat, quick decay. 1→0. Usage: size * (1 + 0.2 * api.pulse) */
     pulse: {
       get() {
-        return Math.exp(-(getGlobalBeat() % 1) * 6);
+        return Math.exp(-(music.getGlobalBeat() % 1) * 6);
       },
     },
     onBeat: {
@@ -101,10 +87,10 @@ export function createEngine(slide, onEnd) {
     },
 
     // Sound
-    soundTap: { value: soundTap },
-    soundPlay: { value: soundPlay },
-    soundWin: { value: soundWin },
-    soundLose: { value: soundLose },
+    soundTap: { value: () => music.soundTap() },
+    soundPlay: { value: (f, d, w) => music.soundPlay(f, d, w) },
+    soundWin: { value: () => music.soundWin() },
+    soundLose: { value: () => music.soundLose() },
 
     // Helpers
     dist: { value: (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1) },
@@ -166,7 +152,7 @@ export function createEngine(slide, onEnd) {
 
   // --- Game loop ---
   function tick(now) {
-    if (state === STATE_ENDED) return;
+    if (state !== STATE_RUNNING) return;
 
     if (lastFrameTime === 0) lastFrameTime = now;
     const dt = now - lastFrameTime;
@@ -176,7 +162,7 @@ export function createEngine(slide, onEnd) {
     api.dt = dt;
 
     // Beat callbacks
-    const currentBeatNumber = Math.floor(getGlobalBeat());
+    const currentBeatNumber = Math.floor(music.getGlobalBeat());
     if (currentBeatNumber > lastBeatNumber && lastBeatNumber >= 0) {
       events.dispatchEvent(new BeatEvent(currentBeatNumber));
     }
@@ -185,7 +171,7 @@ export function createEngine(slide, onEnd) {
     resetDrawState();
     gameDef.draw(api);
 
-    if (gameTimeMs >= beatsToMs(gameDef.duration)) {
+    if (gameTimeMs >= music.beatsToMs(gameDef.duration)) {
       const timeoutResult = gameDef.timeoutResult ?? RESULT_LOSE;
       end(timeoutResult, timeoutResult === RESULT_WIN ? 1 : 0);
     }
@@ -199,36 +185,36 @@ export function createEngine(slide, onEnd) {
     run(def) {
       state = STATE_RUNNING;
       gameDef = def;
-      startBeatClock();
-      changeBassRoot();
-      lastBeatNumber = Math.floor(getGlobalBeat());
+      music.start();
+      music.changeBassRoot();
+      lastBeatNumber = Math.floor(music.getGlobalBeat());
       lastFrameTime = 0;
       gameTimeMs = 0;
       requestAnimationFrame(tick);
     },
 
     pause() {
-      if (state !== STATE_RUNNING) return;
+      music.pause();
       state = STATE_PAUSED;
-      pauseAudio();
     },
 
     resume() {
+      console.log(state);
       if (state !== STATE_PAUSED) return;
       state = STATE_RUNNING;
       lastFrameTime = 0;
       requestAnimationFrame(tick);
-      resumeAudio();
+      music.resume();
     },
 
     get timeRemainingMs() {
       return gameDef
-        ? Math.max(0, beatsToMs(gameDef.duration) - gameTimeMs)
+        ? Math.max(0, music.beatsToMs(gameDef.duration) - gameTimeMs)
         : 0;
     },
 
     get gameDurationMs() {
-      return gameDef ? beatsToMs(gameDef.duration) : 0;
+      return gameDef ? music.beatsToMs(gameDef.duration) : 0;
     },
 
     /** Tear down everything */

@@ -19,7 +19,7 @@ const mockAudioCtx = {
   createOscillator: () => ({ ...mockNode }),
   createGain: () => ({ ...mockNode }),
   createBufferSource: () => ({ ...mockNode, buffer: null }),
-  createBuffer: (ch, len, sr) => ({ getChannelData: () => new Float32Array(len) }),
+  createBuffer: (ch, len) => ({ getChannelData: () => new Float32Array(len) }),
   createBiquadFilter: () => ({ ...mockNode, type: '', Q: { value: 0 } }),
   sampleRate: 44100,
 };
@@ -55,10 +55,10 @@ export function tickRaf(ms) {
   if (rafCallback) { const fn = rafCallback; rafCallback = null; fn(ms); }
 }
 
-// TODO shouldn't import from music
-const { initAudio, beatsToMs } = await import('../music/sequencer.js');
+const { createMusic } = await import('../music/sequencer.js');
 const { createEngine, RESULT_WIN, RESULT_LOSE } = await import('../engine.js');
-initAudio();
+const music = createMusic();
+music.initAudio();
 
 function makeSlide() {
   return { innerHTML: '', appendChild: () => {} };
@@ -72,7 +72,7 @@ function tick(engine, ms) {
 
 test('win() calls onEnd with win result', () => {
   let result = null;
-  const engine = createEngine(makeSlide(), (r) => { result = r; });
+  const engine = createEngine(makeSlide(), (r) => { result = r; }, music);
   engine.run({ duration: 8, draw(api) { api.win(); } });
   tick(engine, 0);
   assert.equal(result, RESULT_WIN);
@@ -80,7 +80,7 @@ test('win() calls onEnd with win result', () => {
 
 test('lose() calls onEnd with lose result', () => {
   let result = null;
-  const engine = createEngine(makeSlide(), (r) => { result = r; });
+  const engine = createEngine(makeSlide(), (r) => { result = r; }, music);
   engine.run({ duration: 8, draw(api) { api.lose(); } });
   tick(engine, 0);
   assert.equal(result, RESULT_LOSE);
@@ -88,7 +88,7 @@ test('lose() calls onEnd with lose result', () => {
 
 test('onEnd fires only once even if win called multiple times', () => {
   let count = 0;
-  const engine = createEngine(makeSlide(), () => { count++; });
+  const engine = createEngine(makeSlide(), () => { count++; }, music);
   engine.run({ duration: 8, draw(api) { api.win(); api.win(); } });
   tick(engine, 0);
   assert.equal(count, 1);
@@ -98,27 +98,75 @@ test('onEnd fires only once even if win called multiple times', () => {
 
 test('game times out with lose when duration exceeded', () => {
   let result = null;
-  const engine = createEngine(makeSlide(), (r) => { result = r; });
+  const engine = createEngine(makeSlide(), (r) => { result = r; }, music);
   engine.run({ duration: 8, draw() {} });
   tick(engine, 1000);                       // frame 1: gameTimeMs = 0
-  tick(engine, 1000 + beatsToMs(8) + 1);   // frame 2: gameTimeMs = duration+1
+  tick(engine, 1000 + music.beatsToMs(8) + 1);   // frame 2: gameTimeMs = duration+1
   assert.equal(result, RESULT_LOSE);
 });
 
 test('game times out with win when timeoutResult is win', () => {
   let result = null;
-  const engine = createEngine(makeSlide(), (r) => { result = r; });
+  const engine = createEngine(makeSlide(), (r) => { result = r; }, music);
   engine.run({ duration: 8, timeoutResult: RESULT_WIN, draw() {} });
   tick(engine, 1000);
-  tick(engine, 1000 + beatsToMs(8) + 1);
+  tick(engine, 1000 + music.beatsToMs(8) + 1);
   assert.equal(result, RESULT_WIN);
 });
 
 test('game does not end before duration', () => {
   let result = null;
-  const engine = createEngine(makeSlide(), (r) => { result = r; });
+  const engine = createEngine(makeSlide(), (r) => { result = r; }, music);
   engine.run({ duration: 8, draw() {} });
   tick(engine, 1000);
-  tick(engine, 1000 + beatsToMs(4)); // halfway
+  tick(engine, 1000 + music.beatsToMs(4)); // halfway
   assert.equal(result, null);
+});
+
+// ── pause / resume ────────────────────────────────────────────────────────────
+
+test('paused game does not advance time or call draw', () => {
+  let draws = 0;
+  const engine = createEngine(makeSlide(), () => {}, music);
+  engine.run({ duration: 8, draw() { draws++; } });
+  tick(engine, 1000);   // frame 1: runs draw
+  engine.pause();
+  tick(engine, 2000);   // frame 2: paused, should not run
+  tick(engine, 3000);   // frame 3: paused, should not run
+  assert.equal(draws, 1);
+});
+
+test('resumed game continues from where it left off', () => {
+  let result = null;
+  const engine = createEngine(makeSlide(), (r) => { result = r; }, music);
+  const dur = music.beatsToMs(2); // short duration: 1000ms at 120bpm
+  engine.run({ duration: 2, draw() {} });
+  tick(engine, 1000);          // frame 1: lastFrameTime=0→1000, gameTimeMs=0
+  engine.pause();
+  tick(engine, 1000 + dur);    // while paused — no time advance
+  assert.equal(result, null);  // should not have ended
+  engine.resume();             // lastFrameTime resets to 0
+  tick(engine, 1000 + dur);    // frame 2: lastFrameTime=0→1000+dur, gameTimeMs=0 (dt=0)
+  tick(engine, 2000 + dur);    // frame 3: dt=1000, gameTimeMs=1000 >= dur → timeout
+  assert.equal(result, RESULT_LOSE);
+});
+
+test('pause is idempotent when already paused', () => {
+  const engine = createEngine(makeSlide(), () => {}, music);
+  engine.run({ duration: 8, draw() {} });
+  tick(engine, 1000);
+  engine.pause();
+  engine.pause(); // should not throw
+  engine.resume();
+  tick(engine, 2000); // should draw without error
+});
+
+test('resume is a no-op when not paused', () => {
+  let draws = 0;
+  const engine = createEngine(makeSlide(), () => {}, music);
+  engine.run({ duration: 8, draw() { draws++; } });
+  tick(engine, 1000);  // frame 1
+  engine.resume();     // no-op
+  tick(engine, 2000);  // frame 2: should still run normally
+  assert.equal(draws, 2);
 });

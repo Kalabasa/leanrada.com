@@ -116,7 +116,7 @@ export function splitGame(api) {
       dragPos = pointerToRatio(x, y);
     },
 
-    onRelease(_x, _y) {
+    onRelease() {
       if (decided || dragPos === null || !dragging) return;
       dragging = false;
 

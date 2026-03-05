@@ -1,193 +1,173 @@
 // gamegame music — bar sequencer
-// No AudioContext. Accepts instrument (playEvent) and composition as dependencies.
+// No AudioContext. Accepts instrument and composition as dependencies.
 
-import { createInstrument, initAudio as _initAudio, pauseAudio as _pauseAudio,
-         resumeAudio as _resumeAudio, now } from './instruments.js';
-import { createComposition, BARS } from './composition.js';
+import { createInstrument, initInstruments, now } from './instruments.js';
+import { createComposition } from './composition.js';
 
 // ============================================================
 // Sequencer class
 // ============================================================
 
 class Sequencer {
-  constructor({ bars, instrument, composition, getTime = now }) {
-    this._bars = bars;
-    this._instrument = instrument;
-    this._comp = composition;
-    this._now = getTime;
+  #instrument; #comp; #nowMs;
+  #bpm; #beatStartMs; #accumulatedBeats; #started;
+  #scheduledUntil; #loopTimer;
+  #pendingSection; #pendingSectionBeat;
+  #queue; #barStartBeat;
 
-    this._bpm = 120;
-    this._beatStart = 0;      // getTime() when current BPM segment started
-    this._accumulated = 0;    // beats accumulated before current BPM segment
-    this._started = false;
+  constructor({ instrument, composition, getNowMs = now }) {
+    this.#instrument = instrument;
+    this.#comp = composition;
+    this.#nowMs = getNowMs;
 
-    this._scheduledUntil = 0;
-    this._loopTimer = null;
+    this.#bpm = 120;
+    this.#beatStartMs = 0;      // getNowMs() when current BPM segment started
+    this.#accumulatedBeats = 0;    // beats accumulated before current BPM segment
+    this.#started = false;
 
-    this._currentSection = 'main_a';
-    this._nextSection = null;
-    this._nextSectionBeat = null;
-    this._mainAlt = false;
+    this.#scheduledUntil = 0;
+    this.#loopTimer = null;
+
+    this.#pendingSection = null;
+    this.#pendingSectionBeat = null;
+
+    this.#queue = [];             // pending events for current bar, sorted by dt
+    this.#barStartBeat = -4;      // triggers #startBar at first b=0
   }
 
   // ── Beat clock ──────────────────────────────────────────────
 
-  getBpm() { return this._bpm; }
+  getBpm() { return this.#bpm; }
 
   setBpm(bpm) {
-    if (this._started && bpm !== this._bpm) {
-      this._accumulated = this.getGlobalBeat();
-      this._beatStart = this._now();
-    }
-    this._bpm = bpm;
+    if (this.#started && bpm !== this.#bpm) this.#snapshotBeat();
+    this.#bpm = bpm;
+  }
+
+  #snapshotBeat() {
+    this.#accumulatedBeats = this.getGlobalBeat();
+    this.#beatStartMs = this.#nowMs();
   }
 
   getGlobalBeat() {
-    if (!this._started) return 0;
-    return this._accumulated + (this._now() - this._beatStart) * (this._bpm / 60);
+    if (!this.#started) return 0;
+    return this.#accumulatedBeats + (this.#nowMs() - this.#beatStartMs) * (this.#bpm / 60000);
   }
 
-  beatsToMs(beats) { return (beats / this._bpm) * 60000; }
+  beatsToMs(beats) { return (beats / this.#bpm) * 60000; }
 
-  _beatToTime(b) {
-    return this._beatStart + ((b - this._accumulated) / this._bpm) * 60;
-  }
-
-  nextBeatTime() {
-    const next = Math.ceil(this.getGlobalBeat() + 0.01);
-    return this._beatToTime(next);
-  }
-
-  msUntilNextBeat() {
-    return Math.max(0, (this.nextBeatTime() - this._now()) * 1000);
+  beatToTimeMs(b) {
+    return this.#beatStartMs + this.beatsToMs(b - this.#accumulatedBeats);
   }
 
   // ── Lifecycle ───────────────────────────────────────────────
 
+  initAudio() { initInstruments(); this.start(); }
+  pause() {
+    clearTimeout(this.#loopTimer);
+  }
+
+  resume() {
+    console.log(this.#started);
+    if (this.#started) this.#tick();
+  }
+
   start() {
-    if (this._started) return;
-    this._started = true;
-    this._beatStart = this._now();
-    this._tick();
+    if (this.#started) return;
+    this.#started = true;
+    this.#beatStartMs = this.#nowMs();
+    this.#tick();
   }
 
   stop() {
-    clearTimeout(this._loopTimer);
-    this._loopTimer = null;
+    clearTimeout(this.#loopTimer);
   }
 
-  // ── Section management ──────────────────────────────────────
+  // ── Composition passthrough ─────────────────────────────────
 
-  _queueSection(name) {
-    this._nextSection = name;
-    const t = this.nextBeatTime();
-    this._nextSectionBeat = this.getGlobalBeat() + 1;
-    return t;
-  }
+  changeBassRoot() { this.#comp.changeBassRoot(); }
 
   // ── Public sound API ────────────────────────────────────────
 
-  /** Queue win bar at next beat. Returns bar end time (audioCtx seconds). */
+  /** Queue win bar at next beat. Returns bar end time (ms). */
   soundWin() {
-    const t = this._queueSection('win');
-    const barDur = (4 / this._bpm) * 60;
-    // TODO, only win bar, can build bar dynamically, but not schedule individual elements
-    // Schedule riff and roll directly — bypass lookahead lag
-    this._comp.buildWinRiff(this._bpm).forEach(e =>
-      this._instrument.playEvent({ ...e, t: t + e.dt }));
-    this._comp.buildRoll(t + barDur, this._bpm).forEach(e =>
-      this._instrument.playEvent(e));
-    return t + barDur;
+    this.#pendingSection = 'win';
+    this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
+    return this.beatToTimeMs(this.#pendingSectionBeat + 4);
   }
 
-  /** Queue lose bar at next beat. Returns bar end time (audioCtx seconds). */
+  /** Queue lose bar at next beat. Returns bar end time (ms). */
   soundLose() {
-    const t = this._queueSection('lose');
-    const barDur = (4 / this._bpm) * 60;
-    // TODO, only lose bar, can build bar dynamically, but not schedule individual elements
-    this._comp.buildLoseRiff(this._bpm).forEach(e =>
-      this._instrument.playEvent({ ...e, t: t + e.dt }));
-    return t + barDur;
+    this.#pendingSection = 'lose';
+    this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
+    return this.beatToTimeMs(this.#pendingSectionBeat + 4);
   }
 
   soundTap() {
-    this._comp.buildTap().forEach(e =>
-      this._instrument.playEvent({ ...e, t: this._now() }));
+    this.#comp.buildTap().forEach(e => {
+      const dur = e.dur * (60000 / this.#bpm);
+      this.#instrument.playEvent({ ...e, t: this.#nowMs(), dur });
+    });
   }
 
   soundPlay(freq, dur = 0.2, type = 'sine') {
-    this._instrument.playEvent({ type: 'tone', t: this._now(), freq, dur, wave: type, vol: 0.12 });
+    this.#instrument.playEvent({ type: 'tone', t: this.#nowMs(), freq, dur, wave: type, vol: 0.12 });
+  }
+
+  // ── Bar management ──────────────────────────────────────────
+
+  #startBar(b, section) {
+    const cutoff = this.#queue.findIndex(e => e.t >= b - 0.001);
+    if (cutoff !== -1) this.#queue.length = cutoff;
+    this.#barStartBeat = b;
+    this.#queue.push(...this.#comp.buildBar(section).map(e => ({...e, t: b + e.dt })).sort((a, b) => a.dt - b.dt));
   }
 
   // ── Scheduler loop ──────────────────────────────────────────
 
-  _tick() {
-    const lookAhead = 0.2;
+  #tick() {
     const beatNow = this.getGlobalBeat();
-    const n = this._now();
     const scheduleTo = beatNow + 1;
     const s16beat = 0.25;
-    const swingS = (60 / this._bpm) * 0.25 * 0.18;
+    const msPerBeat = 60000 / this.#bpm;
+    const swingMs = msPerBeat * 0.25 * 0.18;
 
-    for (let b = Math.max(Math.ceil(this._scheduledUntil * 4) / 4, 0); b < scheduleTo; b += s16beat) {
-      // Section transition
-      if (this._nextSection !== null && this._nextSectionBeat !== null &&
-          b >= this._nextSectionBeat - 0.001) {
-        this._currentSection = this._nextSection;
-        this._nextSection = null;
-        this._nextSectionBeat = null;
+    for (let b = Math.ceil(this.#scheduledUntil); b < scheduleTo; b += s16beat) {
+      // Section transition — start new bar immediately
+      if (this.#pendingSection !== null && b >= this.#pendingSectionBeat - 0.5) {
+        const section = this.#pendingSection;
+        const beat = this.#pendingSectionBeat;
+        this.#pendingSection = null;
+        this.#pendingSectionBeat = null;
+        this.#startBar(beat, section);
+      }
+      // Bar boundary — start next bar
+      else if (b >= this.#barStartBeat + 4 - 0.001) {
+        this.#startBar(b, 'main');
       }
 
-      const s16 = Math.round(((b % 4) * 4 + 64)) % 16;
-      const swing = (s16 % 2 === 1) ? swingS : 0;
-      const t = this._beatToTime(b) + swing;
-      if (t < n - 0.01) continue;
-
-      const bar = this._bars[this._currentSection];
-      const play = (e) => this._instrument.playEvent({ ...e, t });
-
-      if (bar.kick.has(s16))              play({ type: 'kick' });
-      if (bar.snare.has(s16))             play({ type: 'snare' });
-      if (bar.ghost.has(s16))             play({ type: 'ghost' });
-      if (bar.open_hat.has(s16))          play({ type: 'open_hat' });
-      else if (bar.hat.has(s16))          play({ type: 'hat' });
-      if (bar.bass.has(s16)) {
-        const e = this._comp.buildBassNote(bar.bass.get(s16), this._bpm);
-        play(e);
-      }
-      if (bar.chop.has(s16)) {
-        this._comp.buildChop().forEach(e => play(e));
-      }
-
-      // Bar-start events
-      if (s16 === 0 && b % 4 < 0.01) {
-        this._comp.advanceChord();
-        // Return from one-shot section
-        if (this._currentSection === 'win' || this._currentSection === 'lose') {
-          this._mainAlt = !this._mainAlt;
-          this._currentSection = this._mainAlt ? 'main_b' : 'main_a';
-        }
-      }
-
-      // Groove riff every 2 bars
-      if (s16 === 0 && b % 8 < 0.01 && bar.riff === true) {
-        this._comp.buildRiff(this._bpm).forEach(e =>
-          this._instrument.playEvent({ ...e, t: t + e.dt }));
+      // Consume queued events at this step
+      while (this.#queue.length > 0 && this.#queue[0].t <= b + 0.001) {
+        const e = this.#queue.shift();
+        const swing = (Math.round(e.dt * 4) % 2 === 1) ? swingMs : 0;
+        const t = this.beatToTimeMs(e.t) + swing;
+        const dur = e.dur !== undefined ? e.dur * msPerBeat : undefined;
+        this.#instrument.playEvent({ ...e, t, ...(dur !== undefined ? { dur } : {}) });
       }
     }
 
-    this._scheduledUntil = scheduleTo;
-    this._loopTimer = setTimeout(() => this._tick(), 100);
+    this.#scheduledUntil = scheduleTo;
+    this.#loopTimer = setTimeout(() => this.#tick(), 50);
   }
 
   // ── Test hook ────────────────────────────────────────────────
 
   getMusicState() {
     return {
-      currentSection: this._currentSection,
-      nextSection: this._nextSection,
-      nextSectionBeat: this._nextSectionBeat,
-      bpm: this._bpm,
+
+      nextSection: this.#pendingSection,
+      nextSectionBeat: this.#pendingSectionBeat,
+      bpm: this.#bpm,
     };
   }
 }
@@ -199,41 +179,7 @@ class Sequencer {
 export function createMusic() {
   const instrument = createInstrument();
   const composition = createComposition();
-  return new Sequencer({ bars: BARS, instrument, composition });
+  return new Sequencer({ instrument, composition });
 }
 
-
-// TODO Remove all these exports
-// ============================================================
-// Singleton for engine.js / index.html (backwards compat)
-// ============================================================
-
-let _music = null;
-function getMusic() {
-  if (!_music) _music = createMusic();
-  return _music;
-}
-
-export function initAudio()    { _initAudio(); getMusic().start(); }
-export function pauseAudio()   { _pauseAudio(); }
-export function resumeAudio()  { _resumeAudio(); }
-
-export function getBpm()              { return getMusic().getBpm(); }
-export function setBpm(bpm)           { getMusic().setBpm(bpm); }
-export function getGlobalBeat()       { return getMusic().getGlobalBeat(); }
-export function startBeatClock()      { getMusic().start(); }
-export function beatsToMs(beats)      { return getMusic().beatsToMs(beats); }
-export function nextBeatTime()        { return getMusic().nextBeatTime(); }
-export function msUntilNextBeat()     { return getMusic().msUntilNextBeat(); }
-export function changeBassRoot()      { getMusic()._comp.changeBassRoot(); }
-export function getScaleNote(i)       { return getMusic()._comp.getScaleNote(i); }
-export function soundTap()            { getMusic().soundTap(); }
-export function soundPlay(f, d, w)    { getMusic().soundPlay(f, d, w); }
-export function soundWin()            { return getMusic().soundWin(); }
-export function soundLose()           { return getMusic().soundLose(); }
-export function getMusicState()       { return getMusic().getMusicState(); }
-
-// For index.html (getAudioCtx used for timing calculations)
-export { getAudioCtx } from './instruments.js';
-
-export { Sequencer, BARS, createComposition };
+export { Sequencer, createComposition };
