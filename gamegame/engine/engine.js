@@ -20,6 +20,7 @@ export function createEngine(slide, onEnd, music) {
   let state = STATE_INIT;
   let gameDef = null;
   let gameTimeMs = 0;
+  let gameDurationMs = 0;
   let lastFrameTime = 0;
   let lastBeatNumber = -1;
 
@@ -137,7 +138,7 @@ export function createEngine(slide, onEnd, music) {
     resetDrawState();
     gameDef.draw(api);
 
-    if (gameTimeMs >= music.beatsToMs(gameDef.duration)) {
+    if (gameTimeMs >= gameDurationMs) {
       const timeoutResult = gameDef.timeoutResult ?? RESULT_LOSE;
       end(timeoutResult, timeoutResult === RESULT_WIN ? 1 : 0);
     }
@@ -149,6 +150,7 @@ export function createEngine(slide, onEnd, music) {
   return {
     /** Start running a game definition */
     run(def) {
+      if (state === STATE_ENDED) return;
       state = STATE_RUNNING;
       gameDef = def;
       music.start();
@@ -156,16 +158,17 @@ export function createEngine(slide, onEnd, music) {
       lastBeatNumber = Math.floor(music.getGlobalBeat());
       lastFrameTime = 0;
       gameTimeMs = 0;
+      gameDurationMs = music.beatsToMs(def.duration);
       requestAnimationFrame(tick);
     },
 
     pause() {
+      if (state !== STATE_RUNNING) return;
       music.pause();
       state = STATE_PAUSED;
     },
 
     resume() {
-      console.log(state);
       if (state !== STATE_PAUSED) return;
       state = STATE_RUNNING;
       lastFrameTime = 0;
@@ -174,13 +177,11 @@ export function createEngine(slide, onEnd, music) {
     },
 
     get timeRemainingMs() {
-      return gameDef
-        ? Math.max(0, music.beatsToMs(gameDef.duration) - gameTimeMs)
-        : 0;
+      return Math.max(0, gameDurationMs - gameTimeMs);
     },
 
     get gameDurationMs() {
-      return gameDef ? music.beatsToMs(gameDef.duration) : 0;
+      return gameDurationMs;
     },
 
     /** Tear down everything */

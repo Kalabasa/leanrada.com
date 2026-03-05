@@ -302,6 +302,10 @@
               fn();
             }, remaining);
           },
+          cancel() {
+            clearTimeout(id);
+            pauseableTimeouts.delete(entry);
+          },
         };
         pauseableTimeouts.add(entry);
         if (!paused) entry.resume();
@@ -356,6 +360,7 @@
 
       let netWinCount = 0;
       let activeEngine = null;
+      let activeTitleTimeout = null;
 
       const gameTypes = [
         dragGame,
@@ -429,6 +434,7 @@
       }
 
       function startGame() {
+        activeTitleTimeout?.cancel();
         activeEngine?.cleanup();
 
         const gameFn = gameTypes[Math.floor(Math.random() * gameTypes.length)];
@@ -454,7 +460,8 @@
         titleEl.textContent = gameDef.title || "";
         currentEl.appendChild(titleEl);
 
-        pauseableTimeout(() => {
+        activeTitleTimeout = pauseableTimeout(() => {
+          activeTitleTimeout = null;
           titleEl.remove();
           engine.run(gameDef);
         }, titleMs);
