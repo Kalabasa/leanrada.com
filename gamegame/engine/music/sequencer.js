@@ -76,16 +76,12 @@ class Sequencer {
 
   /** @returns {number} bar end time (ms) */
   soundWin() {
-    this.#pendingSection = SECTION_WIN;
-    this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
-    return this.beatToTimeMs(this.#pendingSectionBeat + SECTION_BEAT_LENGTH);
+    return this.#queueSection(SECTION_WIN);
   }
 
   /** @returns {number} bar end time (ms) */
   soundLose() {
-    this.#pendingSection = SECTION_LOSE;
-    this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
-    return this.beatToTimeMs(this.#pendingSectionBeat + SECTION_BEAT_LENGTH);
+    return this.#queueSection(SECTION_LOSE);
   }
 
   soundTap() {
@@ -95,11 +91,19 @@ class Sequencer {
     });
   }
 
-  #startBar(b, section) {
-    const cutoff = this.#queue.findIndex(e => e.t >= b - 0.001);
+  /** @returns {number} bar end time (ms) */
+  #queueSection(sectionName) {
+    this.#pendingSection = sectionName;
+    const halfSection = Math.ceil(SECTION_BEAT_LENGTH / 2);
+    this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() / halfSection) * halfSection;
+    return this.beatToTimeMs(this.#pendingSectionBeat + SECTION_BEAT_LENGTH);
+  }
+
+  #startBar(beat, section) {
+    const cutoff = this.#queue.findIndex(e => e.t > beat + 1e-9);
     if (cutoff !== -1) this.#queue.length = cutoff;
-    this.#barStartBeat = b;
-    this.#queue.push(...this.#comp.buildBar(section).map(e => ({...e, t: b + e.beatOffset })).sort((a, b) => a.beatOffset - b.beatOffset));
+    this.#barStartBeat = beat;
+    this.#queue.push(...this.#comp.buildBar(section).map(e => ({...e, t: beat + e.beatOffset })).sort((a, b) => a.beatOffset - b.beatOffset));
   }
 
   #tick() {
@@ -111,20 +115,18 @@ class Sequencer {
 
     for (let b = Math.ceil(this.#scheduledUntil); b < scheduleTo; b += s16beat) {
       // Section transition — start new bar immediately
-      if (this.#pendingSection !== null && b >= this.#pendingSectionBeat - 0.5) {
-        const section = this.#pendingSection;
-        const beat = this.#pendingSectionBeat;
+      if (this.#pendingSection !== null && b >= this.#pendingSectionBeat) {
+        this.#startBar(this.#pendingSectionBeat, this.#pendingSection);
         this.#pendingSection = null;
         this.#pendingSectionBeat = null;
-        this.#startBar(beat, section);
       }
       // Bar boundary — start next bar
-      else if (b >= this.#barStartBeat + SECTION_BEAT_LENGTH - 0.001) {
+      else if (b >= this.#barStartBeat + SECTION_BEAT_LENGTH) {
         this.#startBar(b, SECTION_MAIN);
       }
 
       // Consume queued events at this step
-      while (this.#queue.length > 0 && this.#queue[0].t <= b + 0.001) {
+      while (this.#queue.length > 0 && this.#queue[0].t <= b + 1e-9) {
         const e = this.#queue.shift();
         const swing = (Math.round(e.beatOffset * 4) % 2 === 1) ? swingMs : 0;
         const t = this.beatToTimeMs(e.t) + swing;

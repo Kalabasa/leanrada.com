@@ -35,23 +35,24 @@ const BARS = {
     riff:     false,
   },
   win: {
-    kick:     new Set([0, 8]),
-    snare:    new Set([4]),
-    ghost:    new Set([]),
-    hat:      new Set([0, 2, 4, 6, 8, 10]),
-    open_hat: new Set([6]),
-    bass:     new Map([]),
-    chop:     new Set([]),
+    //                beat: 0  1  2  3  (s16: 0..15)
+    kick:     new Set([0, 2, 3, 5, 7]),     // dense first half, drops off
+    snare:    new Set([4, 6]),               // snappy early
+    ghost:    new Set([1, 3, 9]),
+    hat:      new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]), // 16ths die off at beat 3
+    open_hat: new Set([12, 14]),             // beat 3-4: open hats build tension
+    bass:     new Map([[0, 0], [2, 4], [4, 2], [7, 5]]),
+    chop:     new Set([1, 3, 5, 7, 9]),     // syncopated stabs, stops before roll
     riff:     false,
   },
   lose: {
-    kick:     new Set([0]),
-    snare:    new Set([4, 10]),
-    ghost:    new Set([6]),
-    hat:      new Set([0, 4, 8]),
-    open_hat: new Set([]),
-    bass:     new Map([]),
-    chop:     new Set([]),
+    kick:     new Set([0, 3, 5, 8]),
+    snare:    new Set([4, 7]),
+    ghost:    new Set([2, 6, 10]),
+    hat:      new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
+    open_hat: new Set([12, 14]),             // same anticipation gap
+    bass:     new Map([[0, 4], [3, 2], [5, 3], [8, 0]]),
+    chop:     new Set([0, 2, 4, 6, 9]),
     riff:     false,
   },
 };
@@ -144,10 +145,13 @@ export function createComposition() {
     if (!scaleNotes.length) return [];
     const chordRoot = getCurrentChordRoot();
     const oct = 7;
-    return [chordRoot, chordRoot + 2, chordRoot + 4, chordRoot + 5].map((ni, i) => ({
-      type: 'tone', beatOffset: i * 0.5,
+    // leap up, step back, quick bouncy fill at the top
+    const notes   = [chordRoot + 7, chordRoot + 4, chordRoot + 9, chordRoot + 7, chordRoot + 4, chordRoot + 5];
+    const offsets = [0,             0.5,           1,             1.25,          1.5,           1.75];
+    return notes.map((ni, i) => ({
+      type: 'tone', beatOffset: offsets[i],
       freq: getScaleNote(oct + ni),
-      dur: 0.5, wave: 'sine', vol: 0.15,
+      dur: 0.22, wave: 'triangle', vol: 0.22,
     }));
   }
 
@@ -155,10 +159,13 @@ export function createComposition() {
     if (!scaleNotes.length) return [];
     const chordRoot = getCurrentChordRoot();
     const oct = 6;
-    return [chordRoot + 3, chordRoot + 1, chordRoot].map((ni, i) => ({
-      type: 'tone', beatOffset: i * 0.5,
+    // starts high, dips, briefly lifts, then falls below root
+    const notes   = [chordRoot + 4, chordRoot + 1, chordRoot + 3, chordRoot + 2, chordRoot - 1];
+    const offsets = [0,             0.5,           1,             1.5,           2.0];
+    return notes.map((ni, i) => ({
+      type: 'tone', beatOffset: offsets[i],
       freq: getScaleNote(oct + ni),
-      dur: 0.9, wave: 'sawtooth', vol: 0.1,
+      dur: 0.4, wave: 'sawtooth', vol: 0.12,
     }));
   }
 
@@ -196,6 +203,7 @@ export function createComposition() {
       chordIndex++;
       events.push(...buildDrumEvents(bar));
       events.push(...buildLoseRiff());
+      events.push(...buildRoll(4));
     }
 
     return events;
