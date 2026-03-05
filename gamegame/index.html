@@ -284,12 +284,40 @@
       // --- Pause ---
       let paused = false;
       const pauseMenu = document.getElementById("pause-menu");
+      const pauseableTimeouts = new Set();
+
+      function pauseableTimeout(fn, ms) {
+        let remaining = ms;
+        let startTime = null;
+        let id = null;
+        const entry = {
+          pause() {
+            clearTimeout(id);
+            remaining -= Date.now() - startTime;
+          },
+          resume() {
+            startTime = Date.now();
+            id = setTimeout(() => {
+              pauseableTimeouts.delete(entry);
+              fn();
+            }, remaining);
+          },
+        };
+        pauseableTimeouts.add(entry);
+        if (!paused) entry.resume();
+        return entry;
+      }
 
       function setPaused(value) {
         paused = value;
         pauseMenu.classList.toggle("visible", paused);
-        if (paused) activeEngine.pause();
-        else activeEngine.resume();
+        if (paused) {
+          activeEngine?.pause();
+          pauseableTimeouts.forEach((t) => t.pause());
+        } else {
+          activeEngine?.resume();
+          pauseableTimeouts.forEach((t) => t.resume());
+        }
       }
 
       // --- Pause/Resume on visibility change ---
@@ -344,10 +372,7 @@
           const tmp = currentEl.id;
           currentEl.id = nextEl.id;
           nextEl.id = tmp;
-          if (!paused) {
-            startGame();
-          }
-          // TODO pause should affect transitions
+          startGame();
         });
       }
 
@@ -362,8 +387,7 @@
             nextEl.style.transform = `translateY(0)`;
           });
         });
-        // TODO pause should affect transitions
-        setTimeout(() => {
+        pauseableTimeout(() => {
           currentEl.style.transition = "none";
           nextEl.style.transition = "none";
           callback();
@@ -399,8 +423,7 @@
         const msUntilMelodyEnd =
           melodyEnd - music.beatToTimeMs(music.getGlobalBeat());
         const slideStartDelay = msUntilMelodyEnd - SLIDE_MS;
-        // TODO pause should affect transitions
-        setTimeout(() => {
+        pauseableTimeout(() => {
           nextGame();
         }, slideStartDelay);
       }
@@ -431,15 +454,10 @@
         titleEl.textContent = gameDef.title || "";
         currentEl.appendChild(titleEl);
 
-        if (!paused) {
-          // TODO pause should affect transitions
-          setTimeout(() => {
-            titleEl.remove();
-            engine.run(gameDef);
-          }, titleMs);
-        } else {
-          // TODO pause should affect title screena
-        }
+        pauseableTimeout(() => {
+          titleEl.remove();
+          engine.run(gameDef);
+        }, titleMs);
       }
 
       document.getElementById("title-screen").addEventListener(
