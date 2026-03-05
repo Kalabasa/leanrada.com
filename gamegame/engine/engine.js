@@ -31,81 +31,47 @@ export function createEngine(slide, onEnd, music) {
     onEnd(result);
   }
 
-  // TODO class instead of Object.create()
   class API {
-    get bpm() {
-      return music.getBpm();
+    constructor() {
+      Object.defineProperties(this, Object.getOwnPropertyDescriptors(drawing));
     }
-    // ...
-  }
 
-  const api = Object.create(drawing, {
     // Time
-    time: { get() { return gameTimeMs } },
-    dt: { value: 0, writable: true },
+    get time() { return gameTimeMs; }
+    dt = 0;
 
     // Beat
-    bpm: {
-      get() {
-        return music.getBpm();
-      },
-    },
-    beat: {
-      get() {
-        return music.getGlobalBeat();
-      },
-    },
-    beatFrac: {
-      get() {
-        return music.getGlobalBeat() % 1;
-      },
-    },
+    get bpm() { return music.getBpm(); }
+    get beat() { return music.getGlobalBeat(); }
+    get beatFrac() { return music.getGlobalBeat() % 1; }
     /** Sharp attack on beat, quick decay. 1→0. Usage: size * (1 + 0.2 * api.pulse) */
-    pulse: {
-      get() {
-        return Math.exp(-(music.getGlobalBeat() % 1) * 6);
-      },
-    },
-    onBeat: {
-      value(fn) {
-        events.addEventListener("beat", fn);
-      },
-    },
+    get pulse() { return Math.exp(-(music.getGlobalBeat() % 1) * 6); }
+    onBeat(fn) { events.addEventListener("beat", fn); }
+
     /** Complexity, starts at 0, unbounded. Set by index before game init. */
-    complexity: { value: 0, writable: true },
+    complexity = 0;
 
     // Game control
-    win: {
-      value() {
-        end(RESULT_WIN);
-      },
-    },
-    lose: {
-      value() {
-        end(RESULT_LOSE);
-      },
-    },
+    win() { end(RESULT_WIN); }
+    lose() { end(RESULT_LOSE); }
 
     // Sound
-    soundTap: { value: () => music.soundTap() },
-    soundPlay: { value: (f, d, w) => music.soundPlay(f, d, w) },
-    soundWin: { value: () => music.soundWin() },
-    soundLose: { value: () => music.soundLose() },
+    soundTap() { music.soundTap(); }
+    soundPlay(f, d, w) { music.soundPlay(f, d, w); }
+    soundWin() { music.soundWin(); }
+    soundLose() { music.soundLose(); }
 
     // Helpers
-    dist: { value: (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1) },
-    lerp: { value: (a, b, t) => a + (b - a) * t },
-    map: { value: (v, a, b, c, d) => c + ((v - a) / (b - a)) * (d - c) },
-    random: {
-      value(min = 0, max = 1) {
-        if (arguments.length === 1) {
-          max = min;
-          min = 0;
-        }
-        return min + Math.random() * (max - min);
-      },
-    },
-  });
+    dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
+    lerp(a, b, t) { return a + (b - a) * t; }
+    map(v, a, b, c, d) { return c + ((v - a) / (b - a)) * (d - c); }
+    random(min = 0, max = 1) {
+      if (arguments.length === 1) { max = min; min = 0; }
+      return min + Math.random() * (max - min);
+    }
+  }
+
+  const api = new API();
 
   // --- Input handling ---
   let pointerDown = false;
