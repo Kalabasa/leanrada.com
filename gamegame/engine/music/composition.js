@@ -30,8 +30,8 @@
 const PENTATONIC = [0, 2, 4, 7, 9]; // major pentatonic semitone intervals
 const ROOT_FREQS = [110, 123.47, 130.81, 146.83, 164.81, 174.61, 196]; // A2..G3
 
-// Chord roots as scale-note indices: I IV V iii
-const CHORD_ROOTS = [0, 3, 4, 2];
+// Good melodic intervals in the pentatonic scale (steps of scale-note index)
+const VOICE_LEAD_STEPS = [1, 2, 3, -1, -2, -3, 4, -4]; // prefer steps/thirds, allow 4ths
 
 /** @type {Record<string, SectionEvent[]>} */
 const SECTIONS = {
@@ -191,19 +191,42 @@ const SECTIONS = {
 };
 
 export function createComposition() {
+  let scaleRoot = 0; // Hz, set on initScale
+  let semitonesUp = 0; // -1–3, up on win, down on lose
   let scaleNotes = [];
   let chordIndex = 0;
   let mainBarCount = 0;
+  let chordProgression = [0, 3, 4, 2]; // initial: I IV V iii
+  let progressionBarsLeft = 0;
+  let shiftPending = 0; // +1 on win, -1 on lose, applied at next main bar
 
-  function changeBassRoot() {
-    const root = ROOT_FREQS[Math.floor(Math.random() * ROOT_FREQS.length)];
+  function generateProgression(startRoot) {
+    const prog = [startRoot];
+    for (let i = 1; i < 4; i++) {
+      const prev = prog[i - 1];
+      const step = VOICE_LEAD_STEPS[Math.floor(Math.random() * VOICE_LEAD_STEPS.length)];
+      prog.push(((prev + step) % 5 + 5) % 5);
+    }
+    return prog;
+  }
+
+  function rebuildScale() {
+    const root = scaleRoot * Math.pow(2, semitonesUp / 12);
     scaleNotes = [];
     for (let oct = 0; oct < 4; oct++) {
       for (const interval of PENTATONIC) {
         scaleNotes.push(root * Math.pow(2, (oct * 12 + interval) / 12));
       }
     }
+  }
+
+  function initScale() {
+    scaleRoot = ROOT_FREQS[Math.floor(Math.random() * ROOT_FREQS.length)];
+    semitonesUp = 0;
+    rebuildScale();
     chordIndex = 0;
+    chordProgression = generateProgression(0);
+    progressionBarsLeft = 0;
   }
 
   function getScaleNote(index) {
@@ -212,7 +235,7 @@ export function createComposition() {
   }
 
   function getCurrentChordRoot() {
-    return CHORD_ROOTS[chordIndex % CHORD_ROOTS.length];
+    return chordProgression[chordIndex % chordProgression.length];
   }
 
   function resolveEvent(e) {
@@ -256,6 +279,22 @@ export function createComposition() {
 
   /** @returns {MusicEvent[]} */
   function buildBar(section) {
+    if (!scaleNotes.length) initScale();
+    if (section === 'win') {
+      shiftPending = 1;
+    } else if (section === 'lose') {
+      shiftPending = -1;
+    } else if (section === 'main') {
+      if (shiftPending !== 0 || progressionBarsLeft <= 0) {
+        semitonesUp = Math.max(-1, Math.min(3, semitonesUp + shiftPending));
+        rebuildScale();
+        const lastRoot = chordProgression[chordIndex % chordProgression.length];
+        chordProgression = generateProgression(lastRoot);
+        progressionBarsLeft = 4 + Math.floor(Math.random() * 3);
+        shiftPending = 0;
+      }
+      progressionBarsLeft--;
+    }
     chordIndex++;
     const events = [];
 
@@ -285,5 +324,5 @@ export function createComposition() {
     return [{ type: 'tone', beatOffset: 0, freq: getScaleNote(idx), dur: 0.04, wave: 'square', vol: 0.1 }];
   }
 
-  return { changeBassRoot, buildBar, buildTap };
+  return { buildBar, buildTap };
 }

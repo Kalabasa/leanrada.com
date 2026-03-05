@@ -72,8 +72,6 @@ class Sequencer {
     this.#tick();
   }
 
-  changeBassRoot() { this.#comp.changeBassRoot(); }
-
   /** @returns {number} bar end time (ms) */
   soundWin() {
     return this.#queueSection(SECTION_WIN);

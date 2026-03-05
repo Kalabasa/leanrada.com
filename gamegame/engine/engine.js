@@ -134,7 +134,6 @@ export function createEngine(slide, onEnd, music) {
       state = STATE_RUNNING;
       gameDef = def;
       music.start();
-      music.changeBassRoot();
       lastBeatNumber = Math.floor(music.getGlobalBeat());
       lastFrameTime = 0;
       gameTimeMs = 0;

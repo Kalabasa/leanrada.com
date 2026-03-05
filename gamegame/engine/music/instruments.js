@@ -1,6 +1,7 @@
 let audioCtx = null;
 let drumBus = null;
 let noiseBuffer = null;
+let reverbNode = null;
 
 export function initInstruments() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -8,10 +9,31 @@ export function initInstruments() {
 }
 export function now() { return audioCtx ? audioCtx.currentTime * 1000 : 0; }
 
+function getReverb() {
+  if (!reverbNode) {
+    reverbNode = audioCtx.createConvolver();
+    const len = audioCtx.sampleRate * 0.2;
+    const ir = audioCtx.createBuffer(2, len, audioCtx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+      }
+    }
+    reverbNode.buffer = ir;
+    const wet = audioCtx.createGain();
+    wet.gain.value = 0.2;
+    reverbNode.connect(wet);
+    wet.connect(audioCtx.destination);
+  }
+  return reverbNode;
+}
+
 function getDrumBus() {
   if (!drumBus) {
     drumBus = audioCtx.createGain();
     drumBus.connect(audioCtx.destination);
+    drumBus.connect(getReverb());
   }
   return drumBus;
 }
@@ -94,12 +116,13 @@ export function playEvent(e) {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(e.freq, t);
-      osc.frequency.setValueAtTime(e.freq * 0.99, t + 0.01);
-      gain.gain.setValueAtTime(0.18, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      osc.frequency.setValueAtTime(e.freq / 2, t);
+      osc.frequency.exponentialRampToValueAtTime(e.freq / 2 * 0.92, t + 0.06);
+      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.exponentialRampToValueAtTime(0.08, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.10);
       osc.connect(gain); gain.connect(getDrumBus());
-      osc.start(t); osc.stop(t + 0.15);
+      osc.start(t); osc.stop(t + 0.1);
       break;
     }
     case 'roll_hit': {
@@ -117,6 +140,7 @@ export function playEvent(e) {
       gain.gain.exponentialRampToValueAtTime(0.001, t + e.dur);
       osc.connect(gain);
       gain.connect(e.bus === 'drum' ? getDrumBus() : audioCtx.destination);
+      gain.connect(getReverb());
       osc.start(t); osc.stop(t + e.dur + 0.01);
       break;
     }

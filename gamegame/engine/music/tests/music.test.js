@@ -44,7 +44,6 @@ function makeSeq(startTime = 0) {
   const clock = { now: () => t, advance: (s) => { t += s * 1000; } };
   const instrument = mockInstrument();
   const composition = createComposition();
-  composition.changeBassRoot();
   const seq = new Sequencer({ bars: BARS, instrument, composition, getNowMs: clock.now });
   seq.start();
   seq.pause();
