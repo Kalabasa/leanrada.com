@@ -47,12 +47,7 @@ export function createInstrument() {
   return { playEvent };
 }
 
-/**
- * Play a synthesized event. Accepts event objects from the composition/sequencer layer.
- * @param {Event} e
- * @param {Event.t} ms
- * @param {Event.dur} ms
- **/
+/** @param {import('./composition.js').MusicEvent & {t: number, dur?: number}} e */
 export function playEvent(e) {
   if (!audioCtx) return;
   const t = e.t / 1000;
@@ -107,18 +102,6 @@ export function playEvent(e) {
       osc.start(t); osc.stop(t + 0.15);
       break;
     }
-    case 'chop':
-      e.freqs.forEach((freq) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, t);
-        gain.gain.setValueAtTime(0.05, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-        osc.connect(gain); gain.connect(getDrumBus());
-        osc.start(t); osc.stop(t + 0.06);
-      });
-      break;
     case 'roll_hit': {
       const vol = 0.12 + (e.step / 3) * 0.45;
       playNoise(t, 0.018, vol * 0.6, 'bandpass', 4000, 1.2);

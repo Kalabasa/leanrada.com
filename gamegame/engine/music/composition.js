@@ -1,9 +1,8 @@
 /**
  * @typedef {Object} MusicEvent
- * @property {string} type - 'kick'|'snare'|'ghost'|'hat'|'open_hat'|'bass'|'chop'|'tone'|'roll_hit'
- * @property {number} dt - beat offset within bar
+ * @property {string} type - 'kick'|'snare'|'ghost'|'hat'|'open_hat'|'bass'|'tone'|'roll_hit'
+ * @property {number} beatOffset - beat offset within bar
  * @property {number} [freq] - Hz
- * @property {number[]} [freqs] - Hz array (chop)
  * @property {number} [dur] - duration in beats
  * @property {string} [wave] - OscillatorType
  * @property {number} [vol] - gain 0–1
@@ -92,13 +91,13 @@ export function createComposition() {
 
   function buildDrumEvents(bar) {
     const events = [];
-    for (const s16 of bar.kick)     events.push({ type: 'kick',     dt: s16 / 4 });
-    for (const s16 of bar.snare)    events.push({ type: 'snare',    dt: s16 / 4 });
-    for (const s16 of bar.ghost)    events.push({ type: 'ghost',    dt: s16 / 4 });
-    for (const s16 of bar.open_hat) events.push({ type: 'open_hat', dt: s16 / 4 });
+    for (const s16 of bar.kick)     events.push({ type: 'kick',     beatOffset: s16 / 4 });
+    for (const s16 of bar.snare)    events.push({ type: 'snare',    beatOffset: s16 / 4 });
+    for (const s16 of bar.ghost)    events.push({ type: 'ghost',    beatOffset: s16 / 4 });
+    for (const s16 of bar.open_hat) events.push({ type: 'open_hat', beatOffset: s16 / 4 });
     // Hat only where open_hat isn't
     for (const s16 of bar.hat) {
-      if (!bar.open_hat.has(s16)) events.push({ type: 'hat', dt: s16 / 4 });
+      if (!bar.open_hat.has(s16)) events.push({ type: 'hat', beatOffset: s16 / 4 });
     }
     return events;
   }
@@ -107,7 +106,7 @@ export function createComposition() {
     const events = [];
     const chordRoot = getCurrentChordRoot();
     for (const [s16, scaleOffset] of bar.bass) {
-      events.push({ type: 'bass', dt: s16 / 4, freq: getScaleNote(chordRoot + scaleOffset) });
+      events.push({ type: 'bass', beatOffset: s16 / 4, freq: getScaleNote(chordRoot + scaleOffset) });
     }
     return events;
   }
@@ -118,7 +117,9 @@ export function createComposition() {
     const oct = 5;
     const freqs = notes.map(ni => getScaleNote(oct + ni));
     for (const s16 of bar.chop) {
-      events.push({ type: 'chop', dt: s16 / 4, freqs });
+      for (const freq of freqs) {
+        events.push({ type: 'tone', beatOffset: s16 / 4, freq, dur: 0.08, wave: 'sawtooth', vol: 0.05 });
+      }
     }
     return events;
   }
@@ -132,7 +133,7 @@ export function createComposition() {
     return offsets.map((o, i) => {
       const ni = pool[Math.min(i + Math.floor(Math.random() * 2), pool.length - 1)];
       return {
-        type: 'tone', dt: o / 4,
+        type: 'tone', beatOffset: o / 4,
         freq: getScaleNote(oct + ni),
         dur: 1.8 / 4, wave: 'sine', vol: 0.1, bus: 'drum',
       };
@@ -144,7 +145,7 @@ export function createComposition() {
     const chordRoot = getCurrentChordRoot();
     const oct = 7;
     return [chordRoot, chordRoot + 2, chordRoot + 4, chordRoot + 5].map((ni, i) => ({
-      type: 'tone', dt: i * 0.5,
+      type: 'tone', beatOffset: i * 0.5,
       freq: getScaleNote(oct + ni),
       dur: 0.5, wave: 'sine', vol: 0.15,
     }));
@@ -155,7 +156,7 @@ export function createComposition() {
     const chordRoot = getCurrentChordRoot();
     const oct = 6;
     return [chordRoot + 3, chordRoot + 1, chordRoot].map((ni, i) => ({
-      type: 'tone', dt: i * 0.5,
+      type: 'tone', beatOffset: i * 0.5,
       freq: getScaleNote(oct + ni),
       dur: 0.9, wave: 'sawtooth', vol: 0.1,
     }));
@@ -164,7 +165,7 @@ export function createComposition() {
   function buildRoll(barDur) {
     return [0, 1, 2, 3].map(i => ({
       type: 'roll_hit',
-      dt: barDur - (4 - i) / 4,
+      beatOffset: barDur - (4 - i) / 4,
       step: i,
     }));
   }
@@ -204,7 +205,7 @@ export function createComposition() {
     if (!scaleNotes.length) return [];
     const idx = Math.floor(scaleNotes.length / 2) +
       Math.floor(Math.random() * Math.ceil(scaleNotes.length / 2));
-    return [{ type: 'tone', dt: 0, freq: getScaleNote(idx), dur: 0.04, wave: 'square', vol: 0.1 }];
+    return [{ type: 'tone', beatOffset: 0, freq: getScaleNote(idx), dur: 0.04, wave: 'square', vol: 0.1 }];
   }
 
   return {

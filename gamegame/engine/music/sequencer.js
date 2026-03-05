@@ -29,7 +29,7 @@ class Sequencer {
     this.#pendingSection = null;
     this.#pendingSectionBeat = null;
 
-    this.#queue = [];             // pending events for current bar, sorted by dt
+    this.#queue = [];             // pending events for current bar, sorted by beatOffset
     this.#barStartBeat = -SECTION_BEAT_LENGTH; // triggers #startBar at first b=0
   }
 
@@ -99,7 +99,7 @@ class Sequencer {
     const cutoff = this.#queue.findIndex(e => e.t >= b - 0.001);
     if (cutoff !== -1) this.#queue.length = cutoff;
     this.#barStartBeat = b;
-    this.#queue.push(...this.#comp.buildBar(section).map(e => ({...e, t: b + e.dt })).sort((a, b) => a.dt - b.dt));
+    this.#queue.push(...this.#comp.buildBar(section).map(e => ({...e, t: b + e.beatOffset })).sort((a, b) => a.beatOffset - b.beatOffset));
   }
 
   #tick() {
@@ -126,7 +126,7 @@ class Sequencer {
       // Consume queued events at this step
       while (this.#queue.length > 0 && this.#queue[0].t <= b + 0.001) {
         const e = this.#queue.shift();
-        const swing = (Math.round(e.dt * 4) % 2 === 1) ? swingMs : 0;
+        const swing = (Math.round(e.beatOffset * 4) % 2 === 1) ? swingMs : 0;
         const t = this.beatToTimeMs(e.t) + swing;
         const dur = e.dur !== undefined ? e.dur * msPerBeat : undefined;
         this.#instrument.playEvent({ ...e, t, ...(dur !== undefined ? { dur } : {}) });
