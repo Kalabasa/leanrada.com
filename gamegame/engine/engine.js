@@ -58,9 +58,6 @@ export function createEngine(slide, onEnd, music) {
 
     // Sound
     soundTap() { music.soundTap(); }
-    soundPlay(f, d, w) { music.soundPlay(f, d, w); }
-    soundWin() { music.soundWin(); }
-    soundLose() { music.soundLose(); }
 
     // Helpers
     dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }

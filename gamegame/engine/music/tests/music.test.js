@@ -18,7 +18,7 @@ const mockAudioCtx = {
   createOscillator: () => ({ ...mockNode }),
   createGain: () => ({ ...mockNode }),
   createBufferSource: () => ({ ...mockNode, buffer: null }),
-  createBuffer: (ch, len) => ({ getChannelData: () => new Float32Array(len) }),
+  createBuffer: (_ch, len) => ({ getChannelData: () => new Float32Array(len) }),
   createBiquadFilter: () => ({ ...mockNode, type: '', Q: { value: 0 } }),
   sampleRate: 44100,
 };
@@ -47,7 +47,7 @@ function makeSeq(startTime = 0) {
   composition.changeBassRoot();
   const seq = new Sequencer({ bars: BARS, instrument, composition, getNowMs: clock.now });
   seq.start();
-  seq.stop();
+  seq.pause();
   return { seq, instrument, clock };
 }
 

@@ -1,6 +1,11 @@
 // gamegame music — bar sequencer
 // No AudioContext. Accepts instrument and composition as dependencies.
 
+export const SECTION_BEAT_LENGTH = 4;
+export const SECTION_MAIN = 'main';
+export const SECTION_WIN = 'win';
+export const SECTION_LOSE = 'lose';
+
 import { createInstrument, initInstruments, now } from './instruments.js';
 import { createComposition } from './composition.js';
 
@@ -32,7 +37,7 @@ class Sequencer {
     this.#pendingSectionBeat = null;
 
     this.#queue = [];             // pending events for current bar, sorted by dt
-    this.#barStartBeat = -4;      // triggers #startBar at first b=0
+    this.#barStartBeat = -SECTION_BEAT_LENGTH; // triggers #startBar at first b=0
   }
 
   // ── Beat clock ──────────────────────────────────────────────
@@ -79,10 +84,6 @@ class Sequencer {
     this.#tick();
   }
 
-  stop() {
-    clearTimeout(this.#loopTimer);
-  }
-
   // ── Composition passthrough ─────────────────────────────────
 
   changeBassRoot() { this.#comp.changeBassRoot(); }
@@ -91,16 +92,16 @@ class Sequencer {
 
   /** Queue win bar at next beat. Returns bar end time (ms). */
   soundWin() {
-    this.#pendingSection = 'win';
+    this.#pendingSection = SECTION_WIN;
     this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
-    return this.beatToTimeMs(this.#pendingSectionBeat + 4);
+    return this.beatToTimeMs(this.#pendingSectionBeat + SECTION_BEAT_LENGTH);
   }
 
   /** Queue lose bar at next beat. Returns bar end time (ms). */
   soundLose() {
-    this.#pendingSection = 'lose';
+    this.#pendingSection = SECTION_LOSE;
     this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
-    return this.beatToTimeMs(this.#pendingSectionBeat + 4);
+    return this.beatToTimeMs(this.#pendingSectionBeat + SECTION_BEAT_LENGTH);
   }
 
   soundTap() {
@@ -108,10 +109,6 @@ class Sequencer {
       const dur = e.dur * (60000 / this.#bpm);
       this.#instrument.playEvent({ ...e, t: this.#nowMs(), dur });
     });
-  }
-
-  soundPlay(freq, dur = 0.2, type = 'sine') {
-    this.#instrument.playEvent({ type: 'tone', t: this.#nowMs(), freq, dur, wave: type, vol: 0.12 });
   }
 
   // ── Bar management ──────────────────────────────────────────
@@ -142,8 +139,8 @@ class Sequencer {
         this.#startBar(beat, section);
       }
       // Bar boundary — start next bar
-      else if (b >= this.#barStartBeat + 4 - 0.001) {
-        this.#startBar(b, 'main');
+      else if (b >= this.#barStartBeat + SECTION_BEAT_LENGTH - 0.001) {
+        this.#startBar(b, SECTION_MAIN);
       }
 
       // Consume queued events at this step
