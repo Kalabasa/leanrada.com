@@ -1,17 +1,18 @@
-// gamegame composition — scales, chords, bar patterns, riff builders
-// Pure musical knowledge: no AudioContext, no scheduling. All dt in beats.
-
-// ============================================================
-// Scale / Key
-// ============================================================
+/**
+ * @typedef {Object} MusicEvent
+ * @property {string} type - 'kick'|'snare'|'ghost'|'hat'|'open_hat'|'bass'|'chop'|'tone'|'roll_hit'
+ * @property {number} dt - beat offset within bar
+ * @property {number} [freq] - Hz
+ * @property {number[]} [freqs] - Hz array (chop)
+ * @property {number} [dur] - duration in beats
+ * @property {string} [wave] - OscillatorType
+ * @property {number} [vol] - gain 0–1
+ * @property {string} [bus] - audio bus name
+ * @property {number} [step] - roll step index
+ */
 
 const PENTATONIC = [0, 2, 4, 7, 9]; // major pentatonic semitone intervals
 const ROOT_FREQS = [110, 123.47, 130.81, 146.83, 164.81, 174.61, 196]; // A2..G3
-
-// ============================================================
-// Bar pattern definitions
-// ============================================================
-// 16th-note positions (0–15) per 4-beat bar. dt = position / 4 beats.
 
 const BARS = {
   main_a: {
@@ -89,10 +90,6 @@ export function createComposition() {
     return [root, root + 2, root + 4];
   }
 
-  // ============================================================
-  // Bar builders — return Event[] with dt in beats
-  // ============================================================
-
   function buildDrumEvents(bar) {
     const events = [];
     for (const s16 of bar.kick)     events.push({ type: 'kick',     dt: s16 / 4 });
@@ -165,7 +162,6 @@ export function createComposition() {
   }
 
   function buildRoll(barDur) {
-    // 4 crescendo snare hits ending at barDur beats
     return [0, 1, 2, 3].map(i => ({
       type: 'roll_hit',
       dt: barDur - (4 - i) / 4,
@@ -173,11 +169,7 @@ export function createComposition() {
     }));
   }
 
-  // ============================================================
-  // Public API
-  // ============================================================
-
-  /** Build all events for a bar section. Advances chord and internal state. */
+  /** @returns {MusicEvent[]} */
   function buildBar(section) {
     const events = [];
 
@@ -208,7 +200,6 @@ export function createComposition() {
     return events;
   }
 
-  /** Tap sound: random note from upper half of scale. */
   function buildTap() {
     if (!scaleNotes.length) return [];
     const idx = Math.floor(scaleNotes.length / 2) +

@@ -1,6 +1,3 @@
-// gamegame music — bar sequencer
-// No AudioContext. Accepts instrument and composition as dependencies.
-
 export const SECTION_BEAT_LENGTH = 4;
 export const SECTION_MAIN = 'main';
 export const SECTION_WIN = 'win';
@@ -8,10 +5,6 @@ export const SECTION_LOSE = 'lose';
 
 import { createInstrument, initInstruments, now } from './instruments.js';
 import { createComposition } from './composition.js';
-
-// ============================================================
-// Sequencer class
-// ============================================================
 
 class Sequencer {
   #instrument; #comp; #nowMs;
@@ -40,8 +33,6 @@ class Sequencer {
     this.#barStartBeat = -SECTION_BEAT_LENGTH; // triggers #startBar at first b=0
   }
 
-  // ── Beat clock ──────────────────────────────────────────────
-
   getBpm() { return this.#bpm; }
 
   setBpm(bpm) {
@@ -65,15 +56,12 @@ class Sequencer {
     return this.#beatStartMs + this.beatsToMs(b - this.#accumulatedBeats);
   }
 
-  // ── Lifecycle ───────────────────────────────────────────────
-
   initAudio() { initInstruments(); this.start(); }
   pause() {
     clearTimeout(this.#loopTimer);
   }
 
   resume() {
-    console.log(this.#started);
     if (this.#started) this.#tick();
   }
 
@@ -84,20 +72,16 @@ class Sequencer {
     this.#tick();
   }
 
-  // ── Composition passthrough ─────────────────────────────────
-
   changeBassRoot() { this.#comp.changeBassRoot(); }
 
-  // ── Public sound API ────────────────────────────────────────
-
-  /** Queue win bar at next beat. Returns bar end time (ms). */
+  /** @returns {number} bar end time (ms) */
   soundWin() {
     this.#pendingSection = SECTION_WIN;
     this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
     return this.beatToTimeMs(this.#pendingSectionBeat + SECTION_BEAT_LENGTH);
   }
 
-  /** Queue lose bar at next beat. Returns bar end time (ms). */
+  /** @returns {number} bar end time (ms) */
   soundLose() {
     this.#pendingSection = SECTION_LOSE;
     this.#pendingSectionBeat = Math.ceil(this.getGlobalBeat() + 0.2);
@@ -111,16 +95,12 @@ class Sequencer {
     });
   }
 
-  // ── Bar management ──────────────────────────────────────────
-
   #startBar(b, section) {
     const cutoff = this.#queue.findIndex(e => e.t >= b - 0.001);
     if (cutoff !== -1) this.#queue.length = cutoff;
     this.#barStartBeat = b;
     this.#queue.push(...this.#comp.buildBar(section).map(e => ({...e, t: b + e.dt })).sort((a, b) => a.dt - b.dt));
   }
-
-  // ── Scheduler loop ──────────────────────────────────────────
 
   #tick() {
     const beatNow = this.getGlobalBeat();
@@ -157,8 +137,6 @@ class Sequencer {
     this.#loopTimer = setTimeout(() => this.#tick(), 50);
   }
 
-  // ── Test hook ────────────────────────────────────────────────
-
   getMusicState() {
     return {
 
@@ -168,10 +146,6 @@ class Sequencer {
     };
   }
 }
-
-// ============================================================
-// Factory — wires up real instrument + composition
-// ============================================================
 
 export function createMusic() {
   const instrument = createInstrument();

@@ -1,5 +1,3 @@
-// gamegame instruments — WebAudio synthesis, no musical knowledge
-
 let audioCtx = null;
 let drumBus = null;
 let noiseBuffer = null;
@@ -45,12 +43,16 @@ function playNoise(t, dur, vol, filterType, filterFreq, filterQ = 1) {
   src.stop(t + dur + 0.01);
 }
 
-/** Create an instrument instance (dependency injection for testing). */
 export function createInstrument() {
   return { playEvent };
 }
 
-/** Play a synthesized event. Accepts event objects from the composition/sequencer layer. t and dur are in ms. */
+/**
+ * Play a synthesized event. Accepts event objects from the composition/sequencer layer.
+ * @param {Event} e
+ * @param {Event.t} ms
+ * @param {Event.dur} ms
+ **/
 export function playEvent(e) {
   if (!audioCtx) return;
   const t = e.t / 1000;

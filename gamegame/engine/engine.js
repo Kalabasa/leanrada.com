@@ -1,5 +1,3 @@
-// gamegame engine — game loop, input, api
-
 import { createCanvas } from "./graphics.js";
 
 export const STATE_INIT = "init";
@@ -9,10 +7,6 @@ export const STATE_ENDED = "ended";
 
 export const RESULT_WIN = "win";
 export const RESULT_LOSE = "lose";
-
-// ============================================================
-// Engine — creates canvas, runs game loop, provides API
-// ============================================================
 
 export function createEngine(slide, onEnd, music) {
   const { canvas, drawing, resetDrawState } = createCanvas(slide);
@@ -37,11 +31,9 @@ export function createEngine(slide, onEnd, music) {
       Object.defineProperties(this, Object.getOwnPropertyDescriptors(drawing));
     }
 
-    // Time
     get time() { return gameTimeMs; }
     dt = 0;
 
-    // Beat
     get bpm() { return music.getBpm(); }
     get beat() { return music.getGlobalBeat(); }
     get beatFrac() { return music.getGlobalBeat() % 1; }
@@ -49,17 +41,13 @@ export function createEngine(slide, onEnd, music) {
     get pulse() { return Math.exp(-(music.getGlobalBeat() % 1) * 6); }
     onBeat(fn) { events.addEventListener("beat", fn); }
 
-    /** Complexity, starts at 0, unbounded. Set by index before game init. */
     complexity = 0;
 
-    // Game control
     win() { end(RESULT_WIN); }
     lose() { end(RESULT_LOSE); }
 
-    // Sound
     soundTap() { music.soundTap(); }
 
-    // Helpers
     dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
     lerp(a, b, t) { return a + (b - a) * t; }
     map(v, a, b, c, d) { return c + ((v - a) / (b - a)) * (d - c); }
@@ -71,7 +59,6 @@ export function createEngine(slide, onEnd, music) {
 
   const api = new API();
 
-  // --- Input handling ---
   let pointerDown = false;
   let lastPointerX = 0;
   let lastPointerY = 0;
@@ -114,7 +101,6 @@ export function createEngine(slide, onEnd, music) {
   canvas.addEventListener("pointerup", onPointerUp);
   canvas.addEventListener("pointerleave", onPointerUp);
 
-  // --- Game loop ---
   function tick(now) {
     if (state !== STATE_RUNNING) return;
 
@@ -125,7 +111,6 @@ export function createEngine(slide, onEnd, music) {
 
     api.dt = dt;
 
-    // Beat callbacks
     const currentBeatNumber = Math.floor(music.getGlobalBeat());
     if (currentBeatNumber > lastBeatNumber && lastBeatNumber >= 0) {
       events.dispatchEvent(new BeatEvent(currentBeatNumber));
@@ -143,9 +128,7 @@ export function createEngine(slide, onEnd, music) {
     requestAnimationFrame(tick);
   }
 
-  // --- Public engine interface ---
   return {
-    /** Start running a game definition */
     run(def) {
       if (state === STATE_ENDED) return;
       state = STATE_RUNNING;
@@ -181,7 +164,6 @@ export function createEngine(slide, onEnd, music) {
       return gameDurationMs;
     },
 
-    /** Tear down everything */
     cleanup() {
       state = STATE_ENDED;
       canvas.removeEventListener("pointerdown", onPointerDown);
