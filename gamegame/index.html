@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>gamegame</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        font-family: system-ui, sans-serif;
+        color: #fff;
+        touch-action: none;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #game-wrap {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        max-width: 480px;
+        max-height: 960px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      #container {
+        position: relative;
+        height: 100%;
+        overflow: hidden;
+      }
+      .slide {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        will-change: transform;
+      }
+      .slide-result {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 10;
+      }
+      .slide-result.visible {
+        opacity: 1;
+      }
+      .slide-title {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        background: #111;
+        z-index: 10;
+      }
+
+      /* --- Universal Timer --- */
+      #timer-wrap {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+      }
+      #timer-bar-bg {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      #timer-bar {
+        height: 100%;
+        background: #fff;
+        width: 100%;
+        transition: none;
+      }
+      #timer-bar.urgent {
+        background: #ff4444;
+      }
+      #timer-text {
+        margin-top: 4px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        opacity: 0.9;
+      }
+      #timer-text.urgent {
+        color: #ff4444;
+      }
+
+      /* --- Pause button --- */
+      #btn-pause {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 300;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(4px);
+        border: none;
+        color: #fff;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #btn-pause:active {
+        transform: scale(0.9);
+      }
+
+      /* --- Pause menu --- */
+      #pause-menu {
+        position: absolute;
+        inset: 0;
+        z-index: 400;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+      }
+      #pause-menu.visible {
+        display: flex;
+      }
+      #pause-menu h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+      .pause-btn {
+        width: 200px;
+        padding: 14px 0;
+        border-radius: 12px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .pause-btn:active {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* --- Title screen --- */
+      #title-screen {
+        position: absolute;
+        inset: 0;
+        z-index: 500;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #title-screen.hidden {
+        display: none;
+      }
+      #title-screen h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      #title-screen p {
+        font-size: 1rem;
+        opacity: 0.5;
+        animation: blink 1.5s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 0.15;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-wrap">
+      <div id="title-screen">
+        <h1>gamegame</h1>
+        <p>tap to start</p>
+      </div>
+
+      <div id="timer-wrap">
+        <div id="timer-bar-bg"><div id="timer-bar"></div></div>
+        <div id="timer-text">0.0</div>
+      </div>
+
+      <div id="container">
+        <div class="slide" id="current"></div>
+        <div class="slide" id="next"></div>
+      </div>
+
+      <button id="btn-pause">&#x23F8;</button>
+
+      <div id="pause-menu">
+        <h2>PAUSED</h2>
+        <button class="pause-btn" id="pause-resume">Resume</button>
+        <button class="pause-btn" id="pause-skip">Skip</button>
+      </div>
+    </div>
+
+    <script type="module">
+      import {
+        createEngine,
+        RESULT_WIN,
+        RESULT_LOSE,
+      } from "./engine/engine.js";
+      import { createMusic } from "./engine/music/music.js";
+
+      const music = createMusic();
+      import { dragGame } from "./games/drag.js";
+      import { dodgeGame } from "./games/dodge.js";
+      import { parryGame } from "./games/parry.js";
+      import { oddOneOutGame } from "./games/oddoneout.js";
+      import { splitGame } from "./games/split.js";
+      import { countGame } from "./games/count.js";
+      import { matchGame } from "./games/match.js";
+
+      // --- Timer bar display (reads from activeEngine) ---
+      const timer = document.getElementById("timer-wrap");
+      const timerBar = document.getElementById("timer-bar");
+      const timerText = document.getElementById("timer-text");
+
+      function tickTimerBar() {
+        if (activeEngine) {
+          const remaining = activeEngine.timeRemainingMs;
+          const duration = activeEngine.gameDurationMs;
+          if (duration) {
+            const frac = duration > 0 ? remaining / duration : 1;
+            timerBar.style.width = frac * 100 + "%";
+            timerText.textContent = (remaining / 1000).toFixed(1);
+            timerBar.classList.toggle("urgent", frac < 0.25);
+            timerText.classList.toggle("urgent", frac < 0.25);
+            timer.style.visibility = "visible";
+          } else {
+            timer.style.visibility = "hidden";
+          }
+        }
+        requestAnimationFrame(tickTimerBar);
+      }
+      requestAnimationFrame(tickTimerBar);
+
+      // --- Pause ---
+      let paused = false;
+      const pauseMenu = document.getElementById("pause-menu");
+      const pauseableTimeouts = new Set();
+
+      function pauseableTimeout(fn, ms) {
+        let remaining = ms;
+        let startTime = null;
+        let id = null;
+        const entry = {
+          pause() {
+            clearTimeout(id);
+            remaining -= Date.now() - startTime;
+          },
+          resume() {
+            startTime = Date.now();
+            id = setTimeout(() => {
+              pauseableTimeouts.delete(entry);
+              fn();
+            }, remaining);
+          },
+          cancel() {
+            clearTimeout(id);
+            pauseableTimeouts.delete(entry);
+          },
+        };
+        pauseableTimeouts.add(entry);
+        if (!paused) entry.resume();
+        return entry;
+      }
+
+      function setPaused(value) {
+        paused = value;
+        pauseMenu.classList.toggle("visible", paused);
+        if (paused) {
+          activeEngine?.pause();
+          pauseableTimeouts.forEach((t) => t.pause());
+        } else {
+          activeEngine?.resume();
+          pauseableTimeouts.forEach((t) => t.resume());
+        }
+      }
+
+      // --- Pause/Resume on visibility change ---
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) setPaused(true);
+      });
+      window.addEventListener("blur", () => {
+        setPaused(true);
+      });
+
+      document
+        .getElementById("btn-pause")
+        .addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          setPaused(true);
+        });
+
+      document
+        .getElementById("pause-resume")
+        .addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          setPaused(false);
+        });
+
+      document
+        .getElementById("pause-skip")
+        .addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          setPaused(false);
+          nextGame();
+        });
+
+      // --- Game loop ---
+      const currentEl = document.getElementById("current");
+      const nextEl = document.getElementById("next");
+
+      let netWinCount = 0;
+      let activeEngine = null;
+      let activeTitleTimeout = null;
+
+      const gameTypes = location.search.includes('mock')
+        ? [mockGame]
+        : [
+            dragGame,
+            dodgeGame,
+            parryGame,
+            oddOneOutGame,
+            splitGame,
+            countGame,
+            matchGame,
+          ];
+
+      function nextGame() {
+        transition(() => {
+          const tmp = currentEl.id;
+          currentEl.id = nextEl.id;
+          nextEl.id = tmp;
+          startGame();
+        });
+      }
+
+      function transition(callback) {
+        const h = window.innerHeight;
+        currentEl.style.transition = "transform 0.4s ease-in-out";
+        nextEl.style.transition = "transform 0.4s ease-in-out";
+        nextEl.style.transform = `translateY(${h}px)`;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            currentEl.style.transform = `translateY(${-h}px)`;
+            nextEl.style.transform = `translateY(0)`;
+          });
+        });
+        pauseableTimeout(() => {
+          currentEl.style.transition = "none";
+          nextEl.style.transition = "none";
+          callback();
+        }, 420);
+      }
+
+      function endGame(result) {
+        if (result === RESULT_WIN) {
+          netWinCount++;
+          music.setBpm(Math.min(180, music.getBpm() + 3));
+        } else {
+          netWinCount = Math.max(0, netWinCount - 1);
+        }
+        let melodyEnd = null;
+        if (activeEngine) {
+          melodyEnd = (
+            result === RESULT_WIN
+              ? () => music.soundWin()
+              : () => music.soundLose()
+          )();
+          const won = result === RESULT_WIN;
+          const resultEl = document.createElement("div");
+          resultEl.className = "slide-result visible";
+          resultEl.textContent = won ? "NICE!" : "TOO BAD";
+          resultEl.style.background = won
+            ? "rgba(0,200,100,0.3)"
+            : "rgba(200,0,50,0.3)";
+          currentEl.appendChild(resultEl);
+        }
+
+        // Slide animation (420ms) ends at melodyEnd; start it 420ms before that
+        const SLIDE_MS = 420;
+        const msUntilMelodyEnd =
+          melodyEnd - music.beatToTimeMs(music.getGlobalBeat());
+        const slideStartDelay = msUntilMelodyEnd - SLIDE_MS;
+        pauseableTimeout(() => {
+          nextGame();
+        }, slideStartDelay);
+      }
+
+      function startGame() {
+        activeTitleTimeout?.cancel();
+        activeEngine?.cleanup();
+
+        const gameFn = gameTypes[Math.floor(Math.random() * gameTypes.length)];
+        currentEl.style.transform = "translateY(0)";
+        nextEl.style.transform = `translateY(${window.innerHeight}px)`;
+
+        // Prep next slide
+        nextEl.innerHTML = "";
+        nextEl.style.background = "#111";
+
+        // Create engine for this game
+        const engine = createEngine(currentEl, endGame, music);
+        activeEngine = engine;
+
+        // Init game
+        engine.api.complexity = Math.pow(netWinCount, 1.5) * 0.1;
+        const gameDef = gameFn(engine.api);
+
+        // Show title overlay for 2 beats, then start the game
+        const titleMs = music.beatsToMs(2);
+        const titleEl = document.createElement("div");
+        titleEl.className = "slide-title";
+        titleEl.textContent = gameDef.title || "";
+        currentEl.appendChild(titleEl);
+
+        activeTitleTimeout = pauseableTimeout(() => {
+          activeTitleTimeout = null;
+          titleEl.remove();
+          engine.run(gameDef);
+        }, titleMs);
+      }
+
+      document.getElementById("title-screen").addEventListener(
+        "click",
+        () => {
+          music.initAudio();
+          document.getElementById("title-screen").classList.add("hidden");
+          startGame();
+        },
+        { once: true },
+      );
+    </script>
+  </body>
+</html>
