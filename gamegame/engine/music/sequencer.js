@@ -85,7 +85,7 @@ class Sequencer {
   soundTap() {
     this.#comp.buildTap().forEach(e => {
       const dur = e.dur * (60000 / this.#bpm);
-      this.#instrument.playEvent({ ...e, t: this.#nowMs(), dur });
+      this.#instrument.playEvent(e, this.#nowMs(), dur);
     });
   }
 
@@ -129,7 +129,7 @@ class Sequencer {
         const swing = (Math.round(e.beatOffset * 4) % 2 === 1) ? swingMs : 0;
         const t = this.beatToTimeMs(e.t) + swing;
         const dur = e.dur !== undefined ? e.dur * msPerBeat : undefined;
-        this.#instrument.playEvent({ ...e, t, ...(dur !== undefined ? { dur } : {}) });
+        this.#instrument.playEvent(e, t, dur);
       }
     }
 

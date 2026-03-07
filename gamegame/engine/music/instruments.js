@@ -48,7 +48,7 @@ function getNoiseBuffer() {
   return noiseBuffer;
 }
 
-function playNoise(t, dur, vol, filterType, filterFreq, filterQ = 1) {
+function playNoise(tS, durS, vol, filterType, filterFreq, filterQ = 1) {
   const src = audioCtx.createBufferSource();
   src.buffer = getNoiseBuffer();
   const filter = audioCtx.createBiquadFilter();
@@ -56,96 +56,100 @@ function playNoise(t, dur, vol, filterType, filterFreq, filterQ = 1) {
   filter.frequency.value = filterFreq;
   filter.Q.value = filterQ;
   const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(vol, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  gain.gain.setValueAtTime(vol, tS);
+  gain.gain.exponentialRampToValueAtTime(0.001, tS + durS);
   src.connect(filter);
   filter.connect(gain);
   gain.connect(getDrumBus());
-  src.start(t);
-  src.stop(t + dur + 0.01);
+  src.start(tS);
+  src.stop(tS + durS + 0.01);
 }
 
 export function createInstrument() {
   return { playEvent };
 }
 
-/** @param {import('./composition.js').MusicEvent & {t: number, dur?: number}} e */
-export function playEvent(e) {
+/**
+ * @param {import('./composition.js').MusicEvent} e
+ * @param {number} tMs - absolute scheduled time (ms)
+ * @param {number} durMs - duration (ms), required for tone/noise events
+ */
+export function playEvent(e, tMs, durMs) {
   if (!audioCtx) return;
-  const t = e.t / 1000;
-  e = { ...e, t, ...(e.dur !== undefined ? { dur: e.dur / 1000 } : {}) };
+  const tS = tMs / 1000;
+  const durS = durMs / 1000;
 
   switch (e.type) {
     case 'kick': {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(180, t);
-      osc.frequency.exponentialRampToValueAtTime(42, t + 0.07);
-      gain.gain.setValueAtTime(0.9, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      osc.frequency.setValueAtTime(180, tS);
+      osc.frequency.exponentialRampToValueAtTime(42, tS + 0.07);
+      gain.gain.setValueAtTime(0.9, tS);
+      gain.gain.exponentialRampToValueAtTime(0.001, tS + 0.18);
       osc.connect(gain); gain.connect(getDrumBus());
-      osc.start(t); osc.stop(t + 0.2);
-      playNoise(t, 0.008, 0.4, 'bandpass', 3000, 0.8);
+      osc.start(tS); osc.stop(tS + 0.2);
+      playNoise(tS, 0.008, 0.4, 'bandpass', 3000, 0.8);
       break;
     }
     case 'snare': {
       const osc = audioCtx.createOscillator();
       const oscGain = audioCtx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(200, t);
-      osc.frequency.exponentialRampToValueAtTime(100, t + 0.05);
-      oscGain.gain.setValueAtTime(0.35, t);
-      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      osc.frequency.setValueAtTime(200, tS);
+      osc.frequency.exponentialRampToValueAtTime(100, tS + 0.05);
+      oscGain.gain.setValueAtTime(0.35, tS);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, tS + 0.06);
       osc.connect(oscGain); oscGain.connect(getDrumBus());
-      osc.start(t); osc.stop(t + 0.08);
-      playNoise(t, 0.18, 0.4, 'bandpass', 2500, 0.6);
-      playNoise(t, 0.06, 0.25, 'highpass', 6000, 0.5);
+      osc.start(tS); osc.stop(tS + 0.08);
+      playNoise(tS, 0.18, 0.4, 'bandpass', 2500, 0.6);
+      playNoise(tS, 0.06, 0.25, 'highpass', 6000, 0.5);
       break;
     }
     case 'ghost':
-      playNoise(t, 0.06, 0.07, 'bandpass', 2500, 0.6);
+      playNoise(tS, 0.06, 0.07, 'bandpass', 2500, 0.6);
       break;
     case 'hat':
-      playNoise(t, 0.035, 0.12, 'highpass', 8000, 0.8);
+      playNoise(tS, 0.035, 0.12, 'highpass', 8000, 0.8);
       break;
     case 'open_hat':
-      playNoise(t, 0.18, 0.15, 'highpass', 7000, 0.5);
+      playNoise(tS, 0.18, 0.15, 'highpass', 7000, 0.5);
       break;
     case 'bass': {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(e.freq / 4, t);
-      osc.frequency.exponentialRampToValueAtTime(e.freq / 4 * 0.92, t + 0.06);
-      gain.gain.setValueAtTime(0.8, t);
-      gain.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      osc.frequency.setValueAtTime(e.freq / 4, tS);
+      osc.frequency.exponentialRampToValueAtTime(e.freq / 4 * 0.92, tS + 0.06);
+      gain.gain.setValueAtTime(0.8, tS);
+      gain.gain.exponentialRampToValueAtTime(0.2, tS + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, tS + 0.14);
       osc.connect(gain); gain.connect(getDrumBus());
-      osc.start(t); osc.stop(t + 0.1);
+      osc.start(tS); osc.stop(tS + 0.1);
       break;
     }
     case 'roll_hit': {
       const vol = 0.12 + (e.step / 3) * 0.45;
-      playNoise(t, 0.018, vol * 0.6, 'bandpass', 4000, 1.2);
-      playNoise(t, 0.012, vol * 0.5, 'highpass', 10000, 1.0);
+      playNoise(tS, 0.018, vol * 0.6, 'bandpass', 4000, 1.2);
+      playNoise(tS, 0.012, vol * 0.5, 'highpass', 10000, 1.0);
       break;
     }
     case 'tone': {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = e.wave || 'sine';
-      osc.frequency.setValueAtTime(e.freq, t);
-      gain.gain.setValueAtTime(e.vol ?? 0.12, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + e.dur);
+      osc.frequency.setValueAtTime(e.freq, tS);
+      gain.gain.setValueAtTime(e.vol ?? 0.12, tS);
+      gain.gain.exponentialRampToValueAtTime(0.001, tS + durS);
       osc.connect(gain);
       gain.connect(e.bus === 'drum' ? getDrumBus() : audioCtx.destination);
       gain.connect(getReverb());
-      osc.start(t); osc.stop(t + e.dur + 0.01);
+      osc.start(tS); osc.stop(tS + durS + 0.01);
       break;
     }
     case 'noise':
-      playNoise(t, e.dur, e.vol, e.filterType, e.filterFreq, e.filterQ);
+      playNoise(tS, durS, e.vol, e.filterType, e.filterFreq, e.filterQ);
       break;
   }
 }
