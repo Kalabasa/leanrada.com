@@ -177,7 +177,7 @@ export async function deployProjectsToGithubPages({
       exe("git diff --cached HEAD");
     } catch (e) {}
 
-    if (!noConfirm && !(await confirmYN(colorPrompt("Commit changes?")))) {
+    if (!noConfirm && !(await confirmYN(colorPrompt("Commit and push changes?")))) {
       process.exit(0);
     }
 
@@ -234,7 +234,7 @@ export async function deployProjectsToCloudflarePages({
       exe("git diff --cached HEAD");
     } catch (e) {}
 
-    if (!noConfirm && !(await confirmYN(colorPrompt("Commit changes?")))) {
+    if (!noConfirm && !(await confirmYN(colorPrompt("Commit and push changes?")))) {
       process.exit(0);
     }
 
