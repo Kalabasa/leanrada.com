@@ -47,7 +47,7 @@ async function main() {
           maxSuggestions: 4,
         });
         await populateStats({
-          enable: options["notes-stats"].enable,
+          enable: options["note-stats"].enable,
           notes,
           existingNotes,
         });
