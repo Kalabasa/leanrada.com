@@ -6,7 +6,6 @@ import readline from "node:readline/promises";
 import { colorInfo, colorPrompt, colorQuote } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
 import { getPath, getTopDir, normalizeDirPath } from "./util/paths.js";
-import e from "express";
 
 export async function deployProjectsToDir({
   targetProjectDirs,
