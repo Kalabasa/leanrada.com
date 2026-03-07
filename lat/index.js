@@ -10,6 +10,8 @@ import { colorInfo } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
 import { getPath, getTopDir } from "./util/paths.js";
 
+const ALL = "ALL";
+
 const args = arg({
   "--yes": Boolean,
   "--prod": Boolean,
@@ -43,13 +45,30 @@ function dev() {
   runDevServer(port);
 }
 
+function exitDeployHelp() {
+  const projectNames = getProjects().map((project) => project.name);
+  console.log(
+    `${colorInfo("Usage:")} lat deploy (${ALL} | <project-name> ...)
+    #
+    #${colorInfo("<project-name>:")}
+    #  ${projectNames.join("\n  ")}
+    `.replaceAll(/^\s+#/gm, '').trim()
+  );
+  process.exit(1);
+}
+
 function deploy(targetProjectDirs) {
-  if (!targetProjectDirs.length) {
-    const suggestions = getProjects().map((project) => project.name);
-    console.log(
-      `${colorInfo("Usage:")} lat deploy (${suggestions.join("|")}) ...`
-    );
-    process.exit(1);
+  const projects = getProjects().map(p => p.name);
+
+  if (targetProjectDirs.includes(ALL)) {
+    if (targetProjectDirs.length > 1) {
+      exitDeployHelp();
+    }
+    targetProjectDirs = projects;
+  }
+
+  if (targetProjectDirs.length === 0) {
+    exitDeployHelp();
   }
 
   const wwwDir = getPath("www");
