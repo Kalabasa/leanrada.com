@@ -20,6 +20,7 @@ const mockAudioCtx = {
   createBufferSource: () => ({ ...mockNode, buffer: null }),
   createBuffer: (_ch, len) => ({ getChannelData: () => new Float32Array(len) }),
   createBiquadFilter: () => ({ ...mockNode, type: '', Q: { value: 0 } }),
+  createConvolver: () => ({ ...mockNode, buffer: null }),
   sampleRate: 44100,
 };
 
