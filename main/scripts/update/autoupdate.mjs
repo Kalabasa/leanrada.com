@@ -22,7 +22,7 @@ const { siteDir } = initScript();
 const dryRun = process.argv.includes("--dry-run");
 const options = parseOptionArgs([
   "notes",
-  "notes-stats",
+  "note-stats",
   "wares",
   "guestbook",
   "hits",
