@@ -116,11 +116,11 @@ export function playEvent(e) {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(e.freq / 2, t);
-      osc.frequency.exponentialRampToValueAtTime(e.freq / 2 * 0.92, t + 0.06);
-      gain.gain.setValueAtTime(0.5, t);
-      gain.gain.exponentialRampToValueAtTime(0.08, t + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.10);
+      osc.frequency.setValueAtTime(e.freq / 4, t);
+      osc.frequency.exponentialRampToValueAtTime(e.freq / 4 * 0.92, t + 0.06);
+      gain.gain.setValueAtTime(0.8, t);
+      gain.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
       osc.connect(gain); gain.connect(getDrumBus());
       osc.start(t); osc.stop(t + 0.1);
       break;
