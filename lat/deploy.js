@@ -6,6 +6,7 @@ import readline from "node:readline/promises";
 import { colorInfo, colorPrompt, colorQuote } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
 import { getPath, getTopDir, normalizeDirPath } from "./util/paths.js";
+import { getGitExcludes, updateWorktree } from "./git.js";
 
 export async function deployProjectsToDir({
   targetProjectDirs,
@@ -98,7 +99,6 @@ function generateCommands({
       .map((project) => "/" + project.sitePathPrefix);
 
     const gitExcludes = getGitExcludes(webFilesDir);
-    console.log(gitExcludes);
 
     const excludeArgs = [
       ...otherProjectPaths,
@@ -138,11 +138,7 @@ export async function deployProjectsToGithubPages({
   noConfirm = false,
 }) {
   try {
-    fs.rmSync(workingDir, { recursive: true, force: true });
-    exe("git fetch");
-    exe(
-      `git worktree add -f ${path.relative(".", workingDir)} origin/${branch}`
-    );
+    updateWorktree({ dir: workingDir, branch });
 
     fs.closeSync(fs.openSync(`${workingDir}/.nojekyll`, "a"));
 
@@ -204,11 +200,7 @@ export async function deployProjectsToCloudflarePages({
   noConfirm = false,
 }) {
   try {
-    fs.rmSync(workingDir, { recursive: true, force: true });
-    exe("git fetch");
-    exe(
-      `git worktree add -f ${path.relative(".", workingDir)} origin/${cfBranch}`
-    );
+    updateWorktree({ dir: workingDir, branch: cfBranch });
 
     await deployProjectsToDir({
       targetProjectDirs,
@@ -275,19 +267,9 @@ function rsyncArgs({ dryRun }) {
   return (
     " --checksum --del --progress --recursive" +
     " --exclude lathala.json" +
-    " --exclude /.git/" +
+    " --exclude .git" +
     (dryRun ? " --dry-run" : "")
   );
-}
-
-function getGitExcludes(sourcePath) {
-  console.log(`git -C "${path.resolve(sourcePath)}" ls-files --directory --others --ignored --exclude-standard -z`);
-  const stdout = childProcess.execSync(
-    `git -C "${path.resolve(sourcePath)}" ls-files --directory --others --ignored --exclude-standard -z`,
-    { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }
-  );
-
-  return stdout.split('\0').filter(Boolean);
 }
 
 function exe(cmd) {

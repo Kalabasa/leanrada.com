@@ -7,6 +7,9 @@ export function getTopDir() {
       "../../.."
     );
   }
+  if (path.basename(getTopDir.cache) !== "leanrada.com") {
+    throw new Error("Wrong top directory!");
+  }
   return getTopDir.cache;
 }
 
