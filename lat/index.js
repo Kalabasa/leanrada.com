@@ -11,8 +11,6 @@ import { getProjects } from "./util/get_projects.js";
 import { getPath, getTopDir } from "./util/paths.js";
 import { updateWorktree } from "./git.js";
 
-const ALL = "ALL";
-
 const argsDef = {
   "--yes": Boolean,
   "--prod": Boolean,
@@ -58,7 +56,7 @@ function dev() {
 function exitDeployHelp() {
   const projectNames = getProjects().map((project) => project.name);
   console.log(
-    `${colorInfo("Usage:")} lat deploy (${ALL} | <project-name> ...)
+    `${colorInfo("Usage:")} lat deploy (<project-name> ...)
     #${colorInfo("<project-name>:")}
     #  ${projectNames.join("\n  ")}
     `.replaceAll(/^\s+#/gm, '').trim()
@@ -67,15 +65,6 @@ function exitDeployHelp() {
 }
 
 function deploy(...targetProjectDirs) {
-  const projects = getProjects().map(p => p.name);
-
-  if (targetProjectDirs.includes(ALL)) {
-    if (targetProjectDirs.length > 1) {
-      exitDeployHelp();
-    }
-    targetProjectDirs = projects;
-  }
-
   if (targetProjectDirs.length === 0) {
     exitDeployHelp();
   }
