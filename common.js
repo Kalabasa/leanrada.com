@@ -34,6 +34,10 @@ script.async = true;
 script.src = "https://leanrada.com/analytics/analytics.js";
 document.head.appendChild(script);
 
+if (!["leanrada.com", "localhost"].includes(location.hostname) && !location.search.includes("noprank")) {
+  import("/labs/prank/prank.js");
+}
+
 const html = (() => {
   const staging = document.createElement("div");
   const rawSymbol = Symbol("raw");
