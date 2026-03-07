@@ -6,6 +6,7 @@ import readline from "node:readline/promises";
 import { colorInfo, colorPrompt, colorQuote } from "./util/colors.js";
 import { getProjects } from "./util/get_projects.js";
 import { getPath, getTopDir, normalizeDirPath } from "./util/paths.js";
+import e from "express";
 
 export async function deployProjectsToDir({
   targetProjectDirs,
@@ -85,19 +86,24 @@ function generateCommands({
       );
     }
 
-    const excludes = [
-      ...allProjects
-        .filter(
-          (otherProject) =>
-            targetProject !== otherProject &&
-            !path
-              .relative(
-                projectDeployDir,
-                path.resolve(deployDir, otherProject.sitePathPrefix)
-              )
-              .startsWith("..")
-        )
-        .map((project) => "/" + project.sitePathPrefix),
+    const otherProjectPaths = allProjects
+      .filter(
+        (otherProject) => targetProject !== otherProject &&
+          !path
+            .relative(
+              projectDeployDir,
+              path.resolve(deployDir, otherProject.sitePathPrefix)
+            )
+            .startsWith("..")
+      )
+      .map((project) => "/" + project.sitePathPrefix);
+
+    const gitExcludes = getGitExcludes(webFilesDir);
+    console.log(gitExcludes);
+
+    const excludeArgs = [
+      ...otherProjectPaths,
+      ...gitExcludes,
       ...(Array.isArray(targetProject.excludePattern)
         ? targetProject.excludePattern
         : [targetProject.excludePattern]),
@@ -110,7 +116,7 @@ function generateCommands({
       commands.push(
         "rsync" +
           rsyncArgs({ dryRun }) +
-          excludes +
+          excludeArgs +
           ` '${normalizeDirPath(path.relative(rootDir, webFilesDir))}'` +
           ` '${normalizeDirPath(path.relative(rootDir, projectDeployDir))}'`
       );
@@ -270,9 +276,19 @@ function rsyncArgs({ dryRun }) {
   return (
     " --checksum --del --progress --recursive" +
     " --exclude lathala.json" +
-    " --exclude /.git" +
+    " --exclude /.git/" +
     (dryRun ? " --dry-run" : "")
   );
+}
+
+function getGitExcludes(sourcePath) {
+  console.log(`git -C "${path.resolve(sourcePath)}" ls-files --directory --others --ignored --exclude-standard -z`);
+  const stdout = childProcess.execSync(
+    `git -C "${path.resolve(sourcePath)}" ls-files --directory --others --ignored --exclude-standard -z`,
+    { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }
+  );
+
+  return stdout.split('\0').filter(Boolean);
 }
 
 function exe(cmd) {
