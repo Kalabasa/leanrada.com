@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Instrument Test</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #eee; padding: 24px; }
+    h2 { margin: 0 0 16px; }
+    .controls { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; }
+    .control { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 12px; color: #aaa; }
+    select, input[type=range] { width: 160px; }
+    input[type=range] { accent-color: #8f8; }
+    .val { font-size: 12px; color: #8f8; }
+    .piano { display: flex; position: relative; height: 120px; gap: 2px; }
+    .key {
+      position: relative; cursor: pointer; border-radius: 0 0 4px 4px; border: 1px solid #555;
+      flex-shrink: 0;
+    }
+    .key.white { width: 36px; height: 120px; background: #ddd; }
+    .key.black {
+      width: 24px; height: 76px; background: #222; margin-left: -13px; margin-right: -13px;
+      z-index: 1; border-color: #666;
+    }
+    .key.white:active, .key.white.active { background: #8f8; }
+    .key.black:active, .key.black.active { background: #484; }
+    .note-label { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 10px; color: #888; pointer-events: none; }
+    .key.black .note-label { color: #666; }
+  </style>
+</head>
+<body>
+  <h2>Instrument Test</h2>
+
+  <div class="controls">
+    <div class="control">
+      <label>type</label>
+      <select id="type">
+        <option value="square">square</option>
+        <option value="triangle">triangle</option>
+        <option value="noise">noise</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>timbre <span class="val" id="timbre-val">0.00</span></label>
+      <input type="range" id="timbre" min="0" max="1" step="0.01" value="0">
+    </div>
+    <div class="control">
+      <label>sustain <span class="val" id="sustain-val">0.50</span></label>
+      <input type="range" id="sustain" min="0" max="1" step="0.01" value="0.5">
+    </div>
+    <div class="control">
+      <label>duration (s) <span class="val" id="duration-val">0.50</span></label>
+      <input type="range" id="duration" min="0.05" max="2" step="0.05" value="0.5">
+    </div>
+    <div class="control">
+      <label>gain <span class="val" id="gain-val">0.50</span></label>
+      <input type="range" id="gain" min="0.01" max="1" step="0.01" value="0.5">
+    </div>
+  </div>
+
+  <div class="piano" id="piano"></div>
+
+  <script type="module">
+    import { initInstruments, createInstrument, nowMs } from '../instrument.js';
+
+    const piano = document.getElementById('piano');
+
+    // C3 to C6 (MIDI 48–84)
+    const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    const BLACK = [1,3,6,8,10]; // semitone offsets that are black keys
+
+    for (let note = 48; note <= 84; note++) {
+      const semi = note % 12;
+      const isBlack = BLACK.includes(semi);
+      const key = document.createElement('div');
+      key.className = `key ${isBlack ? 'black' : 'white'}`;
+      key.dataset.note = note;
+      const label = document.createElement('span');
+      label.className = 'note-label';
+      label.textContent = NOTE_NAMES[semi] + Math.floor(note / 12 - 1);
+      key.appendChild(label);
+      piano.appendChild(key);
+    }
+
+    function getParams() {
+      return {
+        type: document.getElementById('type').value,
+        timbre: parseFloat(document.getElementById('timbre').value),
+        sustain: parseFloat(document.getElementById('sustain').value),
+        duration: parseFloat(document.getElementById('duration').value),
+        gain: parseFloat(document.getElementById('gain').value),
+      };
+    }
+
+    function playNote(note) {
+      initInstruments();
+      const { type, timbre, sustain, duration, gain } = getParams();
+      const inst = createInstrument({ type, timbre, sustain });
+      const tS = nowMs() / 1000;
+      inst.play(tS, duration, note, gain);
+    }
+
+    piano.addEventListener('pointerdown', e => {
+      const key = e.target.closest('.key');
+      if (!key) return;
+      playNote(parseInt(key.dataset.note));
+      key.classList.add('active');
+      key.addEventListener('pointerup', () => key.classList.remove('active'), { once: true });
+      key.addEventListener('pointerleave', () => key.classList.remove('active'), { once: true });
+    });
+
+    for (const id of ['timbre', 'sustain', 'duration', 'gain']) {
+      const el = document.getElementById(id);
+      const val = document.getElementById(`${id}-val`);
+      el.addEventListener('input', () => val.textContent = parseFloat(el.value).toFixed(2));
+    }
+  </script>
+</body>
+</html>
