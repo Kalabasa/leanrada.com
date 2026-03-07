@@ -64,14 +64,18 @@ function exitDeployHelp() {
   process.exit(1);
 }
 
-function deploy(...targetProjectDirs) {
-  if (targetProjectDirs.length === 0) {
+function deploy(...targetProjectNames) {
+  const projects = getProjects();
+  const targetProjects = targetProjectNames.map(name =>
+    projects.find((project) => name === project.name)
+  );
+  if (!targetProjects.every(Boolean) || targetProjects.length === 0) {
     exitDeployHelp();
   }
 
   if (args["--cf-prod"] || args["--prod"] || args["--cf-preview"] || args["--preview"]) {
     deployProjectsToCloudflarePages({
-      targetProjectDirs,
+      targetProjects,
       workingDir: getWorkingDir(),
       cfBranch: getTargetBranch(),
       dryRun: args["--dry-run"],
@@ -79,7 +83,7 @@ function deploy(...targetProjectDirs) {
     });
   } else if (args["--gh-prod"]) {
     deployProjectsToGithubPages({
-      targetProjectDirs,
+      targetProjects,
       workingDir: getWorkingDir(),
       branch: getTargetBranch(),
       ghPagesDir: "docs",
@@ -88,7 +92,7 @@ function deploy(...targetProjectDirs) {
     });
   } else {
     deployProjectsToDir({
-      targetProjectDirs,
+      targetProjects,
       deployDir: getWorkingDir(),
       dryRun: args["--dry-run"],
       noConfirm: args["--yes"],

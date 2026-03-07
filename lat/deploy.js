@@ -9,20 +9,13 @@ import { getPath, getTopDir, normalizeDirPath } from "./util/paths.js";
 import { getGitExcludes, updateWorktree } from "./git.js";
 
 export async function deployProjectsToDir({
-  targetProjectDirs,
+  targetProjects,
   deployDir,
   dryRun = false,
   noConfirm = false,
 }) {
-  const projects = getProjects();
-
-  const targetProjects = projects.filter((project) =>
-    targetProjectDirs.some((dir) => getPath(dir) === project.rootDir)
-  );
-
   const commands = generateCommands({
     deployDir,
-    allProjects: projects,
     targetProjects,
     dryRun,
   });
@@ -56,7 +49,6 @@ export async function deployProjectsToDir({
 
 function generateCommands({
   deployDir,
-  allProjects,
   targetProjects,
   dryRun = false,
 }) {
@@ -86,7 +78,7 @@ function generateCommands({
       );
     }
 
-    const otherProjectPaths = allProjects
+    const otherProjectPaths = getProjects()
       .filter(
         (otherProject) => targetProject !== otherProject &&
           !path
@@ -130,7 +122,7 @@ function generateCommands({
 }
 
 export async function deployProjectsToGithubPages({
-  targetProjectDirs,
+  targetProjects,
   workingDir,
   branch,
   ghPagesDir,
@@ -146,7 +138,7 @@ export async function deployProjectsToGithubPages({
     exe(`rsync ${rsyncArgs({ dryRun })} '.github/' '${workingDir}/.github/'`);
 
     await deployProjectsToDir({
-      targetProjectDirs,
+      targetProjects,
       deployDir: `${workingDir}/${ghPagesDir}/`,
       dryRun,
       noConfirm,
@@ -184,7 +176,7 @@ export async function deployProjectsToGithubPages({
     exe("git config extensions.worktreeConfig true");
     exe("git config --worktree user.email 'Kalabasa@users.noreply.github.com'");
     exe("git config --worktree user.name 'Kalabasa'");
-    exe(`git commit -m 'Deploy ${targetProjectDirs.join(", ")}'`);
+    exe(`git commit -m 'Deploy ${targetProjects.map(p => p.rootDir).join(", ")}'`);
     exe(`git push origin HEAD:${branch}`);
   } finally {
     process.chdir(getTopDir());
@@ -193,7 +185,7 @@ export async function deployProjectsToGithubPages({
 }
 
 export async function deployProjectsToCloudflarePages({
-  targetProjectDirs,
+  targetProjects,
   workingDir,
   cfBranch,
   dryRun = false,
@@ -203,7 +195,7 @@ export async function deployProjectsToCloudflarePages({
     updateWorktree({ dir: workingDir, branch: cfBranch });
 
     await deployProjectsToDir({
-      targetProjectDirs,
+      targetProjects,
       deployDir: `${workingDir}/`,
       dryRun,
       noConfirm,
@@ -241,7 +233,7 @@ export async function deployProjectsToCloudflarePages({
     exe("git config extensions.worktreeConfig true");
     exe("git config --worktree user.email 'Kalabasa@users.noreply.github.com'");
     exe("git config --worktree user.name 'Kalabasa'");
-    exe(`git commit -m 'Deploy ${targetProjectDirs.join(", ")}'`);
+    exe(`git commit -m 'Deploy ${targetProjects.map(p => p.rootDir).join(", ")}'`);
     exe(`git push origin HEAD:${cfBranch}`);
 
     // exe(
