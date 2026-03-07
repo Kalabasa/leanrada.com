@@ -1,7 +1,5 @@
 import { HTMLRewriter } from "@miniflare/html-rewriter";
 import fs from "node:fs/promises";
-import path from "node:path";
-import { dateString } from "../format/format.mjs";
 import { tryWrite } from "../util/try-write.mjs";
 
 /**
