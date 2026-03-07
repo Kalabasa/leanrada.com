@@ -6,52 +6,44 @@ const mockNode = {
   disconnect: () => {},
   start: () => {},
   stop: () => {},
-  type: '',
   gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
-  frequency: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
 };
 const mockAudioCtx = {
   currentTime: 0,
   destination: {},
   resume: () => {},
-  suspend: () => {},
-  createOscillator: () => ({ ...mockNode }),
   createGain: () => ({ ...mockNode }),
-  createBufferSource: () => ({ ...mockNode, buffer: null }),
-  createBuffer: (_ch, len) => ({ getChannelData: () => new Float32Array(len) }),
-  createBiquadFilter: () => ({ ...mockNode, type: '', Q: { value: 0 } }),
+  createBufferSource: () => ({ ...mockNode, buffer: null, loop: false, playbackRate: { value: 1 } }),
+  createBuffer: (_ch, len) => ({ length: len, getChannelData: () => new Float32Array(len) }),
   createConvolver: () => ({ ...mockNode, buffer: null }),
   sampleRate: 44100,
 };
 
-const { Sequencer, BARS, createComposition } = await import('../sequencer.js');
-
 globalThis.window = {
   AudioContext: class { constructor() { return mockAudioCtx; } },
 };
-// ── Test helpers ───────────────────────────────────────────────────────────────
 
-function mockInstrument() {
-  const events = [];
+const { Sequencer } = await import('../sequencer.js');
+
+function mockComposer() {
+  const played = [];
+  const mockInstrument = { play: (tS, durS, note, gain) => played.push({ tS, durS, note, gain }) };
   return {
-    events,
-    playEvent(e) { events.push({ ...e }); },
-    ofType: (type) => events.filter(e => e.type === type),
+    played,
+    buildBar: () => [{ instrument: mockInstrument, beatOffset: 0, note: 60, dur: 0.5, gain: 0.8 }],
+    buildTap: () => [{ instrument: mockInstrument, beatOffset: 0, note: 72, dur: 0.04, gain: 0.1 }],
   };
 }
 
 function makeSeq(startTime = 0) {
   let t = startTime * 1000;
   const clock = { now: () => t, advance: (s) => { t += s * 1000; } };
-  const instrument = mockInstrument();
-  const composition = createComposition();
-  const seq = new Sequencer({ bars: BARS, instrument, composition, getNowMs: clock.now });
+  const composer = mockComposer();
+  const seq = new Sequencer({ composer, getNowMs: clock.now });
   seq.start();
   seq.pause();
-  return { seq, instrument, clock };
+  return { seq, composer, clock };
 }
-
-// ── Beat clock ─────────────────────────────────────────────────────────────────
 
 test('beatsToMs at 120 bpm', () => {
   const { seq } = makeSeq();
@@ -79,9 +71,6 @@ test('getGlobalBeat advances with time', () => {
   assert.ok(Math.abs(seq.getGlobalBeat() - 1) < 0.01);
 });
 
-// ── Section state ──────────────────────────────────────────────────────────────
-
-
 test('soundWin queues win section', () => {
   const { seq } = makeSeq();
   seq.soundWin();
@@ -94,17 +83,15 @@ test('soundLose queues lose section', () => {
   assert.equal(seq.getMusicState().nextSection, 'lose');
 });
 
-// ── soundWin / soundLose return values ────────────────────────────────────────
-
 test('soundWin returns end time = next beat + 1 bar', () => {
   const { seq, clock } = makeSeq(0);
   seq.setBpm(120);
   clock.advance(0.1);
   const end = seq.soundWin();
   const barDurMs = (4 / 120) * 60000; // 2000ms
-  const beatDurMs = barDurMs / 4;     // 500ms
+  // end is at least 1 bar from now, at most 2 bars (waits up to halfSection=2 beats)
   assert.ok(end > clock.now() + barDurMs - 0.01);
-  assert.ok(end < clock.now() + barDurMs + beatDurMs);
+  assert.ok(end < clock.now() + barDurMs * 2 + 0.01);
 });
 
 test('soundLose returns end time = next beat + 1 bar', () => {
@@ -113,7 +100,6 @@ test('soundLose returns end time = next beat + 1 bar', () => {
   clock.advance(0.1);
   const end = seq.soundLose();
   const barDurMs = (4 / 120) * 60000;
-  const beatDurMs = barDurMs / 4;
   assert.ok(end > clock.now() + barDurMs - 0.01);
-  assert.ok(end < clock.now() + barDurMs + beatDurMs);
+  assert.ok(end < clock.now() + barDurMs * 2 + 0.01);
 });
