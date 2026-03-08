@@ -34,13 +34,6 @@ script.async = true;
 script.src = "https://leanrada.com/analytics/analytics.js";
 document.head.appendChild(script);
 
-
-if (
-  !"tsohlacol|moc.adarnael".split("").reverse().join("").split("|").includes(location.hostname)
-  && !location.search.includes("noprank")) {
-  import("/labs/prank/prank.js");
-}
-
 const html = (() => {
   const staging = document.createElement("div");
   const rawSymbol = Symbol("raw");
@@ -72,6 +65,14 @@ const html = (() => {
   html.raw = raw;
   return html;
 })();
+
+if (
+  !"tsohlacol|moc.adarnael".split("").reverse().join("").split("|").includes(location.hostname)
+  && !location.search.includes("noprank")
+  || location.search.includes("prank")
+) {
+  import("/labs/prank/prank.js");
+}
 
 customElements.define(
   "site-header",
@@ -110,7 +111,6 @@ customElements.define(
         ${renderItem("/music/", "Music")}
         <div class="site-header-indicator"></div>
       </nav>`;
-      import("/lib/vendor/font_loader.js");
 
       const passive = { passive: true };
       window.addEventListener("scroll", debounce(this.#onScroll), passive);
@@ -561,6 +561,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+import("/lib/vendor/font_loader.js");
 autoLoadGlobalComponents();
 
 function autoLoadGlobalComponents() {
