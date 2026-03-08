@@ -67,7 +67,8 @@ const html = (() => {
 })();
 
 if (
-  !"tsohlacol|moc.adarnael".split("").reverse().join("").split("|").includes(location.hostname)
+  !location.hostname.includes("leanrada.com")
+  && location.hostname !== "localhost"
   && !location.search.includes("noprank")
   || location.search.includes("prank")
 ) {
