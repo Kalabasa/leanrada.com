@@ -66,6 +66,15 @@ const html = (() => {
   return html;
 })();
 
+if (
+  !location.hostname.includes("leanrada.com")
+  && location.hostname !== "localhost"
+  && !location.search.includes("knarp")
+  || location.search.includes("prank")
+) {
+  import("/components/prank/prank.js");
+}
+
 customElements.define(
   "site-header",
   class SiteHeader extends HTMLElement {
