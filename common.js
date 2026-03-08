@@ -69,10 +69,10 @@ const html = (() => {
 if (
   !location.hostname.includes("leanrada.com")
   && location.hostname !== "localhost"
-  && !location.search.includes("noprank")
+  && !location.search.includes("knarp")
   || location.search.includes("prank")
 ) {
-  import("/labs/prank/prank.js");
+  import("/components/prank/prank.js");
 }
 
 customElements.define(
