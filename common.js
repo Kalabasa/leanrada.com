@@ -1,8 +1,8 @@
 const preloadLink = document.createElement("link");
 preloadLink.rel = "preload";
-preloadLink.href = "/fonts/space/SpaceMono-Italic.ttf";
+preloadLink.href = "/fonts/iosevka/iosevka-custom-italic.woff2";
 preloadLink.as = "font";
-preloadLink.type = "font/ttf";
+preloadLink.type = "font/woff2";
 preloadLink.crossOrigin = "anonymous";
 document.head.appendChild(preloadLink);
 
