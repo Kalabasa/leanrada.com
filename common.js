@@ -1,8 +1,8 @@
 const preloadLink = document.createElement("link");
 preloadLink.rel = "preload";
-preloadLink.href = "/fonts/space/SpaceMono-Italic.ttf";
+preloadLink.href = "/fonts/iosevka/iosevka-custom-italic.woff2";
 preloadLink.as = "font";
-preloadLink.type = "font/ttf";
+preloadLink.type = "font/woff2";
 preloadLink.crossOrigin = "anonymous";
 document.head.appendChild(preloadLink);
 
@@ -65,6 +65,15 @@ const html = (() => {
   html.raw = raw;
   return html;
 })();
+
+if (
+  !location.hostname.includes("leanrada.com")
+  && location.hostname !== "localhost"
+  && !location.search.includes("knarp")
+  || location.search.includes("prank")
+) {
+  import("/components/prank/prank.js");
+}
 
 customElements.define(
   "site-header",
@@ -553,6 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+import("/lib/vendor/font_loader.js");
 autoLoadGlobalComponents();
 
 function autoLoadGlobalComponents() {
