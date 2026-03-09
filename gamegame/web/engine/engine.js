@@ -9,7 +9,7 @@ export const RESULT_WIN = "win";
 export const RESULT_LOSE = "lose";
 
 export function createEngine(slide, onEnd, music) {
-  const { canvas, drawing, resetDrawState } = createCanvas(slide);
+  const { canvas, drawing } = createCanvas(slide);
 
   let state = STATE_INIT;
   let gameDef = null;
@@ -117,7 +117,6 @@ export function createEngine(slide, onEnd, music) {
     }
     lastBeatNumber = currentBeatNumber;
 
-    resetDrawState();
     gameDef.draw(api);
 
     if (gameTimeMs >= gameDurationMs) {

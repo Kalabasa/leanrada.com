@@ -24,7 +24,6 @@ export function oddOneOutGame(api) {
   if (idxB >= idxA) idxB++;
   const odd = cat[idxA];
   const common = cat[idxB];
-  const bgHue = api.random(360);
 
   const total = 9 + Math.floor(Math.sqrt(c) * 6);
   const oddIndex = Math.floor(api.random(total));
@@ -78,7 +77,7 @@ export function oddOneOutGame(api) {
     duration: 6,
 
     draw(api) {
-      api.clear(`hsl(${bgHue}, 30%, 12%)`);
+      api.clear(0x1a1e1f);
 
       for (let i = 0; i < total; i++) {
         const item = items[i];

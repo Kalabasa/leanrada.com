@@ -1,23 +1,12 @@
-/**
- * Split — drag a line to cut a shape at the target ratio
- *
- * Variants (one per play):
- * - horizontal: classic horizontal bar
- * - vertical: vertical bar
- * - multi: multiple cuts in sequence
- */
 export function splitGame(api) {
   const c = api.complexity;
-  const bgHue = api.random(360);
 
-  // Pick ONE variant
   const variants = ['horizontal', 'vertical', 'multi'];
   const variant = variants[Math.floor(api.random(variants.length))];
 
   const numCuts = variant === 'multi' ? 2 + Math.floor(c * 0.4) : 1;
   const vertical = variant === 'vertical';
 
-  // Generate fraction targets
   const cuts = [];
   for (let i = 0; i < numCuts; i++) {
     const maxDenom = Math.floor(3 + c * 3);
@@ -29,7 +18,6 @@ export function splitGame(api) {
   const tolerance = 0.12;
   let currentCut = 0;
 
-  // Bar dimensions
   const barLength = (vertical ? api.height : api.width) * 0.7;
   const barThick = 100;
   const barX = vertical ? (api.width - barThick) / 2 : api.width * 0.15;
@@ -56,53 +44,33 @@ export function splitGame(api) {
     duration: 8 + (numCuts - 1) * 2,
 
     draw(api) {
-      api.clear(`hsl(${bgHue}, 25%, 10%)`);
+      api.clear(0x1a1a18);
 
       const target = cuts[currentCut];
 
-      // Label
-      api.fill('rgba(255,255,255,0.35)');
-      api.text(target.label, api.width / 2, (vertical ? barY : barY) - 30, 20);
+      api.text(target.label, api.width / 2, (vertical ? barY : barY) - 30, 0x999999, 20);
 
-      // Counter
       if (numCuts > 1) {
-        api.fill('rgba(255,255,255,0.3)');
-        api.text(`${currentCut + 1}/${numCuts}`, api.width / 2, api.height * 0.9, 16);
+        api.text(`${currentCut + 1}/${numCuts}`, api.width / 2, api.height * 0.9, 0x999999, 16);
       }
 
-      // Bar
-      api.fill('rgba(255,255,255,0.15)');
-      api.stroke(null);
-      api.rect(barX, barY, barW, barH);
+      api.rect(barX, barY, barW, barH, 0x333333);
 
-      // Cut line
       if (dragPos !== null) {
         if (vertical) {
           const cutY = barY + barH * dragPos;
-          api.stroke('rgba(255,255,255,0.9)', 3);
-          api.line(barX - 20, cutY, barX + barW + 20, cutY);
-          api.fill('rgba(100,200,255,0.3)');
-          api.stroke(null);
-          api.rect(barX, barY, barW, cutY - barY);
-          api.fill('rgba(255,150,100,0.3)');
-          api.rect(barX, cutY, barW, barY + barH - cutY);
+          api.line(barX - 20, cutY, barX + barW + 20, cutY, 0xeeeeee, 3);
+          api.rect(barX, barY, barW, cutY - barY, 0x3a6080);
+          api.rect(barX, cutY, barW, barY + barH - cutY, 0x804a3a);
         } else {
           const cutX = barX + barW * dragPos;
-          api.stroke('rgba(255,255,255,0.9)', 3);
-          api.line(cutX, barY - 20, cutX, barY + barH + 20);
-          api.fill('rgba(100,200,255,0.3)');
-          api.stroke(null);
-          api.rect(barX, barY, cutX - barX, barH);
-          api.fill('rgba(255,150,100,0.3)');
-          api.rect(cutX, barY, barX + barW - cutX, barH);
+          api.line(cutX, barY - 20, cutX, barY + barH + 20, 0xeeeeee, 3);
+          api.rect(barX, barY, cutX - barX, barH, 0x3a6080);
+          api.rect(cutX, barY, barX + barW - cutX, barH, 0x804a3a);
         }
       }
 
-      // Pulse border
-      const pulse = api.pulse;
-      api.stroke(`rgba(255,255,255,${0.1 + 0.2 * pulse})`, 2);
-      api.fill(null);
-      api.rect(barX, barY, barW, barH);
+      api.rectOutline(barX, barY, barW, barH, 0x444444, 2);
     },
 
     onTap(x, y) {

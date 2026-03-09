@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-// Shared browser mocks for tests
 
 globalThis.window = {
   devicePixelRatio: 1,
@@ -16,7 +15,7 @@ globalThis.document = {
     clientWidth: 400,
     clientHeight: 600,
     getContext: () => ({
-      setTransform: () => {}, fillRect: () => {}, save: () => {}, restore: () => {},
+      setTransform: () => {}, fillRect: () => {}, clearRect: () => {}, save: () => {}, restore: () => {},
       beginPath: () => {}, arc: () => {}, fill: () => {}, stroke: () => {},
       strokeRect: () => {}, moveTo: () => {}, lineTo: () => {},
       fillText: () => {}, translate: () => {}, rotate: () => {}, scale: () => {},
@@ -39,13 +38,10 @@ function makeSlide() {
   return { innerHTML: '', appendChild: () => {} };
 }
 
-// ── createCanvas ──────────────────────────────────────────────────────────────
-
-test('createCanvas returns canvas, drawing, and resetDrawState', () => {
+test('createCanvas returns canvas and drawing', () => {
   const result = createCanvas(makeSlide());
   assert.ok(result.canvas);
   assert.ok(result.drawing);
-  assert.equal(typeof result.resetDrawState, 'function');
 });
 
 test('drawing.width and height return canvas dimensions', () => {
@@ -54,53 +50,39 @@ test('drawing.width and height return canvas dimensions', () => {
   assert.equal(drawing.height, 600);
 });
 
-// ── drawing methods exist ─────────────────────────────────────────────────────
-
 test('drawing has all expected methods', () => {
   const { drawing } = createCanvas(makeSlide());
-  const methods = ['clear', 'fill', 'stroke', 'circle', 'rect', 'line', 'text', 'emoji', 'push', 'pop', 'translate', 'rotate', 'scale'];
+  const methods = ['clear', 'circle', 'circleOutline', 'rect', 'rectOutline', 'line', 'text', 'emoji'];
   for (const m of methods) {
     assert.equal(typeof drawing[m], 'function', `missing method: ${m}`);
   }
 });
 
-// ── drawing methods don't throw ───────────────────────────────────────────────
-
 test('clear does not throw', () => {
   const { drawing } = createCanvas(makeSlide());
   assert.doesNotThrow(() => drawing.clear());
-  assert.doesNotThrow(() => drawing.clear('#fff'));
-});
-
-test('fill and stroke set state without throwing', () => {
-  const { drawing } = createCanvas(makeSlide());
-  assert.doesNotThrow(() => drawing.fill('#f00'));
-  assert.doesNotThrow(() => drawing.stroke('#0f0', 3));
+  assert.doesNotThrow(() => drawing.clear(0xffffff));
 });
 
 test('circle does not throw', () => {
   const { drawing } = createCanvas(makeSlide());
-  drawing.fill('#fff');
-  drawing.stroke('#000');
-  assert.doesNotThrow(() => drawing.circle(100, 100, 50));
+  assert.doesNotThrow(() => drawing.circle(100, 100, 50, 0xffffff));
 });
 
 test('rect does not throw', () => {
   const { drawing } = createCanvas(makeSlide());
-  drawing.fill('#fff');
-  drawing.stroke('#000');
-  assert.doesNotThrow(() => drawing.rect(10, 10, 50, 50));
+  assert.doesNotThrow(() => drawing.rect(10, 10, 50, 50, 0xffffff));
 });
 
 test('line does not throw', () => {
   const { drawing } = createCanvas(makeSlide());
-  assert.doesNotThrow(() => drawing.line(0, 0, 100, 100));
+  assert.doesNotThrow(() => drawing.line(0, 0, 100, 100, 0xffffff));
 });
 
 test('text does not throw', () => {
   const { drawing } = createCanvas(makeSlide());
-  assert.doesNotThrow(() => drawing.text('hello', 200, 300));
-  assert.doesNotThrow(() => drawing.text('big', 200, 300, 48));
+  assert.doesNotThrow(() => drawing.text('hello', 200, 300, 0xffffff));
+  assert.doesNotThrow(() => drawing.text('big', 200, 300, 0xffffff, 48));
 });
 
 test('emoji does not throw', () => {
@@ -108,24 +90,3 @@ test('emoji does not throw', () => {
   assert.doesNotThrow(() => drawing.emoji('🎮', 200, 300));
 });
 
-test('push/pop do not throw', () => {
-  const { drawing } = createCanvas(makeSlide());
-  assert.doesNotThrow(() => { drawing.push(); drawing.pop(); });
-});
-
-test('transform methods do not throw', () => {
-  const { drawing } = createCanvas(makeSlide());
-  assert.doesNotThrow(() => drawing.translate(10, 20));
-  assert.doesNotThrow(() => drawing.rotate(0.5));
-  assert.doesNotThrow(() => drawing.scale(2));
-  assert.doesNotThrow(() => drawing.scale(2, 3));
-});
-
-// ── resetDrawState ────────────────────────────────────────────────────────────
-
-test('resetDrawState does not throw', () => {
-  const { drawing, resetDrawState } = createCanvas(makeSlide());
-  drawing.fill('#f00');
-  drawing.stroke('#0f0', 5);
-  assert.doesNotThrow(() => resetDrawState());
-});

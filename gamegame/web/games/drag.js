@@ -1,20 +1,9 @@
-/**
- * Drag — drag an emoji to a target
- *
- * Variants (one per play):
- * - simple: static target, just drag there
- * - moving: target drifts around
- * - walls: obstacles block the path
- * - multi: deliver multiple times
- */
 export function dragGame(api) {
   const c = api.complexity;
-  const bgHue = api.random(360);
 
   const ballEmoji = ['🐱', '🐶', '🐝', '🚀', '🧲', '🐸', '🦊', '🐧'][Math.floor(api.random(8))];
   const targetEmoji = ['🧶', '🦴', '🌸', '🌙', '🔩', '🪺', '💎', '⭐'][Math.floor(api.random(8))];
 
-  // Pick ONE variant
   const variants = ['simple', 'moving', 'walls', 'multi'];
   const variant = variants[Math.floor(api.random(variants.length))];
 
@@ -31,7 +20,6 @@ export function dragGame(api) {
   let targetY = api.height * (0.15 + api.random(0.4));
   let driftAngle = api.random(Math.PI * 2);
 
-  // Generate walls
   const walls = [];
   for (let i = 0; i < numWalls; i++) {
     walls.push({
@@ -55,9 +43,8 @@ export function dragGame(api) {
     duration: 6 + (numDeliveries - 1) * 2,
 
     draw(api) {
-      api.clear(`hsl(${bgHue}, 35%, 12%)`);
+      api.clear(0x1e1a1f);
 
-      // Drift
       if (driftSpeed > 0) {
         driftAngle += api.dt * 0.001;
         targetX += Math.cos(driftAngle) * driftSpeed * (api.dt / 1000);
@@ -69,31 +56,20 @@ export function dragGame(api) {
         targetY = Math.max(m, Math.min(api.height * 0.65, targetY));
       }
 
-      // Walls
       for (const w of walls) {
         api.emoji('🧱', w.x, w.y, w.r * 1.5);
       }
 
-      // Target
       const tPulse = 1 + 0.2 * api.pulse;
-      api.push();
-      api.translate(targetX, targetY);
-      api.scale(tPulse);
-      api.stroke('rgba(255,255,255,0.3)', 2);
-      api.circle(0, 0, 45);
-      api.emoji(targetEmoji, 0, 0, 48);
-      api.pop();
+      api.circleOutline(targetX, targetY, 45 * tPulse, 0x555555);
+      api.emoji(targetEmoji, targetX, targetY, 48 * tPulse);
 
-      // Counter
       if (numDeliveries > 1) {
-        api.fill('rgba(255,255,255,0.4)');
-        api.text(`${delivered}/${numDeliveries}`, api.width / 2, api.height * 0.92, 18);
+        api.text(`${delivered}/${numDeliveries}`, api.width / 2, api.height * 0.92, 0x999999, 18);
       }
 
-      // Ball
       api.emoji(ballEmoji, ballX, ballY, dragging ? 56 : 48);
-      api.stroke('rgba(255,255,255,0.08)', 1);
-      api.line(ballX, ballY, targetX, targetY);
+      api.line(ballX, ballY, targetX, targetY, 0x222222, 1);
     },
 
     onTap(x, y) {

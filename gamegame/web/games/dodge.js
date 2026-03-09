@@ -1,14 +1,5 @@
 import { RESULT_WIN } from '../engine/engine.js';
 
-/**
- * Dodge — survive by avoiding falling objects
- *
- * Variants (one per play):
- * - straight: classic rain, more per wave with complexity
- * - zigzag: obstacles sine-wave horizontally
- * - aimed: obstacles steer toward the player
- * - big: fewer but much larger obstacles
- */
 export function dodgeGame(api) {
   const c = api.complexity;
   let playerX = api.width / 2;
@@ -19,13 +10,10 @@ export function dodgeGame(api) {
 
   const playerEmoji = ['🐸', '🐥', '🏃', '🛸', '🐱', '🐶', '🐰', '🐧'][Math.floor(api.random(8))];
   const obstacleEmoji = ['🪨', '💧', '🔥', '☄️', '💣', '🧱', '❄️', '💀'][Math.floor(api.random(8))];
-  const bgHue = api.random(360);
 
-  // Pick ONE variant
   const variants = ['straight', 'zigzag', 'aimed', 'big'];
   const variant = variants[Math.floor(api.random(variants.length))];
 
-  // Spawn count: low and flat — the variant behavior is the challenge, not quantity
   const spawnCount = variant === 'big' ? 1 : 1 + Math.floor(Math.log2(1 + c));
 
   const obstacleSize = variant === 'big' ? 50 + Math.log2(1 + c) * 10 : 36;
@@ -37,7 +25,7 @@ export function dodgeGame(api) {
     timeoutResult: RESULT_WIN,
 
     draw(api) {
-      api.clear(`hsl(${bgHue}, 30%, 10%)`);
+      api.clear(0x1a1a1a);
 
       spawnTimer += api.dt;
       const spawnInterval = (60000 / api.bpm) * 2;
