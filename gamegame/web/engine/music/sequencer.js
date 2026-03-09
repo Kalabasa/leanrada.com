@@ -1,9 +1,9 @@
+import { initAudio, nowMs } from './audio.js';
+
 export const SECTION_BEAT_LENGTH = 4;
 export const SECTION_MAIN = 'main';
 export const SECTION_WIN = 'win';
 export const SECTION_LOSE = 'lose';
-
-import { initAudio, nowMs } from './audio.js';
 
 export class Sequencer {
   #comp; #getNowMs;
@@ -28,8 +28,21 @@ export class Sequencer {
     this.#pendingSectionBeat = null;
 
     this.#queue = [];
-    this.#barStartBeat = -SECTION_BEAT_LENGTH; // triggers #startBar at first b=0
+    this.#barStartBeat = -SECTION_BEAT_LENGTH;
   }
+
+  initAudio() { initAudio(); this.start(); }
+
+  start() {
+    if (this.#started) return;
+    this.#started = true;
+    this.#beatStartMs = this.#getNowMs();
+    this.#tick();
+  }
+
+  pause() { clearTimeout(this.#loopTimer); }
+
+  resume() { if (this.#started) this.#tick(); }
 
   getBpm() { return this.#bpm; }
 
@@ -48,19 +61,6 @@ export class Sequencer {
   /** @returns {number} bar end time (ms) */
   beatToTimeMs(b) {
     return this.#beatStartMs + this.beatsToMs(b - this.#accumulatedBeats);
-  }
-
-  initAudio() { initAudio(); this.start(); }
-
-  pause() { clearTimeout(this.#loopTimer); }
-
-  resume() { if (this.#started) this.#tick(); }
-
-  start() {
-    if (this.#started) return;
-    this.#started = true;
-    this.#beatStartMs = this.#getNowMs();
-    this.#tick();
   }
 
   /** @returns {number} bar end time (ms) */

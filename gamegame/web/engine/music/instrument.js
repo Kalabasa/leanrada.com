@@ -1,15 +1,8 @@
 import { getAudioCtx } from './audio.js';
 
 /**
- * @typedef {'square'|'triangle'|'noise'} InstrumentType
- *
- * @typedef {Object} Instrument
- * @property {(tS: number, durS: number, note: number, volume: number) => void} play
- */
-
-/**
- * @param {{ type: InstrumentType, timbre?: number, sustain?: number }} options
- * @returns {Instrument}
+ * @param {{ type: 'square'|'triangle'|'noise', timbre?: number, sustain?: number }} options
+ * @returns {{ play: (tS: number, durS: number, note: number, volume: number) => void }}
  */
 export function createInstrument({ type, timbre = 0, sustain = 0.5 }) {
   let buffer = null;
@@ -34,6 +27,28 @@ export function createInstrument({ type, timbre = 0, sustain = 0.5 }) {
   };
 }
 
+export function createWaveBuffer(type, timbre, sampleRate, createBuffer) {
+  const period = type === 'noise' ? 8192 : 1024;
+  let fraction;
+  switch (type) {
+    case 'square':
+      fraction = 1 - timbre * 0.5;
+      break;
+    case 'triangle':
+      fraction = 1 - timbre * 0.5;
+      break;
+    case 'noise':
+      fraction = 1 - (timbre ** 0.25) * 0.95;
+      break;
+    default:
+      throw new Error(`unknown type: ${type}`);
+  }
+  const samples = Math.max(2, Math.round(period * fraction));
+  const buffer = createBuffer(1, samples, sampleRate);
+  fillWave(type, buffer.getChannelData(0), period);
+  return buffer;
+}
+
 function playWave(sustain, tS, durS, noteFreq, refFreq, buffer, gain) {
   const src = getAudioCtx().createBufferSource();
   src.buffer = buffer;
@@ -41,7 +56,6 @@ function playWave(sustain, tS, durS, noteFreq, refFreq, buffer, gain) {
   src.playbackRate.value = noteFreq / refFreq;
 
   const gainNode = getAudioCtx().createGain();
-  // sustain=0: instant falloff, sustain=1: full gain until end
   const decayEnd = tS + durS;
   const decayStart = tS + durS * sustain;
   gainNode.gain.setValueAtTime(gain, tS);
@@ -64,76 +78,27 @@ function getRootMeanSquare(buffer) {
 }
 
 /**
-* @param {AudioContext['createBuffer']} createBuffer
-*/
-export function createWaveBuffer(type, timbre, sampleRate, createBuffer) {
-  const period = type === 'noise' ? 8192 : 1024;
-  let fraction;
-  switch (type) {
-    case 'square':
-      fraction = 1 - timbre * 0.475;
-      break;
-    case 'triangle':
-      fraction = 1 - timbre * 0.5;
-      break;
-    case 'noise':
-      fraction = 1 - (timbre ** 0.25) * 0.95;
-      break;
-    default:
-      throw new Error(`unknown type: ${type}`);
-  }
-  const samples =  Math.max(2, Math.round(period * fraction));
-  const buffer = createBuffer(1, samples, sampleRate);
-  fillWave(type, buffer.getChannelData(0), period);
-  return buffer;
-}
-
-/**
  * Fills a buffer with a partial or full period of a waveform.
  *
- * The `data` array acts as a looping waveform. The synthesizer repeats it every `period`
- * samples. data.length and sampleRate defines the frequency of the sound.
+ * - **square** — At `data.length === period`, 50% duty cycle.
+ *   Decreasing toward `period / 2` narrows the pulse toward 100% duty.
+ * - **triangle** — At `data.length === period`, pure triangle.
+ *   Decreasing toward `period / 2` morphs toward sawtooth.
+ * - **noise** — Random white noise. Shorter buffers = metallic, pitched texture.
  *
- * @param {'square' | 'triangle' | 'noise'} type - The waveform shape to generate.
- *
- *   - **square** — Classic square wave. At `data.length === period`, produces a 50% duty cycle.
- *     Decreasing `data.length` toward `period / 2` narrows the pulse toward 100% duty.
- *
- *   - **triangle** — Symmetric triangle wave. At `data.length === period`, produces a pure
- *     triangle. Decreasing `data.length` toward `period / 2` morphs toward a sawtooth, since
- *     only the rising half of the waveform fits in the buffer.
- *
- *   - **noise** — Random white noise buffer. Shorter buffers loop more frequently, creating a
- *     metallic, pitched texture.
- *
- * @param {number[]} data - Output buffer to fill. Must satisfy `2 <= data.length <= period`.
- *   Values are written in-place in the range [-1, 1].
- * @param {number} period - The full wavelength in samples, determining the perceived pitch.
- *   Must be >= `data.length`.
- *
- * @example
- * // 50% duty square wave at a 32-sample period
- * const buf = new Array(32);
- * fillWave('square', buf, 32);
- *
- * @example
- * // Sawtooth-like triangle (half-period buffer)
- * const buf = new Array(16);
- * fillWave('triangle', buf, 32);
+ * @param {'square' | 'triangle' | 'noise'} type
+ * @param {number[]} data - Output buffer (2 <= length <= period), values in [-1, 1].
+ * @param {number} period - Full wavelength in samples.
  */
 function fillWave(type, data, period) {
   console.assert(data.length >= 2, 'data.length must be at least 2');
   console.assert(data.length <= period, 'data.length must not exceed period');
   if (type === 'square') {
-    // data.length == period: 50% duty classic square
-    // data.length == period/2: 100% duty -> silence
     const halfPeriod = period / 2;
     for (let i = 0; i < data.length; i++) {
       data[i] = i < halfPeriod ? 1 : -1;
     }
   } else if (type === 'triangle') {
-    // data.length == period: pure triangle
-    // data.length == period/2: sawtooth
     for (let i = 0; i < data.length; i++) {
       const t = i / period;
       data[i] = t < 0.5 ? t * 4 - 1 : (1 - t) * 4 - 1;

@@ -249,6 +249,7 @@
         RESULT_WIN,
         RESULT_LOSE,
       } from "./engine/engine.js";
+      import { createCanvas } from "./engine/graphics.js";
       import { createMusic } from "./engine/music/music.js";
 
       const music = createMusic();
@@ -449,7 +450,55 @@
         nextEl.style.background = "#111";
 
         // Create engine for this game
-        const engine = createEngine(currentEl, endGame, music);
+        const engine = createEngine(endGame, music, ({ onTap, onDrag, onRelease }) => {
+          const { canvas, drawing } = createCanvas(currentEl);
+          let pointerDown = false;
+          let lastX = 0;
+          let lastY = 0;
+
+          function getXY(e) {
+            const rect = canvas.getBoundingClientRect();
+            return [e.clientX - rect.left, e.clientY - rect.top];
+          }
+
+          function handleDown(e) {
+            e.preventDefault();
+            pointerDown = true;
+            const [x, y] = getXY(e);
+            lastX = x; lastY = y;
+            onTap(x, y);
+          }
+          function handleMove(e) {
+            if (!pointerDown) return;
+            e.preventDefault();
+            const [x, y] = getXY(e);
+            const dx = x - lastX;
+            const dy = y - lastY;
+            lastX = x; lastY = y;
+            onDrag(x, y, dx, dy);
+          }
+          function handleUp(e) {
+            if (!pointerDown) return;
+            pointerDown = false;
+            const [x, y] = getXY(e);
+            onRelease(x, y);
+          }
+
+          canvas.addEventListener("pointerdown", handleDown);
+          canvas.addEventListener("pointermove", handleMove);
+          canvas.addEventListener("pointerup", handleUp);
+          canvas.addEventListener("pointerleave", handleUp);
+
+          return {
+            drawing,
+            cleanup() {
+              canvas.removeEventListener("pointerdown", handleDown);
+              canvas.removeEventListener("pointermove", handleMove);
+              canvas.removeEventListener("pointerup", handleUp);
+              canvas.removeEventListener("pointerleave", handleUp);
+            },
+          };
+        });
         activeEngine = engine;
 
         // Init game
