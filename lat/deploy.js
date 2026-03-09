@@ -176,7 +176,7 @@ export async function deployProjectsToGithubPages({
     exe("git config extensions.worktreeConfig true");
     exe("git config --worktree user.email 'Kalabasa@users.noreply.github.com'");
     exe("git config --worktree user.name 'Kalabasa'");
-    exe(`git commit -m 'Deploy ${targetProjects.map(p => p.rootDir).join(", ")}'`);
+    exe(`git commit -m 'Deploy ${targetProjects.map(p => p.name).join(", ")}'`);
     exe(`git push origin HEAD:${branch}`);
   } finally {
     process.chdir(getTopDir());
@@ -233,7 +233,7 @@ export async function deployProjectsToCloudflarePages({
     exe("git config extensions.worktreeConfig true");
     exe("git config --worktree user.email 'Kalabasa@users.noreply.github.com'");
     exe("git config --worktree user.name 'Kalabasa'");
-    exe(`git commit -m 'Deploy ${targetProjects.map(p => p.rootDir).join(", ")}'`);
+    exe(`git commit -m 'Deploy ${targetProjects.map(p => p.name).join(", ")}'`);
     exe(`git push origin HEAD:${cfBranch}`);
 
     // exe(
