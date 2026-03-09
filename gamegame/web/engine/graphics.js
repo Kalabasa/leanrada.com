@@ -79,7 +79,7 @@ export function createCanvas(slide) {
 
     text(str, x, y, size = 24) {
       ctx.fillStyle = fillStyle;
-      ctx.font = `bold ${size}px system-ui, sans-serif`;
+      ctx.font = `${size}px Pixel, system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(str, x, y);
