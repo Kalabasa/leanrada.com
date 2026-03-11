@@ -6,7 +6,7 @@
     import("/lib/mouse_position.mjs").then((m) => m.mousePosition);
 
   const TARGET_FPS = 60;
-  const PARTICLE_DENSITY = 0.0025;
+  const PARTICLE_DENSITY = 0.002;
   const BILLBOARD_SIZE = 128;
   const BILLBOARD_DENSITY = 0.009;
   const SPEED_ALPHA = 3;
@@ -257,7 +257,7 @@
             if (this.#quality > 0 && performance < 0.8) {
               this.#quality -= 0.1;
             } else if (this.#quality <= 1 && performance >= 1) {
-              this.#quality += 0.01;
+              this.#quality += 0.001;
             }
             const goodQuality = this.#quality >= 1;
 
