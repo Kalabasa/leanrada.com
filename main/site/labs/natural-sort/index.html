@@ -1,120 +1,441 @@
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 40px 20px 80px;
+    font-family: Georgia, serif;
+    color: #222;
+    background: #fafaf8;
+    line-height: 1.7;
+  }
+
+  article {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 28px;
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    color: #777;
+    font-style: italic;
+    margin: 0 0 32px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin: 48px 0 12px;
+  }
+
+  p {
+    margin: 0 0 16px;
+  }
+
+  code {
+    font-family: Menlo, Consolas, monospace;
+    font-size: 14px;
+    background: #f0eeeb;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .cell {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    background: #fff;
+    font-family: Menlo, Consolas, monospace;
+    font-size: 14px;
+  }
+
+  .cell-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .cell-indicator {
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .cell-direction {
+    font-size: 11px;
+    color: #999;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .cell-expected {
+    color: #888;
+    font-size: 12px;
+  }
+
+  .cell-sorted {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .cell.pass .cell-indicator { color: #2a7a3a; }
+  .cell.pass .cell-sorted { color: #2a7a3a; }
+
+  .cell.fail .cell-indicator { color: #a44; }
+  .cell.fail .cell-sorted { color: #a44; }
+  .cell.fail .cell-expected {
+    text-decoration: line-through;
+    color: #a44;
+    opacity: 0.5;
+  }
+
+  .cell-bars {
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 54px;
+    gap: 6px;
+    align-items: center;
+    padding: 2px 0;
+    font-size: 12px;
+  }
+
+  .bar-row .label {
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-row .bar {
+    height: 14px;
+    border-radius: 3px;
+    min-width: 2px;
+  }
+
+  .bar-row .val {
+    color: #999;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .cell-scatter {
+    display: flex;
+    justify-content: center;
+  }
+
+  .cell-scatter svg {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    overflow: visible;
+  }
+
+  .try-it {
+    margin: 24px 0;
+  }
+
+  .try-it input {
+    font-family: Menlo, Consolas, monospace;
+    font-size: 14px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    outline: none;
+  }
+
+  .try-it input:focus {
+    border-color: #4a90d9;
+  }
+
+  .try-it-output {
+    margin-top: 12px;
+  }
+
+  .try-it-error {
+    color: #a44;
+    font-family: Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+
+  .loading {
+    color: #999;
+    font-style: italic;
+  }
+
+</style>
+
+<article>
+  <h1>Naturalest Sort</h1>
+  <p class="subtitle">Sorting words by vibes, using word embeddings</p>
+
+  <p>
+    In programming, "natural sort" means sorting <code>file2</code> before
+    <code>file10</code>. Cute. But what about sorting
+    <code>["huge", "small", "tiny", "large"]</code> into
+    <code>tiny, small, large, huge</code>&mdash;without telling the computer
+    what any of these words mean?
+  </p>
+
+  <p>
+    Words that sit on a conceptual scale (small&rarr;big, bad&rarr;good, slow&rarr;fast)
+    should be sortable by projecting their <strong>word2vec embeddings</strong>
+    onto a direction that captures that scale. Let's find out.
+  </p>
+
+  <h2>The approach</h2>
+
+  <p>
+    We feed ~130 anchor pairs (small&rarr;big, worst&rarr;best, never&rarr;always, ...)
+    into a clustering algorithm. Most of them point in the same few directions.
+    The clusters collapse into just 4 axes baked into word2vec:
+    <strong>polarity</strong> (bad&rarr;good),
+    <strong>magnitude</strong> (small&rarr;big),
+    <strong>frequency</strong> (rare&rarr;common), and
+    <strong>sequence</strong> (first&rarr;last).
+  </p>
+
+  <p>
+    To sort a list of words, pick whichever axis best separates them
+    (by dot-product spread) and project. That's the whole algorithm.
+  </p>
+
+  <h2>Does it work?</h2>
+
+  <p>Each bar chart shows the projection onto the chosen axis. The label
+    on the right tells you which one it picked.</p>
+
+  <p><strong>Magnitude</strong> handles size, intensity, and degree. This
+    is the bread and butter.</p>
+
+  <word-chart words="tiny, small, medium, large, huge"></word-chart>
+  <word-chart words="low, medium, high"></word-chart>
+  <word-chart words="shallow, medium, deep"></word-chart>
+  <word-chart words="whisper, talk, shout, scream"></word-chart>
+  <word-chart words="breeze, wind, gale, storm"></word-chart>
+
+  <p><strong>Polarity</strong> is the fattest axis in word2vec&mdash;61 of our
+    130 anchor pairs collapsed into it. It covers good/bad, sentiment,
+    and quality scales.</p>
+
+  <word-chart words="hate, dislike, like, love"></word-chart>
+  <word-chart words="ugly, plain, pretty, beautiful"></word-chart>
+  <word-chart words="horrible, bad, good, wonderful"></word-chart>
+  <word-chart words="poor, fair, good, excellent"></word-chart>
+  <word-chart words="crude, decent, refined, elegant"></word-chart>
+  <word-chart words="boring, interesting, exciting"></word-chart>
+  <word-chart words="poverty, comfort, wealth"></word-chart>
+  <word-chart words="weak, moderate, strong"></word-chart>
+  <word-chart words="dull, average, sharp, brilliant"></word-chart>
+
+  <p><strong>Sequence</strong> picks up beginning-to-end and lifecycle ordering.</p>
+
+  <word-chart words="beginning, middle, end"></word-chart>
+  <word-chart words="early, middle, late"></word-chart>
+  <word-chart words="dawn, noon, dusk"></word-chart>
+  <word-chart words="birth, life, death"></word-chart>
+  <word-chart words="rookie, veteran, legend"></word-chart>
+
+  <p><strong>Frequency</strong> is the weakest axis. It barely holds together.</p>
+
+  <word-chart words="none, few, some, many, all"></word-chart>
+
+  <h2>Almost</h2>
+
+  <p>These get the gist but fumble a neighbor swap. So close.</p>
+
+  <word-chart words="worst, bad, good, best"></word-chart>
+  <word-chart words="terrible, bad, okay, good, great, excellent"></word-chart>
+  <word-chart words="first, second, third, fourth, fifth"></word-chart>
+  <word-chart words="never, rarely, often, always"></word-chart>
+  <word-chart words="freezing, cool, warm, hot"></word-chart>
+
+  <h2>Nope</h2>
+
+  <p>Not everything is a scale. Days of the week are a cycle. Seasons too.
+    No projection onto a line will recover Monday&rarr;Sunday.</p>
+
+  <word-chart words="Monday, Tuesday, Wednesday, Thursday, Friday"></word-chart>
+  <word-chart words="spring, summer, autumn, winter"></word-chart>
+
+  <p>The 2D projection shows why&mdash;days cluster by weekday vs. weekend,
+    not by order.</p>
+
+  <word-scatter words="Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday"></word-scatter>
+  <word-scatter words="spring, summer, autumn, winter"></word-scatter>
+
+  <h2>Try it</h2>
+
+  <div class="try-it">
+    <input type="text" id="try-input" placeholder="Enter comma-separated words..." disabled />
+    <div class="try-it-output" id="try-output"></div>
+  </div>
+
+  <p>
+    The word vectors come from a pre-trained
+    <a href="https://github.com/turbomaze/word2vecjson">word2vec model</a>
+    (25k vocabulary). Words outside the vocabulary will error.
+  </p>
+</article>
+
 <script type="module">
   import { wordSort } from "./sort.js";
 
-  const testCases = [
-    ["low", "medium", "high"],
-    ["never", "rarely", "often", "always"],
-    ["terrible", "bad", "okay", "good", "great", "excellent"],
-    ["hate", "dislike", "like", "love"],
-    ["tiny", "small", "medium", "large", "huge"],
-    ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-    ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-    ["bronze", "silver", "gold", "platinum"],
-    ["first", "second", "third", "fourth", "fifth"],
-    ["spring", "summer", "autumn", "winter"],
-    ["left", "center", "right"],
-    ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"],
-  ];
-
-  function log(...args) {
-    const el = document.createElement('pre');
-    el.textContent = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : a).join(' ');
-    el.style.cssText = 'margin:2px 0; font-size:12px; color:#555';
-    document.body.appendChild(el);
-  }
-
-  function renderBarChart(section, title, projections) {
-    const keys = Object.keys(projections);
-    const vals = Object.values(projections);
+  function renderBarChart(container, projections) {
+    const entries = Object.entries(projections)
+      .toSorted(([, a], [, b]) => a - b);
+    const vals = entries.map(([, v]) => v);
     const min = Math.min(...vals);
     const max = Math.max(...vals);
     const range = max - min || 1;
 
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `<b>${title}</b>`;
-    wrap.style.cssText = 'margin:8px 0';
-
-    const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid; grid-template-columns: max-content 1fr max-content; gap:3px 8px; align-items:center; margin-top:4px';
-
-    for (const key of keys) {
-      const val = projections[key];
+    for (const [key, val] of entries) {
       const pct = ((val - min) / range) * 100;
+      const row = document.createElement("div");
+      row.className = "bar-row";
 
-      const label = document.createElement('span');
+      const label = document.createElement("span");
+      label.className = "label";
       label.textContent = key;
-      label.style.cssText = 'text-align:right; white-space:nowrap';
 
-      const bar = document.createElement('div');
-      bar.style.cssText = `background:#4a90d9; height:16px; width:${pct.toFixed(1)}%; min-width:2px; border-radius:2px`;
+      const barWrap = document.createElement("div");
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.width = pct.toFixed(1) + "%";
+      bar.style.background = "#4a90d9";
+      barWrap.appendChild(bar);
 
-      const num = document.createElement('span');
-      num.textContent = val.toFixed(3);
-      num.style.cssText = 'color:#888; font-size:11px; white-space:nowrap';
+      const valEl = document.createElement("span");
+      valEl.className = "val";
+      valEl.textContent = val.toFixed(3);
 
-      grid.appendChild(label);
-      grid.appendChild(bar);
-      grid.appendChild(num);
+      row.append(label, barWrap, valEl);
+      container.appendChild(row);
     }
-
-    wrap.appendChild(grid);
-    section.appendChild(wrap);
   }
 
-  function renderScatter(section, title, labels, points) {
-    const W = 300, H = 300, PAD = 30;
+  function renderScatter(container, labels, points) {
+    const W = 400, H = 400, PAD = 60;
     const xs = points.map(p => p[0]), ys = points.map(p => p[1]);
     const xMin = Math.min(...xs), xMax = Math.max(...xs);
     const yMin = Math.min(...ys), yMax = Math.max(...ys);
-    const xRange = xMax - xMin || 1, yRange = yMax - yMin || 1;
     const xMid = (xMin + xMax) / 2, yMid = (yMin + yMax) / 2;
-    const scale = Math.max(xRange, yRange) || 1;
+    const scale = Math.max(xMax - xMin, yMax - yMin) || 1;
 
-    const toSvgX = x => W/2 + ((x - xMid) / scale) * (W - PAD * 2);
-    const toSvgY = y => H/2 - ((y - yMid) / scale) * (H - PAD * 2);
+    const sx = x => W / 2 + ((x - xMid) / scale) * (W - PAD * 2);
+    const sy = y => H / 2 - ((y - yMid) / scale) * (H - PAD * 2);
 
-    const dots = points.map((p, i) => `
-      <circle cx="${toSvgX(xs[i]).toFixed(1)}" cy="${toSvgY(ys[i]).toFixed(1)}" r="4" fill="#4a90d9"/>
-      <text x="${(toSvgX(xs[i]) + 6).toFixed(1)}" y="${(toSvgY(ys[i]) + 4).toFixed(1)}" font-size="11" fill="#333">${labels[i]}</text>
-    `).join('');
+    const dots = points.map((p, i) => {
+      const cx = sx(xs[i]);
+      const cy = sy(ys[i]);
+      const onRight = cx > W * 0.6;
+      const tx = onRight ? cx - 7 : cx + 7;
+      const anchor = onRight ? "end" : "start";
+      return `
+        <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="#4a90d9"/>
+        <text x="${tx.toFixed(1)}" y="${(cy + 5).toFixed(1)}"
+          text-anchor="${anchor}"
+          font-size="11" font-family="Menlo,Consolas,monospace" fill="#555">${labels[i]}</text>
+      `;
+    }).join("");
 
-    const axes = `
-      <line x1="${PAD}" y1="${toSvgY(0).toFixed(1)}" x2="${W-PAD}" y2="${toSvgY(0).toFixed(1)}" stroke="#ccc"/>
-      <line x1="${toSvgX(0).toFixed(1)}" y1="${PAD}" x2="${toSvgX(0).toFixed(1)}" y2="${H-PAD}" stroke="#ccc"/>
+    container.innerHTML = `
+      <div class="cell-scatter">
+        <svg width="${W}" height="${H}">${dots}</svg>
+      </div>
     `;
-
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `
-      <b>${title}</b>
-      <svg width="${W}" height="${H}" style="display:block;border:1px solid #eee;border-radius:4px">
-        ${axes}${dots}
-      </svg>
-    `;
-    section.appendChild(wrap);
   }
 
-  for (const testCase of testCases) {
-    const section = document.createElement('div');
-    section.style.cssText = 'border:1px solid #ddd; margin:16px; padding:16px; font-family:monospace; border-radius:6px';
-    document.body.appendChild(section);
-
-    const result = await wordSort(testCase);
-    const sorted = result.toSorted();
-    const { linearProjections, planarProjections } = result.debug;
-
-    section.innerHTML += `<h3 style="margin:0 0 8px">${testCase.join(', ')}</h3>`;
-    section.innerHTML += `<div><b>wordSort:</b> ${sorted.join(', ')}</div>`;
-
-    const charts = document.createElement('div');
-    charts.style.cssText = 'display:flex; gap:24px; margin-top:12px; flex-wrap:wrap';
-    section.appendChild(charts);
-
-    const barWrap = document.createElement('div');
-    charts.appendChild(barWrap);
-    renderBarChart(barWrap, 'Linear Projections (orderVec)', linearProjections);
-
-    const scatterWrap = document.createElement('div');
-    charts.appendChild(scatterWrap);
-    renderScatter(scatterWrap, 'Planar Projections (PC1 vs PC2)', testCase, planarProjections);
+  function parseWords(attr) {
+    return attr.split(",").map(w => w.trim()).filter(Boolean);
   }
+
+  customElements.define("word-chart", class extends HTMLElement {
+    async connectedCallback() {
+      const expected = parseWords(this.getAttribute("words"));
+      const shuffled = expected.toSorted(() => Math.random() - 0.5);
+      const result = await wordSort(shuffled);
+      const sorted = result.toSorted();
+      const pass = expected.every((w, i) => sorted[i] === w);
+
+      this.innerHTML = "";
+      const cell = document.createElement("div");
+      cell.className = "cell " + (pass ? "pass" : "fail");
+
+      const header = document.createElement("div");
+      header.className = "cell-header";
+      const indicator = document.createElement("span");
+      indicator.className = "cell-indicator";
+      indicator.textContent = pass ? "ok" : "no";
+      const expectedEl = document.createElement("span");
+      expectedEl.className = "cell-expected";
+      expectedEl.textContent = expected.join(", ");
+      const dirEl = document.createElement("span");
+      dirEl.className = "cell-direction";
+      dirEl.textContent = result.direction;
+      header.append(indicator, expectedEl, dirEl);
+
+      const sortedEl = document.createElement("div");
+      sortedEl.className = "cell-sorted";
+      sortedEl.textContent = sorted.join(", ");
+
+      const bars = document.createElement("div");
+      bars.className = "cell-bars";
+      renderBarChart(bars, result.debug.orderProjections);
+
+      cell.append(header, sortedEl, bars);
+      this.appendChild(cell);
+    }
+  });
+
+  customElements.define("word-scatter", class extends HTMLElement {
+    async connectedCallback() {
+      const words = parseWords(this.getAttribute("words"));
+      const result = await wordSort(words);
+      this.innerHTML = "";
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      renderScatter(cell, words, result.debug.planarProjections);
+      this.appendChild(cell);
+    }
+  });
+
+  const input = document.getElementById("try-input");
+  const outputEl = document.getElementById("try-output");
+  input.disabled = false;
+  input.placeholder = "Enter comma-separated words, e.g.: huge, tiny, large, small";
+
+  let debounce;
+  input.addEventListener("input", () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(async () => {
+      const raw = input.value.trim();
+      if (!raw) { outputEl.innerHTML = ""; return; }
+
+      const words = parseWords(raw);
+      if (words.length < 2) {
+        outputEl.innerHTML = '<span class="try-it-error">Enter at least 2 words</span>';
+        return;
+      }
+
+      try {
+        outputEl.innerHTML = '<span class="loading">sorting...</span>';
+        const result = await wordSort(words);
+        outputEl.innerHTML = "";
+        const el = document.createElement("word-chart");
+        el.setAttribute("words", words.join(", "));
+        outputEl.appendChild(el);
+      } catch (e) {
+        outputEl.innerHTML = `<span class="try-it-error">${e.message}</span>`;
+      }
+    }, 400);
+  });
 </script>

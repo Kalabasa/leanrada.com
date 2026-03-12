@@ -1,47 +1,96 @@
-const sequences100 = [
-  // Numeric & Mathematical
-  [1, 2, 3, 4, 5],
-  [-5, -3, -1, 0, 2, 4],
-  [0.1, 0.2, 0.5, 1, 2],
-  [1/2, 1/3, 1/4, 1/5],
-  [2, 3, 5, 7, 11, 13],
-  [0, 1, 1, 2, 3, 5, 8],
+import { wordSort } from "./sort.js";
 
-  // Temporal (Time & Calendar)
-  [new Date("2020-01-01"), new Date("2021-01-01"), new Date("2022-01-01")],
-  ["00:00", "06:00", "12:00", "18:00", "23:59"],
-  ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-  ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-  ["sunrise", "noon", "sunset", "midnight"],
-  ["morning", "afternoon", "evening", "night"],
-  ["second", "minute", "hour", "day", "week"],
-  ["spring", "summer", "autumn", "winter"],
+const testCases = [
+  // pairs
+  ["past", "future"],
+  ["slow", "fast"],
+  ["weak", "strong"],
+  ["young", "old"],
+  ["narrow", "wide"],
+  ["shallow", "deep"],
+  ["soft", "hard"],
+  // ["dry", "wet"],
+  ["empty", "full"],
+  ["light", "heavy"],
+  ["poor", "rich"],
+  ["sad", "happy"],
+  ["worst", "best"],
+  ["less", "more"],
+  ["few", "many"],
+  ["minor", "major"],
+  ["below", "above"],
+  ["down", "up"],
+  ["failure", "success"],
+  ["smallest", "biggest"],
+  ["lowest", "highest"],
+  ["weakest", "strongest"],
+  ["slower", "faster"],
+  ["smaller", "larger"],
+  ["thinner", "thicker"],
+  ["easier", "harder"],
+  ["simpler", "complex"],
+  ["dull", "sharp"],
+  ["loose", "tight"],
+  ["plain", "fancy"],
+  ["asleep", "awake"],
 
-  // Qualitative & Ordinal Scales
+  // longer sequences — passing
   ["low", "medium", "high"],
-  ["beginner", "intermediate", "advanced", "expert"],
-  ["bronze", "silver", "gold", "platinum"],
-  ["short", "medium", "long"],
   ["tiny", "small", "medium", "large", "huge"],
-
-  // Position & Rank
-  ["first", "second", "third", "fourth", "fifth"],
-  ["top", "middle", "bottom"],
   ["left", "center", "right"],
-  ["front", "back"],
-  ["near", "far"],
+  ["worst", "bad", "good", "best"],
+  ["village", "town", "city", "metropolis"],
+  ["path", "road", "highway"],
 
-  // Scientific & Systemic Orders
-  ["α", "β", "γ", "δ", "ε"], // Alphabetical sequence
-  ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"], // Distance from Sun
-  ["C", "D", "E", "F", "G", "A", "B"], // Musical scale
-  ["♩", "♪", "♫", "♬"], // Rhythmic duration (decreasing)
-  ["full", "half", "quarter", "eighth", "sixteenth"], // Musical/Fractional division
-  ["solid", "liquid", "gas", "plasma"], // States of matter (energy level)
-  ["low pitch", "medium pitch", "high pitch"],
-  ["low amplitude", "medium amplitude", "high amplitude"],
-  ["low frequency", "medium frequency", "high frequency"],
-  ["byte", "kilobyte", "megabyte", "gigabyte", "terabyte"], // Data scale
-  ["octet", "nibble", "bit"], // Data scale (decreasing)
-  ["IPv4", "IPv6"], // Versioning
+  // from index.html — all failed
+  // ["never", "rarely", "often", "always"],
+  // ["terrible", "bad", "okay", "good", "great", "excellent"],
+  // ["hate", "dislike", "like", "love"],
+  // ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+  // ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+  // ["bronze", "silver", "gold", "platinum"],  // got reversed
+  // ["first", "second", "third", "fourth", "fifth"],  // almost: swapped fourth/fifth
+  // ["spring", "summer", "autumn", "winter"],
+  // ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"],
+
+  // longer sequences — failed
+  // ["terrible", "poor", "fair", "good", "great", "excellent"],
+  // ["freezing", "cool", "warm", "hot"],
+  // ["whisper", "talk", "shout", "scream"],
+  // ["crawl", "walk", "run", "sprint"],
+  // ["infant", "child", "teenager", "adult", "elder"],
+  // ["pond", "lake", "sea", "ocean"],
+  // ["hill", "mountain", "peak"],
+  // ["cup", "bowl", "bucket", "barrel"],
+  // ["pebble", "stone", "rock", "boulder"],
+  // ["breeze", "wind", "gale", "hurricane"],
+  // ["drop", "stream", "river", "flood"],
+  // ["spark", "flame", "fire", "inferno"],
+  // ["mouse", "cat", "dog", "horse", "elephant", "whale"],
+  // ["penny", "dollar", "thousand", "million", "billion"],
+  // ["never", "rarely", "sometimes", "often", "always"],
+  // ["none", "few", "some", "many", "all"],
+
+  // not in vocab: cold, morning, win, peace, minute, byte, kilobyte, megabyte, gigabyte, terabyte
 ];
+
+let passed = 0;
+let failed = 0;
+
+for (const expected of testCases) {
+  const shuffled = expected.toSorted(() => Math.random() - 0.5);
+  const result = await wordSort(shuffled);
+  const sorted = result.toSorted();
+  const correct = expected.every((w, i) => sorted[i] === w);
+
+  if (correct) {
+    passed++;
+    console.log(`✓ ${expected.join(', ')}`);
+  } else {
+    failed++;
+    console.log(`✗ ${expected.join(', ')}`);
+    console.log(`  got: ${sorted.join(', ')}`);
+  }
+}
+
+console.log(`\n${passed}/${passed + failed} passed`);

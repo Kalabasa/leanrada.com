@@ -2,57 +2,19 @@ import { Word2VecData } from "./data.js";
 
 const data = new Word2VecData();
 
-const anchors = [
-  // abstract order
-  ["first", "last"],
-  ["beginning", "end"],
-  ["initial", "final"],
-  ["start", "finish"],
-  ["least", "most"],
-  ["previous", "next"],
-
-  // size
-  ["smallest", "largest"],
-  ["tiny", "huge"],
-  ["minimum", "maximum"],
-  ["narrow", "wide"],
-  ["low", "high"],
-  ["light", "heavy"],
-
-  // time
-  ["past", "future"],
-  ["ancient", "modern"],
-  ["dawn", "dusk"],
-  ["yesterday", "tomorrow"],
-  ["young", "old"],
-
-  // specific sequences
-  ["january", "december"],
-  ["birth", "death"],
-  ["alpha", "omega"],
-
-  // rank
-  ["worst", "best"],
-  ["lowest", "highest"],
-  ["weakest", "strongest"],
-  ["slow", "fast"],
-  ["coldest", "colder"],
-
-  ["smile", "laugh"],
-];
-
-const anchorVecs = await Promise.all(
-  anchors.map(async ([startWord, endWord]) =>
-    subtract(...await Promise.all([
-      data.find(endWord, true),
-      data.find(startWord, true)
-    ]))
-  )
-);
+const isNode = typeof globalThis.process !== "undefined";
+let anchorVecsRaw;
+if (isNode) {
+  const { readFileSync } = await import("fs");
+  anchorVecsRaw = JSON.parse(readFileSync(new URL("./anchor-vecs.json", import.meta.url), "utf-8"));
+} else {
+  const resp = await fetch(new URL("./anchor-vecs.json", import.meta.url));
+  anchorVecsRaw = await resp.json();
+}
+const anchorNames = Object.keys(anchorVecsRaw);
+const anchorVecs = Object.values(anchorVecsRaw);
 
 export async function wordSort(list) {
-  console.group('wordSort');
-  console.log(list);
   list.forEach(item => {
     if (typeof item !== "string") throw new TypeError("strings only");
   });
@@ -60,26 +22,14 @@ export async function wordSort(list) {
   const vecs = await Promise.all(list.map(w => data.find(w, true)));
   vecs.forEach(v => normalize(v));
 
-  const topAnchorVecs = anchorVecs
-    .map(anchorVec => {
+  const ranked = anchorVecs
+    .map((anchorVec, i) => {
       const scores = vecs.map(v => dot(v, anchorVec));
-      const min = Math.min(...scores);
-      const max = Math.max(...scores);
-      return { anchorVec, spread: max - min };
+      return { name: anchorNames[i], anchorVec, spread: Math.max(...scores) - Math.min(...scores) };
     })
-    .sort((a, b) => b.spread - a.spread)
-    .slice(0, 4)
-    .map(o => o.anchorVec);
-
-  console.group("top anchorVecs");
-  const orderVec = average(topAnchorVecs);
-  for (let i = 0; i < anchors.length; i++) {
-    if (topAnchorVecs.includes(anchorVecs[i])) {
-      console.log('vec(', ...anchors[i], ') * avg(topAnchorVecs)', dot(anchorVecs[i], orderVec));
-    }
-  }
-  console.groupEnd();
-  normalize(orderVec);
+    .sort((a, b) => b.spread - a.spread);
+  const bestDirection = ranked[0];
+  const orderVec = bestDirection.anchorVec;
 
   const mean = average(vecs);
   const centered = vecs.map(vec => subtract(vec.slice(), mean));
@@ -89,12 +39,11 @@ export async function wordSort(list) {
   const v2 = variance(centered, pc2);
   const varianceRatio = v1 / v2;
 
-  console.log("pc1 * orderVec", dot(pc1, orderVec));
-  console.log("pc2 * orderVec", dot(pc2, orderVec));
+  const orderProjections = {};
+  vecs.forEach((v, i) => orderProjections[list[i]] = dot(orderVec, v));
 
   const linearProjections = {};
-  vecs.forEach((v, i) => linearProjections[list[i]] = dot(orderVec, v));
-  console.log("linearProjections", linearProjections);
+  vecs.forEach((v, i) => linearProjections[list[i]] = dot(pc1, v));
 
   const planarProjections = centered.map(v => ([
     dot(v, pc1),
@@ -110,25 +59,18 @@ export async function wordSort(list) {
     if (angle < 0) angle += Math.PI * 2;
     angularProjections[list[i]] = angle;
   });
-  console.log('angularProjections', angularProjections);
-
-  // const greedyRank = greedySort(list, vecs, orderVec);
 
   const varianceThreshold = 1.3;
-  console.log({varianceRatio, varianceThreshold});
-  const projections = varianceRatio > varianceThreshold && Math.abs(dot(pc1, orderVec)) > 0.4
-    ? linearProjections : angularProjections;
-  console.log("using", projections === angularProjections ? "angular" : "linear", "projections");
-  // const projections = greedyRank;
+  const projections = orderProjections; // change
   const comparator = (a, b) => projections[a] - projections[b];
-  console.log('>', list.toSorted(comparator));
-  console.groupEnd();
   return {
     comparator,
     toSorted: () => list.toSorted(comparator),
     sort: () => list.sort(comparator),
+    direction: bestDirection.name,
     debug: {
       linearProjections,
+      orderProjections,
       planarProjections,
       angularProjections,
     }
@@ -161,31 +103,6 @@ function powerIteration(matrix, excludeVecs = [], iters = 50) {
 function variance(vectors, dir) {
   const projected = vectors.map(v => dot(v, dir));
   return projected.reduce((sum, v) => sum + v * v, 0) / vectors.length;
-}
-
-function greedySort(list, vecs, orderVec) {
-  const scores = vecs.map(v => dot(v, orderVec));
-  const startIdx = scores.indexOf(Math.min(...scores));
-
-  const visited = list.map(() => false);
-  visited[startIdx] = true;
-  const path = [startIdx];
-
-  while (path.length < list.length) {
-    const currentIdx = path.at(-1);
-    let nearest = -1, minDist = Infinity;
-
-    for (let i = 0; i < vecs.length; i++) {
-      if (visited[i]) continue;
-      const dist = dot(normalize(vecs[i].slice()), normalize(vecs[currentIdx].slice()));
-      if (dist < minDist) { minDist = dist; nearest = i; }
-    }
-
-    visited[nearest] = true;
-    path.push(nearest);
-  }
-
-  return Object.fromEntries(path.map((idx, rank) => [list[idx], rank]));
 }
 
 function average(vectors) {
