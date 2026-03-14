@@ -4,7 +4,6 @@ const data = new Word2VecData();
 
 export async function wordSort(list, { anchorPair, projectionType = "order" } = {}) {
   const vecs = await data.find(list);
-  vecs.forEach(v => normalize(v));
 
   const projection = { values: {} };
   projection.type = projectionType;
@@ -40,14 +39,16 @@ export async function wordSort(list, { anchorPair, projectionType = "order" } = 
     } else if (projectionType === "angular") {
       const pc2 = powerIteration(centered, [pc1]);
       const planar = centered.map(v => [dot(v, pc1), dot(v, pc2)]);
+      projection.planarPoints = Object.fromEntries(list.map((w, i) => [w, planar[i]]));
       const magnitudes = planar.map(p => Math.hypot(...p));
       const farthestIdx = magnitudes.indexOf(Math.max(...magnitudes));
+      const startAngle = Math.atan2(planar[farthestIdx][1], planar[farthestIdx][0]);
       vecs.forEach((v, i) => {
-        let angle = Math.atan2(...subtract(planar[i].slice(), planar[farthestIdx]));
+        let angle = Math.atan2(planar[i][1], planar[i][0]) - startAngle;
         if (angle < 0) angle += Math.PI * 2;
         projection.values[list[i]] = angle;
       });
-      projection.direction = "polar";
+      projection.direction = "2D PCA polar coordinate";
     }
   }
 
@@ -89,12 +90,12 @@ function createRandom(seed) {
 
 function powerIteration(matrix, excludeVecs = [], iters = 50) {
   const rand = createRandom(42);
-  let vec = new Array(matrix[0].length).fill(0).map(() => rand() - 0.5);
+  let vec = matrix[0].map(() => rand() - 0.5);
 
   for (let i = 0; i < iters; i++) {
     // Xᵀ(Xv)
     const projected = matrix.map(row => dot(row, vec));
-    let newVec = new Array(vec.length).fill(0);
+    let newVec = Array.from(vec, () => 0);
     for (let k = 0; k < matrix.length; k++)
       for (let j = 0; j < matrix[k].length; j++)
         newVec[j] += matrix[k][j] * projected[k];

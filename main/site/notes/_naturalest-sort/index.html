@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="/common.css">
 <script defer src="/common.js"></script>
 <script defer src="./demo/nat-sort-demo.js"></script>
+<script defer src="./demo/nat-sort-scatter.js"></script>
 
 <title>Naturalest sort</title>
 
@@ -144,19 +145,19 @@ Output: {"sorted":["monday","tuesday","friday","sunday"]}</code></pre>
 
 <h2>The search for the order vector</h2>
 
-<p>Easy: To get the order vector, just subtract a small word (say, <code>"smallest"</code>) from a big word (<code>"largest"</code>) and use this as the direction to order words in.</p>
+<p>Naive solution: Just subtract a small-sounding word (say, <code>"smallest"</code>) from a big word (<code>"largest"</code>) and use the difference vector as the direction to order words in.</p>
 
 <p class="center-text">
   <code>orderVec = word2vec("largest") - word2vec("smallest")</code>
 </p>
 
-<p>Project the words to be sorted onto this order vector should give us a linear ranking of the words! <small>Btw I’m using word2vec from Google to get word embeddings.</small></p>
+<p>Projecting the input words onto this order vector should give us a straightforward linear ranking of the words. <small>Btw I’m using word2vec from Google to get word embeddings.</small></p>
 
 <code-block language="js">
   <pre><code> // compute the order direction vector
 const orderDir =
     normalize(word2vec("largest") - word2vec("smallest"));
-// get the embeddings of the words to sort
+// get the embeddings of the input words
 const vecs = words.map(word2vec);
 // rank each word according to the order vector
 const ranks = Object.fromEntries(vecs.map((vec, i) =>
@@ -172,9 +173,11 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <nat-sort-demo words="tiny,small,medium,large,huge" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
-<p>The above diagram shows the word embedding vectors collapsed onto a single dimension, the direction from <code>"smallest"</code> to <code>"largest"</code>. Sorting words by the values of their projections on the smallest-to-largest direction seems to produce a ‘natural’ sort!</p>
+<p>The above diagram shows the word embedding vectors for tiny, small, &hellip; huge collapsed onto a single line. This is the line from <code>"smallest"</code> to <code>"largest"</code>.</p>
 
-<p>It can even sort different sorts of semantic magnitudes, a couple of examples:</p>
+<p>Sorting words by the values of their projections on the smallest-to-largest direction seems to produce a ‘natural’ sort!</p>
+
+<p>It can even sort different kinds of semantic magnitudes, not just sizes per se, a couple of examples:</p>
 
 <nat-sort-demo words="breeze,wind,gale,storm" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
@@ -190,7 +193,9 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <p>The above example fails because our chosen anchor words <code>"smallest"</code> and <code>"largest"</code> have nothing to do with the love-hate scale. Well, I guess it’s still being sorted in a way, maybe from the least intense to the most intense emotion? so there’s that.</p>
 
-<p>But what if we sort it using different order vectors? How about <code>"negative"</code> to <code>"positive"</code>?</p>
+<h2>Other anchor words</h2>
+
+<p>What if we sort it by different order vectors based on other anchor words? How about <code>"negative"</code> to <code>"positive"</code>?</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="negative,positive"></nat-sort-demo>
 
@@ -198,15 +203,15 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="bad,good"></nat-sort-demo>
 
-<p>The actual order vector that can sorts hate love is <code>"worst"</code> and <code>"best"</code>.</p>
+<p>An order vector that can sort hate and love is <code>"worst"</code> to <code>"best"</code>.</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="worst,best"></nat-sort-demo>
 
-<p>The lesson here is that there are many potential order vectors, many dimensions to sort words in. One may make sense for a given set of words, and another for a different set. We need to choose the right order direction vector per set of words ot sort. But how do we choose, and from what order vector choices?</p>
+<p>The lesson here is that there are many potential order vectors, many dimensions to sort words in. One may make sense for a given set of input words, and another for a different set. We need to choose the right order direction vector per set of words. But how do we choose, and from what order vector choices?</p>
 
 <h2>The search for multiple order vectors</h2>
 
-<p>With the help of an LLM, I generated plenty of anchor pairs for the algorithm to choose order vectors from.</p>
+<p>With the help of an LLM, I generated a bunch of anchor pairs for the algorithm to choose order vectors from.</p>
 
 <code-block language="js">
   <pre><code>const anchors = [
@@ -222,7 +227,7 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <p>Before using them, I clustered them to reduce the amount of choices to process.</p>
 
-<p>Clustering order vectors revealed a nice pattern. That there were two major clusters: one seemingly related to magnitude, and the other like a general ‘value’ (?) direction.</p>
+<p>Clustering the order vectors revealed a nice pattern. That there were two major clusters: one seemingly related to magnitude, and the other like a general ‘value’ (?) direction.</p>
 
 <code-block language="clike">
   <pre><code>CLUSTER     SIZE MEMBERS
@@ -244,15 +249,15 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 'space'     [5] particular→universal, internal→external, &hellip;</code></pre>
 </code-block>
 
-<p><small>Note: I manually labelled the clusters above.</small> Then I picked the top 4 clusters and averaged them, and saved the averages as the 4 order vectors to choose from.</p>
+<p><small>Note: I manually labelled the clusters above.</small> Then I picked the top 4 clusters and averaged them, and saved the averages as the final 4 order vectors to choose from.</p>
 
-<p>To choose an order vector, we pick the one that separates the words to sort the most.</p>
+<p>To choose an order vector, we pick the one that separates the words the most.</p>
 
 <code-block language="js">
   <pre><code>// orderVecs contains the cluster averages of the top 4 clusters
 const ranked = orderVecs
   .map(orderVec => {
-    // project the words to sort onto this order vector
+    // project the words onto this order vector
     const scores = wordVecs.map(v => dot(v, orderVec));
     // calculate the spread
     const spread = Math.max(...scores) - Math.min(...scores)
@@ -260,13 +265,13 @@ const ranked = orderVecs
   })
   // sort by spread
   .sort((a, b) => b.spread - a.spread);
-// get the order vector that most spreads the words to sort
+// get the order vector that most spreads the words
 orderVec = ranked[0].orderVec;</code></pre>
 </code-block>
 
 <p>If you want to see the actual values of the final order vectors, <a href="./demo/order-vecs.json" target="_blank">check this out.</a></p>
 
-<p>The algorithm now chooses to sort these words using the magnitude vector:</p>
+<p>The algorithm can now choose to sort words based on the best fit order direction. For example, these particular words use the magnitude vector:</p>
 
 <nat-sort-demo words="low,medium,high"></nat-sort-demo>
 
@@ -274,7 +279,7 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-demo words="whisper,talk,shout,scream"></nat-sort-demo>
 
-<p>These words fall into the value vector, the good/bad direction:</p>
+<p>The following words fall into the value vector, the good/bad axis:</p>
 
 <nat-sort-demo words="hate,dislike,like,love"></nat-sort-demo>
 
@@ -290,13 +295,19 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-demo words="once,twice,thrice"></nat-sort-demo>
 
-<p>Interestingly, medals are sorted by first, second, and third places, instead of increasing value. The choice of sequence vector explains it.</p>
+<p>Interestingly, the particular metals bronze, silver, and gold are sorted as <em>medals</em> in first, second, and third places instead of increasing value. The choice of order vector being the sequence vector explains this.</p>
 
 <nat-sort-demo words="bronze,silver,gold"></nat-sort-demo>
 
-<p>The ordinals almost get there, ironically.</p>
+<p>Ironcally, the ordinals aren’t quite correct:</p>
 
 <nat-sort-demo words="first,second,third,fourth,fifth"></nat-sort-demo>
+
+<p>While the choice of order vector seems correct, there’s something wrong with <code>"fifth"</code>. The 2D plot via principal component analysis (PCA) reveals an interesting pattern. Even though the ordinals appear to maintain a clear sequence and shape in conceptual space, they change directions halfway through.</p>
+
+<nat-sort-scatter words="first,second,third,fourth,fifth,sixth,seventh,eighth,ninth"></nat-sort-scatter>
+
+<p>The sequence vector may have only captured the initial direction of the ordinals. Indeed the word <code>"first"</code> is explicitly included in the sequence cluster as the <code>"first","last"</code> anchor pair, as well as synonyms/neighbors like <code>"initial"</code> and <code>"early"</code>.</p>
 
 <p>The frequency vector is the weakest of the top 4 clusters, but I included it to squeeze some more coverage:</p>
 
@@ -310,15 +321,67 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <h2>Limitations</h2>
 
-<p>Now, let’s look at the failure cases:</p>
+<p>Now, let’s look at the obvious failure cases:</p>
 
 <nat-sort-demo words="monday,tuesday,wednesday,thursday,friday,saturday,sunday"></nat-sort-demo>
 
 <nat-sort-demo words="january,february,march,april,may,june,july,august,september,october,november,december"></nat-sort-demo>
 
-<h2>Alternatives</h2>
+<p>Days of the week and months supposedly have obvious and logical sequences <small>(or not, is it Sunday or Monday for the start of the week?)</small> but these linear projections don’t show it.</p>
 
-PCA
+<p>Let’s look at the 2D projections:</p>
+
+<nat-sort-scatter words="monday,tuesday,wednesday,thursday,friday,saturday,sunday">
+  <figcaption>The days are clustered more strongly by weekday and weekend. Maybe if we sorted by polar coordinates&hellip;</figcaption>
+</nat-sort-scatter>
+
+<p>The months reveal another limitation:</p>
+
+<nat-sort-scatter words="january,february,march,april,may,june,july,august,september,october,november,december">
+  <figcaption>Even ignoring May, months aren’t arranged in the conceptual space as expected</figcaption>
+</nat-sort-scatter>
+
+<p>The word <code>"may"</code> can mean different things. Word embeddings alone cannot capture the specific sense of the word within the context of the rest of the input words. Additional processing should be done to disambiguate the 5th month of the year <code>"may"</code> from the expression of possibility <code>"may"</code>.</p>
+
+<p>While the solution works in principle, there are many blind spots and edge cases to worry about. I explored a few more variants but the clustered order vectors was the best performing.</p>
+
+<h2>Alternatives considered</h2>
+
+<p>What if we just fit a line through the words, and use that as the order vector? Eliminate the bias of human curated anchor words.</p>
+
+<nat-sort-demo words="tiny,small,medium,large,huge" projection="principal"></nat-sort-demo>
+
+<nat-sort-demo words="poor,fair,good,excellent" projection="principal"></nat-sort-demo>
+
+<nat-sort-demo words="never,rarely,sometimes,often,always" projection="principal"></nat-sort-demo>
+
+<p>It actually got more of the ordinals correctly with just a line fit!</p>
+
+<nat-sort-demo words="first,second,third,fourth,fifth,sixth,seventh,eighth,ninth,tenth" projection="principal"></nat-sort-demo>
+
+<p>Note that there is a 50% chance for the order to flip because the direction is arbitrary. Two opposite vectors represent the same line. The algorithm could choose either.</p>
+
+<p>Days of the week are hopeless, or is it?</p>
+
+<nat-sort-demo words="monday,tuesday,wednesday,thursday,friday,saturday,sunday" projection="principal"></nat-sort-demo>
+
+<h2>Rings in conceptual space</h2>
+
+<p>Another variant was to use polar coordinates to sort. The idea is that days of the week are cyclical and would form a ring in conceptual space.</p>
+
+<nat-sort-demo words="sunday,monday,tuesday,wednesday,thursday,friday,saturday" projection="angular"></nat-sort-demo>
+
+<p>Almost there! What about months?</p>
+
+<nat-sort-demo words="january,february,march,april,may,june,july,august,september,october,november,december" projection="angular"></nat-sort-demo>
+
+<p>Removing the <code>"may"</code> outlier:</p>
+
+<nat-sort-demo words="january,february,march,april,june,july,august,september,october,november,december" projection="angular"></nat-sort-demo>
+
+<p>Without May, it’s actually a ring! The starting element is arbitrary when sorting by angle but if you trace it, the order is almost correct! if not for November.</p>
+
+<p>There is definitely some value in refining the meaning of each word in context before doing the sorting. I haven’t looked into that direction yet.</p>
 
 </main>
 

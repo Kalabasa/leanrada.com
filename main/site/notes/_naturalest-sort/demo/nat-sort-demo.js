@@ -22,41 +22,45 @@
           opts.anchorPair = anchorPairAttr.split(",");
         }
 
-        const projection = this.getAttribute("projection");
-        if (projection) {
-          opts.projection = projection;
+        const projectionAttr = this.getAttribute("projection");
+        if (projectionAttr) {
+          opts.projectionType = projectionAttr;
         }
 
         const input = words.toSorted(() => Math.random() - 0.5);
         const result = await wordSort(input, opts);
         const output = result.toSorted();
 
-        const correct = findCorrect(output, words);
+        const reversible = ["angular", "principal"].includes(result.projection.type);
+        const cyclic = result.projection.type === "angular";
+        const forwardCorrect = findCorrect(output, words, cyclic);
+        const backwardCorrect = reversible ? findCorrect(output, [...words].reverse(), cyclic) : [];
+        const correct = backwardCorrect.filter(Boolean).length > forwardCorrect.filter(Boolean).length
+          ? backwardCorrect : forwardCorrect;
 
         const formatOutput = (word, index) => {
           return html`<span class="${correct[index] ? "correct" : "wrong"}">${word}</span>`;
         };
 
-        const orderRow = this.hasAttribute("no-order-row")
-          ? ""
-          : html`<tr>
-            <td><b>Ordered by</b>
-            <td><code>${result.projection.direction}</code>`;
-
-        const chart = result.projection.type === "order"
-          ? renderLinearGraph(result.projection, correct)
-          : "";
+        let chart = "";
+        if (["order", "principal"].includes(result.projection.type)) {
+          chart = renderLinearGraph(result.projection, correct);
+        } else if (result.projection.type === "angular" && result.projection.planarPoints) {
+          const { renderScatter } = await import("./render-scatter.js");
+          const points = output.map((w) => result.projection.planarPoints[w]);
+          chart = renderScatter(output, points);
+        }
 
         this.innerHTML = html`<div class="horizontal-scroll">
           <figure>
             <table>
               <tr>
                 <td colspan=2>${chart}
-              ${orderRow}
               <tr>
                 <td><b>Sorted</b>
                 <td class="text2-color"><code>${html.raw(output.map(formatOutput).join(",<wbr>"))}</code>
             </table>
+            ${html.raw(this.innerHTML)}
           </figure>
         </div>`;
 
@@ -67,7 +71,7 @@
               display: block;
 
               figure {
-                margin: 0;
+                margin: auto;
               }
 
               table {
@@ -99,6 +103,12 @@
                 fill: var(--text-clr);
                 font-size: 12px;
               }
+              .text2 {
+                color: var(--text2-clr);
+                fill: var(--text2-clr);
+                font-size: 12px;
+              }
+              circle,
               .correct {
                 color: var(--clr0);
                 fill: var(--clr0);
@@ -153,7 +163,7 @@
     }
 
     const zeroX = x(0);
-    const showZero = min <= 12 && max >= 12;
+    const showZero = min + tickPadding <= 0 && max - tickPadding >= 0;
 
     let y = 12;
 
@@ -188,7 +198,7 @@
       `))}
       ${showZero ? html`
         <line x1="${zeroX}" y1="${lineY - tickH}" x2="${zeroX}" y2="${lineY + tickH}" stroke-width="1.5"/>
-        <text x="${zeroX}" y="${lineY - tickH - 3}" text-anchor="middle" font-size="9" font-family="Menlo,Consolas,monospace" fill="#999">0</text>
+        <text class="text2" x="${zeroX}" y="${lineY - tickH - 3}" text-anchor="middle">0</text>
       ` : ""}
       ${html.raw(entries.map(({ value, correct }) => html`
         <circle class="${ correct ? "correct" : "wrong" }" cx="${x(value)}" cy="${lineY}" r="${dotR}"/>
@@ -221,20 +231,18 @@
     return nice * pow;
   }
 
-  function findCorrect(got, want) {
+  function findCorrect(got, want, cyclic = false) {
+    const n = want.length;
+    const offset = cyclic ? want.indexOf(got[0]) : 0;
     let working = [...got];
     return got.map(w => {
-      const wantIndex = want.indexOf(w);
+      const wantIndex = (want.indexOf(w) - offset + n) % n;
       const workingIndex = working.indexOf(w);
       const gotIndex = got.indexOf(w);
       const correct =
         wantIndex === workingIndex
         && Math.abs(wantIndex - gotIndex) <= 1;
-      // make corrections as we go, so we don't mark all words after a single mistake
-      if (wantIndex < workingIndex) {
-        working.splice(workingIndex, 1);
-        working.splice(wantIndex, 0, w);
-      } else if (wantIndex > workingIndex) {
+      if (wantIndex !== workingIndex) {
         working.splice(workingIndex, 1);
         working.splice(wantIndex, 0, w);
       }
