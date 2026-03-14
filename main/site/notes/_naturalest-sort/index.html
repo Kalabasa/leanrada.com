@@ -1,0 +1,162 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/common.css">
+<script defer src="/common.js"></script>
+<script defer src="./demo/nat-sort-demo.js"></script>
+
+<title>Naturalest sort</title>
+
+<site-header></site-header>
+
+<blog-header>
+  <h1>Naturalest sort</h1>
+  <img src="hero.jpg" alt="" loading="lazy">
+</blog-header>
+
+<blog-post-info-template>
+  <time datetime="1970-01-01">01 Jan 1970</time>
+  · 1 min read
+</blog-post-info-template>
+
+<tag-row>
+  <tag-chip title="ai"></tag-chip>
+</tag-row>
+
+<main appearance="prose">
+  
+<p>You may have heard of the legendary <a href="http://www.overset.com/2008/09/01/javascript-natural-sort-algorithm/" target="_blank"><code>naturalSort</code></a> in JavaScript.</p>
+
+<code-block language="js">
+  <pre><code>/*
+* Natural Sort algorithm for Javascript - Version 0.7 - Released under MIT license
+* Author: Jim Palmer (based on chunking idea from Dave Koelle)
+*/
+function naturalSort (a, b) {
+  var re = /(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?$|^0x[0-9a-f]+$|[0-9]+)/gi,
+      sre = /(^[ ]*|[ ]*$)/g,
+      dre = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/,
+      hre = /^0x[0-9a-f]+$/i,
+      ore = /^0/,
+      i = function(s) { return naturalSort.insensitive && (''+s).toLowerCase() || ''+s },
+      // convert all to strings strip whitespace
+      x = i(a).replace(sre, '') || '',
+      y = i(b).replace(sre, '') || '',
+      // chunk/tokenize
+      xN = x.replace(re, '\0$1\0').replace(/\0$/,'').replace(/^\0/,'').split('\0'),
+      yN = y.replace(re, '\0$1\0').replace(/\0$/,'').replace(/^\0/,'').split('\0'),
+      // numeric, hex or date detection
+      xD = parseInt(x.match(hre)) || (xN.length != 1 && x.match(dre) && Date.parse(x)),
+      yD = parseInt(y.match(hre)) || xD && y.match(dre) && Date.parse(y) || null,
+      oFxNcL, oFyNcL;
+  // first try and sort Hex codes or Dates
+  if (yD)
+    if ( xD < yD ) return -1;
+    else if ( xD > yD ) return 1;
+  // natural sorting through split numeric strings and default strings
+  for(var cLoc=0, numS=Math.max(xN.length, yN.length); cLoc < numS; cLoc++) {
+    // find floats not starting with '0', string or 0 if not defined (Clint Priest)
+    oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
+    oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
+    // handle numeric vs string comparison - number < string - (Kyle Adams)
+    if (isNaN(oFxNcL) !== isNaN(oFyNcL)) { return (isNaN(oFxNcL)) ? 1 : -1; }
+    // rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
+    else if (typeof oFxNcL !== typeof oFyNcL) {
+      oFxNcL += '';
+      oFyNcL += '';
+    }
+    if (oFxNcL < oFyNcL) return -1;
+    if (oFxNcL > oFyNcL) return 1;
+  }
+  return 0;
+}</code></pre>
+</code-block>
+
+<p>If you haven’t, this function compares two strings and determines their <i>‘natural’</i> ordering. For example, <code>Monday</code> comes before <code>Friday</code>, <code>file2</code> before <code>file10</code>, and so on.</p>
+
+<p>While there’s no single correct natural ordering, they all aim to order strings based on <a href="https://blog.codinghorror.com/sorting-for-humans-natural-sort-order/" target="_blank">what makes sense for humans</a>.</p>
+
+<auto-flex style="--colwidth:49%">
+  <figure>
+    <img alt="file2.png,file3.png,file6.png,file7.png,file8.png,file27.png,file50.png,file54.png,file68.png,file72.png" src="fm-sort.png">
+    <figcaption>Natural sort</figcaption>
+  </figure>
+  <figure>
+    <img alt="file27.png,file2.png,file340.png,file376.png,file3.png,file453.png,file509.png,file50.png,file54.png,file579.png" src="unix-sort.png">
+    <figcaption>Lexical sort</figcaption>
+  </figure>
+</auto-flex>
+
+<p>But what if we could sort <em>any</em> word without having to program every class of words and edge cases like <code>naturalSort</code> above? What about words like <code>low</code>, <code>medium</code>, <code>high</code>? <code>heaven</code>, <code>earth</code>, <code>hell</code>?</p>
+
+<p>Surely LLMs are the right hammer for this job?</p>
+
+<h2>Naturalest sort</h2>
+
+<p>Using LLMs may be the naturalest sort, but I was looking for something lighter than that. Surely, for the narrow use case of sorting for human sensibility, LLMs are overkill.</p>
+
+<p>Contrary to the clickbait title, this post is not about LLMs per se. It’s more about an experiment in making a lighter sorting than LLM-sort. But before that, let’s set a benchmark with <a href="vibesort.sh" target="_blank">vibesort.sh</a>.</p>
+
+<code-block>
+  <pre><code>❯ ./vibesort.sh cases
+Input:  file1,file10,file2
+Output: {"sorted":["file1","file2","file10"]}
+
+Input:  low,high,medium
+Output: {"sorted":["low","medium","high"]}
+
+Input:  heaven,hell,earth
+Output: {"sorted":["heaven","earth","hell"]}
+
+Input:  monday,friday,tuesday,sunday
+Output: {"sorted":["monday","tuesday","friday","sunday"]}
+  </code></pre>
+</code-block>
+
+<p>Can we do that without LLMs? Let me introduce a less natural natural sort.</p>
+
+<h2>Naturaler sort</h2>
+
+<p>The idea behind this is to use <strong>word embeddings</strong>, or vectors that represent words. I wondered if embeddings could even be sortable. I set out to experiment.</p>
+
+<h3>Word embedding arithmetic</h3>
+
+<p>Embeddings are basically high-dimensional vectors (> 300 coordinates) that describe word meanings. The key aspect is that words with similar meanings have embedding vectors that are also close in the embedding space.</p>
+
+<p>Comparing two words is as ‘simple’ as taking the dot product of their vectors.</p>
+
+<p>Since they are vectors, you can do other kinds of math on them. A popular cherry-picked example is <code>King - Man + Woman = Queen</code>.</p>
+
+<p>The main idea is that dimensions encode specific meanings or features. In the example above, there could be a <code>Gender</code> dimension or a <code>Nobility</code> dimension.</p>
+
+<figure>
+  <img src="gender-nobility.jpg" alt="2D scattterplot showing gender and nobility as dimensions and man, woman, king, queen as points">
+  <figcaption>Man, woman, king, and queen projected to 2D using principal component analysis (not-to-scale illustration only). Dimensions are inherently nameless but I made up the labels for the two principal dimensions.</figcaption>
+</figure>
+
+<p><strong>The main hypothesis:</strong> Could there be an <strong style="font-size:120%"><i>order dimension</i></strong> that encodes the natural order of words? Or more generally, an order <em>vector</em> that describes the general direction of going from Monday to Tuesday as well as low to medium to high?</p>
+
+<prose-bleed>
+  <figure>
+    <img src="projection.png" alt="3D projection of word embeddings with man, woman, king, queen points highlighted">
+    <figcaption>The space is weird.</figcaption>
+  </figure>
+</prose-bleed>
+
+<h2>The search for the order vector</h2>
+
+<p>Easy: just subtract <code>end</code> from <code>start</code> and we go running</p>
+
+<code>orderVec = word2vec("end") - word2vec("start")</code>
+
+<p>Then we project the words to be sorted onto the order vector.</p>
+
+<nat-sort-demo words="first,second,third,fourth,fifth" anchor-pair="start,end"></nat-sort-demo>
+
+<p>Btw I’m using <code>word2vec</code></p>
+
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
