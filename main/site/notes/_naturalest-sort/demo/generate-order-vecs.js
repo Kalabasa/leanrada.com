@@ -2,7 +2,7 @@ import { Word2VecData } from "./data.js";
 import { writeFileSync } from "fs";
 
 const data = new Word2VecData();
-await data.load();
+await data.preload();
 const anchors = [
   ["first", "last"], ["beginning", "end"], ["initial", "final"],
   ["start", "finish"], ["previous", "next"], ["before", "after"],
@@ -128,30 +128,31 @@ const allClusters = [...active].map(idx => {
 
 allClusters.sort((a, b) => b.members.length - a.members.length);
 
-const minSize = 8;
-const bigClusters = allClusters.filter(c => c.members.length >= minSize);
+console.log(`${validAnchors.length} valid anchors → ${allClusters.length} clusters\n`);
 
-console.log(`${validAnchors.length} valid anchors → ${allClusters.length} clusters (${bigClusters.length} with ${minSize}+ members)\n`);
-
-for (const { members } of allClusters) {
-  const big = members.length >= minSize;
-  const labels = members.map(([a, b]) => `${a}→${b}`).join(", ");
-  console.log(`  ${big ? ">>>" : "   "} [${members.length}] ${labels}`);
-}
-
+// from tests, there seem to be four big clusters
+// we can name them by looking for presence of representative pairs in each cluster
 const nameByPair = {
-  polarity:  ["worst", "best"],
+  value:  ["worst", "best"],
   magnitude: ["tiny", "huge"],
   frequency: ["rare", "common"],
   sequence:  ["first", "last"],
 };
-const output = {};
-for (const [name, pair] of Object.entries(nameByPair)) {
-  const cluster = bigClusters.find(c =>
-    c.members.some(([a, b]) => a === pair[0] && b === pair[1])
+
+const output = {
+  _k: k,
+};
+for (const cluster of allClusters) {
+  const match = Object.entries(nameByPair).find(([, pair]) =>
+    cluster.members.some(([a, b]) => a === pair[0] && b === pair[1])
   );
-  if (!cluster) throw new Error(`No cluster found containing ${pair}`);
-  output[name] = cluster.centroid;
+  const tag = match ? `\x1b[32m${match[0].padEnd(10)}\x1b[39m` : "          ";
+  const labels = cluster.members.map(([a, b]) => `${a}→${b}`).join(", ");
+  console.log(`  ${tag} [${cluster.members.length}] \x1b[90m${labels}\x1b[39m`);
+  if (match) output[match[0]] = cluster.centroid;
 }
-writeFileSync("anchor-vecs.json", JSON.stringify(output, null, 2));
-console.log(`\nWrote ${Object.keys(output).length} named anchor vecs to anchor-vecs.json`);
+for (const name of Object.keys(nameByPair)) {
+  if (!output[name]) throw new Error(`No cluster found containing ${name}`);
+}
+writeFileSync("order-vecs.json", JSON.stringify(output, null, 2));
+console.log(`\nWrote ${Object.keys(output).length} named order vecs to order-vecs.json`);

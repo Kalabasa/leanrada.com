@@ -109,54 +109,226 @@ Input:  heaven,hell,earth
 Output: {"sorted":["heaven","earth","hell"]}
 
 Input:  monday,friday,tuesday,sunday
-Output: {"sorted":["monday","tuesday","friday","sunday"]}
-  </code></pre>
+Output: {"sorted":["monday","tuesday","friday","sunday"]}</code></pre>
 </code-block>
 
 <p>Can we do that without LLMs? Let me introduce a less natural natural sort.</p>
 
 <h2>Naturaler sort</h2>
 
-<p>The idea behind this is to use <strong>word embeddings</strong>, or vectors that represent words. I wondered if embeddings could even be sortable. I set out to experiment.</p>
+<p>The idea behind this is to use <strong>word embeddings</strong>, or vectors that represent words in a conceptual space. I wondered if these embeddings could even be sortable. I set out to experiment.</p>
 
-<h3>Word embedding arithmetic</h3>
+<h3>Intro to word embedding arithmetic</h3>
 
-<p>Embeddings are basically high-dimensional vectors (> 300 coordinates) that describe word meanings. The key aspect is that words with similar meanings have embedding vectors that are also close in the embedding space.</p>
+<p>Embeddings are basically high-dimensional vectors (> 300 coordinates) that describe word meanings. The key aspect is that words with similar meanings have vectors that are also close in the embedding space or conceptual space.</p>
 
 <p>Comparing two words is as ‘simple’ as taking the dot product of their vectors.</p>
 
 <p>Since they are vectors, you can do other kinds of math on them. A popular cherry-picked example is <code>King - Man + Woman = Queen</code>.</p>
 
-<p>The main idea is that dimensions encode specific meanings or features. In the example above, there could be a <code>Gender</code> dimension or a <code>Nobility</code> dimension.</p>
-
-<figure>
-  <img src="gender-nobility.jpg" alt="2D scattterplot showing gender and nobility as dimensions and man, woman, king, queen as points">
-  <figcaption>Man, woman, king, and queen projected to 2D using principal component analysis (not-to-scale illustration only). Dimensions are inherently nameless but I made up the labels for the two principal dimensions.</figcaption>
-</figure>
-
-<p><strong>The main hypothesis:</strong> Could there be an <strong style="font-size:120%"><i>order dimension</i></strong> that encodes the natural order of words? Or more generally, an order <em>vector</em> that describes the general direction of going from Monday to Tuesday as well as low to medium to high?</p>
-
 <prose-bleed>
   <figure>
-    <img src="projection.png" alt="3D projection of word embeddings with man, woman, king, queen points highlighted">
-    <figcaption>The space is weird.</figcaption>
+    <img src="projector.png" alt="3D projection of word embeddings with man, woman, king, queen points highlighted">
+    <figcaption>This is the embedding <a href="https://projector.tensorflow.org/" target="_blank">projected</a> to 3D using principal component analysis, with a few interesting words highlighted.</figcaption>
   </figure>
 </prose-bleed>
 
+<p>The main idea is that individual dimensions encode specific meanings or features. In the <code>King - Man + Woman = Queen</code> example, there could be a <code>Gender</code> dimension or a <code>Nobility</code> dimension that makes the arithmetic work.</p>
+
+<figure>
+  <img src="gender-nobility.jpg" alt="2D scattterplot showing gender and nobility as dimensions and man, woman, king, queen as points">
+  <figcaption>Man, woman, king, and queen projected to 2D using principal component analysis (not-to-scale illustration only). I made up the labels for the two resulting dimensions.</figcaption>
+</figure>
+
+<p><strong>The main hypothesis:</strong> Could there be an <strong style="font-size:120%"><i>order dimension</i></strong> that encodes the natural order of words? Is there an order <em>vector</em> that describes the general direction of going from Monday to Tuesday as well as low to medium to high?</p>
+
 <h2>The search for the order vector</h2>
 
-<p>Easy: just subtract <code>end</code> from <code>start</code> and we go running</p>
+<p>Easy: To get the order vector, just subtract a small word (say, <code>"smallest"</code>) from a big word (<code>"largest"</code>) and use this as the direction to order words in.</p>
 
-<code>orderVec = word2vec("end") - word2vec("start")</code>
+<p class="center-text">
+  <code>orderVec = word2vec("largest") - word2vec("smallest")</code>
+</p>
 
-<p>Then we project the words to be sorted onto the order vector.</p>
+<p>Project the words to be sorted onto this order vector should give us a linear ranking of the words! <small>Btw I’m using word2vec from Google to get word embeddings.</small></p>
 
-<nat-sort-demo words="first,second,third,fourth,fifth" anchor-pair="start,end"></nat-sort-demo>
+<code-block language="js">
+  <pre><code> // compute the order direction vector
+const orderDir =
+    normalize(word2vec("largest") - word2vec("smallest"));
+// get the embeddings of the words to sort
+const vecs = words.map(word2vec);
+// rank each word according to the order vector
+const ranks = Object.fromEntries(vecs.map((vec, i) =>
+  // the rank of each word is
+  // its dot product against the 'order vector'
+  [words[i], dot(vec, orderDir)]
+));
+// sort words according to the order vector ranking!
+words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
+</code-block>
 
-<p>Btw I’m using <code>word2vec</code></p>
+<p>Does it work? Let’s visualise an example:</p>
+
+<nat-sort-demo words="tiny,small,medium,large,huge" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
+
+<p>The above diagram shows the word embedding vectors collapsed onto a single dimension, the direction from <code>"smallest"</code> to <code>"largest"</code>. Sorting words by the values of their projections on the smallest-to-largest direction seems to produce a ‘natural’ sort!</p>
+
+<p>It can even sort different sorts of semantic magnitudes, a couple of examples:</p>
+
+<nat-sort-demo words="breeze,wind,gale,storm" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
+
+<nat-sort-demo words="poor,wealthy,rich" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
+
+<p>It starts breaking down as you stray into words not directly related to size or magnitude:</p>
+
+<nat-sort-demo words="first,second,third,fourth,fifth" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
+
+<p>When sorting words completely unrelated to the concept of size/magnitude, it completely fails.</p>
+
+<nat-sort-demo words="hate,dislike,like,love" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
+
+<p>The above example fails because our chosen anchor words <code>"smallest"</code> and <code>"largest"</code> have nothing to do with the love-hate scale. Well, I guess it’s still being sorted in a way, maybe from the least intense to the most intense emotion? so there’s that.</p>
+
+<p>But what if we sort it using different order vectors? How about <code>"negative"</code> to <code>"positive"</code>?</p>
+
+<nat-sort-demo words="hate,dislike,like,love" anchor-pair="negative,positive"></nat-sort-demo>
+
+<p><code>"good"</code> and <code>"bad"</code>?</p>
+
+<nat-sort-demo words="hate,dislike,like,love" anchor-pair="bad,good"></nat-sort-demo>
+
+<p>The actual order vector that can sorts hate love is <code>"worst"</code> and <code>"best"</code>.</p>
+
+<nat-sort-demo words="hate,dislike,like,love" anchor-pair="worst,best"></nat-sort-demo>
+
+<p>The lesson here is that there are many potential order vectors, many dimensions to sort words in. One may make sense for a given set of words, and another for a different set. We need to choose the right order direction vector per set of words ot sort. But how do we choose, and from what order vector choices?</p>
+
+<h2>The search for multiple order vectors</h2>
+
+<p>With the help of an LLM, I generated plenty of anchor pairs for the algorithm to choose order vectors from.</p>
+
+<code-block language="js">
+  <pre><code>const anchors = [
+  ["least", "most"], ["low", "high"], ["light", "heavy"],
+  ["worst", "best"], ["empty", "full"], ["uncertain", "certain"],
+  ["quiet", "noisy"], ["back", "forward"], ["unusual", "typical"],
+  ["dull", "sharp"], ["tiny", "huge"], ["frozen", "boiling"],
+  ["poverty", "wealth"], ["left", "right"], ["small", "big"],
+  ["early", "late"], ["young", "old"], ["start", "finish"],
+  &hellip;
+];</code></pre>
+</code-block>
+
+<p>Before using them, I clustered them to reduce the amount of choices to process.</p>
+
+<p>Clustering order vectors revealed a nice pattern. That there were two major clusters: one seemingly related to magnitude, and the other like a general ‘value’ (?) direction.</p>
+
+<code-block language="clike">
+  <pre><code>CLUSTER     SIZE MEMBERS
+'value'     [61] narrow→wide, closed→open, down→up, low→high,
+               lowest→highest, below→above, weak→strong,
+               weakest→strongest, inferior→superior, sluggish→rapid,
+               dim→bright, worthless→valuable, boring→exciting, &hellip;
+'magnitude' [40] least→most, few→many, back→forward, off→on,
+               calm→violent, quiet→noisy, dry→wet, rural→urban,
+               basic→advanced, plain→elaborate, cheap→expensive,
+               free→costly, easy→difficult, simple→complex,
+               trivial→challenging, smallest→largest, &hellip;
+'sequence'  [12] first→last, young→old, new→ancient, fresh→stale,
+               beginning→end, initial→final, start→finish,
+               minority→majority, inner→outer, cool→warm, &hellip;
+'frequency' [10] before→after, none→all, never→always, seldom→often,
+               opening→closing, rare→common, uncertain→certain, &hellip;
+'size'      [9] minimum→maximum, affordable→luxurious, &hellip;
+'space'     [5] particular→universal, internal→external, &hellip;</code></pre>
+</code-block>
+
+<p><small>Note: I manually labelled the clusters above.</small> Then I picked the top 4 clusters and averaged them, and saved the averages as the 4 order vectors to choose from.</p>
+
+<p>To choose an order vector, we pick the one that separates the words to sort the most.</p>
+
+<code-block language="js">
+  <pre><code>// orderVecs contains the cluster averages of the top 4 clusters
+const ranked = orderVecs
+  .map(orderVec => {
+    // project the words to sort onto this order vector
+    const scores = wordVecs.map(v => dot(v, orderVec));
+    // calculate the spread
+    const spread = Math.max(...scores) - Math.min(...scores)
+    return { orderVec, spread };
+  })
+  // sort by spread
+  .sort((a, b) => b.spread - a.spread);
+// get the order vector that most spreads the words to sort
+orderVec = ranked[0].orderVec;</code></pre>
+</code-block>
+
+<p>If you want to see the actual values of the final order vectors, <a href="./demo/order-vecs.json" target="_blank">check this out.</a></p>
+
+<p>The algorithm now chooses to sort these words using the magnitude vector:</p>
+
+<nat-sort-demo words="low,medium,high"></nat-sort-demo>
+
+<nat-sort-demo words="tiny,small,medium,large,huge"></nat-sort-demo>
+
+<nat-sort-demo words="whisper,talk,shout,scream"></nat-sort-demo>
+
+<p>These words fall into the value vector, the good/bad direction:</p>
+
+<nat-sort-demo words="hate,dislike,like,love"></nat-sort-demo>
+
+<nat-sort-demo words="ugly,plain,pretty,beautiful"></nat-sort-demo>
+
+<nat-sort-demo words="poor,fair,good,excellent"></nat-sort-demo>
+
+<p>Here are some words sorted by the sequence vector:</p>
+
+<nat-sort-demo words="dawn,noon,dusk"></nat-sort-demo>
+
+<nat-sort-demo words="birth,life,death"></nat-sort-demo>
+
+<nat-sort-demo words="once,twice,thrice"></nat-sort-demo>
+
+<p>Interestingly, medals are sorted by first, second, and third places, instead of increasing value. The choice of sequence vector explains it.</p>
+
+<nat-sort-demo words="bronze,silver,gold"></nat-sort-demo>
+
+<p>The ordinals almost get there, ironically.</p>
+
+<nat-sort-demo words="first,second,third,fourth,fifth"></nat-sort-demo>
+
+<p>The frequency vector is the weakest of the top 4 clusters, but I included it to squeeze some more coverage:</p>
+
+<nat-sort-demo words="none,few,some,many,all"></nat-sort-demo>
+
+<nat-sort-demo words="never,rarely,sometimes,often,always"></nat-sort-demo>
+
+<nat-sort-demo words="rare,uncommon,common"></nat-sort-demo>
+
+<nat-sort-demo words="never,unlikely,likely,definitely"></nat-sort-demo>
+
+<h2>Limitations</h2>
+
+<p>Now, let’s look at the failure cases:</p>
+
+<nat-sort-demo words="monday,tuesday,wednesday,thursday,friday,saturday,sunday"></nat-sort-demo>
+
+<nat-sort-demo words="january,february,march,april,may,june,july,august,september,october,november,december"></nat-sort-demo>
+
+<h2>Alternatives</h2>
+
+PCA
 
 </main>
 
 <article-footer></article-footer>
 
 <site-footer></site-footer>
+
+<style>
+  nat-sort-demo:empty {
+    display: block;
+    min-height: 290px;
+  }
+</style>

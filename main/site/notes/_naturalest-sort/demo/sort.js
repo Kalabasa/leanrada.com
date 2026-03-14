@@ -2,86 +2,79 @@ import { Word2VecData } from "./data.js";
 
 const data = new Word2VecData();
 
-const isNode = typeof globalThis.process !== "undefined";
-let anchorVecsRaw;
-if (isNode) {
-  const { readFileSync } = await import("fs");
-  anchorVecsRaw = JSON.parse(readFileSync(new URL("./anchor-vecs.json", import.meta.url), "utf-8"));
-} else {
-  const resp = await fetch(new URL("./anchor-vecs.json", import.meta.url));
-  anchorVecsRaw = await resp.json();
-}
-const anchorNames = Object.keys(anchorVecsRaw);
-const anchorVecs = Object.values(anchorVecsRaw);
-
-export async function wordSort(list, { anchorPair, projection = "order" } = {}) {
-  list.forEach(item => {
-    if (typeof item !== "string") throw new TypeError("strings only");
-  });
-
+export async function wordSort(list, { anchorPair, projectionType = "order" } = {}) {
   const vecs = await data.find(list);
   vecs.forEach(v => normalize(v));
 
-  let orderVec;
-  let directionName;
+  const projection = { values: {} };
+  projection.type = projectionType;
 
-  if (anchorPair) {
-    const [lowWord, highWord] = anchorPair;
-    const [lowVec, highVec] = await data.find([lowWord, highWord]);
-    orderVec = normalize(subtract(highVec.slice(), lowVec));
-    directionName = `${lowWord}→${highWord}`;
+  if (projectionType === "order") {
+    let orderVec;
+    if (anchorPair) {
+      const [lowWord, highWord] = anchorPair;
+      const [lowVec, highVec] = await data.find([lowWord, highWord]);
+      orderVec = normalize(subtract(highVec.slice(), lowVec));
+      projection.direction = `"${lowWord}" to "${highWord}"`;
+    } else {
+      const ranked = Object.entries(await getOrderVecs())
+        .map(([name, anchorVec]) => {
+          if (!Array.isArray(anchorVec)) return null;
+          const scores = vecs.map(v => dot(v, anchorVec));
+          return { name: name, anchorVec, spread: Math.max(...scores) - Math.min(...scores) };
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.spread - a.spread);
+      orderVec = ranked[0].anchorVec;
+      projection.direction = `'${ranked[0].name}' cluster vector`;
+    }
+    vecs.forEach((v, i) => projection.values[list[i]] = dot(orderVec, v));
   } else {
-    const ranked = anchorVecs
-      .map((anchorVec, i) => {
-        const scores = vecs.map(v => dot(v, anchorVec));
-        return { name: anchorNames[i], anchorVec, spread: Math.max(...scores) - Math.min(...scores) };
-      })
-      .sort((a, b) => b.spread - a.spread);
-    orderVec = ranked[0].anchorVec;
-    directionName = ranked[0].name;
+    const mean = average(vecs);
+    const centered = vecs.map(vec => subtract(vec.slice(), mean));
+    const pc1 = powerIteration(centered);
+
+    if (projectionType === "principal") {
+      vecs.forEach((v, i) => projection.values[list[i]] = dot(pc1, v));
+      projection.direction = "PC1";
+    } else if (projectionType === "angular") {
+      const pc2 = powerIteration(centered, [pc1]);
+      const planar = centered.map(v => [dot(v, pc1), dot(v, pc2)]);
+      const magnitudes = planar.map(p => Math.hypot(...p));
+      const farthestIdx = magnitudes.indexOf(Math.max(...magnitudes));
+      vecs.forEach((v, i) => {
+        let angle = Math.atan2(...subtract(planar[i].slice(), planar[farthestIdx]));
+        if (angle < 0) angle += Math.PI * 2;
+        projection.values[list[i]] = angle;
+      });
+      projection.direction = "polar";
+    }
   }
 
-  const mean = average(vecs);
-  const centered = vecs.map(vec => subtract(vec.slice(), mean));
-  const pc1 = powerIteration(centered);
-  const pc2 = powerIteration(centered, [pc1]);
-
-  const orderProjections = {};
-  vecs.forEach((v, i) => orderProjections[list[i]] = dot(orderVec, v));
-
-  const linearProjections = {};
-  vecs.forEach((v, i) => linearProjections[list[i]] = dot(pc1, v));
-
-  const planarProjections = centered.map(v => ([
-    dot(v, pc1),
-    dot(v, pc2),
-  ]));
-  const magnitudes = planarProjections.map(p => Math.hypot(...p));
-  const farthestIdx = magnitudes.indexOf(Math.max(...magnitudes));
-
-  const angularProjections = {}
-  vecs.forEach((v, i) => {
-    let angle = Math.atan2(...subtract(planarProjections[i].slice(), planarProjections[farthestIdx]));
-    // normalize to [0, 2π]
-    if (angle < 0) angle += Math.PI * 2;
-    angularProjections[list[i]] = angle;
-  });
-
-  const projectionsByName = { order: orderProjections, linear: linearProjections, angular: angularProjections };
-  const projections = projectionsByName[projection];
-  const comparator = (a, b) => projections[a] - projections[b];
+  const comparator = (a, b) => projection.values[a] - projection.values[b];
   return {
     comparator,
     toSorted: () => list.toSorted(comparator),
     sort: () => list.sort(comparator),
-    direction: directionName,
-    debug: {
-      linearProjections,
-      orderProjections,
-      planarProjections,
-      angularProjections,
-    }
+    projection,
   }
+}
+
+const isNode = typeof globalThis.process !== "undefined";
+
+let orderVecsPromise;
+
+async function getOrderVecs() {
+  if (orderVecsPromise) return orderVecsPromise;
+  return orderVecsPromise = (async () => {
+    if (isNode) {
+      const { readFileSync } = await import("fs");
+      return JSON.parse(readFileSync(new URL("./order-vecs.json", import.meta.url), "utf-8"));
+    } else {
+      const res = await fetch(new URL("./order-vecs.json", import.meta.url));
+      return await res.json();
+    }
+  })();
 }
 
 function createRandom(seed) {
@@ -116,11 +109,6 @@ function powerIteration(matrix, excludeVecs = [], iters = 50) {
   }
 
   return vec;
-}
-
-function variance(vectors, dir) {
-  const projected = vectors.map(v => dot(v, dir));
-  return projected.reduce((sum, v) => sum + v * v, 0) / vectors.length;
 }
 
 function average(vectors) {

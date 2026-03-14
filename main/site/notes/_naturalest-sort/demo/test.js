@@ -56,7 +56,9 @@ const cases = [
   { expected: ["village", "town", "city", "metropolis"] },
   { expected: ["path", "road", "highway"] },
   { expected: ["breeze", "wind", "gale", "storm"] },
-  { anchorPair: ["before", "after"], expected: ["first", "second", "third", "fourth", "fifth"] },
+  { expected: ["first", "second", "third", "fourth", "fifth"] },
+  { expected: ["bronze", "silver", "gold"] },
+  { anchorPair: ["smallest", "largest"], expected: ["tiny", "small", "medium", "large", "huge"] },
 ];
 
 let passed = 0;
@@ -78,5 +80,6 @@ for (const item of cases) {
     console.log(`\x1b[31mFAIL\x1b[39m ${caseLabel}`);
     console.log(`\x1b[33mWANT\x1b[39m ${expected.join(", ")}`);
   }
+  if (globalThis.process?.env?.DEBUG) console.log(`direction=${result.projection.direction}`);
 }
 console.log(`${passed}/${cases.length}`);
