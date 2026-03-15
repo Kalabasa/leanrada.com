@@ -167,7 +167,7 @@ const orderDir =
 const vecs = words.map(word2vec);
 
 const ranks = Object.fromEntries(vecs.map((vec, i) =>
-  // Rank each word by
+  // Project each word by calculating
   // its dot product against the 'order vector'
   [words[i], dot(vec, orderDir)]
 ));
@@ -400,18 +400,19 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <h2>Natural sorting showdown</h2>
 
-<p>If we were to put orderings on a scale, it would put dictionary sorting on the extreme and LLM on the other end (or maybe an actual human).</p>
+<p>If we were to put orderings on a scale, we can put dictionary sorting on the extreme and LLM on the other end (or maybe an actual human). In the middle lies our solution which I’ll call <code>wordSort</code>, coming after <code>naturalSort</code>. <small>Wait, did I just order the orderings? Sorted the sorts?</small></p>
 
 <prose-bleed>
 <prose-table>
 <table>
   <tr><th>Expected<th><code>Array.sort</code><br>(lexical)<th><code>naturalSort</code><br>(natural)<th><code>wordSort</code><br>(naturaler)<th><code>vibeSort</code><br>(naturalest)
+  <tr><td>a, b, c<td><details><summary>✅</summary>a,<br>b,<br>c</details><td><details><summary>✅</summary>a,<br>b,<br>c</details><td><details><summary>❌</summary>c,<br>b,<br>a</details><td><details><summary>✅</summary>a,<br>b,<br>c</details>
   <tr><td>low, medium, high<td><details><summary>❌</summary>high,<br>low,<br>medium</details><td><details><summary>❌</summary>high,<br>low,<br>medium</details><td><details><summary>✅</summary>low,<br>medium,<br>high</details><td><details><summary>✅</summary>low,<br>medium,<br>high</details>
   <tr><td>birth, life, death<td><details><summary>❌</summary>birth,<br>death,<br>life</details><td><details><summary>❌</summary>birth,<br>death,<br>life</details><td><details><summary>✅</summary>birth,<br>life,<br>death</details><td><details><summary>✅</summary>birth,<br>life,<br>death</details>
   <tr><td>dawn, noon, dusk<td><details><summary>❌</summary>dawn,<br>dusk,<br>noon</details><td><details><summary>❌</summary>dawn,<br>dusk,<br>noon</details><td><details><summary>✅</summary>dawn,<br>noon,<br>dusk</details><td><details><summary>✅</summary>dawn,<br>noon,<br>dusk</details>
   <tr><td>rare, uncommon, common<td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>✅</summary>rare,<br>uncommon,<br>common</details><td><details><summary>❌</summary>common,<br>uncommon,<br>rare</details>
   <tr><td>bronze, silver, gold<td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>❌</summary>gold,<br>silver,<br>bronze</details><td><details><summary>✅</summary>bronze,<br>silver,<br>gold</details>
-  <tr><td>Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday<td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Monday,<br>Wednesday,<br>Thursday,<br>Tuesday,<br>Friday,<br>Saturday,<br>Sunday</details><td><details><summary>❌</summary>Sunday,<br>Monday,<br>Tuesday,<br>Wednesday,<br>Thursday,<br>Friday,<br>Saturday</details>
+  <tr><td>Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday<td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Monday,<br>Wednesday,<br>Thursday,<br>Tuesday,<br>Friday,<br>Saturday,<br>Sunday</details><td><details><summary>✅</summary>Monday,<br>Tuesday,<br>Wednesday,<br>Thursday,<br>Friday,<br>Saturday,<br>Sunday</details>
   <tr><td>first, second, third, fourth, fifth<td><details><summary>❌</summary>fifth,<br>first,<br>fourth,<br>second,<br>third</details><td><details><summary>❌</summary>fifth,<br>first,<br>fourth,<br>second,<br>third</details><td><details><summary>❌</summary>first,<br>second,<br>fifth,<br>third,<br>fourth</details><td><details><summary>✅</summary>first,<br>second,<br>third,<br>fourth,<br>fifth</details>
   <tr><td>file1, file2, file3, file10, file20<td><details><summary>❌</summary>file1,<br>file10,<br>file2,<br>file20,<br>file3</details><td><details><summary>✅</summary>file1,<br>file2,<br>file3,<br>file10,<br>file20</details><td>N/A<td><details><summary>✅</summary>file1,<br>file2,<br>file3,<br>file10,<br>file20</details>
   <tr><td>Wednesday, February 15, 2023; Sunday, December 1, 2024; Wednesday, March 5, 2025<td><details><summary>❌</summary>Sunday, December 1, 2024;<br>Wednesday, February 15, 2023;<br>Wednesday, March 5, 2025</details><td><details><summary>✅</summary>Wednesday, February 15, 2023;<br>Sunday, December 1, 2024;<br>Wednesday, March 5, 2025</details><td>N/A<td><details><summary>✅</summary>Wednesday, February 15, 2023;<br>Sunday, December 1, 2024;<br>Wednesday, March 5, 2025</details>
@@ -489,7 +490,7 @@ orderVec = ranked[0].orderVec;</code></pre>
     }
   }, true);
 
-  table.querySelector("details").open = true;
+  table.querySelector("tr:nth-child(3) details").open = true;
 </script>
 
 <h2>Online demo</h2>
@@ -502,7 +503,9 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <p>Experiment was mixed, but the results were surprisingly good. Word embeddings can be used sort words by meaning without any hardcoded rules or LLM calls. It’s not perfect but for 300 dimensions, it’s decent and it can run on a web browser!</p>
 
-<p>It seems that word embeddings already encode order implicitly. We just need to find the right axis. For cyclical sequences, polar coordinates on the right plane get close.</p>
+<p>It seems that word embeddings already encode order implicitly. We just need to find the right axis. For cyclical sequences, polar coordinates on the right plane can get close.</p>
+
+<p>This particular implementation lacked a wide variety of order vectors to choose from. This could be mitigated by incorporating more diverse anchor words and increasing the clusters. This could help the algorithm find the perfect axis (or not! It could also add noise).</p>
 
 <p>I think the biggest weakness is ambiguity. Word2vec assigns one static vector per word, so words with multiple meanings like <code>"may"</code> get an average vector across all their meanings as in <i>‘if I may’</i> and <i>‘5th of May’</i>. <a href="https://en.wikipedia.org/wiki/Word-sense_disambiguation#Unsupervised_methods" target="_blank">Word-sense disambiguation</a> is its own topic. Maybe a neural network like a transformer could be used to disambiguate words in the context of the full list to sort (<a href="https://arxiv.org/abs/2010.02686" target="_blank">it’s been done</a>), but if you’re gonna run a neural network anyway on every sort then just use a language model and vibe sort it.</p>
 
