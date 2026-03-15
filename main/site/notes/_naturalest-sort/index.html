@@ -5,6 +5,7 @@
 <script defer src="/common.js"></script>
 <script defer src="./demo/nat-sort-demo.js"></script>
 <script defer src="./demo/nat-sort-scatter.js"></script>
+<script defer src="./demo/nat-sort-sandbox.js"></script>
 
 <title>Naturalest sort</title>
 
@@ -73,9 +74,9 @@ function naturalSort (a, b) {
 }</code></pre>
 </code-block>
 
-<p>If you haven’t, this function compares two strings and determines their <i>‘natural’</i> ordering. For example, <code>Monday</code> comes before <code>Friday</code>, <code>file2</code> before <code>file10</code>, and so on.</p>
+<p>If you haven’t, this monstrous function compares two strings and determines their <i>natural ordering</i>. For example, <code>Monday</code> comes before <code>Friday</code>, <code>file2</code> before <code>file10</code>, and so on.</p>
 
-<p>While there’s no single correct natural ordering, they all aim to order strings based on <a href="https://blog.codinghorror.com/sorting-for-humans-natural-sort-order/" target="_blank">what makes sense for humans</a>.</p>
+<p>There are many such natural sort order implementations. While there’s no single correct natural ordering, they all aim to order strings based on <a href="https://blog.codinghorror.com/sorting-for-humans-natural-sort-order/" target="_blank">what makes sense for humans</a>, as opposed to the mechanical sorting based on lexicographical order like in physical dictionaries of old.</p>
 
 <auto-flex style="--colwidth:49%">
   <figure>
@@ -88,15 +89,15 @@ function naturalSort (a, b) {
   </figure>
 </auto-flex>
 
-<p>But what if we could sort <em>any</em> word without having to program every class of words and edge cases like <code>naturalSort</code> above? What about words like <code>low</code>, <code>medium</code>, <code>high</code>? <code>heaven</code>, <code>earth</code>, <code>hell</code>?</p>
+<p>But what if we could sort <em>any</em> word without having to program every class of words and edge cases like <code>naturalSort</code> above? What about sequences like <code>low</code>, <code>medium</code>, <code>high</code>? Or <code>heaven</code>, <code>earth</code>, <code>hell</code>? Is there such a natural <em>natural sort</em>?</p>
 
 <p>Surely LLMs are the right hammer for this job?</p>
 
 <h2>Naturalest sort</h2>
 
-<p>Using LLMs may be the naturalest sort, but I was looking for something lighter than that. Surely, for the narrow use case of sorting for human sensibility, LLMs are overkill.</p>
+<p>I think LLMs are overkill for the narrow use case of sorting word sequences for human sensibility. They may be the naturalest sort, but I was looking for something lighter.</p>
 
-<p>Contrary to the clickbait title, this post is not about LLMs per se. It’s more about an experiment in making a lighter sorting than LLM-sort. But before that, let’s set a benchmark with <a href="vibesort.sh" target="_blank">vibesort.sh</a>.</p>
+<p>Before that, let’s set a benchmark using LLM-sort (see <a href="vibesort.sh" target="_blank">vibesort.sh</a>).</p>
 
 <code-block>
   <pre><code>❯ ./vibesort.sh cases
@@ -113,19 +114,19 @@ Input:  monday,friday,tuesday,sunday
 Output: {"sorted":["monday","tuesday","friday","sunday"]}</code></pre>
 </code-block>
 
-<p>Can we do that without LLMs? Let me introduce a less natural natural sort.</p>
+<p>Can we do this without LLMs? Let me introduce a less natural natural sort.</p>
 
-<h2>Naturaler sort</h2>
+<h2>Natural sort using word embeddings</h2>
 
-<p>The idea behind this is to use <strong>word embeddings</strong>, or vectors that represent words in a conceptual space. I wondered if these embeddings could even be sortable. I set out to experiment.</p>
+<p>The idea behind this is to use <a href="https://en.wikipedia.org/wiki/Word_embedding" target="_blank"><strong>word embeddings</strong></a>, or vectors that represent words in a conceptual space. The question is, are words embeddings sortable? Are embeddings even orderable? Is the order transitive? I set out to experiment.</p>
 
-<h3>Intro to word embedding arithmetic</h3>
+<h3>Quick intro to word embedding arithmetic</h3>
 
 <p>Embeddings are basically high-dimensional vectors (> 300 coordinates) that describe word meanings. The key aspect is that words with similar meanings have vectors that are also close in the embedding space or conceptual space.</p>
 
-<p>Comparing two words is as ‘simple’ as taking the dot product of their vectors.</p>
+<p>Comparing two words can be as simple as taking the dot product of their vectors.</p>
 
-<p>Since they are vectors, you can do other kinds of math on them. A popular cherry-picked example is <code>King - Man + Woman = Queen</code>.</p>
+<p>Since they are vectors, you can do other kinds of math on them. A popular cherry-picked example is to add and subtract embeddings to ‘calculate’ words like <code>King - Man + Woman = Queen</code>.</p>
 
 <prose-bleed>
   <figure>
@@ -134,14 +135,18 @@ Output: {"sorted":["monday","tuesday","friday","sunday"]}</code></pre>
   </figure>
 </prose-bleed>
 
-<p>The main idea is that individual dimensions encode specific meanings or features. In the <code>King - Man + Woman = Queen</code> example, there could be a <code>Gender</code> dimension or a <code>Nobility</code> dimension that makes the arithmetic work.</p>
+<p>The main idea is that individual dimensions encode specific meanings or features. In the <code>King - Man + Woman = Queen</code> example, there could be a <code>Gender</code> axis or a <code>Nobility</code> axis that makes the arithmetic work.</p>
 
 <figure>
   <img src="gender-nobility.jpg" alt="2D scattterplot showing gender and nobility as dimensions and man, woman, king, queen as points">
   <figcaption>Man, woman, king, and queen projected to 2D using principal component analysis (not-to-scale illustration only). I made up the labels for the two resulting dimensions.</figcaption>
 </figure>
 
-<p><strong>The main hypothesis:</strong> Could there be an <strong style="font-size:120%"><i>order dimension</i></strong> that encodes the natural order of words? Is there an order <em>vector</em> that describes the general direction of going from Monday to Tuesday as well as low to medium to high?</p>
+<box-note style="background:var(--highlight-clr)">
+  <p><strong>The main hypothesis:</strong> Could there be an <strong><i>order axis</i></strong> that encodes the natural order of words?</p>
+</box-note>
+
+<p>Is there an order vector that describes the general direction of going from Monday to Tuesday as well as low to medium to high?</p>
 
 <h2>The search for the order vector</h2>
 
@@ -154,18 +159,20 @@ Output: {"sorted":["monday","tuesday","friday","sunday"]}</code></pre>
 <p>Projecting the input words onto this order vector should give us a straightforward linear ranking of the words. <small>Btw I’m using word2vec from Google to get word embeddings.</small></p>
 
 <code-block language="js">
-  <pre><code> // compute the order direction vector
+  <pre><code> // Compute the order direction vector
 const orderDir =
     normalize(word2vec("largest") - word2vec("smallest"));
-// get the embeddings of the input words
+
+// Get the embeddings of the input words
 const vecs = words.map(word2vec);
-// rank each word according to the order vector
+
 const ranks = Object.fromEntries(vecs.map((vec, i) =>
-  // the rank of each word is
+  // Rank each word by
   // its dot product against the 'order vector'
   [words[i], dot(vec, orderDir)]
 ));
-// sort words according to the order vector ranking!
+
+// Sort words according to the order vector ranking!
 words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 </code-block>
 
@@ -173,9 +180,9 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <nat-sort-demo words="tiny,small,medium,large,huge" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
-<p>The above diagram shows the word embedding vectors for tiny, small, &hellip; huge collapsed onto a single line. This is the line from <code>"smallest"</code> to <code>"largest"</code>.</p>
+<p>The above diagram shows the word embedding vectors for tiny, small, etc., collapsed onto a single line. This is the line from <code>"smallest"</code> to <code>"largest"</code>.</p>
 
-<p>Sorting words by the values of their projections on the smallest-to-largest direction seems to produce a ‘natural’ sort!</p>
+<p><strong>Sorting words by the values of their projections on the smallest-to-largest direction seems to produce a ‘natural’ sort!</strong></p>
 
 <p>It can even sort different kinds of semantic magnitudes, not just sizes per se, a couple of examples:</p>
 
@@ -183,7 +190,7 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <nat-sort-demo words="poor,wealthy,rich" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
-<p>It starts breaking down as you stray into words not directly related to size or magnitude:</p>
+<p>It starts breaking down as you stray away from size or magnitude:</p>
 
 <nat-sort-demo words="first,second,third,fourth,fifth" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
@@ -195,19 +202,27 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <h2>Other anchor words</h2>
 
-<p>What if we sort it by different order vectors based on other anchor words? How about <code>"negative"</code> to <code>"positive"</code>?</p>
+<p>The examples thus far have been using <code>"smallest"</code> and <code>"largest"</code> as ‘anchor words’.</p>
+
+<p>What if we sort by different anchor pairs? How about <code>"negative"</code> to <code>"positive"</code>?</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="negative,positive"></nat-sort-demo>
 
-<p><code>"good"</code> and <code>"bad"</code>?</p>
+<p>Nice, it almost sorts the love-hate example.</p>
+
+<p>How about <code>"good"</code> and <code>"bad"</code>?</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="bad,good"></nat-sort-demo>
 
-<p>An order vector that can sort hate and love is <code>"worst"</code> to <code>"best"</code>.</p>
+<p>An order vector that can actually sort hate and love is <code>"worst"</code> to <code>"best"</code>.</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="worst,best"></nat-sort-demo>
 
-<p>The lesson here is that there are many potential order vectors, many dimensions to sort words in. One may make sense for a given set of input words, and another for a different set. We need to choose the right order direction vector per set of words. But how do we choose, and from what order vector choices?</p>
+<p>And of course, the two extremes within the list themselves would work perfectly, but obviously the sorting algorithm doesn’t know that beforehand.</p>
+
+<nat-sort-demo words="hate,dislike,like,love" anchor-pair="hate,love"></nat-sort-demo>
+
+<p>The lesson here is that there are many potential order vectors, many axes to sort words in. One may make sense for a given set of input words, and another for a different set. We need to choose the right order direction vector per set of words. But how do we choose, and from what order vector choices?</p>
 
 <h2>The search for multiple order vectors</h2>
 
@@ -227,7 +242,7 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <p>Before using them, I clustered them to reduce the amount of choices to process.</p>
 
-<p>Clustering the order vectors revealed a nice pattern. That there were two major clusters: one seemingly related to magnitude, and the other like a general ‘value’ (?) direction.</p>
+<p>Clustering the order vectors seemed to partially validate the hypothesis. There were two major clusters: one seemingly related to increasing magnitude, and the other like a general ‘value’ (?) direction. This means there could actually be general order vectors in the conceptual space.</p>
 
 <code-block language="clike">
   <pre><code>CLUSTER     SIZE MEMBERS
@@ -249,7 +264,9 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 'space'     [5] particular→universal, internal→external, &hellip;</code></pre>
 </code-block>
 
-<p><small>Note: I manually labelled the clusters above.</small> Then I picked the top 4 clusters and averaged them, and saved the averages as the final 4 order vectors to choose from.</p>
+<p><small>Note: I manually labelled the clusters above.</small> I picked the top 4 clusters, averaged them, and saved the averages as the final 4 order vectors to choose from.</p>
+
+<p>If you want to see the actual values of the final order vectors, <a href="./demo/order-vecs.json" target="_blank">check this out.</a></p>
 
 <p>To choose an order vector, we pick the one that separates the words the most.</p>
 
@@ -269,9 +286,7 @@ const ranked = orderVecs
 orderVec = ranked[0].orderVec;</code></pre>
 </code-block>
 
-<p>If you want to see the actual values of the final order vectors, <a href="./demo/order-vecs.json" target="_blank">check this out.</a></p>
-
-<p>The algorithm can now choose to sort words based on the best fit order direction. For example, these particular words use the magnitude vector:</p>
+<p>The algorithm can now choose to sort words based on the best fit order direction. For example, with these particular words the algorithm chooses the <code>magnitude</code> vector:</p>
 
 <nat-sort-demo words="low,medium,high"></nat-sort-demo>
 
@@ -279,7 +294,7 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-demo words="whisper,talk,shout,scream"></nat-sort-demo>
 
-<p>The following words fall into the value vector, the good/bad axis:</p>
+<p>The following words fall into the <code>value</code> vector, the good/bad axis:</p>
 
 <nat-sort-demo words="hate,dislike,like,love"></nat-sort-demo>
 
@@ -287,7 +302,7 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-demo words="poor,fair,good,excellent"></nat-sort-demo>
 
-<p>Here are some words sorted by the sequence vector:</p>
+<p>Here are some words sorted by the <code>sequence</code> vector:</p>
 
 <nat-sort-demo words="dawn,noon,dusk"></nat-sort-demo>
 
@@ -295,11 +310,11 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-demo words="once,twice,thrice"></nat-sort-demo>
 
-<p>Interestingly, the particular metals bronze, silver, and gold are sorted as <em>medals</em> in first, second, and third places instead of increasing value. The choice of order vector being the sequence vector explains this.</p>
+<p>Interestingly, the particular metals bronze, silver, and gold are sorted as <em>medals</em> in first, second, and third places instead of increasing value. The choice of order vector being the <code>sequence</code> vector explains this.</p>
 
 <nat-sort-demo words="bronze,silver,gold"></nat-sort-demo>
 
-<p>Ironcally, the ordinals aren’t quite correct:</p>
+<p>Ironically though, the ordinals aren’t quite correct:</p>
 
 <nat-sort-demo words="first,second,third,fourth,fifth"></nat-sort-demo>
 
@@ -307,7 +322,7 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-scatter words="first,second,third,fourth,fifth,sixth,seventh,eighth,ninth"></nat-sort-scatter>
 
-<p>The sequence vector may have only captured the initial direction of the ordinals. Indeed the word <code>"first"</code> is explicitly included in the sequence cluster as the <code>"first","last"</code> anchor pair, as well as synonyms/neighbors like <code>"initial"</code> and <code>"early"</code>.</p>
+<p>The <code>sequence</code> vector may have only captured the initial direction of the ordinals. Indeed the word <code>"first"</code> is explicitly included in the <code>sequence</code> cluster as the <code>"first","last"</code> anchor pair, as well as synonyms/neighbors like <code>"initial"</code> and <code>"early"</code>.</p>
 
 <p>The frequency vector is the weakest of the top 4 clusters, but I included it to squeeze some more coverage:</p>
 
@@ -381,7 +396,117 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <p>Without May, it’s actually a ring! The starting element is arbitrary when sorting by angle but if you trace it, the order is almost correct! if not for November.</p>
 
-<p>There is definitely some value in refining the meaning of each word in context before doing the sorting. I haven’t looked into that direction yet.</p>
+<p>There is definitely some value in refining the meaning of each word in context before doing the sorting. I haven’t looked into that direction yet. Maybe for a future post.</p>
+
+<h2>Natural sorting showdown</h2>
+
+<p>If we were to put orderings on a scale, it would put dictionary sorting on the extreme and LLM on the other end (or maybe an actual human).</p>
+
+<prose-bleed>
+<prose-table>
+<table>
+  <tr><th>Expected<th><code>Array.sort</code><br>(lexical)<th><code>naturalSort</code><br>(natural)<th><code>wordSort</code><br>(naturaler)<th><code>vibeSort</code><br>(naturalest)
+  <tr><td>low, medium, high<td><details><summary>❌</summary>high,<br>low,<br>medium</details><td><details><summary>❌</summary>high,<br>low,<br>medium</details><td><details><summary>✅</summary>low,<br>medium,<br>high</details><td><details><summary>✅</summary>low,<br>medium,<br>high</details>
+  <tr><td>birth, life, death<td><details><summary>❌</summary>birth,<br>death,<br>life</details><td><details><summary>❌</summary>birth,<br>death,<br>life</details><td><details><summary>✅</summary>birth,<br>life,<br>death</details><td><details><summary>✅</summary>birth,<br>life,<br>death</details>
+  <tr><td>dawn, noon, dusk<td><details><summary>❌</summary>dawn,<br>dusk,<br>noon</details><td><details><summary>❌</summary>dawn,<br>dusk,<br>noon</details><td><details><summary>✅</summary>dawn,<br>noon,<br>dusk</details><td><details><summary>✅</summary>dawn,<br>noon,<br>dusk</details>
+  <tr><td>rare, uncommon, common<td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>✅</summary>rare,<br>uncommon,<br>common</details><td><details><summary>❌</summary>common,<br>uncommon,<br>rare</details>
+  <tr><td>bronze, silver, gold<td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>❌</summary>gold,<br>silver,<br>bronze</details><td><details><summary>✅</summary>bronze,<br>silver,<br>gold</details>
+  <tr><td>Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday<td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Monday,<br>Wednesday,<br>Thursday,<br>Tuesday,<br>Friday,<br>Saturday,<br>Sunday</details><td><details><summary>❌</summary>Sunday,<br>Monday,<br>Tuesday,<br>Wednesday,<br>Thursday,<br>Friday,<br>Saturday</details>
+  <tr><td>first, second, third, fourth, fifth<td><details><summary>❌</summary>fifth,<br>first,<br>fourth,<br>second,<br>third</details><td><details><summary>❌</summary>fifth,<br>first,<br>fourth,<br>second,<br>third</details><td><details><summary>❌</summary>first,<br>second,<br>fifth,<br>third,<br>fourth</details><td><details><summary>✅</summary>first,<br>second,<br>third,<br>fourth,<br>fifth</details>
+  <tr><td>file1, file2, file3, file10, file20<td><details><summary>❌</summary>file1,<br>file10,<br>file2,<br>file20,<br>file3</details><td><details><summary>✅</summary>file1,<br>file2,<br>file3,<br>file10,<br>file20</details><td>N/A<td><details><summary>✅</summary>file1,<br>file2,<br>file3,<br>file10,<br>file20</details>
+  <tr><td>Wednesday, February 15, 2023; Sunday, December 1, 2024; Wednesday, March 5, 2025<td><details><summary>❌</summary>Sunday, December 1, 2024;<br>Wednesday, February 15, 2023;<br>Wednesday, March 5, 2025</details><td><details><summary>✅</summary>Wednesday, February 15, 2023;<br>Sunday, December 1, 2024;<br>Wednesday, March 5, 2025</details><td>N/A<td><details><summary>✅</summary>Wednesday, February 15, 2023;<br>Sunday, December 1, 2024;<br>Wednesday, March 5, 2025</details>
+</table>
+<style>
+  @scope {
+    table {
+      width: 100%;
+    }
+    td {
+      vertical-align: text-top;
+    }
+    tr:has(td) {
+      cursor: pointer;
+      &:hover {
+        background-color: #ffffff08;
+      }
+    }
+    tr:has(:open) {
+      background-color: #ffffff0c;
+      transition: background-color 0.2s;
+    }
+    tr > *:nth-child(1) {
+      width: 60%;
+    }
+    tr > *:nth-child(n + 2) {
+      width: 10%;
+    }
+    details::details-content {
+      overflow: hidden;
+      max-height: 0;
+      transition:
+        max-height 0.2s,
+        content-visibility 0.2s allow-discrete;
+    }
+    details[open]::details-content {
+      max-height: auto;
+      max-height: calc-size(max-content, size);
+    }
+  }
+</style>
+</prose-table>
+</prose-bleed>
+<script data-rss="dynamic">
+  const table = document.currentScript.previousElementSibling.querySelector("table");
+
+  table.addEventListener("click", (e) => {
+    const row = e.target.closest("tr");
+    const details = row?.querySelector("details");
+    if (details) {
+      details.open = !details.open;
+      e.preventDefault();
+    }
+  });
+
+  let inToggleEffect = false;
+  table.addEventListener("toggle", (e) => {
+    if (inToggleEffect) return;
+    inToggleEffect = true;
+    try {
+      const detail = e.target;
+      if (detail.tagName !== "DETAILS") return;
+      const row = detail.closest("tr");
+      for (const d of row.querySelectorAll("details")) {
+        if (d !== detail) d.open = detail.open;
+      }
+      for (const tr of table.querySelectorAll("tr")) {
+        if (tr === row) continue;
+        for (const d of tr.querySelectorAll("details")) {
+          if (d.open) d.open = false;
+        }
+      }
+    } finally {
+      setTimeout(() => inToggleEffect = false);
+    }
+  }, true);
+
+  table.querySelector("details").open = true;
+</script>
+
+<h2>Online demo</h2>
+
+<p>Congrats on making it this far. As a reward you can play with an online demo! Since this is a web demo, the vocabulary is limited, so bear with it and try to use very common words only!</p>
+
+<nat-sort-sandbox></nat-sort-sandbox>
+
+<h2>Conclusion</h2>
+
+<p>Experiment was mixed, but the results were surprisingly good. Word embeddings can be used sort words by meaning without any hardcoded rules or LLM calls. It’s not perfect but for 300 dimensions, it’s decent and it can run on a web browser!</p>
+
+<p>It seems that word embeddings already encode order implicitly. We just need to find the right axis. For cyclical sequences, polar coordinates on the right plane get close.</p>
+
+<p>I think the biggest weakness is ambiguity. Word2vec assigns one static vector per word, so words with multiple meanings like <code>"may"</code> get an average vector across all their meanings as in <i>‘if I may’</i> and <i>‘5th of May’</i>. <a href="https://en.wikipedia.org/wiki/Word-sense_disambiguation#Unsupervised_methods" target="_blank">Word-sense disambiguation</a> is its own topic. Maybe a neural network could be used disambiguate based on the surrounding words, but at that point just use a language model and vibe sort it.</p>
+
+<p>So this sits in an interesting middle ground between traditional natural sort (which only handles alphanumeric patterns) and LLM-sort (which understands everything but is expensive). Word embeddings are fast, offline, and handle semantic ordering&hellip; as long as the words aren’t too ambiguous.</p>
 
 </main>
 
@@ -393,5 +518,9 @@ orderVec = ranked[0].orderVec;</code></pre>
   nat-sort-demo:empty {
     display: block;
     min-height: 290px;
+  }
+  nat-sort-scatter:empty {
+    display: block;
+    min-height: 400px;
   }
 </style>
