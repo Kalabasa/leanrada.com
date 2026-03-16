@@ -50,8 +50,12 @@ export function renderScatter(labels, points) {
       const onRight = cx > w * 0.6;
       const tx = onRight ? cx - 7 : cx + 7;
       const anchor = onRight ? "end" : "start";
-      return html`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3"/>
-        <text x="${tx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="${anchor}">${labels[i]}</text>`;
+      return html`<g>
+        <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7" fill="transparent"/>
+        <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3"/>
+        <text x="${tx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="${anchor}">${labels[i]}</text>
+        <text class="coord" x="${tx.toFixed(1)}" y="${(cy + 14).toFixed(1)}" text-anchor="${anchor}">(${p[0].toFixed(2)}, ${p[1].toFixed(2)})</text>
+      </g>`;
     });
 
   const arrowSize = 4;

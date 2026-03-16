@@ -90,14 +90,23 @@ const methods = [
   { key: "naturalest", label: "vibeSort" },
 ];
 
+function isReversed(sorted, expected) {
+  const rev = [...expected].reverse();
+  return sorted.every((w, i) => w === rev[i]);
+}
+
 function isCorrect(sorted, expected) {
   if (!sorted) return null;
-  return sorted.every((w, i) => w === expected[i]);
+  if (sorted.every((w, i) => w === expected[i])) return "correct";
+  if (isReversed(sorted, expected)) return "reversed";
+  return "wrong";
 }
 
 function verdict(correct) {
   if (correct === null) return "N/A";
-  return correct ? "✅" : "❌";
+  if (correct === "correct") return "✅";
+  if (correct === "reversed") return "🔁";
+  return "❌";
 }
 
 function formatWords(words, newline) {

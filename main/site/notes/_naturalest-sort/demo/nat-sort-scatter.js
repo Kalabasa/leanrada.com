@@ -47,7 +47,7 @@
                 stroke: var(--text2-clr);
               }
 
-              circle {
+              circle:where(:not([fill])) {
                 fill: var(--clr0);
               }
 
@@ -55,6 +55,12 @@
                 fill: var(--text-clr);
                 font-size: 11px;
                 font-family: var(--default-font);
+              }
+              .coord {
+                opacity: 0;
+              }
+              g:hover .coord {
+                opacity: 1;
               }
             }
           </style>`,

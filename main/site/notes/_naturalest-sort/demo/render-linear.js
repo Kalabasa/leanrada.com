@@ -72,21 +72,22 @@ export function renderLinearGraph(projection, correct) {
       <line x1="${zeroX}" y1="${lineY - tickH}" x2="${zeroX}" y2="${lineY + tickH}" stroke-width="1.5"/>
       <text class="text2" x="${zeroX}" y="${lineY - tickH - 3}" text-anchor="middle">0</text>
     ` : ""}
-    ${html.raw(entries.map(({ value, correct }) => html`
-      <circle class="${ correct ? "correct" : "wrong" }" cx="${x(value)}" cy="${lineY}" r="${dotR}"/>
-    `))}
   `;
 
   const rows = entries.map(({ word, value, correct }) => {
     const rowY = y + rowH / 2;
-    const svg = html`<text x="${x(value) - 3}" y="${rowY}" text-anchor="end">${word}</text>
+    const svg = html`<g>
+      <circle cx="${x(value)}" cy="${lineY}" r="${dotR + 4}" fill="transparent"/>
+      <circle class="${ correct ? "correct" : "wrong" }" cx="${x(value)}" cy="${lineY}" r="${dotR}"/>
+      <text class="coord" x="${x(value)}" y="${lineY - dotR - 4}" text-anchor="middle">${value.toFixed(2)}</text>
+      <text x="${x(value) - 3}" y="${rowY}" text-anchor="end">${word}</text>
       <line class="${ correct ? "correct" : "wrong" }"
         x1="${x(value)}"
         y1="${lineY + dotR}"
         x2="${x(value)}"
         y2="${rowY}"
         stroke-width="1" />
-    `;
+    </g>`;
     y += rowH;
     return svg;
   });

@@ -13,24 +13,26 @@
 
 <blog-header>
   <h1>Naturalest sort</h1>
-  <img src="hero.jpg" alt="" loading="lazy">
+  <img src="hero.jpg" alt="" loading="lazy" width="2000" height="1500" style="--lqip:-174621">
 </blog-header>
 
-<blog-post-info-template>
-  <time datetime="1970-01-01">01 Jan 1970</time>
-  · 1 min read
-</blog-post-info-template>
+<blog-post-info>
+  <time datetime="2026-03-16">16 Mar 2026</time>
+  · 20 min read
+</blog-post-info>
 
 <tag-row>
   <tag-chip title="ai"></tag-chip>
+  <tag-chip title="algo"></tag-chip>
+  <tag-chip title="js"></tag-chip>
 </tag-row>
 
 <main appearance="prose">
   
 <p>You may have heard of the legendary <a href="http://www.overset.com/2008/09/01/javascript-natural-sort-algorithm/" target="_blank"><code>naturalSort</code></a> in JavaScript.</p>
 
-<code-block language="js">
-  <pre><code>/*
+<code-block wraptext language="js">
+  <pre><code style="font-size:60%">/*
 * Natural Sort algorithm for Javascript - Version 0.7 - Released under MIT license
 * Author: Jim Palmer (based on chunking idea from Dave Koelle)
 */
@@ -74,34 +76,31 @@ function naturalSort (a, b) {
 }</code></pre>
 </code-block>
 
-<p>If you haven’t, this monstrous function compares two strings and determines their <a href="https://en.wikipedia.org/wiki/Natural_sort_order" target="_blank"><i>natural ordering</i></a>. For example, <code>file2</code> comes before <code>file10</code>, and dates are sorted chronologically.</p>
+<h2>Natural sort</h2>
 
-<p>There are many such natural sort order implementations. While there’s no single correct natural ordering, they all aim to order strings based on <a href="https://blog.codinghorror.com/sorting-for-humans-natural-sort-order/" target="_blank">what makes sense for humans</a>, as opposed to the mechanical sorting based on lexicographical order like in physical dictionaries of old.</p>
+<p><a href="https://en.wikipedia.org/wiki/Natural_sort_order" target="_blank">Natural sorting</a> aims to order strings based on <a href="https://blog.codinghorror.com/sorting-for-humans-natural-sort-order/" target="_blank">what makes sense for humans</a>. This is in contrast to standard mechanical ordering based on lexicographical order like in physical dictionaries of old.</p>
 
 <auto-flex style="--colwidth:49%">
   <figure>
-    <img alt="file2.png,file3.png,file6.png,file7.png,file8.png,file27.png,file50.png,file54.png,file68.png,file72.png" src="fm-sort.png">
+    <img alt="file2.png,file3.png,file6.png,file7.png,file8.png,file27.png,file50.png,file54.png,file68.png,file72.png" src="fm-sort.png" loading="lazy" width="200" height="300" style="--lqip:91490">
     <figcaption>Natural sort</figcaption>
   </figure>
   <figure>
-    <img alt="file27.png,file2.png,file340.png,file376.png,file3.png,file453.png,file509.png,file50.png,file54.png,file579.png" src="unix-sort.png">
+    <img alt="file27.png,file2.png,file340.png,file376.png,file3.png,file453.png,file509.png,file50.png,file54.png,file579.png" src="unix-sort.png" loading="lazy" width="200" height="300" style="--lqip:157987">
     <figcaption>Lexical sort</figcaption>
   </figure>
 </auto-flex>
 
-<p>But what if we could sort <em>any</em> word without having to program every class of words and edge cases like <code>naturalSort</code> above? What about sequences like <code>low</code>, <code>medium</code>, <code>high</code>? Or <code>heaven</code>, <code>earth</code>, <code>hell</code>? Is there such a natural <em>natural sort</em>?</p>
+<p>But what if we could sort <em>any</em> word without having to program every edge case? What about sequences like <code>low</code>, <code>medium</code>, <code>high</code>? Or <code>heaven</code>, <code>earth</code>, <code>hell</code>?</p>
 
 <p>Surely LLMs are the right hammer for this job?</p>
 
-<h2>Naturalest sort</h2>
+<h2>Naturalest sort?</h2>
 
-<p>I think LLMs are overkill for the narrow use case of sorting word sequences for human sensibility. They may be the naturalest sort, but I was looking for something lighter.</p>
-
-<p>Before that, let’s set a benchmark using LLM-sort (see <a href="vibesort.sh" target="_blank">vibesort.sh</a>).</p>
+<p>You may have heard of the more recent <a href="https://github.com/abyesilyurt/vibesort/" target="_blank"><code>vibeSort</code></a>.</p>
 
 <code-block>
-  <pre><code>❯ ./vibesort.sh cases
-Input:  file1,file10,file2
+  <pre><code>Input:  file1,file10,file2
 Output: {"sorted":["file1","file2","file10"]}
 
 Input:  low,high,medium
@@ -114,36 +113,36 @@ Input:  monday,friday,tuesday,sunday
 Output: {"sorted":["monday","tuesday","friday","sunday"]}</code></pre>
 </code-block>
 
-<p>Can we do this without LLMs? Let me introduce a less natural natural sort.</p>
+<p>I think LLMs are overkill for the use case of sorting word sequences for human sensibility. LLMs may be the most natural sorter, but I was looking for something lighter.</p>
 
-<h2>Natural sort using word embeddings</h2>
+<p>Can we do this without LLMs? Let’s look at a less natural natural sort.</p>
+
+<h1>Natural sort using word embeddings</h1>
 
 <p>The idea behind this is to use <a href="https://en.wikipedia.org/wiki/Word_embedding" target="_blank"><strong>word embeddings</strong></a>, or vectors that represent words in a conceptual space. The question is, are word embeddings sortable? Are embeddings even orderable? Is the order transitive? I set out to experiment.</p>
 
-<h3>Quick intro to word embedding arithmetic</h3>
+<h2>Quick intro to word embedding arithmetic</h2>
 
-<p>Basically, we turn words into numbers so we can do math on them. Embeddings are high-dimensional vectors (> 300 coordinates) that describe word meanings. The key aspect is that words with similar meanings have vectors that are close in the conceptual space.</p>
+<p>Basically, we turn words into numbers so we can do math on them. Embeddings are high-dimensional vectors (> 300 coordinates) that describe word meanings. The key aspect is that words with similar meanings have vectors that are close in this conceptual space.</p>
 
-<p>Comparing two words can be as simple as taking the dot product of their vectors.</p>
-
-<p>Since they are vectors, you can do other kinds of math on them. A popular cherry-picked example is to add and subtract embeddings to ‘calculate’ words like <code>King - Man + Woman = Queen</code>.</p>
+<p>Since they are vectors, you can do math on them. A popular cherry-picked example is to add and subtract embeddings to ‘calculate’ words like <code>King - Man + Woman = Queen</code>.</p>
 
 <prose-bleed>
   <figure>
-    <img src="projector.png" alt="3D projection of word embeddings with man, woman, king, queen points highlighted">
-    <figcaption>This is the embedding <a href="https://projector.tensorflow.org/" target="_blank">projected</a> to 3D using principal component analysis, with a few interesting words highlighted.</figcaption>
+    <img src="projector.png" alt="3D projection of word embeddings with man, woman, king, queen points highlighted" loading="lazy" width="1186" height="879" style="--lqip:-108253">
+    <figcaption>This is the embedding space <a href="https://projector.tensorflow.org/" target="_blank">projected</a> to 3D using principal component analysis, with a few interesting words highlighted.</figcaption>
   </figure>
 </prose-bleed>
 
 <p>The main idea is that individual dimensions encode specific meanings or features. In the <code>King - Man + Woman = Queen</code> example, there could be a <code>Gender</code> axis or a <code>Nobility</code> axis that makes the arithmetic work.</p>
 
 <figure>
-  <img src="gender-nobility.jpg" alt="2D scattterplot showing gender and nobility as dimensions and man, woman, king, queen as points">
+  <img src="gender-nobility.jpg" alt="2D scattterplot showing gender and nobility as dimensions and man, woman, king, queen as points" loading="lazy" width="600" height="400" style="--lqip:174627">
   <figcaption>Man, woman, king, and queen projected to 2D using principal component analysis (not-to-scale illustration only). I made up the labels for the two resulting dimensions.</figcaption>
 </figure>
 
 <box-note style="background:var(--highlight-clr)">
-  <p><strong>The main hypothesis:</strong> Could there be an <strong><i>order axis</i></strong> that encodes the natural order of words?</p>
+  <p><strong>The main hypothesis:</strong> Could there be an <strong><i>order axis</i></strong> in this conceptual space that encodes the natural order of words?</p>
 </box-note>
 
 <p>Is there an order vector that describes the general direction of going from Monday to Tuesday as well as low to medium to high?</p>
@@ -156,7 +155,7 @@ Output: {"sorted":["monday","tuesday","friday","sunday"]}</code></pre>
   <code>orderVec = word2vec("largest") - word2vec("smallest")</code>
 </p>
 
-<p>Projecting the input words onto this order vector should give us a straightforward linear ranking of the words. <small>Btw I’m using word2vec from Google to get word embeddings.</small></p>
+<p>Projecting the input words onto this order vector should in theory give us a straightforward linear value for each word which is trivially sortable. <small>Btw I’m using precomputed word2vec from Google to get word embeddings.</small></p>
 
 <code-block language="js">
   <pre><code> // Compute the order direction vector
@@ -180,9 +179,9 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <nat-sort-demo words="tiny,small,medium,large,huge" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
-<p>The above diagram shows the word embedding vectors for tiny, small, etc., collapsed onto a single line. This is the line from <code>"smallest"</code> to <code>"largest"</code>.</p>
+<p>The above diagram shows the word embedding vectors for tiny, small, etc., collapsed onto a single line &mdash; the line from <code>"smallest"</code> to <code>"largest"</code>.</p>
 
-<p><strong>Sorting words by the values of their projections on the smallest-to-largest direction seems to produce a ‘natural’ sort!</strong></p>
+<p><strong>Sorting words by the scalar values of their projections on the smallest-to-largest direction seems to produce a ‘natural’ sort!</strong></p>
 
 <p>It can even sort different kinds of semantic magnitudes, not just sizes per se, a couple of examples:</p>
 
@@ -194,7 +193,7 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <nat-sort-demo words="first,second,third,fourth,fifth" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
-<p>When sorting words completely unrelated to the concept of size/magnitude, it completely fails.</p>
+<p>When sorting words completely unrelated to the concept of size/magnitude, like love and hate, it fails.</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="smallest,largest" no-order-row></nat-sort-demo>
 
@@ -214,11 +213,11 @@ words.sort((a, b) => ranks[a] - ranks[b]);</code></pre>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="bad,good"></nat-sort-demo>
 
-<p>An order vector that can actually sort hate and love is <code>"worst"</code> to <code>"best"</code>.</p>
+<p>An order vector that can actually sort hate and love is <code>"worst"</code> to <code>"best"</code> for some reason.</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="worst,best"></nat-sort-demo>
 
-<p>And of course, the two extremes within the list themselves would work perfectly, but obviously the sorting algorithm doesn’t know that beforehand.</p>
+<p>And of course, the two extremes within the list themselves would work perfectly, but obviously the sorting algorithm wouldn’t know which elements are the extremes beforehand.</p>
 
 <nat-sort-demo words="hate,dislike,like,love" anchor-pair="hate,love"></nat-sort-demo>
 
@@ -347,22 +346,22 @@ orderVec = ranked[0].orderVec;</code></pre>
 <p>Let’s look at the 2D projections:</p>
 
 <nat-sort-scatter words="monday,tuesday,wednesday,thursday,friday,saturday,sunday">
-  <figcaption>The days are clustered more strongly by weekday and weekend. Maybe if we sorted by polar coordinates&hellip;</figcaption>
+  <figcaption>The days are clustered more strongly by weekday and weekend.</figcaption>
 </nat-sort-scatter>
 
 <p>The months reveal another limitation:</p>
 
 <nat-sort-scatter words="january,february,march,april,may,june,july,august,september,october,november,december">
-  <figcaption>Even ignoring May, months aren’t arranged in the conceptual space as expected</figcaption>
+  <figcaption>May is an outlier.</figcaption>
 </nat-sort-scatter>
 
 <p>The word <code>"may"</code> can mean different things. Word embeddings alone cannot capture the specific sense of the word within the context of the rest of the input words. Additional processing should be done to disambiguate the 5th month of the year <code>"may"</code> from the expression of possibility <code>"may"</code>.</p>
 
-<p>While the solution works in principle, there are many blind spots and edge cases to worry about. I explored a few more variants but the clustered order vectors were the best performing.</p>
+<p>While the solution works in principle, there are many blind spots and edge cases to worry about. I explored a few more variants.</p>
 
 <h2>Alternatives considered</h2>
 
-<p>What if we just fit a line through the words, and use that as the order vector? This eliminates the bias of human-curated anchor words.</p>
+<p>What if we just automatically fit a line through the words, and use that as the order vector? This eliminates the bias of human-curated anchor words.</p>
 
 <nat-sort-demo words="tiny,small,medium,large,huge" projection="principal"></nat-sort-demo>
 
@@ -374,19 +373,25 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-demo words="first,second,third,fourth,fifth,sixth,seventh,eighth,ninth,tenth" projection="principal"></nat-sort-demo>
 
-<p>Note that there is a 50% chance for the order to flip because the direction is arbitrary. Two opposite vectors represent the same line. The algorithm could choose either.</p>
+<p>Note that there is a 50% chance for the order to flip because the direction is arbitrary. The PCA algorithm could choose either of the two opposing vectors that represent the same line.</p>
 
-<p>Days of the week are hopeless, or is it?</p>
+<p>How about days of the week?</p>
 
 <nat-sort-demo words="monday,tuesday,wednesday,thursday,friday,saturday,sunday" projection="principal"></nat-sort-demo>
 
+<p>Still hopeless, or is it?</p>
+
 <h2>Rings in conceptual space</h2>
 
-<p>Another variant was to use polar coordinates to sort. The idea is that days of the week are cyclical and would form a ring in conceptual space.</p>
+<p>Another variant was to use polar coordinates to sort. The idea was that days of the week are cyclical and would form a ring in conceptual space.</p>
 
 <nat-sort-demo words="sunday,monday,tuesday,wednesday,thursday,friday,saturday" projection="angular"></nat-sort-demo>
 
-<p>Almost there! What about months?</p>
+<p>Almost there! I had a hunch that the weekends gain slightly different meanings from the rest of the week and so became outliers. If we removed them?</p>
+
+<nat-sort-demo words="monday,tuesday,wednesday,thursday,friday" projection="angular"></nat-sort-demo>
+
+<p>It’s a cycle, it’s a ring!? at least in 2D PCA projection! What about months?</p>
 
 <nat-sort-demo words="january,february,march,april,may,june,july,august,september,october,november,december" projection="angular"></nat-sort-demo>
 
@@ -394,25 +399,45 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <nat-sort-demo words="january,february,march,april,june,july,august,september,october,november,december" projection="angular"></nat-sort-demo>
 
-<p>Without May, it’s actually a ring! The starting element is arbitrary when sorting by angle but if you trace it, the order is almost correct! If not for November.</p>
+<p>Without May, it’s actually a ring! The starting element is arbitrary when sorting by angle but the order is almost correct! if not for November.</p>
 
-<p>There is definitely some value in refining the meaning of each word in context before doing the sorting. I haven’t looked into that direction yet. Maybe for a future post.</p>
+<figure>
+  <video autoplay playsinline loop muted src="months-projector.mp4"></video>
+  <figcaption>In 3D PCA it’s a ring and <em>a dot in front</em>. You can see the how the 1D, 2D, and 2D-without-may projections relate this 3D projection.</figcaption>
+</figure>
+
+<p>There is definitely some value in contextualising the meaning of each word in the list doing the sorting. I haven’t looked into that direction yet.</p>
+
+<p>Should seasons form a cycle?</p>
+
+<nat-sort-demo words="winter,spring,summer,autumn" projection="angular"></nat-sort-demo>
+
+<p>Do random words form a ring?</p>
+
+<prose-bleed>
+<auto-flex>
+  <nat-sort-scatter words="practical,detail,resist,do,tower"></nat-sort-scatter>
+  <nat-sort-scatter words="panther,finch,chicken,camel,jaguar"></nat-sort-scatter>
+</auto-flex>
+</prose-bleed>
+
+<p>I don’t know what to make of these. In the end I didn’t include angular sorting because there was no good crieria for when to use it and when to use linear projections.</p>
 
 <h2>Natural sorting showdown</h2>
 
-<p>If we were to put orderings on a scale, we can put dictionary sorting on the extreme and LLM on the other end (or maybe an actual human). In the middle lies our solution which I’ll call <code>wordSort</code>, coming after <code>naturalSort</code>. <small>Wait, did I just order the orderings? Sorted the sorts?</small></p>
+<p>If we were to put orderings on a scale, we can put dictionary sorting on one extreme and LLM on the other end (or maybe an actual human). In the middle lies our solution which I’ll call <code>wordSort</code>, coming after <code>naturalSort</code>. <small>Wait, did I just order the orderings? Sorted the sorts?</small></p>
 
 <prose-bleed>
 <prose-table>
 <table>
   <tr><th>Expected<th><code>Array.sort</code><br>(lexical)<th><code>naturalSort</code><br>(natural)<th><code>wordSort</code><br>(naturaler)<th><code>vibeSort</code><br>(naturalest)
-  <tr><td>a, b, c<td><details><summary>✅</summary>a,<br>b,<br>c</details><td><details><summary>✅</summary>a,<br>b,<br>c</details><td><details><summary>❌</summary>c,<br>b,<br>a</details><td><details><summary>✅</summary>a,<br>b,<br>c</details>
+  <tr><td>a, b, c<td><details><summary>✅</summary>a,<br>b,<br>c</details><td><details><summary>✅</summary>a,<br>b,<br>c</details><td><details><summary>🔁</summary>c,<br>b,<br>a</details><td><details><summary>✅</summary>a,<br>b,<br>c</details>
   <tr><td>low, medium, high<td><details><summary>❌</summary>high,<br>low,<br>medium</details><td><details><summary>❌</summary>high,<br>low,<br>medium</details><td><details><summary>✅</summary>low,<br>medium,<br>high</details><td><details><summary>✅</summary>low,<br>medium,<br>high</details>
   <tr><td>birth, life, death<td><details><summary>❌</summary>birth,<br>death,<br>life</details><td><details><summary>❌</summary>birth,<br>death,<br>life</details><td><details><summary>✅</summary>birth,<br>life,<br>death</details><td><details><summary>✅</summary>birth,<br>life,<br>death</details>
   <tr><td>dawn, noon, dusk<td><details><summary>❌</summary>dawn,<br>dusk,<br>noon</details><td><details><summary>❌</summary>dawn,<br>dusk,<br>noon</details><td><details><summary>✅</summary>dawn,<br>noon,<br>dusk</details><td><details><summary>✅</summary>dawn,<br>noon,<br>dusk</details>
-  <tr><td>rare, uncommon, common<td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>✅</summary>rare,<br>uncommon,<br>common</details><td><details><summary>❌</summary>common,<br>uncommon,<br>rare</details>
-  <tr><td>bronze, silver, gold<td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>❌</summary>gold,<br>silver,<br>bronze</details><td><details><summary>✅</summary>bronze,<br>silver,<br>gold</details>
-  <tr><td>Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday<td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Monday,<br>Wednesday,<br>Thursday,<br>Tuesday,<br>Friday,<br>Saturday,<br>Sunday</details><td><details><summary>✅</summary>Monday,<br>Tuesday,<br>Wednesday,<br>Thursday,<br>Friday,<br>Saturday,<br>Sunday</details>
+  <tr><td>rare, uncommon, common<td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>❌</summary>common,<br>rare,<br>uncommon</details><td><details><summary>✅</summary>rare,<br>uncommon,<br>common</details><td><details><summary>🔁</summary>common,<br>uncommon,<br>rare</details>
+  <tr><td>bronze, silver, gold<td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>❌</summary>bronze,<br>gold,<br>silver</details><td><details><summary>🔁</summary>gold,<br>silver,<br>bronze</details><td><details><summary>✅</summary>bronze,<br>silver,<br>gold</details>
+  <tr><td>Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday<td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Friday,<br>Monday,<br>Saturday,<br>Sunday,<br>Thursday,<br>Tuesday,<br>Wednesday</details><td><details><summary>❌</summary>Monday,<br>Wednesday,<br>Thursday,<br>Tuesday,<br>Friday,<br>Saturday,<br>Sunday</details><td><details><summary>❌</summary>Sunday,<br>Monday,<br>Tuesday,<br>Wednesday,<br>Thursday,<br>Friday,<br>Saturday</details>
   <tr><td>first, second, third, fourth, fifth<td><details><summary>❌</summary>fifth,<br>first,<br>fourth,<br>second,<br>third</details><td><details><summary>❌</summary>fifth,<br>first,<br>fourth,<br>second,<br>third</details><td><details><summary>❌</summary>first,<br>second,<br>fifth,<br>third,<br>fourth</details><td><details><summary>✅</summary>first,<br>second,<br>third,<br>fourth,<br>fifth</details>
   <tr><td>file1, file2, file3, file10, file20<td><details><summary>❌</summary>file1,<br>file10,<br>file2,<br>file20,<br>file3</details><td><details><summary>✅</summary>file1,<br>file2,<br>file3,<br>file10,<br>file20</details><td>N/A<td><details><summary>✅</summary>file1,<br>file2,<br>file3,<br>file10,<br>file20</details>
   <tr><td>Wednesday, February 15, 2023; Sunday, December 1, 2024; Wednesday, March 5, 2025<td><details><summary>❌</summary>Sunday, December 1, 2024;<br>Wednesday, February 15, 2023;<br>Wednesday, March 5, 2025</details><td><details><summary>✅</summary>Wednesday, February 15, 2023;<br>Sunday, December 1, 2024;<br>Wednesday, March 5, 2025</details><td>N/A<td><details><summary>✅</summary>Wednesday, February 15, 2023;<br>Sunday, December 1, 2024;<br>Wednesday, March 5, 2025</details>
@@ -456,7 +481,7 @@ orderVec = ranked[0].orderVec;</code></pre>
 </style>
 </prose-table>
 </prose-bleed>
-<script data-rss="dynamic">
+<script data-rss="hidden">
   const table = document.currentScript.previousElementSibling.querySelector("table");
 
   table.addEventListener("click", (e) => {
@@ -493,11 +518,17 @@ orderVec = ranked[0].orderVec;</code></pre>
   table.querySelector("tr:nth-child(3) details").open = true;
 </script>
 
+<p>Isn’t it ironic that the most natural sorter is artificial intelligence?</p>
+
 <h2>Online demo</h2>
 
 <p>Congrats on making it this far. As a reward you can play with an online demo! Since this is a web demo, the vocabulary is limited, so bear with it and try to use very common words only!</p>
 
 <nat-sort-sandbox></nat-sort-sandbox>
+
+<h2>Bonus: Organic sort</h2>
+
+<p>If you send a list of words to <code>organic-sort-requests@leanrad.com</code>, I will sort them with my meat brain and send the results back to you.</p>
 
 <h2>Conclusion</h2>
 
@@ -511,6 +542,10 @@ orderVec = ranked[0].orderVec;</code></pre>
 
 <p>So this sits in an interesting middle ground between traditional natural sort (which only handles alphanumeric patterns) and LLM-sort (which understands everything but is expensive). Word embeddings are fast, offline, and handle semantic ordering&hellip; as long as the words aren’t too ambiguous.</p>
 
+<p>Final question: Which came first?</p>
+
+<nat-sort-demo words="egg,chicken"></nat-sort-demo>
+
 <h2>Further reading</h2>
 
 <ul>
@@ -519,7 +554,7 @@ orderVec = ranked[0].orderVec;</code></pre>
   <li><a href="https://fuzzytolerance.info/blog/2019/07/19/The-better-way-to-do-natural-sort-in-JavaScript/">Native JS via localeCompare (fuzzytolerance blog, 2019)</a>
   <li>
     <a href="https://arxiv.org/abs/1802.01241">Semantic projection (Grand et al, 2018)</a>, same core idea
-    <img src="semantic-projection.png" alt="graph showing an embedding space with a SMALL to BIG line with animals of different sizes projected onto it">
+    <img src="semantic-projection.png" alt="graph showing an embedding space with a SMALL to BIG line with animals of different sizes projected onto it" loading="lazy" width="260" height="193" style="--lqip:174819">
   <li><a href="https://arxiv.org/abs/1806.05521v1">Semantic axis (An, Kwak & Ahn, 2018)</a>, identifying pole words (anchor words)
   <li><a href="https://aclanthology.org/D13-1169/">Deriving Adjectival Scales from Continuous Space Word Representations (Kim & de Marneffe, 2013)</a>, ranking words with static embeddings
   <li><a href="https://arxiv.org/abs/2010.02686">Ranking Scalar Adjectives with Contextualised Representations (Garí Soler & Apidianaki, 2020)</a>, ranking words with contextual embeddings

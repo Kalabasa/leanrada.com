@@ -76,11 +76,17 @@
                 fill: var(--text2-clr);
                 font-size: 12px;
               }
-              circle,
+              circle:where(:not([fill])),
               .correct {
                 color: var(--clr0);
                 fill: var(--clr0);
                 stroke: var(--clr0);
+              }
+              .coord {
+                opacity: 0;
+              }
+              g:hover .coord {
+                opacity: 1;
               }
             }
           </style>`
