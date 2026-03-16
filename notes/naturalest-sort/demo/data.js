@@ -1,12 +1,8 @@
 import { openDB } from "./db.js";
 
 export class Word2VecData {
-  preload() {
-    return populate();
-  }
-
   async find(words) {
-    await populate();
+    await preload();
     const keys = words.map(w => w.toLowerCase());
     const vecs = await db.get(keys);
     for (let i = 0; i < words.length; i++) {
@@ -18,11 +14,11 @@ export class Word2VecData {
 
 const db = await openDB("word2vec");
 
-let populatePromise = null;
+let preloadPromise = null;
 
-async function populate() {
-  if (populatePromise) return populatePromise;
-  return populatePromise = (async () => {
+export async function preload() {
+  if (preloadPromise) return preloadPromise;
+  return preloadPromise = (async () => {
     const sentinelKey = "_populated";
     const [existing] = await db.get([sentinelKey]);
     if (existing) return;

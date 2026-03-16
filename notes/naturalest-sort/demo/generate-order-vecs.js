@@ -1,8 +1,8 @@
-import { Word2VecData } from "./data.js";
+import { Word2VecData, preload } from "./data.js";
 import { writeFileSync } from "fs";
 
 const data = new Word2VecData();
-await data.preload();
+await preload();
 const anchors = [
   ["first", "last"], ["beginning", "end"], ["initial", "final"],
   ["start", "finish"], ["previous", "next"], ["before", "after"],
