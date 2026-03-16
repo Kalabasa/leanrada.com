@@ -1,0 +1,17 @@
+<!doctype html>
+<meta charset="utf-8">
+<pre id="output" style="font-family:Menlo,Consolas,monospace;font-size:14px"></pre>
+<script>
+  const colors = { 31: "#a44", 32: "#2a7a3a", 33: "#b90" };
+  const output = document.getElementById("output");
+  const _log = console.log;
+  console.log = (...args) => {
+    _log(...args);
+    const html = args.join(" ")
+      .replace(/\x1b\[(\d+)m/g, (_, code) =>
+        colors[code] ? `<span style="color:${colors[code]}">` : "</span>"
+      );
+    output.innerHTML += html + "\n";
+  };
+</script>
+<script type="module" src="test.js"></script>
