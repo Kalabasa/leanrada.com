@@ -1,14 +1,14 @@
 import * as cheerio from "cheerio";
 import fs from "node:fs/promises";
-import path from "node:path";
 import { tryWrite } from "../util/try-write.mjs";
-import { findComponentNames } from "./find-component-names.mjs";
+import { renderItem } from "./render-item.js";
+import { createSnapshotter } from "./snapshot-page.js";
 
 const domain = "leanrada.com";
 const channelTitle = "leanrada.com notes";
 
 export async function updateRSS({ rssFilePath, notes, siteDir, dryRun }) {
-  const resolvedPath = path.resolve(rssFilePath);
+  const resolvedPath = (await import("node:path")).resolve(rssFilePath);
   const sourceRSS = (await fs.readFile(resolvedPath)) ?? renderBase();
   const rewrittenRSS = await rewriteRSS({ rss: sourceRSS, notes, siteDir });
   await tryWrite({
@@ -21,8 +21,6 @@ export async function updateRSS({ rssFilePath, notes, siteDir, dryRun }) {
 }
 
 async function rewriteRSS({ rss, notes, siteDir }) {
-  const componentNames = findComponentNames(siteDir);
-
   let added = false;
 
   const ch = cheerio.load(rss, { xml: true });
@@ -32,6 +30,7 @@ async function rewriteRSS({ rss, notes, siteDir }) {
     oldestTime = Math.min(oldestTime, Date.parse(ch(el).text()));
   });
 
+  const notesToRender = [];
   for (const note of notes) {
     if (!note.public) continue;
     if (!note.href.startsWith("/")) {
@@ -51,178 +50,59 @@ async function rewriteRSS({ rss, notes, siteDir }) {
     });
 
     if (matchEntry.length > 0) continue;
+    notesToRender.push({ note, date });
+  }
 
-    const itemXML = await renderItem({ note, url, componentNames, siteDir });
+  if (notesToRender.length === 0) return ch.xml();
 
-    // Find a place to insert the new item
-    const deltas = ch("item")
-      .toArray()
-      .map((el) => {
-        const cel = ch(el);
-        const otherTime = Date.parse(cel.find("pubDate").text());
-        const delta = date.getTime() - otherTime;
-        return { el, delta };
-      })
-      .sort((a, b) => Math.abs(a.delta) - Math.abs(b.delta));
+  const snapshotter = await createSnapshotter(siteDir);
 
-    if (deltas.length === 0) {
-      ch("channel").append(itemXML);
-    } else {
-      const nearest = deltas[0];
-      if (nearest.delta > 0) {
-        ch(nearest.el).before(itemXML.trimStart());
+  try {
+    for (const { note, date } of notesToRender) {
+      const mainHTML = await snapshotter.snapshotPage(note.href);
+
+      const itemXML = renderItem({
+        mainHTML,
+        pageHref: note.href,
+        title: note.title,
+        date,
+        domain,
+      });
+
+      const deltas = ch("item")
+        .toArray()
+        .map((el) => {
+          const cel = ch(el);
+          const otherTime = Date.parse(cel.find("pubDate").text());
+          const delta = date.getTime() - otherTime;
+          return { el, delta };
+        })
+        .sort((a, b) => Math.abs(a.delta) - Math.abs(b.delta));
+
+      if (deltas.length === 0) {
+        ch("channel").append(itemXML);
       } else {
-        ch(nearest.el).after(itemXML.trimEnd());
+        const nearest = deltas[0];
+        if (nearest.delta > 0) {
+          ch(nearest.el).before(itemXML.trimStart());
+        } else {
+          ch(nearest.el).after(itemXML.trimEnd());
+        }
       }
+      added = true;
     }
-    added = true;
+  } finally {
+    await snapshotter.close();
   }
 
   // prune old items
   if (added) {
-    // assuming items are sorted by descending date
     ch("item").each((i, el) => {
       if (i >= 20) ch(el).remove();
     });
   }
 
   return ch.xml();
-}
-
-async function renderItem({ note, url, componentNames, siteDir }) {
-  const ch = cheerio.load(
-    await fs.readFile(
-      path.resolve(siteDir, path.relative("/", note.href), "index.html")
-    )
-  );
-
-  const probableLocalComponentNames = ch("script[src]")
-    .toArray()
-    .map((script) => {
-      const name = path.basename(script.attribs.src, ".js");
-      if (name === "common") return null;
-      return name;
-    })
-    .filter((name) => name);
-  const interactiveTags = probableLocalComponentNames
-    .concat(componentNames)
-    .filter((tag) => !tag.includes("code-block"));
-
-  let content = ch("main");
-  if (!content) {
-    console.error("No content for page:", title);
-    throw new Error("No content!");
-  }
-
-  // Remove extra elements
-  content.find("style").remove();
-
-  // Flatten structures
-  let loopFlatten = true;
-  while (loopFlatten) {
-    loopFlatten = false;
-    content.contents().each((i, el) => {
-      if (["div", "span", "code-block"].includes(el.name)) {
-        ch(el).replaceWith(el.children);
-        loopFlatten = true;
-      } else if (el.type === "comment") {
-        ch(el).remove();
-      }
-    });
-  }
-
-  // Remove extra attributes
-  content.find("*").each((i, el) => {
-    ch(el).removeAttr("class").removeAttr("style");
-  });
-
-  const interactiveElements = content.find(
-    interactiveTags.concat("iframe", "script:not([src])", "[data-rss=interactive]").join(",")
-  );
-
-  if (interactiveElements.length > 0) {
-    content.prepend(
-      `<p><em>For RSS readers: This article contains interactive content available on the <a href="${url.href}">original post on ${domain}</a>.</em></p>\n`
-    );
-  }
-
-  // Replace interactive components
-  interactiveElements.each((i, el) => {
-    const cel = ch(el);
-    const name =
-      el.name === "script"
-        ? "Inline script"
-        : el.name
-            .split("-")
-            .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1))
-            .join(" ");
-    const label = cel.attr("alt") ?? cel.attr("aria-label") ?? "";
-    cel.replaceWith(
-      `<pre>Interactive content: <a href="${url.href}">Visit the post to interact with this content.</a>` +
-        `\nAlternative name: ${name}` +
-        (label ? `\nAlternative text: ${label}` : "") +
-        `</pre>`
-    );
-  });
-
-  // Update URLs
-  content.find("img,video,source").each((i, el) => {
-    const cel = ch(el);
-    const src = cel.attr("src");
-    if (src) {
-      cel.attr("src", makeURL(note.href, src));
-    }
-  });
-  content.find("[href]").each((i, el) => {
-    const cel = ch(el);
-    const href = cel.attr("href");
-    if (href) {
-      cel.attr("href", makeURL(note.href, href));
-    }
-  });
-
-  // Format for plaintext
-  const tempRoot = ch("<div></div>");
-  content.contents().each((i, el) => {
-    if (el.type === "text" && el.data.trim() === "") {
-      return;
-    }
-
-    const isBlock = [
-      "p",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "ol",
-      "ul",
-      "pre",
-      "figure",
-      "img",
-      "video",
-      "details",
-    ].includes(el.name);
-    if (isBlock) tempRoot.append("\n");
-    tempRoot.append(el);
-    if (isBlock) tempRoot.append("\n");
-  });
-  content = tempRoot;
-
-  const description = content.html();
-
-  return `
-
-    <item>
-      <title><![CDATA[${note.title}]]></title>
-      <link><![CDATA[${url}]]></link>
-      <guid isPermaLink="true"><![CDATA[${url}]]></guid>
-      <pubDate>${formatDate(new Date(note.date))}</pubDate>
-      <description><![CDATA[${description}]]></description>
-    </item>
-
-    `;
 }
 
 function renderBase() {
@@ -236,39 +116,6 @@ function renderBase() {
       <atom:link href="${domain}/rss.xml" rel="self" type="application/rss+xml"/>
   </channel>
 </rss>`;
-}
-
-function makeURL(pageHref, href) {
-  if (/^(.+):/.test(href)) return href;
-  const urlPath = path.resolve("/", pageHref, href);
-  const url = new URL(urlPath, `https://${domain}`);
-  url.searchParams.set("ref", "rss");
-  return url.href;
-}
-
-function formatDate(date) {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
-  const dayName = days[date.getDay()];
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = months[date.getMonth()];
-  const year = date.getFullYear();
-
-  return `${dayName}, ${day} ${month} ${year} 00:00:00 GMT`;
 }
 
 function normalizePath(url) {
