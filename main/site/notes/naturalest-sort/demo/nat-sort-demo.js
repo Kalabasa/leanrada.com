@@ -2,12 +2,20 @@
   customElements.define(
     "nat-sort-demo",
     class NatSortDemo extends HTMLElement {
+      #children = "";
+
       connectedCallback() {
         new IntersectionObserver((entries, observer) => {
           if (!entries[0].isIntersecting) return;
           observer.disconnect();
           this.#run();
         }).observe(this);
+
+        const { preload } = import("./data.js");
+        setTimeout(() => preload(), 5_000);
+
+        this.#children = this.innerHTML;
+        this.innerHTML = "<i>Loading word embeddings (25MB)&hellip;</i>";
       }
 
       async #run() {
@@ -61,7 +69,7 @@
                 <td><b>Sorted</b>
                 <td class="text2-color"><code>${html.raw(output.map(formatOutput).join(",<wbr>"))}</code>
             </table>
-            ${html.raw(this.innerHTML)}
+            ${html.raw(this.#children)}
           </figure>
         </div>`;
 
@@ -93,7 +101,7 @@
 
               svg {
                 max-width: calc(100vw - 36px);
-                width: 400px;
+                width: 540px;
                 display: block;
                 margin: auto;
               }
@@ -104,12 +112,12 @@
               text, .text {
                 color: var(--text-clr);
                 fill: var(--text-clr);
-                font-size: 12px;
+                font-size: 11px;
               }
               .text2 {
                 color: var(--text2-clr);
                 fill: var(--text2-clr);
-                font-size: 12px;
+                font-size: 11px;
               }
               circle:where(:not([fill])),
               .correct {
