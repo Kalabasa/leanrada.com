@@ -71,7 +71,7 @@ export function renderScatter(labels, points) {
     <line x1="${ox}" y1="${dataBottom.toFixed(1)}" x2="${ox}" y2="${dataTop.toFixed(1)}" stroke-width="1" marker-start="url(#scatter-arrow-start)" marker-end="url(#scatter-arrow-end)"/>
     ${html.raw(xTicks.join(""))}${html.raw(yTicks.join(""))}`;
 
-  return html`<svg width="${w}" height="${h}">${axes}${html.raw(dots)}</svg>`;
+  return html`<svg viewBox="0 0 ${w} ${h}">${axes}${html.raw(dots)}</svg>`;
 }
 
 function niceStep(range, maxTicks) {

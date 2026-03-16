@@ -37,6 +37,8 @@
               }
 
               svg {
+                max-width: calc(100vw - 36px);
+                width: 400px;
                 display: block;
                 margin: auto;
                 background: var(--card-clr);

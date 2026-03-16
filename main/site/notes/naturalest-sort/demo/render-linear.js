@@ -93,7 +93,7 @@ export function renderLinearGraph(projection, correct) {
   });
 
   const totalH = y;
-  return html`<svg width="${totalW}" height="${totalH}">${numberLine}${html.raw(rows)}</svg>`;
+  return html`<svg viewBox="0 0 ${totalW} ${totalH}">${numberLine}${html.raw(rows)}</svg>`;
 }
 
 function niceStep(range, maxTicks) {

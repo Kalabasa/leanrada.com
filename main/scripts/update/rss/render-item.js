@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import path from "node:path";
 
-export function rendreItem({ mainHTML, pageHref, title, date, domain }) {
+export function renderItem({ mainHTML, pageHref, title, date, domain }) {
   const url = new URL(pageHref, `https://${domain}`);
   url.searchParams.set("ref", "rss");
 
@@ -30,7 +30,7 @@ export function rendreItem({ mainHTML, pageHref, title, date, domain }) {
     ch(el).removeAttr("class").removeAttr("style");
   });
 
-  const interactiveElements = content.find("iframe");
+  const interactiveElements = content.find(`iframe,[data-rss="interactive"]`);
 
   if (interactiveElements.length > 0) {
     content.prepend(
@@ -52,14 +52,14 @@ export function rendreItem({ mainHTML, pageHref, title, date, domain }) {
     const cel = ch(el);
     const src = cel.attr("src");
     if (src) {
-      cel.attr("src", makeURL(pageHref, src));
+      cel.attr("src", makeURL(pageHref, src, domain));
     }
   });
   content.find("[href]").each((i, el) => {
     const cel = ch(el);
     const href = cel.attr("href");
     if (href) {
-      cel.attr("href", makeURL(pageHref, href));
+      cel.attr("href", makeURL(pageHref, href, domain));
     }
   });
 
@@ -106,7 +106,7 @@ export function rendreItem({ mainHTML, pageHref, title, date, domain }) {
     `;
 }
 
-function makeURL(pageHref, href) {
+function makeURL(pageHref, href, domain) {
   if (/^(.+):/.test(href)) return href;
   const urlPath = path.resolve("/", pageHref, href);
   const url = new URL(urlPath, `https://${domain}`);

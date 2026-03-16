@@ -7,7 +7,8 @@ export async function createSnapshotter(siteDir) {
   const server = await startServer(siteDir);
   const browser = await puppeteer.launch({
     executablePath: "/usr/bin/chromium",
-    headless: true,
+    headless: false,
+    devtools: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
@@ -20,6 +21,7 @@ export async function createSnapshotter(siteDir) {
         await page.goto(pageUrl, { waitUntil: "networkidle0", timeout: 30_000 });
 
         // trigger IntersectionObservers
+        await page.waitForNetworkIdle();
         await page.evaluate(async () => {
           const delay = (ms) => new Promise((r) => setTimeout(r, ms));
           const step = window.innerHeight;
@@ -29,6 +31,10 @@ export async function createSnapshotter(siteDir) {
           }
           window.scrollTo(0, 0);
           await delay(500);
+        });
+        await page.waitForNetworkIdle({
+          concurrency: 0,
+          idleTime: 10_000,
         });
 
         const mainHTML = await page.evaluate(() => {

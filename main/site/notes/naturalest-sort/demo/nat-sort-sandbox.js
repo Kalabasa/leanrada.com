@@ -8,11 +8,11 @@
 
       connectedCallback() {
         this.innerHTML = html`
-        <auto-flex>
+        <auto-flex data-rss="hidden">
           <input type="text" placeholder="low,medium,high">
           <button appearance="button">Sort</button>
         </auto-flex>
-        <output>Enter comma-separated words</output>`;
+        <output data-rss="interactive">Enter comma-separated words</output>`;
 
         this.#input = this.querySelector("input");
         this.#output = this.querySelector("output");
@@ -59,6 +59,8 @@
               }
 
               svg {
+                max-width: calc(100vw - 36px);
+                width: 100%;
                 display: block;
                 margin: auto;
               }
