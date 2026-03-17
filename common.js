@@ -573,7 +573,7 @@ function autoLoadGlobalComponents() {
 
 if (window.location.search.match(/[?&]edit\b/)) {
   import("/tools/edit.js");
-} else if (window.location.hostname === "localhost") {
+} else if (window.location.host === "localhost:8000") {
   import("https://kalabasa.github.io/simple-live-reload/script.js");
 }
 
