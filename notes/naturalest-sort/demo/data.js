@@ -31,7 +31,7 @@ export async function preload() {
 
 const isNode = typeof globalThis.process !== "undefined";
 
-const dataURL = "https://raw.githubusercontent.com/Kalabasa/word2vecjson/df8e1ca892678ab7d00fc9f0c577b64b79c1c568/data.json"; // https://kalabasa.github.io/word2vecjson/data.json
+const dataURL = "https://raw.githubusercontent.com/Kalabasa/word2vecjson/2ed5414e77533f9d9bded211158569d99c00cec1/data.json.gz"; // https://kalabasa.github.io/word2vecjson/data.json.gz
 
 async function fetchData() {
   if (isNode) {
@@ -42,11 +42,16 @@ async function fetchData() {
       return JSON.parse(fs.readFileSync(cacheFile, "utf-8"));
     } catch {
       console.warn("Fetching data...");
-      const data = await fetch(dataURL).then((r) => r.json());
+      const data = await decompressToJson(await fetch(dataURL));
       fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
       fs.writeFileSync(cacheFile, JSON.stringify(data));
       return data;
     }
   }
-  return fetch(dataURL).then((r) => r.json());
+  return decompressToJson(await fetch(dataURL));
+}
+
+async function decompressToJson(response) {
+  const stream = response.body.pipeThrough(new DecompressionStream("gzip"));
+  return await new Response(stream).json();
 }
