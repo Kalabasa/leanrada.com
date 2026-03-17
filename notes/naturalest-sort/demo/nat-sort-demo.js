@@ -1,4 +1,6 @@
 (() => {
+  import("./data.js").then(({ preload }) => setTimeout(() => preload(), 5_000));
+
   customElements.define(
     "nat-sort-demo",
     class NatSortDemo extends HTMLElement {
@@ -10,9 +12,6 @@
           observer.disconnect();
           this.#run();
         }).observe(this);
-
-        const { preload } = import("./data.js");
-        setTimeout(() => preload(), 5_000);
 
         this.#children = this.innerHTML;
         this.innerHTML = "<i>Loading word embeddings (25MB)&hellip;</i>";
