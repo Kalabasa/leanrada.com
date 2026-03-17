@@ -1,6 +1,5 @@
 (() => {
-  const { preload } = import("./data.js");
-  setTimeout(() => preload(), 5_000);
+  import("./data.js").then(({ preload }) => setTimeout(() => preload(), 5_000));
 
   customElements.define(
     "nat-sort-demo",
