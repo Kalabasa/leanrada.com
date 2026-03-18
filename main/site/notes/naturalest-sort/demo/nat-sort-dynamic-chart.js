@@ -12,7 +12,7 @@
       #targetLines = [];
       #fit = null;
       #camera = { rotX: 0, rotY: 0, scaleZ: 0 };
-      #targetCamera = { rotX: 0, rotY: 0, scaleZ: 0 };
+      #targetCamera = { rotX: 0, rotY: 0, scaleZ: 1 };
       #baseTargetCamera = { rotX: 0, rotY: 0, scaleZ: 1 };
       #animFrame = null;
       #width = 400;
@@ -356,7 +356,7 @@
   }
 
   function alphaFromDepth(z) {
-    return 0.2 + 0.8 * Math.max(0, Math.min(1, 1 + z * 3));
+    return 0.4 + 0.6 * Math.max(0, Math.min(1, 1 + z * 3));
   }
 
   function fitToScreen(projected, w, h, padding) {

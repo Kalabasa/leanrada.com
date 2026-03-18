@@ -96,12 +96,19 @@
               -Math.min(...xs), Math.max(...xs),
               -Math.min(...ys), Math.max(...ys)
             ) * 1.05;
+            const wordLines = points.map((p, i) => {
+              const nextIndex = (i + 1) % points.length;
+              if (!correct[i] || !correct[nextIndex]) return;
+              const q = points[nextIndex];
+              return { x1: p.x, y1: p.y, z1: p.z, x2: q.x, y2: q.y, z2: q.z };
+            }).filter(Boolean);
             dynamicChart.data = {
               points,
               lines: [
                 { x1: -extent, y1: 0, z1: 0, x2: extent, y2: 0, z2: 0, tickInterval: extent * 2 / 10, hasArrowStart: true, hasArrowEnd: true },
                 { x1: 0, y1: -extent, z1: 0, x2: 0, y2: extent, z2: 0, tickInterval: extent * 2 / 10, hasArrowStart: true, hasArrowEnd: true },
                 { x1: 0, y1: 0, z1: -extent, x2: 0, y2: 0, z2: extent, tickInterval: extent * 2 / 10, hasArrowStart: true, hasArrowEnd: true },
+                ...wordLines,
               ],
             };
           } else {
