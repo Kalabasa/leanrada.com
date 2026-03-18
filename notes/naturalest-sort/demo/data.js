@@ -37,18 +37,27 @@ async function fetchData() {
   if (isNode) {
     const fs = await import("node:fs");
     const path = await import("node:path");
-    const cacheFile = path.join(import.meta.dirname, ".cache", "data.json");
+    const cacheFile = path.join(import.meta.dirname, ".cache", "data.json.gz");
     try {
-      return JSON.parse(fs.readFileSync(cacheFile, "utf-8"));
+      return await decompressToJson(new Response(fs.readFileSync(cacheFile)));
     } catch {
       console.warn("Fetching data...");
-      const data = await decompressToJson(await fetch(dataURL));
+      const response = await fetch(dataURL);
+      const buf = Buffer.from(await response.clone().arrayBuffer());
       fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-      fs.writeFileSync(cacheFile, JSON.stringify(data));
-      return data;
+      fs.writeFileSync(cacheFile, buf);
+      return await decompressToJson(response);
     }
   }
-  return decompressToJson(await fetch(dataURL));
+
+  const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  if (isLocalhost) {
+    try {
+      const cacheURL = new URL(".cache/data.json.gz", import.meta.url).href;
+      return await decompressToJson(await fetch(cacheURL));
+    } catch {}
+  }
+  return await decompressToJson(await fetch(dataURL));
 }
 
 async function decompressToJson(response) {
