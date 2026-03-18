@@ -297,13 +297,13 @@
             drawTicks(ctx, line, color, flatAlpha, ap, bp, fit);
           }
 
-          if (line.label) {
+          if (line.labelEnd) {
             const mx = b[0];
             const my = b[1] - 12;
             ctx.fillStyle = getColor("--text-clr");
             ctx.font = getFont(11);
             ctx.textAlign = "center";
-            ctx.fillText(line.label, mx, my);
+            ctx.fillText(line.labelEnd, mx, my);
           }
           ctx.globalAlpha = 1;
         }
