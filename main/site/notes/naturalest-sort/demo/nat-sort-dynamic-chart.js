@@ -298,8 +298,8 @@
           }
 
           if (line.label) {
-            const mx = (a[0] + b[0]) / 2;
-            const my = Math.min(a[1], b[1]) - 12;
+            const mx = b[0];
+            const my = b[1] - 12;
             ctx.fillStyle = getColor("--text-clr");
             ctx.font = getFont(11);
             ctx.textAlign = "center";

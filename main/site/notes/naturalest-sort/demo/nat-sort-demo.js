@@ -177,6 +177,7 @@
               x1: Math.min(minX - rangeX * 0.1, -rangeY / 3, -rangeZ / 3), y1: 0, z1: 0,
               x2: Math.max(maxX + rangeX * 0.1, rangeY / 3, rangeZ / 3), y2: 0, z2: 0,
               tickInterval, hasArrowEnd: true,
+              label: result.projection.direction,
             };
 
             const indicator = dynamicChart.nextElementSibling;
