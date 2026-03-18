@@ -13,6 +13,7 @@
       }
 
       async #run() {
+        return; // TESTING
         const { wordSort } = await import("./sort.js");
 
         const words = this.getAttribute("words").split(",");
