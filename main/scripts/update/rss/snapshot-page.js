@@ -34,7 +34,7 @@ export async function createSnapshotter(siteDir) {
         });
         await page.waitForNetworkIdle({
           concurrency: 0,
-          idleTime: 10_000,
+          idleTime: 5_000,
         });
 
         const mainHTML = await page.evaluate(() => {
