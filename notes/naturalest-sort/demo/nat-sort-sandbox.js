@@ -9,7 +9,7 @@
       connectedCallback() {
         this.innerHTML = html`
         <auto-flex data-rss="hidden">
-          <input type="text" placeholder="low,medium,high">
+          <input type="text" placeholder="dawn noon dusk evening">
           <button appearance="button">Sort</button>
         </auto-flex>
         <output data-rss="interactive">Enter comma-separated words</output>`;
@@ -47,7 +47,7 @@
 
               output {
                 display: block;
-                min-height: 170px;
+                min-height: 650px;
                 margin-top: 12px;
                 text-align: center;
               }
@@ -105,28 +105,54 @@
 
         this.#output.innerHTML = `Sorting&hellip;`;
 
-        const thisPromise = (async () => {
-          const [{ wordSort }, { renderLinearGraph }] = await Promise.all([
-            import("./sort.js"),
-            import("./render-linear.js"),
-          ]);
-          return { wordSort, renderLinearGraph };
-        })();
+        const thisPromise = import("./sort.js");
         this.#sortPromise = thisPromise;
 
         try {
-          const { wordSort, renderLinearGraph } = await thisPromise;
-          if (this.#sortPromise !== thisPromise) return;
-          const result = await wordSort(words);
+          const { wordSort } = await thisPromise;
           if (this.#sortPromise !== thisPromise) return;
           if (words.length < 2) {
             this.#output.innerHTML = `<span class="error">Enter at least 2 words.</span>`;
             return;
           }
+          const result = await wordSort(words);
+          if (this.#sortPromise !== thisPromise) return;
           const sorted = result.toSorted();
-          const allCorrect = sorted.map(() => true);
-          const chart = renderLinearGraph(result.projection, allCorrect);
-          this.#output.innerHTML = html`${html.raw(chart)}<div><b>Sorted:</b> ${sorted.join(", ")}</div>`;
+          const coords = result.projection.coords;
+
+          this.#output.innerHTML = `<div><b>Sorted:</b> ${sorted.join(", ")}</div><nat-sort-dynamic-chart></nat-sort-dynamic-chart>`;
+          const chart = this.#output.querySelector("nat-sort-dynamic-chart");
+
+          const points = sorted.map((w) => {
+            const [x, y, z] = coords[w];
+            return { x, y, z, label: w, color: "#54f8c1" };
+          });
+          const projLines = points.map((p) => ({
+            x1: p.x, y1: 0, z1: 0,
+            x2: p.x, y2: p.y, z2: p.z,
+            color: p.color,
+          }));
+          const minX = Math.min(...points.map(p => p.x));
+          const maxX = Math.max(...points.map(p => p.x));
+          const minY = Math.min(...points.map(p => p.y));
+          const maxY = Math.max(...points.map(p => p.y));
+          const minZ = Math.min(...points.map(p => p.z));
+          const maxZ = Math.max(...points.map(p => p.z));
+          const rangeX = maxX - minX;
+          const rangeY = maxY - minY;
+          const rangeZ = maxZ - minZ;
+          const axisLine = {
+            x1: Math.min(minX - rangeX * 0.1, -rangeY / 3, -rangeZ / 3), y1: 0, z1: 0,
+            x2: Math.max(maxX + rangeX * 0.1, rangeY / 3, rangeZ / 3), y2: 0, z2: 0,
+            tickInterval: rangeX / 5, hasArrowEnd: true,
+            labelEnd: result.projection.direction,
+          };
+          chart.data = {
+            points,
+            lines: [axisLine, ...projLines],
+          };
+          chart.rotatable = true;
+          chart.baseTargetCamera = { rotX: 0.25, rotY: -0.25, scaleZ: 1 };
         } catch (e) {
           if (this.#sortPromise !== thisPromise) return;
           this.#output.innerHTML = html`<span class="error">${e.message}</span>`;
