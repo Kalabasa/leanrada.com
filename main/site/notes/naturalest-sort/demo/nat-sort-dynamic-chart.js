@@ -166,7 +166,7 @@
             }
           }
           l.color = tl.color;
-          l.label = tl.label;
+          l.labelEnd = tl.labelEnd;
           if (l.tickInterval == null || tl.tickInterval == null) {
             l.tickInterval = tl.tickInterval;
           } else {
