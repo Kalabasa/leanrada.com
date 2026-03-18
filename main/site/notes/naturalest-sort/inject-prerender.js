@@ -38,7 +38,7 @@ async function main() {
       .replace(/> </g, "><")
       .trim();
 
-    return `${indent}<${tag}${attrs ?? ""}>\n${indent}  ${minified}\n${indent}</${tag}>`;
+    return `${indent}<${tag}${attrs ?? ""}>\n${indent}  <!--prerender.js-->${minified}\n${indent}</${tag}>`;
   });
 
   await fs.writeFile(indexPath, result);
