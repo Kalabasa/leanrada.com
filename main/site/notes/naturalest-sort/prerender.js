@@ -10,7 +10,7 @@ const { siteDir } = initScript();
 const noteDir = path.join(siteDir, "notes/naturalest-sort");
 const indexPath = path.join(noteDir, "index.html");
 const outputPath = path.join(noteDir, "prerendered.html");
-const pageHref = "/notes/naturalest-sort/";
+const pageHref = "/notes/naturalest-sort/?prerender";
 
 main();
 

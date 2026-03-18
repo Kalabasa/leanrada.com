@@ -106,16 +106,16 @@
         this.#output.innerHTML = `Sorting&hellip;`;
 
         const thisPromise = (async () => {
-          const [{ wordSort }, { renderLinearGraph }] = await Promise.all([
+          const [{ wordSort }, { renderChart }] = await Promise.all([
             import("./sort.js"),
-            import("./render-linear.js"),
+            import("./render-dynamic-chart.js"),
           ]);
-          return { wordSort, renderLinearGraph };
+          return { wordSort, renderChart };
         })();
         this.#sortPromise = thisPromise;
 
         try {
-          const { wordSort, renderLinearGraph } = await thisPromise;
+          const { wordSort, renderChart } = await thisPromise;
           if (this.#sortPromise !== thisPromise) return;
           const result = await wordSort(words);
           if (this.#sortPromise !== thisPromise) return;
@@ -125,7 +125,7 @@
           }
           const sorted = result.toSorted();
           const allCorrect = sorted.map(() => true);
-          const chart = renderLinearGraph(result.projection, allCorrect);
+          const chart = renderChart(sorted, result.projection, { mode: "linear", correct: allCorrect });
           this.#output.innerHTML = html`${html.raw(chart)}<div><b>Sorted:</b> ${sorted.join(", ")}</div>`;
         } catch (e) {
           if (this.#sortPromise !== thisPromise) return;

@@ -28,25 +28,37 @@ export async function wordSort(list, { anchorPair, projectionType = "order" } = 
       projection.direction = `'${ranked[0].name}' cluster vector`;
     }
     vecs.forEach((v, i) => projection.values[list[i]] = dot(orderVec, v));
+
+    const mean = average(vecs);
+    const centered = vecs.map(vec => subtract(vec.slice(), mean));
+    const pc2 = powerIteration(centered, [orderVec]);
+    const pc3 = powerIteration(centered, [orderVec, pc2]);
+    projection.coords = Object.fromEntries(list.map((w, i) =>
+      [w, [dot(centered[i], orderVec), dot(centered[i], pc2), dot(centered[i], pc3)]]
+    ));
   } else {
     const mean = average(vecs);
     const centered = vecs.map(vec => subtract(vec.slice(), mean));
     const pc1 = powerIteration(centered);
+    const pc2 = powerIteration(centered, [pc1]);
+    const pc3 = powerIteration(centered, [pc1, pc2]);
+
+    projection.coords = Object.fromEntries(list.map((w, i) =>
+      [w, [dot(centered[i], pc1), dot(centered[i], pc2), dot(centered[i], pc3)]]
+    ));
 
     if (projectionType === "principal") {
       vecs.forEach((v, i) => projection.values[list[i]] = dot(pc1, v));
       projection.direction = "PC1";
     } else if (projectionType === "angular") {
-      const pc2 = powerIteration(centered, [pc1]);
-      const planar = centered.map(v => [dot(v, pc1), dot(v, pc2)]);
-      projection.planarPoints = Object.fromEntries(list.map((w, i) => [w, planar[i]]));
+      const planar = list.map(w => [projection.coords[w][0], projection.coords[w][1]]);
       const magnitudes = planar.map(p => Math.hypot(...p));
       const farthestIdx = magnitudes.indexOf(Math.max(...magnitudes));
       const startAngle = Math.atan2(planar[farthestIdx][1], planar[farthestIdx][0]);
-      vecs.forEach((v, i) => {
+      list.forEach((w, i) => {
         let angle = Math.atan2(planar[i][1], planar[i][0]) - startAngle;
         if (angle < 0) angle += Math.PI * 2;
-        projection.values[list[i]] = angle;
+        projection.values[w] = angle;
       });
       projection.direction = "2D PCA polar coordinate";
     }
