@@ -1,4 +1,4 @@
-import { HTMLRewriter } from "@miniflare/html-rewriter";
+import { HTMLRewriter } from "html-rewriter-wasm";
 import fs from "node:fs/promises";
 import { tryWrite } from "../util/try-write.mjs";
 
@@ -15,7 +15,13 @@ export async function rewrite({
   data = {},
   dryRun = false,
 }) {
-  const rewriter = new HTMLRewriter();
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const chunks = [];
+
+  const rewriter = new HTMLRewriter((chunk) => {
+    chunks.push(chunk);
+  });
 
   rewriter.on("[data-rewrite]", {
     element(element) {
@@ -48,9 +54,14 @@ export async function rewrite({
   await setup(rewriter);
 
   const sourceHTML = await fs.readFile(htmlFilePath);
-  const rewrittenHTML = await rewriter
-    .transform(new Response(sourceHTML))
-    .text();
+  try {
+    await rewriter.write(encoder.encode(String(sourceHTML)));
+    await rewriter.end();
+  } finally {
+    rewriter.free();
+  }
+  const rewrittenHTML = decoder.decode(Buffer.concat(chunks));
+
   await tryWrite({
     filePath: htmlFilePath,
     origText: sourceHTML,
