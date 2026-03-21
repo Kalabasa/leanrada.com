@@ -25,7 +25,6 @@ SOFTWARE.
 import { getPixels } from "ndarray-pixels";
 import sharp from "sharp";
 import quantize from "@lokesh.dhakar/quantize";
-import FileType from "file-type";
 
 function createPixelArray(pixels, pixelCount, quality) {
   const pixelArray = [];
@@ -71,7 +70,6 @@ function validateOptions(options) {
 }
 
 const loadImg = (img) => {
-  const type = Buffer.isBuffer(img) ? FileType.fromBuffer(img).mime : null;
   return new Promise((resolve, reject) => {
     sharp(img)
       .toBuffer()
