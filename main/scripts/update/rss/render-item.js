@@ -10,7 +10,7 @@ export function renderItem({ mainInnerHTML, pageHref, title, date, domain }) {
 
   content.find("style").remove();
   content.find("script").remove();
-  content.find("[data-rss=hidden]").remove();
+  content.find(`[data-rss="hidden"]`).remove();
 
   const interactiveElements = content.find(`iframe,[data-rss="interactive"]`);
 

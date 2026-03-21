@@ -86,4 +86,10 @@ describe("renderItem", () => {
     assert.ok(ch.text().includes("Interactive content"));
     assert.ok(ch.text().includes("Alternative text: Demo"));
   });
+
+  it("adds interactive content notice for data-rss=interactive", () => {
+    const ch = description('<p data-rss="interactive" alt="Demo">content</p>');
+    assert.ok(ch.text().includes("Interactive content"));
+    assert.ok(ch.text().includes("Alternative text: Demo"));
+  });
 });
