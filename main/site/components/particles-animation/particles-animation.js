@@ -147,14 +147,14 @@
               inset: 0;
               pointer-events: none;
               background: url("/components/particles-animation/noise.png");
-              opacity: 0.1;
+              opacity: 0.15;
               animation: 
-                particles-noise-x 0.16s steps(2, jump-start) infinite,
-                particles-noise-y 0.25s steps(3, jump-start) infinite;
+                particles-noise-x 0.24s steps(2, jump-start) infinite,
+                particles-noise-y 0.36s steps(3, jump-start) infinite;
 
               @supports (mix-blend-mode: soft-light) {
                 mix-blend-mode: soft-light;
-                opacity: 0.6;
+                opacity: 0.9;
               }
             }
             @keyframes particles-noise-x { to { background-position-x: 100px; } }
