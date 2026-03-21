@@ -5,17 +5,17 @@
   const getMousePosition = () =>
     import("/lib/mouse_position.mjs").then((m) => m.mousePosition);
 
-  const TARGET_FPS = 60;
-  const PARTICLE_DENSITY = 0.002;
+  const TARGET_FPS = 15;
+  const PARTICLE_DENSITY = 0.0013;
   const BILLBOARD_SIZE = 128;
   const BILLBOARD_DENSITY = 0.009;
-  const SPEED_ALPHA = 3;
-  const SPEED_SPAN = 12;
+  const SPEED_ALPHA = 0.8;
+  const SPEED_SPAN = 1.6;
   const NOISE_SCALE = 0.004;
   const NOISE_TIME = 0.0001;
-  const FORCE_SCALE = 1;
-  const DAMPING = 0.94;
-  const BROWNIAN = 0.05;
+  const FORCE_SCALE = 0.4;
+  const DAMPING = 0.93;
+  const BROWNIAN = 0.01;
   const BILLBOARDS = 4;
   const ALPHA_BUCKETS = 16;
   const PALETTE_TIME = 0.00004;
@@ -31,15 +31,15 @@
       this.y = this.p5.random(this.p5.height);
       this.vx = 0;
       this.vy = 0;
-      this.life = 200;
+      this.life = 900;
       this.rotation = Math.random() * 2 * Math.PI;
       this.billboardIndex = Math.floor(this.p5.random(BILLBOARDS));
     }
 
-    step(t, billboardsPool, mousePos = null, mouseVel = null, saturation = 1, goodQuality = true) {
+    step(t, dt, billboardsPool, mousePos = null, mouseVel = null, saturation = 1, goodQuality = true) {
       const p5 = this.p5;
       const speed = Math.hypot(this.vx, this.vy);
-      this.life -= 1 + 0.5 / (0.01 + speed);
+      this.life -= dt * (1 + 0.5 / (0.01 + speed));
 
       if (this.life <= 0 || this.x < 0 || this.y < 0 || this.x > p5.width || this.y > p5.height) {
         return false;
@@ -48,26 +48,26 @@
       const nx = this.x * NOISE_SCALE;
       const ny = this.y * NOISE_SCALE;
 
-      let ax = (p5.noise(nx, ny, t * NOISE_TIME) - 0.5) * FORCE_SCALE;
-      let ay = (p5.noise(nx + 2, ny + 2, 2 - t * NOISE_TIME) - 0.5) * FORCE_SCALE;
+      let ax = (p5.noise(nx, ny, t * NOISE_TIME) - 0.5) * FORCE_SCALE + BROWNIAN * (p5.random() * 2 - 1);
+      let ay = (p5.noise(nx + 2, ny + 2, 2 - t * NOISE_TIME) - 0.5) * FORCE_SCALE + BROWNIAN * (p5.random() * 2 - 1);
 
       if (mousePos && mouseVel) {
-        const mdx = mousePos.x - this.x;
-        const mdy = mousePos.y - this.y;
+        const mdx = (mousePos.x - this.x) / dt;
+        const mdy = (mousePos.y - this.y) / dt;
         const md = mdx * mdx + mdy * mdy;
-        const mpf = 1 / (1 + md * 0.5);
-        const mvf = 1 / (1 + md ** 0.5 * 0.5);
-        ax += (mousePos.x - this.x) * mpf + (mouseVel.x - this.vx) * mvf;
-        ay += (mousePos.y - this.y) * mpf + (mouseVel.y - this.vy) * mvf;
+        const mpf = 0.01 / (1 + md * 0.5);
+        const mvf = 0.1 / (1 + md ** 0.5 * 3.0);
+        ax += (mousePos.x - this.x) * mpf + mouseVel.x * mvf;
+        ay += (mousePos.y - this.y) * mpf + mouseVel.y * mvf;
       }
 
-      this.vx = (this.vx + ax + BROWNIAN * (p5.random() * 2 - 1)) * DAMPING;
-      this.vy = (this.vy + ay + BROWNIAN * (p5.random() * 2 - 1)) * DAMPING;
+      this.vx = (this.vx + dt * ax) * Math.pow(DAMPING, dt);
+      this.vy = (this.vy + dt * ay) * Math.pow(DAMPING, dt);
 
-      this.x += this.vx;
-      this.y += this.vy;
+      this.x += dt * this.vx;
+      this.y += dt * this.vy;
 
-      const alpha = Math.min(1, (speed / SPEED_ALPHA) * (goodQuality ? 1 : 2));
+      const alpha = Math.min(1, (speed / SPEED_ALPHA) * (goodQuality ? 1 : 20));
       const idx = Math.round(alpha * (ALPHA_BUCKETS - 1));
       const span = Math.min(
         BILLBOARD_SIZE * Math.max(1 - saturation, Math.min(1, 0.15 + 0.85 * (speed / SPEED_SPAN) ** 2)),
@@ -222,7 +222,7 @@
 
       #getTargetParticleCount(p5) {
         const performance = Math.min(1, p5.frameRate() / TARGET_FPS);
-        return Math.ceil(1 + PARTICLE_DENSITY * (p5.width * p5.height) * performance ** 2);
+        return Math.ceil(1 + PARTICLE_DENSITY * (p5.width * p5.height) * performance ** 0.5);
       }
 
       #setupParticles(p5) {
@@ -253,6 +253,8 @@
 
           p5.draw = () => {
             this.#t += p5.deltaTime;
+            const dt = p5.deltaTime * (60 / 1000);
+
             const performance = p5.frameRate() / TARGET_FPS;
             if (this.#quality > 0 && performance < 0.8) {
               this.#quality -= 0.1;
@@ -263,20 +265,23 @@
 
             const paletteTime = this.#t * PALETTE_TIME;
             const colorHex = this.#palette[Math.floor(paletteTime) % this.#palette.length];
-            const backgroundAlpha = Math.min(255, 2 + Math.floor(6 * (1 + Math.cos((paletteTime + 0.5) * Math.PI * 2))));
+            const backgroundAlpha = Math.round(255 * Math.min(1, 0.05 + 0.05 * (1 + Math.cos((paletteTime + 0.5) * Math.PI * 2))));
             p5.blendMode(p5.BLEND);
             p5.background(colorHex + backgroundAlpha.toString(16).padStart(2, "0"));
             if (goodQuality) p5.blendMode(p5.OVERLAY);
-            p5.background(colorHex + (goodQuality ? "08" : "04"));
-            p5.background(0, 0, 0, goodQuality ? 8 : 4);
+            const overlayAlpha = Math.round(255 * Math.pow(goodQuality ? 0.2 : 0.01, dt));
+            p5.background(colorHex + overlayAlpha.toString(16).padStart(2, "0"));
+            p5.background(0, 0, 0, overlayAlpha);
             if (goodQuality) p5.blendMode(p5.BLEND);
-            p5.background(0, 0, 0, 4);
+            const darkenAlpha = Math.round(255 * Math.pow(0.4, dt));
+            p5.background(0, 0, 0, darkenAlpha);
 
             const saturation = this.#particles.length / (PARTICLE_DENSITY * (p5.width * p5.height));
             if (goodQuality) p5.blendMode(p5.ADD);
             this.#particles = this.#particles.filter(
               pt => pt.step(
                 this.#t,
+                dt,
                 this.#billboardsPool,
                 this.#mousePos,
                 this.#mouseVel,
