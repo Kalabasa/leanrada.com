@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import glob from "glob";
+import { globSync } from "node:fs";
 import chalk from "chalk";
 import path from "node:path";
 import fs from "node:fs";
@@ -23,7 +23,7 @@ async function main() {
   let expandedRedirects = new Map();
 
   for (const [from, to] of redirects) {
-    const toFiles = glob.sync(path.resolve(siteDir, to));
+    const toFiles = globSync(path.resolve(siteDir, to));
 
     if (!toFiles.length) {
       throw new Error("No destination files found. from/to: " + from + " → " + to);

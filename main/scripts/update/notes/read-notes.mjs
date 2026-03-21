@@ -1,4 +1,4 @@
-import glob from "glob";
+import { globSync } from "node:fs";
 import path from "node:path";
 import fs from "node:fs/promises";
 import * as cheerio from "cheerio";
@@ -6,7 +6,7 @@ import * as cheerio from "cheerio";
 // returns notes and statically defined items in descending date order
 export async function readNotes(siteDir) {
   console.log("Reading notes...");
-  const pages = glob.sync(path.resolve(siteDir, "notes", "*", "index.html"));
+  const pages = globSync(path.resolve(siteDir, "notes", "*", "index.html"));
   const noteReferences = new Map();
 
   const notes = await Promise.all(

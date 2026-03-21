@@ -1,9 +1,9 @@
-import glob from "glob";
+import { globSync } from "node:fs";
 import path from "node:path";
 
 export async function readWares(siteDir) {
   console.log("Reading wares...");
-  const pages = glob.sync(path.resolve(siteDir, "wares", "*", "index.html"));
+  const pages = globSync(path.resolve(siteDir, "wares", "*", "index.html"));
 
   const wares = await Promise.all(
     pages.map(async (page) => {
