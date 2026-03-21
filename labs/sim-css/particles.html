@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>sim-css particles</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: system-ui; padding: 20px; background: #111; color: #eee; }
+  h1 { font-size: 1.2em; margin-bottom: 12px; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; margin-bottom: 12px; }
+  .controls > div { display: flex; flex-direction: column; gap: 2px; }
+  .controls label { font-size: 0.75em; color: #aaa; }
+  .controls input, .controls select {
+    font-family: inherit; font-size: 0.85em;
+    background: #222; color: #eee; border: 1px solid #444;
+    border-radius: 4px; padding: 4px 8px; width: 100px;
+  }
+  button {
+    font-family: inherit; font-size: 0.85em;
+    cursor: pointer; background: #336; color: #eee;
+    border: 1px solid #558; border-radius: 4px;
+    padding: 6px 14px; align-self: end;
+  }
+  button:hover { background: #448; }
+  textarea {
+    width: 100%; height: 200px; font-family: monospace; font-size: 0.75em;
+    background: #222; color: #eee; border: 1px solid #444;
+    border-radius: 4px; padding: 8px; resize: vertical; margin-top: 8px;
+  }
+  .preview { margin-top: 12px; }
+  .preview iframe {
+    width: 100%; height: 500px; border: 1px solid #444;
+    border-radius: 4px; background: #000;
+  }
+  .stats { font-size: 0.8em; color: #888; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<h1>sim-css particles</h1>
+
+<div class="controls">
+  <div>
+    <label>Particles</label>
+    <input type="number" id="particleCount" value="5" min="1" step="1">
+  </div>
+  <div>
+    <label>Echoes each</label>
+    <input type="number" id="echoCount" value="20" min="5" step="5">
+  </div>
+  <div>
+    <label>Segment (s)</label>
+    <input type="number" id="segmentDuration" value="4" min="1" step="0.5">
+  </div>
+  <div>
+    <label>Field scale</label>
+    <input type="number" id="fieldScale" value="0.005" min="0.001" step="0.001">
+  </div>
+  <div>
+    <label>Field strength</label>
+    <input type="number" id="fieldStrength" value="80" min="10" step="10">
+  </div>
+  <div>
+    <label>Time radius</label>
+    <input type="number" id="timeRadius" value="1" min="0" step="0.25">
+  </div>
+  <div>
+    <label>Brownian</label>
+    <input type="number" id="brownian" value="30" min="0" step="5">
+  </div>
+  <div>
+    <label>Damping</label>
+    <input type="number" id="damping" value="2" min="0" step="0.5">
+  </div>
+  <div>
+    <label>Sim rate (Hz)</label>
+    <input type="number" id="simRate" value="120" min="30" step="30">
+  </div>
+  <div>
+    <label>Max error (px)</label>
+    <input type="number" id="maxError" value="2" min="0.5" step="0.5">
+  </div>
+  <div>
+    <label>Particle size (px)</label>
+    <input type="number" id="particleSize" value="3" min="1" step="1">
+  </div>
+  <div>
+    <label>Canvas</label>
+    <select id="canvasSize">
+      <option value="600x400">600×400</option>
+      <option value="800x500">800×500</option>
+      <option value="400x400">400×400</option>
+    </select>
+  </div>
+  <button id="compile">Compile</button>
+  <button id="save-btn">Save HTML</button>
+</div>
+
+<div class="stats" id="stats"></div>
+<div class="preview">
+  <iframe id="preview" sandbox="allow-same-origin"></iframe>
+</div>
+<textarea id="output" readonly></textarea>
+
+<script>
+function perlinNoise(seed) {
+  // Generate permutation table from seed
+  const perm = new Uint8Array(512);
+  const p = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) p[i] = i;
+  // Fisher-Yates shuffle seeded
+  let s = seed;
+  for (let i = 255; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = ((s >>> 0) % (i + 1));
+    [p[i], p[j]] = [p[j], p[i]];
+  }
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+
+  // 12 gradient directions (Perlin's improved noise)
+  const grad2 = [
+    [1,1],[-1,1],[1,-1],[-1,-1],
+    [1,0],[-1,0],[0,1],[0,-1],
+    [1,1],[-1,1],[1,-1],[-1,-1],
+  ];
+
+  function dot(gi, dx, dy) {
+    const g = grad2[gi % 12];
+    return g[0] * dx + g[1] * dy;
+  }
+
+  function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+  function lerp(a, b, t) { return a + t * (b - a); }
+
+  return function(x, y) {
+    const ix = Math.floor(x) & 255, iy = Math.floor(y) & 255;
+    const dx = x - Math.floor(x), dy = y - Math.floor(y);
+    const fx = fade(dx), fy = fade(dy);
+
+    const aa = perm[perm[ix] + iy];
+    const ab = perm[perm[ix] + iy + 1];
+    const ba = perm[perm[ix + 1] + iy];
+    const bb = perm[perm[ix + 1] + iy + 1];
+
+    return lerp(
+      lerp(dot(aa, dx, dy), dot(ba, dx - 1, dy), fx),
+      lerp(dot(ab, dx, dy - 1), dot(bb, dx - 1, dy - 1), fx),
+      fy
+    );
+  };
+}
+
+function buildFlowField(seed, scale, loopPeriodS, timeRadius) {
+  const noiseX = perlinNoise(seed);
+  const noiseY = perlinNoise(seed + 9999);
+
+  return function(x, y, t) {
+    const phase = (2 * Math.PI * t) / loopPeriodS;
+    const ox = timeRadius * Math.cos(phase);
+    const oy = timeRadius * Math.sin(phase);
+    const sx = x * scale + ox;
+    const sy = y * scale + oy;
+    const angle = noiseX(sx, sy) * Math.PI * 2;
+    const mag = (noiseY(sx, sy) + 1) * 0.5;
+    return { fx: Math.cos(angle) * mag, fy: Math.sin(angle) * mag };
+  };
+}
+
+function simulate(params) {
+  const {
+    particleCount, echoCount, segmentDurationS, fieldScale, fieldStrength,
+    damping, simRate, canvasW, canvasH,
+  } = params;
+
+  const seed = Math.floor(Math.random() * 100000);
+  const field = buildFlowField(seed, fieldScale, segmentDurationS, params.timeRadius);
+  const dt = 1 / simRate;
+  const stepsPerSegment = Math.ceil(segmentDurationS * simRate);
+
+  const allSegments = [];
+
+  for (let p = 0; p < particleCount; p++) {
+    const totalSteps = stepsPerSegment * echoCount;
+    let x = Math.random() * canvasW;
+    let y = Math.random() * canvasH;
+    let vx = (Math.random() - 0.5) * 20;
+    let vy = (Math.random() - 0.5) * 20;
+    let pendingWrap = null;
+    let currentSegment = [];
+
+    for (let s = 0; s <= totalSteps; s++) {
+      const stepInSeg = s % stepsPerSegment;
+
+      if (stepInSeg === 0 && s > 0) {
+        allSegments.push(currentSegment);
+        currentSegment = [];
+      }
+
+      const t = stepInSeg * dt;
+      currentSegment.push({ t, x, y, vx, vy, preWrap: pendingWrap });
+      pendingWrap = null;
+
+      if (s < totalSteps) {
+        const globalT = s * dt;
+        const { fx, fy } = field(x, y, globalT);
+        const brownian = params.brownian;
+        vx += fx * fieldStrength * dt + (Math.random() - 0.5) * brownian * Math.sqrt(dt);
+        vy += fy * fieldStrength * dt + (Math.random() - 0.5) * brownian * Math.sqrt(dt);
+        vx *= (1 - damping * dt);
+        vy *= (1 - damping * dt);
+        x += vx * dt;
+        y += vy * dt;
+
+        const preX = x, preY = y;
+        if (x < 0) x += canvasW;
+        if (x > canvasW) x -= canvasW;
+        if (y < 0) y += canvasH;
+        if (y > canvasH) y -= canvasH;
+
+        if (preX !== x || preY !== y) {
+          pendingWrap = { x: preX, y: preY };
+        }
+      }
+    }
+    if (currentSegment.length > 1) allSegments.push(currentSegment);
+  }
+
+  return allSegments;
+}
+
+function adaptiveSample(segment, maxError) {
+  const n = segment.length;
+  if (n <= 2) return segment.map((f, i) => ({ x: f.x, y: f.y, pct: i === 0 ? 0 : 100 }));
+
+  const durationS = segment[n - 1].t;
+  const toPct = t => durationS > 0 ? Math.round(t / durationS * 10000) / 100 : 0;
+
+  const result = [{ x: segment[0].x, y: segment[0].y, pct: 0 }];
+  let lastKept = 0;
+
+  for (let i = 1; i < n - 1; i++) {
+    const frame = segment[i];
+
+    // If this frame has a wrap, force emit: previous position, pre-wrap position, then this (post-wrap) position
+    if (frame.preWrap) {
+      // Emit the frame before the wrap if not already kept
+      if (lastKept !== i - 1) {
+        const prev = segment[i - 1];
+        result.push({ x: prev.x, y: prev.y, pct: toPct(prev.t) });
+      }
+      // Pre-wrap and post-wrap at the same time — browser jumps instantly
+      const pct = toPct(frame.t);
+      result.push({ x: frame.preWrap.x, y: frame.preWrap.y, pct });
+      result.push({ x: frame.x, y: frame.y, pct });
+      lastKept = i;
+      continue;
+    }
+
+    // Normal adaptive check
+    const a = segment[lastKept];
+    const c = frame;
+    const tSpan = c.t - a.t;
+    if (tSpan < 0.0001) continue;
+
+    let exceed = false;
+    for (let j = lastKept + 1; j < i; j++) {
+      if (segment[j].preWrap) break;
+      const actual = segment[j];
+      const frac = (actual.t - a.t) / tSpan;
+      const px = a.x + (c.x - a.x) * frac;
+      const py = a.y + (c.y - a.y) * frac;
+      const dx = actual.x - px, dy = actual.y - py;
+      if (dx * dx + dy * dy > maxError * maxError) {
+        exceed = true;
+        break;
+      }
+    }
+    if (exceed) {
+      result.push({ x: frame.x, y: frame.y, pct: toPct(frame.t) });
+      lastKept = i;
+    }
+  }
+
+  result.push({ x: segment[n - 1].x, y: segment[n - 1].y, pct: 100 });
+  return result;
+}
+
+function compileCSS(segments, params) {
+  const { segmentDurationS, maxError, particleSize, canvasW, canvasH, simRate, particleCount, echoCount } = params;
+
+  const sampled = segments.map(seg => adaptiveSample(seg, maxError));
+
+  // Global ranges across all particles
+  const allX = sampled.flatMap(s => s.map(p => p.x));
+  const allY = sampled.flatMap(s => s.map(p => p.y));
+  const xMin = Math.min(...allX), xMax = Math.max(...allX);
+  const yMin = Math.min(...allY), yMax = Math.max(...allY);
+  const xRange = xMax - xMin || 1;
+  const yRange = yMax - yMin || 1;
+
+  const r = n => Math.round(n * 100) / 100;
+  const totalSamples = sampled.reduce((s, a) => s + a.length, 0);
+
+  let css = `/* ${segments.length} echoes (${params.particleCount} particles × ${params.echoCount} echoes), ${totalSamples} total samples from ${simRate}Hz sim */
+@keyframes p-x { from { translate: ${r(xMin)}px 0 } to { translate: ${r(xMax)}px 0 } }
+@keyframes p-y { from { translate: 0 ${r(yMin)}px } to { translate: 0 ${r(yMax)}px } }
+@keyframes p-o { from { opacity: 0 } to { opacity: 1 } }
+`;
+
+  let html = "";
+
+  sampled.forEach((points, i) => {
+    const echoIdx = i % echoCount;
+    const isFirst = echoIdx === 0;
+    const isLast = echoIdx === echoCount - 1;
+
+    const xEasing = points.map(p => {
+      const norm = Math.round((p.x - xMin) / xRange * 10000) / 10000;
+      return `${norm} ${p.pct}%`;
+    }).join(", ");
+
+    const yEasing = points.map(p => {
+      const norm = Math.round((p.y - yMin) / yRange * 10000) / 10000;
+      return `${norm} ${p.pct}%`;
+    }).join(", ");
+
+    // Triangle fade: ramps up over first half of echoes, down over second half
+    const halfEchoes = echoCount / 2;
+    let oStart, oEnd;
+    if (echoIdx < halfEchoes) {
+      oStart = echoIdx / halfEchoes;
+      oEnd = (echoIdx + 1) / halfEchoes;
+    } else {
+      oStart = (echoCount - echoIdx) / halfEchoes;
+      oEnd = (echoCount - echoIdx - 1) / halfEchoes;
+    }
+    oStart = Math.min(oStart, 1);
+    oEnd = Math.min(oEnd, 1);
+    const oEasing = `linear(${Math.round(oStart * 1000) / 1000}, ${Math.round(oEnd * 1000) / 1000})`;
+
+    css += `.p-${i} {
+  animation-timing-function: linear(${xEasing}), linear(${yEasing}), ${oEasing};
+}
+`;
+    html += `<div class="p p-${i}"></div>\n`;
+  });
+
+  const output = `<style>
+.particle-field {
+  position: relative;
+  width: ${canvasW}px;
+  height: ${canvasH}px;
+  overflow: hidden;
+  background: #0a0a0a;
+  border-radius: 8px;
+}
+.p {
+  position: absolute; top: 0; left: 0;
+  width: ${particleSize}px;
+  height: ${particleSize}px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: p-x ${segmentDurationS}s infinite, p-y ${segmentDurationS}s infinite, p-o ${segmentDurationS}s infinite;
+  animation-composition: accumulate, accumulate, replace;
+}
+${css}
+</style>
+<div class="particle-field">
+${html}</div>`;
+
+  return { output, totalSamples };
+}
+
+const STORAGE_KEY = "sim-css-particles-params";
+const inputIds = [
+  "particleCount", "echoCount", "segmentDuration", "fieldScale",
+  "fieldStrength", "timeRadius", "brownian", "damping", "simRate", "maxError", "particleSize", "canvasSize",
+];
+
+function saveParams() {
+  const data = {};
+  for (const id of inputIds) data[id] = document.getElementById(id).value;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadParams() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!data) return;
+    for (const id of inputIds) {
+      if (data[id] != null) document.getElementById(id).value = data[id];
+    }
+  } catch {}
+}
+
+loadParams();
+
+document.getElementById("compile").onclick = () => {
+  saveParams();
+  const [canvasW, canvasH] = document.getElementById("canvasSize").value.split("x").map(Number);
+  const params = {
+    particleCount: parseInt(document.getElementById("particleCount").value),
+    echoCount: parseInt(document.getElementById("echoCount").value),
+    segmentDurationS: parseFloat(document.getElementById("segmentDuration").value),
+    fieldScale: parseFloat(document.getElementById("fieldScale").value),
+    fieldStrength: parseFloat(document.getElementById("fieldStrength").value),
+    timeRadius: parseFloat(document.getElementById("timeRadius").value),
+    brownian: parseFloat(document.getElementById("brownian").value),
+    damping: parseFloat(document.getElementById("damping").value),
+    simRate: parseInt(document.getElementById("simRate").value),
+    maxError: parseFloat(document.getElementById("maxError").value),
+    particleSize: parseInt(document.getElementById("particleSize").value),
+    canvasW, canvasH,
+  };
+
+  const segments = simulate(params);
+  const { output, totalSamples } = compileCSS(segments, params);
+
+  document.getElementById("output").value = output;
+  document.getElementById("preview").srcdoc = output;
+  document.getElementById("stats").textContent =
+    `${params.particleCount} particles × ${params.echoCount} echoes = ${segments.length} output echoes, ${totalSamples} total samples, ${(output.length / 1024).toFixed(1)} KB`;
+};
+
+document.getElementById("save-btn").onclick = () => {
+  const output = document.getElementById("output").value;
+  if (!output) return;
+  const blob = new Blob([output], { type: "text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "particles-demo.html";
+  a.click();
+};
+
+document.getElementById("compile").click();
+</script>
+
+</body>
+</html>
