@@ -9,8 +9,7 @@ export async function createSnapshotter(siteDir) {
     executablePath: "/usr/bin/chromium",
     headless: false,
     devtools: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+});
 
   return {
     async snapshotPage(pageHref) {
