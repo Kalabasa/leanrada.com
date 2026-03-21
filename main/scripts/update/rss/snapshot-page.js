@@ -36,16 +36,16 @@ export async function createSnapshotter(siteDir) {
           idleTime: 5_000,
         });
 
-        const mainHTML = await page.evaluate(() => {
+        const mainInnerHTML = await page.evaluate(() => {
           const main = document.querySelector("main");
           return main ? main.innerHTML : null;
         });
 
-        if (!mainHTML) {
+        if (!mainInnerHTML) {
           throw new Error(`No <main> found for ${pageHref}`);
         }
 
-        return mainHTML;
+        return mainInnerHTML;
       } finally {
         await page.close();
       }

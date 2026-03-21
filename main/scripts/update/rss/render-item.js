@@ -1,34 +1,16 @@
 import * as cheerio from "cheerio";
 import path from "node:path";
 
-export function renderItem({ mainHTML, pageHref, title, date, domain }) {
+export function renderItem({ mainInnerHTML, pageHref, title, date, domain }) {
   const url = new URL(pageHref, `https://${domain}`);
   url.searchParams.set("ref", "rss");
 
-  const ch = cheerio.load(`<main>${mainHTML}</main>`);
+  const ch = cheerio.load(`<main>${mainInnerHTML}</main>`);
   let content = ch("main");
 
   content.find("style").remove();
   content.find("script").remove();
   content.find("[data-rss=hidden]").remove();
-
-  // RSS readers ignore unknown tags and their contents, so flatten them
-  let loopFlatten = true;
-  while (loopFlatten) {
-    loopFlatten = false;
-    content.find("*").each((i, el) => {
-      if (el.name === "div" || el.name === "span" || el.name?.includes("-")) {
-        ch(el).replaceWith(el.children);
-        loopFlatten = true;
-      } else if (el.type === "comment") {
-        ch(el).remove();
-      }
-    });
-  }
-
-  content.find("*").each((i, el) => {
-    ch(el).removeAttr("class").removeAttr("style");
-  });
 
   const interactiveElements = content.find(`iframe,[data-rss="interactive"]`);
 
@@ -63,6 +45,25 @@ export function renderItem({ mainHTML, pageHref, title, date, domain }) {
     }
   });
 
+  // RSS readers ignore unknown tags and their contents, so flatten them
+  let flattenAgain;
+  do {
+    flattenAgain = false;
+    content.find("*").each((i, el) => {
+      if (el.name === "div" || el.name === "span" || el.name?.includes("-")) {
+        ch(el).replaceWith(el.children);
+        flattenAgain = true;
+      } else if (el.type === "comment") {
+        ch(el).remove();
+      }
+    });
+  } while (flattenAgain);
+ 
+  content.find("*").each((i, el) => {
+    ch(el).removeAttr("class").removeAttr("style");
+  });
+
+  // format HTML
   const tempRoot = ch("<div></div>");
   content.contents().each((i, el) => {
     if (el.type === "text" && el.data.trim() === "") {

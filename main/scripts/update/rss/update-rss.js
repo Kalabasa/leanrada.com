@@ -59,10 +59,10 @@ async function rewriteRSS({ rss, notes, siteDir }) {
 
   try {
     for (const { note, date } of notesToRender) {
-      const mainHTML = await snapshotter.snapshotPage(note.href);
+      const mainInnerHTML = await snapshotter.snapshotPage(note.href);
 
       const itemXML = renderItem({
-        mainHTML,
+        mainInnerHTML,
         pageHref: note.href,
         title: note.title,
         date,
