@@ -1,14 +1,12 @@
 import http from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
-import puppeteer from "puppeteer-core";
+import puppeteer from "puppeteer";
 
 export async function createSnapshotter(siteDir) {
   const server = await startServer(siteDir);
   const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium",
-    headless: false,
-    devtools: true,
+    headless: true,
 });
 
   return {
