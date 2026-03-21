@@ -45,24 +45,13 @@ export function renderItem({ mainInnerHTML, pageHref, title, date, domain }) {
     }
   });
 
-  // RSS readers ignore unknown tags and their contents, so flatten them
-  let flattenAgain;
-  do {
-    flattenAgain = false;
-    content.find("*").each((i, el) => {
-      if (el.name === "div" || el.name === "span" || el.name?.includes("-")) {
-        ch(el).replaceWith(el.children);
-        flattenAgain = true;
-      } else if (el.type === "comment") {
-        ch(el).remove();
-      }
-    });
-  } while (flattenAgain);
- 
-  content.find("*").each((i, el) => {
-    ch(el).removeAttr("class").removeAttr("style");
+  // RSS viewers ignore unknown tags and their contents, so flatten them
+  ch(content.find("*").get().reverse()).each((i, el) => {
+    if (el.name?.includes("-")) {
+      ch(el).replaceWith(el.children);
+    }
   });
-
+ 
   // format HTML
   const tempRoot = ch("<div></div>");
   content.contents().each((i, el) => {

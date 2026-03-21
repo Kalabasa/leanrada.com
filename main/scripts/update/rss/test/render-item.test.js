@@ -53,24 +53,10 @@ describe("renderItem", () => {
     assert.equal(ch("p").text(), "inside");
   });
 
-  it("flattens div and span elements", () => {
-    const ch = description("<div><span><p>deep</p></span></div>");
-    assert.equal(ch("div").length, 0);
-    assert.equal(ch("span").length, 0);
-    assert.equal(ch("p").text(), "deep");
-  });
-
   it("flattens nested custom elements", () => {
     const ch = description("<outer-tag><inner-tag><p>text</p></inner-tag></outer-tag>");
     assert.equal(ch("outer-tag").length, 0);
     assert.equal(ch("inner-tag").length, 0);
-    assert.equal(ch("p").text(), "text");
-  });
-
-  it("strips class and style attributes", () => {
-    const ch = description('<p class="fancy" style="color:red">text</p>');
-    assert.equal(ch("p").attr("class"), undefined);
-    assert.equal(ch("p").attr("style"), undefined);
     assert.equal(ch("p").text(), "text");
   });
 
