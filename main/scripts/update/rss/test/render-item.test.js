@@ -92,4 +92,9 @@ describe("renderItem", () => {
     assert.ok(ch.text().includes("Interactive content"));
     assert.ok(ch.text().includes("Alternative text: Demo"));
   });
+
+  it("keeps data-rss=only", () => {
+    const ch = description('<p data-rss="only">RSS only</p>');
+    assert.ok(ch.text().includes("RSS only"));
+  });
 });
