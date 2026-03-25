@@ -12,11 +12,6 @@ iconLink.type = "image/png";
 iconLink.href = "/favicon.png";
 document.head.appendChild(iconLink);
 
-const webmentionLink = document.createElement("link");
-webmentionLink.rel = "webmention";
-webmentionLink.href = "https://webmention.io/leanrada.com/webmention";
-document.head.appendChild(webmentionLink);
-
 const alternateLink = document.createElement("link");
 alternateLink.rel = "alternate";
 alternateLink.type = "application/rss+xml";

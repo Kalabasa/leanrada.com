@@ -19,18 +19,35 @@ async function main() {
     throw new Error("File not part of site!");
   }
 
+  console.group("🍞 Baking canonical href");
+  await rewriteElementAttributes({
+    dryRun, htmlFilePath,
+    afterTags: ["meta"],
+    tagName: "link",
+    identifierAttributes: { rel: "canonical" },
+    valueAttributes: { href: getHref(htmlFilePath) },
+  });
+  console.groupEnd();
+
   console.group("🍞 Baking lqip");
   await rewriteLQIP({ dryRun, htmlFilePath });
   console.groupEnd();
 
   if (isNotePost(htmlFilePath)) {
+    console.group("🍞 Baking webmention href");
+    await rewriteElementAttributes({
+      dryRun, htmlFilePath,
+      afterTags: ["meta"],
+      tagName: "link",
+      identifierAttributes: { rel: "webmention" },
+      valueAttributes: { href: "https://webmention.io/leanrada.com/webmention" },
+    });
+    console.groupEnd();
+
     console.group("🍞 Baking read mins");
     await rewriteReadMins({ dryRun, htmlFilePath });
     console.groupEnd();
   }
-
-  console.group("🍞 Baking canonical href");
-  await rewriteCanonicalHref({ dryRun, htmlFilePath });
 }
 
 function isNotePost(htmlFilePath) {
@@ -47,32 +64,40 @@ function getHref(htmlFilePath) {
   return "/" + pathname;
 }
 
-export async function rewriteCanonicalHref({ dryRun = false, htmlFilePath }) {
-  const ch = cheerio.load(await fs.readFile(htmlFilePath));
-  const existingRelCanonical = ch("link[rel=canonical]");
-  const href = getHref(htmlFilePath);
+async function rewriteElementAttributes({ dryRun = false, htmlFilePath, tagName, afterTags, identifierAttributes, valueAttributes }) {
+  const filtersSelector = Object.entries(identifierAttributes)
+    .map(([k, v]) => `[${k}="${v}"]`)
+    .join("");
+  const selector = tagName + filtersSelector;
 
-  if (path.basename(href).startsWith("_")) {
-    console.warn(`❌ Current path is temporary: ${href}`);
-    return;
-  }
+  const ch = cheerio.load(await fs.readFile(htmlFilePath));
+  const exists = ch(selector).length > 0;
 
   await rewrite({
     htmlFilePath,
     setup(rewriter) {
-      if (existingRelCanonical.length > 0) {
-        rewriter.on("link[rel=canonical]", {
+      if (exists) {
+        rewriter.on(selector, {
           element(element) {
-            element.setAttribute("href", href);
+            for (const [k, v] of Object.entries(valueAttributes)) {
+              element.setAttribute(k, v);
+            }
           },
         });
       } else {
         let hasInserted = false;
-        rewriter.on(":not(meta)", {
+        rewriter.on(`:not(${afterTags.join(",")})`, {
           element(element) {
             if (!hasInserted) {
               hasInserted = true;
-              element.before(`<link rel="canonical" href="${href}">\n`, {
+              let attributesHTML = "";
+              for (const [k, v] of Object.entries(identifierAttributes)) {
+                attributesHTML += " " + attributeHTML(k, v);
+              }
+              for (const [k, v] of Object.entries(valueAttributes)) {
+                attributesHTML += " " + attributeHTML(k, v);
+              }
+              element.before(`<${tagName}${attributesHTML}>\n`, {
                 html: true,
               });
             }
@@ -82,4 +107,23 @@ export async function rewriteCanonicalHref({ dryRun = false, htmlFilePath }) {
     },
     dryRun,
   });
+}
+
+function attributeHTML(name, value) {
+  return `${name}="${value.replaceAll(/["'&<>]/g, (ch) => {
+    switch (ch.charCodeAt(0)) {
+      case 34: // "
+        return '&quot;'
+      case 38: // &
+        return '&amp;'
+      case 39: // '
+        return '&#39;'
+      case 60: // <
+        return '&lt;'
+      case 62: // >
+        return '&gt;'
+      default:
+        return ch;
+    }
+  })}"`;
 }
