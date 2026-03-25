@@ -29,11 +29,7 @@ async function main() {
   });
   console.groupEnd();
 
-  console.group("🍞 Baking lqip");
-  await rewriteLQIP({ dryRun, htmlFilePath });
-  console.groupEnd();
-
-  if (isNotePost(htmlFilePath)) {
+  if (isNotePost(htmlFilePath) || isRootPage(htmlFilePath)) {
     console.group("🍞 Baking webmention href");
     await rewriteElementAttributes({
       dryRun, htmlFilePath,
@@ -43,11 +39,22 @@ async function main() {
       valueAttributes: { href: "https://webmention.io/leanrada.com/webmention" },
     });
     console.groupEnd();
+  }
 
+  console.group("🍞 Baking lqip");
+  await rewriteLQIP({ dryRun, htmlFilePath });
+  console.groupEnd();
+
+  if (isNotePost(htmlFilePath)) {
     console.group("🍞 Baking read mins");
     await rewriteReadMins({ dryRun, htmlFilePath });
     console.groupEnd();
   }
+}
+
+function isRootPage(htmlFilePath) {
+  const href = getHref(htmlFilePath);
+  return href === "/";
 }
 
 function isNotePost(htmlFilePath) {
@@ -57,7 +64,7 @@ function isNotePost(htmlFilePath) {
 function getHref(htmlFilePath) {
   const rel = path.relative(siteDir, htmlFilePath);
   const pathname = rel.endsWith(".html")
-    ? rel.endsWith("/index.html")
+    ? rel === "index.html" || rel.endsWith("/index.html")
       ? rel.slice(0, -"index.html".length)
       : rel
     : rel + "/";
