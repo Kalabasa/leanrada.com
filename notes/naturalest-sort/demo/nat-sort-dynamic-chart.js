@@ -1,5 +1,6 @@
 (() => {
   const DPR = window.devicePixelRatio || 1;
+  const aspectRatio = 1.25;
 
   customElements.define(
     "nat-sort-dynamic-chart",
@@ -20,14 +21,14 @@
 
       #resizeObserver = null;
       #visible = false;
-      #rotatable = true;
+      #rotatable = null;
 
       constructor() {
         super();
         this.#canvas = document.createElement("canvas");
         this.#canvas.style.display = "block";
         this.#canvas.style.width = "100%";
-        this.#canvas.style.aspectRatio = "1";
+        this.#canvas.style.aspectRatio = aspectRatio;
       }
 
       connectedCallback() {
@@ -42,8 +43,12 @@
           this.#visible = entries[0].isIntersecting;
           if (this.#visible && this.#animFrame === null) this.#draw();
         }).observe(this);
-        this.#canvas.addEventListener("mouseleave", () => this.#resetTargetCamera());
-        this.#canvas.addEventListener("mousemove", (e) => this.#onMouseMove(e));
+        this.#canvas.addEventListener("pointerdown", (e) => this.#onPointerDown(e));
+        this.#canvas.addEventListener("pointermove", (e) => this.#onPointerMove(e));
+        this.#canvas.addEventListener("pointerup", () => this.#onPointerUp());
+        this.#canvas.addEventListener("pointerleave", () => {
+          if (!this.#dragging) this.#resetTargetCamera();
+        });
         this.#draw();
       }
 
@@ -70,16 +75,40 @@
 
       set rotatable(value) {
         this.#rotatable = value;
+        this.#canvas.style.touchAction = this.#rotatable === true ? "pinch-zoom" : "";
         this.#resetTargetCamera();
       }
 
       #resetTargetCamera() {
-        this.#targetCamera = { rotX: 0, rotY: 0, scaleZ: this.#rotatable ? 1 : 0 };
+        this.#targetCamera = { rotX: 0, rotY: 0, scaleZ: this.#rotatable !== false ? 1 : 0 };
         this.#animate();
       }
 
-      #onMouseMove(e) {
-        if (!this.#rotatable) return;
+      #dragging = false;
+
+      #onPointerDown(e) {
+        if (this.#rotatable === false) return;
+        this.#dragging = true;
+        this.#canvas.setPointerCapture(e.pointerId);
+        this.#updateCamera(e);
+        this.#canvas.style.touchAction = "pinch-zoom";
+      }
+
+      #onPointerMove(e) {
+        if (this.#rotatable === false) return;
+        if (e.pointerType === "mouse" || this.#dragging) {
+          e.preventDefault();
+          this.#updateCamera(e);
+        }
+      }
+
+      #onPointerUp() {
+        this.#dragging = false;
+        this.#resetTargetCamera();
+        this.#canvas.style.touchAction = this.#rotatable === true ? "pinch-zoom" : "";
+      }
+
+      #updateCamera(e) {
         const rect = this.#canvas.getBoundingClientRect();
         const mx = (e.clientX - rect.left) / rect.width - 0.5;
         const my = (e.clientY - rect.top) / rect.height - 0.5;
@@ -191,9 +220,9 @@
         this.#fit = null;
         const size = this.#canvas.clientWidth || 400;
         this.#width = size;
-        this.#height = size;
-        this.#canvas.width = size * DPR;
-        this.#canvas.height = size * DPR;
+        this.#height = size / aspectRatio;
+        this.#canvas.width = this.#width * DPR;
+        this.#canvas.height = this.#height * DPR;
         this.#ctx = this.#canvas.getContext("2d");
         this.#ctx.scale(DPR, DPR);
         this.#ctx.imageSmoothingEnabled = true;
@@ -323,7 +352,7 @@
           if (p.label) {
             const onRight = sx > w * 0.6;
             ctx.fillStyle = getColor("--text-clr");
-            ctx.font = getFont(11);
+            ctx.font = getFont(12);
             ctx.textAlign = onRight ? "right" : "left";
             const tx = onRight ? sx - 7 : sx + 7;
             ctx.fillText(p.label, tx, sy + 4);

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>sim-css compiler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: system-ui; padding: 20px; background: #111; color: #eee; }
+  h1 { font-size: 1.2em; margin-bottom: 12px; }
+  .layout { display: flex; gap: 20px; }
+  .panel { flex: 1; min-width: 0; }
+  label { display: block; margin: 8px 0 4px; font-size: 0.85em; color: #aaa; }
+  select, textarea, button, input {
+    font-family: inherit; font-size: 0.9em;
+    background: #222; color: #eee; border: 1px solid #444;
+    border-radius: 4px; padding: 6px 10px;
+  }
+  select, input { width: 100%; }
+  textarea { width: 100%; height: 300px; font-family: monospace; font-size: 0.8em; resize: vertical; }
+  button {
+    cursor: pointer; background: #336; border-color: #558; padding: 8px 16px; margin-top: 8px;
+  }
+  button:hover { background: #448; }
+  .preview-frame {
+    width: 100%; height: 400px; border: 1px solid #444; border-radius: 4px;
+    background: #fff;
+  }
+  .row { display: flex; gap: 8px; align-items: end; }
+  .row > * { flex: 1; }
+</style>
+</head>
+<body>
+
+<h1>sim-css compiler</h1>
+<div class="layout">
+  <div class="panel">
+    <label>Demo preset</label>
+    <select id="preset">
+      <option value="bouncing-balls">Bouncing balls</option>
+      <option value="confetti">Confetti burst</option>
+    </select>
+
+    <div class="row">
+      <div>
+        <label>Duration (s)</label>
+        <input type="number" id="duration" value="3" min="0.5" step="0.5">
+      </div>
+      <div>
+        <label>Sim rate (Hz)</label>
+        <input type="number" id="simRate" value="240" min="60" step="60">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Max error (world units)</label>
+        <input type="number" id="maxError" value="0.1" min="0.01" step="0.05">
+      </div>
+      <div>
+        <label>Min interval (s)</label>
+        <input type="number" id="minInterval" value="0.02" min="0.005" step="0.005">
+      </div>
+    </div>
+
+    <button id="compile">Compile</button>
+
+    <label>Output CSS + HTML</label>
+    <textarea id="output" readonly></textarea>
+
+    <button id="preview-btn">Preview</button>
+    <button id="save-btn">Save to demo.html</button>
+  </div>
+  <div class="panel">
+    <label>Preview</label>
+    <iframe id="preview" class="preview-frame" sandbox="allow-same-origin"></iframe>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/planck-js@1.3.0/dist/planck.min.js"></script>
+<script>
+const { World, Vec2, Edge, Box, Circle } = planck;
+
+const presets = {
+  "bouncing-balls": buildBouncingBalls,
+  "confetti": buildConfetti,
+};
+
+function buildBouncingBalls() {
+  const world = World({ gravity: Vec2(0, 20) });
+
+  world.createBody().createFixture(Edge(Vec2(-5, 8), Vec2(5, 8)), { friction: 0.3 });
+  world.createBody().createFixture(Edge(Vec2(-5, -2), Vec2(-5, 8)), { friction: 0.3 });
+  world.createBody().createFixture(Edge(Vec2(5, -2), Vec2(5, 8)), { friction: 0.3 });
+
+  const balls = [];
+  const colors = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6"];
+  for (let i = 0; i < 5; i++) {
+    const body = world.createDynamicBody({
+      position: Vec2(-1.5 + i * 0.8, -1),
+      linearVelocity: Vec2((Math.random() - 0.5) * 4, 0),
+      angularVelocity: (Math.random() - 0.5) * 10,
+    });
+    body.createFixture(Circle(0.3), {
+      density: 1,
+      restitution: 0.7,
+      friction: 0.3,
+    });
+    balls.push({
+      body,
+      radius: 0.3,
+      color: colors[i],
+      label: `ball-${i}`,
+    });
+  }
+
+  return {
+    world,
+    bodies: balls,
+    prefix: "ball",
+    viewBox: { x: -5, y: -2, w: 10, h: 10 },
+    pixelScale: 40,
+  };
+}
+
+function buildConfetti() {
+  const world = World({ gravity: Vec2(0, 4) });
+
+  const pieces = [];
+  const colors = [
+    "#e74c3c", "#3498db", "#2ecc71", "#f1c40f",
+    "#9b59b6", "#e67e22", "#1abc9c", "#ff6b9d",
+  ];
+
+  for (let i = 0; i < 20; i++) {
+    const angle = (Math.random() * Math.PI * 2);
+    const speed = 6 + Math.random() * 6;
+    const body = world.createDynamicBody({
+      position: Vec2(0, 2),
+      linearVelocity: Vec2(Math.cos(angle) * speed, -Math.abs(Math.sin(angle)) * speed - 2),
+      angularVelocity: (Math.random() - 0.5) * 20,
+      linearDamping: 0.5,
+      angularDamping: 0.3,
+    });
+    const hw = 0.05 + Math.random() * 0.1;
+    const hh = 0.1 + Math.random() * 0.15;
+    body.createFixture(Box(hw, hh), {
+      density: 0.5,
+      restitution: 0.3,
+      friction: 0.5,
+    });
+    pieces.push({
+      body,
+      hw,
+      hh,
+      color: colors[i % colors.length],
+      label: `confetti-${i}`,
+    });
+  }
+
+  return {
+    world,
+    bodies: pieces,
+    prefix: "conf",
+    viewBox: { x: -8, y: -10, w: 16, h: 14 },
+    pixelScale: 30,
+  };
+}
+
+function simulateHighRate(scene, durationS, simRate) {
+  const dt = 1 / simRate;
+  const totalSteps = Math.ceil(durationS * simRate);
+  const trajectories = scene.bodies.map(() => []);
+
+  for (let s = 0; s <= totalSteps; s++) {
+    const t = s * dt;
+    scene.bodies.forEach((b, i) => {
+      const pos = b.body.getPosition();
+      const vel = b.body.getLinearVelocity();
+      trajectories[i].push({
+        t, x: pos.x, y: pos.y, angle: b.body.getAngle(),
+        vx: vel.x, vy: vel.y,
+      });
+    });
+    if (s < totalSteps) {
+      scene.world.step(dt);
+    }
+  }
+
+  return trajectories;
+}
+
+function adaptiveSample(trajectories, durationS, maxError, minInterval) {
+  const bodyCount = trajectories.length;
+  const frameCount = trajectories[0].length;
+
+  const kept = [0];
+
+  for (let i = 1; i < frameCount - 1; i++) {
+    const lastKept = kept[kept.length - 1];
+
+    // Enforce min interval
+    if (trajectories[0][i].t - trajectories[0][lastKept].t < minInterval) continue;
+
+    // Check max deviation from linear interpolation for any body
+    let exceed = false;
+    for (let b = 0; b < bodyCount; b++) {
+      const a = trajectories[b][lastKept];
+      const c = trajectories[b][i];
+      const tSpan = c.t - a.t;
+      if (tSpan < 0.0001) continue;
+
+      // Check every frame between lastKept and i
+      for (let j = lastKept + 1; j < i; j++) {
+        const actual = trajectories[b][j];
+        const frac = (actual.t - a.t) / tSpan;
+        const predictedX = a.x + (c.x - a.x) * frac;
+        const predictedY = a.y + (c.y - a.y) * frac;
+        const dx = actual.x - predictedX;
+        const dy = actual.y - predictedY;
+        if (dx * dx + dy * dy > maxError * maxError) {
+          exceed = true;
+          break;
+        }
+      }
+      if (exceed) break;
+    }
+
+    if (exceed) {
+      kept.push(i);
+    }
+  }
+
+  kept.push(frameCount - 1);
+
+  return kept.map(idx => {
+    const t = trajectories[0][idx].t;
+    const pct = round(t / durationS * 100);
+    return {
+      pct,
+      frames: trajectories.map(body => ({
+        x: body[idx].x,
+        y: body[idx].y,
+        angle: body[idx].angle,
+      })),
+    };
+  });
+}
+
+function toLinearEasing(valuesWithPct, globalMin, globalMax) {
+  const range = globalMax - globalMin;
+  if (range < 0.0001) return "linear(0, 0)";
+  const points = valuesWithPct.map(({ value, pct }) => {
+    const norm = Math.round(((value - globalMin) / range) * 10000) / 10000;
+    return `${norm} ${pct}%`;
+  });
+  return `linear(${points.join(", ")})`;
+}
+
+function compileCSS(scene, samples, durationS) {
+  const { viewBox, pixelScale } = scene;
+  const prefix = scene.prefix || "obj";
+
+  const allX = [], allY = [], allR = [];
+  for (const s of samples) {
+    for (const f of s.frames) {
+      allX.push((f.x - viewBox.x) * pixelScale);
+      allY.push((f.y - viewBox.y) * pixelScale);
+      allR.push(f.angle);
+    }
+  }
+
+  const xMin = Math.min(...allX), xMax = Math.max(...allX);
+  const yMin = Math.min(...allY), yMax = Math.max(...allY);
+  const rMin = Math.min(...allR), rMax = Math.max(...allR);
+
+  let css = `@keyframes ${prefix}-x { from { translate: ${round(xMin)}px 0 } to { translate: ${round(xMax)}px 0 } }
+@keyframes ${prefix}-y { from { translate: 0 ${round(yMin)}px } to { translate: 0 ${round(yMax)}px } }
+@keyframes ${prefix}-r { from { rotate: ${round(rMin)}rad } to { rotate: ${round(rMax)}rad } }
+`;
+  let html = "";
+
+  const sampleInfo = `/* ${samples.length} adaptive samples from ${scene.simRate || "?"}Hz sim */\n`;
+  css = sampleInfo + css;
+
+  scene.bodies.forEach((b, i) => {
+    const name = b.label;
+
+    const xPoints = samples.map(s => ({ value: (s.frames[i].x - viewBox.x) * pixelScale, pct: s.pct }));
+    const yPoints = samples.map(s => ({ value: (s.frames[i].y - viewBox.y) * pixelScale, pct: s.pct }));
+    const rPoints = samples.map(s => ({ value: s.frames[i].angle, pct: s.pct }));
+
+    const xEasing = toLinearEasing(xPoints, xMin, xMax);
+    const yEasing = toLinearEasing(yPoints, yMin, yMax);
+    const rEasing = toLinearEasing(rPoints, rMin, rMax);
+
+    let size = "";
+    if (b.radius) {
+      const sizePx = round(b.radius * 2 * pixelScale);
+      size = `width: ${sizePx}px; height: ${sizePx}px; border-radius: 50%;`;
+    } else if (b.hw) {
+      size = `width: ${round(b.hw * 2 * pixelScale)}px; height: ${round(b.hh * 2 * pixelScale)}px; border-radius: 2px;`;
+    }
+
+    css += `.${name} {
+  position: absolute; top: 0; left: 0;
+  ${size}
+  background: ${b.color};
+  animation:
+    ${prefix}-x ${durationS}s infinite ${xEasing},
+    ${prefix}-y ${durationS}s infinite ${yEasing},
+    ${prefix}-r ${durationS}s infinite ${rEasing};
+  animation-composition: accumulate;
+}
+`;
+    html += `<div class="${name}"></div>\n`;
+  });
+
+  const containerW = round(viewBox.w * pixelScale);
+  const containerH = round(viewBox.h * pixelScale);
+
+  return `<style>
+.sim-container {
+  position: relative;
+  width: ${containerW}px;
+  height: ${containerH}px;
+  overflow: hidden;
+  background: #fafafa;
+  border-radius: 8px;
+}
+${css}</style>
+<div class="sim-container">
+${html}</div>`;
+}
+
+function round(n) {
+  return Math.round(n * 100) / 100;
+}
+
+document.getElementById("compile").onclick = () => {
+  const presetName = document.getElementById("preset").value;
+  const durationS = parseFloat(document.getElementById("duration").value);
+  const simRate = parseInt(document.getElementById("simRate").value);
+  const maxError = parseFloat(document.getElementById("maxError").value);
+  const minInterval = parseFloat(document.getElementById("minInterval").value);
+
+  const scene = presets[presetName]();
+  scene.simRate = simRate;
+  const trajectories = simulateHighRate(scene, durationS, simRate);
+  const samples = adaptiveSample(trajectories, durationS, maxError, minInterval);
+  const output = compileCSS(scene, samples, durationS);
+
+  document.getElementById("output").value = output;
+  showPreview(output);
+};
+
+document.getElementById("preview-btn").onclick = () => {
+  showPreview(document.getElementById("output").value);
+};
+
+document.getElementById("save-btn").onclick = async () => {
+  const output = document.getElementById("output").value;
+  if (!output) return;
+  const blob = new Blob([output], { type: "text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "demo.html";
+  a.click();
+};
+
+function showPreview(html) {
+  const iframe = document.getElementById("preview");
+  iframe.srcdoc = html;
+}
+
+document.getElementById("compile").click();
+</script>
+
+</body>
+</html>
