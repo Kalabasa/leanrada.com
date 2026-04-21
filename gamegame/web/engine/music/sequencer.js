@@ -16,7 +16,7 @@ export class Sequencer {
     this.#comp = composer;
     this.#getNowMs = getNowMs;
 
-    this.#bpm = 120;
+    this.#bpm = 100;
     this.#beatStartMs = 0;
     this.#accumulatedBeats = 0;
     this.#started = false;
