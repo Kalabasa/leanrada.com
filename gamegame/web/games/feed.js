@@ -46,7 +46,7 @@ export function feedGame(api) {
   const badChance = badPool.length > 0 ? 0.3 + Math.min(0.25, c * 0.03) : 0;
 
   const PLAYER_RATE_PER_SEC = 2;
-  const HIT_RATE = 0.8 * (positionVariant === 'pacing' ? 0.75 : 1);
+  const HIT_RATE = 0.8 * (positionVariant === 'pacing' ? 0.75 : 1) * (speedVariant === 'rush' ? 0.5 : 1);
   const FILL_FRACTION = 0.75;
   const durationSec = (10 * 60) / api.bpm;
   const goodChance = (1 - bombChance) * (1 - badChance);
