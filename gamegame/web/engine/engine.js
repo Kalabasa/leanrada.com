@@ -39,7 +39,7 @@ export function createEngine(onEnd, music, createGraphics) {
     gameDef?.onRelease?.(x, y);
   }
 
-  const { drawing, cleanup: cleanupGraphics } = createGraphics({ onTap, onDrag, onRelease });
+  const { drawing, getSafeInsets, cleanup: cleanupGraphics } = createGraphics({ onTap, onDrag, onRelease });
 
   class API {
     constructor() {
@@ -56,6 +56,8 @@ export function createEngine(onEnd, music, createGraphics) {
     onBeat(fn) { events.addEventListener("beat", fn); }
 
     complexity = 0;
+
+    get safeTop() { return getSafeInsets().top; }
 
     win(message) { end(RESULT_WIN, message); }
     lose(message) { end(RESULT_LOSE, message); }

@@ -266,6 +266,7 @@
 
       const music = createMusic();
       import { feedGame } from "./games/feed.js";
+      import { findGame } from "./games/find.js";
 
       // --- Timer bar display (reads from activeEngine) ---
       const timer = document.getElementById("timer-wrap");
@@ -374,7 +375,7 @@
 
       const gameTypes = location.search.includes('mock')
         ? [mockGame]
-        : [feedGame];
+        : [feedGame, findGame];
 
       function nextGame() {
         transition(() => {
@@ -444,6 +445,7 @@
         const gameFn = gameTypes[Math.floor(Math.random() * gameTypes.length)];
         currentEl.style.transform = "translateY(0)";
         nextEl.style.transform = `translateY(${window.innerHeight}px)`;
+        let hintEl = null;
 
         // Prep next slide
         nextEl.innerHTML = "";
@@ -459,6 +461,13 @@
           function getXY(e) {
             const rect = canvas.getBoundingClientRect();
             return [e.clientX - rect.left, e.clientY - rect.top];
+          }
+
+          function getSafeInsets() {
+            const hintBottom = hintEl ? hintEl.offsetTop + hintEl.offsetHeight : 0;
+            return {
+              top: hintBottom + 8,
+            };
           }
 
           function handleDown(e) {
@@ -491,6 +500,7 @@
 
           return {
             drawing,
+            getSafeInsets,
             cleanup() {
               canvas.removeEventListener("pointerdown", handleDown);
               canvas.removeEventListener("pointermove", handleMove);
@@ -516,7 +526,7 @@
           activeTitleTimeout = null;
           titleEl.remove();
           if (gameDef.hint) {
-            const hintEl = document.createElement("div");
+            hintEl = document.createElement("div");
             hintEl.className = "slide-hint";
             hintEl.textContent = gameDef.hint;
             currentEl.appendChild(hintEl);

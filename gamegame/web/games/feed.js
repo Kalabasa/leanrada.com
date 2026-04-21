@@ -40,9 +40,7 @@ export function feedGame(api) {
     title = 'Feed!';
     loseMessage = null;
   }
-  const beltSpeedMultiplier = speedVariant === 'rush' ? 1.65 : 1;
-
-  const beltPxPer16ms = (4 + Math.log2(1 + c) * 0.7) * beltSpeedMultiplier;
+  const beltPxPer16ms = (4 + Math.log2(1 + c) * 0.7) * (speedVariant === 'rush' ? 1.65 : 1);
   const badChance = badPool.length > 0 ? 0.3 + Math.min(0.25, c * 0.03) : 0;
 
   const PLAYER_RATE_PER_SEC = 2;
@@ -66,17 +64,13 @@ export function feedGame(api) {
 
   const paceMinX = chompsR * 1.1;
   const paceMaxX = api.width - chompsR * 1.1;
-  const chompsStaticX = positionVariant === 'random'
+  const paceMidX = (paceMinX + paceMaxX) / 2;
+  const paceAmpX = (paceMaxX - paceMinX) / 2;
+  const pacePeriodMs = Math.max(1400, 3800 - c * 120);
+  const initialChompsX = positionVariant === 'random'
     ? paceMinX + api.random() * (paceMaxX - paceMinX)
     : centerX;
-  const pacePeriodMs = Math.max(1400, 3800 - c * 120);
-  function getChompsX() {
-    if (positionVariant !== 'pacing') return chompsStaticX;
-    const phase = (api.time / pacePeriodMs) * Math.PI * 2;
-    const mid = (paceMinX + paceMaxX) / 2;
-    const amp = (paceMaxX - paceMinX) / 2;
-    return mid + Math.sin(phase) * amp;
-  }
+  let chompsX = initialChompsX;
 
   const belts = [
     { y: api.height * 0.58, dir: -1 },
@@ -88,13 +82,16 @@ export function feedGame(api) {
   const GRAB_RADIUS = 60;
   const THROW_VELOCITY_SAMPLE_MS = 100;
   const MAX_SPEED_PX_PER_16MS = 35;
+  const HAPPY_DURATION_MS = 280;
+  const GAG_DURATION_MS = 700;
+  const SHAKE_DURATION_MS = 450;
 
   let foods = [];
   let spawnTimer = 0;
   let eaten = 0;
   let alive = true;
   let chompT = 1;
-  let happyUntilMs = 0;
+  let happyStartMs = -Infinity;
   let gagUntilMs = 0;
   let shakeUntilMs = 0;
   let particles = [];
@@ -109,18 +106,18 @@ export function feedGame(api) {
 
   function eatFood(f) {
     if (f.isBad) {
-      gagUntilMs = api.time + 700;
-      shakeUntilMs = api.time + 450;
+      gagUntilMs = api.time + GAG_DURATION_MS;
+      shakeUntilMs = api.time + SHAKE_DURATION_MS;
       alive = false;
       api.lose(f.isBomb ? 'BOOM!' : loseMessage);
     } else {
       eaten++;
       chompT = 0;
-      happyUntilMs = api.time + 280;
-      popups.push({ x: getChompsX(), y: chompsY + chompsR + 20, t: 0 });
+      happyStartMs = api.time;
+      popups.push({ x: chompsX, y: chompsY + chompsR + 20, t: 0 });
       for (let i = 0; i < 8; i++) {
         particles.push({
-          x: getChompsX() + (api.random() - 0.5) * 50,
+          x: chompsX + (api.random() - 0.5) * 50,
           y: mouthCenterY,
           vx: (api.random() - 0.5) * 5,
           vy: 1 + api.random() * 3,
@@ -143,6 +140,11 @@ export function feedGame(api) {
     timeoutMessage: 'TOO SLOW!',
 
     draw(api) {
+      if (positionVariant === 'pacing') {
+        const phase = (api.time / pacePeriodMs) * Math.PI * 2;
+        chompsX = paceMidX + Math.sin(phase) * paceAmpX;
+      }
+
       const shaking = api.time < shakeUntilMs;
       const shakeX = shaking ? (Math.random() - 0.5) * 12 : 0;
       const shakeY = shaking ? (Math.random() - 0.5) * 12 : 0;
@@ -159,7 +161,8 @@ export function feedGame(api) {
           spawnTimer -= spawnIntervalMs;
           const isBomb = api.random() < bombChance;
           const isBad = isBomb || api.random() < badChance;
-          const emoji = isBomb ? '💣' : (isBad ? badPool : goodPool)[Math.floor(api.random((isBad ? badPool : goodPool).length))];
+          const pool = isBad ? badPool : goodPool;
+          const emoji = isBomb ? '💣' : pool[Math.floor(api.random(pool.length))];
           const belt = belts[Math.floor(api.random(belts.length))];
           const spawnX = belt.dir < 0 ? api.width + 30 : -30;
           foods.push({
@@ -184,7 +187,7 @@ export function feedGame(api) {
           f.vy += GRAVITY_PX_PER_16MS2 * (api.dt / 16);
           f.x += f.vx * (api.dt / 16);
           f.y += f.vy * (api.dt / 16);
-          if (api.dist(f.x, f.y, getChompsX(), mouthCenterY) < mouthCatchR) {
+          if (api.dist(f.x, f.y, chompsX, mouthCenterY) < mouthCatchR) {
             eatFood(f);
             return false;
           }
@@ -221,14 +224,13 @@ export function feedGame(api) {
 
       chompT = Math.min(1, chompT + api.dt / 180);
       const gagging = api.time < gagUntilMs;
-      const happy = api.time < happyUntilMs;
+      const happy = api.time < happyStartMs + HAPPY_DURATION_MS;
       const mouthOpen = gagging
         ? 0.4 + 0.15 * Math.sin(api.time * 0.06)
         : Math.sin(chompT * Math.PI);
-      const bob = happy ? Math.sin((api.time - (happyUntilMs - 280)) * 0.04) * 6 : api.pulse * 10;
+      const bob = happy ? Math.sin((api.time - happyStartMs) * 0.04) * 6 : api.pulse * 10;
       const bodyR = chompsR * (happy ? 1.08 : 1);
 
-      const chompsX = getChompsX();
       let lookX = 0, lookY = 0;
       let nearestD = Infinity;
       for (const f of foods) {
