@@ -78,7 +78,8 @@ export function feedGame(api) {
   }
 
   return {
-    title: isPicky ? 'Throw to Chomps — no veggies!' : 'Throw to Chomps!',
+    title: isPicky ? 'Feed no veggies!' : 'Feed!',
+    hint: 'Swipe food to throw!',
     duration: 10,
     timeoutResult: RESULT_LOSE,
     timeoutMessage: 'TOO SLOW!',

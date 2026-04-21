@@ -41,7 +41,7 @@ function tick(engine, ms) {
 test('win() calls onEnd with win result', () => {
   let result = null;
   const engine = createEngine((r) => { result = r; }, music, mockGraphics);
-  engine.run({ duration: 8, draw(api) { api.win(); } });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw(api) { api.win(); } });
   tick(engine, 0);
   assert.equal(result, RESULT_WIN);
 });
@@ -49,7 +49,7 @@ test('win() calls onEnd with win result', () => {
 test('lose() calls onEnd with lose result', () => {
   let result = null;
   const engine = createEngine((r) => { result = r; }, music, mockGraphics);
-  engine.run({ duration: 8, draw(api) { api.lose(); } });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw(api) { api.lose('oops'); } });
   tick(engine, 0);
   assert.equal(result, RESULT_LOSE);
 });
@@ -57,7 +57,7 @@ test('lose() calls onEnd with lose result', () => {
 test('onEnd fires only once even if win called multiple times', () => {
   let count = 0;
   const engine = createEngine(() => { count++; }, music, mockGraphics);
-  engine.run({ duration: 8, draw(api) { api.win(); api.win(); } });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw(api) { api.win(); api.win(); } });
   tick(engine, 0);
   assert.equal(count, 1);
 });
@@ -65,7 +65,7 @@ test('onEnd fires only once even if win called multiple times', () => {
 test('game times out with lose when duration exceeded', () => {
   let result = null;
   const engine = createEngine((r) => { result = r; }, music, mockGraphics);
-  engine.run({ duration: 8, draw() {} });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw() {} });
   tick(engine, 1000);
   tick(engine, 1000 + music.beatsToMs(8) + 1);
   assert.equal(result, RESULT_LOSE);
@@ -83,7 +83,7 @@ test('game times out with win when timeoutResult is win', () => {
 test('game does not end before duration', () => {
   let result = null;
   const engine = createEngine((r) => { result = r; }, music, mockGraphics);
-  engine.run({ duration: 8, draw() {} });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw() {} });
   tick(engine, 1000);
   tick(engine, 1000 + music.beatsToMs(4));
   assert.equal(result, null);
@@ -92,7 +92,7 @@ test('game does not end before duration', () => {
 test('paused game does not advance time or call draw', () => {
   let draws = 0;
   const engine = createEngine(() => {}, music, mockGraphics);
-  engine.run({ duration: 8, draw() { draws++; } });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw() { draws++; } });
   tick(engine, 1000);
   engine.pause();
   tick(engine, 2000);
@@ -104,7 +104,7 @@ test('resumed game continues from where it left off', () => {
   let result = null;
   const engine = createEngine((r) => { result = r; }, music, mockGraphics);
   const dur = music.beatsToMs(2);
-  engine.run({ duration: 2, draw() {} });
+  engine.run({ duration: 2, timeoutMessage: 'time up', draw() {} });
   tick(engine, 1000);
   engine.pause();
   tick(engine, 1000 + dur);
@@ -117,7 +117,7 @@ test('resumed game continues from where it left off', () => {
 
 test('pause is idempotent when already paused', () => {
   const engine = createEngine(() => {}, music, mockGraphics);
-  engine.run({ duration: 8, draw() {} });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw() {} });
   tick(engine, 1000);
   engine.pause();
   engine.pause();
@@ -128,7 +128,7 @@ test('pause is idempotent when already paused', () => {
 test('resume is a no-op when not paused', () => {
   let draws = 0;
   const engine = createEngine(() => {}, music, mockGraphics);
-  engine.run({ duration: 8, draw() { draws++; } });
+  engine.run({ duration: 8, timeoutMessage: 'time up', draw() { draws++; } });
   tick(engine, 1000);
   engine.resume();
   tick(engine, 2000);

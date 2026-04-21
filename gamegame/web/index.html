@@ -70,6 +70,17 @@
       .slide-result.visible {
         opacity: 1;
       }
+      .slide-hint {
+        position: absolute;
+        top: 48px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 0.9rem;
+        opacity: 0.75;
+        pointer-events: none;
+        z-index: 10;
+      }
       .slide-title {
         position: absolute;
         inset: 0;
@@ -409,7 +420,7 @@
           const won = result === RESULT_WIN;
           const resultEl = document.createElement("div");
           resultEl.className = "slide-result visible";
-          resultEl.textContent = message ?? (won ? "NICE!" : "OH NO!");
+          resultEl.textContent = message ?? (won ? "NICE!" : "");
           resultEl.style.background = won
             ? "rgba(0,200,100,0.3)"
             : "rgba(200,0,50,0.3)";
@@ -504,6 +515,12 @@
         activeTitleTimeout = pauseableTimeout(() => {
           activeTitleTimeout = null;
           titleEl.remove();
+          if (gameDef.hint) {
+            const hintEl = document.createElement("div");
+            hintEl.className = "slide-hint";
+            hintEl.textContent = gameDef.hint;
+            currentEl.appendChild(hintEl);
+          }
           engine.run(gameDef);
         }, titleMs);
       }

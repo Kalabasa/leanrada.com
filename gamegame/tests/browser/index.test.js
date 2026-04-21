@@ -128,6 +128,40 @@ it('game does not time out while paused', async () => {
   await waitFor(() => doc.querySelector('.slide-result'));
 });
 
+// --- Title card ---
+
+it('title renders on title card', async () => {
+  const iframe = await loadPage({ mock: 1, mockTitle: 'FEED!' });
+  const doc = iframe.contentDocument;
+  startGame(doc);
+
+  await waitFor(() => doc.querySelector('.slide-title'));
+  const text = doc.querySelector('.slide-title').textContent;
+  if (!text.includes('FEED!')) throw new Error(`expected title, got: ${text}`);
+});
+
+it('hint is hidden during title card, visible once game starts', async () => {
+  const iframe = await loadPage({ mock: 1, mockHint: 'Swipe to throw' });
+  const doc = iframe.contentDocument;
+  startGame(doc);
+
+  if (doc.querySelector('.slide-hint')) throw new Error('hint should not render during title card');
+
+  await iframe.contentWindow.mockControls.ready;
+  await waitFor(() => doc.querySelector('.slide-hint'));
+  const text = doc.querySelector('.slide-hint').textContent;
+  if (!text.includes('Swipe to throw')) throw new Error(`expected hint, got: ${text}`);
+});
+
+it('hint is absent when not provided', async () => {
+  const iframe = await loadPage({ mock: 1 });
+  const doc = iframe.contentDocument;
+  startGame(doc);
+
+  await iframe.contentWindow.mockControls.ready;
+  if (doc.querySelector('.slide-hint')) throw new Error('hint element should not exist');
+});
+
 // --- Results ---
 
 it('win shows NICE result', async () => {
@@ -144,21 +178,7 @@ it('win shows NICE result', async () => {
   if (!text.includes('NICE')) throw new Error(`expected win message, got: ${text}`);
 });
 
-it('lose shows default feedback', async () => {
-  const iframe = await loadPage({ mock: 1 });
-  const doc = iframe.contentDocument;
-  const win = iframe.contentWindow;
-  startGame(doc);
-
-  await win.mockControls.ready;
-  win.mockControls.lose();
-
-  await waitFor(() => doc.querySelector('.slide-result'));
-  const text = doc.querySelector('.slide-result').textContent;
-  if (!text.includes('OH NO')) throw new Error(`expected lose message, got: ${text}`);
-});
-
-it('lose shows custom feedback message', async () => {
+it('lose shows feedback message', async () => {
   const iframe = await loadPage({ mock: 1 });
   const doc = iframe.contentDocument;
   const win = iframe.contentWindow;

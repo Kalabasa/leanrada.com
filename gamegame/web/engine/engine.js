@@ -17,6 +17,9 @@ export function createEngine(onEnd, music, createGraphics) {
 
   function end(result, message) {
     if (state == STATE_ENDED) return;
+    if (result === RESULT_LOSE && !message) {
+      throw new Error('lose requires a message saying why');
+    }
     state = STATE_ENDED;
     onEnd(result, message);
   }
@@ -98,6 +101,10 @@ export function createEngine(onEnd, music, createGraphics) {
   return {
     run(def) {
       if (state === STATE_ENDED) return;
+      const timeoutResult = def.timeoutResult ?? RESULT_LOSE;
+      if (timeoutResult === RESULT_LOSE && !def.timeoutMessage) {
+        throw new Error('game with lose timeout requires timeoutMessage');
+      }
       state = STATE_RUNNING;
       gameDef = def;
       music.start();
