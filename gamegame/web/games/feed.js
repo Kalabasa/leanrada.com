@@ -21,6 +21,11 @@ export function feedGame(api) {
   const bombVariant = bombVariants[Math.floor(api.random(bombVariants.length))];
   const bombChance = bombVariant === 'bombs' ? Math.min(0.2, 0.08 + c * 0.015) : 0;
 
+  const positionVariants = ['centered'];
+  if (c >= 0.5) positionVariants.push('random');
+  if (c >= 2) positionVariants.push('pacing');
+  const positionVariant = positionVariants[Math.floor(api.random(positionVariants.length))];
+
   let goodPool, badPool, title, loseMessage;
   if (poolVariant === 'picky') {
     goodPool = [...junkFoods, ...fruit]; badPool = veggies;
@@ -41,23 +46,37 @@ export function feedGame(api) {
   const badChance = badPool.length > 0 ? 0.3 + Math.min(0.25, c * 0.03) : 0;
 
   const PLAYER_RATE_PER_SEC = 2;
-  const HIT_RATE = 0.8;
+  const HIT_RATE = 0.8 * (positionVariant === 'pacing' ? 0.75 : 1);
   const FILL_FRACTION = 0.75;
   const durationSec = (10 * 60) / api.bpm;
   const goodChance = (1 - bombChance) * (1 - badChance);
   const quota = Math.max(2, Math.floor(
     durationSec * PLAYER_RATE_PER_SEC * HIT_RATE * goodChance * FILL_FRACTION
   ));
-  const maxOnSurface = 5 + Math.floor(Math.log2(1 + c) * 1.5);
+  const maxOnSurface = 20;
 
-  const spawnPxGap = Math.max(40, 88 - Math.log2(1 + c) * 10);
+  const spawnPxGap = 60;
   const spawnIntervalMs = (spawnPxGap / beltPxPer16ms) * 16;
 
-  const cx = api.width / 2;
+  const centerX = api.width / 2;
   const chompsY = api.height * 0.22;
   const chompsR = Math.min(80, api.width * 0.2);
   const mouthCenterY = chompsY + chompsR * 0.15;
   const mouthCatchR = chompsR * 0.75;
+
+  const paceMinX = chompsR * 1.1;
+  const paceMaxX = api.width - chompsR * 1.1;
+  const chompsStaticX = positionVariant === 'random'
+    ? paceMinX + api.random() * (paceMaxX - paceMinX)
+    : centerX;
+  const pacePeriodMs = Math.max(1400, 3800 - c * 120);
+  function getChompsX() {
+    if (positionVariant !== 'pacing') return chompsStaticX;
+    const phase = (api.time / pacePeriodMs) * Math.PI * 2;
+    const mid = (paceMinX + paceMaxX) / 2;
+    const amp = (paceMaxX - paceMinX) / 2;
+    return mid + Math.sin(phase) * amp;
+  }
 
   const belts = [
     { y: api.height * 0.58, dir: -1 },
@@ -98,10 +117,10 @@ export function feedGame(api) {
       eaten++;
       chompT = 0;
       happyUntilMs = api.time + 280;
-      popups.push({ x: cx, y: chompsY + chompsR + 20, t: 0 });
+      popups.push({ x: getChompsX(), y: chompsY + chompsR + 20, t: 0 });
       for (let i = 0; i < 8; i++) {
         particles.push({
-          x: cx + (api.random() - 0.5) * 50,
+          x: getChompsX() + (api.random() - 0.5) * 50,
           y: mouthCenterY,
           vx: (api.random() - 0.5) * 5,
           vy: 1 + api.random() * 3,
@@ -165,7 +184,7 @@ export function feedGame(api) {
           f.vy += GRAVITY_PX_PER_16MS2 * (api.dt / 16);
           f.x += f.vx * (api.dt / 16);
           f.y += f.vy * (api.dt / 16);
-          if (api.dist(f.x, f.y, cx, mouthCenterY) < mouthCatchR) {
+          if (api.dist(f.x, f.y, getChompsX(), mouthCenterY) < mouthCatchR) {
             eatFood(f);
             return false;
           }
@@ -209,14 +228,15 @@ export function feedGame(api) {
       const bob = happy ? Math.sin((api.time - (happyUntilMs - 280)) * 0.04) * 6 : api.pulse * 10;
       const bodyR = chompsR * (happy ? 1.08 : 1);
 
+      const chompsX = getChompsX();
       let lookX = 0, lookY = 0;
       let nearestD = Infinity;
       for (const f of foods) {
         if (f.state !== 'thrown') continue;
-        const d = api.dist(f.x, f.y, cx, chompsY);
+        const d = api.dist(f.x, f.y, chompsX, chompsY);
         if (d < nearestD) {
           nearestD = d;
-          const dx = f.x - cx;
+          const dx = f.x - chompsX;
           const dy = f.y - chompsY;
           const m = Math.hypot(dx, dy) || 1;
           lookX = dx / m;
@@ -224,11 +244,11 @@ export function feedGame(api) {
         }
       }
 
-      drawChomps(api, cx + shakeX, chompsY + shakeY - bob, bodyR, mouthOpen, gagging, lookX, lookY);
+      drawChomps(api, chompsX + shakeX, chompsY + shakeY - bob, bodyR, mouthOpen, gagging, lookX, lookY);
 
       const hudY = api.height * 0.46;
       for (let i = 0; i < quota; i++) {
-        const x = cx - (quota - 1) * 12 + i * 24;
+        const x = centerX - (quota - 1) * 12 + i * 24;
         if (i < eaten) api.circle(x, hudY, 8, 0xffcc44);
         else api.circleOutline(x, hudY, 8, 0x666677);
       }
