@@ -6,8 +6,8 @@ export function mockGame(api) {
 
   window.mockControls = {
     ready,
-    win: () => api.win(),
-    lose: () => api.lose(),
+    win: (message) => api.win(message),
+    lose: (message) => api.lose(message),
   };
 
   let firstDraw = true;

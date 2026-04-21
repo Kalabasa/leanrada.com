@@ -54,7 +54,7 @@ export function feedGame(api) {
       gagUntilMs = api.time + 700;
       shakeUntilMs = api.time + 450;
       alive = false;
-      api.lose();
+      api.lose('NO VEGGIES!');
     } else {
       eaten++;
       chompT = 0;
@@ -81,6 +81,7 @@ export function feedGame(api) {
     title: isPicky ? 'Throw to Chomps — no veggies!' : 'Throw to Chomps!',
     duration: 10,
     timeoutResult: RESULT_LOSE,
+    timeoutMessage: 'TOO SLOW!',
 
     draw(api) {
       const shaking = api.time < shakeUntilMs;

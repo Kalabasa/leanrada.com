@@ -144,7 +144,7 @@ it('win shows NICE result', async () => {
   if (!text.includes('NICE')) throw new Error(`expected win message, got: ${text}`);
 });
 
-it('lose shows TOO BAD result', async () => {
+it('lose shows default feedback', async () => {
   const iframe = await loadPage({ mock: 1 });
   const doc = iframe.contentDocument;
   const win = iframe.contentWindow;
@@ -155,7 +155,21 @@ it('lose shows TOO BAD result', async () => {
 
   await waitFor(() => doc.querySelector('.slide-result'));
   const text = doc.querySelector('.slide-result').textContent;
-  if (!text.includes('TOO BAD')) throw new Error(`expected lose message, got: ${text}`);
+  if (!text.includes('OH NO')) throw new Error(`expected lose message, got: ${text}`);
+});
+
+it('lose shows custom feedback message', async () => {
+  const iframe = await loadPage({ mock: 1 });
+  const doc = iframe.contentDocument;
+  const win = iframe.contentWindow;
+  startGame(doc);
+
+  await win.mockControls.ready;
+  win.mockControls.lose('BECAUSE!');
+
+  await waitFor(() => doc.querySelector('.slide-result'));
+  const text = doc.querySelector('.slide-result').textContent;
+  if (!text.includes('BECAUSE')) throw new Error(`expected custom lose message, got: ${text}`);
 });
 
 // --- Next game ---

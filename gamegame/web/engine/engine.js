@@ -15,10 +15,10 @@ export function createEngine(onEnd, music, createGraphics) {
   let lastBeatNumber = -1;
   const events = new EventTarget();
 
-  function end(result) {
+  function end(result, message) {
     if (state == STATE_ENDED) return;
     state = STATE_ENDED;
-    onEnd(result);
+    onEnd(result, message);
   }
 
   function onTap(x, y) {
@@ -54,8 +54,8 @@ export function createEngine(onEnd, music, createGraphics) {
 
     complexity = 0;
 
-    win() { end(RESULT_WIN); }
-    lose() { end(RESULT_LOSE); }
+    win(message) { end(RESULT_WIN, message); }
+    lose(message) { end(RESULT_LOSE, message); }
 
     soundTap() { music.soundTap(); }
 
@@ -89,7 +89,7 @@ export function createEngine(onEnd, music, createGraphics) {
 
     if (gameTimeMs >= gameDurationMs) {
       const timeoutResult = gameDef.timeoutResult ?? RESULT_LOSE;
-      end(timeoutResult);
+      end(timeoutResult, gameDef.timeoutMessage);
     }
 
     requestAnimationFrame(tick);
