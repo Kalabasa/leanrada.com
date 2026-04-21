@@ -3,16 +3,49 @@ import { RESULT_LOSE } from '../engine/engine.js';
 export function feedGame(api) {
   const c = api.complexity;
 
-  const goodFoods = ['🍔', '🍕', '🍩', '🍗', '🍎', '🍪', '🍦', '🌭'];
-  const badFoods = ['🥦', '🥕', '🫛', '🥬'];
+  const junkFoods = ['🍔', '🍕', '🍩', '🍗', '🍪', '🍦', '🌭'];
+  const veggies = ['🥦', '🥕', '🫛', '🥬'];
+  const fruit = ['🍎', '🍌', '🍓', '🍊'];
 
-  const isPicky = api.random() < 0.5;
+  const poolVariants = ['feed'];
+  if (c >= 1) poolVariants.push('picky');
+  if (c >= 2) poolVariants.push('vegan');
+  const poolVariant = poolVariants[Math.floor(api.random(poolVariants.length))];
 
-  const quota = 5 + Math.floor(Math.log2(1 + c) * 2);
+  const speedVariants = ['normal', 'normal', 'normal'];
+  if (c >= 1.5) speedVariants.push('rush');
+  const speedVariant = speedVariants[Math.floor(api.random(speedVariants.length))];
+
+  let goodPool, badPool, title, loseMessage;
+  if (poolVariant === 'picky') {
+    goodPool = [...junkFoods, ...fruit]; badPool = veggies;
+    title = 'Feed NO veggies!';
+    loseMessage = 'NO VEGGIES!';
+  } else if (poolVariant === 'vegan') {
+    goodPool = [...veggies, ...fruit]; badPool = junkFoods;
+    title = 'Feed! (VEGAN!)';
+    loseMessage = 'ONLY VEGGIES!';
+  } else {
+    goodPool = [...junkFoods, ...fruit]; badPool = [];
+    title = 'Feed!';
+    loseMessage = null;
+  }
+  const beltSpeedMultiplier = speedVariant === 'rush' ? 1.65 : 1;
+
+  const beltPxPer16ms = (4 + Math.log2(1 + c) * 0.7) * beltSpeedMultiplier;
+  const badChance = badPool.length > 0 ? 0.3 + Math.min(0.25, c * 0.03) : 0;
+
+  const PLAYER_RATE_PER_SEC = 2;
+  const HIT_RATE = 0.8;
+  const FILL_FRACTION = 0.75;
+  const durationSec = (10 * 60) / api.bpm;
+  const quota = Math.max(2, Math.floor(
+    durationSec * PLAYER_RATE_PER_SEC * HIT_RATE * (1 - badChance) * FILL_FRACTION
+  ));
   const maxOnSurface = 5 + Math.floor(Math.log2(1 + c) * 1.5);
-  const spawnBeats = Math.max(0.3, 0.7 - Math.log2(1 + c) * 0.08);
-  const beltPxPer16ms = 4 + Math.log2(1 + c) * 0.7;
-  const badChance = isPicky ? 0.3 + Math.min(0.25, c * 0.03) : 0;
+
+  const spawnPxGap = Math.max(40, 88 - Math.log2(1 + c) * 10);
+  const spawnIntervalMs = (spawnPxGap / beltPxPer16ms) * 16;
 
   const cx = api.width / 2;
   const chompsY = api.height * 0.22;
@@ -54,7 +87,7 @@ export function feedGame(api) {
       gagUntilMs = api.time + 700;
       shakeUntilMs = api.time + 450;
       alive = false;
-      api.lose('NO VEGGIES!');
+      api.lose(loseMessage);
     } else {
       eaten++;
       chompT = 0;
@@ -78,7 +111,7 @@ export function feedGame(api) {
   }
 
   return {
-    title: isPicky ? 'Feed no veggies!' : 'Feed!',
+    title,
     hint: 'Swipe food to throw!',
     duration: 10,
     timeoutResult: RESULT_LOSE,
@@ -97,11 +130,10 @@ export function feedGame(api) {
 
       if (alive && idleCount() < maxOnSurface) {
         spawnTimer += api.dt;
-        const spawnIntervalMs = (60000 / api.bpm) * spawnBeats;
         while (spawnTimer > spawnIntervalMs && idleCount() < maxOnSurface) {
           spawnTimer -= spawnIntervalMs;
           const isBad = api.random() < badChance;
-          const pool = isBad ? badFoods : goodFoods;
+          const pool = isBad ? badPool : goodPool;
           const belt = belts[Math.floor(api.random(belts.length))];
           const spawnX = belt.dir < 0 ? api.width + 30 : -30;
           foods.push({
