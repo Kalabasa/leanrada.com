@@ -16,6 +16,11 @@ export function feedGame(api) {
   if (c >= 1.5) speedVariants.push('rush');
   const speedVariant = speedVariants[Math.floor(api.random(speedVariants.length))];
 
+  const bombVariants = ['none', 'none'];
+  if (c >= 2) bombVariants.push('bombs');
+  const bombVariant = bombVariants[Math.floor(api.random(bombVariants.length))];
+  const bombChance = bombVariant === 'bombs' ? Math.min(0.2, 0.08 + c * 0.015) : 0;
+
   let goodPool, badPool, title, loseMessage;
   if (poolVariant === 'picky') {
     goodPool = [...junkFoods, ...fruit]; badPool = veggies;
@@ -39,8 +44,9 @@ export function feedGame(api) {
   const HIT_RATE = 0.8;
   const FILL_FRACTION = 0.75;
   const durationSec = (10 * 60) / api.bpm;
+  const goodChance = (1 - bombChance) * (1 - badChance);
   const quota = Math.max(2, Math.floor(
-    durationSec * PLAYER_RATE_PER_SEC * HIT_RATE * (1 - badChance) * FILL_FRACTION
+    durationSec * PLAYER_RATE_PER_SEC * HIT_RATE * goodChance * FILL_FRACTION
   ));
   const maxOnSurface = 5 + Math.floor(Math.log2(1 + c) * 1.5);
 
@@ -87,7 +93,7 @@ export function feedGame(api) {
       gagUntilMs = api.time + 700;
       shakeUntilMs = api.time + 450;
       alive = false;
-      api.lose(loseMessage);
+      api.lose(f.isBomb ? 'BOOM!' : loseMessage);
     } else {
       eaten++;
       chompT = 0;
@@ -132,13 +138,15 @@ export function feedGame(api) {
         spawnTimer += api.dt;
         while (spawnTimer > spawnIntervalMs && idleCount() < maxOnSurface) {
           spawnTimer -= spawnIntervalMs;
-          const isBad = api.random() < badChance;
-          const pool = isBad ? badPool : goodPool;
+          const isBomb = api.random() < bombChance;
+          const isBad = isBomb || api.random() < badChance;
+          const emoji = isBomb ? '💣' : (isBad ? badPool : goodPool)[Math.floor(api.random((isBad ? badPool : goodPool).length))];
           const belt = belts[Math.floor(api.random(belts.length))];
           const spawnX = belt.dir < 0 ? api.width + 30 : -30;
           foods.push({
-            emoji: pool[Math.floor(api.random(pool.length))],
+            emoji,
             isBad,
+            isBomb,
             x: spawnX,
             y: belt.y - 20,
             vx: belt.dir * beltPxPer16ms,
@@ -168,7 +176,11 @@ export function feedGame(api) {
 
       for (const f of foods) {
         const size = f.state === 'held' ? 44 : 36;
-        api.emoji(f.emoji, f.x + shakeX, f.y + shakeY, size);
+        let danceDy = 0;
+        if (f.state === 'idle' && !f.isBad) {
+          danceDy = -api.pulse * 10;
+        }
+        api.emoji(f.emoji, f.x + shakeX, f.y + shakeY + danceDy, size);
       }
 
       particles = particles.filter(p => {
@@ -194,10 +206,25 @@ export function feedGame(api) {
       const mouthOpen = gagging
         ? 0.4 + 0.15 * Math.sin(api.time * 0.06)
         : Math.sin(chompT * Math.PI);
-      const bob = happy ? Math.sin((api.time - (happyUntilMs - 280)) * 0.04) * 6 : api.pulse * 2;
+      const bob = happy ? Math.sin((api.time - (happyUntilMs - 280)) * 0.04) * 6 : api.pulse * 10;
       const bodyR = chompsR * (happy ? 1.08 : 1);
 
-      drawChomps(api, cx + shakeX, chompsY + shakeY - bob, bodyR, mouthOpen, gagging);
+      let lookX = 0, lookY = 0;
+      let nearestD = Infinity;
+      for (const f of foods) {
+        if (f.state !== 'thrown') continue;
+        const d = api.dist(f.x, f.y, cx, chompsY);
+        if (d < nearestD) {
+          nearestD = d;
+          const dx = f.x - cx;
+          const dy = f.y - chompsY;
+          const m = Math.hypot(dx, dy) || 1;
+          lookX = dx / m;
+          lookY = dy / m;
+        }
+      }
+
+      drawChomps(api, cx + shakeX, chompsY + shakeY - bob, bodyR, mouthOpen, gagging, lookX, lookY);
 
       const hudY = api.height * 0.46;
       for (let i = 0; i < quota; i++) {
@@ -275,7 +302,7 @@ function drawBelt(api, y, dir, width, speedPxPer16ms, timeMs) {
   }
 }
 
-function drawChomps(api, cx, cy, r, mouthOpen, gagging) {
+function drawChomps(api, cx, cy, r, mouthOpen, gagging, lookX = 0, lookY = 0) {
   const body = 0x9944cc;
   const bodyDark = 0x552288;
   const mouthBlack = 0x1a0011;
@@ -306,20 +333,26 @@ function drawChomps(api, cx, cy, r, mouthOpen, gagging) {
     api.rect(cx - r * 0.18, mouthY - r * 0.02, r * 0.36, r * 0.45, tongue);
   }
 
-  const eyeY = cy - r * 0.35;
+  const faceShiftX = r * 0.08 * lookX;
+  const faceShiftY = r * 0.05 * lookY;
+  const eyeY = cy - r * 0.35 + faceShiftY;
   const eyeOffX = r * 0.38;
   const eyeR = r * 0.22;
-  api.circle(cx - eyeOffX, eyeY, eyeR, eye);
-  api.circle(cx + eyeOffX, eyeY, eyeR, eye);
+  const leftEyeX = cx - eyeOffX + faceShiftX;
+  const rightEyeX = cx + eyeOffX + faceShiftX;
+  api.circle(leftEyeX, eyeY, eyeR, eye);
+  api.circle(rightEyeX, eyeY, eyeR, eye);
 
   if (gagging) {
     const pr = eyeR * 0.75;
-    api.line(cx - eyeOffX - pr, eyeY - pr, cx - eyeOffX + pr, eyeY + pr, pupil, 3);
-    api.line(cx - eyeOffX - pr, eyeY + pr, cx - eyeOffX + pr, eyeY - pr, pupil, 3);
-    api.line(cx + eyeOffX - pr, eyeY - pr, cx + eyeOffX + pr, eyeY + pr, pupil, 3);
-    api.line(cx + eyeOffX - pr, eyeY + pr, cx + eyeOffX + pr, eyeY - pr, pupil, 3);
+    api.line(leftEyeX - pr, eyeY - pr, leftEyeX + pr, eyeY + pr, pupil, 3);
+    api.line(leftEyeX - pr, eyeY + pr, leftEyeX + pr, eyeY - pr, pupil, 3);
+    api.line(rightEyeX - pr, eyeY - pr, rightEyeX + pr, eyeY + pr, pupil, 3);
+    api.line(rightEyeX - pr, eyeY + pr, rightEyeX + pr, eyeY - pr, pupil, 3);
   } else {
-    api.circle(cx - eyeOffX, eyeY, eyeR * 0.45, pupil);
-    api.circle(cx + eyeOffX, eyeY, eyeR * 0.45, pupil);
+    const pupilOffX = eyeR * 0.45 * lookX;
+    const pupilOffY = eyeR * 0.45 * lookY;
+    api.circle(leftEyeX + pupilOffX, eyeY + pupilOffY, eyeR * 0.45, pupil);
+    api.circle(rightEyeX + pupilOffX, eyeY + pupilOffY, eyeR * 0.45, pupil);
   }
 }
