@@ -1,6 +1,70 @@
 import { reaction } from "../lib/mobx.js";
 import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
+/*
+
+Each glyph is subdivided into a grid. 3 rows, variable columns. Each cell can contain one vertex.
+
+For example, glyph ᜀ (A) is structured as a 4x3 grid:
+
+  .................
+  :   :   :   :   :
+  : o---o : o---o :
+  :...:.|.:.|.:...:
+  :   : | : | :   :
+  : o---o : o :   :
+  :...:.|.:/..:...:
+  :   : | /   :   :
+  :   : o/:   :   :
+  :...:...:...:...:
+
+Vertices can be connected. Edges have properties.
+
+An edge could be plain (as inᜑ), wavy (as in ᜁ, ᜎ), or curved (as in ᜐ, ᜂ, ᜄ).
+
+A wavy edge could have wave frequency parameter.
+
+A curved edge could have a radius or direction parameter.
+
+Cell occupancy could be used for kerning.
+
+    A  +   PA
+  #### >> ..##
+  ###. << ####
+  .#..    .#..
+
+Subsets of vertices could be shifted up or down to make adjacent glyphs fit better.
+
+   A (shifted)      +  K
+  .................   ....
+  :   :   :   :   :   :
+  : o---o :   :   : <<: o-
+  :...:.|.:...:...:   :...
+  :   : | :   :   :   :
+  : o---o : o---o :>> :
+  :...:.|.:.|.:...:   :...
+  :   : | : | :   :   :
+  :   : o---o :   : <<: o-
+  :...:...:...:...:   :...
+
+    A  +  KA
+  ##.. << ###
+  #### >> .#.
+  .##. << ###
+
+Whole glyphs could be shifted up or down in cell grid increments.
+
+    A  +  KA
+  .... << ###
+  #### >> .#.
+  ###. << ###
+  .#..    ...
+
+Glyphs are laid out in a global grid using the above rules to create a tight composition.
+
+The resulting graph describes the basic skeleton of a glyph which will be the basis for the brush strokes.
+
+*/
 
 const memo = Symbol("memo");
 
@@ -16,38 +80,23 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
       const context = canvas.getContext("2d");
       context.reset();
       context.clearRect(0, 0, canvas.width, canvas.height);
-      const glyphMap = await loadGlyphMap();
-      drawCalligraphy(baybayinUnits, glyphMap, painter, context);
+      drawCalligraphy(baybayinUnits, painter, context);
     },
     { delay: 1000 }
   );
 }
 
-async function loadGlyphMap() {
-  if (loadGlyphMap[memo]) return loadGlyphMap[memo];
-
-  const map = new Map();
-  const glyphArray = (await import("./glyph-map.js")).default;
-  for (const glyph of glyphArray) {
-    map.set(glyph.name, glyph);
-  }
-
-  loadGlyphMap[memo] = map;
-  return map;
-}
-
 /**
  * @param {string[]} baybayinUnits
- * @param {Map<string, import("../authoring/glyphed.js").Glyph>} glyphMap
  * @param {BasePainter} painter
  * @param {CanvasRenderingContext2D} canvasContext
  */
 export async function drawCalligraphy(
   baybayinUnits,
-  glyphMap,
   painter,
   canvasContext
 ) {
+  throw new "Not implemented";
   const glyphs = baybayinUnits
     .map((baybayinUnit) => generateGlyph(baybayinUnit, glyphMap))
     .filter((glyph) => glyph);
@@ -64,7 +113,7 @@ export async function drawCalligraphy(
   }
 }
 
-function generateGlyph(baybayinUnit, glyphMap) {
+function generateGlyph(baybayinUnit) {
   const consonant =
     baybayinUnit === "ng" ? baybayinUnit : baybayinUnit.slice(0, 1);
   const consonantGlyph = glyphMap.get(consonant);
