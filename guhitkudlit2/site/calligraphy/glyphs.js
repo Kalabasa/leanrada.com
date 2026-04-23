@@ -12,6 +12,7 @@ LEGEND
 
 Vertices can only be entered in odd columns and odd lines.
 */
+
 export const A = glyph`
 .-. .-.
   | |
@@ -125,6 +126,16 @@ export const Y = glyph`
   .
 `;
 
+/**
+ * @typedef {{
+ *  x: number,
+ *  y: number,
+ *  adjacency: Set<Vertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined }>
+ * }} GlyphVertex
+ * @typedef {(GlyphVertex | undefined)[][]} Glyph
+ * 
+ * @returns {Glyph} a glyph
+ */
 function glyph([data]) {
   data = data.replaceAll(/^\n|\n$/g, "");
   const charGrid = data.split("\n").map((line) => line.trimEnd());
