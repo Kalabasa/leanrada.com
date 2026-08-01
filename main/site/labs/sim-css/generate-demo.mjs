@@ -1,5 +1,4 @@
 // Run with: node generate-demo.mjs
-// Generates demo.html with pre-baked CSS physics animations
 // Uses planck.js for proper rigid body collisions
 
 import { writeFileSync } from "fs";
@@ -191,7 +190,6 @@ ${confetti.css}
 <body>
 
 <h1>sim-css demos</h1>
-<p>Physics simulations baked into CSS keyframes + linear() easing. Zero JS at runtime.</p>
 
 <h2>Bouncing balls</h2>
 <div class="sim-container bouncing-balls">
