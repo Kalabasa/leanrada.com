@@ -114,7 +114,6 @@
       animation: p-x 6s infinite, p-y 6s infinite, p-o 6s infinite;
       animation-composition: accumulate, accumulate, replace;
     }
-    /* 51 echoes (17 particles × 3 echoes), 1525 total samples from 120Hz sim */
     @keyframes p-x { from { translate: -2.28px 0 } to { translate: 601.67px 0 } }
     @keyframes p-y { from { translate: 0 -1.44px } to { translate: 0 402.04px } }
     @keyframes p-o { from { opacity: 0 } to { opacity: 1 } }
@@ -937,11 +936,59 @@
 
 <h2>Demo</h2>
 
-<code-block language="css" wraptext>
-  <pre><code><script>
-    document.currentScript.replaceWith(document.querySelector("#ball-example style").textContent);
-  </script></code></pre>
-</code-block>
+<p>Click a demo to see its CSS source code!</p>
+
+<prose-bleed>
+  <auto-flex id="example-picker" style="--colwidth:200px;--gap:2"></auto-flex>
+</prose-bleed>
+
+<prose-bleed>
+  <code-block id="example-code-block" language="css" wraptext>
+    <pre><code>Click a demo above to see the source!</code></pre>
+  </code-block>
+</prose-bleed>
+
+<script>
+  {
+    const picker = document.getElementById("example-picker");
+    let codeBlock = document.getElementById("example-code-block");
+
+    for (const example of document.getElementById("examples").children) {
+      const copy = example.cloneNode(true);
+      copy.removeAttribute("id");
+      copy.style.cursor = "pointer";
+      picker.append(copy);
+    }
+
+    const showStyle = (example) => {
+      document.querySelectorAll(".selected-demo").forEach(e => e.classList.remove("selected-demo"));
+      example.classList.add("selected-demo");
+      const replacement = codeBlock.cloneNode(true);
+      replacement.querySelector("code").textContent = unindent(example.querySelector("style").textContent);
+      codeBlock.replaceWith(replacement);
+      codeBlock = replacement;
+    };
+
+    picker.addEventListener("click", (event) => {
+      const clicked = event.target.closest("#example-picker > *");
+      if (clicked) showStyle(clicked);
+    });
+
+    function unindent(code) {
+      const lines = code.replace(/^\n|\s+$/g, "").split("\n");
+      const indents = lines
+        .filter((line) => line.trim())
+        .map((line) => line.match(/^[ \t]*/)[0].length);
+      const commonIndent = Math.min(...indents);
+      return lines.map((line) => line.slice(commonIndent)).join("\n");
+    }
+  }
+</script>
+<style>
+  .selected-demo {
+    outline: solid 4px var(--clr0);
+  }
+</style>
 
 </main>
 
