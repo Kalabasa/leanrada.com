@@ -14,12 +14,6 @@ export function renderItem({ mainInnerHTML, pageHref, title, date, domain }) {
 
   const interactiveElements = content.find(`iframe,[data-rss="interactive"]`);
 
-  if (interactiveElements.length > 0) {
-    content.prepend(
-      `<p><em>For RSS readers: This article contains interactive content available on the <a href="${url.href}">original post on ${domain}</a>.</em></p>\n`
-    );
-  }
-
   interactiveElements.each((i, el) => {
     const cel = ch(el);
     const label = cel.attr("alt") ?? cel.attr("aria-label") ?? "";
