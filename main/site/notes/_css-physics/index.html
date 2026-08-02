@@ -634,7 +634,7 @@
 </auto-grid>
 </prose-bleed>
 
-<p>If you wanted to implement complex procedural animations (like physics) on the web, you’d probably go for JS-based <code>requestAnimationFrame</code> update-loop and animate each frame. But everyone knows that CSS animations are much smoother than frame-based JS animations.</p>
+<p>If you wanted to implement complex procedural animations (like physics) on the web, you’d probably go for JS-based <code>requestAnimationFrame</code> update-loop and animate each frame. But everyone knows that CSS animations are much smoother than janky frame-based JS animations.</p>
 
 <p>Native web animations run outside the main thread, so things like heavy JS computations, DOM manipulations (like React re-renders) won’t affect it. Likewise, it won’t interfere with your UI event handlers that decides the UI’s responsiveness.</p>
 
@@ -704,7 +704,7 @@
 
 <h2>Technique</h2>
 
-<p>Baking precalculated animations in CSS keyframes is nothing new I suppose, but I wanted to highlight a couple of ‘recent’ developments in CSS: the <strong><code>linear()</code></strong> custom easing and <strong>animation composition</strong>. The two of these enable high-fidelity CSS animations in a compact representation!</p>
+<p>Baking precalculated animations in CSS keyframes is nothing new I suppose, but I wanted to highlight a ‘recent’ development CSS: the <strong><code>linear()</code></strong> custom easing. This enables high-fidelity CSS animations in a compact representation!</p>
 
 <p>First, the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/easing-function/linear" target="_blank"><code>linear()</code></a> custom ease (not to be confused with the classic <code>linear</code> keyword with no arguments) lets you define custom easing curves.</p>
 
@@ -814,28 +814,31 @@
 
 <box-note>Note that the waving box above starts in the <em>middle</em> of the range, not at <code>from</code>. The endpoints don’t have to be where the motion begins and ends.</box-note>
 
-<p>So far we’ve only been working with one axis or degree of freedom. If we wanted a more interesting physics simulation, we’d need more spatial dimensions. This is where <em>animation composition</em> can come in.</p>
+<p>So far we’ve only been working with one axis or degree of freedom. If we wanted a more interesting physics simulation, we’d need more dimensions. This is where <em>animation composition</em> can come in.</p>
 
 <h2>Composition</h2>
 
-<p><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/animation-composition" target="_blank"><code>animation-composition</code></a> can be used to combine multiple animations so they don’t override one another.</p>
+<p>For 2D animation, we need two separately-animated dimensions, but right now it’s written in a single property, <code>translate: x y</code>. Having two animations run on the same property would overwrite the other.</p>
 
-<p>We could add a simulteanous animation on the same <code>translate</code> property, and the resulting animation would just combine the values together:</p>
+<p>The general answer to this is <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/animation-composition" target="_blank"><code>animation-composition</code></a>, but it forces the animation to calculate in the main thread, and we lose the main selling point of smooth animations.</p>
+
+<p>One way out is to use two technically different properties for translation, <code>translate</code> and <code>transform</code>. Note that transformation properties are applied in this order: <code>translate</code>, <code>rotate</code>, <code>scale</code>, <code>transform</code>.</p>
+
+<p>So x can use <code>translate: $x 0</code> and y can use <code>transform: translateY($y)</code>:</p>
 
 <code-block language="css" wraptext>
   <pre><code>div {
   animation:
     circle-x 2s linear(1, 0.994, 0.976, 0.946, 0.905, 0.854, 0.794, 0.727, 0.655, 0.578, 0.5, 0.422, 0.345, 0.273, 0.206, 0.146, 0.095, 0.054, 0.024, 0.006, 0, 0.006, 0.024, 0.054, 0.095, 0.146, 0.206, 0.273, 0.345, 0.422, 0.5, 0.578, 0.655, 0.727, 0.794, 0.854, 0.905, 0.946, 0.976, 0.994, 1) infinite,
     circle-y 2s linear(0.5, 0.578, 0.655, 0.727, 0.794, 0.854, 0.905, 0.946, 0.976, 0.994, 1, 0.994, 0.976, 0.946, 0.905, 0.854, 0.794, 0.727, 0.655, 0.578, 0.5, 0.422, 0.345, 0.273, 0.206, 0.146, 0.095, 0.054, 0.024, 0.006, 0, 0.006, 0.024, 0.054, 0.095, 0.146, 0.206, 0.273, 0.345, 0.422, 0.5) infinite;
-  animation-composition: add;
 }
 @keyframes circle-x {
   from { translate: 0 0 }
   to { translate: 100px 0 }
 }
 @keyframes circle-y {
-  from { translate: 0 0 }
-  to { translate: 0 100px }
+  from { transform: translateY(0) }
+  to { transform: translateY(100px) }
 }</code></pre>
 </code-block>
 
@@ -857,19 +860,26 @@
         animation:
           circle-x 2s linear(1, 0.994, 0.976, 0.946, 0.905, 0.854, 0.794, 0.727, 0.655, 0.578, 0.5, 0.422, 0.345, 0.273, 0.206, 0.146, 0.095, 0.054, 0.024, 0.006, 0, 0.006, 0.024, 0.054, 0.095, 0.146, 0.206, 0.273, 0.345, 0.422, 0.5, 0.578, 0.655, 0.727, 0.794, 0.854, 0.905, 0.946, 0.976, 0.994, 1) infinite,
           circle-y 2s linear(0.5, 0.578, 0.655, 0.727, 0.794, 0.854, 0.905, 0.946, 0.976, 0.994, 1, 0.994, 0.976, 0.946, 0.905, 0.854, 0.794, 0.727, 0.655, 0.578, 0.5, 0.422, 0.345, 0.273, 0.206, 0.146, 0.095, 0.054, 0.024, 0.006, 0, 0.006, 0.024, 0.054, 0.095, 0.146, 0.206, 0.273, 0.345, 0.422, 0.5) infinite;
-        animation-composition: add;
       }
       @keyframes circle-x {
         from { translate: 0 0 }
         to { translate: 100px 0 }
       }
       @keyframes circle-y {
-        from { translate: 0 0 }
-        to { translate: 0 100px }
+        from { transform: translateY(0) }
+        to { transform: translateY(100px) }
       }
     }
   </style>
 </card-box>
+
+<p>We can now animate two dimensions independently. Each <code>linear()</code> gives the motion data for the corresponding dimension.</p>
+
+<box-note>
+  <p><code>transform</code> is applied last, after <code>rotate</code>, which means adding a rotation dimension to the animation would cause issues.</p>
+  <p>The solution for sane rotate and scale animations is div wrappers: Apply translation to the parent element, and only apply rotation and scale to the child element.</p>
+  <p>Do not let <code>animation-composition</code> tempt the purity of GPU-composited animations.</p>
+</box-note>
 
 <p>Again, this is all possible with classic keyframes, but that would require explicitly writing <em>both coordinates in every frame</em>. In animations where x and y are mostly independent, that is highly inefficient. It’s a multiplicative gain in efficiency.</p>
 
@@ -882,21 +892,19 @@
   animation:
     bounce-x 2s linear(0, 1, 0.84) infinite,
     bounce-y 2s linear(0, 0.009, 0.028, 0.056, 0.094, 0.141, 0.197, 0.263, 0.338, 0.422, 0.516, 0.619, 0.731, 0.853, 0.984, 0.906, 0.81, 0.723, 0.646, 0.578, 0.52, 0.47, 0.43, 0.4, 0.379, 0.367, 0.365, 0.372, 0.388, 0.414, 0.449, 0.494, 0.548, 0.611, 0.684, 0.766, 0.857, 0.958, 0.949, 0.876, 0.812, 0.757, 0.712, 0.677, 0.65, 0.633, 0.626, 0.627, 0.638, 0.659, 0.689, 0.728, 0.777, 0.835, 0.902, 0.979, 0.951, 0.896, 0.85, 0.814, 0.787, 0.769, 0.76, 0.762, 0.772, 0.792, 0.821, 0.859, 0.907, 0.965, 0.977, 0.936, 0.905, 0.883, 0.87, 0.867, 0.874, 0.889, 0.914, 0.949, 0.992) infinite;
-  animation-composition: add;
 }
 .b {
   animation:
     bounce-x 2s linear(1, 0 50%, 0) infinite,
     bounce-y 2s linear(0.5, 0.506, 0.517, 0.534, 0.556, 0.584, 0.618, 0.657, 0.703, 0.753, 0.809, 0.871, 0.939, 0.993, 0.955, 0.922, 0.895, 0.874, 0.858, 0.848, 0.843, 0.844, 0.851, 0.863, 0.881, 0.905, 0.934, 0.969, 0.994, 0.975, 0.962, 0.955, 0.953, 0.957, 0.966, 0.982, 0.999, 0.992, 0.991, 0.995, 1 50%, 1) infinite;
-  animation-composition: add;
 }
 @keyframes bounce-x {
   from { translate: 0 0 }
   to { translate: 100px 0 }
 }
 @keyframes bounce-y {
-  from { translate: 0 0 }
-  to { translate: 0 100px }
+  from { transform: translateY(0) }
+  to { transform: translateY(100px) }
 }</code></pre>
 </code-block>
 
@@ -929,21 +937,19 @@
         animation:
           pos-x 2s linear(0, 1, 0.84) infinite,
           pos-y 2s linear(0, 0.009, 0.028, 0.056, 0.094, 0.141, 0.197, 0.263, 0.338, 0.422, 0.516, 0.619, 0.731, 0.853, 0.984, 0.906, 0.81, 0.723, 0.646, 0.578, 0.52, 0.47, 0.43, 0.4, 0.379, 0.367, 0.365, 0.372, 0.388, 0.414, 0.449, 0.494, 0.548, 0.611, 0.684, 0.766, 0.857, 0.958, 0.949, 0.876, 0.812, 0.757, 0.712, 0.677, 0.65, 0.633, 0.626, 0.627, 0.638, 0.659, 0.689, 0.728, 0.777, 0.835, 0.902, 0.979, 0.951, 0.896, 0.85, 0.814, 0.787, 0.769, 0.76, 0.762, 0.772, 0.792, 0.821, 0.859, 0.907, 0.965, 0.977, 0.936, 0.905, 0.883, 0.87, 0.867, 0.874, 0.889, 0.914, 0.949, 0.992) infinite;
-        animation-composition: add;
       }
       .b {
         animation:
           pos-x 2s linear(1, 0 50%, 0) infinite,
           pos-y 2s linear(0.5, 0.506, 0.517, 0.534, 0.556, 0.584, 0.618, 0.657, 0.703, 0.753, 0.809, 0.871, 0.939, 0.993, 0.955, 0.922, 0.895, 0.874, 0.858, 0.848, 0.843, 0.844, 0.851, 0.863, 0.881, 0.905, 0.934, 0.969, 0.994, 0.975, 0.962, 0.955, 0.953, 0.957, 0.966, 0.982, 0.999, 0.992, 0.991, 0.995, 1 50%, 1) infinite;
-        animation-composition: add;
       }
       @keyframes pos-x {
         from { translate: 0 0 }
         to { translate: 100px 0 }
       }
       @keyframes pos-y {
-        from { translate: 0 0 }
-        to { translate: 0 100px }
+        from { transform: translateY(0) }
+        to { transform: translateY(100px) }
       }
     }
   </style>
@@ -1134,15 +1140,14 @@
   animation:
     <span class="x">drag-x ${seconds}s ${bakeEasing("x", startMs, totalMs)}</span>,
     <span class="y">drag-y ${seconds}s ${bakeEasing("y", startMs, totalMs)}</span>;
-  animation-composition: add;
 }
 @keyframes drag-x {
   from { translate: <span class="x">${Math.round(range.x.min)}px</span> 0 }
   to { translate: <span class="x">${Math.round(range.x.max)}px</span> 0 }
 }
 @keyframes drag-y {
-  from { translate: 0 <span class="y">${Math.round(range.y.min)}px</span> }
-  to { translate: 0 <span class="y">${Math.round(range.y.max)}px</span> }
+  from { transform: translateY(<span class="y">${Math.round(range.y.min)}px</span>) }
+  to { transform: translateY(<span class="y">${Math.round(range.y.max)}px</span>) }
 }`;
       }
 
