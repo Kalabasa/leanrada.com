@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>double pendulum</title>
+<style>
+  body { font-family: system-ui; padding: 20px; background: #111; color: #eee; }
+  h1 { font-size: 1.2em; margin-bottom: 12px; }
+  p { font-size: 0.85em; color: #aaa; margin-bottom: 12px; }
+  button {
+    font-family: inherit; font-size: 0.9em; cursor: pointer;
+    background: #336; color: #eee; border: 1px solid #558;
+    border-radius: 4px; padding: 8px 16px; margin-bottom: 12px;
+  }
+  textarea {
+    width: 100%; height: 200px; margin-top: 12px;
+    font-family: monospace; font-size: 0.75em;
+    background: #222; color: #eee; border: 1px solid #444; border-radius: 4px; padding: 8px;
+  }
+  .stage {
+    position: relative;
+    width: 480px; height: 480px;
+    border: 1px solid #444; border-radius: 4px;
+    background: #0a0a0a;
+  }
+  .pivot {
+    position: absolute; left: 50%; top: 40%;
+  }
+  .arm {
+    position: absolute; left: -2px; top: 0;
+    width: 4px;
+    background: #6cf;
+    transform-origin: 2px 0;
+  }
+  .arm::after {
+    content: "";
+    position: absolute; left: -8px; bottom: -10px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #6cf;
+  }
+</style>
+</head>
+<body>
+
+<h1>double pendulum</h1>
+<p>Chaotic motion, RK4-integrated at 2000 Hz, adaptively sampled into two <code>linear()</code> easings sharing one <code>@keyframes</code>.</p>
+
+<button id="rebake">Rebake with new initial angles</button>
+
+<div class="stage">
+  <div class="pivot">
+    <div class="arm arm1">
+      <div class="arm arm2"></div>
+    </div>
+  </div>
+</div>
+
+<textarea id="output" readonly></textarea>
+
+<script>
+  const armLength1 = 110;
+  const armLength2 = 110;
+  const mass1 = 1;
+  const mass2 = 1;
+  const gravity = 9.81;
+  const durationS = 20;
+  const simRate = 2000;
+  const timeScale = 10;
+  const maxErrorRad = 0.004;
+  const minIntervalS = 0.008;
+
+  function derivatives([angle1, angle2, momentum1, momentum2]) {
+    const delta = angle1 - angle2;
+    const denom = mass1 + mass2 * Math.sin(delta) ** 2;
+
+    const velocity1 =
+      (momentum1 - momentum2 * Math.cos(delta) * armLength1 / armLength2) /
+      (armLength1 * armLength1 * denom);
+    const velocity2 =
+      (momentum2 * (mass1 + mass2) * armLength2 / armLength1
+        - momentum1 * mass2 * Math.cos(delta)) /
+      (mass2 * armLength2 * armLength2 * denom);
+
+    const shared = velocity1 * velocity2 * Math.sin(delta);
+    const secondTerm =
+      ((mass1 + mass2) * velocity1 * velocity1 * armLength1 * armLength1
+        + mass2 * velocity2 * velocity2 * armLength2 * armLength2
+        - 2 * mass2 * velocity1 * velocity2 * armLength1 * armLength2 * Math.cos(delta))
+      * Math.sin(2 * delta) * mass2 / (2 * denom * denom * armLength1 * armLength2);
+
+    return [
+      velocity1,
+      velocity2,
+      -(mass1 + mass2) * gravity * armLength1 * Math.sin(angle1)
+        - mass2 * armLength1 * armLength2 * shared + secondTerm,
+      -mass2 * gravity * armLength2 * Math.sin(angle2)
+        + mass2 * armLength1 * armLength2 * shared - secondTerm,
+    ];
+  }
+
+  function step(state, dt) {
+    const add = (base, delta, scale) => base.map((v, i) => v + delta[i] * scale);
+    const k1 = derivatives(state);
+    const k2 = derivatives(add(state, k1, dt / 2));
+    const k3 = derivatives(add(state, k2, dt / 2));
+    const k4 = derivatives(add(state, k3, dt));
+    return state.map((v, i) => v + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+  }
+
+  function simulate() {
+    const dt = 1 / simRate;
+    const totalSteps = Math.round(durationS * simRate);
+    let state = [
+      Math.PI / 2 + Math.random() * Math.PI / 2,
+      Math.PI / 2 + Math.random() * Math.PI / 2,
+      0,
+      0,
+    ];
+    const frames = [];
+    for (let s = 0; s <= totalSteps; s++) {
+      frames.push({ t: s * dt, angle1: state[0], angle2: state[1] });
+      state = step(state, dt * timeScale);
+    }
+    return frames;
+  }
+
+  function adaptiveSample(frames) {
+    const kept = [0];
+    for (let i = 1; i < frames.length - 1; i++) {
+      const last = kept[kept.length - 1];
+      if (frames[i].t - frames[last].t < minIntervalS) continue;
+
+      let exceeds = false;
+      for (let j = last + 1; j < i && !exceeds; j++) {
+        const ratio = (frames[j].t - frames[last].t) / (frames[i].t - frames[last].t);
+        const guess1 = frames[last].angle1 + (frames[i].angle1 - frames[last].angle1) * ratio;
+        const guess2 = frames[last].angle2 + (frames[i].angle2 - frames[last].angle2) * ratio;
+        exceeds =
+          Math.abs(guess1 - frames[j].angle1) > maxErrorRad ||
+          Math.abs(guess2 - frames[j].angle2) > maxErrorRad;
+      }
+      if (exceeds) kept.push(i - 1);
+    }
+    kept.push(frames.length - 1);
+    return kept.map(i => frames[i]);
+  }
+
+  function compile(samples) {
+    const relativeAngle = f => f.angle2 - f.angle1;
+    const all = samples.flatMap(f => [f.angle1, relativeAngle(f)]);
+    const min = Math.min(...all);
+    const max = Math.max(...all);
+    const range = max - min;
+
+    const easing = pick => "linear(" + samples.map(f => {
+      const norm = Math.round((pick(f) - min) / range * 10000) / 10000;
+      const pct = Math.round(f.t / durationS * 10000) / 100;
+      return `${norm} ${pct}%`;
+    }).join(", ") + ")";
+
+    return `/* ${samples.length} samples from ${simRate}Hz RK4 */
+@keyframes swing {
+  from { rotate: ${(Math.round(min * 1000) / 1000)}rad }
+  to { rotate: ${(Math.round(max * 1000) / 1000)}rad }
+}
+.arm1, .arm2 {
+  animation: swing ${durationS}s both;
+}
+.arm1 {
+  height: ${armLength1}px;
+  animation-timing-function: ${easing(f => f.angle1)};
+}
+.arm2 {
+  top: ${armLength1}px;
+  height: ${armLength2}px;
+  animation-timing-function: ${easing(relativeAngle)};
+}`;
+  }
+
+  const styleElement = document.createElement("style");
+  document.head.append(styleElement);
+  const outputElement = document.getElementById("output");
+
+  function rebake() {
+    const css = compile(adaptiveSample(simulate()));
+    styleElement.textContent = "";
+    document.querySelectorAll(".arm").forEach(arm => void arm.offsetWidth);
+    styleElement.textContent = css;
+    outputElement.value = css;
+  }
+
+  document.getElementById("rebake").onclick = rebake;
+  rebake();
+</script>
+
+</body>
+</html>

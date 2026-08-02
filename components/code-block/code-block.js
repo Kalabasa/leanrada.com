@@ -162,6 +162,8 @@
       }
 
       async #init() {
+        if (this.getAttribute("language") === "plaintext") return;
+
         await import("/lib/vendor/prism.js");
 
         const language = this.getAttribute("language") ?? "clike";
