@@ -588,9 +588,9 @@
 </auto-grid>
 </prose-bleed>
 
-<p>If you wanted to implement complex procedural animations (like physics) on the web, you’d probably go for JS-based <code>requestAnimationFrame</code> update-loop animations to animate each frame. But everyone knows that CSS animations (and now Web Animations API) are much smoother than frame-based JS animations.</p>
+<p>If you wanted to implement complex procedural animations (like physics) on the web, you’d probably go for JS-based <code>requestAnimationFrame</code> update-loop animations to animate each frame.</p>
 
-<p>This is because native web animations run outside the main thread, so things like heavy JS computations, DOM manipulations (like React re-renders) won’t affect it. Likewise, it won’t interfere with UI event handlers which decides your UI’s responsiveness. This makes native web animations smoother.</p>
+<p>But everyone knows that CSS animations (and now Web Animations API) are much smoother than frame-based JS animations. Native web animations run outside the main thread, so things like heavy JS computations, DOM manipulations (like React re-renders) won’t affect it. Likewise, it won’t interfere with UI event handlers which decides your UI’s responsiveness.</p>
 
 <card-box data-rss="interactive" alt="JS vs CSS animation comparison">
   <div class="flex">
@@ -646,11 +646,13 @@
   </script>
 </card-box>
 
-<p>However, we can’t do procedural animations in CSS. CSS is declarative. Precalculating the keyframes to replay with CSS is one way to do it, but a high quality replay would normally require a heavy amount of generated CSS to download and parse.</p>
+<p>However, we can’t do procedural animations in CSS. CSS is declarative.</p>
+
+<p>One way to do this is to precalculate the keyframes to replay with CSS, but a high quality replay would normally require a heavy amount of generated CSS to be loaded and parsed. I found a way to highly compress this precalculated CSS to a manageable size.</p>
 
 <h2>Technique</h2>
 
-<p>Baking precalculated animations in CSS keyframes is nothing new I suppose, but I wanted to highlight a couple of ‘recent’ developments in CSS such as the <strong><code>linear()</code></strong> custom easing and <strong>animation composition</strong> that allow a dense expression of CSS animations &mdash; both compact representation AND high-quality replay!</p>
+<p>Baking precalculated animations in CSS keyframes is nothing new I suppose, but I wanted to highlight a couple of ‘recent’ developments in CSS such as the <strong><code>linear()</code></strong> custom easing and <strong>animation composition</strong> that allow a dense expression of CSS animations, so we can have both compact representation AND high-quality replay!</p>
 
 <p>First, the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/easing-function/linear" target="_blank"><code>linear()</code></a> custom ease (not to be confused with the classic <code>linear</code> keyword with no arguments) lets you define keyframes in the <em>time axis</em>.</p>
 
@@ -944,6 +946,201 @@
 <p>After recording, you need to encode it. First, you need the ranges for the <code>@keyframe</code> property declaration. For each <code>$property</code>, find the min and max values over the whole animation and use that in <code>@keyframe $property { from{ $property:$min } to{ $property:$max } }</code></p>
 
 <p>Then you can encode the <code>linear()</code> values. Remember, one CSS animation, one <code>linear()</code> per property! For every sample, normalize each property’s value against the range you got from earlier to [0,1].</p>
+
+<card-box>
+  <p>
+    This demo bakes your mouse movements into a CSS animation in real time.
+    <div class="stage">
+      <div class="drag-me">drag me</div>
+    </div>
+  </p>
+  <code-block language="plaintext" wraptext><pre><code class="baked">CSS will appear here. Drag the drag thing!</code></pre></code-block>
+  <style>
+    @scope {
+      .stage {
+        position: relative;
+        height: 240px;
+        border: dashed 1px var(--text2-clr);
+        overflow: hidden;
+        touch-action: none;
+        &:active {
+          cursor: grabbing;
+        }
+      }
+      .drag-me {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80px;
+        height: 40px;
+        display: grid;
+        place-content: center;
+        cursor: grab;
+        border: solid 1px currentColor;
+        background: var(--card-clr);
+        user-select: none;
+      }
+      .baked {
+        color: var(--text2-clr);
+      }
+      .x {
+        color: #8ff;
+      }
+      .y {
+        color: #f8f;
+      }
+      .flash {
+        animation: flash 200ms linear both;
+      }
+      @keyframes flash {
+        from {
+          color: #fff;
+          background: #fff2;
+        }
+        to {
+          color: inherit;
+          background: transparent;
+        }
+      }
+    }
+  </style>
+  <script>
+    {
+      const me = document.currentScript.parentElement;
+      const stage = me.querySelector(".stage");
+      const dragger = me.querySelector(".drag-me");
+      const bakedCode = me.querySelector(".baked");
+
+      const samples = { x: [], y: [] };
+      const range = { x: { min: 0, max: 0 }, y: { min: 0, max: 0 } };
+      let pendingSample = null;
+      let startMs = 0;
+      let pointerX = 0;
+      let pointerY = 0;
+      let grabOffsetX = 0;
+      let grabOffsetY = 0;
+      let isDragging = false;
+
+      stage.addEventListener("pointerdown", (event) => {
+        const draggerRect = dragger.getBoundingClientRect();
+        grabOffsetX = event.clientX - draggerRect.left;
+        grabOffsetY = event.clientY - draggerRect.top;
+        samples.x = [];
+        samples.y = [];
+        range.x = { min: 0, max: stage.clientWidth };
+        range.y = { min: 0, max: stage.clientHeight };
+        pendingSample = null;
+        isDragging = true;
+        dragger.style.animation = "none";
+        stage.setPointerCapture(event.pointerId);
+        onPointer(event);
+        requestAnimationFrame(sample);
+      });
+
+      stage.addEventListener("pointermove", onPointer);
+
+      stage.addEventListener("pointerup", () => {
+        isDragging = false;
+        replay();
+      });
+
+      function onPointer(event) {
+        const stageRect = stage.getBoundingClientRect();
+        pointerX = event.clientX - stageRect.left - grabOffsetX;
+        pointerY = event.clientY - stageRect.top - grabOffsetY;
+      }
+
+      function sample(timeMs) {
+        if (!isDragging) return;
+        const current = { ms: timeMs, x: pointerX, y: pointerY };
+        for (const axis of ["x", "y"]) {
+          range[axis].min = Math.min(range[axis].min, current[axis]);
+          range[axis].max = Math.max(range[axis].max, current[axis]);
+          const axisSamples = samples[axis];
+          if (!axisSamples.length) axisSamples.push(current);
+          else if (pendingSample && shouldFlushPending(axis, current)) {
+            axisSamples.push(pendingSample);
+          }
+        }
+        if (!pendingSample) startMs = timeMs;
+        pendingSample = current;
+        dragger.style.translate = pointerX + "px " + pointerY + "px";
+        bakedCode.innerHTML = bake();
+        requestAnimationFrame(sample);
+      }
+
+      function shouldFlushPending(axis, current) {
+        const axisSamples = samples[axis];
+        const previous = axisSamples[axisSamples.length - 1];
+        if (previous === pendingSample) return false;
+        const spanMs = current.ms - previous.ms;
+        const interpolated = spanMs
+          ? previous[axis] +
+            ((current[axis] - previous[axis]) * (pendingSample.ms - previous.ms)) / spanMs
+          : previous[axis];
+        return Math.abs(pendingSample[axis] - interpolated) > 1;
+      }
+
+      function bake() {
+        const durationMs = pendingSample ? pendingSample.ms - startMs : 0;
+        if (!durationMs) return "";
+        const totalMs = Math.max(30000, durationMs);
+        const seconds = (totalMs / 1000).toFixed(2);
+        return `.drag-me {
+  animation:
+    <span class="x">drag-x ${seconds}s ${bakeEasing("x", startMs, totalMs)}</span>,
+    <span class="y">drag-y ${seconds}s ${bakeEasing("y", startMs, totalMs)}</span>;
+  animation-composition: add;
+}
+@keyframes drag-x {
+  from { translate: <span class="x">${Math.round(range.x.min)}px</span> 0 }
+  to { translate: <span class="x">${Math.round(range.x.max)}px</span> 0 }
+}
+@keyframes drag-y {
+  from { translate: 0 <span class="y">${Math.round(range.y.min)}px</span> }
+  to { translate: 0 <span class="y">${Math.round(range.y.max)}px</span> }
+}`;
+      }
+
+      function bakeEasing(axis, startMs, totalMs) {
+        const min = range[axis].min;
+        const span = range[axis].max - min;
+        const kept = samples[axis].concat(pendingSample);
+        const stops = kept.map((sample, index) => {
+          const value = span ? (sample[axis] - min) / span : 0;
+          const percent = ((sample.ms - startMs) / totalMs) * 100;
+          const text =
+            index === 0
+              ? value.toFixed(3)
+              : `${value.toFixed(3)} ${percent.toFixed(1)}%`;
+          const ageMs = performance.now() - sample.ms;
+          return ageMs < 200
+            ? `<span class="flash" style="animation-delay:${-ageMs.toFixed(0)}ms">${text}</span>`
+            : text;
+        });
+        const last = kept[kept.length - 1];
+        const lastNormalized = span ? (last[axis] - min) / span : 0;
+        return `linear(${stops.join(", ")}, ${lastNormalized.toFixed(3)} 100%)`;
+      }
+
+      function replay() {
+        const css = bakedCode.textContent;
+        if (!css) return;
+        let replayStyle = me.querySelector(".replay-style");
+        if (!replayStyle) {
+          replayStyle = document.createElement("style");
+          replayStyle.className = "replay-style";
+          me.append(replayStyle);
+        }
+        dragger.style.animation = "none";
+        dragger.style.translate = "";
+        replayStyle.textContent = `@scope { ${css} }`;
+        dragger.offsetWidth;
+        dragger.style.animation = "";
+      }
+    }
+  </script>
+</card-box>
 
 <box-note>An optimisation could be added such that you skip writing samples that are too similar to the previous sample. Let <code>linear()</code> do its actual job of linearly interpolating your values. Note that skipping samples would break the property that each sample is in regular intervals, so you’d also need to add the progress percentage coordinates where necessary.</box-note>
 
