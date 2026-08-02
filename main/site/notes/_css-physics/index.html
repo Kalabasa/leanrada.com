@@ -636,7 +636,7 @@
 
 <p>If you wanted to implement complex procedural animations (like physics) on the web, you’d probably go for JS-based <code>requestAnimationFrame</code> update-loop and animate each frame. But everyone knows that CSS animations are much smoother than janky frame-based JS animations.</p>
 
-<p>Native web animations run outside the main thread, so things like heavy JS computations, DOM manipulations (like React re-renders) won’t affect it. Likewise, it won’t interfere with your UI event handlers that decides the UI’s responsiveness.</p>
+<p>Native web animations run outside the main thread, so things like heavy JS computations won’t affect it. Likewise, it won’t interfere with your UI event handlers that decides the UI’s responsiveness.</p>
 
 <card-box data-rss="interactive" alt="JS vs CSS animation comparison">
   <div class="flex">
@@ -691,8 +691,15 @@
       }).observe(jsEl);
 
       me.querySelector("button").addEventListener("click", () => {
+        const scratch = document.createElement("div");
+        scratch.style.cssText = "position:absolute;visibility:hidden";
+        me.append(scratch);
         const endMs = performance.now() + 200;
-        while (performance.now() < endMs);
+        while (performance.now() < endMs) {
+          scratch.innerHTML = "<span>x</span>".repeat(500);
+          scratch.offsetHeight;
+        }
+        scratch.remove();
       });
     }
   </script>
@@ -814,7 +821,7 @@
 
 <box-note>Note that the waving box above starts in the <em>middle</em> of the range, not at <code>from</code>. The endpoints don’t have to be where the motion begins and ends.</box-note>
 
-<p>So far we’ve only been working with one axis or degree of freedom. If we wanted a more interesting physics simulation, we’d need more dimensions. This is where <em>animation composition</em> can come in.</p>
+<p>So far we’ve only been working with one axis or degree of freedom. If we wanted a more interesting physics simulation, we’d need more dimensions, and a way to combine their animations.</p>
 
 <h2>Composition</h2>
 
@@ -982,7 +989,7 @@
 }</code></pre>
 </code-block>
 
-<box-note>Note that dimension != CSS property. For example, the animations above has 2 dimensions but use the same <code>translate</code> CSS property. Dimension can mean anything in your model that is animated independently, like x, y, color, rotation, scale, etc.</box-note>
+<box-note>Dimension can mean anything in your model that is animated independently, like x, y, color, rotation, scale, radius, progress, depth, etc.</box-note>
 
 <p>To encode the <code>linear()</code> values: For every dimension, for every sample, normalize the property values against the range you got from earlier to [0,1]. Remember, one <code>animation</code>, one <code>linear()</code> per dimension!</p>
 
