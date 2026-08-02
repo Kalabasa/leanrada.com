@@ -4,19 +4,19 @@
 <link rel="stylesheet" href="/common.css">
 <script defer src="/common.js"></script>
 
-<title>CSS physics</title>
+<title>Baking physics in CSS via linear() abuse</title>
 
 <site-header></site-header>
 
 <blog-header>
-  <h1>CSS physics</h1>
+  <h1>Baking physics in CSS via linear() abuse</h1>
   <img src="hero.jpg" alt="" loading="lazy">
 </blog-header>
 
-<blog-post-info-template>
-  <time datetime="1970-01-01">01 Jan 1970</time>
+<blog-post-info>
+  <time datetime="2026-08-03">03 Aug 2026</time>
   · 1 min read
-</blog-post-info-template>
+</blog-post-info>
 
 <tag-row>
   <tag-chip title="essay"></tag-chip>
@@ -24,11 +24,10 @@
 
 <main appearance="prose">
 
-<p>This post is about baking physics animations in CSS (or any procedurally computed animation, for that matter). Yeah i know clickbait title</p>
-
 <p>Check out the following CSS animations:</p>
 
 <prose-bleed>
+<div data-rss="only">these are CSS-based graphics and animations, you probably need to visit the website to see</div>
 <auto-grid id="examples" style="justify-items:center;--colwidth:400px">
   <div id="pendulum-example">
     <style>
@@ -704,7 +703,7 @@
 
 <h2>Technique</h2>
 
-<p>Baking precalculated animations in CSS keyframes is nothing new I suppose, but I wanted to highlight a ‘recent’ development CSS: the <strong><code>linear()</code></strong> custom easing. This enables high-fidelity CSS animations in a compact representation!</p>
+<p>Baking precalculated animations in CSS keyframes is nothing new I suppose, but I wanted to highlight a ‘recent’ development in CSS, the <strong><code>linear()</code></strong> custom easing. Abusing this function enables high-fidelity CSS animations in a compact representation!</p>
 
 <p>First, the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/easing-function/linear" target="_blank"><code>linear()</code></a> custom ease (not to be confused with the classic <code>linear</code> keyword with no arguments) lets you define custom easing curves.</p>
 
@@ -735,7 +734,7 @@
   </style>
 </card-box>
 
-<p>It’s not very intuitive since we’re manually mapping values in the time domain (that's what ease functions do). To illustrate what’s happening and to compare, we can expand the above example to classic keyframes that do the same thing:</p>
+<p>It’s not very intuitive since we’re manually mapping values in the time domain (that's what ease functions do). To illustrate what’s happening and to compare, we can denormalise the above example to classic keyframes that do the same thing:</p>
 
 <code-block language="css">
   <pre><code>div {
@@ -971,7 +970,7 @@
   </ol>
 </details>
 
-<p>Oh, right. <strong>Baking the motion data.</strong> It depends on what your animation is, really. If it’s a simulation, then you record the state of each object in each time step. Only record the state that has corresponding CSS properties (or, design your simulation state for CSSability in the first place). After sampling state over time, it’s just mapping the values to the linear-composite format.</p>
+<p>Oh, right. <strong>Baking the motion data.</strong> It depends on what your animation is, really. If it’s a simulation, then you record the state of each object in each time step. Only record the state that has corresponding CSS properties (or, design your simulation state for CSSability in the first place). After sampling state over time, it’s just mapping the values to the linear() abuse format.</p>
 
 <p>You’d need the ranges for the <code>@keyframes</code> declarations. For each state <code>$dimension</code> you’re interested in, find the min and max values over the whole animation and use that in:</p>
 
@@ -996,7 +995,7 @@
 }</code></pre>
 </code-block>
 
-<p>The following is a demo that bakes your mouse movements into your very own linear composite CSS animation in real time.</p>
+<p>The following is a demo that bakes your mouse movements into your very own linear() abuse CSS animation in real time.</p>
 
 <card-box>
   <p>
@@ -1063,7 +1062,7 @@
 
       const samples = { x: [], y: [] };
       const range = { x: { min: 0, max: 0 }, y: { min: 0, max: 0 } };
-      let pendingSample = null;
+      const pendingSamples = { x: [], y: [] };
       let startMs = 0;
       let pointerX = 0;
       let pointerY = 0;
@@ -1079,7 +1078,8 @@
         samples.y = [];
         range.x = { min: 0, max: stage.clientWidth };
         range.y = { min: 0, max: stage.clientHeight };
-        pendingSample = null;
+        pendingSamples.x = [];
+        pendingSamples.y = [];
         isDragging = true;
         dragger.style.animation = "none";
         stage.setPointerCapture(event.pointerId);
@@ -1103,17 +1103,18 @@
       function sample(timeMs) {
         if (!isDragging) return;
         const current = { ms: timeMs, x: pointerX, y: pointerY };
+        if (!pendingSamples.x.length) startMs = timeMs;
         for (const axis of ["x", "y"]) {
           range[axis].min = Math.min(range[axis].min, current[axis]);
           range[axis].max = Math.max(range[axis].max, current[axis]);
           const axisSamples = samples[axis];
           if (!axisSamples.length) axisSamples.push(current);
-          else if (pendingSample && shouldFlushPending(axis, current)) {
-            axisSamples.push(pendingSample);
+          else if (shouldFlushPending(axis, current)) {
+            axisSamples.push(pendingSamples[axis].at(-1));
+            pendingSamples[axis] = [];
           }
+          pendingSamples[axis].push(current);
         }
-        if (!pendingSample) startMs = timeMs;
-        pendingSample = current;
         dragger.style.translate = pointerX + "px " + pointerY + "px";
         bakedCode.innerHTML = bake();
         requestAnimationFrame(sample);
@@ -1122,17 +1123,23 @@
       function shouldFlushPending(axis, current) {
         const axisSamples = samples[axis];
         const previous = axisSamples[axisSamples.length - 1];
-        if (previous === pendingSample) return false;
         const spanMs = current.ms - previous.ms;
-        const interpolated = spanMs
-          ? previous[axis] +
-            ((current[axis] - previous[axis]) * (pendingSample.ms - previous.ms)) / spanMs
-          : previous[axis];
-        return Math.abs(pendingSample[axis] - interpolated) > 1;
+        if (!spanMs) return false;
+
+        const speed = (Math.abs(current[axis] - previous[axis]) / spanMs) * 16;
+        const threshold = 2 + 0.8 * speed;
+
+        return pendingSamples[axis].some((pending) => {
+          const interpolated =
+            previous[axis] +
+            ((current[axis] - previous[axis]) * (pending.ms - previous.ms)) / spanMs;
+          return Math.abs(pending[axis] - interpolated) > threshold;
+        });
       }
 
       function bake() {
-        const durationMs = pendingSample ? pendingSample.ms - startMs : 0;
+        const lastSample = pendingSamples.x.at(-1);
+        const durationMs = lastSample ? lastSample.ms - startMs : 0;
         if (!durationMs) return "";
         const totalMs = Math.max(30000, durationMs);
         const seconds = (totalMs / 1000).toFixed(2);
@@ -1153,23 +1160,25 @@
 
       function bakeEasing(axis, startMs, totalMs) {
         const min = range[axis].min;
-        const span = range[axis].max - min;
-        const kept = samples[axis].concat(pendingSample);
-        const stops = kept.map((sample, index) => {
-          const value = span ? (sample[axis] - min) / span : 0;
+        const pendingSample = pendingSamples[axis].at(-1);
+        const keyframes = [
+          ...samples[axis],
+          pendingSample,
+          { ...pendingSample, ms: totalMs },
+        ];
+        const stops = keyframes.map((sample, index) => {
+          const value = (sample[axis] - min) / (range[axis].max - min);
           const percent = ((sample.ms - startMs) / totalMs) * 100;
           const text =
             index === 0
-              ? value.toFixed(3)
-              : `${value.toFixed(3)} ${percent.toFixed(1)}%`;
+              ? Math.round(value * 100) / 100
+              : `${Math.round(value * 100) / 100} ${percent.toFixed(1)}%`;
           const ageMs = performance.now() - sample.ms;
           return ageMs < 200
             ? `<span class="flash" style="animation-delay:${-ageMs.toFixed(0)}ms">${text}</span>`
             : text;
         });
-        const last = kept[kept.length - 1];
-        const lastNormalized = span ? (last[axis] - min) / span : 0;
-        return `linear(${stops.join(", ")}, ${lastNormalized.toFixed(3)} 100%)`;
+        return `linear(${stops.join(", ")})`;
       }
 
       function replay() {
@@ -1212,7 +1221,7 @@
 
 <ul>
   <li>Only limited to position (2 degrees of freedom), no other dimensions like color, opacity, or any other animatable CSS property.
-  <li>Not as compact as linear-composite (SVG path commands, absolute values, and not as code reuse-friendly).
+  <li>Not as compact as linear() abuse (SVG path commands, absolute values, and not as code reuse-friendly).
   <li>Curves can be defined more compactly though, unlike <code>linear()</code> stuck with linear interpolation.
 </ul>
 
