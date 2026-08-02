@@ -13,6 +13,7 @@ export async function rewriteReadMins({ dryRun = false, htmlFilePath }) {
   const content = ch("main");
   if (!content) throw new Error("No content!");
 
+  content.find("style, script").remove();
   const text = content.text();
   const wordCount = text.trim().split(/\s+/g).length;
   const minutes = wordCount / wordsPerMinute;

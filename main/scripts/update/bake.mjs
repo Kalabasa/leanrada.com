@@ -25,7 +25,7 @@ async function main() {
     afterTags: ["meta"],
     tagName: "link",
     identifierAttributes: { rel: "canonical" },
-    valueAttributes: { href: getHref(htmlFilePath) },
+    valueAttributes: { href: getHref(htmlFilePath).replaceAll("/_", "/") },
   });
   console.groupEnd();
 
