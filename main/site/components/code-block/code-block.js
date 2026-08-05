@@ -10,9 +10,7 @@
           this.tagName,
           html`<style>
             code-block {
-              margin-left: -18px; /* bleed for scroll */
-              margin-right: -18px; /* bleed for scroll */
-              padding: 0 18px; /* bleed for scroll */
+              padding: 0;
               overflow-x: auto;
 
               pre {
@@ -35,6 +33,11 @@
               &[wraptext] code {
                 white-space: pre-wrap;
                 overflow-wrap: anywhere;
+              }
+              &:not([wraptext]) {
+                margin-left: -18px; /* bleed for scroll */
+                margin-right: -18px; /* bleed for scroll */
+                padding: 0 18px; /* bleed for scroll */
               }
 
               /**

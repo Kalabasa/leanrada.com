@@ -48,7 +48,7 @@
           height: 400px;
           overflow: hidden;
           background: #368a67;
-          border-radius: 8px;
+          border-radius: 12px;
         }
         .pivot {
           position: absolute;
@@ -105,7 +105,7 @@
         height: 400px;
         overflow: hidden;
         background: #cbeefa;
-        border-radius: 8px;
+        border-radius: 12px;
       }
       @keyframes ball-x { from { translate: 55px 0 } to { translate: 347.32px 0 } }
       @keyframes ball-y { from { transform: translateY(157.1px) } to { transform: translateY(347.68px) } }
@@ -172,7 +172,7 @@
       height: 400px;
       overflow: hidden;
       background: #0a0a0a;
-      border-radius: 8px;
+      border-radius: 12px;
     }
     .p {
       position: absolute; top: 0; left: 0;
@@ -401,7 +401,7 @@
         height: 400px;
         overflow: hidden;
         background: #fbfefa;
-        border-radius: 8px;
+        border-radius: 12px;
       }
       @keyframes conf-x { from { translate: -74.77px 0 } to { translate: 559.33px 0 } }
       @keyframes conf-y { from { transform: translateY(-253.89px) } to { transform: translateY(617.26px) } }
@@ -1219,40 +1219,27 @@
 
 <p>If your animation is more of the hand-authored type, then you’re just mapping keyframes to keyframes. This could probably be automated depending on the source animation authoring format. Any easing / motion curves from the source material would have to be ‘rasterised’ though, because we can only do linear interpolation with <code>linear()</code>.</p>
 
-<h2>Alternatives considered / related tech</h2>
+<h2>Demo explanation</h2>
 
-<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API" target="_blank"><strong>WAAPI.</strong></a> Web Animations API (WAAPI) is basically a JS API for creating CSS animations. It’s much better than dynamically constructing <code>&lt;style&gt;</code> tags. So I lied when I said JS-based animations can’t achieve native speeds (actually I didn’t, I specifically called out <code>requestAnimationFrame</code> only!).</p>
+<p>Let me explain the four demos above (also below).</p>
 
-<ul>
-  <li>WAAPI is used by most animation frameworks nowadays such as <a href="https://motion.dev/" target="_blank">[Framer] Motion</a>. They have <a href="https://motion.dev/docs/performance" target="_blank">a great article explaining JS-based vs native animations</a>.
-  <li>WAAPI is not an alternative per se. You can bake the simulation and replay it in either CSS or WAAPI, and get native speeds on dynamic/procedural animations either way.
-</ul> 
+<p>The double pendulum was made by simulating a double pendulum and recording the relative angles of the arms. There is one single <code>@keyframes</code> declaration that both arms use to move through the maximum rotational range recorded which happened to be <code>from { rotate: -8.907rad }</code> <code>to { rotate: 40.439rad }</code>. The individual <code>linear()</code>s encode the recorded rotations.</p>
 
-<p><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/offset-path" target="_blank"><strong>offset-path</strong></a> is a strong alternative. It essentially lets you define an SVG-style path that an element could follow.</p>
+<p>The balls were made similarly, but with three independent dimensions, <code>x</code>, <code>y</code>, and <code>rotation</code>. The <a href="https://piqnt.com/planck.js/" target="_blank">Planck.js</a> library was used for the rigid body sim.</p>
 
-<ul>
-  <li>Only limited to position (2 degrees of freedom), no other dimensions like color, opacity, or any other animatable CSS property.
-  <li>Not as compact as linear() abuse (SVG path commands, absolute values, and not as code reuse-friendly).
-  <li>Curves can be defined more concisely with path curve commands, unlike <code>linear()</code> stuck with linear interpolation.
-</ul>
+<p>The particles were made using a flow field. Here it was possible to loop the animation by tracing loops in the noise function’s domain.</p>
 
-<p><strong>SVG animations?</strong> <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_animation_with_SMIL" target="_blank">SMIL</a>, &lt;animateMotion&gt;? Idk enough about these, but I imagine it’s verbose XML declarative animations.</p>
+<p>The confetti was just like the balls physics having three degrees of freedom, but with added aerodynamics for confettiness.</p>
 
-<p><strong>CSS custom animatable <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@property" target="_blank"><code>@property</code></a>.</strong> Apparently animating custom properties recalculates every frame in the main thread? So this isn’t very performant. <a href="https://www.bram.us/2023/02/01/the-gotcha-with-animating-custom-properties/" target="_blank">This blog</a> writes about it in detail.</p>
-
-<p><a href="/notes/css-sprite-sheets/" target="_blank"><strong>Sprite sheets.</strong></a> Yeah sprite sheets.</p>
-
-<p><strong>prerendered video / animated WebP!</strong> This is the solution for 99% of cases! Forget everything you’ve learned in this blog, this is just some trifling for fun!</p>
-
-<h2>Demo code</h2>
-
-<p>Click a demo to see its CSS source code below the gallery!</p>
+<p>Click a demo to see its CSS source code below!</p>
 
 <prose-bleed>
   <auto-flex id="example-picker" style="--colwidth:200px;--gap:2"></auto-flex>
 </prose-bleed>
 
-<prose-bleed id="example-code-blocks"></prose-bleed>
+<prose-bleed>
+  <div id="example-code-blocks"></div>
+</prose-bleed>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -1302,18 +1289,55 @@
 </script>
 <style>
   .selected-demo {
-    outline: solid 4px var(--clr0);
+    outline: solid 6px var(--clr0);
   }
-  #example-picker > div:not(.selected-demo) {
-    filter: contrast(0.8) brightness(0.8);
-    * {
-      animation-play-state: paused;
+  #example-picker {
+    padding-bottom: 12px;
+    > div:not(.selected-demo) {
+      filter: contrast(0.8) brightness(0.8);
+      * {
+        animation-play-state: paused;
+      }
     }
   }
-  #example-code-blocks > code-block:not(.selected-demo-code) {
-    display: none;
+  #example-code-blocks {
+    max-height: 70vh;
+    overflow-y: auto;
+    > code-block {
+      &:not(.selected-demo-code) {
+        display: none;
+      }
+      code {
+        font-size: 80%;
+      }
+    }
   }
 </style>
+
+<h2>Alternatives considered / related tech</h2>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API" target="_blank"><strong>WAAPI.</strong></a> Web Animations API (WAAPI) is basically a JS API for creating CSS animations. It’s much better than dynamically constructing <code>&lt;style&gt;</code> tags. So I lied when I said JS-based animations can’t achieve native speeds (actually I didn’t, I specifically called out <code>requestAnimationFrame</code> only!).</p>
+
+<ul>
+  <li>WAAPI is used by most animation frameworks nowadays such as <a href="https://motion.dev/" target="_blank">[Framer] Motion</a>. They have <a href="https://motion.dev/docs/performance" target="_blank">a great article explaining JS-based vs native animations</a>.
+  <li>WAAPI is not an alternative per se. You can bake the simulation and replay it in either CSS or WAAPI, and get native speeds on dynamic/procedural animations either way.
+</ul> 
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/offset-path" target="_blank"><strong>offset-path</strong></a> is a strong alternative. It essentially lets you define an SVG-style path that an element could follow.</p>
+
+<ul>
+  <li>Only limited to position (2 degrees of freedom), no other dimensions like color, opacity, or any other animatable CSS property.
+  <li>Not as compact as linear() abuse (SVG path commands, absolute values, and not as code reuse-friendly).
+  <li>Curves can be defined more concisely with path curve commands, unlike <code>linear()</code> stuck with linear interpolation.
+</ul>
+
+<p><strong>SVG animations?</strong> <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_animation_with_SMIL" target="_blank">SMIL</a>, &lt;animateMotion&gt;? Idk enough about these, but I imagine it’s verbose XML declarative animations.</p>
+
+<p><strong>CSS custom animatable <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@property" target="_blank"><code>@property</code></a>.</strong> Apparently animating custom properties recalculates every frame in the main thread? So this isn’t very performant. <a href="https://www.bram.us/2023/02/01/the-gotcha-with-animating-custom-properties/" target="_blank">This blog</a> writes about it in detail.</p>
+
+<p><a href="/notes/css-sprite-sheets/" target="_blank"><strong>Sprite sheets.</strong></a> Yeah sprite sheets.</p>
+
+<p><strong>prerendered video / animated WebP!</strong> This is the solution for 99% of cases! Forget everything you’ve learned in this blog, this was just some trifling for fun!</p>
 
 </main>
 
