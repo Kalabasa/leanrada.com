@@ -14,6 +14,13 @@
     inset: 0;
   }
 
+  .dragHandle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #000;
+  }
+
   #controls {
     position: fixed;
     top: 50%;
@@ -103,64 +110,173 @@
     };
   }
 
+  function renderPatternSegmentTypes(values) {
+    return [
+      { dark: true, size: values.darkSize, controlRight: "darkSize" },
+      { dark: false, size: values.lightSize, controlLeft: "lightSize" },
+      { dark: true, size: values.lineSize, controlLeft: "lineSize" },
+      { dark: false, size: values.lineSize * 2, controlBoth: "lineSize" },
+      { dark: true, size: values.lineSize, controlRight: "lineSize" },
+      { dark: false, size: values.lightSize, controlRight: "lightSize" },
+      { dark: true, size: values.darkSize, controlLeft: "darkSize" },
+      { dark: false, size: values.lineSize, controlBoth: "lineSize" },
+    ];
+  }
+
   for (const input of document.querySelectorAll("#controls input")) {
     input.oninput = () => {
-      const newConfig = { ...config, ...readInputs() };
-      for (const key of Object.keys(newConfig)) {
-        if (key.startsWith(input.id)) config[key] = newConfig[key];
-      }
-
-      const bandMinSize = 8;
-
-      lineInput.value = newConfig.lineSize = Math.min(
-        config.lineSize,
-        Math.max(bandMinSize, newConfig.darkSize, newConfig.lightSize),
-      );
-
-      if (input === darkInput) {
-        lightInput.value = newConfig.lightSize = Math.max(
-          config.lightSize,
-          bandMinSize - newConfig.darkSize,
-        );
-      } else if (input === lightInput) {
-        darkInput.value = newConfig.darkSize = Math.max(
-          config.darkSize,
-          bandMinSize - newConfig.lightSize,
-        );
-      }
-
-      render(newConfig);
+      updateConfig({ ...config, ...readInputs() }, input);
     };
   }
 
+  let dragHandle = null;
+
   pattern.addEventListener("pointermove", (event) => {
-    console.log(event.clientX);
+    const edge = selectSegmentEdge(event.clientX);
+    if (edge) {
+      pattern.style.cursor = edge.dir < 0 ? "w-resize" : "e-resize";
+      if (!dragHandle?.isConnected) {
+        if (!dragHandle) {
+          dragHandle = document.createElement("div");
+          dragHandle.classList.add("dragHandle");
+        }
+        pattern.append(dragHandle);
+      }
+      dragHandle.style.backgroundColor = renderColor(
+        config.hue,
+        edge.segmentType.dark,
+      );
+      dragHandle.style.translate = `${event.clientX}px ${event.clientY}px`;
+    } else {
+      pattern.style.cursor = "";
+      if (dragHandle?.isConnected) {
+        dragHandle.remove();
+      }
+    }
   });
 
-  function render(config) {
-    const color = `oklch(90% 20% ${config.hue}deg)`;
+  function selectSegmentEdge(x) {
+    const threshold = 20;
+    const segmentTypes = renderPatternSegmentTypes(config);
+    const segment = findSegment(segmentTypes, x);
+    const segmentType = segmentTypes[segment.typeIndex];
+    let controlSegment = null;
+    if (
+      x < segment.centerX &&
+      x > segment.leftX &&
+      x < segment.leftX + threshold
+    ) {
+      // prioritize other thin segment
+      const leftSegmentType =
+        segmentTypes[
+          (segment.typeIndex - 1 + segmentTypes.length) % segmentTypes.length
+        ];
+      if (
+        (leftSegmentType.controlRight || leftSegmentType.controlBoth) &&
+        x < segment.leftX - leftSegmentType.size + threshold
+      ) {
+        return {
+          dir: 1,
+          segmentType: leftSegmentType,
+          control: leftSegmentType.controlRight || leftSegmentType.controlBoth,
+        };
+      }
 
+      if (segmentType.controlLeft || segmentType.controlBoth) {
+        return {
+          dir: -1,
+          segmentType,
+          control: segmentType.controlLeft || segmentType.controlBoth,
+        };
+      }
+    } else if (
+      x > segment.centerX &&
+      x < segment.rightX &&
+      x > segment.rightX - threshold
+    ) {
+      const rightSegmentType =
+        segmentTypes[(segment.typeIndex + 1) % segmentTypes.length];
+      if (
+        (rightSegmentType.controlLeft || rightSegmentType.controlBoth) &&
+        x > segment.rightX + rightSegmentType.size - threshold
+      ) {
+        return {
+          dir: -1,
+          segmentType: rightSegmentType,
+          control: rightSegmentType.controlLeft || rightSegmentType.controlBoth,
+        };
+      }
+
+      if (segmentType.controlRight || segmentType.controlBoth) {
+        return {
+          dir: 1,
+          segmentType,
+          control: segmentType.controlRight || segmentType.controlBoth,
+        };
+      }
+    }
+  }
+
+  function findSegment(types, x) {
+    let probe = config.offset;
+    const dir = x > probe ? 1 : -1;
+    let typeIndex = (-dir - 1) / 2;
+    while (probe * dir < x * dir) {
+      typeIndex = (typeIndex + dir + types.length) % types.length;
+      probe += types[typeIndex].size * dir;
+    }
+    const segment = types[typeIndex];
+    const leftX = probe + segment.size * ((-dir - 1) / 2);
+    return {
+      leftX,
+      centerX: leftX + segment.size / 2,
+      rightX: leftX + segment.size,
+      typeIndex,
+    };
+  }
+
+  function updateConfig(values, control) {
+    for (const key of Object.keys(values)) {
+      if (key.startsWith(control.id)) config[key] = values[key];
+    }
+
+    const bandMinSize = 8;
+
+    lineInput.value = values.lineSize = Math.min(
+      config.lineSize,
+      Math.max(bandMinSize, values.darkSize, values.lightSize),
+    );
+
+    if (control === darkInput) {
+      lightInput.value = values.lightSize = Math.max(
+        config.lightSize,
+        bandMinSize - values.darkSize,
+      );
+    } else if (control === lightInput) {
+      darkInput.value = values.darkSize = Math.max(
+        config.darkSize,
+        bandMinSize - values.lightSize,
+      );
+    }
+
+    render(values);
+  }
+
+  function render(values) {
     const stops = [];
-    let isDarkSegment = false;
     let stopOffset = 0;
-    for (const size of [
-      config.lineSize,
-      config.darkSize,
-      config.lightSize,
-      config.lineSize,
-      config.lineSize * 2,
-      config.lineSize,
-      config.lightSize,
-      config.darkSize,
-    ]) {
-      const stopColor = isDarkSegment ? color : "#fff";
+    for (const { size, dark } of renderPatternSegmentTypes(values)) {
+      const stopColor = renderColor(values.hue, dark);
       stops.push(`${stopColor} ${stopOffset}px`);
       stopOffset += size;
       stops.push(`${stopColor} ${stopOffset}px`);
-      isDarkSegment = !isDarkSegment;
     }
     pattern.style.backgroundImage = `linear-gradient(to right, ${stops.join(", ")})`;
     pattern.style.backgroundSize = `${stopOffset}px 100%`;
-    pattern.style.backgroundPosition = `${config.offset}px`;
+    pattern.style.backgroundPosition = `${values.offset}px`;
+  }
+
+  function renderColor(hue, dark) {
+    return dark ? `oklch(90% 20% ${hue}deg)` : "#fff";
   }
 </script>
