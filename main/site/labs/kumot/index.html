@@ -14,9 +14,15 @@
     inset: 0;
   }
 
-  .dragHandle {
+  :root.ready .dragHandle {
     position: absolute;
     pointer-events: none;
+    width: 100px;
+    height: 100px;
+    transform-origin: 0 50%;
+    clip-path: path("M0,0 C0,30 95,45 100,50 C95,55 0,70 0,100 Z");
+    transition: 50ms ease-in;
+    transition-property: translate, scale, background-color;
   }
 
   #controls {
@@ -113,7 +119,7 @@
       { dark: true, size: values.darkSize, controlRight: "darkSize" },
       { dark: false, size: values.lightSize, controlLeft: "lightSize" },
       { dark: true, size: values.lineSize, controlLeft: "lineSize" },
-      { dark: false, size: values.lineSize * 2, controlBoth: "lineSize" },
+      { dark: false, size: values.lineSize * 2 },
       { dark: true, size: values.lineSize, controlRight: "lineSize" },
       { dark: false, size: values.lightSize, controlRight: "lightSize" },
       { dark: true, size: values.darkSize, controlLeft: "darkSize" },
@@ -133,26 +139,32 @@
     const edge = selectSegmentEdge(event.clientX);
     if (edge) {
       pattern.style.cursor = edge.dir < 0 ? "w-resize" : "e-resize";
-      if (!dragHandle?.isConnected) {
-        if (!dragHandle) {
-          dragHandle = document.createElement("div");
-          dragHandle.classList.add("dragHandle");
-        }
+      if (!dragHandle) {
+        dragHandle = document.createElement("div");
+        dragHandle.classList.add("dragHandle");
         pattern.append(dragHandle);
       }
+      dragHandle.style.display = "block";
       dragHandle.style.backgroundColor = renderColor(
         config.hue,
         edge.segmentType.dark,
       );
-      const handleWidth = 20 - (edge.x - event.clientX) * edge.dir;
-      const handleHeight = 60;
-      dragHandle.style.width = `${handleWidth}px`;
-      dragHandle.style.height = `${handleHeight}px`;
-      dragHandle.style.translate = `${edge.x + handleWidth * ((edge.dir - 1) / 2)}px ${event.clientY - handleHeight / 2}px`;
+      const handleWidth = Math.min(
+        Math.max(5, edge.segmentType.size),
+        20 + (event.clientX - edge.x) * edge.dir,
+      );
+      dragHandle.style.translate = `${edge.x - edge.dir}px ${event.clientY - 50}px`;
+      dragHandle.style.scale = `${(handleWidth / 100) * edge.dir} 6`;
     } else {
       pattern.style.cursor = "";
-      if (dragHandle?.isConnected) {
-        dragHandle.remove();
+      if (dragHandle) {
+        dragHandle.style.scale = "0";
+        dragHandle.style.backgroundColor = "transparent";
+        setTimeout(() => {
+          if (dragHandle.style.scale === "0") {
+            dragHandle.style.display = "none";
+          }
+        }, 100);
       }
     }
   });
@@ -227,9 +239,11 @@
     let probe = config.offset;
     const dir = x > probe ? 1 : -1;
     let typeIndex = (-dir - 1) / 2;
-    while (probe * dir < x * dir) {
+    let iterations = 0;
+    while (probe * dir < x * dir && iterations < 2000) {
       typeIndex = (typeIndex + dir + types.length) % types.length;
       probe += types[typeIndex].size * dir;
+      iterations++;
     }
     const segment = types[typeIndex];
     const leftX = probe + segment.size * ((-dir - 1) / 2);
