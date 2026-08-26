@@ -12,7 +12,6 @@
   #pattern {
     position: absolute;
     inset: 0;
-    background-position: center;
   }
 
   #controls {
@@ -42,15 +41,15 @@
 <div id="controls">
   <label>
     Dark
-    <input type="range" id="dark" min="4" max="200" value="64" step="0.1" />
+    <input type="range" id="dark" min="0" max="200" value="64" step="0.1" />
   </label>
   <label>
     Light
-    <input type="range" id="light" min="4" max="200" value="96" step="0.1" />
+    <input type="range" id="light" min="0" max="200" value="96" step="0.1" />
   </label>
   <label>
     Line
-    <input type="range" id="line" min="0" max="15" value="3" step="0.1" />
+    <input type="range" id="line" min="0" max="30" value="5" step="0.1" />
   </label>
   <label>
     Hue
@@ -60,31 +59,58 @@
 
 <script>
   const pattern = document.getElementById("pattern");
+  const hueInput = document.getElementById("hue");
+  const darkInput = document.getElementById("dark");
+  const lightInput = document.getElementById("light");
+  const lineInput = document.getElementById("line");
 
-  function render() {
-    const hue = Number.parseFloat(document.getElementById("hue").value);
-    const color = `oklch(90% 20% ${hue}deg)`;
-    const darkBandWidth = Number.parseFloat(
-      document.getElementById("dark").value,
-    );
-    const lighBandWidth = Number.parseFloat(
-      document.getElementById("light").value,
-    );
-    const lineValue = Number.parseFloat(document.getElementById("line").value);
-    const lineWidth = (darkBandWidth + lighBandWidth) * (lineValue / 100);
+  const config = readInputs();
+  render(config);
+
+  function readInputs() {
+    return {
+      hue: Number.parseFloat(hueInput.value),
+      darkWidth: Number.parseFloat(darkInput.value),
+      lightWidth: Number.parseFloat(lightInput.value),
+      lineWidth: Number.parseFloat(lineInput.value),
+    };
+  }
+
+  for (const input of document.querySelectorAll("#controls input")) {
+    input.oninput = () => {
+      const inputs = readInputs();
+      for (const key of Object.keys(inputs)) {
+        if (key.startsWith(input.id)) config[key] = inputs[key];
+      }
+
+      inputs.lineWidth = Math.min(
+        config.lineWidth,
+        Math.max(inputs.darkWidth, inputs.lightWidth),
+      );
+      lineInput.value = inputs.lineWidth;
+      render(inputs);
+    };
+  }
+
+  pattern.addEventListener("pointermove", (event) => {
+    // console.log(event.clientX);
+  });
+
+  function render(config) {
+    const color = `oklch(90% 20% ${config.hue}deg)`;
 
     const stops = [];
     let isDarkSegment = true;
     let offset = 0;
     for (const width of [
-      darkBandWidth,
-      lineWidth,
-      darkBandWidth,
-      lighBandWidth,
-      lineWidth,
-      lineWidth * 2,
-      lineWidth,
-      lighBandWidth,
+      config.darkWidth,
+      config.lineWidth,
+      config.darkWidth,
+      config.lightWidth,
+      config.lineWidth,
+      config.lineWidth * 2,
+      config.lineWidth,
+      config.lightWidth,
     ]) {
       const stopColor = isDarkSegment ? color : "#ffffff";
       stops.push(`${stopColor} ${offset}px`);
@@ -94,10 +120,6 @@
     }
     pattern.style.backgroundImage = `linear-gradient(to right, ${stops.join(", ")})`;
     pattern.style.backgroundSize = `${offset}px 100%`;
+    pattern.style.backgroundPosition = `${window.innerWidth / 2}px`;
   }
-
-  for (const input of document.querySelectorAll("#controls input")) {
-    input.oninput = render;
-  }
-  render();
 </script>
