@@ -66,35 +66,31 @@
 <script>
   const pattern = document.getElementById("pattern");
 
-  function buildSegments() {
+  function render() {
+    const hue = +document.getElementById("hue").value;
+    const color = `oklch(90% 20% ${hue}deg)`;
     const darkBlock = +document.getElementById("dark").value;
     const lightBlock = +document.getElementById("light").value;
-    const line = ((darkBlock + lightBlock) / 2) * (+document.getElementById("line").value / 100);
-    const gap = line * 2;
-    return [
+    const line =
+      ((darkBlock + lightBlock) / 2) *
+      (+document.getElementById("line").value / 100);
+
+    const stops = [];
+    let offset = 0;
+    for (const [on, width] of [
       [1, darkBlock],
       [0, line],
       [1, darkBlock],
       [0, lightBlock],
       [1, line],
-      [0, gap],
+      [0, line * 2],
       [1, line],
       [0, lightBlock],
-    ];
-  }
-
-  function render() {
-    const hue = +document.getElementById("hue").value;
-    const clr = `oklch(90% 20% ${hue}deg)`;
-    const segments = buildSegments();
-
-    const stops = [];
-    let offset = 0;
-    for (const [on, width] of segments) {
-      const color = on ? clr : "#ffffff";
-      stops.push(`${color} ${offset}px`);
+    ]) {
+      const stopColor = on ? color : "#ffffff";
+      stops.push(`${stopColor} ${offset}px`);
       offset += width;
-      stops.push(`${color} ${offset}px`);
+      stops.push(`${stopColor} ${offset}px`);
     }
     pattern.style.backgroundImage = `linear-gradient(to right, ${stops.join(", ")})`;
     pattern.style.backgroundSize = `${offset}px 100%`;
