@@ -134,14 +134,35 @@
   }
 
   let dragHandle = null;
+  let dragStart = null;
+  let selectedEdge = null;
 
   pattern.addEventListener("pointermove", (event) => {
-    const edge = selectSegmentEdge(event.clientX);
-    if (edge) showDragHandle(edge, event.clientX, event.clientY);
-    else hideDragHandle();
+    if (dragStart != null) {
+      
+    } else {
+      selectedEdge = selectSegmentEdge(event.clientX);
+      if (selectedEdge) {
+        showDragHandle(selectedEdge, event.clientX, event.clientY);
+      } else {
+        hideDragHandle();
+      }
+    }
   });
 
-  pattern.addEventListener("pointerout", hideDragHandle);
+  pattern.addEventListener("pointerout", () => {
+    dragStart = null;
+    hideDragHandle();
+  });
+
+  pattern.addEventListener("pointerdown", (event) => {
+    if (!selectedEdge) return;
+    dragStart = event.clientX;
+  });
+
+  pattern.addEventListener("pointerup", (event) => {
+    dragStart = null;
+  });
 
   function showDragHandle(edge, pointerX, pointerY) {
     pattern.style.cursor = "grab";
@@ -151,7 +172,10 @@
       pattern.append(dragHandle);
     }
     dragHandle.style.display = "block";
-    dragHandle.style.backgroundColor = renderColor(config.hue, edge.segmentType.dark);
+    dragHandle.style.backgroundColor = renderColor(
+      config.hue,
+      edge.segmentType.dark,
+    );
     const handleWidth = Math.min(
       Math.max(5, edge.segmentType.size),
       20 + (pointerX - edge.x) * edge.dir,
@@ -247,7 +271,7 @@
     while (probe * dir < x * dir && iterations < 2000) {
       typeIndex = (typeIndex + dir + types.length) % types.length;
       probe += types[typeIndex].size * dir;
-      iterations
+      iterations;
     }
     const segment = types[typeIndex];
     const leftX = probe + segment.size * ((-dir - 1) / 2);
