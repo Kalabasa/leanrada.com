@@ -16,9 +16,7 @@
 
   .dragHandle {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    background: #000;
+    pointer-events: none;
   }
 
   #controls {
@@ -146,7 +144,11 @@
         config.hue,
         edge.segmentType.dark,
       );
-      dragHandle.style.translate = `${event.clientX}px ${event.clientY}px`;
+      const handleWidth = 20 - (edge.x - event.clientX) * edge.dir;
+      const handleHeight = 60;
+      dragHandle.style.width = `${handleWidth}px`;
+      dragHandle.style.height = `${handleHeight}px`;
+      dragHandle.style.translate = `${edge.x + handleWidth * ((edge.dir - 1) / 2)}px ${event.clientY - handleHeight / 2}px`;
     } else {
       pattern.style.cursor = "";
       if (dragHandle?.isConnected) {
@@ -162,9 +164,9 @@
     const segmentType = segmentTypes[segment.typeIndex];
     let controlSegment = null;
     if (
-      x < segment.centerX &&
-      x > segment.leftX &&
-      x < segment.leftX + threshold
+      x <= segment.centerX &&
+      x >= segment.leftX &&
+      x <= segment.leftX + threshold
     ) {
       // prioritize other thin segment
       const leftSegmentType =
@@ -173,9 +175,10 @@
         ];
       if (
         (leftSegmentType.controlRight || leftSegmentType.controlBoth) &&
-        x < segment.leftX - leftSegmentType.size + threshold
+        x <= segment.leftX - leftSegmentType.size + threshold
       ) {
         return {
+          x: segment.leftX,
           dir: 1,
           segmentType: leftSegmentType,
           control: leftSegmentType.controlRight || leftSegmentType.controlBoth,
@@ -184,23 +187,25 @@
 
       if (segmentType.controlLeft || segmentType.controlBoth) {
         return {
+          x: segment.leftX,
           dir: -1,
           segmentType,
           control: segmentType.controlLeft || segmentType.controlBoth,
         };
       }
     } else if (
-      x > segment.centerX &&
-      x < segment.rightX &&
-      x > segment.rightX - threshold
+      x >= segment.centerX &&
+      x <= segment.rightX &&
+      x >= segment.rightX - threshold
     ) {
       const rightSegmentType =
         segmentTypes[(segment.typeIndex + 1) % segmentTypes.length];
       if (
         (rightSegmentType.controlLeft || rightSegmentType.controlBoth) &&
-        x > segment.rightX + rightSegmentType.size - threshold
+        x >= segment.rightX + rightSegmentType.size - threshold
       ) {
         return {
+          x: segment.rightX,
           dir: -1,
           segmentType: rightSegmentType,
           control: rightSegmentType.controlLeft || rightSegmentType.controlBoth,
@@ -209,6 +214,7 @@
 
       if (segmentType.controlRight || segmentType.controlBoth) {
         return {
+          x: segment.rightX,
           dir: 1,
           segmentType,
           control: segmentType.controlRight || segmentType.controlBoth,
