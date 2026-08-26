@@ -67,30 +67,35 @@
   const pattern = document.getElementById("pattern");
 
   function render() {
-    const hue = +document.getElementById("hue").value;
+    const hue = Number.parseFloat(document.getElementById("hue").value);
     const color = `oklch(90% 20% ${hue}deg)`;
-    const darkBlock = +document.getElementById("dark").value;
-    const lightBlock = +document.getElementById("light").value;
-    const line =
-      ((darkBlock + lightBlock) / 2) *
-      (+document.getElementById("line").value / 100);
+    const darkBandWidth = Number.parseFloat(
+      document.getElementById("dark").value,
+    );
+    const lighBandWidth = Number.parseFloat(
+      document.getElementById("light").value,
+    );
+    const lineValue = Number.parseFloat(document.getElementById("line").value);
+    const lineWidth = (darkBandWidth + lighBandWidth) * (lineValue / 100);
 
     const stops = [];
+    let isDarkSegment = true;
     let offset = 0;
-    for (const [on, width] of [
-      [1, darkBlock],
-      [0, line],
-      [1, darkBlock],
-      [0, lightBlock],
-      [1, line],
-      [0, line * 2],
-      [1, line],
-      [0, lightBlock],
+    for (const width of [
+      darkBandWidth,
+      lineWidth,
+      darkBandWidth,
+      lighBandWidth,
+      lineWidth,
+      lineWidth * 2,
+      lineWidth,
+      lighBandWidth,
     ]) {
-      const stopColor = on ? color : "#ffffff";
+      const stopColor = isDarkSegment ? color : "#ffffff";
       stops.push(`${stopColor} ${offset}px`);
       offset += width;
       stops.push(`${stopColor} ${offset}px`);
+      isDarkSegment = !isDarkSegment;
     }
     pattern.style.backgroundImage = `linear-gradient(to right, ${stops.join(", ")})`;
     pattern.style.backgroundSize = `${offset}px 100%`;
