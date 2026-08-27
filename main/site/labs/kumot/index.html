@@ -84,6 +84,7 @@
   const config = {
     ...readInputs(),
     offset: window.innerWidth / 2,
+    shift: 0,
   };
 
   animateEntrance(0);
@@ -115,7 +116,7 @@
   }
 
   function renderPatternSegmentTypes(values) {
-    return [
+    const types = [
       { dark: true, size: values.dark, controlRight: darkInput.id },
       { dark: false, size: values.light, controlLeft: lightInput.id },
       { dark: true, size: values.line, controlLeft: lineInput.id },
@@ -124,7 +125,9 @@
       { dark: false, size: values.light, controlRight: lightInput.id },
       { dark: true, size: values.dark, controlLeft: darkInput.id },
       { dark: false, size: values.line, controlBoth: lineInput.id },
-    ];
+    ].map((type, index) => ({ ...type, index }));
+    const shift = ((values.shift % types.length) + types.length) % types.length;
+    return [...types.slice(shift), ...types.slice(0, shift)];
   }
 
   for (const input of document.querySelectorAll("#controls input")) {
@@ -168,6 +171,9 @@
     drag = {
       anchorX: selectedEdge.x - selectedEdge.dir * config[selectedEdge.control],
     };
+    config.shift = selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
+    config.offset = drag.anchorX;
+    render(config);
   });
 
   pattern.addEventListener("pointerup", (event) => {
