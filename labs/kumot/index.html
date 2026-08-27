@@ -1,0 +1,103 @@
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: sans-serif;
+    color: #ccc;
+    background: #111;
+  }
+
+  #pattern {
+    position: fixed;
+    inset: 0;
+    background-color: #ffffff;
+    background-position: center;
+    --scale: 20px;
+    --clr: #000000;
+  }
+
+  #controls {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #1a1a1e;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px #0008;
+  }
+
+  #controls label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+  }
+</style>
+
+<div id="pattern"></div>
+<div id="controls">
+  <label>
+    Dark
+    <input type="range" id="dark" min="4" max="200" value="96" step="0.1" />
+  </label>
+  <label>
+    Light
+    <input type="range" id="light" min="4" max="200" value="96" step="0.1" />
+  </label>
+  <label>
+    Line
+    <input type="range" id="line" min="0" max="15" value="12.5" step="0.1" />
+  </label>
+  <label>
+    Hue
+    <input type="range" id="hue" min="0" max="360" value="0" step="1" />
+  </label>
+</div>
+
+<script>
+  const pattern = document.getElementById("pattern");
+
+  function render() {
+    const hue = +document.getElementById("hue").value;
+    const color = `oklch(90% 20% ${hue}deg)`;
+    const darkBlock = +document.getElementById("dark").value;
+    const lightBlock = +document.getElementById("light").value;
+    const line =
+      ((darkBlock + lightBlock) / 2) *
+      (+document.getElementById("line").value / 100);
+
+    const stops = [];
+    let offset = 0;
+    for (const [on, width] of [
+      [1, darkBlock],
+      [0, line],
+      [1, darkBlock],
+      [0, lightBlock],
+      [1, line],
+      [0, line * 2],
+      [1, line],
+      [0, lightBlock],
+    ]) {
+      const stopColor = on ? color : "#ffffff";
+      stops.push(`${stopColor} ${offset}px`);
+      offset += width;
+      stops.push(`${stopColor} ${offset}px`);
+    }
+    pattern.style.backgroundImage = `linear-gradient(to right, ${stops.join(", ")})`;
+    pattern.style.backgroundSize = `${offset}px 100%`;
+  }
+
+  for (const input of document.querySelectorAll("#controls input")) {
+    input.oninput = render;
+  }
+  render();
+</script>
