@@ -139,19 +139,14 @@
 
   pattern.addEventListener("pointermove", (event) => {
     if (drag != null && selectedEdge) {
-      const lastSize = config[selectedEdge.control];
       updateConfig(
         {
           ...config,
-          [selectedEdge.control]:
-            config[selectedEdge.control] +
-            (event.clientX - drag.lastX) * selectedEdge.dir,
+          [selectedEdge.control]: (event.clientX - drag.anchorX) * selectedEdge.dir,
         },
         selectedEdge.control,
       );
-      const dx = (config[selectedEdge.control] - lastSize) * selectedEdge.dir;
-      drag.lastX += dx;
-      selectedEdge.x += dx;
+      selectedEdge.x = drag.anchorX + selectedEdge.dir * config[selectedEdge.control];
       selectedEdge.segmentType.size = config[selectedEdge.control];
     } else {
       selectedEdge = selectSegmentEdge(event.clientX);
@@ -171,7 +166,7 @@
   pattern.addEventListener("pointerdown", (event) => {
     if (!selectedEdge) return;
     drag = {
-      lastX: event.clientX,
+      anchorX: selectedEdge.x - selectedEdge.dir * config[selectedEdge.control],
     };
   });
 
