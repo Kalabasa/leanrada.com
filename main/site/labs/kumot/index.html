@@ -125,9 +125,11 @@
       { dark: false, size: values.light, controlRight: lightInput.id },
       { dark: true, size: values.dark, controlLeft: darkInput.id },
       { dark: false, size: values.line, controlBoth: lineInput.id },
-    ].map((type, index) => ({ ...type, index }));
-    const shift = ((values.shift % types.length) + types.length) % types.length;
-    return [...types.slice(shift), ...types.slice(0, shift)];
+    ];
+    return types.map((_, i) => {
+      const index = (values.shift + i) % types.length;
+      return { ...types[index], index };
+    });
   }
 
   for (const input of document.querySelectorAll("#controls input")) {
@@ -145,7 +147,8 @@
       updateConfig(
         {
           ...config,
-          [selectedEdge.control]: (event.clientX - drag.anchorX) * selectedEdge.dir,
+          [selectedEdge.control]:
+            (event.clientX - drag.grabOffset - drag.anchorX) * selectedEdge.dir,
         },
         selectedEdge.control,
       );
@@ -170,6 +173,7 @@
     if (!selectedEdge) return;
     drag = {
       anchorX: selectedEdge.x - selectedEdge.dir * config[selectedEdge.control],
+      grabOffset: event.clientX - selectedEdge.x,
     };
     config.shift = selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
     config.offset = drag.anchorX;
