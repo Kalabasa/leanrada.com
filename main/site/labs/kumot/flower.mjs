@@ -10,13 +10,17 @@ export function setupFlowers(container) {
   container.append(canvas);
 
   const ctx = canvas.getContext("2d");
-  const cellSize = 300;
+  const cellSize = 400;
   let flowers = [];
   let grid = new Map();
 
   function resize() {
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = container.clientWidth * dpr;
+    canvas.height = container.clientHeight * dpr;
+    canvas.style.width = container.clientWidth + "px";
+    canvas.style.height = container.clientHeight + "px";
+    ctx.scale(dpr, dpr);
     buildGrid();
   }
 
@@ -30,7 +34,11 @@ export function setupFlowers(container) {
       for (let col = 0; col < cols; col++) {
         const x = col * cellSize + ((row % 2) * cellSize) / 2;
         const y = row * rowHeight;
-        const flower = new Flower(ctx, x, y, cellSize / 7);
+        const flower = new Flower(ctx, x, y, cellSize / 6, {
+          r: 240,
+          g: 60,
+          b: 0,
+        });
         flowers.push(flower);
         grid.set(`${col},${row}`, flower);
       }
@@ -71,14 +79,19 @@ class Flower {
 
   #petalCount = 0;
   #rotation = 0;
+  #faceX = 0;
+  #faceY = 0;
   #noise = null;
+  #startAngle = 0;
   #drawAngle = 0;
+  #color;
 
-  constructor(ctx, x, y, radius) {
+  constructor(ctx, x, y, radius, color) {
     this.#ctx = ctx;
     this.#x = x;
     this.#y = y;
     this.#radius = radius;
+    this.#color = color;
   }
 
   bloom() {
@@ -87,49 +100,188 @@ class Flower {
 
     this.#petalCount = 5;
     this.#rotation = Math.random() * Math.PI * 2;
+    this.#faceX = (Math.random() - 0.5) * 1.5;
+    this.#faceY = (Math.random() - 0.5) * 1.5;
     this.#noise = createNoise();
-    this.#drawAngle = this.#rotation;
+    this.#startAngle = Math.atan2(this.#faceY, this.#faceX) + Math.PI;
+    this.#drawAngle = this.#startAngle;
   }
 
   update() {
     if (this.#state !== "draw") return;
 
+    const { r, g, b } = this.#color;
+    const colorStr = `rgb(${r},${g},${b})`;
+    const darkColorStr = `rgb(${Math.floor(r * 0.8)},${Math.floor(g * 0.8)},${Math.floor(b * 0.8)})`;
+
     const endAngle = Math.min(
       this.#drawAngle + ANGLE_PER_UPDATE,
-      this.#rotation + Math.PI * 2,
+      this.#startAngle + Math.PI * 2,
     );
 
-    const radiusAt = (a) => {
-      const petal = Math.pow(
-        (1 + Math.cos((a - this.#rotation) * this.#petalCount)) / 2,
-        0.125,
-      );
-      return this.#radius * petal + this.#noise(a) * this.#radius * 0.6 * petal;
-    };
-
-    const ctx = this.#ctx;
-    ctx.beginPath();
-    ctx.moveTo(
-      this.#x + Math.cos(this.#drawAngle) * radiusAt(this.#drawAngle),
-      this.#y + Math.sin(this.#drawAngle) * radiusAt(this.#drawAngle),
+    const aheadEnd = Math.min(
+      endAngle + ANGLE_PER_UPDATE,
+      this.#startAngle + Math.PI * 2,
     );
+    let aheadAngle = endAngle;
+    let prevBgPetal = this.#petalAt(aheadAngle);
+    let prevBg = this.#outerAt(aheadAngle, prevBgPetal, 2);
+    while (aheadAngle < aheadEnd) {
+      const stepEnd = Math.min(aheadAngle + 0.03, aheadEnd);
+      const currBgPetal = this.#petalAt(stepEnd);
+      const currBg = this.#outerAt(stepEnd, currBgPetal, 2);
+      this.#ctx.fillStyle = "#fff";
+      this.#ctx.beginPath();
+      this.#ctx.moveTo(this.#x, this.#y);
+      this.#ctx.lineTo(...prevBg);
+      this.#ctx.lineTo(...currBg);
+      this.#ctx.closePath();
+      this.#ctx.fill();
+      prevBgPetal = currBgPetal;
+      prevBg = currBg;
+      aheadAngle = stepEnd;
+    }
+
+    let prevPetal = this.#petalAt(this.#drawAngle);
+    let prev = this.#outerAt(this.#drawAngle, prevPetal);
+    let prevInner = this.#innerAt(this.#drawAngle, prevPetal);
     while (this.#drawAngle < endAngle) {
       const stepEnd = Math.min(this.#drawAngle + 0.03, endAngle);
-      const r = radiusAt(stepEnd);
-      ctx.lineTo(
-        this.#x + Math.cos(stepEnd) * r,
-        this.#y + Math.sin(stepEnd) * r,
-      );
+      const currPetal = this.#petalAt(stepEnd);
+      const curr = this.#outerAt(stepEnd, currPetal);
+      const currInner = this.#innerAt(stepEnd, currPetal);
+
+      this.#ctx.fillStyle = "#fff";
+      this.#ctx.beginPath();
+      this.#ctx.moveTo(this.#x, this.#y);
+      this.#ctx.lineTo(...prev);
+      this.#ctx.lineTo(...curr);
+      this.#ctx.closePath();
+      this.#ctx.fill();
+
+      this.#ctx.fillStyle = colorStr;
+      this.#ctx.beginPath();
+      this.#ctx.moveTo(this.#x, this.#y);
+      this.#ctx.lineTo(...prevInner);
+      this.#ctx.lineTo(...currInner);
+      this.#ctx.closePath();
+      this.#ctx.fill();
+
+      this.#ctx.beginPath();
+      this.#ctx.moveTo(...prev);
+      this.#ctx.lineTo(...curr);
+      this.#ctx.strokeStyle = colorStr;
+      this.#ctx.lineWidth = 2;
+      this.#ctx.stroke();
+
+      prevPetal = currPetal;
+      prev = curr;
+      prevInner = currInner;
       this.#drawAngle = stepEnd;
     }
-    ctx.strokeStyle = "#f00";
-    ctx.lineWidth = 2;
-    ctx.stroke();
 
-    if (this.#drawAngle >= this.#rotation + Math.PI * 2) {
+    const veinStart = endAngle - ANGLE_PER_UPDATE;
+    this.#drawVeins(veinStart, 16, 0.75, colorStr);
+    this.#drawVeins(veinStart, 12, 0.3, darkColorStr);
+
+    if (this.#drawAngle >= this.#startAngle + Math.PI * 2) {
       this.#state = "done";
     }
   }
+
+  #petalAt(angle) {
+    return (1 + Math.cos((angle - this.#rotation) * this.#petalCount)) / 2;
+  }
+
+  #offsetAt(angle, petal) {
+    const r = this.#radius * petal ** 0.05 * (0.8 + this.#noise(angle) * 0.4);
+    return [
+      Math.cos(angle) * r + this.#faceX * r,
+      Math.sin(angle) * r + this.#faceY * r,
+    ];
+  }
+
+  #outerAt(angle, petal, grow = 0) {
+    const [ox, oy] = this.#offsetAt(angle, petal);
+    if (grow === 0) return [this.#x + ox, this.#y + oy];
+    const len = Math.sqrt(ox * ox + oy * oy);
+    const scale = (len + grow) / len;
+    return [this.#x + ox * scale, this.#y + oy * scale];
+  }
+
+  #innerAt(angle, petal) {
+    const faceAngle = Math.atan2(this.#faceY, this.#faceX);
+    const petalAngle =
+      this.#rotation +
+      (Math.round(
+        ((angle - this.#rotation) * this.#petalCount) / (Math.PI * 2),
+      ) *
+        (Math.PI * 2)) /
+        this.#petalCount;
+    const faceness = (1 + Math.cos(petalAngle - faceAngle)) / 2;
+    const t = Math.min(
+      1,
+      Math.max(0, -0.1 - petal * 0.2 + faceness * 0.8) ** 0.5,
+    );
+    const [ox, oy] = this.#offsetAt(angle, petal);
+    return [this.#x + ox * t, this.#y + oy * t];
+  }
+
+  #drawVeins(fromAngle, veinsPerPetal, reach, color) {
+    const veinStep = (Math.PI * 2) / (this.#petalCount * veinsPerPetal);
+    const segments = 8;
+    const center = [this.#x, this.#y];
+    const halfWidth = 1.5;
+    for (let a = fromAngle; a < this.#drawAngle; a += veinStep) {
+      if (a + veinStep > this.#drawAngle) break;
+      const petal = this.#petalAt(a);
+      const [ox, oy] = this.#offsetAt(a, petal);
+      const len = Math.sqrt(ox * ox + oy * oy);
+      const perpX = -oy / len;
+      const perpY = ox / len;
+      const randomOffset = (this.#noise(a * 7) - 0.5) * 0.15 * this.#radius;
+      const dir = len > 0 ? [ox / len, oy / len] : [0, 0];
+      const tip = [
+        this.#x + ox * reach + dir[0] * randomOffset,
+        this.#y + oy * reach + dir[1] * randomOffset,
+      ];
+      const control = [
+        lerp(center[0], tip[0], 0.5) + this.#faceX * this.#radius * 0.8 * reach,
+        lerp(center[1], tip[1], 0.5) + this.#faceY * this.#radius * 0.8 * reach,
+      ];
+      const points = [];
+      for (let s = 0; s <= segments; s++) {
+        const t = s / segments;
+        const [px, py] = bezier(center, control, tip, t);
+        points.push({ px, py, w: lerp(halfWidth, 0.5, t) });
+      }
+      this.#ctx.fillStyle = color;
+      this.#ctx.beginPath();
+      for (let s = 0; s <= segments; s++) {
+        const { px, py, w } = points[s];
+        if (s === 0) this.#ctx.moveTo(px + perpX * w, py + perpY * w);
+        else this.#ctx.lineTo(px + perpX * w, py + perpY * w);
+      }
+      for (let s = segments; s >= 0; s--) {
+        const { px, py, w } = points[s];
+        this.#ctx.lineTo(px - perpX * w, py - perpY * w);
+      }
+      this.#ctx.closePath();
+      this.#ctx.fill();
+    }
+  }
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function bezier(p0, p1, p2, t) {
+  const u = 1 - t;
+  return [
+    u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0],
+    u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1],
+  ];
 }
 
 function createNoise(freq = 0.5, octaves = 8) {
