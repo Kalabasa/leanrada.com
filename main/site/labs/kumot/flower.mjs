@@ -100,8 +100,8 @@ class Flower {
 
     this.#petalCount = 5;
     this.#rotation = Math.random() * Math.PI * 2;
-    this.#faceX = (Math.random() - 0.5) * 1.5;
-    this.#faceY = (Math.random() - 0.5) * 1.5;
+    this.#faceX = (Math.random() - 0.5) * 1.2;
+    this.#faceY = (Math.random() - 0.5) * 1.2;
     this.#noise = createNoise();
     this.#startAngle = Math.atan2(this.#faceY, this.#faceX) + Math.PI;
     this.#drawAngle = this.#startAngle;
@@ -124,12 +124,10 @@ class Flower {
       this.#startAngle + Math.PI * 2,
     );
     let aheadAngle = endAngle;
-    let prevBgPetal = this.#petalAt(aheadAngle);
-    let prevBg = this.#outerAt(aheadAngle, prevBgPetal, 2);
+    let prevBg = this.#getPoint(aheadAngle, this.#getRadius(aheadAngle) + 2);
     while (aheadAngle < aheadEnd) {
       const stepEnd = Math.min(aheadAngle + 0.03, aheadEnd);
-      const currBgPetal = this.#petalAt(stepEnd);
-      const currBg = this.#outerAt(stepEnd, currBgPetal, 2);
+      const currBg = this.#getPoint(stepEnd, this.#getRadius(stepEnd) + 2);
       this.#ctx.fillStyle = "#fff";
       this.#ctx.beginPath();
       this.#ctx.moveTo(this.#x, this.#y);
@@ -137,19 +135,22 @@ class Flower {
       this.#ctx.lineTo(...currBg);
       this.#ctx.closePath();
       this.#ctx.fill();
-      prevBgPetal = currBgPetal;
       prevBg = currBg;
       aheadAngle = stepEnd;
     }
 
-    let prevPetal = this.#petalAt(this.#drawAngle);
-    let prev = this.#outerAt(this.#drawAngle, prevPetal);
-    let prevInner = this.#innerAt(this.#drawAngle, prevPetal);
+    let prev = this.#getPoint(
+      this.#drawAngle,
+      this.#getRadius(this.#drawAngle),
+    );
+    let prevInner = this.#getPoint(
+      this.#drawAngle,
+      this.#getInner(this.#drawAngle),
+    );
     while (this.#drawAngle < endAngle) {
       const stepEnd = Math.min(this.#drawAngle + 0.03, endAngle);
-      const currPetal = this.#petalAt(stepEnd);
-      const curr = this.#outerAt(stepEnd, currPetal);
-      const currInner = this.#innerAt(stepEnd, currPetal);
+      const curr = this.#getPoint(stepEnd, this.#getRadius(stepEnd));
+      const currInner = this.#getPoint(stepEnd, this.#getInner(stepEnd));
 
       this.#ctx.fillStyle = "#fff";
       this.#ctx.beginPath();
@@ -174,7 +175,6 @@ class Flower {
       this.#ctx.lineWidth = 2;
       this.#ctx.stroke();
 
-      prevPetal = currPetal;
       prev = curr;
       prevInner = currInner;
       this.#drawAngle = stepEnd;
@@ -189,27 +189,21 @@ class Flower {
     }
   }
 
-  #petalAt(angle) {
+  // base petal lobe shapes
+  #getPetal(angle) {
     return (1 + Math.cos((angle - this.#rotation) * this.#petalCount)) / 2;
   }
 
-  #offsetAt(angle, petal) {
-    const r = this.#radius * petal ** 0.05 * (0.8 + this.#noise(angle) * 0.4);
-    return [
-      Math.cos(angle) * r + this.#faceX * r,
-      Math.sin(angle) * r + this.#faceY * r,
-    ];
+  #getRadius(angle) {
+    return (
+      this.#radius *
+      this.#getPetal(angle) ** 0.05 *
+      (0.8 + this.#noise(angle) * 0.4)
+    );
   }
 
-  #outerAt(angle, petal, grow = 0) {
-    const [ox, oy] = this.#offsetAt(angle, petal);
-    if (grow === 0) return [this.#x + ox, this.#y + oy];
-    const len = Math.sqrt(ox * ox + oy * oy);
-    const scale = (len + grow) / len;
-    return [this.#x + ox * scale, this.#y + oy * scale];
-  }
-
-  #innerAt(angle, petal) {
+  #getInner(angle) {
+    const petal = this.#getPetal(angle);
     const faceAngle = Math.atan2(this.#faceY, this.#faceX);
     const petalAngle =
       this.#rotation +
@@ -219,12 +213,18 @@ class Flower {
         (Math.PI * 2)) /
         this.#petalCount;
     const faceness = (1 + Math.cos(petalAngle - faceAngle)) / 2;
-    const t = Math.min(
-      1,
-      Math.max(0, -0.1 - petal * 0.2 + faceness * 0.8) ** 0.5,
-    );
-    const [ox, oy] = this.#offsetAt(angle, petal);
-    return [this.#x + ox * t, this.#y + oy * t];
+    const innerR =
+      this.#radius *
+      Math.max(0, 0.2 - petal * 0.4 + faceness * 0.3) ** 0.5 *
+      (0.6 + this.#noise(angle) * 0.8);
+    return Math.min(this.#getRadius(angle), innerR);
+  }
+
+  #getPoint(angle, r) {
+    return [
+      this.#x + Math.cos(angle) * r + this.#faceX * r,
+      this.#y + Math.sin(angle) * r + this.#faceY * r,
+    ];
   }
 
   #drawVeins(fromAngle, veinsPerPetal, reach, color) {
@@ -234,8 +234,9 @@ class Flower {
     const halfWidth = 1.5;
     for (let a = fromAngle; a < this.#drawAngle; a += veinStep) {
       if (a + veinStep > this.#drawAngle) break;
-      const petal = this.#petalAt(a);
-      const [ox, oy] = this.#offsetAt(a, petal);
+      const r = this.#getRadius(a);
+      const ox = Math.cos(a) * r + this.#faceX * r;
+      const oy = Math.sin(a) * r + this.#faceY * r;
       const len = Math.sqrt(ox * ox + oy * oy);
       const perpX = -oy / len;
       const perpY = ox / len;
