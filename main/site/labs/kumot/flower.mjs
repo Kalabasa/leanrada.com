@@ -27,6 +27,7 @@ export function setupFlowers(container) {
   function buildGrid() {
     flowers = [];
     grid = new Map();
+    const flowerParams = randomFlowerParams();
     const cols = Math.ceil(canvas.width / cellSize) + 1;
     const rowHeight = (cellSize * Math.sqrt(3)) / 2;
     const rows = Math.ceil(canvas.height / rowHeight) + 1;
@@ -34,11 +35,7 @@ export function setupFlowers(container) {
       for (let col = 0; col < cols; col++) {
         const x = col * cellSize + ((row % 2) * cellSize) / 2;
         const y = row * rowHeight;
-        const flower = new Flower(ctx, x, y, cellSize / 6, {
-          r: 240,
-          g: 60,
-          b: 0,
-        });
+        const flower = new Flower(ctx, x, y, cellSize / 6, flowerParams);
         flowers.push(flower);
         grid.set(`${col},${row}`, flower);
       }
@@ -76,21 +73,45 @@ class Flower {
   #y;
   #radius;
   #state = null;
+  #layer = 0;
 
-  #petalCount = 0;
+  #petals;
+  #sharpness;
+  #layers;
+  #layerScale;
+  #noisiness;
+  #innerFill;
+  #veinReach;
+  #color;
+
   #rotation = 0;
   #faceX = 0;
   #faceY = 0;
   #noise = null;
   #startAngle = 0;
   #drawAngle = 0;
-  #color;
 
-  constructor(ctx, x, y, radius, color) {
+  constructor(ctx, x, y, radius, {
+    petals = 5,
+    sharpness = 0.5,
+    layers = 4,
+    layerScale = 0.65,
+    noisiness = 0.5,
+    innerFill = 0.5,
+    veinReach = 0.5,
+    color = { h: 10, s: 90, l: 55 },
+  }) {
     this.#ctx = ctx;
     this.#x = x;
     this.#y = y;
     this.#radius = radius;
+    this.#petals = petals;
+    this.#sharpness = sharpness;
+    this.#layers = layers;
+    this.#layerScale = layerScale;
+    this.#noisiness = noisiness;
+    this.#innerFill = innerFill;
+    this.#veinReach = veinReach;
     this.#color = color;
   }
 
@@ -98,7 +119,6 @@ class Flower {
     if (this.#state) return;
     this.#state = "draw";
 
-    this.#petalCount = 5;
     this.#rotation = Math.random() * Math.PI * 2;
     this.#faceX = (Math.random() - 0.5) * 1.2;
     this.#faceY = (Math.random() - 0.5) * 1.2;
@@ -110,9 +130,13 @@ class Flower {
   update() {
     if (this.#state !== "draw") return;
 
-    const { r, g, b } = this.#color;
-    const colorStr = `rgb(${r},${g},${b})`;
-    const darkColorStr = `rgb(${Math.floor(r * 0.8)},${Math.floor(g * 0.8)},${Math.floor(b * 0.8)})`;
+    const { h, s, l } = this.#color;
+    const colorStr = `hsl(${h},${s}%,${l}%)`;
+    const darkColorStr = `hsl(${h},${s}%,${l * 0.8}%)`;
+
+    const { offsetX, offsetY } = this.#layerTransform();
+    const centerX = this.#x + offsetX;
+    const centerY = this.#y + offsetY;
 
     const endAngle = Math.min(
       this.#drawAngle + ANGLE_PER_UPDATE,
@@ -130,7 +154,7 @@ class Flower {
       const currBg = this.#getPoint(stepEnd, this.#getRadius(stepEnd) + 2);
       this.#ctx.fillStyle = "#fff";
       this.#ctx.beginPath();
-      this.#ctx.moveTo(this.#x, this.#y);
+      this.#ctx.moveTo(centerX, centerY);
       this.#ctx.lineTo(...prevBg);
       this.#ctx.lineTo(...currBg);
       this.#ctx.closePath();
@@ -154,7 +178,7 @@ class Flower {
 
       this.#ctx.fillStyle = "#fff";
       this.#ctx.beginPath();
-      this.#ctx.moveTo(this.#x, this.#y);
+      this.#ctx.moveTo(centerX, centerY);
       this.#ctx.lineTo(...prev);
       this.#ctx.lineTo(...curr);
       this.#ctx.closePath();
@@ -162,7 +186,7 @@ class Flower {
 
       this.#ctx.fillStyle = colorStr;
       this.#ctx.beginPath();
-      this.#ctx.moveTo(this.#x, this.#y);
+      this.#ctx.moveTo(centerX, centerY);
       this.#ctx.lineTo(...prevInner);
       this.#ctx.lineTo(...currInner);
       this.#ctx.closePath();
@@ -181,24 +205,39 @@ class Flower {
     }
 
     const veinStart = endAngle - ANGLE_PER_UPDATE;
-    this.#drawVeins(veinStart, 16, 0.75, colorStr);
-    this.#drawVeins(veinStart, 12, 0.3, darkColorStr);
+    this.#drawVeins(veinStart, 16, this.#veinReach * 1.5, colorStr);
+    this.#drawVeins(veinStart, 12, this.#veinReach * 0.6, darkColorStr);
 
     if (this.#drawAngle >= this.#startAngle + Math.PI * 2) {
-      this.#state = "done";
+      this.#layer++;
+      if (this.#layer >= this.#layers) {
+        this.#state = "done";
+      } else {
+        this.#rotation += Math.PI / this.#petals;
+        this.#drawAngle = this.#startAngle;
+      }
     }
+  }
+
+  #layerTransform() {
+    const scale = this.#layerScale ** this.#layer;
+    return {
+      scale,
+      offsetX: this.#faceX * this.#radius * (1 - scale),
+      offsetY: this.#faceY * this.#radius * (1 - scale),
+    };
   }
 
   // base petal lobe shapes
   #getPetal(angle) {
-    return (1 + Math.cos((angle - this.#rotation) * this.#petalCount)) / 2;
+    return (1 + Math.cos((angle - this.#rotation) * this.#petals)) / 2;
   }
 
   #getRadius(angle) {
     return (
       this.#radius *
-      this.#getPetal(angle) ** 0.05 *
-      (0.8 + this.#noise(angle) * 0.4)
+      this.#getPetal(angle) ** lerp(0.01, 1, this.#sharpness) *
+      (1 + (this.#noise(angle) - 0.5) * this.#noisiness)
     );
   }
 
@@ -208,47 +247,52 @@ class Flower {
     const petalAngle =
       this.#rotation +
       (Math.round(
-        ((angle - this.#rotation) * this.#petalCount) / (Math.PI * 2),
+        ((angle - this.#rotation) * this.#petals) / (Math.PI * 2),
       ) *
         (Math.PI * 2)) /
-        this.#petalCount;
+        this.#petals;
     const faceness = (1 + Math.cos(petalAngle - faceAngle)) / 2;
     const innerR =
       this.#radius *
-      Math.max(0, 0.2 - petal * 0.4 + faceness * 0.3) ** 0.5 *
-      (0.6 + this.#noise(angle) * 0.8);
+      Math.max(0, this.#innerFill * 0.4 - petal * 0.4 + faceness * 0.3) ** 0.5 *
+      (1 + (this.#noise(angle) - 0.5) * this.#noisiness);
     return Math.min(this.#getRadius(angle), innerR);
   }
 
   #getPoint(angle, r) {
+    const { scale, offsetX, offsetY } = this.#layerTransform();
+    const sr = r * scale;
     return [
-      this.#x + Math.cos(angle) * r + this.#faceX * r,
-      this.#y + Math.sin(angle) * r + this.#faceY * r,
+      this.#x + offsetX + Math.cos(angle) * sr + this.#faceX * sr,
+      this.#y + offsetY + Math.sin(angle) * sr + this.#faceY * sr,
     ];
   }
 
   #drawVeins(fromAngle, veinsPerPetal, reach, color) {
-    const veinStep = (Math.PI * 2) / (this.#petalCount * veinsPerPetal);
+    const veinStep = (Math.PI * 2) / (this.#petals * veinsPerPetal);
     const segments = 8;
-    const center = [this.#x, this.#y];
+    const { scale, offsetX, offsetY } = this.#layerTransform();
+    const centerX = this.#x + offsetX;
+    const centerY = this.#y + offsetY;
+    const center = [centerX, centerY];
     const halfWidth = 1.5;
     for (let a = fromAngle; a < this.#drawAngle; a += veinStep) {
       if (a + veinStep > this.#drawAngle) break;
-      const r = this.#getRadius(a);
+      const r = this.#getRadius(a) * scale;
       const ox = Math.cos(a) * r + this.#faceX * r;
       const oy = Math.sin(a) * r + this.#faceY * r;
       const len = Math.sqrt(ox * ox + oy * oy);
       const perpX = -oy / len;
       const perpY = ox / len;
-      const randomOffset = (this.#noise(a * 7) - 0.5) * 0.15 * this.#radius;
+      const randomOffset = (this.#noise(a * 7) - 0.5) * 0.15 * this.#radius * scale;
       const dir = len > 0 ? [ox / len, oy / len] : [0, 0];
       const tip = [
-        this.#x + ox * reach + dir[0] * randomOffset,
-        this.#y + oy * reach + dir[1] * randomOffset,
+        centerX + ox * reach + dir[0] * randomOffset,
+        centerY + oy * reach + dir[1] * randomOffset,
       ];
       const control = [
-        lerp(center[0], tip[0], 0.5) + this.#faceX * this.#radius * 0.8 * reach,
-        lerp(center[1], tip[1], 0.5) + this.#faceY * this.#radius * 0.8 * reach,
+        lerp(center[0], tip[0], 0.5) + this.#faceX * this.#radius * scale * 0.8 * reach,
+        lerp(center[1], tip[1], 0.5) + this.#faceY * this.#radius * scale * 0.8 * reach,
       ];
       const points = [];
       for (let s = 0; s <= segments; s++) {
@@ -271,6 +315,37 @@ class Flower {
       this.#ctx.fill();
     }
   }
+}
+
+function randomFlowerParams() {
+  const petals = clamp(Math.round(normalRandom(5, 2)), 3, 13);
+  const petalFraction = (petals - 3) / 10;
+  const sharpness = clamp(petalFraction * 0.8 + (Math.random() - 0.5) * 0.3, 0, 1);
+  const layers = clamp(Math.round(4 - petalFraction * 3 + (Math.random() - 0.5) * 2), 1, 4);
+  return {
+    petals,
+    sharpness,
+    layers,
+    layerScale: 0.6 + Math.random() * 0.15,
+    noisiness: 0.2 + Math.random() * 0.4,
+    innerFill: 0.2 + Math.random() * 0.6,
+    veinReach: 0.2 + Math.random() * 0.4,
+    color: {
+      h: 0 + Math.random() * 20,
+      s: 95,
+      l: 45,
+    },
+  };
+}
+
+function normalRandom(mean, stddev) {
+  const u = 1 - Math.random();
+  const v = Math.random();
+  return mean + stddev * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function lerp(a, b, t) {
