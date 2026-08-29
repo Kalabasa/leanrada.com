@@ -10,7 +10,7 @@ export function setupFlowers(container) {
   container.append(canvas);
 
   const ctx = canvas.getContext("2d");
-  const cellSize = 400;
+  const cellSize = 350;
   let flowers = [];
   let grid = new Map();
 
@@ -35,7 +35,7 @@ export function setupFlowers(container) {
       for (let col = 0; col < cols; col++) {
         const x = col * cellSize + ((row % 2) * cellSize) / 2;
         const y = row * rowHeight;
-        const flower = new Flower(ctx, x, y, cellSize / 6, flowerParams);
+        const flower = new Flower(ctx, x, y, cellSize / 5, flowerParams);
         flowers.push(flower);
         grid.set(`${col},${row}`, flower);
       }
@@ -92,16 +92,22 @@ class Flower {
   #startAngle = 0;
   #drawAngle = 0;
 
-  constructor(ctx, x, y, radius, {
-    petals = 5,
-    sharpness = 0.5,
-    layers = 4,
-    layerScale = 0.65,
-    noisiness = 0.5,
-    innerFill = 0.5,
-    veinReach = 0.5,
-    color = { h: 10, s: 90, l: 55 },
-  }) {
+  constructor(
+    ctx,
+    x,
+    y,
+    radius,
+    {
+      petals = 5,
+      sharpness = 0.5,
+      layers = 4,
+      layerScale = 0.65,
+      noisiness = 0.5,
+      innerFill = 0.5,
+      veinReach = 0.5,
+      color = { h: 10, s: 90, l: 55 },
+    },
+  ) {
     this.#ctx = ctx;
     this.#x = x;
     this.#y = y;
@@ -210,7 +216,7 @@ class Flower {
     }
 
     const veinStart = endAngle - ANGLE_PER_UPDATE;
-    this.#drawVeins(veinStart, 16, this.#veinReach * 1.5, colorStr);
+    this.#drawVeins(veinStart, 16, this.#veinReach, colorStr);
     this.#drawVeins(veinStart, 12, this.#veinReach * 0.6, darkColorStr);
 
     if (this.#drawAngle >= this.#startAngle + Math.PI * 2) {
@@ -219,7 +225,7 @@ class Flower {
         this.#stamens = this.#petals * this.#layers;
         this.#state = "stamen";
       } else {
-        this.#rotation += Math.PI / this.#petals;
+        this.#rotation += Math.PI / this.#petals + (Math.random() - 0.5) * 0.15;
         this.#drawAngle = this.#startAngle;
       }
     }
@@ -252,15 +258,13 @@ class Flower {
     const faceAngle = Math.atan2(this.#faceY, this.#faceX);
     const petalAngle =
       this.#rotation +
-      (Math.round(
-        ((angle - this.#rotation) * this.#petals) / (Math.PI * 2),
-      ) *
+      (Math.round(((angle - this.#rotation) * this.#petals) / (Math.PI * 2)) *
         (Math.PI * 2)) /
         this.#petals;
     const faceness = (1 + Math.cos(petalAngle - faceAngle)) / 2;
     const innerR =
       this.#radius *
-      Math.max(0, this.#innerFill * 0.4 - petal * 0.4 + faceness * 0.3) ** 0.5 *
+      Math.max(0, this.#innerFill * 0.6 - petal * 0.4 + faceness * 0.3) ** 0.5 *
       (1 + (this.#noise(angle) - 0.5) * this.#noisiness);
     return Math.min(this.#getRadius(angle), innerR);
   }
@@ -290,15 +294,18 @@ class Flower {
       const len = Math.sqrt(ox * ox + oy * oy);
       const perpX = -oy / len;
       const perpY = ox / len;
-      const randomOffset = (this.#noise(a * 7) - 0.5) * 0.15 * this.#radius * scale;
+      const randomOffset =
+        (this.#noise(a * 7) - 0.5) * 0.15 * this.#radius * scale;
       const dir = len > 0 ? [ox / len, oy / len] : [0, 0];
       const tip = [
         centerX + ox * reach + dir[0] * randomOffset,
         centerY + oy * reach + dir[1] * randomOffset,
       ];
       const control = [
-        lerp(center[0], tip[0], 0.5) + this.#faceX * this.#radius * scale * 0.8 * reach,
-        lerp(center[1], tip[1], 0.5) + this.#faceY * this.#radius * scale * 0.8 * reach,
+        lerp(center[0], tip[0], 0.5) +
+          this.#faceX * this.#radius * scale * 0.8 * reach,
+        lerp(center[1], tip[1], 0.5) +
+          this.#faceY * this.#radius * scale * 0.8 * reach,
       ];
       const points = [];
       for (let s = 0; s <= segments; s++) {
@@ -324,7 +331,7 @@ class Flower {
 
   #drawStamen() {
     const totalPetals = this.#petals * this.#layers;
-    const stamenLength = this.#radius * 0.3 / (1 + totalPetals * 0.02);
+    const stamenLength = (this.#radius * 0.4) / (1 + totalPetals * 0.1);
 
     const { offsetX, offsetY } = this.#layerTransform();
 
@@ -337,12 +344,11 @@ class Flower {
     const stepLen = stamenLength / steps;
     let px = centerX;
     let py = centerY;
-    const faceBias = 0.3;
 
     for (let step = 0; step < steps; step++) {
       const angle = Math.random() * Math.PI * 2;
-      const nx = px + Math.cos(angle) * stepLen + this.#faceX * stepLen * faceBias;
-      const ny = py + Math.sin(angle) * stepLen + this.#faceY * stepLen * faceBias;
+      const nx = px + Math.cos(angle) * stepLen * 0.3 + this.#faceX * stepLen;
+      const ny = py + Math.sin(angle) * stepLen * 0.3 + this.#faceY * stepLen;
 
       this.#ctx.strokeStyle = outlineColor;
       this.#ctx.lineWidth = 3;
@@ -368,7 +374,13 @@ class Flower {
     this.#ctx.fill();
     this.#ctx.fillStyle = "#fff";
     this.#ctx.beginPath();
-    this.#ctx.arc(px + (Math.random() - 0.5) * 3, py + (Math.random() - 0.5) * 3, 1.5, 0, Math.PI * 2);
+    this.#ctx.arc(
+      px + (Math.random() - 0.5) * 4,
+      py + (Math.random() - 0.5) * 4,
+      1.5,
+      0,
+      Math.PI * 2,
+    );
     this.#ctx.fill();
 
     this.#stamens--;
@@ -381,16 +393,31 @@ class Flower {
 function randomFlowerParams() {
   const petals = clamp(Math.round(normalRandom(5, 2)), 3, 13);
   const petalFraction = (petals - 3) / 10;
-  const sharpness = clamp(0.2 + petalFraction * 0.8 + (Math.random() - 0.5) * 0.3, 0, 1);
-  const layers = clamp(Math.round(3 - petalFraction * 3 + (Math.random() - 0.5) * 2), 1, 4);
+  const sharpness =
+    clamp(0.2 + petalFraction * 0.2 + Math.random() * 0.15, 0, 1) ** 2;
+  const layers = clamp(
+    Math.round(2 - petalFraction * 3 + Math.random() * 1),
+    1,
+    4,
+  );
+  const innerFill = clamp(
+    0.1 + layers * 0.1 - sharpness * 0.2 + Math.random() * 0.2,
+    0,
+    1,
+  );
+  const layerScale = clamp(
+    0.65 - sharpness * 0.2 + Math.random() * 0.15,
+    0.5,
+    0.9,
+  );
   return {
     petals,
     sharpness,
     layers,
-    layerScale: 0.6 + Math.random() * 0.15,
-    noisiness: 0.2 + Math.random() * 0.4,
-    innerFill: 0.2 + Math.random() * 0.6,
-    veinReach: 0.2 + Math.random() * 0.4,
+    layerScale,
+    noisiness: 0.2 + Math.random() * 0.3,
+    innerFill,
+    veinReach: 0.5 + Math.random() * 0.4,
     color: {
       h: 0 + Math.random() * 20,
       s: 95,
@@ -402,7 +429,9 @@ function randomFlowerParams() {
 function normalRandom(mean, stddev) {
   const u = 1 - Math.random();
   const v = Math.random();
-  return mean + stddev * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  return (
+    mean + stddev * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
+  );
 }
 
 function clamp(value, min, max) {
