@@ -12,6 +12,7 @@
   #pattern {
     position: absolute;
     inset: 0;
+    overflow: hidden;
   }
 
   :root.ready .dragHandle {
@@ -23,6 +24,11 @@
     clip-path: path("M0,0 C0,40 0,40 100,50 C0,60 0,60 0,100 Z");
     transition: 50ms ease-in;
     transition-property: scale, background-color;
+    z-index: 1;
+  }
+
+  .flowers {
+    z-index: 2;
   }
 
   #controls {
@@ -74,7 +80,12 @@
   </label>
 </div>
 
-<script>
+<script type="module">
+  import("./flower.mjs").then(({ setupFlowers }) => {
+    const flowers = setupFlowers(pattern);
+    flowers.classList.add("flowers");
+  });
+
   const pattern = document.getElementById("pattern");
   const hueInput = document.getElementById("hue");
   const darkInput = document.getElementById("dark");
@@ -152,7 +163,8 @@
         },
         selectedEdge.control,
       );
-      selectedEdge.x = drag.anchorX + selectedEdge.dir * config[selectedEdge.control];
+      selectedEdge.x =
+        drag.anchorX + selectedEdge.dir * config[selectedEdge.control];
       selectedEdge.segmentType.size = config[selectedEdge.control];
     } else {
       selectedEdge = selectSegmentEdge(event.clientX);
@@ -175,7 +187,8 @@
       anchorX: selectedEdge.x - selectedEdge.dir * config[selectedEdge.control],
       grabOffset: event.clientX - selectedEdge.x,
     };
-    config.shift = selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
+    config.shift =
+      selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
     config.offset = drag.anchorX;
     render(config);
   });
