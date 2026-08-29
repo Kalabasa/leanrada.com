@@ -1,7 +1,7 @@
 import { createNoise2D } from "./lib/simplex-noise.mjs";
 
 const UPDATE_INTERVAL_MS = 25;
-const ANGLE_PER_UPDATE = 0.3;
+const ANGLE_PER_UPDATE = 0.6;
 const CLEAR_MS = 6000;
 
 export function setupFlowers(container) {
@@ -11,7 +11,7 @@ export function setupFlowers(container) {
   container.append(canvas);
 
   const ctx = canvas.getContext("2d");
-  const cellSize = 350;
+  const cellSize = 300;
   let flowers = [];
   let grid = new Map();
 
@@ -105,6 +105,8 @@ class Flower {
   #noise = null;
   #startAngle = 0;
   #drawAngle = 0;
+  #leaves = 0;
+  #leafDist = 0;
 
   constructor(
     ctx,
@@ -135,44 +137,65 @@ class Flower {
     this.#innerFill = innerFill;
     this.#veinReach = veinReach;
     this.#color = color;
+    this.#stamens = this.#petals * this.#layers;
+    this.#leaves = 3;
   }
 
   bloom() {
     this.#state = "draw";
 
     this.#rotation = Math.random() * Math.PI * 2;
-    this.#faceX = (Math.random() - 0.5) * 1.2;
-    this.#faceY = (Math.random() - 0.5) * 1.2;
+    this.#faceX = (Math.random() - 0.5) * 1.3;
+    this.#faceY = (Math.random() - 0.5) * 1.3;
     this.#noise = createNoise();
     this.#startAngle = Math.atan2(this.#faceY, this.#faceX) + Math.PI;
     this.#drawAngle = this.#startAngle;
 
-    this.#ctx.fillStyle = "#fff";
+    this.#ctx.globalCompositeOperation = "destination-out";
     this.#ctx.beginPath();
     this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
     this.#ctx.fill();
+    this.#ctx.globalCompositeOperation = "source-over";
   }
 
   async clear() {
     this.#state = "clear";
-    const fadeSteps = 30;
+
+    this.#ctx.globalCompositeOperation = "destination-over";
+    this.#ctx.fillStyle = `rgba(255,255,255)`;
+    this.#ctx.beginPath();
+    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2 + 1, 0, Math.PI * 2);
+    this.#ctx.fill();
+    this.#ctx.globalCompositeOperation = "source-over";
+
+    const fadeSteps = 45;
+    const lighten = Math.ceil(255 / fadeSteps);
     for (let i = 0; i < fadeSteps; i++) {
-      this.#ctx.fillStyle = "rgba(255,255,255,0.1)";
+      this.#ctx.globalCompositeOperation = "lighter";
+      this.#ctx.fillStyle = `rgba(${lighten},${lighten},${lighten})`;
       this.#ctx.beginPath();
-      this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
+      this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2 - 1, 0, Math.PI * 2);
       this.#ctx.fill();
+      this.#ctx.globalCompositeOperation = "source-over";
       await new Promise((r) => setTimeout(r, UPDATE_INTERVAL_MS));
     }
-    this.#ctx.fillStyle = "#fff";
+
+    this.#ctx.globalCompositeOperation = "destination-out";
     this.#ctx.beginPath();
     this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
     this.#ctx.fill();
+    this.#ctx.globalCompositeOperation = "source-over";
+
     this.#state = null;
   }
 
   update() {
     if (this.#state === "stamen") {
       this.#drawStamen();
+      return;
+    }
+    if (this.#state === "leaf") {
+      this.#drawLeaf();
       return;
     }
     if (this.#state !== "draw") return;
@@ -258,10 +281,9 @@ class Flower {
     if (this.#drawAngle >= this.#startAngle + Math.PI * 2) {
       this.#layer++;
       if (this.#layer >= this.#layers) {
-        this.#stamens = this.#petals * this.#layers;
         this.#state = "stamen";
       } else {
-        this.#rotation += Math.PI / this.#petals + (Math.random() - 0.5) * 0.15;
+        this.#rotation += Math.PI / this.#petals + (Math.random() - 0.5) * 0.2;
         this.#drawAngle = this.#startAngle;
       }
     }
@@ -271,8 +293,8 @@ class Flower {
     const scale = this.#layerScale ** this.#layer;
     return {
       scale,
-      offsetX: this.#faceX * this.#radius * (1 - scale),
-      offsetY: this.#faceY * this.#radius * (1 - scale),
+      offsetX: this.#faceX * this.#radius * (1 - scale) * 0.85,
+      offsetY: this.#faceY * this.#radius * (1 - scale) * 0.85,
     };
   }
 
@@ -285,7 +307,7 @@ class Flower {
     return (
       this.#radius *
       this.#getPetal(angle) ** lerp(0.01, 1, this.#sharpness) *
-      (1 + (this.#noise(angle) - 0.5) * this.#noisiness)
+      (1 + (this.#noise(angle, this.#layer) - 0.5) * this.#noisiness)
     );
   }
 
@@ -301,7 +323,7 @@ class Flower {
     const innerR =
       this.#radius *
       Math.max(0, this.#innerFill * 0.6 - petal * 0.4 + faceness * 0.3) ** 0.5 *
-      (1 + (this.#noise(angle) - 0.5) * this.#noisiness);
+      (1 + (this.#noise(angle, this.#layer) - 0.5) * this.#noisiness);
     return Math.min(this.#getRadius(angle), innerR);
   }
 
@@ -331,7 +353,7 @@ class Flower {
       const perpX = -oy / len;
       const perpY = ox / len;
       const randomOffset =
-        (this.#noise(a * 7) - 0.5) * 0.15 * this.#radius * scale;
+        (this.#noise(a * 7, this.#layer) - 0.5) * 0.15 * this.#radius * scale;
       const dir = len > 0 ? [ox / len, oy / len] : [0, 0];
       const tip = [
         centerX + ox * reach + dir[0] * randomOffset,
@@ -421,20 +443,43 @@ class Flower {
 
     this.#stamens--;
     if (this.#stamens <= 0) {
-      this.#state = "done";
+      this.#state = "leaf";
+    }
+  }
+
+  #drawLeaf() {
+    const angle = this.#startAngle + this.#leaves * 2.4;
+    const stepLen = 10;
+    const length = this.#cellSize / 2;
+    this.#leafDist += stepLen;
+    const px = this.#x + Math.cos(angle) * this.#leafDist;
+    const py = this.#y + Math.sin(angle) * this.#leafDist;
+    this.#ctx.globalCompositeOperation = "destination-over";
+    this.#ctx.fillStyle = "hsl(120,50%,40%)";
+    this.#ctx.beginPath();
+    this.#ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+    this.#ctx.fill();
+    this.#ctx.globalCompositeOperation = "source-over";
+
+    if (this.#leafDist >= length) {
+      this.#leafDist = 0;
+      this.#leaves--;
+      if (this.#leaves <= 0) {
+        this.#state = "done";
+      }
     }
   }
 }
 
 function randomFlowerParams() {
-  const petals = clamp(Math.round(normalRandom(5, 2)), 3, 13);
+  const petals = clamp(Math.round(normalRandom(6, 3)), 2, 13);
   const petalFraction = (petals - 3) / 10;
   const sharpness =
     clamp(0.2 + petalFraction * 0.2 + Math.random() * 0.15, 0, 1) ** 2;
   const layers = clamp(
-    Math.round(2 - petalFraction * 3 + Math.random() * 1),
+    Math.round(1 - petalFraction * 1.5 + Math.random() * 4),
     1,
-    4,
+    5,
   );
   const innerFill = clamp(
     0.1 + layers * 0.1 - sharpness * 0.2 + Math.random() * 0.2,
@@ -442,9 +487,9 @@ function randomFlowerParams() {
     1,
   );
   const layerScale = clamp(
-    0.65 - sharpness * 0.2 + Math.random() * 0.15,
+    0.65 - sharpness * 0.2 + layers * 0.02 + Math.random() * 0.15,
     0.5,
-    0.9,
+    0.85,
   );
   return {
     petals,
@@ -489,12 +534,13 @@ function bezier(p0, p1, p2, t) {
 function createNoise(freq = 0.5, octaves = 8) {
   const noise2d = createNoise2D();
   const maxAmp = 2 * (1 - Math.pow(0.5, octaves));
-  return (angle) => {
+  return (angle, layer) => {
     let value = 0;
     let amp = 1;
     let f = freq;
     for (let i = 0; i < octaves; i++) {
-      value += noise2d(Math.cos(angle) * f, Math.sin(angle) * f) * amp;
+      value +=
+        noise2d(Math.cos(angle) * f, Math.sin(angle) * f + layer * 100) * amp;
       amp *= 0.5;
       f *= 2;
     }

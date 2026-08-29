@@ -32,12 +32,24 @@
     z-index: 2;
   }
 
-  .layer3 {
+  .fabric {
     position: absolute;
     inset: 0;
     z-index: 3;
+    mix-blend-mode: multiply;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        rgba(0, 0, 0, 0.04) 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 0, 0, 0.03) 3px
+      );
+    filter: url(#noise);
   }
-
 
   #controls {
     position: fixed;
@@ -68,8 +80,21 @@
   }
 </style>
 
+<svg width="0" height="0">
+  <filter id="noise">
+    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="turb" />
+    <feColorMatrix in="turb" type="saturate" values="0" result="gray" />
+    <feComponentTransfer in="gray" result="noise">
+      <feFuncR type="linear" slope="0.5" intercept="0.6" />
+      <feFuncG type="linear" slope="0.5" intercept="0.6" />
+      <feFuncB type="linear" slope="0.5" intercept="0.6" />
+    </feComponentTransfer>
+    <feBlend in="SourceGraphic" in2="noise" mode="multiply" />
+  </filter>
+</svg>
+
 <div id="pattern">
-  <div class="layer3"></div>
+  <div class="fabric"></div>
 </div>
 
 <div id="controls">
