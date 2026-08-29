@@ -74,6 +74,7 @@ class Flower {
   #radius;
   #state = null;
   #layer = 0;
+  #stamens = 0;
 
   #petals;
   #sharpness;
@@ -128,6 +129,10 @@ class Flower {
   }
 
   update() {
+    if (this.#state === "stamen") {
+      this.#drawStamen();
+      return;
+    }
     if (this.#state !== "draw") return;
 
     const { h, s, l } = this.#color;
@@ -211,7 +216,8 @@ class Flower {
     if (this.#drawAngle >= this.#startAngle + Math.PI * 2) {
       this.#layer++;
       if (this.#layer >= this.#layers) {
-        this.#state = "done";
+        this.#stamens = this.#petals * this.#layers;
+        this.#state = "stamen";
       } else {
         this.#rotation += Math.PI / this.#petals;
         this.#drawAngle = this.#startAngle;
@@ -315,13 +321,68 @@ class Flower {
       this.#ctx.fill();
     }
   }
+
+  #drawStamen() {
+    const totalPetals = this.#petals * this.#layers;
+    const stamenLength = this.#radius * 0.3 / (1 + totalPetals * 0.02);
+
+    const { offsetX, offsetY } = this.#layerTransform();
+
+    const centerX = this.#x + offsetX;
+    const centerY = this.#y + offsetY;
+    const { h, s, l } = this.#color;
+    const outlineColor = `hsl(${h},${s}%,${l}%)`;
+
+    const steps = 6;
+    const stepLen = stamenLength / steps;
+    let px = centerX;
+    let py = centerY;
+    const faceBias = 0.3;
+
+    for (let step = 0; step < steps; step++) {
+      const angle = Math.random() * Math.PI * 2;
+      const nx = px + Math.cos(angle) * stepLen + this.#faceX * stepLen * faceBias;
+      const ny = py + Math.sin(angle) * stepLen + this.#faceY * stepLen * faceBias;
+
+      this.#ctx.strokeStyle = outlineColor;
+      this.#ctx.lineWidth = 3;
+      this.#ctx.beginPath();
+      this.#ctx.moveTo(px, py);
+      this.#ctx.lineTo(nx, ny);
+      this.#ctx.stroke();
+
+      this.#ctx.strokeStyle = "#fff";
+      this.#ctx.lineWidth = 1.5;
+      this.#ctx.beginPath();
+      this.#ctx.moveTo(px, py);
+      this.#ctx.lineTo(nx, ny);
+      this.#ctx.stroke();
+
+      px = nx;
+      py = ny;
+    }
+
+    this.#ctx.fillStyle = outlineColor;
+    this.#ctx.beginPath();
+    this.#ctx.arc(px, py, 3, 0, Math.PI * 2);
+    this.#ctx.fill();
+    this.#ctx.fillStyle = "#fff";
+    this.#ctx.beginPath();
+    this.#ctx.arc(px + (Math.random() - 0.5) * 3, py + (Math.random() - 0.5) * 3, 1.5, 0, Math.PI * 2);
+    this.#ctx.fill();
+
+    this.#stamens--;
+    if (this.#stamens <= 0) {
+      this.#state = "done";
+    }
+  }
 }
 
 function randomFlowerParams() {
   const petals = clamp(Math.round(normalRandom(5, 2)), 3, 13);
   const petalFraction = (petals - 3) / 10;
-  const sharpness = clamp(petalFraction * 0.8 + (Math.random() - 0.5) * 0.3, 0, 1);
-  const layers = clamp(Math.round(4 - petalFraction * 3 + (Math.random() - 0.5) * 2), 1, 4);
+  const sharpness = clamp(0.2 + petalFraction * 0.8 + (Math.random() - 0.5) * 0.3, 0, 1);
+  const layers = clamp(Math.round(3 - petalFraction * 3 + (Math.random() - 0.5) * 2), 1, 4);
   return {
     petals,
     sharpness,
