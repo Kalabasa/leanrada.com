@@ -2,6 +2,7 @@ import { createNoise2D } from "./lib/simplex-noise.mjs";
 
 const UPDATE_INTERVAL_MS = 25;
 const ANGLE_PER_UPDATE = 0.3;
+const CLEAR_MS = 6000;
 
 export function setupFlowers(container) {
   const canvas = document.createElement("canvas");
@@ -25,28 +26,24 @@ export function setupFlowers(container) {
   }
 
   function buildGrid() {
+    for (const flower of flowers) {
+      flower.clear();
+    }
     flowers = [];
     grid = new Map();
-    const flowerParams = randomFlowerParams();
-    const cols = Math.ceil(canvas.width / cellSize) + 1;
-    const rowHeight = (cellSize * Math.sqrt(3)) / 2;
-    const rows = Math.ceil(canvas.height / rowHeight) + 1;
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const x = col * cellSize + ((row % 2) * cellSize) / 2;
-        const y = row * rowHeight;
-        const flower = new Flower(ctx, x, y, cellSize / 5, flowerParams);
-        flowers.push(flower);
-        grid.set(`${col},${row}`, flower);
-      }
-    }
   }
 
-  function findNearest(px, py) {
+  function findNearestKey(px, py) {
     const rowHeight = (cellSize * Math.sqrt(3)) / 2;
     const row = Math.round(py / rowHeight);
     const col = Math.round((px - ((row % 2) * cellSize) / 2) / cellSize);
-    return grid.get(`${col},${row}`);
+    return `${col},${row}`;
+  }
+
+  function cellPosition(key) {
+    const [col, row] = key.split(",").map(Number);
+    const rowHeight = (cellSize * Math.sqrt(3)) / 2;
+    return [col * cellSize + ((row % 2) * cellSize) / 2, row * rowHeight];
   }
 
   function tick() {
@@ -55,13 +52,29 @@ export function setupFlowers(container) {
     }
   }
 
+  let flowerParams = randomFlowerParams();
+  setInterval(() => {
+    flowerParams = randomFlowerParams();
+  }, CLEAR_MS * 2);
+
   resize();
   new ResizeObserver(resize).observe(container);
   setInterval(tick, UPDATE_INTERVAL_MS);
 
   container.addEventListener("pointermove", (event) => {
-    const flower = findNearest(event.clientX, event.clientY);
-    if (flower) flower.bloom();
+    const key = findNearestKey(event.clientX, event.clientY);
+    if (grid.has(key)) return;
+    const [x, y] = cellPosition(key);
+    const flower = new Flower(ctx, x, y, cellSize, flowerParams);
+    flower.bloom();
+    flowers.push(flower);
+    grid.set(key, flower);
+    setTimeout(async () => {
+      await flower.clear();
+      grid.delete(key);
+      const idx = flowers.indexOf(flower);
+      if (idx >= 0) flowers.splice(idx, 1);
+    }, CLEAR_MS);
   });
 
   return canvas;
@@ -71,6 +84,7 @@ class Flower {
   #ctx;
   #x;
   #y;
+  #cellSize;
   #radius;
   #state = null;
   #layer = 0;
@@ -96,7 +110,7 @@ class Flower {
     ctx,
     x,
     y,
-    radius,
+    cellSize,
     {
       petals = 5,
       sharpness = 0.5,
@@ -111,7 +125,8 @@ class Flower {
     this.#ctx = ctx;
     this.#x = x;
     this.#y = y;
-    this.#radius = radius;
+    this.#cellSize = cellSize;
+    this.#radius = cellSize / 5;
     this.#petals = petals;
     this.#sharpness = sharpness;
     this.#layers = layers;
@@ -123,7 +138,6 @@ class Flower {
   }
 
   bloom() {
-    if (this.#state) return;
     this.#state = "draw";
 
     this.#rotation = Math.random() * Math.PI * 2;
@@ -132,6 +146,28 @@ class Flower {
     this.#noise = createNoise();
     this.#startAngle = Math.atan2(this.#faceY, this.#faceX) + Math.PI;
     this.#drawAngle = this.#startAngle;
+
+    this.#ctx.fillStyle = "#fff";
+    this.#ctx.beginPath();
+    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
+    this.#ctx.fill();
+  }
+
+  async clear() {
+    this.#state = "clear";
+    const fadeSteps = 30;
+    for (let i = 0; i < fadeSteps; i++) {
+      this.#ctx.fillStyle = "rgba(255,255,255,0.1)";
+      this.#ctx.beginPath();
+      this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
+      this.#ctx.fill();
+      await new Promise((r) => setTimeout(r, UPDATE_INTERVAL_MS));
+    }
+    this.#ctx.fillStyle = "#fff";
+    this.#ctx.beginPath();
+    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
+    this.#ctx.fill();
+    this.#state = null;
   }
 
   update() {
