@@ -42,6 +42,26 @@
       repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03) 3px);
     filter: url(#noise);
   }
+
+  #hueSelector {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: calc(infinity);
+
+    button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px #0006;
+      cursor: pointer;
+    }
+  }
 </style>
 
 <svg width="0" height="0">
@@ -67,16 +87,17 @@
   <div class="fabric"></div>
 </div>
 
+<div id="hueSelector"></div>
+
 <script type="module">
   import("./flower.mjs").then(({ setupFlowers }) => {
     const flowers = setupFlowers(pattern);
     flowers.classList.add("flowers");
   });
 
-  const pattern = document.getElementById("pattern");
-
+  const hues = [350, 150, 270];
   const config = {
-    hue: 160,
+    hue: hues[1],
     dark: 64,
     light: 96,
     line: 5,
@@ -84,6 +105,18 @@
     shift: 0,
   };
 
+  const hueSelector = document.getElementById("hueSelector");
+  for (const hue of hues) {
+    const circle = document.createElement("button");
+    circle.style.backgroundColor = renderColor(hue, true);
+    circle.onclick = () => {
+      config.hue = hue;
+      render(config);
+    };
+    hueSelector.append(circle);
+  }
+
+  const pattern = document.getElementById("pattern");
   animateEntrance(0);
   function animateEntrance(t) {
     // prettier-ignore
@@ -337,6 +370,6 @@
   }
 
   function renderColor(hue, dark) {
-    return dark ? `oklch(90% 20% ${hue}deg)` : "#fff";
+    return dark ? `oklch(90% 30% ${hue}deg)` : "#fff";
   }
 </script>
