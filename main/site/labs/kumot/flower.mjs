@@ -313,7 +313,7 @@ class Flower {
 
   #getInner(angle) {
     const petal = this.#getPetal(angle);
-    const faceAngle = Math.atan2(this.#faceY, this.#faceX);
+    const faceAngle = Math.atan2(-this.#faceY, -this.#faceX);
     const petalAngle =
       this.#rotation +
       (Math.round(((angle - this.#rotation) * this.#petals) / (Math.PI * 2)) *
@@ -322,7 +322,17 @@ class Flower {
     const faceness = (1 + Math.cos(petalAngle - faceAngle)) / 2;
     const innerR =
       this.#radius *
-      Math.max(0, this.#innerFill * 0.6 - petal * 0.4 + faceness * 0.3) ** 0.5 *
+      Math.max(
+        0,
+        this.#innerFill * 0.7 -
+          petal * 0.4 +
+          faceness *
+            (this.#layer < this.#layers - 1 ? 1 : 0) *
+            this.#layers *
+            this.#layerScale *
+            0.2,
+      ) **
+        0.5 *
       (1 + (this.#noise(angle, this.#layer) - 0.5) * this.#noisiness);
     return Math.min(this.#getRadius(angle), innerR);
   }
@@ -389,7 +399,7 @@ class Flower {
 
   #drawStamen() {
     const totalPetals = this.#petals * this.#layers;
-    const stamenLength = (this.#radius * 0.4) / (1 + totalPetals * 0.1);
+    const stamenLength = (this.#radius * 0.2) ** 2 / (1 + totalPetals * 0.4);
 
     const { offsetX, offsetY } = this.#layerTransform();
 
@@ -472,10 +482,10 @@ class Flower {
 }
 
 function randomFlowerParams() {
-  const petals = clamp(Math.round(normalRandom(6, 3)), 2, 13);
+  const petals = clamp(Math.round(normalRandom(6.5, 3)), 2, 13);
   const petalFraction = (petals - 3) / 10;
   const sharpness =
-    clamp(0.2 + petalFraction * 0.2 + Math.random() * 0.15, 0, 1) ** 2;
+    clamp(0.2 + petalFraction * 0.1 + Math.random() * 0.25, 0, 1) ** 2;
   const layers = clamp(
     Math.round(1 - petalFraction * 1.5 + Math.random() * 4),
     1,
@@ -498,9 +508,9 @@ function randomFlowerParams() {
     layerScale,
     noisiness: 0.2 + Math.random() * 0.3,
     innerFill,
-    veinReach: 0.5 + Math.random() * 0.4,
+    veinReach: 0.6 + Math.random() * 0.4,
     color: {
-      h: 0 + Math.random() * 20,
+      h: -10 + Math.random() * 40,
       s: 95,
       l: 45,
     },
