@@ -138,7 +138,7 @@ class Flower {
     this.#veinReach = veinReach;
     this.#color = color;
     this.#stamens = this.#petals * this.#layers;
-    this.#leaves = 3;
+    this.#leaves = 2 + Math.floor(Math.random() * 3);
   }
 
   bloom() {
@@ -459,16 +459,55 @@ class Flower {
 
   #drawLeaf() {
     const angle = this.#startAngle + this.#leaves * 2.4;
-    const stepLen = 10;
-    const length = this.#cellSize / 2;
-    this.#leafDist += stepLen;
-    const px = this.#x + Math.cos(angle) * this.#leafDist;
-    const py = this.#y + Math.sin(angle) * this.#leafDist;
+    const length = this.#radius * 1.4;
+
+    const prevDist = this.#leafDist;
+    this.#leafDist += 4;
+    const prevT = prevDist / length;
+    const t = this.#leafDist / length;
+
+    const width = length * (0.5 - this.#sharpness ** 0.25 * 0.45);
+
+    const biasX = Math.cos(angle) - this.#faceX * 1.1;
+    const biasY = Math.sin(angle) - this.#faceY * 1.1;
+    const biasLen = Math.hypot(biasX, biasY);
+    const dirX = biasX / biasLen;
+    const dirY = biasY / biasLen;
+
+    const base = [
+      this.#x - this.#faceX * this.#radius * 0.4,
+      this.#y - this.#faceY * this.#radius * 0.4,
+    ];
+    const tip = [this.#x + dirX * length, this.#y + dirY * length];
+
+    const mid = [this.#x + dirX * length * 0.5, this.#y + dirY * length * 0.5];
+    const leftControl = [
+      mid[0] + -dirY * width + this.#faceX * width * 0.6,
+      mid[1] + dirX * width + this.#faceY * width * 0.6,
+    ];
+    const rightControl = [
+      mid[0] - -dirY * width + this.#faceX * width * 0.6,
+      mid[1] - dirX * width + this.#faceY * width * 0.6,
+    ];
+
+    const getCurvePoint = (control, curveT) => {
+      const [px, py] = bezier(base, control, tip, curveT);
+      const nv =
+        (this.#noise(curveT * 3 + this.#leaves, -1) - 0.5) *
+        length *
+        (0.01 + this.#noisiness * 0.04);
+      return [px - dirY * nv, py + dirX * nv];
+    };
+
     this.#ctx.globalCompositeOperation = "destination-over";
-    this.#ctx.fillStyle = "hsl(120,50%,40%)";
+    this.#ctx.strokeStyle = "hsl(120,50%,40%)";
+    this.#ctx.lineWidth = 3;
     this.#ctx.beginPath();
-    this.#ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-    this.#ctx.fill();
+    this.#ctx.moveTo(...getCurvePoint(leftControl, prevT));
+    this.#ctx.lineTo(...getCurvePoint(leftControl, t));
+    this.#ctx.moveTo(...getCurvePoint(rightControl, prevT));
+    this.#ctx.lineTo(...getCurvePoint(rightControl, t));
+    this.#ctx.stroke();
     this.#ctx.globalCompositeOperation = "source-over";
 
     if (this.#leafDist >= length) {
