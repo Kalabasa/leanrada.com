@@ -38,51 +38,21 @@
     z-index: 3;
     mix-blend-mode: multiply;
     background-image:
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        rgba(0, 0, 0, 0.04) 3px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        rgba(0, 0, 0, 0.03) 3px
-      );
+      repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.04) 3px),
+      repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03) 3px);
     filter: url(#noise);
-  }
-
-  #controls {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 200px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    background: #1a1a1e;
-    color: #ccc;
-    border-radius: 8px;
-    box-shadow: 0 8px 32px #0008;
-    transition: opacity 0.3s;
-    z-index: calc(infinity);
-
-    :root:not(.ready) & {
-      opacity: 0;
-    }
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
   }
 </style>
 
 <svg width="0" height="0">
   <filter id="noise">
-    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="turb" />
+    <feTurbulence
+      type="fractalNoise"
+      baseFrequency="0.65"
+      numOctaves="3"
+      stitchTiles="stitch"
+      result="turb"
+    />
     <feColorMatrix in="turb" type="saturate" values="0" result="gray" />
     <feComponentTransfer in="gray" result="noise">
       <feFuncR type="linear" slope="0.5" intercept="0.6" />
@@ -97,25 +67,6 @@
   <div class="fabric"></div>
 </div>
 
-<div id="controls">
-  <label>
-    Dark
-    <input type="range" id="dark" min="0" max="200" value="64" step="0.1" />
-  </label>
-  <label>
-    Light
-    <input type="range" id="light" min="0" max="200" value="96" step="0.1" />
-  </label>
-  <label>
-    Line
-    <input type="range" id="line" min="0" max="30" value="5" step="0.1" />
-  </label>
-  <label>
-    Hue
-    <input type="range" id="hue" min="0" max="360" value="160" step="1" />
-  </label>
-</div>
-
 <script type="module">
   import("./flower.mjs").then(({ setupFlowers }) => {
     const flowers = setupFlowers(pattern);
@@ -123,13 +74,12 @@
   });
 
   const pattern = document.getElementById("pattern");
-  const hueInput = document.getElementById("hue");
-  const darkInput = document.getElementById("dark");
-  const lightInput = document.getElementById("light");
-  const lineInput = document.getElementById("line");
 
   const config = {
-    ...readInputs(),
+    hue: 160,
+    dark: 64,
+    light: 96,
+    line: 5,
     offset: window.innerWidth / 2,
     shift: 0,
   };
@@ -153,36 +103,21 @@
     }
   }
 
-  function readInputs() {
-    return {
-      hue: Number.parseFloat(hueInput.value),
-      dark: Number.parseFloat(darkInput.value),
-      light: Number.parseFloat(lightInput.value),
-      line: Number.parseFloat(lineInput.value),
-    };
-  }
-
   function renderPatternSegmentTypes(values) {
     const types = [
-      { dark: true, size: values.dark, controlRight: darkInput.id },
-      { dark: false, size: values.light, controlLeft: lightInput.id },
-      { dark: true, size: values.line, controlLeft: lineInput.id },
+      { dark: true, size: values.dark, controlRight: "dark" },
+      { dark: false, size: values.light, controlLeft: "light" },
+      { dark: true, size: values.line, controlLeft: "line" },
       { dark: false, size: values.line * 2 },
-      { dark: true, size: values.line, controlRight: lineInput.id },
-      { dark: false, size: values.light, controlRight: lightInput.id },
-      { dark: true, size: values.dark, controlLeft: darkInput.id },
-      { dark: false, size: values.line, controlBoth: lineInput.id },
+      { dark: true, size: values.line, controlRight: "line" },
+      { dark: false, size: values.light, controlRight: "light" },
+      { dark: true, size: values.dark, controlLeft: "dark" },
+      { dark: false, size: values.line, controlBoth: "line" },
     ];
     return types.map((_, i) => {
       const index = (values.shift + i) % types.length;
       return { ...types[index], index };
     });
-  }
-
-  for (const input of document.querySelectorAll("#controls input")) {
-    input.oninput = () => {
-      updateConfig({ ...config, ...readInputs() }, input.id);
-    };
   }
 
   let dragHandle = null;
@@ -226,7 +161,7 @@
     config.shift =
       selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
     config.offset = drag.anchorX;
-    render(config);
+    showDragHandle(selectedEdge, event.clientX, event.clientY);
   });
 
   pattern.addEventListener("pointerup", (event) => {
@@ -235,7 +170,11 @@
   });
 
   function showDragHandle(edge, pointerX, pointerY) {
-    pattern.style.cursor = edge.dir < 0 ? "w-resize" : "e-resize";
+    pattern.style.cursor = drag
+      ? "grabbing"
+      : edge.dir < 0
+        ? "w-resize"
+        : "e-resize";
     if (!dragHandle) {
       dragHandle = document.createElement("div");
       dragHandle.classList.add("dragHandle");
@@ -359,12 +298,9 @@
   }
 
   function updateConfig(values, controlID) {
-    values.dark = Math.min(darkInput.max, Math.max(darkInput.min, values.dark));
-    values.light = Math.min(
-      lightInput.max,
-      Math.max(lightInput.min, values.light),
-    );
-    values.line = Math.min(lineInput.max, Math.max(lineInput.min, values.line));
+    values.dark = Math.min(200, Math.max(0, values.dark));
+    values.light = Math.min(200, Math.max(0, values.light));
+    values.line = Math.min(30, Math.max(0, values.line));
 
     for (const key of Object.keys(values)) {
       if (key.startsWith(controlID)) config[key] = values[key];
@@ -372,23 +308,15 @@
 
     const bandMin = 8;
 
-    lineInput.value = values.line = Math.min(
+    values.line = Math.min(
       config.line,
       Math.max(bandMin, values.dark, values.light),
     );
 
     if (controlID === "dark") {
-      darkInput.value = values.dark;
-      lightInput.value = values.light = Math.max(
-        config.light,
-        bandMin - values.dark,
-      );
+      values.light = Math.max(config.light, bandMin - values.dark);
     } else if (controlID === "light") {
-      lightInput.value = values.light;
-      darkInput.value = values.dark = Math.max(
-        config.dark,
-        bandMin - values.light,
-      );
+      values.dark = Math.max(config.dark, bandMin - values.light);
     }
 
     render(values);
