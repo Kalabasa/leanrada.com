@@ -459,20 +459,25 @@ class Flower {
 
   #drawLeaf() {
     const angle = this.#startAngle + this.#leaves * 2.4;
-    const length = this.#radius * 1.4;
+    const length = this.#radius * (1.3 + (this.#noise(angle, -1) - 0.5) * 0.2);
 
     const prevDist = this.#leafDist;
-    this.#leafDist += 4;
+    this.#leafDist = Math.min(this.#leafDist + 6, length);
     const prevT = prevDist / length;
     const t = this.#leafDist / length;
 
-    const width = length * (0.5 - this.#sharpness ** 0.25 * 0.45);
+    const width = length * (0.7 - this.#sharpness ** 0.25 * 0.65);
 
     const biasX = Math.cos(angle) - this.#faceX * 1.1;
     const biasY = Math.sin(angle) - this.#faceY * 1.1;
     const biasLen = Math.hypot(biasX, biasY);
     const dirX = biasX / biasLen;
     const dirY = biasY / biasLen;
+    const faceness =
+      0.5 *
+      (1 +
+        (this.#faceX * dirX + this.#faceY * dirY) /
+          Math.hypot(this.#faceX, this.#faceY));
 
     const base = [
       this.#x - this.#faceX * this.#radius * 0.4,
@@ -480,26 +485,30 @@ class Flower {
     ];
     const tip = [this.#x + dirX * length, this.#y + dirY * length];
 
-    const mid = [this.#x + dirX * length * 0.5, this.#y + dirY * length * 0.5];
+    const control = [
+      this.#x + dirX * length * 0.3,
+      this.#y + dirY * length * 0.3,
+    ];
     const leftControl = [
-      mid[0] + -dirY * width + this.#faceX * width * 0.6,
-      mid[1] + dirX * width + this.#faceY * width * 0.6,
+      control[0] + -dirY * width + this.#faceX * width * 0.6,
+      control[1] + dirX * width + this.#faceY * width * 0.6,
     ];
     const rightControl = [
-      mid[0] - -dirY * width + this.#faceX * width * 0.6,
-      mid[1] - dirX * width + this.#faceY * width * 0.6,
+      control[0] - -dirY * width + this.#faceX * width * 0.6,
+      control[1] - dirX * width + this.#faceY * width * 0.6,
     ];
 
     const getCurvePoint = (control, curveT) => {
       const [px, py] = bezier(base, control, tip, curveT);
       const nv =
-        (this.#noise(curveT * 3 + this.#leaves, -1) - 0.5) *
+        (this.#noise(angle + curveT * Math.PI, -1) - 0.5) *
         length *
-        (0.01 + this.#noisiness * 0.04);
+        (0.015 + this.#noisiness * 0.04);
       return [px - dirY * nv, py + dirX * nv];
     };
 
     this.#ctx.globalCompositeOperation = "destination-over";
+
     this.#ctx.strokeStyle = "hsl(120,50%,40%)";
     this.#ctx.lineWidth = 3;
     this.#ctx.beginPath();
@@ -508,6 +517,44 @@ class Flower {
     this.#ctx.moveTo(...getCurvePoint(rightControl, prevT));
     this.#ctx.lineTo(...getCurvePoint(rightControl, t));
     this.#ctx.stroke();
+
+    const veinSpacing = 5;
+    this.#ctx.fillStyle = "hsl(120,50%,40%)";
+    for (
+      let veinIndex = Math.floor(prevDist / veinSpacing) + 1;
+      veinIndex <= Math.floor(this.#leafDist / veinSpacing);
+      veinIndex++
+    ) {
+      const veinT =
+        (veinIndex * veinSpacing) / length +
+        (this.#noise(veinIndex, this.#leaves) - 0.5) * 0.02;
+      const veinReach = Math.min(
+        1,
+        0.5 + 0.5 * faceness + this.#noise(veinIndex * 10, this.#leaves) * 0.2,
+      );
+      this.#ctx.beginPath();
+      this.#ctx.moveTo(
+        ...getCurvePoint(
+          leftControl,
+          clamp(veinT - (veinReach * 8) / length, 0, 1),
+        ),
+      );
+      this.#ctx.lineTo(
+        ...getCurvePoint(leftControl, clamp(veinT + 1 / length, 0, 1)),
+      );
+      const [baseX, baseY] = getCurvePoint(leftControl, veinT);
+      const [otherX, otherY] = getCurvePoint(
+        rightControl,
+        clamp(veinT ** 0.5, 0, 1),
+      );
+      this.#ctx.lineTo(
+        lerp(baseX, otherX, veinReach),
+        lerp(baseY, otherY, veinReach),
+      );
+      this.#ctx.closePath();
+      this.#ctx.fill();
+    }
+
     this.#ctx.globalCompositeOperation = "source-over";
 
     if (this.#leafDist >= length) {
