@@ -138,7 +138,7 @@ class Flower {
     this.#veinReach = veinReach;
     this.#color = color;
     this.#stamens = this.#petals * this.#layers;
-    this.#leaves = 2 + Math.floor(Math.random() * 3);
+    this.#leaves = 2 + Math.floor(Math.random() ** 2 * 6);
   }
 
   bloom() {
@@ -221,7 +221,7 @@ class Flower {
     let prevBg = this.#getPoint(aheadAngle, this.#getRadius(aheadAngle) + 2);
     while (aheadAngle < aheadEnd) {
       const stepEnd = Math.min(aheadAngle + 0.03, aheadEnd);
-      const currBg = this.#getPoint(stepEnd, this.#getRadius(stepEnd) + 2);
+      const currBg = this.#getPoint(stepEnd, this.#getRadius(stepEnd) + 4);
       this.#ctx.fillStyle = "#fff";
       this.#ctx.beginPath();
       this.#ctx.moveTo(centerX, centerY);
@@ -458,15 +458,17 @@ class Flower {
   }
 
   #drawLeaf() {
+    const color = "#2c1";
+
     const angle = this.#startAngle + this.#leaves * 2.4;
-    const length = this.#radius * (1.3 + (this.#noise(angle, -1) - 0.5) * 0.2);
+    const length = this.#radius * (1.2 + (this.#noise(angle, -1) - 0.5) * 0.4);
 
     const prevDist = this.#leafDist;
     this.#leafDist = Math.min(this.#leafDist + 6, length);
     const prevT = prevDist / length;
     const t = this.#leafDist / length;
 
-    const width = length * (0.7 - this.#sharpness ** 0.25 * 0.65);
+    const width = this.#radius * 0.9 * (1 - this.#sharpness ** 0.25 * 0.9);
 
     const biasX = Math.cos(angle) - this.#faceX * 1.1;
     const biasY = Math.sin(angle) - this.#faceY * 1.1;
@@ -485,17 +487,26 @@ class Flower {
     ];
     const tip = [this.#x + dirX * length, this.#y + dirY * length];
 
-    const control = [
-      this.#x + dirX * length * 0.3,
-      this.#y + dirY * length * 0.3,
-    ];
+    const balance = (this.#noise(this.#leaves, 167) - 0.5) * 2 * 0.4;
     const leftControl = [
-      control[0] + -dirY * width + this.#faceX * width * 0.6,
-      control[1] + dirX * width + this.#faceY * width * 0.6,
+      this.#x +
+        dirX * length * (0.4 + balance) +
+        -dirY * width +
+        this.#faceX * width * 0.3,
+      this.#y +
+        dirY * length * (0.4 + balance) +
+        dirX * width +
+        this.#faceY * width * 0.3,
     ];
     const rightControl = [
-      control[0] - -dirY * width + this.#faceX * width * 0.6,
-      control[1] - dirX * width + this.#faceY * width * 0.6,
+      this.#x +
+        dirX * length * (0.4 - balance) -
+        -dirY * width +
+        this.#faceX * width * 0.3,
+      this.#y +
+        dirY * length * (0.4 - balance) -
+        dirX * width +
+        this.#faceY * width * 0.3,
     ];
 
     const getCurvePoint = (control, curveT) => {
@@ -509,7 +520,7 @@ class Flower {
 
     this.#ctx.globalCompositeOperation = "destination-over";
 
-    this.#ctx.strokeStyle = "hsl(120,50%,40%)";
+    this.#ctx.strokeStyle = color;
     this.#ctx.lineWidth = 3;
     this.#ctx.beginPath();
     this.#ctx.moveTo(...getCurvePoint(leftControl, prevT));
@@ -519,7 +530,7 @@ class Flower {
     this.#ctx.stroke();
 
     const veinSpacing = 5;
-    this.#ctx.fillStyle = "hsl(120,50%,40%)";
+    this.#ctx.fillStyle = color;
     for (
       let veinIndex = Math.floor(prevDist / veinSpacing) + 1;
       veinIndex <= Math.floor(this.#leafDist / veinSpacing);
@@ -554,6 +565,15 @@ class Flower {
       this.#ctx.closePath();
       this.#ctx.fill();
     }
+
+    this.#ctx.fillStyle = "#fff";
+    this.#ctx.beginPath();
+    this.#ctx.moveTo(...getCurvePoint(leftControl, prevT));
+    this.#ctx.lineTo(...getCurvePoint(leftControl, t));
+    this.#ctx.lineTo(...getCurvePoint(rightControl, t));
+    this.#ctx.lineTo(...getCurvePoint(rightControl, prevT));
+    this.#ctx.closePath();
+    this.#ctx.fill();
 
     this.#ctx.globalCompositeOperation = "source-over";
 
@@ -596,7 +616,7 @@ function randomFlowerParams() {
     innerFill,
     veinReach: 0.6 + Math.random() * 0.4,
     color: {
-      h: -10 + Math.random() * 40,
+      h: -5 + Math.random() * 20,
       s: 95,
       l: 45,
     },
