@@ -64,12 +64,13 @@ export function setupFlowers(container) {
     const key = findNearestKey(event.clientX, event.clientY);
     if (grid.has(key)) return;
     const [x, y] = cellPosition(key);
-    const canvas = createCellCanvas(flowersLayer, x, y, cellSize);
+    const flowerRadius = 60;
+    const canvas = createCellCanvas(flowersLayer, x, y, flowerRadius * 5);
     const flower = new Flower(
       canvas,
-      cellSize / 2,
-      cellSize / 2,
-      cellSize / 5,
+      (flowerRadius * 5) / 2,
+      (flowerRadius * 5) / 2,
+      60,
       flowerParams,
     );
     flower.bloom();
@@ -87,8 +88,8 @@ export function setupFlowers(container) {
       grid.delete(key);
       const idx = flowers.indexOf(flower);
       if (idx >= 0) flowers.splice(idx, 1);
-      flower.remove();
-      clearCanvas(canvas);
+      await clearCanvas(canvas);
+      canvas.remove();
     }, CLEAR_MS);
   });
 
@@ -185,10 +186,6 @@ class Flower {
     this.#color = color;
     this.#stamens = this.#petals * this.#layers;
     this.#leaves = 3 + Math.floor(Math.random() ** 2 * 4);
-  }
-
-  remove() {
-    this.#canvas.remove();
   }
 
   bloom() {
