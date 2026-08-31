@@ -52,10 +52,22 @@ export function setupFlowers(container) {
     }
   }
 
-  let flowerParams = randomFlowerParams();
-  setInterval(() => {
-    flowerParams = randomFlowerParams();
-  }, CLEAR_MS);
+  /** @type {FlowerParams} */
+  let flowerParams = {
+    petals: 5,
+    sharpness: 0.05,
+    layers: 1,
+    layerScale: 0.6,
+    noisiness: 0.25,
+    innerFill: 0.15,
+    veinReach: 0.9,
+    color: { h: 0, s: 95, l: 45 },
+  };
+  setTimeout(() => {
+    setInterval(() => {
+      flowerParams = randomFlowerParams();
+    }, CLEAR_MS);
+  }, CLEAR_MS * 0.5);
 
   resize();
   new ResizeObserver(resize).observe(container);
@@ -599,34 +611,47 @@ class Flower {
   }
 }
 
+/**
+ * @typedef {object} FlowerParams
+ * @property {number} petals
+ * @property {number} sharpness
+ * @property {number} layers
+ * @property {number} layerScale
+ * @property {number} noisiness
+ * @property {number} innerFill
+ * @property {number} veinReach
+ * @property {{ h: number, s: number, l: number }} color
+ */
+
+/** @returns {FlowerParams} */
 function randomFlowerParams() {
-  const petals = clamp(Math.round(normalRandom(6.5, 3)), 2, 13);
+  const petals = clamp(Math.round(normalRandom(6.5, 3)), 1, 14);
   const petalFraction = (petals - 3) / 10;
   const sharpness =
-    clamp(0.2 + petalFraction * 0.1 + Math.random() * 0.25, 0, 1) ** 2;
+    clamp(0.1 + petalFraction * 0.1 + Math.random() * 0.45, 0, 1) ** 2;
   const layers = clamp(
     Math.round(1 - petalFraction * 1.5 + Math.random() * 4),
     1,
-    5,
+    6,
   );
   const innerFill = clamp(
-    0.1 + layers * 0.1 - sharpness * 0.2 + Math.random() * 0.2,
+    0.1 + layers * 0.1 - sharpness * 0.2 + Math.random() * 0.3,
     0,
     1,
   );
   const layerScale = clamp(
-    0.65 - sharpness * 0.2 + layers * 0.02 + Math.random() * 0.15,
-    0.5,
-    0.85,
+    0.6 - sharpness * 0.2 + layers * 0.02 + Math.random() * 0.35,
+    0.45,
+    0.9,
   );
   return {
     petals,
     sharpness,
     layers,
     layerScale,
-    noisiness: 0.2 + Math.random() * 0.3,
+    noisiness: 0.1 + Math.random() * 0.5,
     innerFill,
-    veinReach: 0.6 + Math.random() * 0.4,
+    veinReach: 0.5 + Math.random() * 0.5,
     color: {
       h: -5 + Math.random() * 20,
       s: 95,
