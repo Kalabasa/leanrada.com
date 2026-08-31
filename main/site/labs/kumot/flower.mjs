@@ -63,15 +63,12 @@ export function setupFlowers(container) {
     veinReach: 0.9,
     color: { h: 0, s: 95, l: 45 },
   };
-  setTimeout(() => {
-    setInterval(() => {
-      flowerParams = randomFlowerParams();
-    }, CLEAR_MS);
-  }, CLEAR_MS * 0.5);
 
   resize();
   new ResizeObserver(resize).observe(container);
   setInterval(tick, UPDATE_INTERVAL_MS);
+
+  let firstFlowerBloomed = false;
 
   container.addEventListener("pointermove", (event) => {
     const key = findNearestKey(event.clientX, event.clientY);
@@ -81,6 +78,16 @@ export function setupFlowers(container) {
     flower.bloom();
     flowers.push(flower);
     grid.set(key, flower);
+
+    if (!firstFlowerBloomed) {
+      firstFlowerBloomed = true;
+      setTimeout(() => {
+        setInterval(() => {
+          flowerParams = randomFlowerParams();
+        }, CLEAR_MS);
+      }, CLEAR_MS * 0.5);
+    }
+
     setTimeout(async () => {
       await flower.clear();
       grid.delete(key);
@@ -507,7 +514,7 @@ class Flower {
     ];
     const tip = [this.#x + dirX * length, this.#y + dirY * length];
 
-    const balance = (this.#noise(this.#leaves, 167) - 0.5) * 2 * 0.3;
+    const balance = (this.#noise(this.#leaves, 167) - 0.5) * 2 * 0.1;
     const leftControl = [
       this.#x +
         dirX * length * (0.3 + balance) +
@@ -534,7 +541,7 @@ class Flower {
       const nv =
         (this.#noise(angle + curveT * Math.PI, -1) - 0.5) *
         length *
-        (0.015 + this.#noisiness * 0.04);
+        (0.05 + this.#noisiness * 0.04);
       return [px - dirY * nv, py + dirX * nv];
     };
 
@@ -549,7 +556,7 @@ class Flower {
     this.#ctx.lineTo(...getCurvePoint(rightControl, t));
     this.#ctx.stroke();
 
-    const veinSpacing = 4 + 4 * Math.abs(balance);
+    const veinSpacing = 5 + 4 * Math.abs(balance);
     this.#ctx.fillStyle = color;
     for (
       let veinIndex = Math.floor(prevDist / veinSpacing) + 1;
@@ -558,10 +565,10 @@ class Flower {
     ) {
       const veinT =
         (veinIndex * veinSpacing) / length +
-        (this.#noise(veinIndex, this.#leaves) - 0.5) * 0.02;
+        (this.#noise(veinIndex, this.#leaves) - 0.5) * 0.04;
       const veinReach = Math.min(
         1,
-        0.5 + 0.5 * faceness + this.#noise(veinIndex * 10, this.#leaves) * 0.2,
+        0.4 + 0.6 * faceness + this.#noise(veinIndex * 10, this.#leaves) * 0.2,
       );
       this.#ctx.beginPath();
       this.#ctx.moveTo(
