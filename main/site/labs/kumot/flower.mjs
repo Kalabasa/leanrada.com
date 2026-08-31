@@ -8,29 +8,17 @@ const GREEN = "#1b1";
 const DARK_GREEN = "#191";
 
 export function setupFlowers(container) {
-  const canvas = document.createElement("canvas");
-  canvas.style.cssText =
-    "position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply";
-  container.append(canvas);
+  const flowersLayer = document.createElement("div");
+  flowersLayer.style.cssText = "position:absolute;inset:0;pointer-events:none";
+  container.append(flowersLayer);
 
-  const ctx = canvas.getContext("2d");
   const cellSize = 300;
   let flowers = [];
   let grid = new Map();
 
-  function resize() {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = container.clientWidth * dpr;
-    canvas.height = container.clientHeight * dpr;
-    canvas.style.width = container.clientWidth + "px";
-    canvas.style.height = container.clientHeight + "px";
-    ctx.scale(dpr, dpr);
-    buildGrid();
-  }
-
   function buildGrid() {
     for (const flower of flowers) {
-      flower.clear();
+      flower.remove();
     }
     flowers = [];
     grid = new Map();
@@ -67,8 +55,7 @@ export function setupFlowers(container) {
     color: { h: 0, s: 95, l: 45 },
   };
 
-  resize();
-  new ResizeObserver(resize).observe(container);
+  new ResizeObserver(buildGrid).observe(container);
   setInterval(tick, UPDATE_INTERVAL_MS);
 
   let firstFlowerBloomed = false;
@@ -77,36 +64,73 @@ export function setupFlowers(container) {
     const key = findNearestKey(event.clientX, event.clientY);
     if (grid.has(key)) return;
     const [x, y] = cellPosition(key);
-    const flower = new Flower(ctx, x, y, cellSize, flowerParams);
+    const canvas = createCellCanvas(flowersLayer, x, y, cellSize);
+    const flower = new Flower(
+      canvas,
+      cellSize / 2,
+      cellSize / 2,
+      cellSize / 5,
+      flowerParams,
+    );
     flower.bloom();
     flowers.push(flower);
     grid.set(key, flower);
 
     if (!firstFlowerBloomed) {
       firstFlowerBloomed = true;
-      setTimeout(() => {
-        setInterval(() => {
-          flowerParams = randomFlowerParams();
-        }, CLEAR_MS);
-      }, CLEAR_MS * 0.5);
+      setInterval(() => {
+        flowerParams = randomFlowerParams();
+      }, CLEAR_MS);
     }
 
     setTimeout(async () => {
-      await flower.clear();
       grid.delete(key);
       const idx = flowers.indexOf(flower);
       if (idx >= 0) flowers.splice(idx, 1);
+      flower.remove();
+      clearCanvas(canvas);
     }, CLEAR_MS);
   });
 
+  return { container: flowersLayer };
+}
+
+async function clearCanvas(canvas) {
+  const ctx = canvas.getContext("2d");
+  const { width, height } = canvas;
+
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = "rgb(255,255,255)";
+  ctx.fillRect(0, 0, width, height);
+  ctx.globalCompositeOperation = "source-over";
+
+  const fadeSteps = 45;
+  const lighten = Math.ceil(255 / fadeSteps);
+  for (let i = 0; i < fadeSteps; i++) {
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = `rgb(${lighten},${lighten},${lighten})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = "source-over";
+    await new Promise((r) => setTimeout(r, UPDATE_INTERVAL_MS));
+  }
+}
+
+function createCellCanvas(parent, centerX, centerY, cellSize) {
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = cellSize * dpr;
+  canvas.height = cellSize * dpr;
+  canvas.style.cssText = `position:absolute;left:${centerX - cellSize / 2}px;top:${centerY - cellSize / 2}px;width:${cellSize}px;height:${cellSize}px`;
+  parent.append(canvas);
+  canvas.getContext("2d").scale(dpr, dpr);
   return canvas;
 }
 
 class Flower {
+  #canvas;
   #ctx;
   #x;
   #y;
-  #cellSize;
   #radius;
   #state = null;
   #layer = 0;
@@ -131,10 +155,10 @@ class Flower {
   #leafDist = 0;
 
   constructor(
-    ctx,
+    canvas,
     x,
     y,
-    cellSize,
+    radius,
     {
       petals = 5,
       sharpness = 0.5,
@@ -146,11 +170,11 @@ class Flower {
       color = { h: 10, s: 90, l: 55 },
     },
   ) {
-    this.#ctx = ctx;
+    this.#canvas = canvas;
+    this.#ctx = canvas.getContext("2d");
     this.#x = x;
     this.#y = y;
-    this.#cellSize = cellSize;
-    this.#radius = cellSize / 5;
+    this.#radius = radius;
     this.#petals = petals;
     this.#sharpness = sharpness;
     this.#layers = layers;
@@ -163,6 +187,10 @@ class Flower {
     this.#leaves = 3 + Math.floor(Math.random() ** 2 * 4);
   }
 
+  remove() {
+    this.#canvas.remove();
+  }
+
   bloom() {
     this.#state = "draw";
 
@@ -172,43 +200,6 @@ class Flower {
     this.#noise = createNoise();
     this.#startAngle = Math.atan2(this.#faceY, this.#faceX) + Math.PI;
     this.#drawAngle = this.#startAngle;
-
-    this.#ctx.globalCompositeOperation = "destination-out";
-    this.#ctx.beginPath();
-    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
-    this.#ctx.fill();
-    this.#ctx.globalCompositeOperation = "source-over";
-  }
-
-  async clear() {
-    this.#state = "clear";
-
-    this.#ctx.globalCompositeOperation = "destination-over";
-    this.#ctx.fillStyle = `rgba(255,255,255)`;
-    this.#ctx.beginPath();
-    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2 + 1, 0, Math.PI * 2);
-    this.#ctx.fill();
-    this.#ctx.globalCompositeOperation = "source-over";
-
-    const fadeSteps = 45;
-    const lighten = Math.ceil(255 / fadeSteps);
-    for (let i = 0; i < fadeSteps; i++) {
-      this.#ctx.globalCompositeOperation = "lighter";
-      this.#ctx.fillStyle = `rgba(${lighten},${lighten},${lighten})`;
-      this.#ctx.beginPath();
-      this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2 - 1, 0, Math.PI * 2);
-      this.#ctx.fill();
-      this.#ctx.globalCompositeOperation = "source-over";
-      await new Promise((r) => setTimeout(r, UPDATE_INTERVAL_MS));
-    }
-
-    this.#ctx.globalCompositeOperation = "destination-out";
-    this.#ctx.beginPath();
-    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
-    this.#ctx.fill();
-    this.#ctx.globalCompositeOperation = "source-over";
-
-    this.#state = null;
   }
 
   update() {
