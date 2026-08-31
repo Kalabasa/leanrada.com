@@ -38,8 +38,8 @@
     z-index: 3;
     mix-blend-mode: multiply;
     background-image:
-      repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.04) 3px),
-      repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03) 3px);
+      repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.1) 3px),
+      repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.04) 3px);
     filter: url(#noise);
   }
 
@@ -75,9 +75,9 @@
     />
     <feColorMatrix in="turb" type="saturate" values="0" result="gray" />
     <feComponentTransfer in="gray" result="noise">
-      <feFuncR type="linear" slope="0.5" intercept="0.6" />
-      <feFuncG type="linear" slope="0.5" intercept="0.6" />
-      <feFuncB type="linear" slope="0.5" intercept="0.6" />
+      <feFuncR type="linear" slope="2" intercept="0.1" />
+      <feFuncG type="linear" slope="2" intercept="0.1" />
+      <feFuncB type="linear" slope="2" intercept="0.1" />
     </feComponentTransfer>
     <feBlend in="SourceGraphic" in2="noise" mode="multiply" />
   </filter>
@@ -97,7 +97,7 @@
 
   const hues = [350, 150, 270];
   const config = {
-    hue: hues[1],
+    hue: hues[2],
     dark: 64,
     light: 96,
     line: 5,
@@ -200,6 +200,11 @@
   pattern.addEventListener("pointerup", (event) => {
     drag = null;
     hideDragHandle();
+  });
+
+  document.addEventListener("wheel", (event) => {
+    config.hue += event.deltaY * 0.2;
+    render(config);
   });
 
   function showDragHandle(edge, pointerX, pointerY) {

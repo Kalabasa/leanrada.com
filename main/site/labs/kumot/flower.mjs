@@ -463,7 +463,7 @@ class Flower {
       return;
     }
 
-    const color = "#2c1";
+    const color = "#1b1";
 
     const angle = this.#startAngle + this.#leaves * 2.4;
     const length = this.#radius * (1.1 + (this.#noise(angle, -1) - 0.5) * 0.4);
