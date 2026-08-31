@@ -55,7 +55,7 @@ export function setupFlowers(container) {
   let flowerParams = randomFlowerParams();
   setInterval(() => {
     flowerParams = randomFlowerParams();
-  }, CLEAR_MS * 2);
+  }, CLEAR_MS);
 
   resize();
   new ResizeObserver(resize).observe(container);
