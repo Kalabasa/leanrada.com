@@ -5,14 +5,16 @@
 
   body {
     margin: 0;
-    min-height: 100vh;
+    height: 100vh;
     font-family: sans-serif;
+    overflow: hidden;
   }
 
   #pattern {
     position: absolute;
     inset: 0;
     overflow: hidden;
+    filter: url(#cloth);
   }
 
   .fabric {
@@ -20,9 +22,13 @@
     inset: 0;
     mix-blend-mode: multiply;
     background-image:
-      repeating-linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.1) 3px),
-      repeating-linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.04) 3px);
-    filter: url(#noise);
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        rgba(0, 0, 0, 0.06) 3px
+      ),
+      repeating-linear-gradient(to left, transparent, rgba(0, 0, 0, 0.02) 3px),
+      url("noise.png");
   }
 
   :root.ready .dragHandle {
@@ -83,25 +89,6 @@
   }
 </style>
 
-<svg width="0" height="0">
-  <filter id="noise">
-    <feTurbulence
-      type="fractalNoise"
-      baseFrequency="0.65"
-      numOctaves="3"
-      stitchTiles="stitch"
-      result="turb"
-    />
-    <feColorMatrix in="turb" type="saturate" values="0" result="gray" />
-    <feComponentTransfer in="gray" result="noise">
-      <feFuncR type="linear" slope="2" intercept="0.15" />
-      <feFuncG type="linear" slope="2" intercept="0.15" />
-      <feFuncB type="linear" slope="2" intercept="0.15" />
-    </feComponentTransfer>
-    <feBlend in="SourceGraphic" in2="noise" mode="multiply" />
-  </filter>
-</svg>
-
 <div id="pattern">
   <div class="fabric"></div>
 </div>
@@ -160,8 +147,8 @@
 
   const presetRow = document.getElementById("presetRow");
   const controls = [
-    { label: "A", gridSize: 125, duration: 1000, interval: 1 },
-    { label: "B", gridSize: 300, duration: 6000, interval: 4000 },
+    { label: "A", gridSize: 125, duration: 2000, interval: 15 },
+    { label: "B", gridSize: 400, duration: 6000, interval: 5000 },
   ];
   for (const { label, gridSize, duration, interval } of controls) {
     const button = document.createElement("button");
@@ -416,7 +403,7 @@
       const stopColor = renderColor(values.hue, dark);
       stops.push(`${stopColor} ${stopOffset}px`);
       stopOffset += size;
-      stops.push(`${stopColor} ${stopOffset - 1}px`);
+      stops.push(`${stopColor} ${stopOffset - 2}px`);
     }
     pattern.style.backgroundImage = `linear-gradient(to right, ${stops.join(", ")})`;
     pattern.style.backgroundSize = `${stopOffset}px 100%`;

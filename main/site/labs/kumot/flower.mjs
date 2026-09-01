@@ -10,28 +10,28 @@ export function setupFlowers() {
   const container = document.createElement("div");
   container.style.cssText = "position:absolute;inset:0";
 
-  let cellSize = 300;
-  let clearMs = 6000;
-  let paramsIntervalMs = 4000;
+  let gridSize = 400;
+  let duration = 6000;
+  let paramsIntervalMs = 5000;
   let paramsIntervalId = null;
   let flowers = [];
   let grid = new Map();
 
   function setGridSize(size) {
-    cellSize = size;
+    gridSize = size;
     grid = new Map();
   }
 
   function setFlowerDuration(ms) {
-    clearMs = ms;
+    duration = ms;
   }
 
   function setFlowerInterval(ms) {
     paramsIntervalMs = ms;
-    if (paramsIntervalId != null) startInterval();
+    if (paramsIntervalId != null) startFlowerInterval();
   }
 
-  function startInterval() {
+  function startFlowerInterval() {
     clearInterval(paramsIntervalId);
     paramsIntervalId = setInterval(() => {
       flowerParams = randomFlowerParams();
@@ -39,16 +39,16 @@ export function setupFlowers() {
   }
 
   function findNearestKey(px, py) {
-    const rowHeight = (cellSize * Math.sqrt(3)) / 2;
+    const rowHeight = (gridSize * Math.sqrt(3)) / 2;
     const row = Math.round(py / rowHeight);
-    const col = Math.round((px - ((row % 2) * cellSize) / 2) / cellSize);
+    const col = Math.round((px - ((row % 2) * gridSize) / 2) / gridSize);
     return `${col},${row}`;
   }
 
   function cellPosition(key) {
     const [col, row] = key.split(",").map(Number);
-    const rowHeight = (cellSize * Math.sqrt(3)) / 2;
-    return [col * cellSize + ((row % 2) * cellSize) / 2, row * rowHeight];
+    const rowHeight = (gridSize * Math.sqrt(3)) / 2;
+    return [col * gridSize + ((row % 2) * gridSize) / 2, row * rowHeight];
   }
 
   setInterval(() => {
@@ -69,19 +69,19 @@ export function setupFlowers() {
     color: { h: 0, s: 95, l: 45 },
   };
 
-  let lastMoveTime = 0;
+  let lastMoveBloomTime = 0;
 
   container.addEventListener("pointermove", (event) => {
-    lastMoveTime = Date.now();
 
     const key = findNearestKey(event.clientX, event.clientY);
     if (grid.has(key)) return;
 
     spawnFlower(key);
+    lastMoveBloomTime = Date.now();
   });
 
   setInterval(() => {
-    if (Date.now() - lastMoveTime < 4000) return;
+    if (Date.now() - lastMoveBloomTime < 4000) return;
 
     const x = Math.random() * container.clientWidth;
     const y = Math.random() * container.clientHeight;
@@ -91,7 +91,7 @@ export function setupFlowers() {
     spawnFlower(key);
   }, 200);
 
-  let firstFlowerBloomed = false;
+  let firstBloom = true;
 
   function spawnFlower(key) {
     const [cx, cy] = cellPosition(key);
@@ -108,9 +108,9 @@ export function setupFlowers() {
     flowers.push(flower);
     grid.set(key, flower);
 
-    if (!firstFlowerBloomed) {
-      firstFlowerBloomed = true;
-      startInterval();
+    if (firstBloom) {
+      firstBloom = false;
+      startFlowerInterval();
     }
 
     setTimeout(async () => {
@@ -119,7 +119,7 @@ export function setupFlowers() {
       if (idx >= 0) flowers.splice(idx, 1);
       await clearCanvas(canvas);
       canvas.remove();
-    }, clearMs);
+    }, duration);
   }
 
   return {
@@ -155,7 +155,7 @@ function createCellCanvas(parent, centerX, centerY, cellSize) {
   const canvas = document.createElement("canvas");
   canvas.width = cellSize * dpr;
   canvas.height = cellSize * dpr;
-  canvas.style.cssText = `position:absolute;left:${centerX - cellSize / 2}px;top:${centerY - cellSize / 2}px;width:${cellSize}px;height:${cellSize}px;filter: blur(0.6px);mix-blend-mode: multiply;`;
+  canvas.style.cssText = `position:absolute;left:${centerX - cellSize / 2}px;top:${centerY - cellSize / 2}px;width:${cellSize}px;height:${cellSize}px;mix-blend-mode: multiply;`;
   parent.append(canvas);
   canvas.getContext("2d").scale(dpr, dpr);
   return canvas;
