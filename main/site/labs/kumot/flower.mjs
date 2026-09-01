@@ -2,26 +2,40 @@ import { createNoise2D } from "./lib/simplex-noise.mjs";
 
 const UPDATE_INTERVAL_MS = 25;
 const ANGLE_PER_UPDATE = 0.6;
-const CLEAR_MS = 6000;
 
 const GREEN = "#1b1";
 const DARK_GREEN = "#191";
 
-export function setupFlowers(container) {
-  const flowersLayer = document.createElement("div");
-  flowersLayer.style.cssText = "position:absolute;inset:0;pointer-events:none";
-  container.append(flowersLayer);
+export function setupFlowers() {
+  const container = document.createElement("div");
+  container.style.cssText = "position:absolute;inset:0";
 
-  const cellSize = 300;
+  let cellSize = 300;
+  let clearMs = 6000;
+  let paramsIntervalMs = 4000;
+  let paramsIntervalId = null;
   let flowers = [];
   let grid = new Map();
 
-  function buildGrid() {
-    for (const flower of flowers) {
-      flower.remove();
-    }
-    flowers = [];
+  function setGridSize(size) {
+    cellSize = size;
     grid = new Map();
+  }
+
+  function setFlowerDuration(ms) {
+    clearMs = ms;
+  }
+
+  function setFlowerInterval(ms) {
+    paramsIntervalMs = ms;
+    if (paramsIntervalId != null) startInterval();
+  }
+
+  function startInterval() {
+    clearInterval(paramsIntervalId);
+    paramsIntervalId = setInterval(() => {
+      flowerParams = randomFlowerParams();
+    }, paramsIntervalMs);
   }
 
   function findNearestKey(px, py) {
@@ -37,11 +51,11 @@ export function setupFlowers(container) {
     return [col * cellSize + ((row % 2) * cellSize) / 2, row * rowHeight];
   }
 
-  function tick() {
+  setInterval(() => {
     for (const flower of flowers) {
       flower.update();
     }
-  }
+  }, UPDATE_INTERVAL_MS);
 
   /** @type {FlowerParams} */
   let flowerParams = {
@@ -55,17 +69,34 @@ export function setupFlowers(container) {
     color: { h: 0, s: 95, l: 45 },
   };
 
-  new ResizeObserver(buildGrid).observe(container);
-  setInterval(tick, UPDATE_INTERVAL_MS);
+  let lastMoveTime = 0;
+
+  container.addEventListener("pointermove", (event) => {
+    lastMoveTime = Date.now();
+
+    const key = findNearestKey(event.clientX, event.clientY);
+    if (grid.has(key)) return;
+
+    spawnFlower(key);
+  });
+
+  setInterval(() => {
+    if (Date.now() - lastMoveTime < 4000) return;
+
+    const x = Math.random() * container.clientWidth;
+    const y = Math.random() * container.clientHeight;
+    const key = findNearestKey(x, y);
+    if (grid.has(key)) return;
+
+    spawnFlower(key);
+  }, 200);
 
   let firstFlowerBloomed = false;
 
-  container.addEventListener("pointermove", (event) => {
-    const key = findNearestKey(event.clientX, event.clientY);
-    if (grid.has(key)) return;
-    const [x, y] = cellPosition(key);
+  function spawnFlower(key) {
+    const [cx, cy] = cellPosition(key);
     const flowerRadius = 60;
-    const canvas = createCellCanvas(flowersLayer, x, y, flowerRadius * 5);
+    const canvas = createCellCanvas(container, cx, cy, flowerRadius * 5);
     const flower = new Flower(
       canvas,
       (flowerRadius * 5) / 2,
@@ -79,9 +110,7 @@ export function setupFlowers(container) {
 
     if (!firstFlowerBloomed) {
       firstFlowerBloomed = true;
-      setInterval(() => {
-        flowerParams = randomFlowerParams();
-      }, CLEAR_MS);
+      startInterval();
     }
 
     setTimeout(async () => {
@@ -90,10 +119,15 @@ export function setupFlowers(container) {
       if (idx >= 0) flowers.splice(idx, 1);
       await clearCanvas(canvas);
       canvas.remove();
-    }, CLEAR_MS);
-  });
+    }, clearMs);
+  }
 
-  return { container: flowersLayer };
+  return {
+    container,
+    setGridSize,
+    setFlowerDuration,
+    setFlowerInterval,
+  };
 }
 
 async function clearCanvas(canvas) {
@@ -121,7 +155,7 @@ function createCellCanvas(parent, centerX, centerY, cellSize) {
   const canvas = document.createElement("canvas");
   canvas.width = cellSize * dpr;
   canvas.height = cellSize * dpr;
-  canvas.style.cssText = `position:absolute;left:${centerX - cellSize / 2}px;top:${centerY - cellSize / 2}px;width:${cellSize}px;height:${cellSize}px`;
+  canvas.style.cssText = `position:absolute;left:${centerX - cellSize / 2}px;top:${centerY - cellSize / 2}px;width:${cellSize}px;height:${cellSize}px;filter: blur(0.6px);mix-blend-mode: multiply;`;
   parent.append(canvas);
   canvas.getContext("2d").scale(dpr, dpr);
   return canvas;
