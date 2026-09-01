@@ -40,7 +40,7 @@ export function setupFlowers() {
 
   function findNearestKey(px, py) {
     const rowHeight = (gridSize * Math.sqrt(3)) / 2;
-    const row = Math.round(py / rowHeight);
+    const row = Math.round(py / rowHeight - 0.5);
     const col = Math.round((px - ((row % 2) * gridSize) / 2) / gridSize);
     return `${col},${row}`;
   }
@@ -48,7 +48,7 @@ export function setupFlowers() {
   function cellPosition(key) {
     const [col, row] = key.split(",").map(Number);
     const rowHeight = (gridSize * Math.sqrt(3)) / 2;
-    return [col * gridSize + ((row % 2) * gridSize) / 2, row * rowHeight];
+    return [col * gridSize + ((row % 2) * gridSize) / 2, (row + 0.5) * rowHeight];
   }
 
   setInterval(() => {

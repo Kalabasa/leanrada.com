@@ -1,3 +1,5 @@
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <style>
   * {
     box-sizing: border-box;
@@ -5,6 +7,7 @@
 
   body {
     margin: 0;
+    padding: 0;
     height: 100vh;
     font-family: sans-serif;
     overflow: hidden;
@@ -12,7 +15,8 @@
 
   #pattern {
     position: absolute;
-    inset: 0;
+    width: 100%;
+    height: 100vh;
     overflow: hidden;
     filter: url(#cloth);
   }
@@ -85,6 +89,13 @@
       background: #fff;
       box-shadow: 0 2px 8px #0006;
       cursor: pointer;
+      overflow: hidden;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   }
 </style>
@@ -100,6 +111,9 @@
 
 <script type="module">
   const flowerModule = import("./flower.mjs");
+
+  const isTouch = navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth <= 640;
 
   const hues = [350, 150, 270];
   const config = {
@@ -147,17 +161,38 @@
 
   const presetRow = document.getElementById("presetRow");
   const controls = [
-    { label: "A", gridSize: 125, duration: 2000, interval: 15 },
-    { label: "B", gridSize: 400, duration: 6000, interval: 5000 },
+    {
+      label: "A",
+      icon: "preset-a.png",
+      gridSize: 125,
+      duration: 2000,
+      interval: 15,
+    },
+    {
+      label: "B",
+      icon: "preset-b.png",
+      gridSize: Math.min(
+        400,
+        window.innerWidth * 0.5,
+        window.innerHeight * 0.5,
+      ),
+      duration: 6000,
+      interval: 5000,
+    },
   ];
-  for (const { label, gridSize, duration, interval } of controls) {
+  function applyPreset({ gridSize, duration, interval }) {
+    flowerControls?.setGridSize(gridSize);
+    flowerControls?.setFlowerDuration(duration);
+    flowerControls?.setFlowerInterval(interval);
+  }
+
+  for (const control of controls) {
     const button = document.createElement("button");
-    button.textContent = label;
-    button.onclick = () => {
-      flowerControls?.setGridSize(gridSize);
-      flowerControls?.setFlowerDuration(duration);
-      flowerControls?.setFlowerInterval(interval);
-    };
+    button.setAttribute("aria-label", control.label);
+    const image = document.createElement("img");
+    image.src = control.icon;
+    button.append(image);
+    button.onclick = () => applyPreset(control);
     presetRow.append(button);
   }
 
@@ -171,6 +206,9 @@
     pattern.append(container);
 
     flowerControls = { setGridSize, setFlowerDuration, setFlowerInterval };
+
+    const [presetA, presetB] = controls;
+    applyPreset(isSmallScreen ? presetA : presetB);
   }
 
   function renderPatternSegmentTypes(values) {
@@ -194,49 +232,53 @@
   let drag = null;
   let selectedEdge = null;
 
-  pattern.addEventListener("pointermove", (event) => {
-    if (drag != null && selectedEdge) {
-      updateConfig(
-        {
-          ...config,
-          [selectedEdge.control]:
-            (event.clientX - drag.grabOffset - drag.anchorX) * selectedEdge.dir,
-        },
-        selectedEdge.control,
-      );
-      selectedEdge.x =
-        drag.anchorX + selectedEdge.dir * config[selectedEdge.control];
-      selectedEdge.segmentType.size = config[selectedEdge.control];
-    } else {
-      selectedEdge = selectSegmentEdge(event.clientX);
-    }
-    if (selectedEdge) {
-      showDragHandle(selectedEdge, event.clientX, event.clientY);
-    } else {
+  if (!isMobile) {
+    pattern.addEventListener("pointermove", (event) => {
+      if (drag != null && selectedEdge) {
+        updateConfig(
+          {
+            ...config,
+            [selectedEdge.control]:
+              (event.clientX - drag.grabOffset - drag.anchorX) *
+              selectedEdge.dir,
+          },
+          selectedEdge.control,
+        );
+        selectedEdge.x =
+          drag.anchorX + selectedEdge.dir * config[selectedEdge.control];
+        selectedEdge.segmentType.size = config[selectedEdge.control];
+      } else {
+        selectedEdge = selectSegmentEdge(event.clientX);
+      }
+      if (selectedEdge) {
+        showDragHandle(selectedEdge, event.clientX, event.clientY);
+      } else {
+        hideDragHandle();
+      }
+    });
+
+    pattern.addEventListener("pointerleave", () => {
+      drag = null;
       hideDragHandle();
-    }
-  });
+    });
 
-  pattern.addEventListener("pointerleave", () => {
-    drag = null;
-    hideDragHandle();
-  });
+    pattern.addEventListener("pointerdown", (event) => {
+      drag = {
+        anchorX:
+          selectedEdge.x - selectedEdge.dir * config[selectedEdge.control],
+        grabOffset: event.clientX - selectedEdge.x,
+      };
+      config.shift =
+        selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
+      config.offset = drag.anchorX;
+      showDragHandle(selectedEdge, event.clientX, event.clientY);
+    });
 
-  pattern.addEventListener("pointerdown", (event) => {
-    drag = {
-      anchorX: selectedEdge.x - selectedEdge.dir * config[selectedEdge.control],
-      grabOffset: event.clientX - selectedEdge.x,
-    };
-    config.shift =
-      selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
-    config.offset = drag.anchorX;
-    showDragHandle(selectedEdge, event.clientX, event.clientY);
-  });
-
-  pattern.addEventListener("pointerup", (event) => {
-    drag = null;
-    hideDragHandle();
-  });
+    pattern.addEventListener("pointerup", (event) => {
+      drag = null;
+      hideDragHandle();
+    });
+  }
 
   document.addEventListener("wheel", (event) => {
     config.hue += event.deltaY * 0.1;
