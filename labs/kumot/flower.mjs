@@ -2,89 +2,170 @@ import { createNoise2D } from "./lib/simplex-noise.mjs";
 
 const UPDATE_INTERVAL_MS = 25;
 const ANGLE_PER_UPDATE = 0.6;
-const CLEAR_MS = 6000;
 
-export function setupFlowers(container) {
-  const canvas = document.createElement("canvas");
-  canvas.style.cssText =
-    "position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply";
-  container.append(canvas);
+const GREEN = "#1b1";
+const DARK_GREEN = "#191";
 
-  const ctx = canvas.getContext("2d");
-  const cellSize = 300;
+export function setupFlowers() {
+  const container = document.createElement("div");
+  container.style.cssText = "position:absolute;inset:0";
+
+  let gridSize = 400;
+  let duration = 6000;
+  let paramsIntervalMs = 5000;
+  let paramsIntervalId = null;
   let flowers = [];
   let grid = new Map();
 
-  function resize() {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = container.clientWidth * dpr;
-    canvas.height = container.clientHeight * dpr;
-    canvas.style.width = container.clientWidth + "px";
-    canvas.style.height = container.clientHeight + "px";
-    ctx.scale(dpr, dpr);
-    buildGrid();
-  }
-
-  function buildGrid() {
-    for (const flower of flowers) {
-      flower.clear();
-    }
-    flowers = [];
+  function setGridSize(size) {
+    gridSize = size;
     grid = new Map();
   }
 
+  function setFlowerDuration(ms) {
+    duration = ms;
+  }
+
+  function setFlowerInterval(ms) {
+    paramsIntervalMs = ms;
+    if (paramsIntervalId != null) startFlowerInterval();
+  }
+
+  function startFlowerInterval() {
+    clearInterval(paramsIntervalId);
+    paramsIntervalId = setInterval(() => {
+      flowerParams = randomFlowerParams();
+    }, paramsIntervalMs);
+  }
+
   function findNearestKey(px, py) {
-    const rowHeight = (cellSize * Math.sqrt(3)) / 2;
-    const row = Math.round(py / rowHeight);
-    const col = Math.round((px - ((row % 2) * cellSize) / 2) / cellSize);
+    const rowHeight = (gridSize * Math.sqrt(3)) / 2;
+    const row = Math.round(py / rowHeight - 0.5);
+    const col = Math.round((px - ((row % 2) * gridSize) / 2) / gridSize);
     return `${col},${row}`;
   }
 
   function cellPosition(key) {
     const [col, row] = key.split(",").map(Number);
-    const rowHeight = (cellSize * Math.sqrt(3)) / 2;
-    return [col * cellSize + ((row % 2) * cellSize) / 2, row * rowHeight];
+    const rowHeight = (gridSize * Math.sqrt(3)) / 2;
+    return [col * gridSize + ((row % 2) * gridSize) / 2, (row + 0.5) * rowHeight];
   }
 
-  function tick() {
+  setInterval(() => {
     for (const flower of flowers) {
       flower.update();
     }
-  }
+  }, UPDATE_INTERVAL_MS);
 
-  let flowerParams = randomFlowerParams();
-  setInterval(() => {
-    flowerParams = randomFlowerParams();
-  }, CLEAR_MS * 2);
+  /** @type {FlowerParams} */
+  let flowerParams = {
+    petals: 5,
+    sharpness: 0.05,
+    layers: 1,
+    layerScale: 0.6,
+    noisiness: 0.25,
+    innerFill: 0.15,
+    veinReach: 0.9,
+    color: { h: 0, s: 95, l: 45 },
+  };
 
-  resize();
-  new ResizeObserver(resize).observe(container);
-  setInterval(tick, UPDATE_INTERVAL_MS);
+  let lastMoveBloomTime = 0;
 
   container.addEventListener("pointermove", (event) => {
+
     const key = findNearestKey(event.clientX, event.clientY);
     if (grid.has(key)) return;
-    const [x, y] = cellPosition(key);
-    const flower = new Flower(ctx, x, y, cellSize, flowerParams);
+
+    spawnFlower(key);
+    lastMoveBloomTime = Date.now();
+  });
+
+  setInterval(() => {
+    if (Date.now() - lastMoveBloomTime < 4000) return;
+
+    const x = Math.random() * container.clientWidth;
+    const y = Math.random() * container.clientHeight;
+    const key = findNearestKey(x, y);
+    if (grid.has(key)) return;
+
+    spawnFlower(key);
+  }, 200);
+
+  let firstBloom = true;
+
+  function spawnFlower(key) {
+    const [cx, cy] = cellPosition(key);
+    const flowerRadius = 60;
+    const canvas = createCellCanvas(container, cx, cy, flowerRadius * 5);
+    const flower = new Flower(
+      canvas,
+      (flowerRadius * 5) / 2,
+      (flowerRadius * 5) / 2,
+      60,
+      flowerParams,
+    );
     flower.bloom();
     flowers.push(flower);
     grid.set(key, flower);
+
+    if (firstBloom) {
+      firstBloom = false;
+      startFlowerInterval();
+    }
+
     setTimeout(async () => {
-      await flower.clear();
       grid.delete(key);
       const idx = flowers.indexOf(flower);
       if (idx >= 0) flowers.splice(idx, 1);
-    }, CLEAR_MS);
-  });
+      await clearCanvas(canvas);
+      canvas.remove();
+    }, duration);
+  }
 
+  return {
+    container,
+    setGridSize,
+    setFlowerDuration,
+    setFlowerInterval,
+  };
+}
+
+async function clearCanvas(canvas) {
+  const ctx = canvas.getContext("2d");
+  const { width, height } = canvas;
+
+  ctx.globalCompositeOperation = "destination-over";
+  ctx.fillStyle = "rgb(255,255,255)";
+  ctx.fillRect(0, 0, width, height);
+  ctx.globalCompositeOperation = "source-over";
+
+  const fadeSteps = 45;
+  const lighten = Math.ceil(255 / fadeSteps);
+  for (let i = 0; i < fadeSteps; i++) {
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = `rgb(${lighten},${lighten},${lighten})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = "source-over";
+    await new Promise((r) => setTimeout(r, UPDATE_INTERVAL_MS));
+  }
+}
+
+function createCellCanvas(parent, centerX, centerY, cellSize) {
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = cellSize * dpr;
+  canvas.height = cellSize * dpr;
+  canvas.style.cssText = `position:absolute;left:${centerX - cellSize / 2}px;top:${centerY - cellSize / 2}px;width:${cellSize}px;height:${cellSize}px;mix-blend-mode: multiply;`;
+  parent.append(canvas);
+  canvas.getContext("2d").scale(dpr, dpr);
   return canvas;
 }
 
 class Flower {
+  #canvas;
   #ctx;
   #x;
   #y;
-  #cellSize;
   #radius;
   #state = null;
   #layer = 0;
@@ -109,10 +190,10 @@ class Flower {
   #leafDist = 0;
 
   constructor(
-    ctx,
+    canvas,
     x,
     y,
-    cellSize,
+    radius,
     {
       petals = 5,
       sharpness = 0.5,
@@ -124,11 +205,11 @@ class Flower {
       color = { h: 10, s: 90, l: 55 },
     },
   ) {
-    this.#ctx = ctx;
+    this.#canvas = canvas;
+    this.#ctx = canvas.getContext("2d");
     this.#x = x;
     this.#y = y;
-    this.#cellSize = cellSize;
-    this.#radius = cellSize / 5;
+    this.#radius = radius;
     this.#petals = petals;
     this.#sharpness = sharpness;
     this.#layers = layers;
@@ -150,43 +231,6 @@ class Flower {
     this.#noise = createNoise();
     this.#startAngle = Math.atan2(this.#faceY, this.#faceX) + Math.PI;
     this.#drawAngle = this.#startAngle;
-
-    this.#ctx.globalCompositeOperation = "destination-out";
-    this.#ctx.beginPath();
-    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
-    this.#ctx.fill();
-    this.#ctx.globalCompositeOperation = "source-over";
-  }
-
-  async clear() {
-    this.#state = "clear";
-
-    this.#ctx.globalCompositeOperation = "destination-over";
-    this.#ctx.fillStyle = `rgba(255,255,255)`;
-    this.#ctx.beginPath();
-    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2 + 1, 0, Math.PI * 2);
-    this.#ctx.fill();
-    this.#ctx.globalCompositeOperation = "source-over";
-
-    const fadeSteps = 45;
-    const lighten = Math.ceil(255 / fadeSteps);
-    for (let i = 0; i < fadeSteps; i++) {
-      this.#ctx.globalCompositeOperation = "lighter";
-      this.#ctx.fillStyle = `rgba(${lighten},${lighten},${lighten})`;
-      this.#ctx.beginPath();
-      this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2 - 1, 0, Math.PI * 2);
-      this.#ctx.fill();
-      this.#ctx.globalCompositeOperation = "source-over";
-      await new Promise((r) => setTimeout(r, UPDATE_INTERVAL_MS));
-    }
-
-    this.#ctx.globalCompositeOperation = "destination-out";
-    this.#ctx.beginPath();
-    this.#ctx.arc(this.#x, this.#y, this.#cellSize / 2, 0, Math.PI * 2);
-    this.#ctx.fill();
-    this.#ctx.globalCompositeOperation = "source-over";
-
-    this.#state = null;
   }
 
   update() {
@@ -406,7 +450,12 @@ class Flower {
     const centerX = this.#x + offsetX;
     const centerY = this.#y + offsetY;
     const { h, s, l } = this.#color;
-    const outlineColor = `hsl(${h},${s}%,${l}%)`;
+    let outlineColor = `hsl(${h},${s}%,${l}%)`;
+    let fillColor = "#fff";
+    if (stamenLength < this.#radius * 0.4 && (totalPetals * 111) % 17 < 10) {
+      outlineColor = DARK_GREEN;
+      fillColor = GREEN;
+    }
 
     const steps = 6;
     const stepLen = stamenLength / steps;
@@ -415,8 +464,14 @@ class Flower {
 
     for (let step = 0; step < steps; step++) {
       const angle = Math.random() * Math.PI * 2;
-      const nx = px + Math.cos(angle) * stepLen * 0.3 + this.#faceX * stepLen;
-      const ny = py + Math.sin(angle) * stepLen * 0.3 + this.#faceY * stepLen;
+      const nx =
+        px +
+        Math.cos(angle) * stepLen * (10 / stamenLength) +
+        this.#faceX * stepLen;
+      const ny =
+        py +
+        Math.sin(angle) * stepLen * (10 / stamenLength) +
+        this.#faceY * stepLen;
 
       this.#ctx.strokeStyle = outlineColor;
       this.#ctx.lineWidth = 3;
@@ -425,7 +480,7 @@ class Flower {
       this.#ctx.lineTo(nx, ny);
       this.#ctx.stroke();
 
-      this.#ctx.strokeStyle = "#fff";
+      this.#ctx.strokeStyle = fillColor;
       this.#ctx.lineWidth = 1.5;
       this.#ctx.beginPath();
       this.#ctx.moveTo(px, py);
@@ -440,7 +495,7 @@ class Flower {
     this.#ctx.beginPath();
     this.#ctx.arc(px, py, 3, 0, Math.PI * 2);
     this.#ctx.fill();
-    this.#ctx.fillStyle = "#fff";
+    this.#ctx.fillStyle = fillColor;
     this.#ctx.beginPath();
     this.#ctx.arc(
       px + (Math.random() - 0.5) * 4,
@@ -462,8 +517,6 @@ class Flower {
       this.#state = "done";
       return;
     }
-
-    const color = "#1b1";
 
     const angle = this.#startAngle + this.#leaves * 2.4;
     const length = this.#radius * (1.1 + (this.#noise(angle, -1) - 0.5) * 0.4);
@@ -495,26 +548,26 @@ class Flower {
     ];
     const tip = [this.#x + dirX * length, this.#y + dirY * length];
 
-    const balance = (this.#noise(this.#leaves, 167) - 0.5) * 2 * 0.3;
+    const balance = (this.#noise(this.#leaves, 167) - 0.5) * 2 * 0.1;
     const leftControl = [
       this.#x +
         dirX * length * (0.3 + balance) +
         -dirY * width +
-        this.#faceX * width * 0.2,
+        this.#faceX * width * 0.3,
       this.#y +
         dirY * length * (0.3 + balance) +
         dirX * width +
-        this.#faceY * width * 0.2,
+        this.#faceY * width * 0.3,
     ];
     const rightControl = [
       this.#x +
         dirX * length * (0.3 - balance) -
         -dirY * width +
-        this.#faceX * width * 0.2,
+        this.#faceX * width * 0.3,
       this.#y +
         dirY * length * (0.3 - balance) -
         dirX * width +
-        this.#faceY * width * 0.2,
+        this.#faceY * width * 0.3,
     ];
 
     const getCurvePoint = (control, curveT) => {
@@ -522,13 +575,13 @@ class Flower {
       const nv =
         (this.#noise(angle + curveT * Math.PI, -1) - 0.5) *
         length *
-        (0.015 + this.#noisiness * 0.04);
+        (0.03 + this.#noisiness * 0.04);
       return [px - dirY * nv, py + dirX * nv];
     };
 
     this.#ctx.globalCompositeOperation = "destination-over";
 
-    this.#ctx.strokeStyle = color;
+    this.#ctx.strokeStyle = GREEN;
     this.#ctx.lineWidth = 3;
     this.#ctx.beginPath();
     this.#ctx.moveTo(...getCurvePoint(leftControl, prevT));
@@ -537,8 +590,22 @@ class Flower {
     this.#ctx.lineTo(...getCurvePoint(rightControl, t));
     this.#ctx.stroke();
 
-    const veinSpacing = 4 + 4 * Math.abs(balance);
-    this.#ctx.fillStyle = color;
+    const leafFace = faceDirX * -dirY + faceDirY * dirX;
+    const midribPoint = (curveT) => {
+      const [lx, ly] = getCurvePoint(leftControl, curveT);
+      const [rx, ry] = getCurvePoint(rightControl, curveT);
+      const sideDist = Math.hypot(rx - lx, ry - ly);
+      const offset = leafFace * sideDist * 0.2;
+      return [(lx + rx) / 2 - dirY * offset, (ly + ry) / 2 + dirX * offset];
+    };
+    this.#ctx.lineWidth = 6 * (1 - t);
+    this.#ctx.beginPath();
+    this.#ctx.moveTo(...midribPoint(prevT));
+    this.#ctx.lineTo(...midribPoint(t));
+    this.#ctx.stroke();
+
+    const veinSpacing = 3 + 2 * Math.abs(balance);
+    this.#ctx.fillStyle = GREEN;
     for (
       let veinIndex = Math.floor(prevDist / veinSpacing) + 1;
       veinIndex <= Math.floor(this.#leafDist / veinSpacing);
@@ -546,30 +613,23 @@ class Flower {
     ) {
       const veinT =
         (veinIndex * veinSpacing) / length +
-        (this.#noise(veinIndex, this.#leaves) - 0.5) * 0.02;
+        (this.#noise(veinIndex, this.#leaves) - 0.5) * 0.01;
       const veinReach = Math.min(
         1,
-        0.5 + 0.5 * faceness + this.#noise(veinIndex * 10, this.#leaves) * 0.2,
+        0.2 + 1.6 * faceness + this.#noise(veinIndex * 10, this.#leaves) * 0.2,
       );
       this.#ctx.beginPath();
       this.#ctx.moveTo(
         ...getCurvePoint(
           leftControl,
-          clamp(
-            veinT - (veinReach * (6 + 4 * Math.abs(balance))) / length,
-            0,
-            1,
-          ),
+          clamp(veinT - (veinReach * 4) / length, 0, 1),
         ),
       );
       this.#ctx.lineTo(
         ...getCurvePoint(leftControl, clamp(veinT + 1 / length, 0, 1)),
       );
       const [baseX, baseY] = getCurvePoint(leftControl, veinT);
-      const [otherX, otherY] = getCurvePoint(
-        rightControl,
-        clamp(veinT ** 0.5, 0, 1),
-      );
+      const [otherX, otherY] = getCurvePoint(rightControl, veinT);
       this.#ctx.lineTo(
         lerp(baseX, otherX, veinReach),
         lerp(baseY, otherY, veinReach),
@@ -599,34 +659,47 @@ class Flower {
   }
 }
 
+/**
+ * @typedef {object} FlowerParams
+ * @property {number} petals
+ * @property {number} sharpness
+ * @property {number} layers
+ * @property {number} layerScale
+ * @property {number} noisiness
+ * @property {number} innerFill
+ * @property {number} veinReach
+ * @property {{ h: number, s: number, l: number }} color
+ */
+
+/** @returns {FlowerParams} */
 function randomFlowerParams() {
-  const petals = clamp(Math.round(normalRandom(6.5, 3)), 2, 13);
+  const petals = clamp(Math.round(normalRandom(6.5, 3)), 1, 14);
   const petalFraction = (petals - 3) / 10;
   const sharpness =
-    clamp(0.2 + petalFraction * 0.1 + Math.random() * 0.25, 0, 1) ** 2;
+    clamp(0.1 + petalFraction * 0.1 + Math.random() * 0.45, 0, 1) ** 2;
   const layers = clamp(
-    Math.round(1 - petalFraction * 1.5 + Math.random() * 4),
+    Math.round(1 - petalFraction * 1.5 + Math.random() * 5),
     1,
-    5,
+    6,
   );
   const innerFill = clamp(
-    0.1 + layers * 0.1 - sharpness * 0.2 + Math.random() * 0.2,
+    0.1 + layers * 0.1 - sharpness * 0.2 + Math.random() * 0.3,
     0,
     1,
   );
   const layerScale = clamp(
-    0.65 - sharpness * 0.2 + layers * 0.02 + Math.random() * 0.15,
-    0.5,
-    0.85,
+    0.6 - sharpness * 0.2 + layers * 0.02 + Math.random() * 0.35,
+    0.45,
+    0.9,
   );
   return {
     petals,
     sharpness,
     layers,
     layerScale,
-    noisiness: 0.2 + Math.random() * 0.3,
+    noisiness: 0.1 + Math.random() * 0.5,
     innerFill,
-    veinReach: 0.6 + Math.random() * 0.4,
+    veinReach: 0.5 + Math.random() * 0.5,
     color: {
       h: -5 + Math.random() * 20,
       s: 95,
