@@ -64,9 +64,9 @@ export function setupFlowers() {
     layers: 1,
     layerScale: 0.6,
     noisiness: 0.25,
-    innerFill: 0.15,
+    innerFill: 0.4,
     veinReach: 0.9,
-    color: { h: 0, s: 95, l: 45 },
+    color: { h: 20, s: 95, l: 50 },
   };
 
   let lastMoveBloomTime = 0;
@@ -701,9 +701,9 @@ function randomFlowerParams() {
     innerFill,
     veinReach: 0.5 + Math.random() * 0.5,
     color: {
-      h: -5 + Math.random() * 20,
+      h: -5 + Math.random() * 35,
       s: 95,
-      l: 45,
+      l: 50,
     },
   };
 }
