@@ -3,8 +3,8 @@ import { createNoise2D } from "./lib/simplex-noise.mjs";
 const UPDATE_INTERVAL_MS = 25;
 const ANGLE_PER_UPDATE = 0.6;
 
-const GREEN = "#1b1";
-const DARK_GREEN = "#191";
+const GREEN = "#3a3";
+const DARK_GREEN = "#484";
 
 export function setupFlowers() {
   const container = document.createElement("div");
@@ -64,9 +64,9 @@ export function setupFlowers() {
     layers: 1,
     layerScale: 0.6,
     noisiness: 0.25,
-    innerFill: 0.15,
+    innerFill: 0.4,
     veinReach: 0.9,
-    color: { h: 0, s: 95, l: 45 },
+    color: { h: 20, s: 80, l: 50 },
   };
 
   let lastMoveBloomTime = 0;
@@ -701,9 +701,9 @@ function randomFlowerParams() {
     innerFill,
     veinReach: 0.5 + Math.random() * 0.5,
     color: {
-      h: -5 + Math.random() * 20,
-      s: 95,
-      l: 45,
+      h: -5 + Math.random() * 35,
+      s: 80,
+      l: 50,
     },
   };
 }
