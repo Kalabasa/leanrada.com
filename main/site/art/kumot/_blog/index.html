@@ -15,6 +15,80 @@
 </content-header>
 
 <main appearance="prose">
+  <p>Back in the Philippines, seemingly every home had the same kind of blanket. This blanket:</p>
+
+  img
+
+  <p>I’ve had these back home while growing up. It was comfy. It was airy (Philippines is a humid tropical place). It didn’t tatter and lasted years.</p>
+
+  <p>I made a webtoy that draws this pattern with random procedurally generated flowers to go along with it. I called it <strong><a href="/art/kumot/">Kumot</a></strong>, which literally means ‘blanket’.</p>
+
+  <blockquote>
+    <strong>[kú•mot]</strong> <em>noun</em><br>
+    blanket.
+    <cite>some dictionary</cite>
+  </blockquote>
+
+  <p>This post I go over how I created it.</p>
+
+  <h2>The algorithm</h2>
+
+  <p>It starts with the base striped pattern. I’ve looked up examples online, and while proportions vary, there is a consistent pattern.</p>
+
+  img
+
+  <p>The colors are kind of a strong primary pastel color against white. I’ve put a hue selector for the most typical colors you’d find in real life.</p>
+
+  img img img
+
+  <p>The flowers were the most complex thing in this project and the aspect I spent the most time on.</p>
+
+  img
+
+  <p>Basically, it’s drawn in a polar coordinate fashion. If you laid out the angle and the distance as x- and y-coordinates in a Cartesian plane, it becomes obvious how this was built. It’s just a sinusoid mirrored in half to produce the basic lobes for the petals.</p>
+
+  interactive (slider: polar-cartesian)
+
+  <p>The contour is further shaped by an exponent. Remember that 0<sup>x</sup> = 0 and 1<sup>x</sup> = 1, and anything in between stays between 0 and 1, no matter the exponent, so we can freely randomise the exponent. The exponent essentially describes how full or thin the petals are, so we can go from daisy to hibiscus and everything in between.</p>
+
+  interactive (slider: petal exponent)
+  img left daisy
+  img right hibiscus
+
+  <p>Up until now, it still looks unnatural and perfectly geometric. Let’s make some noise. A simple coherent fractal noise (e.g. Perlin, simplex) gives that natural imperfection.</p>
+
+  interactive (slider: noise proportion)
+
+  <p>Some flowers have more than one layer of petals. This is easy, we just draw the same thing smaller with some angular offset. Draw order is important! Back to front.</p>
+
+  interactive: layers
+
+  <p>The rest of the details are simple lines and fills individually, but together give a lot of depth. The trick I used to fake 3D is to bias each point of the flower towards a certain direction <em>proportional to its distance from the center</em>.</p>
+
+  interactive:
+  draggable facing direction
+  checkbox veins
+  checkbox fill
+  checkbox stamen
+
+  <p>The leaves are drawn last, and behind the petals using a composite operation that only allows transparent pixels to be overwritten. Useful trick when you don’t want to deal with layers. Draw order is not that critical after all.</p>
+  
+  <p>Actually, the draw order here must serves the animation more than the z-ordering. I need the petals to animate first! If we did the standard back-to-front draw ordering, it wouldn't look nice in the animation.</p>
+
+  <p>The flowers fade after a time. The fade effect uses a component-wise addition instead of standard opacity-based fade. It’s hard to explain, just see the example:</p>
+
+  fade animation 1
+  fade animation 2
+  fade animation 3
+
+  <p>Flowers are composited onto the base stripe pattern using the mutiply blend mode, which mimics how dyes work.</p>
+
+  real world example img
+  kumotgen img
+
+  <p>Finally some fabric textures using repeated linear gradients and some noise.</p>
+
+  Gallery
 </main>
 
 <article-footer></article-footer>

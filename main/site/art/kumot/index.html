@@ -1,9 +1,8 @@
-<link rel="canonical" href="/art/kumot/">
 <title>Kumot Kumot</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="canonical" href="/art/kumot/" />
 
 <meta name="description" content="Classic blanket interactive web toy!" />
-
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Legendary blanket generator" />
 <meta
@@ -16,7 +15,6 @@
 />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="675" />
-
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Legendary blanket generator" />
 <meta
@@ -156,7 +154,7 @@
     </script>
     GENERATOR.
   </b>
-  made by <a href="https://leanrada.com">lean</a>.
+  <a href="./blog/">blog.</a>
 </div>
 
 <div id="pattern">
@@ -169,7 +167,7 @@
 </div>
 
 <script type="module">
-  const flowerModule = import("./flower.mjs");
+  const loadingFlowerModule = loadFlowerModule();
   let flowerControls = null;
 
   const pattern = document.getElementById("pattern");
@@ -272,15 +270,29 @@
       requestAnimationFrame(() => animateEntrance(Math.min(1, t + 0.01)));
     } else {
       document.documentElement.classList.add("ready");
-      loadFlowers();
+      setupFlowers();
     }
   }
 
-  async function loadFlowers() {
-    const { setupFlowers } = await flowerModule;
+  async function loadFlowerModule() {
+    for (let tries = 0; tries < 100; tries++) {
+      try {
+        // unique param because browsers cache module import failures
+        const flowerModule = await import("./flower.mjs?t=" + tries);
+        return flowerModule;
+      } catch (e) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 3000 * 1.5 ** tries),
+        );
+      }
+    }
+  }
+
+  async function setupFlowers() {
+    const flowerModule = await loadingFlowerModule;
 
     const { container, setGridSize, setFlowerDuration, setFlowerInterval } =
-      setupFlowers();
+      flowerModule.setupFlowers();
 
     container.classList.add("flowers");
     pattern.append(container);
