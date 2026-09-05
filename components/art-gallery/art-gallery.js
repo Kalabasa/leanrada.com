@@ -68,7 +68,7 @@ customElements.define(
               transition-delay: 0.4s;
             }
 
-            img {
+            img, video {
               grid-row: 1 / -1;
               grid-column: 1 / -1;
               border-radius: 3px;
@@ -101,10 +101,10 @@ customElements.define(
                 transform: translateX(-60px) rotate3d(0, 1, 0, -15deg);
               }
             }
-            &:not(:focus) img.art-gallery-active {
+            &:not(:focus) :where(img,video).art-gallery-active {
               filter: brightness(0.8);
             }
-            &:focus-visible img {
+            &:focus-visible :where(img,video) {
               outline: solid 4px var(--clr0);
               outline-offset: 6px;
             }
