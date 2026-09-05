@@ -1,0 +1,549 @@
+<title>Kumot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="canonical" href="/art/kumot/" />
+
+<meta name="description" content="Classic blanket interactive web toy!" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Legendary blanket generator" />
+<meta
+  property="og:description"
+  content="Classic blanket interactive web toy!"
+/>
+<meta
+  property="og:image"
+  content="https://leanrada.com/art/kumot/preview.png"
+/>
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="675" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Legendary blanket generator" />
+<meta
+  name="twitter:description"
+  content="Classic blanket interactive web toy!"
+/>
+<meta
+  name="twitter:image"
+  content="https://leanrada.com/art/kumot/preview.png"
+/>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #info {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    z-index: calc(infinity);
+  }
+
+  #pattern {
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    filter: url(#cloth);
+  }
+
+  .fabric {
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: multiply;
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        rgba(0, 0, 0, 0.06) 3px
+      ),
+      repeating-linear-gradient(to left, transparent, rgba(0, 0, 0, 0.02) 3px),
+      url("noise.png");
+  }
+
+  :root.ready .dragHandle {
+    position: absolute;
+    pointer-events: none;
+    width: 100px;
+    height: 100px;
+    transform-origin: 0 50%;
+    clip-path: path("M0,0 C0,40 0,40 100,50 C0,60 0,60 0,100 Z");
+    transition: 50ms ease-in;
+    transition-property: scale, background-color;
+    z-index: 1;
+  }
+
+  .flowers canvas {
+    z-index: 2;
+  }
+
+  #hueSelector {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: calc(infinity);
+
+    button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px #0006;
+      cursor: pointer;
+
+      &[aria-pressed="true"] {
+        border-color: #000;
+      }
+    }
+  }
+
+  #presetSelector {
+    position: fixed;
+    bottom: 68px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: calc(infinity);
+
+    button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background: #fff;
+      box-shadow: 0 2px 8px #0006;
+      cursor: pointer;
+      overflow: hidden;
+
+      &[aria-pressed="true"] {
+        border-color: #000;
+      }
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+</style>
+
+<div id="info">
+  <b>
+    LEGENDARY
+    <script>
+      const malay = navigator.languages.some((tag) =>
+        ["id", "ms"].includes(tag.split("-")[0]),
+      );
+      const term = malay ? "selimut" : "kumot";
+      document.currentScript.replaceWith(term.toUpperCase());
+      document.title = `${term} legenerator`;
+    </script>
+    MAKER.
+  </b>
+  <a href="./blog/">blog.</a>
+</div>
+
+<div id="pattern">
+  <div class="fabric"></div>
+</div>
+
+<div id="controls">
+  <div id="presetSelector"></div>
+  <div id="hueSelector"></div>
+</div>
+
+<script type="module">
+  const loadingFlowerModule = loadFlowerModule();
+  let flowerControls = null;
+
+  const pattern = document.getElementById("pattern");
+
+  const isTouch = navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth <= 640;
+
+  const hues = [350, 150, 270];
+  const config = {
+    hue: hues[2],
+    dark: 64,
+    light: 96,
+    line: 5,
+    offset: window.innerWidth / 2,
+    shift: 0,
+  };
+
+  const hueSelector = document.getElementById("hueSelector");
+  const hueButtons = new Map();
+
+  for (const hue of hues) {
+    const button = document.createElement("button");
+    button.style.backgroundColor = renderColor(hue, true);
+    button.setAttribute("aria-pressed", hue === config.hue);
+    button.onclick = () => applyHue(hue);
+    hueSelector.append(button);
+    hueButtons.set(hue, button);
+  }
+
+  function applyHue(hue) {
+    config.hue = hue;
+    render(config);
+    for (const [buttonHue, button] of hueButtons) {
+      button.setAttribute("aria-pressed", buttonHue === hue);
+    }
+  }
+
+  const presetSelector = document.getElementById("presetSelector");
+  const presetButtons = new Map();
+  const presets = [
+    {
+      label: "A",
+      icon: "preset-a.png",
+      gridSize: 125,
+      duration: 2000,
+      interval: 15,
+    },
+    {
+      label: "B",
+      icon: "preset-b.png",
+      gridSize: Math.min(
+        400,
+        window.innerWidth * 0.5,
+        window.innerHeight * 0.5,
+      ),
+      duration: 6000,
+      interval: 5000,
+    },
+  ];
+
+  for (const preset of presets) {
+    const button = document.createElement("button");
+    button.setAttribute("aria-label", preset.label);
+    const image = document.createElement("img");
+    image.src = preset.icon;
+    button.append(image);
+    button.onclick = () => applyPreset(preset);
+    presetSelector.append(button);
+    presetButtons.set(preset, button);
+  }
+
+  function applyPreset(preset) {
+    const { gridSize, duration, interval } = preset;
+    flowerControls?.setGridSize(gridSize);
+    flowerControls?.setFlowerDuration(duration);
+    flowerControls?.setFlowerInterval(interval);
+    for (const [buttonPreset, button] of presetButtons) {
+      button.setAttribute("aria-pressed", buttonPreset === preset);
+    }
+  }
+
+  applyDefaultPreset();
+  function applyDefaultPreset() {
+    applyPreset(isSmallScreen ? presets[0] : presets[1]);
+  }
+
+  animateEntrance(0);
+  function animateEntrance(t) {
+    // prettier-ignore
+    const ease = t === 0 ? 0 : t === 1   ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2;
+    const interpolated = {
+      ...config,
+      hue: config.hue + -120 * (1 - ease),
+      dark: config.dark * ease,
+      light: config.light * ease + 900 * (1 - ease),
+      line: config.line * Math.max(0, ease * 20 - 19),
+    };
+    render(interpolated);
+    if (t < 1) {
+      requestAnimationFrame(() => animateEntrance(Math.min(1, t + 0.01)));
+    } else {
+      document.documentElement.classList.add("ready");
+      setupFlowers();
+    }
+  }
+
+  async function loadFlowerModule() {
+    for (let tries = 0; tries < 100; tries++) {
+      try {
+        // unique param because browsers cache module import failures
+        const flowerModule = await import("./flower.mjs?t=" + tries);
+        return flowerModule;
+      } catch (e) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 3000 * 1.5 ** tries),
+        );
+      }
+    }
+  }
+
+  async function setupFlowers() {
+    const flowerModule = await loadingFlowerModule;
+
+    const { container, setGridSize, setFlowerDuration, setFlowerInterval } =
+      flowerModule.setupFlowers();
+
+    container.classList.add("flowers");
+    pattern.append(container);
+
+    flowerControls = { setGridSize, setFlowerDuration, setFlowerInterval };
+
+    applyDefaultPreset();
+  }
+
+  function renderPatternSegmentTypes(values) {
+    const types = [
+      { dark: true, size: values.dark, controlRight: "dark" },
+      { dark: false, size: values.light, controlLeft: "light" },
+      { dark: true, size: values.line, controlLeft: "line" },
+      { dark: false, size: values.line * 2 },
+      { dark: true, size: values.line, controlRight: "line" },
+      { dark: false, size: values.light, controlRight: "light" },
+      { dark: true, size: values.dark, controlLeft: "dark" },
+      { dark: false, size: values.line, controlBoth: "line" },
+    ];
+    return types.map((_, i) => {
+      const index = (values.shift + i) % types.length;
+      return { ...types[index], index };
+    });
+  }
+
+  let dragHandle = null;
+  let drag = null;
+  let selectedEdge = null;
+
+  if (!isTouch) {
+    pattern.addEventListener("pointermove", (event) => {
+      if (drag != null && selectedEdge) {
+        updateConfig(
+          {
+            ...config,
+            [selectedEdge.control]:
+              (event.clientX - drag.grabOffset - drag.anchorX) *
+              selectedEdge.dir,
+          },
+          selectedEdge.control,
+        );
+        selectedEdge.x =
+          drag.anchorX + selectedEdge.dir * config[selectedEdge.control];
+        selectedEdge.segmentType.size = config[selectedEdge.control];
+      } else {
+        selectedEdge = selectSegmentEdge(event.clientX);
+      }
+      if (selectedEdge) {
+        showDragHandle(selectedEdge, event.clientX, event.clientY);
+      } else {
+        hideDragHandle();
+      }
+    });
+
+    pattern.addEventListener("pointerleave", () => {
+      drag = null;
+      hideDragHandle();
+    });
+
+    pattern.addEventListener("pointerdown", (event) => {
+      drag = {
+        anchorX:
+          selectedEdge.x - selectedEdge.dir * config[selectedEdge.control],
+        grabOffset: event.clientX - selectedEdge.x,
+      };
+      config.shift =
+        selectedEdge.segmentType.index + (selectedEdge.dir < 0 ? 1 : 0);
+      config.offset = drag.anchorX;
+      showDragHandle(selectedEdge, event.clientX, event.clientY);
+    });
+
+    pattern.addEventListener("pointerup", (event) => {
+      drag = null;
+      hideDragHandle();
+    });
+  }
+
+  document.addEventListener("wheel", (event) => {
+    applyHue(config.hue + event.deltaY * 0.1);
+  });
+
+  function showDragHandle(edge, pointerX, pointerY) {
+    pattern.style.cursor = drag
+      ? "grabbing"
+      : edge.dir < 0
+        ? "w-resize"
+        : "e-resize";
+    if (!dragHandle) {
+      dragHandle = document.createElement("div");
+      dragHandle.classList.add("dragHandle");
+      pattern.append(dragHandle);
+    }
+    dragHandle.style.backgroundColor = renderColor(
+      config.hue,
+      edge.segmentType.dark,
+    );
+    const handleWidth = Math.min(
+      Math.max(5, edge.segmentType.size),
+      Math.max(0, 20 + (pointerX - edge.x) * edge.dir),
+      40,
+    );
+    dragHandle.style.translate = `${edge.x - edge.dir}px ${pointerY - 50}px`;
+    dragHandle.style.scale = `${(handleWidth / 100) * edge.dir} 6`;
+  }
+
+  function hideDragHandle() {
+    pattern.style.cursor = "";
+    if (dragHandle) {
+      dragHandle.style.scale = "0";
+      dragHandle.style.backgroundColor = "transparent";
+    }
+  }
+
+  function selectSegmentEdge(x) {
+    const threshold = 20;
+    const segmentTypes = renderPatternSegmentTypes(config);
+    const segment = findSegment(segmentTypes, x);
+    const segmentType = segmentTypes[segment.typeIndex];
+    let controlSegment = null;
+    if (
+      (!segmentType.controlBoth ||
+        segmentType.size > threshold * 2 ||
+        x <= segment.centerX) &&
+      x >= segment.leftX &&
+      x <= segment.leftX + threshold
+    ) {
+      // prioritize other thin segment
+      const leftSegmentType =
+        segmentTypes[
+          (segment.typeIndex - 1 + segmentTypes.length) % segmentTypes.length
+        ];
+      if (
+        (leftSegmentType.controlRight || leftSegmentType.controlBoth) &&
+        (x <= segment.leftX - leftSegmentType.size / 2 + threshold ||
+          (!segmentType.controlLeft &&
+            !segmentType.controlBoth &&
+            x <= segment.leftX + threshold / 2))
+      ) {
+        return {
+          x: segment.leftX,
+          dir: 1,
+          segmentType: leftSegmentType,
+          control: leftSegmentType.controlRight || leftSegmentType.controlBoth,
+        };
+      }
+
+      if (segmentType.controlLeft || segmentType.controlBoth) {
+        return {
+          x: segment.leftX,
+          dir: -1,
+          segmentType,
+          control: segmentType.controlLeft || segmentType.controlBoth,
+        };
+      }
+    } else if (
+      (!segmentType.controlBoth ||
+        segmentType.size > threshold * 2 ||
+        x >= segment.centerX) &&
+      x <= segment.rightX &&
+      x >= segment.rightX - threshold
+    ) {
+      const rightSegmentType =
+        segmentTypes[(segment.typeIndex + 1) % segmentTypes.length];
+      if (
+        (rightSegmentType.controlLeft || rightSegmentType.controlBoth) &&
+        (x >= segment.rightX + rightSegmentType.size / 2 - threshold ||
+          (!segmentType.controlRight &&
+            !segmentType.controlBoth &&
+            x >= segment.rightX - threshold / 2))
+      ) {
+        return {
+          x: segment.rightX,
+          dir: -1,
+          segmentType: rightSegmentType,
+          control: rightSegmentType.controlLeft || rightSegmentType.controlBoth,
+        };
+      }
+
+      if (segmentType.controlRight || segmentType.controlBoth) {
+        return {
+          x: segment.rightX,
+          dir: 1,
+          segmentType,
+          control: segmentType.controlRight || segmentType.controlBoth,
+        };
+      }
+    }
+  }
+
+  function findSegment(types, x) {
+    let probe = config.offset;
+    const dir = x > probe ? 1 : -1;
+    let typeIndex = (-dir - 1) / 2;
+    let iterations = 0;
+    while (probe * dir < x * dir && iterations < 2000) {
+      typeIndex = (typeIndex + dir + types.length) % types.length;
+      probe += types[typeIndex].size * dir;
+      iterations;
+    }
+    const segment = types[typeIndex];
+    const leftX = probe + segment.size * ((-dir - 1) / 2);
+    return {
+      leftX,
+      centerX: leftX + segment.size / 2,
+      rightX: leftX + segment.size,
+      typeIndex,
+    };
+  }
+
+  function updateConfig(values, control) {
+    values.dark = Math.min(200, Math.max(0, values.dark));
+    values.light = Math.min(200, Math.max(0, values.light));
+    values.line = Math.min(30, Math.max(0, values.line));
+
+    for (const key of Object.keys(values)) {
+      if (key.startsWith(control)) config[key] = values[key];
+    }
+
+    const bandMin = 8;
+
+    values.line = Math.min(
+      config.line,
+      Math.max(bandMin, values.dark, values.light),
+    );
+
+    if (control === "dark") {
+      values.light = Math.max(config.light, bandMin - values.dark);
+    } else if (control === "light") {
+      values.dark = Math.max(config.dark, bandMin - values.light);
+    }
+
+    render(values);
+  }
+
+  function render(values) {
+    const stops = [];
+    let stopOffset = 0;
+    for (const { size, dark } of renderPatternSegmentTypes(values)) {
+      const stopColor = renderColor(values.hue, dark);
+      stops.push(`${stopColor} ${stopOffset}px`);
+      stopOffset += size;
+      stops.push(`${stopColor} ${stopOffset}px`);
+    }
+    pattern.style.backgroundImage = `linear-gradient(to right, ${stops.join(", ")})`;
+    pattern.style.backgroundSize = `${stopOffset}px 100%`;
+    pattern.style.backgroundPosition = `${values.offset}px`;
+  }
+
+  function renderColor(hue, dark) {
+    return dark ? `oklch(90% 30% ${hue}deg)` : "#fff";
+  }
+</script>

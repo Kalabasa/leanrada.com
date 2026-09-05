@@ -1,0 +1,767 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="canonical" href="/art/kumot/blog/" />
+<link rel="stylesheet" href="/common.css" />
+<link rel="stylesheet" href="/art/common.css" />
+<script defer src="/common.js"></script>
+
+<title>Kumot</title>
+
+<site-header></site-header>
+
+<content-header>
+  <h1>Kumot</h1>
+</content-header>
+
+<main appearance="prose">
+  <p>
+    I made
+    <strong
+      ><a href="/art/kumot/"><i>kumot legenerator</i></a></strong
+    >, a webtoy that draws this Asian retro blanket pattern with random
+    procedurally generated flowers.
+  </p>
+
+  <prose-bleed>
+    <img
+      src="hero.jpg"
+      alt="screenshot of the app"
+      loading="lazy"
+      width="2000"
+      height="1125"
+      style="--lqip: 174818"
+    />
+  </prose-bleed>
+
+  <h2>Lore</h2>
+
+  <p>
+    Back in the Philippines, seemingly every home had this exact same kind of
+    blanket since decades ago:
+  </p>
+
+  <figure>
+    <img
+      src="tunay.jpg"
+      alt="photo of the blanket"
+      loading="lazy"
+      width="600"
+      height="507"
+      style="--lqip: -174621"
+    />
+    <figcaption>it’s giving nostalgia</figcaption>
+  </figure>
+
+  <p>
+    I’ve also had these back home growing up. It was comfy and pleasantly
+    airy.
+  </p>
+
+  <p>
+    Apparently everyone else, not just in the Philippines, even in Indonesia and
+    Malaysia too, had the same childhood blanket. That is, judging from several viral
+    social media posts years ago.
+  </p>
+
+  <prose-bleed>
+    <img
+      src="selimutverse.png"
+      alt="screenshot of social media posts from Philippines, Malaysia, and Indonesia commenting about the blanket"
+      loading="lazy"
+      width="1200"
+      height="800"
+      style="--lqip: 433763"
+    />
+  </prose-bleed>
+
+  <p>
+    I wonder how these got around so much back in the day? Anyway, I thought I’d
+    turn it into a webpage.
+  </p>
+
+  <h2>As a web toy</h2>
+
+  <p>
+    The name ‘kumot legenerator’ comes from <i>kumot</i>, which literally means
+    ‘blanket’ in Tagalog. Apparently, it’s ‘legendary’ because in
+    Malaysia/Indonesia, it was called <i>selimut legend</i> (where
+    <i>selimut</i> means blanket). And that’s why the second word is that way (It’s not French).
+  </p>
+
+  <blockquote>
+    <strong>[kú•mot]</strong> <em>noun</em><br />
+    blanket.
+    <cite>some dictionary</cite>
+  </blockquote>
+
+  <p>
+    Features include choosing the colors, resizing the pattern, placing flowers,
+    and having fun.
+  </p>
+
+  <prose-bleed>
+    <video src="intro.mp4" autoplay inline muted loop></video>
+  </prose-bleed>
+
+  <p>This post I go over how I created it, and there’s a gallery at the end.</p>
+
+  <p><a href="/art/kumot/" target="_blank">Try it out first if you want!</a></p>
+
+  <h2>Drawing the stripes</h2>
+
+  <p>
+    It starts with the base striped pattern. I’ve looked up many examples
+    online, and while proportions vary, there is a consistent pattern. There’s a
+    main repeating band of color on a white field; each colored band has one
+    thin white stripe in the middle. Then between each band, around the center
+    of the gap a pair of colored stripes.
+  </p>
+
+  <prose-bleed>
+    <img
+      src="base-stripe.png"
+      alt="Base stripe pattern"
+      loading="lazy"
+      width="800"
+      height="300"
+      style="--lqip: 174819"
+    />
+  </prose-bleed>
+
+  <p>
+    Basic texture is also applied using tiled translucent gradients and some
+    pre-generated noise to make it feel like a tangible sheet. Something
+    <i>ma-lambot</i>.
+  </p>
+
+  <prose-bleed>
+    <img
+      src="texture.png"
+      alt="close up of the texture"
+      loading="lazy"
+      width="800"
+      height="200"
+      style="--lqip: 174818"
+    />
+  </prose-bleed>
+
+  <p>
+    I think there were three/four ‘standard’ colors? I put a hue selector at the
+    bottom of the app to select from the same typical colors you’d find irl.
+  </p>
+
+  <prose-bleed>
+    <img
+      src="hues.png"
+      alt="hue selector screenshot"
+      loading="lazy"
+      width="800"
+      height="150"
+      style="--lqip: 174827"
+    />
+  </prose-bleed>
+
+  <h2>On flowers</h2>
+
+  <p>
+    I spent the most time on the flowers. The flowers on the original blanket
+    seemed to be block printed from hand-drawn templates. They were sufficiently
+    intricate and was a high challenge to replicate (unless you’re
+    <a href="https://abeto.co" target="_blank">abeto</a>).
+  </p>
+
+  <prose-bleed>
+    <auto-grid style="--colwidth: 200px">
+      <figure>
+        <img
+          src="flower-reference.jpg"
+          alt="close-up of a flower on the real blanket"
+          loading="lazy"
+          width="200"
+          height="200"
+          style="--lqip: 169444"
+        />
+        <figcaption>best photo I could get</figcaption>
+      </figure>
+      <figure>
+        <img
+          src="flower-attempt.jpg"
+          alt="my attempt at a flower"
+          loading="lazy"
+          width="200"
+          height="200"
+          style="--lqip: 173795"
+        />
+        <figcaption>the attempt</figcaption>
+      </figure>
+    </auto-grid>
+  </prose-bleed>
+
+  <p>
+    The trick was to work in polar coordinates. If you laid out angle and
+    distance as x- and y-coordinates, it becomes more natural to work with
+    floral shapes using regular math functions. A simple sinusoid in polar
+    coordinates produces the basic lobes for the petals, see the following demos
+  </p>
+
+  <style>
+    .slider {
+      width: 100%;
+      display: flex;
+      input {
+        flex: 1 1 auto;
+      }
+    }
+    main card-box input {
+      accent-color: #d44;
+    }
+    .line {
+      fill: none;
+      stroke: #d44;
+      stroke-width: 2;
+    }
+    .shape {
+      fill: var(--bg-clr);
+      stroke: #d44;
+      stroke-width: 2;
+    }
+    .vein {
+      fill: none;
+      stroke: #d44;
+      stroke-width: 1;
+    }
+  </style>
+
+  <card-box>
+    <svg viewBox="0 0 400 200"></svg>
+    <div class="slider">
+      regular sine
+      <input type="range" value="0" />
+      polar sine
+    </div>
+    <script>
+      {
+        const svg = document.currentScript.parentElement.querySelector("svg");
+        const input =
+          document.currentScript.parentElement.querySelector("input");
+
+        const polyline = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "polyline",
+        );
+        polyline.classList.add("line");
+        svg.appendChild(polyline);
+
+        draw();
+        input.addEventListener("input", draw);
+        function draw() {
+          const t = Math.max(Number.parseFloat(input.value), 1e-6) / 100;
+          const worldAngle = t * Math.PI * 2;
+          const worldRadius = 300 / worldAngle;
+          const points = [];
+          const pointCount = 80 + 100 * (1 - t);
+          for (let i = 0; i < pointCount; i++) {
+            const fraction =
+              (i / (pointCount - 1)) * (2 - t ** 2) - 0.5 * (1 - t ** 2);
+            const angle = -Math.PI / 2 + fraction * worldAngle - worldAngle / 2;
+            const radius =
+              worldRadius + 40 * Math.sin(5 * fraction * Math.PI * 2);
+            points.push(
+              `${200 + radius * Math.cos(angle)},${100 - 50 * t + worldRadius + radius * Math.sin(angle)}`,
+            );
+          }
+          polyline.setAttribute("points", points.join(" "));
+        }
+      }
+    </script>
+  </card-box>
+
+  <p>
+    The contour is further shaped by applying an exponent on the sine.
+    The exponent essentially describes how full or thin the
+    petals are, so we could go from daisy to hibiscus and everything in between.
+  </p>
+
+  <card-box>
+    <svg viewBox="0 0 400 200"></svg>
+    <div class="slider">
+      hibiscus-ish
+      <input type="range" min="0.15" value="1" max="2" step="0.01" />
+      daisy-ish
+    </div>
+    <script>
+      {
+        const svg = document.currentScript.parentElement.querySelector("svg");
+        const input =
+          document.currentScript.parentElement.querySelector("input");
+
+        const polyline = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "polyline",
+        );
+        polyline.classList.add("line");
+        svg.appendChild(polyline);
+
+        draw();
+        input.addEventListener("input", draw);
+        function draw() {
+          const t = Number.parseFloat(input.value);
+          const points = [];
+          const pointCount = 180;
+          for (let i = 0; i < pointCount; i++) {
+            const fraction = i / (pointCount - 1);
+            const angle = (fraction + 0.5) * Math.PI * 2;
+            const radius =
+              90 * ((50 + 40 * Math.sin(5 * fraction * Math.PI * 2)) / 90) ** t;
+            points.push(
+              `${200 + radius * Math.cos(angle)},${100 + radius * Math.sin(angle)}`,
+            );
+          }
+          polyline.setAttribute("points", points.join(" "));
+        }
+      }
+    </script>
+  </card-box>
+
+  <auto-grid style="--colwidth: 300px">
+    <figure>
+      <img
+        src="thick.png"
+        alt="screenshot thick flower"
+        loading="lazy"
+        width="245"
+        height="205"
+        style="--lqip: 174818"
+      />
+      <figcaption>small exponent = big petals</figcaption>
+    </figure>
+    <figure>
+      <img
+        src="thin.png"
+        alt="screenshot hine flower"
+        loading="lazy"
+        width="245"
+        height="205"
+        style="--lqip: 174818"
+      />
+      <figcaption>large exponent = narrow petals</figcaption>
+    </figure>
+  </auto-grid>
+
+  <p>
+    Our polar sinusoid still looks unnatural and perfectly geometric. Let’s make
+    some noise. A simple coherent fractal noise (e.g. Perlin, simplex) gives
+    that natural imperfection.
+  </p>
+
+  <card-box>
+    <svg viewBox="0 0 400 200"></svg>
+    <div class="slider">
+      geometric
+      <input type="range" value="0" />
+      noisy
+    </div>
+    <script>
+      const noiseLibLoaded = Promise.withResolvers();
+      let getNoisyFactor = () => 1;
+      {
+        const svg = document.currentScript.parentElement.querySelector("svg");
+        const input =
+          document.currentScript.parentElement.querySelector("input");
+        (async () => {
+          const { createNoise2D } = await import("../lib/simplex-noise.mjs");
+          noiseLibLoaded.resolve();
+
+          const polyline = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "polyline",
+          );
+          polyline.classList.add("line");
+          svg.appendChild(polyline);
+
+          const noise2D = createNoise2D();
+          getNoisyFactor = (angle, t = 0.2) =>
+            1 +
+            t * 0.2 * noise2D(Math.cos(angle) * 3, Math.sin(angle) * 3) +
+            t * 0.1 * noise2D(Math.cos(angle) * 6, Math.sin(angle) * 6);
+
+          draw();
+          input.addEventListener("input", draw);
+          function draw() {
+            const t = (Number.parseFloat(input.value) * 1.5) / 100;
+            const points = [];
+            const pointCount = 180;
+            for (let i = 0; i < pointCount; i++) {
+              const fraction = i / (pointCount - 1);
+              const angle = (fraction + 0.5) * Math.PI * 2;
+              const radius =
+                50 +
+                30 *
+                  Math.sin(5 * fraction * Math.PI * 2) *
+                  getNoisyFactor(angle, t);
+              points.push(
+                `${200 + radius * Math.cos(angle)},${100 + radius * Math.sin(angle)}`,
+              );
+            }
+            polyline.setAttribute("points", points.join(" "));
+          }
+        })();
+      }
+    </script>
+  </card-box>
+
+  <p>
+    Some flowers have more than one layer of petals. This is easy, we just draw
+    the same thing smaller with some angular offset. Draw order is important!
+    Back to front.
+  </p>
+
+  <card-box>
+    <svg viewBox="0 0 400 200"></svg>
+    <div class="slider">
+      single layer
+      <input type="range" min="1" value="1" max="9" />
+      multilayer
+    </div>
+    <script>
+      {
+        const svg = document.currentScript.parentElement.querySelector("svg");
+        const input =
+          document.currentScript.parentElement.querySelector("input");
+        const max = Number.parseFloat(input.max);
+
+        const polylines = [];
+        for (let i = 0; i < max; i++) {
+          const polyline = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "polyline",
+          );
+          polyline.classList.add("shape");
+          polyline.style.display = "none";
+          svg.appendChild(polyline);
+          polylines[i] = polyline;
+        }
+
+        draw();
+        input.addEventListener("input", draw);
+        noiseLibLoaded.promise.then(() => draw());
+        function draw() {
+          const t = Number.parseFloat(input.value);
+          for (let j = 0; j < polylines.length; j++) {
+            const polyline = polylines[j];
+            if (j >= t) {
+              polyline.style.display = "none";
+            } else {
+              polyline.style.display = "initial";
+              const points = [];
+              const pointCount = 120 * 0.9 ** j;
+              for (let i = 0; i < pointCount; i++) {
+                const fraction = i / (pointCount - 1);
+                const angle =
+                  (fraction + 0.5) * Math.PI * 2 + (j * Math.PI) / 5;
+                const radius =
+                  (40 + 40 * Math.sin(6 * fraction * Math.PI * 2)) *
+                  0.9 ** j *
+                  getNoisyFactor?.(angle);
+                points.push(
+                  `${200 + radius * Math.cos(angle)},${100 + radius * Math.sin(angle)}`,
+                );
+              }
+              polyline.setAttribute("points", points.join(" "));
+            }
+          }
+        }
+      }
+    </script>
+  </card-box>
+
+  <prose-bleed>
+    <img
+      src="multi.png"
+      alt="screenshot of a flower with multiple layers"
+      loading="lazy"
+      width="1012"
+      height="771"
+      style="--lqip: 174827"
+    />
+  </prose-bleed>
+
+  <p>
+    The rest of the details are simple curves and shapes I added and built up during the project.
+    Together they give a lot of depth.</p>
+
+  <p>The trick I used to fake 3D was to bias each
+    point of the flower towards a certain facing direction
+    <em>proportional to its distance from the center</em>.
+  </p>
+
+  <card-box>
+    <svg viewBox="0 0 400 200"></svg>
+    <div class="slider">
+      facing
+      <input type="range" value="0" />
+    </div>
+    <div class="slider">
+      veins
+      <input type="range" value="0" />
+    </div>
+    <div class="slider">
+      stamen
+      <input type="range" value="0" />
+    </div>
+    <script>
+      {
+        const svg = document.currentScript.parentElement.querySelector("svg");
+        const [facingInput, veinsInput, stamenInput] =
+          document.currentScript.parentElement.querySelectorAll("input");
+
+        const polylines = [];
+        const veinsPaths = [];
+        for (let i = 0; i < 2; i++) {
+          const polyline = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "polyline",
+          );
+          polyline.classList.add("shape");
+          svg.appendChild(polyline);
+          polylines[i] = polyline;
+
+          const veinsPath = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path",
+          );
+          veinsPath.classList.add("vein");
+          svg.appendChild(veinsPath);
+          veinsPaths[i] = veinsPath;
+        }
+
+        const stamenPolyline = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "polyline",
+        );
+        stamenPolyline.classList.add("shape");
+        svg.appendChild(stamenPolyline);
+
+        draw();
+        facingInput.addEventListener("input", draw);
+        veinsInput.addEventListener("input", draw);
+        stamenInput.addEventListener("input", draw);
+        noiseLibLoaded.promise.then(() => draw());
+        function draw() {
+          const face = Number.parseFloat(facingInput.value) / 100;
+          const faceRadius = 20 * face ** 0.5;
+          const faceX = faceRadius * Math.cos((face + 1) * Math.PI);
+          const faceY = faceRadius * Math.sin((face + 1) * Math.PI);
+          for (let j = 0; j < 2; j++) {
+            const points = [];
+            const veinD = [];
+            const pointCount = 180 - 50 ** j;
+            for (let i = 0; i < pointCount; i++) {
+              const fraction = i / (pointCount - 1);
+              const angle = fraction * Math.PI * 2 + (j * Math.PI) / 6;
+              const radius =
+                (40 + 40 * Math.sin(6 * fraction * Math.PI * 2)) *
+                0.8 ** j *
+                getNoisyFactor(angle);
+              const originX = faceX * j * 0.3;
+              const originY = faceY * j * 0.3;
+              const scaledFaceX = faceX * (radius / 80);
+              const scaledFaceY = faceY * (radius / 80);
+              const petalX = radius * Math.cos(angle) + scaledFaceX;
+              const petalY = radius * Math.sin(angle) + scaledFaceY;
+              points.push(
+                `${200 + originX + petalX},${100 + originY + petalY}`,
+              );
+              if (i % 2 === 0) {
+                const veinReach = Number.parseFloat(veinsInput.value) / 100;
+                const veinStartX = 200 + originX - faceX * 0.1;
+                const veinStartY = 100 + originY - faceY * 0.1;
+                const veinControlX =
+                  200 + originX + petalX * veinReach * 0.75 + faceX * 0.3;
+                const veinControlY =
+                  100 + originY + petalY * veinReach * 0.75 + faceY * 0.3;
+                const veinEndX =
+                  200 + originX + petalX * veinReach + faceX * 0.1;
+                const veinEndY =
+                  100 + originY + petalY * veinReach + faceY * 0.1;
+                veinD.push(
+                  `M${veinStartX},${veinStartY} Q${veinControlX},${veinControlY} ${veinEndX},${veinEndY}`,
+                );
+              }
+            }
+            polylines[j].setAttribute("points", points.join(" "));
+            veinsPaths[j].setAttribute("d", veinD.join(" "));
+          }
+
+          const stamenPoints = [];
+          for (let i = 0; i <= 20; i++) {
+            const stamenSize = Number.parseFloat(stamenInput.value) / 100;
+            const stamenAngle = (i / 20) * Math.PI * 2;
+            const stamenR =
+              12 *
+              stamenSize *
+              (1 + (getNoisyFactor(stamenAngle * 7 * stamenSize) - 1) * 3);
+            const stamenLength = 0.1 + 0.7 / (1 + stamenSize);
+            const x =
+              200 + stamenR * Math.cos(stamenAngle) + faceX * stamenLength;
+            const y =
+              100 + stamenR * Math.sin(stamenAngle) + faceY * stamenLength;
+            stamenPoints.push(`${x},${y}`);
+          }
+          stamenPolyline.setAttribute("points", stamenPoints.join(" "));
+        }
+      }
+    </script>
+  </card-box>
+
+  <p>
+    That’s basically the core recipe. Every possible parameter is randomised so
+    you could get lots of variation using the same procedure.
+  </p>
+
+  <img
+    src="variation.png"
+    alt="lots of varied flowers"
+    loading="lazy"
+    width="430"
+    height="532"
+    style="--lqip: -157981"
+  />
+
+  <p>
+    As for the leaves, I didn’t spend too much time on them. I was pretty much
+    done by the time the flowers were in a good state. Maybe one day. I’d have
+    liked some branching vine/stems creeping around the flowers.
+  </p>
+
+  <p>See more captures in the gallery below!</p>
+
+  <art-gallery>
+    <img
+      src="gallery/1.png"
+      loading="lazy"
+      width="1000"
+      height="1000"
+      style="--lqip: 174827"
+    />
+    <img
+      src="gallery/2.png"
+      loading="lazy"
+      width="1000"
+      height="1000"
+      style="--lqip: -87317"
+    />
+    <img
+      src="gallery/3.png"
+      loading="lazy"
+      width="1000"
+      height="1000"
+      style="--lqip: 109282"
+    />
+    <img
+      src="gallery/4.png"
+      loading="lazy"
+      width="808"
+      height="986"
+      style="--lqip: 104922"
+    />
+    <img
+      src="gallery/5.png"
+      loading="lazy"
+      width="430"
+      height="532"
+      style="--lqip: 174818"
+    />
+    <img
+      src="gallery/7.png"
+      loading="lazy"
+      width="1000"
+      height="800"
+      style="--lqip: 174827"
+    />
+    <img
+      src="gallery/8.png"
+      loading="lazy"
+      width="1000"
+      height="800"
+      style="--lqip: 174811"
+    />
+    <img
+      src="gallery/11.png"
+      loading="lazy"
+      width="1274"
+      height="964"
+      style="--lqip: 109283"
+    />
+    <img
+      src="gallery/12.png"
+      loading="lazy"
+      width="3840"
+      height="2160"
+      style="--lqip: 174827"
+    />
+    <video src="gallery/13.mp4" muted playsinline autoplay loop></video>
+    <img
+      src="gallery/14.png"
+      loading="lazy"
+      width="3840"
+      height="2160"
+      style="--lqip: 174827"
+    />
+  </art-gallery>
+
+  <p>Here’s a <a href="/art/kumot/">link to the kumot webtoy!</a></p>
+
+  <script>
+    const sliderInputs = document.querySelectorAll(".slider input");
+
+    const sliderObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          sliderObserver.unobserve(entry.target);
+          animateSlider(entry.target);
+        }
+      },
+      { threshold: 1 },
+    );
+
+    for (const input of sliderInputs) {
+      sliderObserver.observe(input);
+    }
+
+    function animateSlider(input) {
+      const startValue = Number.parseFloat(input.value);
+      const maxValue = input.max === "" ? 100 : Number.parseFloat(input.max);
+      const minValue = input.min === "" ? 0 : Number.parseFloat(input.min);
+      const durationMs = 3000;
+      const startMs = performance.now();
+      let cancelled = false;
+
+      function cancel() {
+        cancelled = true;
+      }
+      input.addEventListener("focus", cancel, { once: true });
+
+      requestAnimationFrame(function step(nowMs) {
+        if (cancelled) return;
+        const elapsedMs = nowMs - startMs;
+        const t = elapsedMs / durationMs;
+        const range = maxValue - minValue;
+        const pos = startValue + range * t
+        const dir = Math.floor(pos / range) % 2 === 0;
+        input.value = minValue + ((1 - dir) * range) + (dir * 2 - 1) * (pos % range);
+        // trigger draw()
+        input.dispatchEvent(new Event("input"));
+        if (!cancelled) {
+          requestAnimationFrame(step);
+        }
+      });
+    }
+  </script>
+</main>
+
+<article-footer></article-footer>
+
+<site-footer></site-footer>
