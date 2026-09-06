@@ -101,7 +101,7 @@ customElements.define(
             ? "site-header-icon-yay"
             : ""}"
           src="${iconsrc}"
-          alt=""
+          alt="smiling pixel mascot teehee"
         />
         ${renderItem("/wares/", "Wares")} ${renderItem("/art/", "Art")}
         ${renderItem("/music/", "Music")}
@@ -279,7 +279,7 @@ customElements.define(
           <p>
             <img
               class="lg-icon pixelated"
-              alt=""
+              alt="bubble hi against laptop"
               src="/icons/laptop_user.png"
               loading="lazy"
               style="vertical-align: top"
@@ -416,7 +416,7 @@ customElements.define(
               width="40"
               height="10"
             ></nebula-animation>`}
-        <a href="#top" aria-label="Back to top">^</a>
+        <a href="#top" aria-label="Back to top" title="do ascend topmost acme">^</a>
       </footer>`;
 
       const topBtn = this.querySelector("a[href='#top']");
