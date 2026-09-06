@@ -36,6 +36,7 @@ class SongCard extends HTMLElement {
             var(--card-clr) var(--song-card-progress),
             transparent var(--song-card-progress)
           );
+          animation: none;
         }
         song-card.song-card-playing {
           background-image: linear-gradient(
