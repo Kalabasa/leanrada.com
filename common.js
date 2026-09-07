@@ -101,7 +101,7 @@ customElements.define(
             ? "site-header-icon-yay"
             : ""}"
           src="${iconsrc}"
-          alt=""
+          alt="smiling pixel mascot teehee"
         />
         ${renderItem("/wares/", "Wares")} ${renderItem("/art/", "Art")}
         ${renderItem("/music/", "Music")}
@@ -279,7 +279,7 @@ customElements.define(
           <p>
             <img
               class="lg-icon pixelated"
-              alt=""
+              alt="bubble hi against laptop"
               src="/icons/laptop_user.png"
               loading="lazy"
               style="vertical-align: top"
@@ -416,7 +416,7 @@ customElements.define(
               width="40"
               height="10"
             ></nebula-animation>`}
-        <a href="#top" aria-label="Back to top">^</a>
+        <a href="#top" aria-label="Back to top" title="do ascend topmost acme">^</a>
       </footer>`;
 
       const topBtn = this.querySelector("a[href='#top']");
@@ -571,6 +571,3 @@ if (window.location.search.match(/[?&]edit\b/)) {
 } else if (window.location.host === "localhost:8000") {
   import("https://kalabasa.github.io/simple-live-reload/script.js");
 }
-
-/* Build number:
- BUILD_290C1D_4B58A2E1F_6D09X3A8_COMMITANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD2631EDCF22E8CCC1FB35B501C9C867F20D1B6A9C8D4E5B*/
