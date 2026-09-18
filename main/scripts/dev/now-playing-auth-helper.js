@@ -46,6 +46,7 @@ async function main() {
   const tokenResponseJson = await tokenResponse.json();
 
   console.log("refresh_token: " + tokenResponseJson.refresh_token);
+  console.log("update worker env vars");
   process.exit();
 }
 
