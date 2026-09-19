@@ -88,6 +88,7 @@ customElements.define(
       const renderItem = (href, label) => html`<a
         href="${href}"
         class="${this.#isSelected(href) ? "selected" : ""}"
+        style="--nav-clr:${this.#getColor(href)}"
         >${label}</a
       >`;
 
@@ -133,6 +134,15 @@ customElements.define(
       if (this.#isSelected("/art/")) return "/icons/art.png";
       if (this.#isSelected("/music/")) return "/icons/sound.png";
       return "/icons/yay_sheet.png";
+    }
+
+    #getColor(href) {
+      if (href.startsWith("/notes/")) return "#00a7c0";
+      if (href.startsWith("/about/")) return "#2972ff";
+      if (href.startsWith("/wares/")) return "#c335d9";
+      if (href.startsWith("/art/")) return "#f10067";
+      if (href.startsWith("/music/")) return "#c66b00";
+      return "var(--clr0-dark)";
     }
 
     #isSelected(href) {

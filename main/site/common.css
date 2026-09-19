@@ -467,7 +467,7 @@
     position: sticky;
     top: 0;
     height: 60px;
-    padding: 0 calc(25% - 150px);
+    padding: 0 calc(25% - 600px);
     z-index: 100;
     box-sizing: border-box;
     pointer-events: none;
@@ -478,10 +478,29 @@
       justify-content: space-evenly;
       align-items: flex-end;
       height: 100%;
+
+      &::after {
+        content: "";
+        position: absolute;
+        position-anchor: --nav-hover;
+        background: #9996;
+        border-radius: 18px;
+        left: calc(anchor(left) + 6px);
+        right: calc(anchor(right) + 6px);
+        top: calc(anchor(top) + 6px);
+        bottom: calc(anchor(bottom) + 6px);
+        transition: all 0.2s var(--ease);
+        transition-property: left, right, top, bottom;
+        z-index: -1;
+      }
+    }
+    &:not(:hover) > nav::after {
+      transition-delay: 0.3s;
     }
 
-    & a,
-    & a:visited {
+    a,
+    a:visited {
+      position: relative;
       display: inline-flex;
       justify-content: center;
       align-items: center;
@@ -499,29 +518,40 @@
       color: #fff;
       backdrop-filter: blur(8px);
       background-color: #2222;
-      background-image: linear-gradient(60deg, #9994 60%, transparent 60%);
+      background-image: linear-gradient(60deg, var(--nav-clr, var(--clr0)) 60%, transparent 60%);
       background-repeat: no-repeat;
       background-size: 220% 100%;
       background-position: 117%;
       pointer-events: all;
       transition: background-color 0.2s var(--ease),
         background-position 0.2s var(--ease);
+      &::after {
+        /* extend touch area */
+        content: "";
+        position: absolute;
+        inset: -18px;
+      }
     }
-    & a:hover {
+    a:hover {
+      anchor-name: --nav-hover !important;
       background-image: linear-gradient(
         60deg,
-        #9994 50%,
+        var(--nav-clr, var(--clr0)) 50%,
         #fff 50%,
         #fff 60%,
         transparent 60%
       );
       background-position: 0%;
+      transition-delay: 0.2s; /* sync with sliding highlight */
     }
-    & a.selected {
-      background: #9994;
+    a.selected {
+      anchor-name: --nav-hover;
+    }
+    &:has(a:hover) a.selected:not(:hover) {
+      anchor-name: none;
     }
 
-    & img {
+    img {
       width: 48px;
       height: 48px;
       border-radius: 25%;
@@ -530,11 +560,11 @@
       backdrop-filter: blur(8px);
       pointer-events: all;
     }
-    & .site-header-icon-yay {
+    .site-header-icon-yay {
       border-radius: 50%;
       object-position: 0 0;
     }
-    & .site-header-icon-yay:hover {
+    .site-header-icon-yay:hover {
       object-position: 100% 0;
     }
 
@@ -560,7 +590,7 @@
       pointer-events: all;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 648px) {
       height: 90px;
       padding-top: 6px;
 
