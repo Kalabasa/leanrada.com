@@ -519,6 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["hex-animation"],
       ["map-flight"],
       ["nebula-animation"],
+      ["now-gaming"],
       ["now-playing"],
       ["now-reading"],
       ["particles-animation"],

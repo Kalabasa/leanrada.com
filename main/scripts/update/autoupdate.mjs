@@ -6,6 +6,7 @@ import { initScript } from "./lib/script.mjs";
 import { fetchGitHubContribs } from "./misc/fetch-gh-contribs.mjs";
 import { fetchHits } from "./misc/fetch-hits.mjs";
 import { fetchStackOverflowReputation } from "./misc/fetch-so-rep.mjs";
+import { fetchSteamGame } from "./misc/fetch-steam-game.mjs";
 import { populateSuggestions } from "./notes/populate-suggestions.mjs";
 import { readNotes } from "./notes/read-notes.mjs";
 import { renderNoteListItem } from "./notes/render-note-list-item.mjs";
@@ -28,13 +29,14 @@ const options = parseOptionArgs([
   "hits",
   "gh-contribs",
   "so-rep",
+  "steam-game",
 ]);
 
 main();
 
 async function main() {
   console.group("Loading data...");
-  const [notes, wares, guestbook, hits, ghContribs, soRep] = await Promise.all([
+  const [notes, wares, guestbook, hits, ghContribs, soRep, steamGame] = await Promise.all([
     optional("notes", () =>
       (async () => {
         const { notes, noteReferences, existingNotes } = await readNotes(
@@ -65,6 +67,9 @@ async function main() {
     optional("so-rep", () =>
       fetchStackOverflowReputation().catch(fallback("so-rep"))
     ),
+    optional("steam-game", () =>
+      fetchSteamGame().catch(fallback("steam-game"))
+    ),
   ]);
   console.groupEnd();
 
@@ -75,6 +80,7 @@ async function main() {
     hits,
     ghContribs: ghContribs?.flat().length,
     soRep,
+    steamGame,
   });
 
   const rssFilePath = path.resolve(siteDir, "rss.xml");
@@ -94,6 +100,7 @@ async function main() {
     updateNotesIndexHTML({ notes }),
     updateGuestbookIndexHTML({ guestbook }),
     updateComponentsGhContribsJson({ ghContribs }),
+    updateComponentsSteamGameJson({ steamGame }),
     notes && updateRSS({ rssFilePath, notes, siteDir, dryRun }),
   ]);
   console.groupEnd();
@@ -302,6 +309,14 @@ async function updateComponentsGhContribsJson({ ghContribs }) {
   await writeJSON(
     path.resolve(siteDir, "components", "gh-contribs", "gh-contribs.json"),
     ghContribs
+  );
+}
+
+async function updateComponentsSteamGameJson({ steamGame }) {
+  if (!steamGame) return;
+  await writeJSON(
+    path.resolve(siteDir, "components", "now-gaming", "steam-game.json"),
+    steamGame
   );
 }
 

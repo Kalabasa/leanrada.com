@@ -11,10 +11,14 @@ customElements.define(
             margin: 0;
             padding: 0;
             overflow: hidden;
+          }
+          body {
             background-color: #222c2c;
             background-image: url("/components/now-reading/placeholder.png");
             background-size: 100%;
-            image-rendering: pixelated;
+            &:not(:has(img)) {
+              image-rendering: pixelated;
+            }
           }
           .gr_grid_book_container img {
             position: absolute;
@@ -51,7 +55,7 @@ customElements.define(
 
             span {
               flex: 0 1 min-content;
-              font-size: 93.75%;
+              font-size: 16px;
               font-style: italic;
               color: var(--text2-clr);
               text-align: end;
