@@ -558,6 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 import("/lib/vendor/font_loader.js");
+import("/components/cursor/cursor.js").then(({ setupCursor }) => setupCursor());
 autoLoadGlobalComponents();
 
 function autoLoadGlobalComponents() {
