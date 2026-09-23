@@ -23,6 +23,7 @@ customElements.define(
             align-items: center;
             justify-items: center;
             grid-template-columns: 1fr;
+            animation: none;
             cursor: pointer;
             isolation: isolate;
             overflow-x: clip;

@@ -10,7 +10,7 @@ customElements.define(
       this.innerHTML = html`
         <a target="_blank" rel="noopener">
           <img src="/components/now-playing/placeholder.png" alt="" />
-          <span>now playing</span>
+          <span>now listening</span>
           <span>loading&hellip;</span>
         </a>
       `;
@@ -65,12 +65,14 @@ customElements.define(
               object-fit: cover;
               border-radius: 6px;
               grid-row: span 2;
-              image-rendering: pixelated;
               background-color: var(--card-clr);
+              &[src$="placeholder.png"] {
+                image-rendering: pixelated;
+              }
             }
 
             span:first-of-type {
-              font-size: 93.75%;
+              font-size: 16px;
               font-style: italic;
               color: var(--text2-clr);
               min-width: 0;
@@ -256,5 +258,5 @@ customElements.define(
 );
 
 function getStatusHTML(isPlayingNow) {
-  return isPlayingNow ? html`<em>now playing</em>` : "last played";
+  return isPlayingNow ? html`<em>now playing</em>` : "last listened";
 }

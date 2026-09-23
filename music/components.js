@@ -25,6 +25,7 @@ class SongCard extends HTMLElement {
           grid-template-areas:
             "play . title"
             "play . description";
+          align-items: center;
           border: solid 1px var(--card-clr);
           border-radius: 12px;
           padding: 12px;
@@ -36,6 +37,7 @@ class SongCard extends HTMLElement {
             var(--card-clr) var(--song-card-progress),
             transparent var(--song-card-progress)
           );
+          animation: none;
         }
         song-card.song-card-playing {
           background-image: linear-gradient(
@@ -103,7 +105,7 @@ class SongCard extends HTMLElement {
 
         .song-card-title {
           grid-area: title;
-          font-family: var(--display-font);
+          font-family: "Vulf Mono", var(--display-font);
           font-size: 18px;
           font-style: italic;
         }

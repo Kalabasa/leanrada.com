@@ -88,6 +88,7 @@ customElements.define(
       const renderItem = (href, label) => html`<a
         href="${href}"
         class="${this.#isSelected(href) ? "selected" : ""}"
+        style="--nav-clr:${this.#getColor(href)}"
         >${label}</a
       >`;
 
@@ -101,7 +102,7 @@ customElements.define(
             ? "site-header-icon-yay"
             : ""}"
           src="${iconsrc}"
-          alt=""
+          alt="smiling pixel mascot teehee"
         />
         ${renderItem("/wares/", "Wares")} ${renderItem("/art/", "Art")}
         ${renderItem("/music/", "Music")}
@@ -133,6 +134,15 @@ customElements.define(
       if (this.#isSelected("/art/")) return "/icons/art.png";
       if (this.#isSelected("/music/")) return "/icons/sound.png";
       return "/icons/yay_sheet.png";
+    }
+
+    #getColor(href) {
+      if (href.startsWith("/notes/")) return "#00a7c0";
+      if (href.startsWith("/about/")) return "#2972ff";
+      if (href.startsWith("/wares/")) return "#c335d9";
+      if (href.startsWith("/art/")) return "#f10067";
+      if (href.startsWith("/music/")) return "#c66b00";
+      return "var(--clr0-dark)";
     }
 
     #isSelected(href) {
@@ -279,7 +289,7 @@ customElements.define(
           <p>
             <img
               class="lg-icon pixelated"
-              alt=""
+              alt="bubble hi against laptop"
               src="/icons/laptop_user.png"
               loading="lazy"
               style="vertical-align: top"
@@ -416,7 +426,7 @@ customElements.define(
               width="40"
               height="10"
             ></nebula-animation>`}
-        <a href="#top" aria-label="Back to top">^</a>
+        <a href="#top" aria-label="Back to top" title="do ascend topmost acme">^</a>
       </footer>`;
 
       const topBtn = this.querySelector("a[href='#top']");
@@ -509,6 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["hex-animation"],
       ["map-flight"],
       ["nebula-animation"],
+      ["now-gaming"],
       ["now-playing"],
       ["now-reading"],
       ["particles-animation"],
@@ -558,6 +569,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 import("/lib/vendor/font_loader.js");
+import("/components/cursor/cursor.js").then(({ setupCursor }) => setupCursor());
 autoLoadGlobalComponents();
 
 function autoLoadGlobalComponents() {
@@ -571,6 +583,3 @@ if (window.location.search.match(/[?&]edit\b/)) {
 } else if (window.location.host === "localhost:8000") {
   import("https://kalabasa.github.io/simple-live-reload/script.js");
 }
-
-/* Build number:
- BUILD_290C1D_4B58A2E1F_6D09X3A8_COMMITANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD2631EDCF22E8CCC1FB35B501C9C867F20D1B6A9C8D4E5B*/
