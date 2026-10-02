@@ -96,16 +96,25 @@ export async function drawCalligraphy(
   painter,
   canvasContext
 ) {
-  throw new "Not implemented";
-  const glyphs = baybayinUnits
-    .map((baybayinUnit) => generateGlyph(baybayinUnit, glyphMap))
-    .filter((glyph) => glyph);
-  console.log(glyphs);
+  const glyph = await findGlyph(baybayinUnits[0]);
+  if (!glyph) return;
 
-  // arrangeGlyphs(glyphs, canvasContext);
-
-  const { generatePath } = await import("./generate-path.js");
-  const path = generatePath(glyphs[0].nodes, glyphs[0].edges);
+  const cellSize = canvasContext.canvas.height / 4;
+  const drawnEdges = new Set();
+  const path = [];
+  for (const vertex of glyph.flat()) {
+    if (!vertex) continue;
+    for (const [neighbor, edge] of vertex.adjacency) {
+      if (drawnEdges.has(edge)) continue;
+      drawnEdges.add(edge);
+      path.push({
+        vertices: [
+          { x: (vertex.x + 1) * cellSize, y: (vertex.y + 1) * cellSize },
+          { x: (neighbor.x + 1) * cellSize, y: (neighbor.y + 1) * cellSize },
+        ],
+      });
+    }
+  }
 
   const drawing = painter.drawPath(path, canvasContext);
   for (const step of drawing) {
@@ -113,11 +122,10 @@ export async function drawCalligraphy(
   }
 }
 
-function generateGlyph(baybayinUnit) {
-  const consonant =
-    baybayinUnit === "ng" ? baybayinUnit : baybayinUnit.slice(0, 1);
-  const consonantGlyph = glyphMap.get(consonant);
-  if (!consonantGlyph) return null;
+async function findGlyph(baybayinUnit) {
+  const glyphs = await import("./glyphs.js");
+  const glyphName =
+    baybayinUnit === "ng" ? "NG" : baybayinUnit.slice(0, 1).toUpperCase();
   // todo: kudlit
-  return { nodes: consonantGlyph.nodes, edges: consonantGlyph.edges };
+  return glyphs[glyphName];
 }

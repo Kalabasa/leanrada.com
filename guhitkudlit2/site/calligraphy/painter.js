@@ -1,8 +1,14 @@
+/**
+ * @typedef {{
+ *  vertices: { x: number, y: number }[]
+ * }} Stroke
+ */
+
 export class BasePainter {
   constructor() {}
 
   /**
-   * @param {import("./generate-path.js").Stroke[]} path
+   * @param {Stroke[]} path
    * @param {CanvasRenderingContext2D} canvasContext
    * @yields {void}
    */
@@ -16,7 +22,7 @@ export class BasePainter {
   }
 
   /**
-   * @param {import("./generate-path.js").Stroke} stroke
+   * @param {Stroke} stroke
    * @param {number} scale
    * @param {CanvasRenderingContext2D} canvasContext
    * @yields {void}
