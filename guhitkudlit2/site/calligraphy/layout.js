@@ -8,7 +8,7 @@
 const ROWS = 5;
 
 /**
- * @param {Glyph[]} glyphs 
+ * @param {Glyph[]} glyphs
  * @param {{
  *   alterStems?: boolean,
  *   kern?: boolean,
@@ -17,7 +17,7 @@ const ROWS = 5;
  * @returns {Glyph[]}
  */
 export function layoutLine(glyphs, opts = {}) {
-  const layout = glyphs.map(g => structuredClone(g));
+  const layout = glyphs.map((g) => structuredClone(g));
   const gap = opts.gap ?? 0.5;
 
   // keep track of the max X laid per row to determine next placement
@@ -38,7 +38,7 @@ export function layoutLine(glyphs, opts = {}) {
     if (opts.kern) {
       for (let row = 0; row < ROWS; row++) {
         const extent = extents[row];
-        offset = Math.max(offset, maxX[row] - extent.leftX);
+        offset = Math.max(offset, maxX[row] - extent.minX);
       }
     } else {
       for (const rowMaxX of maxX) {
@@ -53,7 +53,7 @@ export function layoutLine(glyphs, opts = {}) {
     }
 
     for (let row = 0; row < ROWS; row++) {
-      maxX[row] = Math.max(maxX[row], extents[row].rightX + offset);
+      maxX[row] = Math.max(maxX[row], extents[row].maxX + offset);
     }
   }
 
@@ -62,12 +62,12 @@ export function layoutLine(glyphs, opts = {}) {
 
 /**
  * @param {Glyph} glyph
- * @returns {{ leftX: number, rightX: number }[]}
+ * @returns {{ minX: number, maxX: number }[]}
  */
 function calculateExtents(glyph, gap) {
   const extents = Array.from({ length: ROWS }, () => ({
-    leftX: Infinity,
-    rightX: -Infinity,
+    minX: Infinity,
+    maxX: -Infinity,
   }));
 
   for (const glyphRow of glyph.map) {
@@ -75,23 +75,36 @@ function calculateExtents(glyph, gap) {
       if (!vertex) continue;
 
       const vertexRow = vertex.y * 2;
-      extents[vertexRow].leftX = Math.min(extents[vertexRow].leftX, vertex.x - gap);
-      extents[vertexRow].rightX = Math.max(extents[vertexRow].rightX, vertex.x + gap);
+      extents[vertexRow].minX = Math.min(
+        extents[vertexRow].minX,
+        vertex.x - gap,
+      );
+      extents[vertexRow].maxX = Math.max(
+        extents[vertexRow].maxX,
+        vertex.x + gap,
+      );
 
       for (const [neighbor, edge] of vertex.adjacency) {
         const endRow = neighbor.y * 2;
         for (let row = vertexRow + 1; row < endRow; row++) {
           const progress = (row - vertexRow) / (endRow - vertexRow);
           const x = vertex.x + (neighbor.x - vertex.x) * progress;
-          let leftX = x - gap;
-          let rightX = x + gap;
-          if (edge.type === "leftCurve") leftX -= 1;
-          if (edge.type === "rightCurve") rightX += 1;
-          extents[row].leftX = Math.min(extents[row].leftX, leftX);
-          extents[row].rightX = Math.max(extents[row].rightX, rightX);
+          let minX = x - gap;
+          let maxX = x + gap;
+          if (edge.type === "leftCurve") minX -= 1;
+          if (edge.type === "rightCurve") maxX += 1;
+          extents[row].minX = Math.min(extents[row].minX, minX);
+          extents[row].maxX = Math.max(extents[row].maxX, maxX);
         }
       }
     }
+  }
+
+  const min = Math.min(...extents.map((e) => e.minX));
+  const max = Math.max(...extents.map((e) => e.maxX));
+  for (let e of extents) {
+    e.minX = Math.min(e.minX, min + 1);
+    e.maxX = Math.max(e.maxX, max - 1);
   }
 
   return extents;

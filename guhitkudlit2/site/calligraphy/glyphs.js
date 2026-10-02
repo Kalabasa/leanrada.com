@@ -38,7 +38,7 @@ export const U = glyph({ xScale: 1 }, `
 export const B = glyph({ xScale: 4 / 3 }, `
   . 
  / x 
-| * |
+. * .
 |/ x|
 .   .
 `);

@@ -43,7 +43,6 @@ export function createTransliterationForm() {
         syllabication=${baybayinUnits.get().join(" · ")}
         baybayin=${lazyConvertToUnicode(unicodeFilter(baybayinUnits.get()))}
         onInput=${onInput}
-        onSubmit=${onInput}
       />
     `;
   });
@@ -76,7 +75,7 @@ function prettifyTempBaybayin(baybayinUnits) {
   return [...baybayinUnits.slice(0, -1), lastConsonantMatch[0] + "a"];
 }
 
-export function TransliterationForm({ syllabication, baybayin, onInput, onSubmit }) {
+export function TransliterationForm({ syllabication, baybayin, onInput }) {
   return html`
     <style id=${TransliterationForm.name}>
       .transliterationForm {
@@ -95,7 +94,7 @@ export function TransliterationForm({ syllabication, baybayin, onInput, onSubmit
         font-size: var(--font-size-l);
       }
     </style>
-    <form class="transliterationForm" action=${onSubmit}>
+    <form class="transliterationForm" action="javascript:false">
       <label class="transliterationFormRow">
         <${LabelText} tag="div">Tagalog word<//>
         <${Input}
