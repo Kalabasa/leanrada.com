@@ -92,43 +92,85 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
  * @param {CanvasRenderingContext2D} canvasContext
  */
 export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
-  const glyphMap = await import("./glyphs.js");
-  const glyphs = baybayinUnits
-    .map((baybayinUnit) => findGlyph(baybayinUnit, glyphMap))
-    .filter((glyph) => glyph);
-  if (glyphs.length === 0) return;
+  const [glyphMap, { layoutLine }, { traceStrokes }] = await Promise.all([
+    import("./glyphs.js"),
+    import("./layout.js"),
+    import("./trace.js"),
+  ]);
 
-  const { layOut } = await import("./layout.js");
-  const layout = layOut(glyphs, { kern: true });
+  const lines = [[]];
+  for (const unit of baybayinUnits) {
+    if (unit === " ") {
+      lines.push([]);
+    } else {
+      lines.at(-1).push(unit);
+    }
+  }
 
-  const { traceStrokes } = await import("./trace.js");
-  const strokes = traceStrokes(layout);
+  const layout2D = [];
+  let lineTopY = 0;
+  for (const line of lines) {
+    const glyphs = line.map((baybayinUnit) =>
+      getGlyph(baybayinUnit, glyphMap),
+    );
+
+    const lineLayout = layoutLine(glyphs, { kern: true });
+    const lineVertices = lineLayout
+      .flatMap((glyph) => glyph.map.flat())
+      .filter((vertex) => vertex);
+    const lineBounds = getBounds(lineVertices);
+    for (const vertex of lineVertices) {
+      vertex.x -= lineBounds.centerX;
+      vertex.y += lineTopY - lineBounds.minY;
+    }
+    layout2D.push(...lineLayout);
+    lineTopY += lineBounds.height;
+  }
+
+  const strokes = traceStrokes(layout2D);
   const vertices = strokes.flatMap((stroke) => stroke.vertices);
 
-  const layoutWidth = Math.max(...vertices.map((vertex) => vertex.x)) + 1;
-  const layoutHeight = 3;
+  const layoutBounds = getBounds(vertices);
   const cellSize = Math.min(
-    canvasContext.canvas.width / (layoutWidth + 1),
-    canvasContext.canvas.height / (layoutHeight + 1),
+    canvasContext.canvas.width / (layoutBounds.width + 1),
+    canvasContext.canvas.height / (layoutBounds.height + 1),
   );
 
   const path = strokes.map((stroke) => ({
     vertices: stroke.vertices.map((vertex) => ({
-      x: (vertex.x + 1) * cellSize,
-      y: (vertex.y + 1) * cellSize,
+      x:
+        canvasContext.canvas.width / 2 +
+        (vertex.x - layoutBounds.centerX) * cellSize,
+      y:
+        canvasContext.canvas.height / 2 +
+        (vertex.y - layoutBounds.centerY) * cellSize,
     })),
   }));
 
   const drawing = painter.drawPath(path, canvasContext);
-  for (const step of drawing) {
+  for (const _ of drawing) {
     await delay(10);
   }
 }
 
-function findGlyph(baybayinUnit, glyphMap) {
+function getGlyph(baybayinUnit, glyphMap) {
   const glyphName = baybayinUnit.startsWith("ng")
     ? "NG"
     : baybayinUnit.slice(0, 1).toUpperCase();
-  // todo: kudlit
+  // todo: add kudlit & memoize
   return glyphMap[glyphName];
+}
+
+function getBounds(vertices) {
+  const minX = Math.min(...vertices.map((vertex) => vertex.x));
+  const maxX = Math.max(...vertices.map((vertex) => vertex.x));
+  const minY = Math.min(...vertices.map((vertex) => vertex.y));
+  const maxY = Math.max(...vertices.map((vertex) => vertex.y));
+  return {
+    minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1,
+    centerX: (minX + maxX) / 2,
+    centerY: (minY + maxY) / 2,
+  };
 }

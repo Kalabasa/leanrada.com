@@ -7,7 +7,7 @@ import { InvalidLetterError } from "./invalid-letter-error.js";
  *   For example, 'ᜃ' is 'ka', 'ᜃᜒ' is 'ki', and 'ᜃᜓ' is 'ku'. The letters 'e' and 'o' are not used.
  *
  * Example,
- *   syllabicate("oo at hindi") => ["u", "u", "a", "t", "hi", "n", "di"]
+ *   syllabicate("oo at hindi") => ["u", "u", " ", "a", "t", " ", "hi", "n", "di"]
  *
  * There are options to modify `how` it transliterates: {
  *   simple?: boolean = If true, it will not handle special cases for specific words.
@@ -29,13 +29,13 @@ export function syllabicate(phrase, how = {}) {
 
   const invalidChars = [];
 
-  const words = phrase.split(/\s+/g);
-  return words.flatMap((word) => {
-    if (!word) return [];
+  const words = phrase.split(/\s+/g).filter((word) => word);
+  return words.flatMap((word, wordIndex) => {
+    const wordBoundary = wordIndex > 0 ? [" "] : [];
 
     if (!how?.simple) {
       const specialWord = syllabicateSpecial(word);
-      if (specialWord) return specialWord;
+      if (specialWord) return [...wordBoundary, ...specialWord];
 
       // remove repetition
       word = word.replace(/(ng|(?<!n)g|[^aeioug])\1+/g, "$1");
@@ -82,7 +82,7 @@ export function syllabicate(phrase, how = {}) {
       baybayinUnits.push(currentUnit);
     }
 
-    return baybayinUnits;
+    return [...wordBoundary, ...baybayinUnits];
   });
 }
 

@@ -16,7 +16,7 @@ const ROWS = 5;
  * }} [opts]
  * @returns {Glyph[]}
  */
-export function layOut(glyphs, opts = {}) {
+export function layoutLine(glyphs, opts = {}) {
   const layout = glyphs.map(g => structuredClone(g));
   const gap = opts.gap ?? 0.5;
 
