@@ -82,7 +82,7 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
       context.clearRect(0, 0, canvas.width, canvas.height);
       drawCalligraphy(baybayinUnits, painter, context);
     },
-    { delay: 1000 }
+    { delay: 1000 },
   );
 }
 
@@ -91,22 +91,32 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
  * @param {BasePainter} painter
  * @param {CanvasRenderingContext2D} canvasContext
  */
-export async function drawCalligraphy(
-  baybayinUnits,
-  painter,
-  canvasContext
-) {
-  const glyph = await findGlyph(baybayinUnits[0]);
-  if (!glyph) return;
+export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
+  const glyphMap = await import("./glyphs.js");
+  const glyphs = baybayinUnits
+    .map((baybayinUnit) => findGlyph(baybayinUnit, glyphMap))
+    .filter((glyph) => glyph);
+  if (glyphs.length === 0) return;
 
-  const cellSize = canvasContext.canvas.height / 4;
+  const { layOut } = await import("./layout.js");
+  const vertices = layOut(glyphs, { kern: true })
+    .flatMap((glyph) => glyph.flat())
+    .filter((vertex) => vertex);
+
+  const columnCount = Math.max(...vertices.map((vertex) => vertex.x)) + 1;
+  const rowCount = 3;
+  const cellSize = Math.min(
+    canvasContext.canvas.width / (columnCount + 1),
+    canvasContext.canvas.height / (rowCount + 1),
+  );
+
   const drawnEdges = new Set();
   const path = [];
-  for (const vertex of glyph.flat()) {
-    if (!vertex) continue;
+  for (const vertex of vertices) {
     for (const [neighbor, edge] of vertex.adjacency) {
       if (drawnEdges.has(edge)) continue;
       drawnEdges.add(edge);
+
       path.push({
         vertices: [
           { x: (vertex.x + 1) * cellSize, y: (vertex.y + 1) * cellSize },
@@ -122,10 +132,10 @@ export async function drawCalligraphy(
   }
 }
 
-async function findGlyph(baybayinUnit) {
-  const glyphs = await import("./glyphs.js");
-  const glyphName =
-    baybayinUnit === "ng" ? "NG" : baybayinUnit.slice(0, 1).toUpperCase();
+function findGlyph(baybayinUnit, glyphMap) {
+  const glyphName = baybayinUnit.startsWith("ng")
+    ? "NG"
+    : baybayinUnit.slice(0, 1).toUpperCase();
   // todo: kudlit
-  return glyphs[glyphName];
+  return glyphMap[glyphName];
 }

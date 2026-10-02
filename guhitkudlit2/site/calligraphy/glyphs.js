@@ -9,6 +9,7 @@ LEGEND
   x falling diagonal
   ) vertical right curve
   ( vertical left curve
+  u horizontal bottom curve
 
 Vertices can only be entered in odd columns and odd lines.
 */
@@ -21,11 +22,11 @@ export const A = glyph`
   .
 `;
 export const I = glyph`
-.-.
+.~~~.
 
 
 
-.~.
+.u.u.
 `;
 export const U = glyph`
 .
@@ -90,6 +91,13 @@ export const N = glyph`
 | s |
 . . .
 `;
+export const NG = glyph`
+.
+ x
+  .~.
+ / 
+.
+`;
 export const P = glyph`
 .-. .-.
   | |
@@ -130,7 +138,7 @@ export const Y = glyph`
  * @typedef {{
  *  x: number,
  *  y: number,
- *  adjacency: Set<Vertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined }>
+ *  adjacency: Set<Vertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | 'bottomCurve' | undefined }>
  * }} GlyphVertex
  * @typedef {(GlyphVertex | undefined)[][]} Glyph
  * 
@@ -177,7 +185,7 @@ function* findConnections(charGrid, gridX, gridY) {
         if (dx === 0 && dy === 0) continue;
 
         const char = charGrid[y][x];
-        const isHorizontal = "-~".includes(char);
+        const isHorizontal = "-~u".includes(char);
         const isVertical = "|s()".includes(char);
         if (isHorizontal && (dx === 0 || dx === px)) continue;
         if (isVertical && (dy === 0 || dy === py)) continue;
@@ -197,6 +205,7 @@ function* findConnections(charGrid, gridX, gridY) {
           if ("~s".includes(char)) type = "wavy";
           else if ("(" === char) type = "leftCurve";
           else if (")" === char) type = "rightCurve";
+          else if ("u" === char) type = "bottomCurve";
         }
 
         const nextCharX = x + dx;
@@ -230,6 +239,7 @@ function* findConnections(charGrid, gridX, gridY) {
             !isHorizontal &&
             (char !== "." || dx === 0)) ||
           ("()".includes(nextChar) && dx === 0) ||
+          ("u" === nextChar && dy === 0) ||
           ("/".includes(nextChar) && dx !== dy) ||
           ("x".includes(nextChar) && dx !== -dy)
         ) {
