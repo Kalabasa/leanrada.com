@@ -25,7 +25,7 @@ export function layOut(glyphs, opts = {}) {
       }
     }
 
-    g.forEach(row =>
+    g.map.forEach(row =>
       row.forEach(v => {
         if (!v) return;
         v.x += offset;
@@ -40,7 +40,7 @@ export function layOut(glyphs, opts = {}) {
 }
 
 function collides(glyph, offset, occupiedCells) {
-  for (const v of glyph.flat()) {
+  for (const v of glyph.map.flat()) {
     if (v && occupiedCells.has(cellKey(v.x + offset, v.y))) {
       return true;
     }
@@ -54,5 +54,5 @@ function cellKey(x, y) {
 }
 
 function glyphWidth(glyph) {
-  return Math.max(...glyph.map(row => Math.max(...row.map((v, i) => v ? i + 1 : 0))));
+  return Math.max(...glyph.map.map(row => Math.max(...row.map((v, i) => v ? i + 1 : 0))));
 }

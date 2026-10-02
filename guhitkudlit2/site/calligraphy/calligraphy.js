@@ -100,7 +100,7 @@ export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
 
   const { layOut } = await import("./layout.js");
   const vertices = layOut(glyphs, { kern: true })
-    .flatMap((glyph) => glyph.flat())
+    .flatMap((glyph) => glyph.map.flat())
     .filter((vertex) => vertex);
 
   const columnCount = Math.max(...vertices.map((vertex) => vertex.x)) + 1;

@@ -139,7 +139,7 @@ export const Y = glyph`
  *  y: number,
  *  adjacency: Set<Vertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined }>
  * }} GlyphVertex
- * @typedef {(GlyphVertex | undefined)[][]} Glyph
+ * @typedef {{ xScale: number; map: (GlyphVertex | undefined)[][] }} Glyph
  * 
  * @returns {Glyph} a glyph
  */
@@ -168,7 +168,7 @@ function glyph([data]) {
       }
     }
   }
-  return grid;
+  return { xScale: 1, map: grid };
 }
 
 function* findConnections(charGrid, gridX, gridY) {

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { A, I, U, B, K, D, G, H, L, M, N, P, S, T, W, Y } from "../glyphs.js";
 
 function vertices(grid) {
-  return grid.flat().filter(Boolean);
+  return grid.map.flat().filter(Boolean);
 }
 
 function degrees(grid) {
