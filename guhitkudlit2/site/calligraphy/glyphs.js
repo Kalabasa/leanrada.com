@@ -137,7 +137,7 @@ export const Y = glyph({ xScale: 1 }, `
  * @typedef {{
  *  x: number,
  *  y: number,
- *  adjacency: Set<Vertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined }>
+ *  adjacency: Map<GlyphVertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined }>
  * }} GlyphVertex
  * @typedef {{ xScale: number; map: (GlyphVertex | undefined)[][] }} Glyph
  * 

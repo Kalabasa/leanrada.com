@@ -1,7 +1,5 @@
 /**
- * @typedef {{
- *  vertices: { x: number, y: number }[]
- * }} Stroke
+ * @typedef {import("./trace.js").Stroke} Stroke
  */
 
 export class BasePainter {

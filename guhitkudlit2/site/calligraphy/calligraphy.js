@@ -99,32 +99,25 @@ export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
   if (glyphs.length === 0) return;
 
   const { layOut } = await import("./layout.js");
-  const vertices = layOut(glyphs, { kern: true })
-    .flatMap((glyph) => glyph.map.flat())
-    .filter((vertex) => vertex);
+  const layout = layOut(glyphs, { kern: true });
 
-  const columnCount = Math.max(...vertices.map((vertex) => vertex.x)) + 1;
-  const rowCount = 3;
+  const { traceStrokes } = await import("./trace.js");
+  const strokes = traceStrokes(layout);
+  const vertices = strokes.flatMap((stroke) => stroke.vertices);
+
+  const layoutWidth = Math.max(...vertices.map((vertex) => vertex.x)) + 1;
+  const layoutHeight = 3;
   const cellSize = Math.min(
-    canvasContext.canvas.width / (columnCount + 1),
-    canvasContext.canvas.height / (rowCount + 1),
+    canvasContext.canvas.width / (layoutWidth + 1),
+    canvasContext.canvas.height / (layoutHeight + 1),
   );
 
-  const drawnEdges = new Set();
-  const path = [];
-  for (const vertex of vertices) {
-    for (const [neighbor, edge] of vertex.adjacency) {
-      if (drawnEdges.has(edge)) continue;
-      drawnEdges.add(edge);
-
-      path.push({
-        vertices: [
-          { x: (vertex.x + 1) * cellSize, y: (vertex.y + 1) * cellSize },
-          { x: (neighbor.x + 1) * cellSize, y: (neighbor.y + 1) * cellSize },
-        ],
-      });
-    }
-  }
+  const path = strokes.map((stroke) => ({
+    vertices: stroke.vertices.map((vertex) => ({
+      x: (vertex.x + 1) * cellSize,
+      y: (vertex.y + 1) * cellSize,
+    })),
+  }));
 
   const drawing = painter.drawPath(path, canvasContext);
   for (const step of drawing) {
