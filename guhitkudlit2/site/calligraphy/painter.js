@@ -1,3 +1,5 @@
+import { DEBUG } from "../app/flags.js";
+
 /**
  * @typedef {import("./trace.js").Stroke} Stroke
  */
@@ -14,18 +16,20 @@ export class BasePainter {
     const scale =
       Math.min(canvasContext.canvas.width, canvasContext.canvas.height) / 1000;
 
-    for (const stroke of path) {
-      yield* this.drawStroke(stroke, scale, canvasContext);
+    for (let i = 0; i < path.length; i++) {
+      const color = DEBUG ? `hsl(${(i / path.length) * 360}, 100%, 40%)` : "#000";
+      yield* this.drawStroke(path[i], scale, color, canvasContext);
     }
   }
 
   /**
    * @param {Stroke} stroke
    * @param {number} scale
+   * @param {string} color
    * @param {CanvasRenderingContext2D} canvasContext
    * @yields {void}
    */
-  *drawStroke(stroke, scale, canvasContext) {
+  *drawStroke(stroke, scale, color, canvasContext) {
     if (stroke.vertices.length === 0) return;
 
     const brush = {
@@ -35,7 +39,7 @@ export class BasePainter {
     };
 
     canvasContext.lineCap = "round";
-    canvasContext.strokeStyle = "#000";
+    canvasContext.strokeStyle = color;
 
     let index = 1;
     let limit = 5000;

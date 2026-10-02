@@ -1,6 +1,7 @@
 /*
 LEGEND
   . vertex
+  * explicit terminal vertex
   | vertical line
   - horizontal line
   s vertical wavy
@@ -27,7 +28,7 @@ export const I = glyph({ xScale: 2 }, `
 
 .~.
 `);
-export const U = glyph({ xScale: 2 }, `
+export const U = glyph({ xScale: 1 }, `
 .
 )
 .
@@ -37,7 +38,7 @@ export const U = glyph({ xScale: 2 }, `
 export const B = glyph({ xScale: 4 / 3 }, `
   . 
  / x 
-| . |
+| * |
 |/ x|
 .   .
 `);
@@ -48,12 +49,12 @@ export const K = glyph({ xScale: 4 / 3 }, `
   |
 .-.-.
 `);
-export const D = glyph({ xScale: 4 / 3 }, `
-.-.-.
+export const D = glyph({ xScale: 1 }, `
+.-.---.
   |
   |
   |
-  .-.
+  .---.
 `);
 export const G = glyph({ xScale: 4 / 3 }, `
 . .
@@ -104,7 +105,7 @@ export const P = glyph({ xScale: 1 }, `
   |/
   .
 `);
-export const S = glyph({ xScale: 1 }, `
+export const S = glyph({ xScale: 4 / 5 }, `
 .-.   .
   |  /)
   . / .
@@ -137,6 +138,7 @@ export const Y = glyph({ xScale: 1 }, `
  * @typedef {{
  *  x: number,
  *  y: number,
+ *  terminal: boolean,
  *  adjacency: Map<GlyphVertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined }>
  * }} GlyphVertex
  * @typedef {{ xScale: number; map: (GlyphVertex | undefined)[][] }} Glyph
@@ -150,8 +152,9 @@ function glyph({ xScale }, data) {
   const grid = Array.from({ length: 3 }, () => Array.from({ length: width }));
   for (let y = 0; y < 3; y++) {
     for (let x = 0; x < width; x++) {
-      if (charGrid[y * 2]?.[x * 2] === ".") {
-        grid[y][x] = { x, y, adjacency: new Map() };
+      const vertexChar = charGrid[y * 2]?.[x * 2];
+      if (vertexChar === "." || vertexChar === "*") {
+        grid[y][x] = { x, y, terminal: vertexChar === "*", adjacency: new Map() };
       }
     }
   }
@@ -216,7 +219,7 @@ function* findConnections(charGrid, gridX, gridY) {
         const nextChar = charRow[nextCharX];
 
         if (
-          "." === nextChar &&
+          ".*".includes(nextChar) &&
           (!isHorizontal || dy === 0) &&
           (!isVertical || dx === 0) &&
           (char !== "/" || dx === -dy) &&
@@ -231,11 +234,11 @@ function* findConnections(charGrid, gridX, gridY) {
           ("-~".includes(nextChar) &&
             dx !== 0 &&
             !isVertical &&
-            (char !== "." || dy === 0)) ||
+            (!".*".includes(char) || dy === 0)) ||
           ("|s".includes(nextChar) &&
             dy !== 0 &&
             !isHorizontal &&
-            (char !== "." || dx === 0)) ||
+            (!".*".includes(char) || dx === 0)) ||
           ("()".includes(nextChar) && dx === 0) ||
           ("/".includes(nextChar) && dx !== dy) ||
           ("x".includes(nextChar) && dx !== -dy)
