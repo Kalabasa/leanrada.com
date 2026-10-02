@@ -6,8 +6,6 @@
  * }} Stroke
  */
 
-const CENTROID_PULL = 0.2;
-
 /**
  * @param {Glyph[]} glyphs laid out glyphs
  * @returns {Stroke[]}
@@ -37,10 +35,6 @@ export function traceStrokes(glyphs) {
     chains.push(chain);
   }
 
-  for (const chain of chains) {
-    smoothen(chain);
-  }
-
   return chains.map((chain) => ({ vertices: chain }));
 }
 
@@ -56,7 +50,7 @@ function findBestChain(vertices, untracedEdges) {
       if (!untracedEdges.has(edge)) continue;
 
       untracedEdges.delete(edge);
-      const chain = extendChain([start, neighbor], edge.type, untracedEdges);
+      const chain = extendChain([start, neighbor], untracedEdges);
       untracedEdges.add(edge);
 
       if (chain === null) continue;
@@ -71,11 +65,10 @@ function findBestChain(vertices, untracedEdges) {
 
 /**
  * @param {GlyphVertex[]} chain
- * @param {string | undefined} edgeType
  * @param {Set<object>} untracedEdges
  * @returns {GlyphVertex[] | null} best maximal chain, or null if every extension is a substroke
  */
-function extendChain(chain, edgeType, untracedEdges) {
+function extendChain(chain, untracedEdges) {
   const start = chain[0];
   const end = chain[chain.length - 1];
 
@@ -84,11 +77,10 @@ function extendChain(chain, edgeType, untracedEdges) {
   if (!end.terminal) {
     for (const [neighbor, edge] of end.adjacency) {
       if (!untracedEdges.has(edge)) continue;
-      if (edge.type !== edgeType) continue;
       isEndExtendable = true;
 
       untracedEdges.delete(edge);
-      const extendedChain = extendChain([...chain, neighbor], edgeType, untracedEdges);
+      const extendedChain = extendChain([...chain, neighbor], untracedEdges);
       untracedEdges.add(edge);
 
       if (extendedChain === null) continue;
@@ -101,7 +93,7 @@ function extendChain(chain, edgeType, untracedEdges) {
 
   if (!start.terminal) {
     for (const edge of start.adjacency.values()) {
-      if (untracedEdges.has(edge) && edge.type === edgeType) return null;
+      if (untracedEdges.has(edge)) return null;
     }
   }
   return chain;
@@ -114,28 +106,11 @@ function extendChain(chain, edgeType, untracedEdges) {
 function scoreChain(chain) {
   const length = chain.length - 1;
   const deltaY = Math.abs(chain[chain.length - 1].y - chain[0].y) + 1;
-  return length / deltaY;
-}
-
-/**
- * @param {GlyphVertex[]} chain
- */
-function smoothen(chain) {
-  const shifts = [];
-  for (let i = 1; i < chain.length - 1; i++) {
-    const vertex = chain[i];
-    const previous = chain[i - 1];
-    const next = chain[i + 1];
-    const centroidX = (previous.x + next.x) / 2;
-    const centroidY = (previous.y + next.y) / 2;
-    shifts.push({
-      x: (centroidX - vertex.x) * CENTROID_PULL,
-      y: (centroidY - vertex.y) * CENTROID_PULL,
-    });
+  let typeChanges = 0;
+  for (let i = 2; i < chain.length; i++) {
+    const previousEdge = chain[i - 2].adjacency.get(chain[i - 1]);
+    const edge = chain[i - 1].adjacency.get(chain[i]);
+    if (edge.type !== previousEdge.type) typeChanges++;
   }
-
-  for (let i = 1; i < chain.length - 1; i++) {
-    chain[i].x += shifts[i - 1].x;
-    chain[i].y += shifts[i - 1].y;
-  }
+  return length / deltaY - typeChanges * 4;
 }
