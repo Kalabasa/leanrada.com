@@ -13,125 +13,125 @@ LEGEND
 Vertices can only be entered in odd columns and odd lines.
 */
 
-export const A = glyph`
+export const A = glyph({ xScale: 1 }, `
 .-. .-.
   | |
 .-. .
   |/
   .
-`;
-export const I = glyph`
+`);
+export const I = glyph({ xScale: 2 }, `
 .-.
 
 
 
 .~.
-`;
-export const U = glyph`
+`);
+export const U = glyph({ xScale: 2 }, `
 .
 )
 .
 )
 .
-`;
-export const B = glyph`
+`);
+export const B = glyph({ xScale: 4 / 3 }, `
   . 
  / x 
 | . |
 |/ x|
 .   .
-`;
-export const K = glyph`
+`);
+export const K = glyph({ xScale: 4 / 3 }, `
 .-.-.
   |
   |
   |
 .-.-.
-`;
-export const D = glyph`
+`);
+export const D = glyph({ xScale: 4 / 3 }, `
 .-.-.
   |
   |
   |
   .-.
-`;
-export const G = glyph`
+`);
+export const G = glyph({ xScale: 4 / 3 }, `
 . .
 )/|
 . |
 ) |
 . .-.
-`;
-export const H = glyph`
+`);
+export const H = glyph({ xScale: 2 }, `
 
 
 .-.
 
 
-`;
-export const L = glyph`
+`);
+export const L = glyph({ xScale: 4 / 3 }, `
 .-.-.
   s
   s
   s
   .
-`;
-export const M = glyph`
+`);
+export const M = glyph({ xScale: 1 }, `
 .-. .-.
   | |
   .-.
   |/
   .
-`;
-export const N = glyph`
+`);
+export const N = glyph({ xScale: 4 / 3 }, `
 .-.-.
 | s |
 | s |
 | s |
 . . .
-`;
-export const NG = glyph`
+`);
+export const NG = glyph({ xScale: 4 / 3 }, `
 .
  x
   .~.
  / 
 .
-`;
-export const P = glyph`
+`);
+export const P = glyph({ xScale: 1 }, `
 .-. .-.
   | |
   . .-.
   |/
   .
-`;
-export const S = glyph`
+`);
+export const S = glyph({ xScale: 1 }, `
 .-.   .
   |  /)
   . / .
   |/  )
   .   .
-`;
-export const T = glyph`
+`);
+export const T = glyph({ xScale: 4 / 3 }, `
 
 
 .-.-.
  /
 .
-`;
-export const W = glyph`
+`);
+export const W = glyph({ xScale: 1 }, `
 .-. .-.
   |   |
   .   .
   |  /
   .-/
-`;
-export const Y = glyph`
+`);
+export const Y = glyph({ xScale: 1 }, `
 .-. .-.
   | |
   . .
   |/
   .
-`;
+`);
 
 /**
  * @typedef {{
@@ -143,7 +143,7 @@ export const Y = glyph`
  * 
  * @returns {Glyph} a glyph
  */
-function glyph([data]) {
+function glyph({ xScale }, data) {
   data = data.replaceAll(/^\n|\n$/g, "");
   const charGrid = data.split("\n").map((line) => line.trimEnd());
   const width = Math.max(...charGrid.map((line) => Math.ceil(line.length / 2)));
@@ -168,7 +168,7 @@ function glyph([data]) {
       }
     }
   }
-  return { xScale: 1, map: grid };
+  return { xScale, map: grid };
 }
 
 function* findConnections(charGrid, gridX, gridY) {

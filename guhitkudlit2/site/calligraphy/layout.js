@@ -12,47 +12,45 @@
  */
 export function layOut(glyphs, opts = {}) {
   const layout = glyphs.map(g => structuredClone(g));
-  const occupiedCells = new Set();
-  let cursor = 0;
+  const maxXByRow = [];
 
   for (let i = 0; i < layout.length; i++) {
     const g = layout[i];
 
-    let offset = cursor;
+    for (const v of g.map.flat()) {
+      if (v) v.x *= g.xScale;
+    }
+
+    let offset = 0;
     if (opts.kern) {
-      while (offset > 0 && !collides(g, offset - 1, occupiedCells)) {
-        offset--;
+      for (const [y, leftX] of findLeftXByRow(g)) {
+        const maxX = maxXByRow[y];
+        if (maxX !== undefined) {
+          offset = Math.max(offset, maxX + 1 - leftX);
+        }
+      }
+    } else {
+      for (const maxX of maxXByRow) {
+        if (maxX !== undefined) {
+          offset = Math.max(offset, maxX + 1);
+        }
       }
     }
 
-    g.map.forEach(row =>
-      row.forEach(v => {
-        if (!v) return;
-        v.x += offset;
-        occupiedCells.add(cellKey(v.x, v.y));
-      })
-    );
-
-    cursor = Math.max(cursor, offset + glyphWidth(g));
+    for (const v of g.map.flat()) {
+      if (!v) continue;
+      v.x += offset;
+      maxXByRow[v.y] = Math.max(maxXByRow[v.y] ?? -Infinity, v.x);
+    }
   }
 
   return layout;
 }
 
-function collides(glyph, offset, occupiedCells) {
+function findLeftXByRow(glyph) {
+  const leftXs = new Map();
   for (const v of glyph.map.flat()) {
-    if (v && occupiedCells.has(cellKey(v.x + offset, v.y))) {
-      return true;
-    }
+    if (v) leftXs.set(v.y, Math.min(leftXs.get(v.y) ?? Infinity, v.x));
   }
-
-  return false;
-}
-
-function cellKey(x, y) {
-  return `${x},${y}`;
-}
-
-function glyphWidth(glyph) {
-  return Math.max(...glyph.map.map(row => Math.max(...row.map((v, i) => v ? i + 1 : 0))));
+  return leftXs;
 }
