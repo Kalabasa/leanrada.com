@@ -2,55 +2,101 @@
  * @typedef {import("./glyphs.js").Glyph} Glyph
  */
 
+// Layout works on a 2x grid relative to glyph coords
+// to account for edges between vertices.
+// If glyphs have 3 rows, layout has 5 rows
+const ROWS = 5;
+
 /**
  * @param {Glyph[]} glyphs 
  * @param {{
  *   alterStems?: boolean,
  *   kern?: boolean,
+ *   gap?: number,
  * }} [opts]
  * @returns {Glyph[]}
  */
 export function layOut(glyphs, opts = {}) {
   const layout = glyphs.map(g => structuredClone(g));
-  const maxXByRow = [];
+  const gap = opts.gap ?? 0.5;
+  // keep track of the max X laid per row to determine next placement
+  const maxX = [];
 
   for (let i = 0; i < layout.length; i++) {
-    const g = layout[i];
+    const glyph = layout[i];
 
-    for (const v of g.map.flat()) {
-      if (v) v.x *= g.xScale;
+    for (const row of glyph.map) {
+      for (const v of row) {
+        if (v) v.x *= glyph.xScale;
+      }
     }
+
+    const extents = calculateExtents(glyph);
 
     let offset = 0;
     if (opts.kern) {
-      for (const [y, leftX] of findLeftXByRow(g)) {
-        const maxX = maxXByRow[y];
-        if (maxX !== undefined) {
-          offset = Math.max(offset, maxX + 1 - leftX);
+      for (let row = 0; row < ROWS; row++) {
+        const extent = extents[row];
+        const rowMaxX = maxX[row];
+        if (rowMaxX !== undefined) {
+          offset = Math.max(offset, rowMaxX + gap - extent.leftX);
         }
       }
     } else {
-      for (const maxX of maxXByRow) {
-        if (maxX !== undefined) {
-          offset = Math.max(offset, maxX + 1);
+      for (const rowMaxX of maxX) {
+        if (rowMaxX !== undefined) {
+          offset = Math.max(offset, rowMaxX + gap);
         }
       }
     }
 
-    for (const v of g.map.flat()) {
-      if (!v) continue;
-      v.x += offset;
-      maxXByRow[v.y] = Math.max(maxXByRow[v.y] ?? -Infinity, v.x);
+    for (const glyphRow of glyph.map) {
+      for (const v of glyphRow) {
+        if (v) v.x += offset;
+      }
+    }
+
+    for (let row = 0; row < ROWS; row++) {
+      maxX[row] = Math.max(maxX[row] ?? -Infinity, extents[row].rightX + offset);
     }
   }
 
   return layout;
 }
 
-function findLeftXByRow(glyph) {
-  const leftXs = new Map();
-  for (const v of glyph.map.flat()) {
-    if (v) leftXs.set(v.y, Math.min(leftXs.get(v.y) ?? Infinity, v.x));
+/**
+ * @param {Glyph} glyph
+ * @returns {{ leftX: number, rightX: number }[]}
+ */
+function calculateExtents(glyph) {
+  const extents = Array.from({ length: ROWS }, () => ({
+    leftX: Infinity,
+    rightX: -Infinity,
+  }));
+
+  for (const glyphRow of glyph.map) {
+    for (const vertex of glyphRow) {
+      if (!vertex) continue;
+
+      const vertexRow = vertex.y * 2;
+      extents[vertexRow].leftX = Math.min(extents[vertexRow].leftX, vertex.x);
+      extents[vertexRow].rightX = Math.max(extents[vertexRow].rightX, vertex.x);
+
+      for (const [neighbor, edge] of vertex.adjacency) {
+        const endRow = neighbor.y * 2;
+        for (let row = vertexRow + 1; row < endRow; row++) {
+          const progress = (row - vertexRow) / (endRow - vertexRow);
+          const x = vertex.x + (neighbor.x - vertex.x) * progress;
+          let leftX = x;
+          let rightX = x;
+          if (edge.type === "leftCurve") leftX -= 1;
+          if (edge.type === "rightCurve") rightX += 1;
+          extents[row].leftX = Math.min(extents[row].leftX, leftX);
+          extents[row].rightX = Math.max(extents[row].rightX, rightX);
+        }
+      }
+    }
   }
-  return leftXs;
+
+  return extents;
 }

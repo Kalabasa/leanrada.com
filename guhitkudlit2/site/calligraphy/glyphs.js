@@ -90,10 +90,10 @@ export const N = glyph({ xScale: 4 / 3 }, `
 | s |
 . . .
 `);
-export const NG = glyph({ xScale: 4 / 3 }, `
+export const NG = glyph({ xScale: 1 }, `
 .
  x
-  .~.
+  .~~~.
  / 
 .
 `);

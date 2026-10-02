@@ -41,7 +41,7 @@ test("second glyph offset by width of first", () => {
     ],
   };
 
-  const [out1, out2] = layOut([g1, g2]);
+  const [out1, out2] = layOut([g1, g2], { gap: 1 });
 
   assert.equal(out1.map[0][0].x, 0);
   assert.equal(out1.map[0][1].x, 1);
@@ -54,7 +54,7 @@ test("cumulative offsets across multiple glyphs", () => {
   const g2 = { xScale: 1, map: [[v(0, 0), v(1, 0)]] }; // width = 2
   const g3 = { xScale: 1, map: [[v(0, 0)]] }; // should be offset by 3
 
-  const [, , out3] = layOut([g1, g2, g3]);
+  const [, , out3] = layOut([g1, g2, g3], { gap: 1 });
 
   assert.equal(out3.map[0][0].x, 3);
 });
@@ -73,7 +73,7 @@ test("handles sparse rows correctly in width calculation", () => {
     ],
   };
 
-  const [, out2] = layOut([g1, g2]);
+  const [, out2] = layOut([g1, g2], { gap: 1 });
 
   assert.equal(out2.map[0][0].x, 3);
 });
@@ -90,12 +90,12 @@ test("does not mutate original glyphs", () => {
 
 test("preserves y and clones adjacency", () => {
   const adjacency = new Map([["mockKey", "mockValue"]]);
-  const vertex = { x: 0, y: 5, adjacency };
+  const vertex = { x: 0, y: 2, adjacency };
   const g = { xScale: 1, map: [[vertex]] };
 
   const [out] = layOut([g]);
 
-  assert.equal(out.map[0][0].y, 5);
+  assert.equal(out.map[0][0].y, 2);
 
   // different reference
   assert.notEqual(out.map[0][0].adjacency, adjacency);
@@ -117,7 +117,7 @@ test("multiple rows contribute to width", () => {
   };
   const g2 = { xScale: 1, map: [[v(0, 0)]] };
 
-  const [, out2] = layOut([g1, g2]);
+  const [, out2] = layOut([g1, g2], { gap: 1 });
 
   assert.equal(out2.map[0][0].x, 3);
 });
