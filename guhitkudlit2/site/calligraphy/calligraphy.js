@@ -92,11 +92,13 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
  * @param {CanvasRenderingContext2D} canvasContext
  */
 export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
-  const [glyphMap, { layoutLine }, { traceStrokes }] = await Promise.all([
-    import("./glyphs.js"),
-    import("./layout.js"),
-    import("./trace.js"),
-  ]);
+  const [glyphMap, { layoutLine }, { compose }, { traceStrokes }] =
+    await Promise.all([
+      import("./glyphs.js"),
+      import("./layout.js"),
+      import("./compose.js"),
+      import("./trace.js"),
+    ]);
 
   const lines = [[]];
   for (const unit of baybayinUnits) {
@@ -126,6 +128,8 @@ export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
     layout2D.push(...lineLayout);
     lineTopY += lineBounds.height;
   }
+
+  compose(layout2D);
 
   const strokes = traceStrokes(layout2D);
   const vertices = strokes.flatMap((stroke) => stroke.vertices);
