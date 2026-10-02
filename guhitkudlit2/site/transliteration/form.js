@@ -38,9 +38,11 @@ export function createTransliterationForm() {
       ? prettifyTempBaybayin
       : (value) => value;
 
+    const syllabication = formatSyllabication(baybayinUnits.get());
+
     return html`
       <${TransliterationForm}
-        syllabication=${baybayinUnits.get().join(" · ")}
+        syllabication=${syllabication}
         baybayin=${lazyConvertToUnicode(unicodeFilter(baybayinUnits.get()))}
         onInput=${onInput}
       />
@@ -51,6 +53,25 @@ export function createTransliterationForm() {
     TransliterationForm: TransliterationFormImpl,
     observableBaybayinUnits: baybayinUnits,
   };
+}
+
+function formatSyllabication(baybayinUnits) {
+  let syllabication = "";
+  for (let i = 0; i < baybayinUnits.length; i++) {
+    const unit = baybayinUnits[i];
+    const previousUnit = baybayinUnits[i - 1];
+    if (unit === " ") {
+      syllabication += "\u2003";
+    } else {
+      if (i > 0) {
+        if (unit !== " " && previousUnit !== " ") {
+          syllabication += " · ";
+        }
+      }
+      syllabication += unit;
+    }
+  }
+  return syllabication;
 }
 
 function lazyConvertToUnicode(baybayinUnits) {
