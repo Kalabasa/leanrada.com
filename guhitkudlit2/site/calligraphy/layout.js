@@ -19,8 +19,9 @@ const ROWS = 5;
 export function layOut(glyphs, opts = {}) {
   const layout = glyphs.map(g => structuredClone(g));
   const gap = opts.gap ?? 0.5;
+
   // keep track of the max X laid per row to determine next placement
-  const maxX = [];
+  const maxX = Array(ROWS).fill(-Infinity);
 
   for (let i = 0; i < layout.length; i++) {
     const glyph = layout[i];
@@ -37,16 +38,11 @@ export function layOut(glyphs, opts = {}) {
     if (opts.kern) {
       for (let row = 0; row < ROWS; row++) {
         const extent = extents[row];
-        const rowMaxX = maxX[row];
-        if (rowMaxX !== undefined) {
-          offset = Math.max(offset, rowMaxX + gap - extent.leftX);
-        }
+        offset = Math.max(offset, maxX[row] + gap - extent.leftX);
       }
     } else {
       for (const rowMaxX of maxX) {
-        if (rowMaxX !== undefined) {
-          offset = Math.max(offset, rowMaxX + gap);
-        }
+        offset = Math.max(offset, rowMaxX + gap);
       }
     }
 
@@ -57,7 +53,7 @@ export function layOut(glyphs, opts = {}) {
     }
 
     for (let row = 0; row < ROWS; row++) {
-      maxX[row] = Math.max(maxX[row] ?? -Infinity, extents[row].rightX + offset);
+      maxX[row] = Math.max(maxX[row], extents[row].rightX + offset);
     }
   }
 
