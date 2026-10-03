@@ -14,135 +14,189 @@ LEGEND
 Vertices can only be entered in odd columns and odd lines.
 */
 
-export const A = glyph({ xScale: 1 }, `
+export const A = glyph(
+  { xScale: 1 },
+  `
 .-. .-.
   | |
 .-. .
   |/
   .
-`);
-export const I = glyph({ xScale: 2 }, `
+`,
+);
+export const I = glyph(
+  { xScale: 2 },
+  `
 .-.
 
 
 
 .~.
-`);
-export const U = glyph({ xScale: 1 }, `
+`,
+);
+export const U = glyph(
+  { xScale: 1 },
+  `
 .
 )
 .
 )
 .
-`);
-export const B = glyph({ xScale: 4 / 3 }, `
+`,
+);
+export const B = glyph(
+  { xScale: 4 / 3 },
+  `
   . 
  / x 
 . * .
 |/ x|
 .   .
-`);
-export const K = glyph({ xScale: 4 / 3 }, `
+`,
+);
+export const K = glyph(
+  { xScale: 4 / 3 },
+  `
 .-.-.
   |
   |
   |
 .-.-.
-`);
-export const D = glyph({ xScale: 1 }, `
+`,
+);
+export const D = glyph(
+  { xScale: 1 },
+  `
 .-.---.
   |
   |
   |
   .---.
-`);
-export const G = glyph({ xScale: 4 / 3 }, `
+`,
+);
+export const G = glyph(
+  { xScale: 4 / 3 },
+  `
 . .
 )/|
 . |
 ) |
 . .-.
-`);
-export const H = glyph({ xScale: 2 }, `
+`,
+);
+export const H = glyph(
+  { xScale: 2 },
+  `
 
 
 .-.
 
 
-`);
-export const L = glyph({ xScale: 4 / 3 }, `
+`,
+);
+export const L = glyph(
+  { xScale: 4 / 3 },
+  `
 .-.-.
   s
   s
   s
   .
-`);
-export const M = glyph({ xScale: 1 }, `
+`,
+);
+export const M = glyph(
+  { xScale: 1 },
+  `
 .-. .-.
   | |
   .-.
   |/
   .
-`);
-export const N = glyph({ xScale: 4 / 3 }, `
+`,
+);
+export const N = glyph(
+  { xScale: 4 / 3 },
+  `
 .-.-.
 | s |
 | s |
 | s |
 . . .
-`);
-export const NG = glyph({ xScale: 1 }, `
+`,
+);
+export const NG = glyph(
+  { xScale: 1 },
+  `
 .
  x
   .~~~.
  / 
 .
-`);
-export const P = glyph({ xScale: 1 }, `
+`,
+);
+export const P = glyph(
+  { xScale: 1 },
+  `
 .-. .-.
   | |
   . .-.
   |/
   .
-`);
-export const S = glyph({ xScale: 4 / 5 }, `
+`,
+);
+export const S = glyph(
+  { xScale: 4 / 5 },
+  `
 .-.   .
   |  /)
   . / .
   |/  )
   .   .
-`);
-export const T = glyph({ xScale: 4 / 3 }, `
+`,
+);
+export const T = glyph(
+  { xScale: 4 / 3 },
+  `
 
 
 .-.-.
  /
 .
-`);
-export const W = glyph({ xScale: 1 }, `
+`,
+);
+export const W = glyph(
+  { xScale: 1 },
+  `
 .-. .-.
   |   |
   .   .
   |  /
   .-/
-`);
-export const Y = glyph({ xScale: 1 }, `
+`,
+);
+export const Y = glyph(
+  { xScale: 1 },
+  `
 .-. .-.
   | |
   . .
   |/
   .
-`);
+`,
+);
 
 /**
  * @typedef {{
  *  x: number,
  *  y: number,
  *  terminal: boolean,
- *  adjacency: Map<GlyphVertex, { type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined }>
+ *  adjacency: Map<GlyphVertex, {
+ *    type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined,
+ *    control: { dx: number, dy: number }
+ *  }>
  * }} GlyphVertex
  * @typedef {{ xScale: number; map: (GlyphVertex | undefined)[][] }} Glyph
- * 
+ *
  * @returns {Glyph} a glyph
  */
 function glyph({ xScale }, data) {
@@ -154,7 +208,12 @@ function glyph({ xScale }, data) {
     for (let x = 0; x < width; x++) {
       const vertexChar = charGrid[y * 2]?.[x * 2];
       if (vertexChar === "." || vertexChar === "*") {
-        grid[y][x] = { x, y, terminal: vertexChar === "*", adjacency: new Map() };
+        grid[y][x] = {
+          x,
+          y,
+          terminal: vertexChar === "*",
+          adjacency: new Map(),
+        };
       }
     }
   }
