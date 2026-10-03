@@ -1,7 +1,7 @@
 import { DEBUG } from "../app/flags.js";
 
 /**
- * @typedef {import("./trace.js").Stroke} Stroke
+ * @typedef {import("./stroke.js").Stroke} Stroke
  */
 
 export class BasePainter {

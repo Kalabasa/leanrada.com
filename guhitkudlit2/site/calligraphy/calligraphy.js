@@ -97,7 +97,7 @@ export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
       import("./glyphs.js"),
       import("./layout.js"),
       import("./compose.js"),
-      import("./trace.js"),
+      import("./stroke.js"),
     ]);
 
   const lines = [[]];
