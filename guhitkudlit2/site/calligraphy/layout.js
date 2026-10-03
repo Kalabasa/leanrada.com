@@ -74,7 +74,7 @@ function calculateExtents(glyph, gap) {
     for (const vertex of glyphRow) {
       if (!vertex) continue;
 
-      const vertexRow = vertex.y * 2;
+      const vertexRow = Math.round(vertex.y * 2);
       extents[vertexRow].minX = Math.min(
         extents[vertexRow].minX,
         vertex.x - gap,
@@ -85,7 +85,7 @@ function calculateExtents(glyph, gap) {
       );
 
       for (const [neighbor, edge] of vertex.adjacency) {
-        const endRow = neighbor.y * 2;
+        const endRow = Math.round(neighbor.y * 2);
         for (let row = vertexRow + 1; row < endRow; row++) {
           const progress = (row - vertexRow) / (endRow - vertexRow);
           const x = vertex.x + (neighbor.x - vertex.x) * progress;
