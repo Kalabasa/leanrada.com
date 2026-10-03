@@ -1,25 +1,30 @@
 /**
- * @param {Glyph[]} layout2D
+ * @typedef {import("./stroke.js").GlyphStrokes} GlyphStrokes
+ * @typedef {import("./stroke.js").StrokeVertex} StrokeVertex
+ * @typedef {import("./stroke.js").Point} Point
  */
-export function compose(layout2D) {
-  const glyphs = layout2D.map((glyph) => {
-    const vertices = glyph.map.flat().filter((vertex) => vertex);
-    const centroid = calculateCentroid(vertices);
+
+/**
+ * @param {GlyphStrokes[]} glyphStrokesList
+ */
+export function compose(glyphStrokesList) {
+  const glyphs = glyphStrokesList.map(({ strokes }) => {
+    const vertices = strokes
+      .flatMap((stroke) => stroke.vertices)
+      .filter((vertex) => !vertex.attach);
+    const centroid = calculateCentroid(vertices.map((vertex) => vertex.position));
     const startOffsets = new Map();
     for (const vertex of vertices) {
       startOffsets.set(vertex, {
-        x: vertex.x - centroid.x,
-        y: vertex.y - centroid.y,
+        x: vertex.position.x - centroid.x,
+        y: vertex.position.y - centroid.y,
       });
     }
 
     const edges = [];
-    const visitedVertices = new Set();
-    for (const vertex of vertices) {
-      visitedVertices.add(vertex);
-      for (const neighbor of vertex.adjacency.keys()) {
-        if (visitedVertices.has(neighbor)) continue;
-        edges.push([vertex, neighbor]);
+    for (const stroke of strokes) {
+      for (let i = 1; i < stroke.vertices.length; i++) {
+        edges.push([stroke.vertices[i - 1], stroke.vertices[i]]);
       }
     }
 
@@ -33,7 +38,7 @@ export function compose(layout2D) {
 
   const offsets = new Map();
   const pushVertex = (vertex, x, y) => {
-    const offset = offsets.get(vertex);
+    const offset = offsets.get(findRootVertex(vertex));
     offset.x += x;
     offset.y += y;
   };
@@ -60,13 +65,17 @@ export function compose(layout2D) {
       for (let j = i + 1; j < edges.length; j++) {
         const edge = edges[i];
         const otherEdge = edges[j];
+        const edgeStart = edge.start.position;
+        const edgeEnd = edge.end.position;
+        const otherEdgeStart = otherEdge.start.position;
+        const otherEdgeEnd = otherEdge.end.position;
 
-        const edgeX = edge.end.x - edge.start.x;
-        const edgeY = edge.end.y - edge.start.y;
-        const otherEdgeX = otherEdge.end.x - otherEdge.start.x;
-        const otherEdgeY = otherEdge.end.y - otherEdge.start.y;
-        const startsX = edge.start.x - otherEdge.start.x;
-        const startsY = edge.start.y - otherEdge.start.y;
+        const edgeX = edgeEnd.x - edgeStart.x;
+        const edgeY = edgeEnd.y - edgeStart.y;
+        const otherEdgeX = otherEdgeEnd.x - otherEdgeStart.x;
+        const otherEdgeY = otherEdgeEnd.y - otherEdgeStart.y;
+        const startsX = edgeStart.x - otherEdgeStart.x;
+        const startsY = edgeStart.y - otherEdgeStart.y;
 
         const edgeLengthSquared = edgeX * edgeX + edgeY * edgeY;
         const otherEdgeLengthSquared =
@@ -95,21 +104,21 @@ export function compose(layout2D) {
           progress = clamp01((edgesDot - edgeStartsDot) / edgeLengthSquared);
         }
 
-        const pointX = edge.start.x + edgeX * progress;
-        const pointY = edge.start.y + edgeY * progress;
-        const otherPointX = otherEdge.start.x + otherEdgeX * otherProgress;
-        const otherPointY = otherEdge.start.y + otherEdgeY * otherProgress;
+        const pointX = edgeStart.x + edgeX * progress;
+        const pointY = edgeStart.y + edgeY * progress;
+        const otherPointX = otherEdgeStart.x + otherEdgeX * otherProgress;
+        const otherPointY = otherEdgeStart.y + otherEdgeY * otherProgress;
 
         let dirX = pointX - otherPointX;
         let dirY = pointY - otherPointY;
         let dist = Math.hypot(dirX, dirY);
         if (dist < 1e-6) {
           dirX =
-            (edge.start.x + edge.end.x) / 2 -
-            (otherEdge.start.x + otherEdge.end.x) / 2;
+            (edgeStart.x + edgeEnd.x) / 2 -
+            (otherEdgeStart.x + otherEdgeEnd.x) / 2;
           dirY =
-            (edge.start.y + edge.end.y) / 2 -
-            (otherEdge.start.y + otherEdge.end.y) / 2;
+            (edgeStart.y + edgeEnd.y) / 2 -
+            (otherEdgeStart.y + otherEdgeEnd.y) / 2;
           dist = 1e-6;
         } else {
           dirX /= dist;
@@ -125,7 +134,9 @@ export function compose(layout2D) {
       }
     }
 
-    const centroids = glyphs.map((glyph) => calculateCentroid(glyph.vertices));
+    const centroids = glyphs.map((glyph) =>
+      calculateCentroid(glyph.vertices.map((vertex) => vertex.position)),
+    );
     for (let i = 0; i < glyphs.length; i++) {
       const glyph = glyphs[i];
       const centroid = centroids[i];
@@ -133,8 +144,8 @@ export function compose(layout2D) {
         const startOffset = glyph.startOffsets.get(vertex);
         pushVertex(
           vertex,
-          (centroid.x + startOffset.x - vertex.x) * 0.2,
-          (centroid.y + startOffset.y - vertex.y) * 0.2,
+          (centroid.x + startOffset.x - vertex.position.x) * 0.2,
+          (centroid.y + startOffset.y - vertex.position.y) * 0.2,
         );
       }
 
@@ -155,10 +166,19 @@ export function compose(layout2D) {
 
     for (const vertex of vertices) {
       const offset = offsets.get(vertex);
-      vertex.x += offset.x;
-      vertex.y += offset.y;
+      vertex.position.x += offset.x;
+      vertex.position.y += offset.y;
     }
   }
+}
+
+/**
+ * @param {StrokeVertex} vertex
+ * @returns {StrokeVertex}
+ */
+function findRootVertex(vertex) {
+  while (vertex.attach) vertex = vertex.attach;
+  return vertex;
 }
 
 function clamp01(value) {

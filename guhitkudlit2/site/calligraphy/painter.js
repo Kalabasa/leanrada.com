@@ -1,14 +1,14 @@
 import { DEBUG } from "../app/flags.js";
 
 /**
- * @typedef {import("./stroke.js").Stroke} Stroke
+ * @typedef {import("./path.js").Path} Path
  */
 
 export class BasePainter {
   constructor() {}
 
   /**
-   * @param {Stroke[]} path
+   * @param {Path[]} path
    * @param {CanvasRenderingContext2D} canvasContext
    * @yields {void}
    */
@@ -23,7 +23,7 @@ export class BasePainter {
   }
 
   /**
-   * @param {Stroke} stroke
+   * @param {Path} stroke
    * @param {number} scale
    * @param {string} color
    * @param {CanvasRenderingContext2D} canvasContext

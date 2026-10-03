@@ -1,28 +1,62 @@
 /**
  * @typedef {import("./glyphs.js").Glyph} Glyph
  * @typedef {import("./glyphs.js").GlyphVertex} GlyphVertex
+ * @typedef {{ x: number, y: number }} Point
  * @typedef {{
- *  vertices: { x: number, y: number }[]
- * }} Stroke
+ *  position: Point,
+ *  control: Point,
+ *  attach?: StrokeVertex
+ * }} StrokeVertex
+ * @typedef {{ strokes: { vertices: StrokeVertex[] }[] }} GlyphStrokes
  * @typedef {Map<GlyphVertex, Set<GlyphVertex>>} UntracedNeighbors
+ * @typedef {{
+ *  vertex: StrokeVertex,
+ *  previous: StrokeVertex,
+ *  next: StrokeVertex
+ * }} MiddleOccurrence
  */
 
 /**
- * @param {Glyph[]} glyphs laid out glyphs
- * @returns {Stroke[]}
+ * @param {Glyph} glyph laid out glyph
+ * @returns {GlyphStrokes}
  */
-export function traceStrokes(glyphs) {
+export function traceStrokes(glyph) {
+  const chains = traceChains(glyph);
+
+  /** @type {Map<GlyphVertex, Point>} */
+  const sharedPositions = new Map();
+  const getSharedPosition = (glyphVertex) => {
+    let position = sharedPositions.get(glyphVertex);
+    if (!position) {
+      position = { x: glyphVertex.x, y: glyphVertex.y };
+      sharedPositions.set(glyphVertex, position);
+    }
+    return position;
+  };
+
+  const strokes = chains.map((chain) => ({
+    vertices: interpolateChain(chain, getSharedPosition),
+  }));
+
+  calculateControlPoints(strokes);
+
+  return { strokes };
+}
+
+/**
+ * @param {Glyph} glyph
+ * @returns {GlyphVertex[][]}
+ */
+function traceChains(glyph) {
   /** @type {GlyphVertex[]} */
   const vertices = [];
   /** @type {UntracedNeighbors} */
   const untracedNeighbors = new Map();
-  for (const glyph of glyphs) {
-    for (const glyphRow of glyph.map) {
-      for (const vertex of glyphRow) {
-        if (!vertex) continue;
-        vertices.push(vertex);
-        untracedNeighbors.set(vertex, new Set(vertex.adjacency.keys()));
-      }
+  for (const glyphRow of glyph.map) {
+    for (const vertex of glyphRow) {
+      if (!vertex) continue;
+      vertices.push(vertex);
+      untracedNeighbors.set(vertex, new Set(vertex.adjacency.keys()));
     }
   }
 
@@ -34,12 +68,7 @@ export function traceStrokes(glyphs) {
     }
     chains.push(chain);
   }
-
-  const interpolatedChains = chains.map(interpolateEdges);
-
-  calculateControlPoints(interpolatedChains);
-
-  return interpolatedChains.map((chain) => ({ vertices: sampleChain(chain) }));
+  return chains;
 }
 
 // Positive go right or down.
@@ -62,29 +91,31 @@ const edgeTypeOffsets = {
 
 /**
  * @param {GlyphVertex[]} chain
- * @returns {GlyphVertex[]}
+ * @param {(glyphVertex: GlyphVertex) => Point} getSharedPosition
+ * @returns {StrokeVertex[]}
  */
-function interpolateEdges(chain) {
-  const out = [chain[0]];
+function interpolateChain(chain, getSharedPosition) {
+  const out = [createStrokeVertex(getSharedPosition(chain[0]))];
   for (let i = 1; i < chain.length; i++) {
     const start = chain[i - 1];
     const end = chain[i];
     const edgeType = start.adjacency.get(end).type;
     const midlineOffsets = edgeTypeOffsets[edgeType] ?? [];
 
-    let previous = start;
     for (const { progress, offset } of midlineOffsets) {
-      const offsetVertex = createOffsetVertex(start, end, progress, offset);
-      linkVertices(previous, offsetVertex);
-      out.push(offsetVertex);
-      previous = offsetVertex;
+      out.push(createStrokeVertex(calculateOffsetPosition(start, end, progress, offset)));
     }
-    if (previous !== start) {
-      linkVertices(previous, end);
-    }
-    out.push(end);
+    out.push(createStrokeVertex(getSharedPosition(end)));
   }
   return out;
+}
+
+/**
+ * @param {Point} position
+ * @returns {StrokeVertex}
+ */
+function createStrokeVertex(position) {
+  return { position, control: { x: 0, y: 0 } };
 }
 
 /**
@@ -92,9 +123,9 @@ function interpolateEdges(chain) {
  * @param {GlyphVertex} end
  * @param {number} progress
  * @param {number} offset
- * @returns {GlyphVertex}
+ * @returns {Point}
  */
-function createOffsetVertex(start, end, progress, offset) {
+function calculateOffsetPosition(start, end, progress, offset) {
   const edgeX = end.x - start.x;
   const edgeY = end.y - start.y;
   let perpendicularX = -edgeY;
@@ -106,180 +137,157 @@ function createOffsetVertex(start, end, progress, offset) {
   return {
     x: start.x + edgeX * progress + perpendicularX * offset,
     y: start.y + edgeY * progress + perpendicularY * offset,
-    terminal: false,
-    adjacency: new Map(),
   };
 }
 
 /**
- * @param {GlyphVertex} vertexA
- * @param {GlyphVertex} vertexB
+ * @param {{ vertices: StrokeVertex[] }[]} strokes
  */
-function linkVertices(vertexA, vertexB) {
-  vertexA.adjacency.set(vertexB, { type: undefined, control: { dx: 0, dy: 0 } });
-  vertexB.adjacency.set(vertexA, { type: undefined, control: { dx: 0, dy: 0 } });
-}
-
-const samplesPerEdge = 8;
-
-/**
- * @param {GlyphVertex[]} chain
- * @returns {{ x: number, y: number }[]}
- */
-function sampleChain(chain) {
-  const out = [chain[0]];
-  for (let i = 1; i < chain.length; i++) {
-    const start = chain[i - 1];
-    const end = chain[i];
-    const startControl = start.adjacency.get(end).control;
-    const endControl = end.adjacency.get(start).control;
-    const startHandle = {
-      x: start.x + startControl.dx,
-      y: start.y + startControl.dy,
-    };
-    const endHandle = {
-      x: end.x + endControl.dx,
-      y: end.y + endControl.dy,
-    };
-    for (let sample = 1; sample < samplesPerEdge; sample++) {
-      const t = sample / samplesPerEdge;
-      out.push(sampleCubicBezier(start, startHandle, endHandle, end, t));
-    }
-    out.push(end);
-  }
-  return out;
-}
-
-/**
- * @param {{ x: number, y: number }} start
- * @param {{ x: number, y: number }} startHandle
- * @param {{ x: number, y: number }} endHandle
- * @param {{ x: number, y: number }} end
- * @param {number} t
- * @returns {{ x: number, y: number }}
- */
-function sampleCubicBezier(start, startHandle, endHandle, end, t) {
-  const startWeight = (1 - t) ** 3;
-  const startHandleWeight = 3 * (1 - t) ** 2 * t;
-  const endHandleWeight = 3 * (1 - t) * t ** 2;
-  const endWeight = t ** 3;
-  return {
-    x:
-      start.x * startWeight +
-      startHandle.x * startHandleWeight +
-      endHandle.x * endHandleWeight +
-      end.x * endWeight,
-    y:
-      start.y * startWeight +
-      startHandle.y * startHandleWeight +
-      endHandle.y * endHandleWeight +
-      end.y * endWeight,
-  };
-}
-
-/**
- * @param {GlyphVertex[][]} chains
- */
-function calculateControlPoints(chains) {
-  /** @type {Map<GlyphVertex, [GlyphVertex, GlyphVertex]>} */
-  const middleNeighbors = new Map();
-  for (const chain of chains) {
-    for (let i = 1; i < chain.length - 1; i++) {
-      if (middleNeighbors.has(chain[i])) continue;
-      middleNeighbors.set(chain[i], [chain[i - 1], chain[i + 1]]);
+function calculateControlPoints(strokes) {
+  /** @type {Map<Point, MiddleOccurrence>} */
+  const middleOccurrences = new Map();
+  for (const { vertices } of strokes) {
+    for (let i = 1; i < vertices.length - 1; i++) {
+      if (middleOccurrences.has(vertices[i].position)) continue;
+      middleOccurrences.set(vertices[i].position, {
+        vertex: vertices[i],
+        previous: vertices[i - 1],
+        next: vertices[i + 1],
+      });
     }
   }
 
-  for (const chain of chains) {
-    if (chain.length === 2) {
-      const [start, end] = chain;
-      setControl(start, end, (end.x - start.x) / 2, (end.y - start.y) / 2);
-      setControl(end, start, (start.x - end.x) / 2, (start.y - end.y) / 2);
+  for (const { vertices } of strokes) {
+    if (vertices.length === 2) {
+      const [start, end] = vertices;
+      const halfEdge = {
+        x: (end.position.x - start.position.x) / 2,
+        y: (end.position.y - start.position.y) / 2,
+      };
+      start.control = halfEdge;
+      end.control = { ...halfEdge };
       continue;
     }
 
-    for (let i = 1; i < chain.length - 1; i++) {
-      alignMiddleControls(chain[i - 1], chain[i], chain[i + 1]);
+    for (let i = 1; i < vertices.length - 1; i++) {
+      vertices[i].control = calculateMiddleControl(
+        vertices[i - 1],
+        vertices[i],
+        vertices[i + 1],
+      );
     }
-    alignEndControl(chain[0], chain[1], middleNeighbors);
-    alignEndControl(chain.at(-1), chain.at(-2), middleNeighbors);
+
+    const first = vertices[0];
+    const second = vertices[1];
+    first.control = calculateEndControlTowardNext(
+      first,
+      second,
+      negate(second.control),
+      middleOccurrences,
+    );
+
+    const last = vertices.at(-1);
+    const secondLast = vertices.at(-2);
+    last.control = negate(
+      calculateEndControlTowardNext(
+        last,
+        secondLast,
+        secondLast.control,
+        middleOccurrences,
+      ),
+    );
+  }
+
+  /** @type {Map<Point, StrokeVertex>} */
+  const firstEndAtPosition = new Map();
+  for (const { vertices } of strokes) {
+    for (const end of [vertices[0], vertices.at(-1)]) {
+      const middleOccurrence = middleOccurrences.get(end.position);
+      const firstEnd = firstEndAtPosition.get(end.position);
+      if (middleOccurrence) {
+        end.attach = middleOccurrence.vertex;
+      } else if (firstEnd) {
+        end.attach = firstEnd;
+      } else {
+        firstEndAtPosition.set(end.position, end);
+      }
+    }
   }
 }
 
 /**
- * @param {GlyphVertex} previous
- * @param {GlyphVertex} vertex
- * @param {GlyphVertex} next
+ * @param {StrokeVertex} previous
+ * @param {StrokeVertex} vertex
+ * @param {StrokeVertex} next
+ * @returns {Point} control toward next
  */
-function alignMiddleControls(previous, vertex, next) {
-  const inX = vertex.x - previous.x;
-  const inY = vertex.y - previous.y;
-  const outX = next.x - vertex.x;
-  const outY = next.y - vertex.y;
+function calculateMiddleControl(previous, vertex, next) {
+  const inX = vertex.position.x - previous.position.x;
+  const inY = vertex.position.y - previous.position.y;
+  const outX = next.position.x - vertex.position.x;
+  const outY = next.position.y - vertex.position.y;
   const inLength = Math.hypot(inX, inY);
   const outLength = Math.hypot(outX, outY);
   const dot = (inX * outX + inY * outY) / (inLength * outLength);
   const lengthFactor = ((dot + 1) / 2) ** 0.25;
   const controlLength = (Math.min(inLength, outLength) / 2) * lengthFactor;
 
-  const tangentX = next.x - previous.x;
-  const tangentY = next.y - previous.y;
+  const tangentX = next.position.x - previous.position.x;
+  const tangentY = next.position.y - previous.position.y;
   const tangentLength = Math.hypot(tangentX, tangentY);
-  let controlX = 0;
-  let controlY = 0;
-  if (tangentLength > 0) {
-    controlX = (tangentX / tangentLength) * controlLength;
-    controlY = (tangentY / tangentLength) * controlLength;
-  }
-
-  setControl(vertex, next, controlX, controlY);
-  setControl(vertex, previous, -controlX, -controlY);
+  if (tangentLength === 0) return { x: 0, y: 0 };
+  return {
+    x: (tangentX / tangentLength) * controlLength,
+    y: (tangentY / tangentLength) * controlLength,
+  };
 }
 
 /**
- * @param {GlyphVertex} end
- * @param {GlyphVertex} next
- * @param {Map<GlyphVertex, [GlyphVertex, GlyphVertex]>} middleNeighbors
+ * @param {StrokeVertex} end
+ * @param {StrokeVertex} next
+ * @param {Point} nextControlTowardEnd
+ * @param {Map<Point, MiddleOccurrence>} middleOccurrences
+ * @returns {Point} control of end toward next
  */
-function alignEndControl(end, next, middleNeighbors) {
-  const edgeX = next.x - end.x;
-  const edgeY = next.y - end.y;
+function calculateEndControlTowardNext(
+  end,
+  next,
+  nextControlTowardEnd,
+  middleOccurrences,
+) {
+  const edgeX = next.position.x - end.position.x;
+  const edgeY = next.position.y - end.position.y;
   const edgeLength = Math.hypot(edgeX, edgeY);
 
-  const junctionNeighbors = middleNeighbors.get(end);
-  if (junctionNeighbors) {
-    const [junctionPrevious, junctionNext] = junctionNeighbors;
-    let tangentX = junctionNext.x - junctionPrevious.x;
-    let tangentY = junctionNext.y - junctionPrevious.y;
+  const middleOccurrence = middleOccurrences.get(end.position);
+  if (middleOccurrence) {
+    let tangentX =
+      middleOccurrence.next.position.x - middleOccurrence.previous.position.x;
+    let tangentY =
+      middleOccurrence.next.position.y - middleOccurrence.previous.position.y;
     if (tangentX * edgeX + tangentY * edgeY < 0) {
       tangentX = -tangentX;
       tangentY = -tangentY;
     }
     const scale = edgeLength / 2 / Math.hypot(tangentX, tangentY);
-    setControl(end, next, tangentX * scale, tangentY * scale);
-    return;
+    return { x: tangentX * scale, y: tangentY * scale };
   }
 
-  const nextControl = next.adjacency.get(end).control;
   const unitX = edgeX / edgeLength;
   const unitY = edgeY / edgeLength;
-  const alongEdge = nextControl.dx * unitX + nextControl.dy * unitY;
-  setControl(
-    end,
-    next,
-    nextControl.dx - 2 * alongEdge * unitX,
-    nextControl.dy - 2 * alongEdge * unitY,
-  );
+  const alongEdge = nextControlTowardEnd.x * unitX + nextControlTowardEnd.y * unitY;
+  return {
+    x: nextControlTowardEnd.x - 2 * alongEdge * unitX,
+    y: nextControlTowardEnd.y - 2 * alongEdge * unitY,
+  };
 }
 
 /**
- * @param {GlyphVertex} from
- * @param {GlyphVertex} to
- * @param {number} dx
- * @param {number} dy
+ * @param {Point} point
+ * @returns {Point}
  */
-function setControl(from, to, dx, dy) {
-  from.adjacency.get(to).control = { dx, dy };
+function negate(point) {
+  return { x: -point.x, y: -point.y };
 }
 
 /**

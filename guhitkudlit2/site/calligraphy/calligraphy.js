@@ -106,13 +106,19 @@ export async function drawCalligraphy(
   canvasContext,
   abortSignal,
 ) {
-  const [glyphMap, { layoutLine }, { compose }, { traceStrokes }] =
-    await Promise.all([
-      import("./glyphs.js"),
-      import("./layout.js"),
-      import("./compose.js"),
-      import("./stroke.js"),
-    ]);
+  const [
+    glyphMap,
+    { layoutLine },
+    { traceStrokes },
+    { compose },
+    { samplePaths },
+  ] = await Promise.all([
+    import("./glyphs.js"),
+    import("./layout.js"),
+    import("./stroke.js"),
+    import("./compose.js"),
+    import("./path.js"),
+  ]);
   if (abortSignal.aborted) return;
 
   const lines = [[]];
@@ -144,9 +150,11 @@ export async function drawCalligraphy(
     lineTopY += lineBounds.height;
   }
 
-  compose(layout2D);
+  const glyphStrokesList = layout2D.map(traceStrokes);
 
-  const strokes = traceStrokes(layout2D);
+  compose(glyphStrokesList);
+
+  const strokes = samplePaths(glyphStrokesList);
   const vertices = strokes.flatMap((stroke) => stroke.vertices);
 
   const layoutBounds = getBounds(vertices);
