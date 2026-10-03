@@ -71,16 +71,24 @@ const memo = Symbol("memo");
 export function installCalligraphy(observableBaybayinUnits, canvasRef) {
   // todo: lazy load
   const painter = new BasePainter();
+  let drawingAbortController = new AbortController();
   reaction(
     () => observableBaybayinUnits.get(),
     async (baybayinUnits) => {
+      drawingAbortController.abort();
+      drawingAbortController = new AbortController();
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d");
       context.reset();
       context.clearRect(0, 0, canvas.width, canvas.height);
-      drawCalligraphy(baybayinUnits, painter, context);
+      drawCalligraphy(
+        baybayinUnits,
+        painter,
+        context,
+        drawingAbortController.signal,
+      );
     },
     { delay: 1000 },
   );
@@ -90,8 +98,14 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
  * @param {string[]} baybayinUnits
  * @param {BasePainter} painter
  * @param {CanvasRenderingContext2D} canvasContext
+ * @param {AbortSignal} abortSignal
  */
-export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
+export async function drawCalligraphy(
+  baybayinUnits,
+  painter,
+  canvasContext,
+  abortSignal,
+) {
   const [glyphMap, { layoutLine }, { compose }, { traceStrokes }] =
     await Promise.all([
       import("./glyphs.js"),
@@ -99,6 +113,7 @@ export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
       import("./compose.js"),
       import("./stroke.js"),
     ]);
+  if (abortSignal.aborted) return;
 
   const lines = [[]];
   for (const unit of baybayinUnits) {
@@ -154,6 +169,7 @@ export async function drawCalligraphy(baybayinUnits, painter, canvasContext) {
   const drawing = painter.drawPath(path, canvasContext);
   for (const _ of drawing) {
     await delay(10);
+    if (abortSignal.aborted) return;
   }
 }
 
