@@ -35,19 +35,93 @@ export function traceStrokes(glyphs) {
     chains.push(chain);
   }
 
-  alignControlPoints(chains);
+  const interpolatedChains = chains.map(interpolateEdges);
 
-  return chains.map((chain) => ({ vertices: sampleChain(chain) }));
+  calculateControlPoints(interpolatedChains);
+
+  return interpolatedChains.map((chain) => ({ vertices: sampleChain(chain) }));
 }
 
-const SAMPLES_PER_EDGE = 8;
+// Positive go right or down.
+const edgeTypeOffsets = {
+  leftCurve: [{ progress: 0.5, offset: -0.5 }],
+  rightCurve: [{ progress: 0.5, offset: 0.5 }],
+  wavy: [
+    { progress: 0.2 ** 1.5, offset: 0.125 * 0.7 ** 0 },
+    { progress: 0.4 ** 1.5, offset: -0.125 * 0.7 ** 1 },
+    { progress: 0.6 ** 1.5, offset: 0.125 * 0.7 ** 2 },
+    { progress: 0.8 ** 1.5, offset: -0.125 * 0.7 ** 3 },
+  ],
+};
+
+/**
+ * @param {GlyphVertex[]} chain
+ * @returns {GlyphVertex[]}
+ */
+function interpolateEdges(chain) {
+  const out = [chain[0]];
+  for (let i = 1; i < chain.length; i++) {
+    const start = chain[i - 1];
+    const end = chain[i];
+    const edgeType = start.adjacency.get(end).type;
+    const midlineOffsets = edgeTypeOffsets[edgeType] ?? [];
+
+    let previous = start;
+    for (const { progress, offset } of midlineOffsets) {
+      const offsetVertex = createOffsetVertex(start, end, progress, offset);
+      linkVertices(previous, offsetVertex);
+      out.push(offsetVertex);
+      previous = offsetVertex;
+    }
+    if (previous !== start) {
+      linkVertices(previous, end);
+    }
+    out.push(end);
+  }
+  return out;
+}
+
+/**
+ * @param {GlyphVertex} start
+ * @param {GlyphVertex} end
+ * @param {number} progress
+ * @param {number} offset
+ * @returns {GlyphVertex}
+ */
+function createOffsetVertex(start, end, progress, offset) {
+  const edgeX = end.x - start.x;
+  const edgeY = end.y - start.y;
+  let perpendicularX = -edgeY;
+  let perpendicularY = edgeX;
+  if (perpendicularX + perpendicularY < 0) {
+    perpendicularX = -perpendicularX;
+    perpendicularY = -perpendicularY;
+  }
+  return {
+    x: start.x + edgeX * progress + perpendicularX * offset,
+    y: start.y + edgeY * progress + perpendicularY * offset,
+    terminal: false,
+    adjacency: new Map(),
+  };
+}
+
+/**
+ * @param {GlyphVertex} vertexA
+ * @param {GlyphVertex} vertexB
+ */
+function linkVertices(vertexA, vertexB) {
+  vertexA.adjacency.set(vertexB, { type: undefined, control: { dx: 0, dy: 0 } });
+  vertexB.adjacency.set(vertexA, { type: undefined, control: { dx: 0, dy: 0 } });
+}
+
+const samplesPerEdge = 8;
 
 /**
  * @param {GlyphVertex[]} chain
  * @returns {{ x: number, y: number }[]}
  */
 function sampleChain(chain) {
-  const samples = [chain[0]];
+  const out = [chain[0]];
   for (let i = 1; i < chain.length; i++) {
     const start = chain[i - 1];
     const end = chain[i];
@@ -61,13 +135,13 @@ function sampleChain(chain) {
       x: end.x + endControl.dx,
       y: end.y + endControl.dy,
     };
-    for (let sample = 1; sample < SAMPLES_PER_EDGE; sample++) {
-      const t = sample / SAMPLES_PER_EDGE;
-      samples.push(sampleCubicBezier(start, startHandle, endHandle, end, t));
+    for (let sample = 1; sample < samplesPerEdge; sample++) {
+      const t = sample / samplesPerEdge;
+      out.push(sampleCubicBezier(start, startHandle, endHandle, end, t));
     }
-    samples.push(end);
+    out.push(end);
   }
-  return samples;
+  return out;
 }
 
 /**
@@ -100,7 +174,7 @@ function sampleCubicBezier(start, startHandle, endHandle, end, t) {
 /**
  * @param {GlyphVertex[][]} chains
  */
-function alignControlPoints(chains) {
+function calculateControlPoints(chains) {
   /** @type {Map<GlyphVertex, [GlyphVertex, GlyphVertex]>} */
   const middleNeighbors = new Map();
   for (const chain of chains) {
@@ -139,7 +213,8 @@ function alignMiddleControls(previous, vertex, next) {
   const inLength = Math.hypot(inX, inY);
   const outLength = Math.hypot(outX, outY);
   const dot = (inX * outX + inY * outY) / (inLength * outLength);
-  const controlLength = (Math.min(inLength, outLength) / 2) * ((dot + 1) / 2);
+  const lengthFactor = ((dot + 1) / 2) ** 0.5;
+  const controlLength = (Math.min(inLength, outLength) / 2) * lengthFactor;
 
   const tangentX = next.x - previous.x;
   const tangentY = next.y - previous.y;
@@ -217,7 +292,6 @@ function findBestChain(vertices, untracedNeighbors) {
       markUntraced(untracedNeighbors, start, neighbor);
 
       if (chain === null) continue;
-      // TODO: tiebreaker for chains of equal score
       if (bestChain.length === 0 || scoreChain(chain) > scoreChain(bestChain)) {
         bestChain = chain;
       }

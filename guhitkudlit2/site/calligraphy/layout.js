@@ -5,7 +5,7 @@
 // Layout works on a 2x grid relative to glyph coords
 // to account for edges between vertices.
 // If glyphs have 3 rows, layout has 5 rows
-const ROWS = 5;
+const layoutRows = 5;
 
 /**
  * @param {Glyph[]} glyphs
@@ -21,7 +21,7 @@ export function layoutLine(glyphs, opts = {}) {
   const gap = opts.gap ?? 0.5;
 
   // keep track of the max X laid per row to determine next placement
-  const maxX = Array(ROWS).fill(-Infinity);
+  const maxX = Array(layoutRows).fill(-Infinity);
 
   for (let i = 0; i < layout.length; i++) {
     const glyph = layout[i];
@@ -36,7 +36,7 @@ export function layoutLine(glyphs, opts = {}) {
 
     let offset = 0;
     if (opts.kern) {
-      for (let row = 0; row < ROWS; row++) {
+      for (let row = 0; row < layoutRows; row++) {
         const extent = extents[row];
         offset = Math.max(offset, maxX[row] - extent.minX);
       }
@@ -52,7 +52,7 @@ export function layoutLine(glyphs, opts = {}) {
       }
     }
 
-    for (let row = 0; row < ROWS; row++) {
+    for (let row = 0; row < layoutRows; row++) {
       maxX[row] = Math.max(maxX[row], extents[row].maxX + offset);
     }
   }
@@ -65,7 +65,7 @@ export function layoutLine(glyphs, opts = {}) {
  * @returns {{ minX: number, maxX: number }[]}
  */
 function calculateExtents(glyph, gap) {
-  const extents = Array.from({ length: ROWS }, () => ({
+  const extents = Array.from({ length: layoutRows }, () => ({
     minX: Infinity,
     maxX: -Infinity,
   }));
