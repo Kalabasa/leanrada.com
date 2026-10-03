@@ -5,17 +5,14 @@
  * @typedef {{
  *  position: Point,
  *  control: Point,
- *  attach?: StrokeVertex
+ *  parent?: StrokeVertex,
+ *  isJoined?: boolean,
+ *  prev?: StrokeVertex,
+ *  next?: StrokeVertex,
+ *  prevSideLen?: number,
+ *  nextSideLen?: number
  * }} StrokeVertex
  * @typedef {{ strokes: { vertices: StrokeVertex[] }[] }} GlyphStrokes
- * @typedef {Map<GlyphVertex, Set<GlyphVertex>>} UntracedNeighbors
- * @typedef {{
- *  vertex: StrokeVertex,
- *  previous: StrokeVertex,
- *  next: StrokeVertex,
- *  previousSideLength: number,
- *  nextSideLength: number
- * }} MiddleOccurrence
  */
 
 /**
@@ -52,7 +49,7 @@ export function traceStrokes(glyph) {
 function traceChains(glyph) {
   /** @type {GlyphVertex[]} */
   const vertices = [];
-  /** @type {UntracedNeighbors} */
+  /** @type {Map<GlyphVertex, Set<GlyphVertex>>} */
   const untracedNeighbors = new Map();
   for (const glyphRow of glyph.map) {
     for (const vertex of glyphRow) {
@@ -150,39 +147,46 @@ function calculateOffsetPosition(start, end, progress, offset) {
  * @param {{ vertices: StrokeVertex[] }[]} strokes
  */
 function calculateControlPoints(strokes) {
-  /** @type {Map<Point, MiddleOccurrence>} */
-  const middleOccurrences = new Map();
+  /** @type {Map<Point, StrokeVertex>} */
+  const middleVertexAtPosition = new Map();
   for (const { vertices } of strokes) {
-    const lengthsFromStart = [0];
+    const lensFromStart = [0];
     for (let i = 1; i < vertices.length; i++) {
-      const edgeLength = Math.hypot(
+      const edgeLen = Math.hypot(
         vertices[i].position.x - vertices[i - 1].position.x,
         vertices[i].position.y - vertices[i - 1].position.y,
       );
-      lengthsFromStart.push(lengthsFromStart[i - 1] + edgeLength);
+      lensFromStart.push(lensFromStart[i - 1] + edgeLen);
     }
-    const strokeLength = lengthsFromStart.at(-1);
+    const strokeLen = lensFromStart.at(-1);
 
     for (let i = 1; i < vertices.length - 1; i++) {
-      if (middleOccurrences.has(vertices[i].position)) continue;
-      middleOccurrences.set(vertices[i].position, {
-        vertex: vertices[i],
-        previous: vertices[i - 1],
-        next: vertices[i + 1],
-        previousSideLength: lengthsFromStart[i],
-        nextSideLength: strokeLength - lengthsFromStart[i],
-      });
+      const vertex = vertices[i];
+      vertex.prev = vertices[i - 1];
+      vertex.next = vertices[i + 1];
+      vertex.prevSideLen = lensFromStart[i];
+      vertex.nextSideLen = strokeLen - lensFromStart[i];
+      if (!middleVertexAtPosition.has(vertex.position)) {
+        middleVertexAtPosition.set(vertex.position, vertex);
+      }
     }
   }
 
-  /** @type {Map<Point, number>} */
-  const terminalCountAtPosition = new Map();
+  /** @type {Map<Point, StrokeVertex>} */
+  const firstTerminalAtPosition = new Map();
   for (const { vertices } of strokes) {
     for (const terminal of [vertices[0], vertices.at(-1)]) {
-      terminalCountAtPosition.set(
-        terminal.position,
-        (terminalCountAtPosition.get(terminal.position) ?? 0) + 1,
-      );
+      const middleVertex = middleVertexAtPosition.get(terminal.position);
+      const firstTerminal = firstTerminalAtPosition.get(terminal.position);
+      if (middleVertex) {
+        terminal.parent = middleVertex;
+      } else if (firstTerminal) {
+        terminal.parent = firstTerminal;
+        terminal.isJoined = true;
+        firstTerminal.isJoined = true;
+      } else {
+        firstTerminalAtPosition.set(terminal.position, terminal);
+      }
     }
   }
 
@@ -193,75 +197,62 @@ function calculateControlPoints(strokes) {
     const secondLast = vertices.at(-2);
 
     for (let i = 1; i < vertices.length - 1; i++) {
-      vertices[i].control = calculateMiddleControl(
-        vertices[i - 1],
-        vertices[i],
-        vertices[i + 1],
-      );
+      vertices[i].control = calculateMiddleControl(vertices, i);
     }
 
-    first.control = calculateTerminalControl(
-      first,
-      second,
-      last,
-      middleOccurrences,
-      terminalCountAtPosition,
-      true,
-    );
-
+    first.control = calculateTerminalControl(first, second, last, true);
     last.control = negate(
-      calculateTerminalControl(
-        last,
-        secondLast,
-        first,
-        middleOccurrences,
-        terminalCountAtPosition,
-        false,
-      ),
+      calculateTerminalControl(last, secondLast, first, false),
     );
-  }
-
-  /** @type {Map<Point, StrokeVertex>} */
-  const firstTerminalAtPosition = new Map();
-  for (const { vertices } of strokes) {
-    for (const terminal of [vertices[0], vertices.at(-1)]) {
-      const middleOccurrence = middleOccurrences.get(terminal.position);
-      const firstTerminal = firstTerminalAtPosition.get(terminal.position);
-      if (middleOccurrence) {
-        terminal.attach = middleOccurrence.vertex;
-      } else if (firstTerminal) {
-        terminal.attach = firstTerminal;
-      } else {
-        firstTerminalAtPosition.set(terminal.position, terminal);
-      }
-    }
   }
 }
 
 /**
- * @param {StrokeVertex} previous
- * @param {StrokeVertex} vertex
- * @param {StrokeVertex} next
+ * @param {StrokeVertex[]} vertices
+ * @param {number} index
  * @returns {Point} control toward next
  */
-function calculateMiddleControl(previous, vertex, next) {
-  const inX = vertex.position.x - previous.position.x;
-  const inY = vertex.position.y - previous.position.y;
-  const outX = next.position.x - vertex.position.x;
-  const outY = next.position.y - vertex.position.y;
-  const inLength = Math.hypot(inX, inY);
-  const outLength = Math.hypot(outX, outY);
-  const dot = (inX * outX + inY * outY) / (inLength * outLength);
-  const lengthFactor = ((dot + 1) / 2) ** 0.25;
-  const controlLength = (Math.min(inLength, outLength) / 2) * lengthFactor;
+function calculateMiddleControl(vertices, index) {
+  const prev = vertices[index - 1];
+  const vertex = vertices[index];
+  const next = vertices[index + 1];
+  const first = vertices[0];
+  const last = vertices.at(-1);
 
-  const tangentX = next.position.x - previous.position.x;
-  const tangentY = next.position.y - previous.position.y;
-  const tangentLength = Math.hypot(tangentX, tangentY);
-  if (tangentLength === 0) return { x: 0, y: 0 };
+  const prevDX = vertex.position.x - prev.position.x;
+  const prevDY = vertex.position.y - prev.position.y;
+  const nextDX = next.position.x - vertex.position.x;
+  const nextDY = next.position.y - vertex.position.y;
+  const prevLen = Math.hypot(prevDX, prevDY);
+  const nextLen = Math.hypot(nextDX, nextDY);
+  const dot = (prevDX * nextDX + prevDY * nextDY) / (prevLen * nextLen);
+  const lenFactor = ((dot + 1) / 2) ** 0.25;
+  const controlLen = (Math.min(prevLen, nextLen) / 2) * lenFactor;
+
+  let prevTangentPoint = prev.position;
+  if (prev === first && isFreeTerminal(first)) {
+    const firstFreeControl = calculateFreeTerminalControl(first, last, true);
+    prevTangentPoint = {
+      x: first.position.x + firstFreeControl.x * 0.5,
+      y: first.position.y + firstFreeControl.y * 0.5,
+    };
+  }
+  let nextTangentPoint = next.position;
+  if (next === last && isFreeTerminal(last)) {
+    const lastFreeControl = calculateFreeTerminalControl(last, first, false);
+    nextTangentPoint = {
+      x: last.position.x + lastFreeControl.x * 0.5,
+      y: last.position.y + lastFreeControl.y * 0.5,
+    };
+  }
+
+  const tangentX = nextTangentPoint.x - prevTangentPoint.x;
+  const tangentY = nextTangentPoint.y - prevTangentPoint.y;
+  const tangentLen = Math.hypot(tangentX, tangentY);
+  if (tangentLen === 0) return { x: 0, y: 0 };
   return {
-    x: (tangentX / tangentLength) * controlLength,
-    y: (tangentY / tangentLength) * controlLength,
+    x: (tangentX / tangentLen) * controlLen,
+    y: (tangentY / tangentLen) * controlLen,
   };
 }
 
@@ -269,8 +260,6 @@ function calculateMiddleControl(previous, vertex, next) {
  * @param {StrokeVertex} terminal
  * @param {StrokeVertex} next
  * @param {StrokeVertex} otherTerminal
- * @param {Map<Point, MiddleOccurrence>} middleOccurrences
- * @param {Map<Point, number>} terminalCountAtPosition
  * @param {boolean} isStrokeStart
  * @returns {Point} control of terminal toward next
  */
@@ -278,27 +267,25 @@ function calculateTerminalControl(
   terminal,
   next,
   otherTerminal,
-  middleOccurrences,
-  terminalCountAtPosition,
   isStrokeStart,
 ) {
   const edgeX = next.position.x - terminal.position.x;
   const edgeY = next.position.y - terminal.position.y;
-  const edgeLength = Math.hypot(edgeX, edgeY);
+  const edgeLen = Math.hypot(edgeX, edgeY);
 
-  const middleOccurrence = middleOccurrences.get(terminal.position);
-  if (middleOccurrence) {
+  const parent = terminal.parent;
+  if (parent && !terminal.isJoined) {
     // attached to middle of another stroke
     // align control to tangent of that stroke
-    const { previous: parentPrevious, next: parentNext } = middleOccurrence;
-    const { previousSideLength, nextSideLength } = middleOccurrence;
-    const mergesFromParentPrevious =
-      previousSideLength === nextSideLength
+    const { prev: parentPrev, next: parentNext } = parent;
+    const { prevSideLen, nextSideLen } = parent;
+    const mergesFromParentPrev =
+      prevSideLen === nextSideLen
         ? isStrokeStart
-        : previousSideLength < nextSideLength;
-    const [handleSideNeighbor, otherSideNeighbor] = mergesFromParentPrevious
-      ? [parentPrevious, parentNext]
-      : [parentNext, parentPrevious];
+        : prevSideLen < nextSideLen;
+    const [handleSideNeighbor, otherSideNeighbor] = mergesFromParentPrev
+      ? [parentPrev, parentNext]
+      : [parentNext, parentPrev];
 
     const tangentX =
       handleSideNeighbor.position.x - otherSideNeighbor.position.x;
@@ -315,22 +302,18 @@ function calculateTerminalControl(
     const doesParentBendTowardStroke = parentBendCross * strokeCross > 0;
     const handleX = doesParentBendTowardStroke ? towardHandleSideX : tangentX;
     const handleY = doesParentBendTowardStroke ? towardHandleSideY : tangentY;
-    const scale = (edgeLength * 0.25) / Math.hypot(handleX, handleY);
+    const scale = (edgeLen * 0.25) / Math.hypot(handleX, handleY);
     return { x: handleX * scale, y: handleY * scale };
-  } else if (terminalCountAtPosition.get(terminal.position) === 1) {
+  } else if (isFreeTerminal(terminal)) {
     // free terminal
-    const spanX = otherTerminal.position.x - terminal.position.x;
-    const spanY = otherTerminal.position.y - terminal.position.y;
-    const horizontalness = (Math.abs(spanX) / Math.hypot(spanX, spanY)) ** 4;
-    const strength = horizontalness * Math.abs(spanX) * 0.2;
-    return { x: 0, y: isStrokeStart ? strength : -strength };
+    return calculateFreeTerminalControl(terminal, otherTerminal, isStrokeStart);
   } else {
     // attached to another terminal
     const nextControlTowardTerminal = isStrokeStart
       ? negate(next.control)
       : next.control;
-    const unitX = edgeX / edgeLength;
-    const unitY = edgeY / edgeLength;
+    const unitX = edgeX / edgeLen;
+    const unitY = edgeY / edgeLen;
     const alongEdge =
       nextControlTowardTerminal.x * unitX + nextControlTowardTerminal.y * unitY;
     return {
@@ -338,6 +321,28 @@ function calculateTerminalControl(
       y: nextControlTowardTerminal.y - 2 * alongEdge * unitY,
     };
   }
+}
+
+/**
+ * @param {StrokeVertex} terminal
+ * @returns {boolean}
+ */
+function isFreeTerminal(terminal) {
+  return !terminal.parent && !terminal.isJoined;
+}
+
+/**
+ * @param {StrokeVertex} terminal
+ * @param {StrokeVertex} otherTerminal
+ * @param {boolean} isStrokeStart
+ * @returns {Point} control of terminal toward next
+ */
+function calculateFreeTerminalControl(terminal, otherTerminal, isStrokeStart) {
+  const spanX = otherTerminal.position.x - terminal.position.x;
+  const spanY = otherTerminal.position.y - terminal.position.y;
+  const horizontalness = (Math.abs(spanX) / Math.hypot(spanX, spanY)) ** 2;
+  const strength = horizontalness * Math.abs(spanX) * 0.15;
+  return { x: 0, y: isStrokeStart ? strength : -strength };
 }
 
 /**
@@ -350,7 +355,7 @@ function negate(point) {
 
 /**
  * @param {GlyphVertex[]} vertices
- * @param {UntracedNeighbors} untracedNeighbors
+ * @param {Map<GlyphVertex, Set<GlyphVertex>>} untracedNeighbors
  * @returns {GlyphVertex[]}
  */
 function findBestChain(vertices, untracedNeighbors) {
@@ -374,7 +379,7 @@ function findBestChain(vertices, untracedNeighbors) {
 
 /**
  * @param {GlyphVertex[]} chain
- * @param {UntracedNeighbors} untracedNeighbors
+ * @param {Map<GlyphVertex, Set<GlyphVertex>>} untracedNeighbors
  * @returns {GlyphVertex[] | null} best maximal chain, or null if every extension is a substroke
  */
 function extendChain(chain, untracedNeighbors) {
@@ -415,19 +420,19 @@ function extendChain(chain, untracedNeighbors) {
  * @returns {number}
  */
 function scoreChain(chain) {
-  const length = chain.length - 1;
+  const len = chain.length - 1;
   const deltaY = Math.abs(chain[chain.length - 1].y - chain[0].y) + 1;
   let typeChanges = 0;
   for (let i = 2; i < chain.length; i++) {
-    const previousEdge = chain[i - 2].adjacency.get(chain[i - 1]);
+    const prevEdge = chain[i - 2].adjacency.get(chain[i - 1]);
     const edge = chain[i - 1].adjacency.get(chain[i]);
-    if (edge.type !== previousEdge.type) typeChanges++;
+    if (edge.type !== prevEdge.type) typeChanges++;
   }
-  return length / deltaY - typeChanges * 4;
+  return len / deltaY - typeChanges * 4;
 }
 
 /**
- * @param {UntracedNeighbors} untracedNeighbors
+ * @param {Map<GlyphVertex, Set<GlyphVertex>>} untracedNeighbors
  * @returns {boolean}
  */
 function hasUntracedEdges(untracedNeighbors) {
@@ -438,7 +443,7 @@ function hasUntracedEdges(untracedNeighbors) {
 }
 
 /**
- * @param {UntracedNeighbors} untracedNeighbors
+ * @param {Map<GlyphVertex, Set<GlyphVertex>>} untracedNeighbors
  * @param {GlyphVertex} vertexA
  * @param {GlyphVertex} vertexB
  */
@@ -448,7 +453,7 @@ function markTraced(untracedNeighbors, vertexA, vertexB) {
 }
 
 /**
- * @param {UntracedNeighbors} untracedNeighbors
+ * @param {Map<GlyphVertex, Set<GlyphVertex>>} untracedNeighbors
  * @param {GlyphVertex} vertexA
  * @param {GlyphVertex} vertexB
  */

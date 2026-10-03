@@ -11,7 +11,7 @@ export function compose(glyphStrokesList) {
   const glyphs = glyphStrokesList.map(({ strokes }) => {
     const vertices = strokes
       .flatMap((stroke) => stroke.vertices)
-      .filter((vertex) => !vertex.attach);
+      .filter((vertex) => !vertex.parent);
     const centroid = calculateCentroid(
       vertices.map((vertex) => vertex.position),
     );
@@ -37,6 +37,7 @@ export function compose(glyphStrokesList) {
   const edges = glyphs.flatMap((glyph) =>
     glyph.edges.map(([start, end]) => ({ glyph, start, end })),
   );
+  const nearEdgesByEdge = findNearEdges(edges);
 
   const offsets = new Map();
   const pushVertex = (vertex, x, y) => {
@@ -67,6 +68,8 @@ export function compose(glyphStrokesList) {
       for (let j = i + 1; j < edges.length; j++) {
         const edge = edges[i];
         const otherEdge = edges[j];
+        if (nearEdgesByEdge.get(edge).has(otherEdge)) continue;
+
         const edgeStart = edge.start.position;
         const edgeEnd = edge.end.position;
         const otherEdgeStart = otherEdge.start.position;
@@ -79,31 +82,31 @@ export function compose(glyphStrokesList) {
         const startsX = edgeStart.x - otherEdgeStart.x;
         const startsY = edgeStart.y - otherEdgeStart.y;
 
-        const edgeLengthSquared = edgeX * edgeX + edgeY * edgeY;
-        const otherEdgeLengthSquared =
+        const edgeLenSquared = edgeX * edgeX + edgeY * edgeY;
+        const otherEdgeLenSquared =
           otherEdgeX * otherEdgeX + otherEdgeY * otherEdgeY;
         const edgesDot = edgeX * otherEdgeX + edgeY * otherEdgeY;
         const edgeStartsDot = edgeX * startsX + edgeY * startsY;
         const otherEdgeStartsDot = otherEdgeX * startsX + otherEdgeY * startsY;
 
         const denominator =
-          edgeLengthSquared * otherEdgeLengthSquared - edgesDot * edgesDot;
+          edgeLenSquared * otherEdgeLenSquared - edgesDot * edgesDot;
         let progress = 0;
         if (denominator > 0) {
           progress = clamp01(
             (edgesDot * otherEdgeStartsDot -
-              edgeStartsDot * otherEdgeLengthSquared) /
+              edgeStartsDot * otherEdgeLenSquared) /
               denominator,
           );
         }
         let otherProgress =
-          (edgesDot * progress + otherEdgeStartsDot) / otherEdgeLengthSquared;
+          (edgesDot * progress + otherEdgeStartsDot) / otherEdgeLenSquared;
         if (otherProgress < 0) {
           otherProgress = 0;
-          progress = clamp01(-edgeStartsDot / edgeLengthSquared);
+          progress = clamp01(-edgeStartsDot / edgeLenSquared);
         } else if (otherProgress > 1) {
           otherProgress = 1;
-          progress = clamp01((edgesDot - edgeStartsDot) / edgeLengthSquared);
+          progress = clamp01((edgesDot - edgeStartsDot) / edgeLenSquared);
         }
 
         const pointX = edgeStart.x + edgeX * progress;
@@ -127,7 +130,7 @@ export function compose(glyphStrokesList) {
           dirY /= dist;
         }
 
-        const pushAmount =
+        const pushAmount = 0;
           1 / ((7 * dist) ** 2 + 1) - 0.12 / ((1.5 * dist) ** 2 + 15);
         const pushX = dirX * pushAmount;
         const pushY = dirY * pushAmount;
@@ -146,8 +149,8 @@ export function compose(glyphStrokesList) {
         const startOffset = glyph.startOffsets.get(vertex);
         pushVertex(
           vertex,
-          (centroid.x + startOffset.x - vertex.position.x) * 0.2,
-          (centroid.y + startOffset.y - vertex.position.y) * 0.2,
+          (centroid.x + startOffset.x - vertex.position.x) * 0.3,
+          (centroid.y + startOffset.y - vertex.position.y) * 0.3,
         );
       }
 
@@ -175,11 +178,56 @@ export function compose(glyphStrokesList) {
 }
 
 /**
+ * @template {{ start: StrokeVertex, end: StrokeVertex }} Edge
+ * @param {Edge[]} edges
+ * @returns {Map<Edge, Set<Edge>>} edges within N nodes of each edge
+ */
+function findNearEdges(edges) {
+  const maxHops = 3;
+
+  /** @type {Map<StrokeVertex, Edge[]>} */
+  const edgesAtRootVertex = new Map();
+  for (const edge of edges) {
+    for (const vertex of [edge.start, edge.end]) {
+      const rootVertex = findRootVertex(vertex);
+      if (!edgesAtRootVertex.has(rootVertex)) {
+        edgesAtRootVertex.set(rootVertex, []);
+      }
+      edgesAtRootVertex.get(rootVertex).push(edge);
+    }
+  }
+
+  /** @type {Map<Edge, Set<Edge>>} */
+  const nearEdgesByEdge = new Map();
+  for (const edge of edges) {
+    const nearEdges = new Set([edge]);
+    let frontier = [edge];
+    for (let hop = 0; hop < maxHops; hop++) {
+      const nextFrontier = [];
+      for (const frontierEdge of frontier) {
+        for (const vertex of [frontierEdge.start, frontierEdge.end]) {
+          for (const neighborEdge of edgesAtRootVertex.get(
+            findRootVertex(vertex),
+          )) {
+            if (nearEdges.has(neighborEdge)) continue;
+            nearEdges.add(neighborEdge);
+            nextFrontier.push(neighborEdge);
+          }
+        }
+      }
+      frontier = nextFrontier;
+    }
+    nearEdgesByEdge.set(edge, nearEdges);
+  }
+  return nearEdgesByEdge;
+}
+
+/**
  * @param {StrokeVertex} vertex
  * @returns {StrokeVertex}
  */
 function findRootVertex(vertex) {
-  while (vertex.attach) vertex = vertex.attach;
+  while (vertex.parent) vertex = vertex.parent;
   return vertex;
 }
 
