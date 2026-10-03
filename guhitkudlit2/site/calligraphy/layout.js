@@ -18,7 +18,7 @@ const layoutRows = 5;
  */
 export function layoutLine(glyphs, opts = {}) {
   const layout = glyphs.map((g) => structuredClone(g));
-  const gap = opts.gap ?? 0.125;
+  const gap = opts.gap ?? 0.25;
 
   // keep track of the max X laid per row to determine next placement
   const maxX = Array(layoutRows).fill(-Infinity);

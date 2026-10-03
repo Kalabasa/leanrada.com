@@ -23,35 +23,19 @@ export function compose(glyphStrokesList) {
       });
     }
 
-    const edges = [];
-    for (const stroke of strokes) {
-      for (let i = 1; i < stroke.vertices.length; i++) {
-        edges.push([stroke.vertices[i - 1], stroke.vertices[i]]);
-      }
-    }
-
-    return { vertices, edges, startOffsets };
+    return { vertices, startOffsets };
   });
 
   const vertices = glyphs.flatMap((glyph) => glyph.vertices);
-  const edges = glyphs.flatMap((glyph) =>
-    glyph.edges.map(([start, end]) => ({ glyph, start, end })),
+  const nearVerticesByVertex = findNearVertices(
+    glyphStrokesList.flatMap(({ strokes }) => strokes),
   );
-  const nearEdgesByEdge = findNearEdges(edges);
 
   const offsets = new Map();
   const pushVertex = (vertex, x, y) => {
     const offset = offsets.get(findRootVertex(vertex));
     offset.x += x;
     offset.y += y;
-  };
-  const pushEdge = (edge, progress, x, y) => {
-    pushVertex(
-      edge.start,
-      x * (1 - progress) ** 0.5,
-      y * (1 - progress) ** 0.5,
-    );
-    pushVertex(edge.end, x * progress ** 0.5, y * progress ** 0.5);
   };
   const pushGlyph = (glyph, x, y) => {
     for (const vertex of glyph.vertices) {
@@ -64,77 +48,22 @@ export function compose(glyphStrokesList) {
       offsets.set(vertex, { x: 0, y: 0 });
     }
 
-    for (let i = 0; i < edges.length; i++) {
-      for (let j = i + 1; j < edges.length; j++) {
-        const edge = edges[i];
-        const otherEdge = edges[j];
-        if (nearEdgesByEdge.get(edge).has(otherEdge)) continue;
+    for (let i = 0; i < vertices.length; i++) {
+      for (let j = i + 1; j < vertices.length; j++) {
+        const vertex = vertices[i];
+        const otherVertex = vertices[j];
+        if (nearVerticesByVertex.get(vertex).has(otherVertex)) continue;
 
-        const edgeStart = edge.start.position;
-        const edgeEnd = edge.end.position;
-        const otherEdgeStart = otherEdge.start.position;
-        const otherEdgeEnd = otherEdge.end.position;
+        const dx = vertex.position.x - otherVertex.position.x;
+        const dy = vertex.position.y - otherVertex.position.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 1e-6) continue;
 
-        const edgeX = edgeEnd.x - edgeStart.x;
-        const edgeY = edgeEnd.y - edgeStart.y;
-        const otherEdgeX = otherEdgeEnd.x - otherEdgeStart.x;
-        const otherEdgeY = otherEdgeEnd.y - otherEdgeStart.y;
-        const startsX = edgeStart.x - otherEdgeStart.x;
-        const startsY = edgeStart.y - otherEdgeStart.y;
-
-        const edgeLenSquared = edgeX * edgeX + edgeY * edgeY;
-        const otherEdgeLenSquared =
-          otherEdgeX * otherEdgeX + otherEdgeY * otherEdgeY;
-        const edgesDot = edgeX * otherEdgeX + edgeY * otherEdgeY;
-        const edgeStartsDot = edgeX * startsX + edgeY * startsY;
-        const otherEdgeStartsDot = otherEdgeX * startsX + otherEdgeY * startsY;
-
-        const denominator =
-          edgeLenSquared * otherEdgeLenSquared - edgesDot * edgesDot;
-        let progress = 0;
-        if (denominator > 0) {
-          progress = clamp01(
-            (edgesDot * otherEdgeStartsDot -
-              edgeStartsDot * otherEdgeLenSquared) /
-              denominator,
-          );
-        }
-        let otherProgress =
-          (edgesDot * progress + otherEdgeStartsDot) / otherEdgeLenSquared;
-        if (otherProgress < 0) {
-          otherProgress = 0;
-          progress = clamp01(-edgeStartsDot / edgeLenSquared);
-        } else if (otherProgress > 1) {
-          otherProgress = 1;
-          progress = clamp01((edgesDot - edgeStartsDot) / edgeLenSquared);
-        }
-
-        const pointX = edgeStart.x + edgeX * progress;
-        const pointY = edgeStart.y + edgeY * progress;
-        const otherPointX = otherEdgeStart.x + otherEdgeX * otherProgress;
-        const otherPointY = otherEdgeStart.y + otherEdgeY * otherProgress;
-
-        let dirX = pointX - otherPointX;
-        let dirY = pointY - otherPointY;
-        let dist = Math.hypot(dirX, dirY);
-        if (dist < 1e-6) {
-          dirX =
-            (edgeStart.x + edgeEnd.x) / 2 -
-            (otherEdgeStart.x + otherEdgeEnd.x) / 2;
-          dirY =
-            (edgeStart.y + edgeEnd.y) / 2 -
-            (otherEdgeStart.y + otherEdgeEnd.y) / 2;
-          dist = 1e-6;
-        } else {
-          dirX /= dist;
-          dirY /= dist;
-        }
-
-        const pushAmount = 18 / ((26 * dist) ** 2 + 1);
-        const pushX = dirX * pushAmount;
-        const pushY = dirY * pushAmount;
-        pushEdge(edge, progress, pushX, pushY, pushVertex);
-        pushEdge(otherEdge, otherProgress, -pushX, -pushY, pushVertex);
+        const pushAmount = 60 / ((18 * dist) ** 2 + 1);
+        const pushX = (dx / dist) * pushAmount;
+        const pushY = (dy / dist) * pushAmount;
+        pushVertex(vertex, pushX, pushY);
+        pushVertex(otherVertex, -pushX, -pushY);
       }
     }
 
@@ -160,7 +89,7 @@ export function compose(glyphStrokesList) {
         if (dist === 0) continue;
 
         const pushAmount =
-          6 / ((8 * dist) ** 2 + 1) - 1.5 / ((3 * dist) ** 0.5 + 1);
+          6 / ((6 * dist) ** 2 + 1) - 1.5 / ((3 * dist) ** 0.5 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = 0 * (dy / dist) * pushAmount;
         pushGlyph(glyph, pushX, pushY);
@@ -168,7 +97,7 @@ export function compose(glyphStrokesList) {
       }
     }
 
-    const factor = 1 / Math.sqrt(edges.length);
+    const factor = 1 / Math.sqrt(vertices.length);
     for (const vertex of vertices) {
       const offset = offsets.get(vertex);
       vertex.position.x += offset.x * factor;
@@ -178,48 +107,48 @@ export function compose(glyphStrokesList) {
 }
 
 /**
- * @template {{ start: StrokeVertex, end: StrokeVertex }} Edge
- * @param {Edge[]} edges
- * @returns {Map<Edge, Set<Edge>>} edges within N nodes of each edge
+ * @param {{ vertices: StrokeVertex[] }[]} strokes
+ * @returns {Map<StrokeVertex, Set<StrokeVertex>>} root vertices within N hops of each root vertex
  */
-function findNearEdges(edges) {
+function findNearVertices(strokes) {
   const maxHops = 20;
 
-  /** @type {Map<StrokeVertex, Edge[]>} */
-  const edgesAtRootVertex = new Map();
-  for (const edge of edges) {
-    for (const vertex of [edge.start, edge.end]) {
-      const rootVertex = findRootVertex(vertex);
-      if (!edgesAtRootVertex.has(rootVertex)) {
-        edgesAtRootVertex.set(rootVertex, []);
-      }
-      edgesAtRootVertex.get(rootVertex).push(edge);
+  /** @type {Map<StrokeVertex, Set<StrokeVertex>>} */
+  const neighborsByRootVertex = new Map();
+  const addNeighbor = (rootVertex, neighbor) => {
+    if (!neighborsByRootVertex.has(rootVertex)) {
+      neighborsByRootVertex.set(rootVertex, new Set());
+    }
+    neighborsByRootVertex.get(rootVertex).add(neighbor);
+  };
+  for (const { vertices } of strokes) {
+    for (let i = 1; i < vertices.length; i++) {
+      const prevRoot = findRootVertex(vertices[i - 1]);
+      const root = findRootVertex(vertices[i]);
+      addNeighbor(prevRoot, root);
+      addNeighbor(root, prevRoot);
     }
   }
 
-  /** @type {Map<Edge, Set<Edge>>} */
-  const nearEdgesByEdge = new Map();
-  for (const edge of edges) {
-    const nearEdges = new Set([edge]);
-    let frontier = [edge];
+  /** @type {Map<StrokeVertex, Set<StrokeVertex>>} */
+  const nearVerticesByVertex = new Map();
+  for (const rootVertex of neighborsByRootVertex.keys()) {
+    const nearVertices = new Set([rootVertex]);
+    let frontier = [rootVertex];
     for (let hop = 0; hop < maxHops; hop++) {
       const nextFrontier = [];
-      for (const frontierEdge of frontier) {
-        for (const vertex of [frontierEdge.start, frontierEdge.end]) {
-          for (const neighborEdge of edgesAtRootVertex.get(
-            findRootVertex(vertex),
-          )) {
-            if (nearEdges.has(neighborEdge)) continue;
-            nearEdges.add(neighborEdge);
-            nextFrontier.push(neighborEdge);
-          }
+      for (const frontierVertex of frontier) {
+        for (const neighbor of neighborsByRootVertex.get(frontierVertex)) {
+          if (nearVertices.has(neighbor)) continue;
+          nearVertices.add(neighbor);
+          nextFrontier.push(neighbor);
         }
       }
       frontier = nextFrontier;
     }
-    nearEdgesByEdge.set(edge, nearEdges);
+    nearVerticesByVertex.set(rootVertex, nearVertices);
   }
-  return nearEdgesByEdge;
+  return nearVerticesByVertex;
 }
 
 /**
@@ -229,10 +158,6 @@ function findNearEdges(edges) {
 function findRootVertex(vertex) {
   while (vertex.parent) vertex = vertex.parent;
   return vertex;
-}
-
-function clamp01(value) {
-  return Math.min(1, Math.max(0, value));
 }
 
 /**
