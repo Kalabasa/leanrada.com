@@ -44,8 +44,14 @@ export function traceStrokes(glyphs) {
 
 // Positive go right or down.
 const edgeTypeOffsets = {
-  leftCurve: [{ progress: 0.5, offset: -0.5 }],
-  rightCurve: [{ progress: 0.5, offset: 0.5 }],
+  leftCurve: [
+    { progress: 0.25, offset: -0.5 },
+    { progress: 0.75, offset: -0.5 },
+  ],
+  rightCurve: [
+    { progress: 0.25, offset: 0.5 },
+    { progress: 0.75, offset: 0.5 }
+  ],
   wavy: [
     { progress: 0.2 ** 1.5, offset: 0.125 * 0.7 ** 0 },
     { progress: 0.4 ** 1.5, offset: -0.125 * 0.7 ** 1 },
@@ -213,7 +219,7 @@ function alignMiddleControls(previous, vertex, next) {
   const inLength = Math.hypot(inX, inY);
   const outLength = Math.hypot(outX, outY);
   const dot = (inX * outX + inY * outY) / (inLength * outLength);
-  const lengthFactor = ((dot + 1) / 2) ** 0.5;
+  const lengthFactor = ((dot + 1) / 2) ** 0.25;
   const controlLength = (Math.min(inLength, outLength) / 2) * lengthFactor;
 
   const tangentX = next.x - previous.x;
