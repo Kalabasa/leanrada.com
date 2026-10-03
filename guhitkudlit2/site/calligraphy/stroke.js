@@ -35,7 +35,170 @@ export function traceStrokes(glyphs) {
     chains.push(chain);
   }
 
-  return chains.map((chain) => ({ vertices: chain }));
+  alignControlPoints(chains);
+
+  return chains.map((chain) => ({ vertices: sampleChain(chain) }));
+}
+
+const SAMPLES_PER_EDGE = 8;
+
+/**
+ * @param {GlyphVertex[]} chain
+ * @returns {{ x: number, y: number }[]}
+ */
+function sampleChain(chain) {
+  const samples = [chain[0]];
+  for (let i = 1; i < chain.length; i++) {
+    const start = chain[i - 1];
+    const end = chain[i];
+    const startControl = start.adjacency.get(end).control;
+    const endControl = end.adjacency.get(start).control;
+    const startHandle = {
+      x: start.x + startControl.dx,
+      y: start.y + startControl.dy,
+    };
+    const endHandle = {
+      x: end.x + endControl.dx,
+      y: end.y + endControl.dy,
+    };
+    for (let sample = 1; sample < SAMPLES_PER_EDGE; sample++) {
+      const t = sample / SAMPLES_PER_EDGE;
+      samples.push(sampleCubicBezier(start, startHandle, endHandle, end, t));
+    }
+    samples.push(end);
+  }
+  return samples;
+}
+
+/**
+ * @param {{ x: number, y: number }} start
+ * @param {{ x: number, y: number }} startHandle
+ * @param {{ x: number, y: number }} endHandle
+ * @param {{ x: number, y: number }} end
+ * @param {number} t
+ * @returns {{ x: number, y: number }}
+ */
+function sampleCubicBezier(start, startHandle, endHandle, end, t) {
+  const startWeight = (1 - t) ** 3;
+  const startHandleWeight = 3 * (1 - t) ** 2 * t;
+  const endHandleWeight = 3 * (1 - t) * t ** 2;
+  const endWeight = t ** 3;
+  return {
+    x:
+      start.x * startWeight +
+      startHandle.x * startHandleWeight +
+      endHandle.x * endHandleWeight +
+      end.x * endWeight,
+    y:
+      start.y * startWeight +
+      startHandle.y * startHandleWeight +
+      endHandle.y * endHandleWeight +
+      end.y * endWeight,
+  };
+}
+
+/**
+ * @param {GlyphVertex[][]} chains
+ */
+function alignControlPoints(chains) {
+  /** @type {Map<GlyphVertex, [GlyphVertex, GlyphVertex]>} */
+  const middleNeighbors = new Map();
+  for (const chain of chains) {
+    for (let i = 1; i < chain.length - 1; i++) {
+      if (middleNeighbors.has(chain[i])) continue;
+      middleNeighbors.set(chain[i], [chain[i - 1], chain[i + 1]]);
+    }
+  }
+
+  for (const chain of chains) {
+    if (chain.length === 2) {
+      const [start, end] = chain;
+      setControl(start, end, (end.x - start.x) / 2, (end.y - start.y) / 2);
+      setControl(end, start, (start.x - end.x) / 2, (start.y - end.y) / 2);
+      continue;
+    }
+
+    for (let i = 1; i < chain.length - 1; i++) {
+      alignMiddleControls(chain[i - 1], chain[i], chain[i + 1]);
+    }
+    alignEndControl(chain[0], chain[1], middleNeighbors);
+    alignEndControl(chain.at(-1), chain.at(-2), middleNeighbors);
+  }
+}
+
+/**
+ * @param {GlyphVertex} previous
+ * @param {GlyphVertex} vertex
+ * @param {GlyphVertex} next
+ */
+function alignMiddleControls(previous, vertex, next) {
+  const inX = vertex.x - previous.x;
+  const inY = vertex.y - previous.y;
+  const outX = next.x - vertex.x;
+  const outY = next.y - vertex.y;
+  const inLength = Math.hypot(inX, inY);
+  const outLength = Math.hypot(outX, outY);
+  const dot = (inX * outX + inY * outY) / (inLength * outLength);
+  const controlLength = (Math.min(inLength, outLength) / 2) * ((dot + 1) / 2);
+
+  const tangentX = next.x - previous.x;
+  const tangentY = next.y - previous.y;
+  const tangentLength = Math.hypot(tangentX, tangentY);
+  let controlX = 0;
+  let controlY = 0;
+  if (tangentLength > 0) {
+    controlX = (tangentX / tangentLength) * controlLength;
+    controlY = (tangentY / tangentLength) * controlLength;
+  }
+
+  setControl(vertex, next, controlX, controlY);
+  setControl(vertex, previous, -controlX, -controlY);
+}
+
+/**
+ * @param {GlyphVertex} end
+ * @param {GlyphVertex} next
+ * @param {Map<GlyphVertex, [GlyphVertex, GlyphVertex]>} middleNeighbors
+ */
+function alignEndControl(end, next, middleNeighbors) {
+  const edgeX = next.x - end.x;
+  const edgeY = next.y - end.y;
+  const edgeLength = Math.hypot(edgeX, edgeY);
+
+  const junctionNeighbors = middleNeighbors.get(end);
+  if (junctionNeighbors) {
+    const [junctionPrevious, junctionNext] = junctionNeighbors;
+    let tangentX = junctionNext.x - junctionPrevious.x;
+    let tangentY = junctionNext.y - junctionPrevious.y;
+    if (tangentX * edgeX + tangentY * edgeY < 0) {
+      tangentX = -tangentX;
+      tangentY = -tangentY;
+    }
+    const scale = edgeLength / 2 / Math.hypot(tangentX, tangentY);
+    setControl(end, next, tangentX * scale, tangentY * scale);
+    return;
+  }
+
+  const nextControl = next.adjacency.get(end).control;
+  const unitX = edgeX / edgeLength;
+  const unitY = edgeY / edgeLength;
+  const alongEdge = nextControl.dx * unitX + nextControl.dy * unitY;
+  setControl(
+    end,
+    next,
+    nextControl.dx - 2 * alongEdge * unitX,
+    nextControl.dy - 2 * alongEdge * unitY,
+  );
+}
+
+/**
+ * @param {GlyphVertex} from
+ * @param {GlyphVertex} to
+ * @param {number} dx
+ * @param {number} dy
+ */
+function setControl(from, to, dx, dy) {
+  from.adjacency.get(to).control = { dx, dy };
 }
 
 /**
