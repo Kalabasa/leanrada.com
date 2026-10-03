@@ -27,9 +27,9 @@ export const A = glyph(
 export const I = glyph(
   { xScale: 2 },
   `
-.-.
+  
 
-
+.-.  
 
 .~.
 `,
@@ -49,9 +49,9 @@ export const B = glyph(
   `
   . 
  / x 
-. * .
-|/ x|
 .   .
+|   |
+.-*-.
 `,
 );
 export const K = glyph(

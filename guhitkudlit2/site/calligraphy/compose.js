@@ -59,7 +59,7 @@ export function compose(glyphStrokesList) {
     }
   };
 
-  for (let step = 0; step < 30; step++) {
+  for (let step = 0; step < 20; step++) {
     for (const vertex of vertices) {
       offsets.set(vertex, { x: 0, y: 0 });
     }
@@ -130,8 +130,7 @@ export function compose(glyphStrokesList) {
           dirY /= dist;
         }
 
-        const pushAmount = 0;
-          1 / ((7 * dist) ** 2 + 1) - 0.12 / ((1.5 * dist) ** 2 + 15);
+        const pushAmount = 18 / ((26 * dist) ** 2 + 1);
         const pushX = dirX * pushAmount;
         const pushY = dirY * pushAmount;
         pushEdge(edge, progress, pushX, pushY, pushVertex);
@@ -149,8 +148,8 @@ export function compose(glyphStrokesList) {
         const startOffset = glyph.startOffsets.get(vertex);
         pushVertex(
           vertex,
-          (centroid.x + startOffset.x - vertex.position.x) * 0.3,
-          (centroid.y + startOffset.y - vertex.position.y) * 0.3,
+          (centroid.x + startOffset.x - vertex.position.x) * 0.9,
+          (centroid.y + startOffset.y - vertex.position.y) * 0.9,
         );
       }
 
@@ -161,18 +160,19 @@ export function compose(glyphStrokesList) {
         if (dist === 0) continue;
 
         const pushAmount =
-          3 / ((3 * dist) ** 2 + 1) - 0.2 / ((0.5 * dist) ** 2 + 1);
+          6 / ((8 * dist) ** 2 + 1) - 1.5 / ((3 * dist) ** 0.5 + 1);
         const pushX = (dx / dist) * pushAmount;
-        const pushY = (dy / dist) * pushAmount;
+        const pushY = 0 * (dy / dist) * pushAmount;
         pushGlyph(glyph, pushX, pushY);
         pushGlyph(glyphs[j], -pushX, -pushY);
       }
     }
 
+    const factor = 1 / Math.sqrt(edges.length);
     for (const vertex of vertices) {
       const offset = offsets.get(vertex);
-      vertex.position.x += offset.x;
-      vertex.position.y += offset.y;
+      vertex.position.x += offset.x * factor;
+      vertex.position.y += offset.y * factor;
     }
   }
 }
@@ -183,7 +183,7 @@ export function compose(glyphStrokesList) {
  * @returns {Map<Edge, Set<Edge>>} edges within N nodes of each edge
  */
 function findNearEdges(edges) {
-  const maxHops = 3;
+  const maxHops = 20;
 
   /** @type {Map<StrokeVertex, Edge[]>} */
   const edgesAtRootVertex = new Map();

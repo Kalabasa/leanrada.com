@@ -280,9 +280,7 @@ function calculateTerminalControl(
     const { prev: parentPrev, next: parentNext } = parent;
     const { prevSideLen, nextSideLen } = parent;
     const mergesFromParentPrev =
-      prevSideLen === nextSideLen
-        ? isStrokeStart
-        : prevSideLen < nextSideLen;
+      prevSideLen === nextSideLen ? isStrokeStart : prevSideLen < nextSideLen;
     const [handleSideNeighbor, otherSideNeighbor] = mergesFromParentPrev
       ? [parentPrev, parentNext]
       : [parentNext, parentPrev];
@@ -340,7 +338,7 @@ function isFreeTerminal(terminal) {
 function calculateFreeTerminalControl(terminal, otherTerminal, isStrokeStart) {
   const spanX = otherTerminal.position.x - terminal.position.x;
   const spanY = otherTerminal.position.y - terminal.position.y;
-  const horizontalness = (Math.abs(spanX) / Math.hypot(spanX, spanY)) ** 2;
+  const horizontalness = Math.abs(spanX) / Math.hypot(spanX, spanY);
   const strength = horizontalness * Math.abs(spanX) * 0.15;
   return { x: 0, y: isStrokeStart ? strength : -strength };
 }

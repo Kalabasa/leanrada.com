@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
 export function createCanvas() {
   const canvasRef = { current: null };
   const CanvasImpl = () =>
-    html`<${Canvas} aspectRatio=${1} canvasRef=${canvasRef} />`;
+    html`<${Canvas} aspectRatio=${1.5} canvasRef=${canvasRef} />`;
   return { Canvas: CanvasImpl, canvasRef };
 }
 
