@@ -12,7 +12,9 @@
  * @typedef {{
  *  vertex: StrokeVertex,
  *  previous: StrokeVertex,
- *  next: StrokeVertex
+ *  next: StrokeVertex,
+ *  previousSideLength: number,
+ *  nextSideLength: number
  * }} MiddleOccurrence
  */
 
@@ -79,7 +81,7 @@ const edgeTypeOffsets = {
   ],
   rightCurve: [
     { progress: 0.25, offset: 0.5 },
-    { progress: 0.75, offset: 0.5 }
+    { progress: 0.75, offset: 0.5 },
   ],
   wavy: [
     { progress: 0.2 ** 1.5, offset: 0.125 * 0.7 ** 0 },
@@ -103,7 +105,11 @@ function interpolateChain(chain, getSharedPosition) {
     const midlineOffsets = edgeTypeOffsets[edgeType] ?? [];
 
     for (const { progress, offset } of midlineOffsets) {
-      out.push(createStrokeVertex(calculateOffsetPosition(start, end, progress, offset)));
+      out.push(
+        createStrokeVertex(
+          calculateOffsetPosition(start, end, progress, offset),
+        ),
+      );
     }
     out.push(createStrokeVertex(getSharedPosition(end)));
   }
@@ -147,27 +153,44 @@ function calculateControlPoints(strokes) {
   /** @type {Map<Point, MiddleOccurrence>} */
   const middleOccurrences = new Map();
   for (const { vertices } of strokes) {
+    const lengthsFromStart = [0];
+    for (let i = 1; i < vertices.length; i++) {
+      const edgeLength = Math.hypot(
+        vertices[i].position.x - vertices[i - 1].position.x,
+        vertices[i].position.y - vertices[i - 1].position.y,
+      );
+      lengthsFromStart.push(lengthsFromStart[i - 1] + edgeLength);
+    }
+    const strokeLength = lengthsFromStart.at(-1);
+
     for (let i = 1; i < vertices.length - 1; i++) {
       if (middleOccurrences.has(vertices[i].position)) continue;
       middleOccurrences.set(vertices[i].position, {
         vertex: vertices[i],
         previous: vertices[i - 1],
         next: vertices[i + 1],
+        previousSideLength: lengthsFromStart[i],
+        nextSideLength: strokeLength - lengthsFromStart[i],
       });
     }
   }
 
+  /** @type {Map<Point, number>} */
+  const terminalCountAtPosition = new Map();
   for (const { vertices } of strokes) {
-    if (vertices.length === 2) {
-      const [start, end] = vertices;
-      const halfEdge = {
-        x: (end.position.x - start.position.x) / 2,
-        y: (end.position.y - start.position.y) / 2,
-      };
-      start.control = halfEdge;
-      end.control = { ...halfEdge };
-      continue;
+    for (const terminal of [vertices[0], vertices.at(-1)]) {
+      terminalCountAtPosition.set(
+        terminal.position,
+        (terminalCountAtPosition.get(terminal.position) ?? 0) + 1,
+      );
     }
+  }
+
+  for (const { vertices } of strokes) {
+    const first = vertices[0];
+    const second = vertices[1];
+    const last = vertices.at(-1);
+    const secondLast = vertices.at(-2);
 
     for (let i = 1; i < vertices.length - 1; i++) {
       vertices[i].control = calculateMiddleControl(
@@ -177,39 +200,39 @@ function calculateControlPoints(strokes) {
       );
     }
 
-    const first = vertices[0];
-    const second = vertices[1];
-    first.control = calculateEndControlTowardNext(
+    first.control = calculateTerminalControl(
       first,
       second,
-      negate(second.control),
+      last,
       middleOccurrences,
+      terminalCountAtPosition,
+      true,
     );
 
-    const last = vertices.at(-1);
-    const secondLast = vertices.at(-2);
     last.control = negate(
-      calculateEndControlTowardNext(
+      calculateTerminalControl(
         last,
         secondLast,
-        secondLast.control,
+        first,
         middleOccurrences,
+        terminalCountAtPosition,
+        false,
       ),
     );
   }
 
   /** @type {Map<Point, StrokeVertex>} */
-  const firstEndAtPosition = new Map();
+  const firstTerminalAtPosition = new Map();
   for (const { vertices } of strokes) {
-    for (const end of [vertices[0], vertices.at(-1)]) {
-      const middleOccurrence = middleOccurrences.get(end.position);
-      const firstEnd = firstEndAtPosition.get(end.position);
+    for (const terminal of [vertices[0], vertices.at(-1)]) {
+      const middleOccurrence = middleOccurrences.get(terminal.position);
+      const firstTerminal = firstTerminalAtPosition.get(terminal.position);
       if (middleOccurrence) {
-        end.attach = middleOccurrence.vertex;
-      } else if (firstEnd) {
-        end.attach = firstEnd;
+        terminal.attach = middleOccurrence.vertex;
+      } else if (firstTerminal) {
+        terminal.attach = firstTerminal;
       } else {
-        firstEndAtPosition.set(end.position, end);
+        firstTerminalAtPosition.set(terminal.position, terminal);
       }
     }
   }
@@ -243,43 +266,78 @@ function calculateMiddleControl(previous, vertex, next) {
 }
 
 /**
- * @param {StrokeVertex} end
+ * @param {StrokeVertex} terminal
  * @param {StrokeVertex} next
- * @param {Point} nextControlTowardEnd
+ * @param {StrokeVertex} otherTerminal
  * @param {Map<Point, MiddleOccurrence>} middleOccurrences
- * @returns {Point} control of end toward next
+ * @param {Map<Point, number>} terminalCountAtPosition
+ * @param {boolean} isStrokeStart
+ * @returns {Point} control of terminal toward next
  */
-function calculateEndControlTowardNext(
-  end,
+function calculateTerminalControl(
+  terminal,
   next,
-  nextControlTowardEnd,
+  otherTerminal,
   middleOccurrences,
+  terminalCountAtPosition,
+  isStrokeStart,
 ) {
-  const edgeX = next.position.x - end.position.x;
-  const edgeY = next.position.y - end.position.y;
+  const edgeX = next.position.x - terminal.position.x;
+  const edgeY = next.position.y - terminal.position.y;
   const edgeLength = Math.hypot(edgeX, edgeY);
 
-  const middleOccurrence = middleOccurrences.get(end.position);
+  const middleOccurrence = middleOccurrences.get(terminal.position);
   if (middleOccurrence) {
-    let tangentX =
-      middleOccurrence.next.position.x - middleOccurrence.previous.position.x;
-    let tangentY =
-      middleOccurrence.next.position.y - middleOccurrence.previous.position.y;
-    if (tangentX * edgeX + tangentY * edgeY < 0) {
-      tangentX = -tangentX;
-      tangentY = -tangentY;
-    }
-    const scale = edgeLength / 2 / Math.hypot(tangentX, tangentY);
-    return { x: tangentX * scale, y: tangentY * scale };
-  }
+    // attached to middle of another stroke
+    // align control to tangent of that stroke
+    const { previous: parentPrevious, next: parentNext } = middleOccurrence;
+    const { previousSideLength, nextSideLength } = middleOccurrence;
+    const mergesFromParentPrevious =
+      previousSideLength === nextSideLength
+        ? isStrokeStart
+        : previousSideLength < nextSideLength;
+    const [handleSideNeighbor, otherSideNeighbor] = mergesFromParentPrevious
+      ? [parentPrevious, parentNext]
+      : [parentNext, parentPrevious];
 
-  const unitX = edgeX / edgeLength;
-  const unitY = edgeY / edgeLength;
-  const alongEdge = nextControlTowardEnd.x * unitX + nextControlTowardEnd.y * unitY;
-  return {
-    x: nextControlTowardEnd.x - 2 * alongEdge * unitX,
-    y: nextControlTowardEnd.y - 2 * alongEdge * unitY,
-  };
+    const tangentX =
+      handleSideNeighbor.position.x - otherSideNeighbor.position.x;
+    const tangentY =
+      handleSideNeighbor.position.y - otherSideNeighbor.position.y;
+    const towardHandleSideX =
+      handleSideNeighbor.position.x - terminal.position.x;
+    const towardHandleSideY =
+      handleSideNeighbor.position.y - terminal.position.y;
+
+    const parentBendCross =
+      tangentX * towardHandleSideY - tangentY * towardHandleSideX;
+    const strokeCross = tangentX * edgeY - tangentY * edgeX;
+    const doesParentBendTowardStroke = parentBendCross * strokeCross > 0;
+    const handleX = doesParentBendTowardStroke ? towardHandleSideX : tangentX;
+    const handleY = doesParentBendTowardStroke ? towardHandleSideY : tangentY;
+    const scale = (edgeLength * 0.25) / Math.hypot(handleX, handleY);
+    return { x: handleX * scale, y: handleY * scale };
+  } else if (terminalCountAtPosition.get(terminal.position) === 1) {
+    // free terminal
+    const spanX = otherTerminal.position.x - terminal.position.x;
+    const spanY = otherTerminal.position.y - terminal.position.y;
+    const horizontalness = (Math.abs(spanX) / Math.hypot(spanX, spanY)) ** 4;
+    const strength = horizontalness * Math.abs(spanX) * 0.2;
+    return { x: 0, y: isStrokeStart ? strength : -strength };
+  } else {
+    // attached to another terminal
+    const nextControlTowardTerminal = isStrokeStart
+      ? negate(next.control)
+      : next.control;
+    const unitX = edgeX / edgeLength;
+    const unitY = edgeY / edgeLength;
+    const alongEdge =
+      nextControlTowardTerminal.x * unitX + nextControlTowardTerminal.y * unitY;
+    return {
+      x: nextControlTowardTerminal.x - 2 * alongEdge * unitX,
+      y: nextControlTowardTerminal.y - 2 * alongEdge * unitY,
+    };
+  }
 }
 
 /**
@@ -331,11 +389,17 @@ function extendChain(chain, untracedNeighbors) {
       isEndExtendable = true;
 
       markTraced(untracedNeighbors, end, neighbor);
-      const extendedChain = extendChain([...chain, neighbor], untracedNeighbors);
+      const extendedChain = extendChain(
+        [...chain, neighbor],
+        untracedNeighbors,
+      );
       markUntraced(untracedNeighbors, end, neighbor);
 
       if (extendedChain === null) continue;
-      if (bestChain === null || scoreChain(extendedChain) > scoreChain(bestChain)) {
+      if (
+        bestChain === null ||
+        scoreChain(extendedChain) > scoreChain(bestChain)
+      ) {
         bestChain = extendedChain;
       }
     }

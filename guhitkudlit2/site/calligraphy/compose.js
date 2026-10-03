@@ -12,7 +12,9 @@ export function compose(glyphStrokesList) {
     const vertices = strokes
       .flatMap((stroke) => stroke.vertices)
       .filter((vertex) => !vertex.attach);
-    const centroid = calculateCentroid(vertices.map((vertex) => vertex.position));
+    const centroid = calculateCentroid(
+      vertices.map((vertex) => vertex.position),
+    );
     const startOffsets = new Map();
     for (const vertex of vertices) {
       startOffsets.set(vertex, {
@@ -56,7 +58,7 @@ export function compose(glyphStrokesList) {
     }
   };
 
-  for (let step = 0; step < 50; step++) {
+  for (let step = 0; step < 30; step++) {
     for (const vertex of vertices) {
       offsets.set(vertex, { x: 0, y: 0 });
     }
@@ -126,7 +128,7 @@ export function compose(glyphStrokesList) {
         }
 
         const pushAmount =
-          2 / ((12 * dist) ** 2 + 1) - 0.15 / ((1.5 * dist) ** 2 + 15);
+          1 / ((7 * dist) ** 2 + 1) - 0.12 / ((1.5 * dist) ** 2 + 15);
         const pushX = dirX * pushAmount;
         const pushY = dirY * pushAmount;
         pushEdge(edge, progress, pushX, pushY, pushVertex);

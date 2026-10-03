@@ -117,9 +117,9 @@ export const M = glyph(
 export const N = glyph(
   { xScale: 4 / 3 },
   `
-.-.-.
-| s |
-| s |
+  .  
+ /sx 
+. s .
 | s |
 . . .
 `,
@@ -155,11 +155,11 @@ export const S = glyph(
 `,
 );
 export const T = glyph(
-  { xScale: 4 / 3 },
+  { xScale: 1 },
   `
 
 
-.-.-.
+.-.---.
  /
 .
 `,
