@@ -223,7 +223,13 @@ function glyph({ xScale }, data) {
       if (vertex) {
         for (const connection of findConnections(charGrid, x, y)) {
           const other = grid[connection.y][connection.x];
-          const edge = { type: connection.type };
+          const edge = {
+            type: connection.type,
+            control: {
+              dx: (other.x - vertex.x) / 2,
+              dy: (other.y - vertex.y) / 2,
+            },
+          };
           vertex.adjacency.set(other, edge);
           other.adjacency.set(vertex, edge);
         }

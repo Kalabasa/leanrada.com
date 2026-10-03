@@ -14,11 +14,11 @@ export function compose(layout2D) {
     }
 
     const edges = [];
-    const seenEdges = new Set();
+    const visitedVertices = new Set();
     for (const vertex of vertices) {
-      for (const [neighbor, edge] of vertex.adjacency) {
-        if (seenEdges.has(edge)) continue;
-        seenEdges.add(edge);
+      visitedVertices.add(vertex);
+      for (const neighbor of vertex.adjacency.keys()) {
+        if (visitedVertices.has(neighbor)) continue;
         edges.push([vertex, neighbor]);
       }
     }
