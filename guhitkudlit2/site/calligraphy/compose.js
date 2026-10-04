@@ -43,7 +43,47 @@ export function compose(glyphStrokesList) {
     }
   };
 
-  for (let step = 0; step < 20; step++) {
+  for (let step = 0; step < 100; step++) {
+    for (const vertex of vertices) {
+      offsets.set(vertex, { x: 0, y: 0 });
+    }
+
+    const centroids = glyphs.map((glyph) =>
+      calculateCentroid(glyph.vertices.map((vertex) => vertex.position)),
+    );
+    const overallCentroid = calculateCentroid(
+      vertices.map((vertex) => vertex.position),
+    );
+    const overallExtent = calculateDiagonalExtent(
+      vertices.map((vertex) => vertex.position),
+    );
+
+    for (let i = 0; i < glyphs.length; i++) {
+      const glyph = glyphs[i];
+      const centroid = centroids[i];
+
+      // pull back to original shape
+      for (const vertex of glyph.vertices) {
+        const startOffset = glyph.startOffsets.get(vertex);
+        pushVertex(
+          vertex,
+          (centroid.x + startOffset.x - vertex.position.x) * 0.002,
+          (centroid.y + startOffset.y - vertex.position.y) * 0.002,
+        );
+      }
+
+      // pull all towards center
+      const dx = centroid.x - overallCentroid.x;
+      const dy = centroid.y - overallCentroid.y;
+      pushGlyph(glyph, -dx * (0.1 / overallExtent), -dy * (0.1 / overallExtent));
+    }
+
+    for (const vertex of vertices) {
+      const offset = offsets.get(vertex);
+      vertex.position.x += offset.x;
+      vertex.position.y += offset.y;
+    }
+
     for (const vertex of vertices) {
       offsets.set(vertex, { x: 0, y: 0 });
     }
@@ -59,7 +99,8 @@ export function compose(glyphStrokesList) {
         const dist = Math.hypot(dx, dy);
         if (dist < 1e-6) continue;
 
-        const pushAmount = 60 / ((18 * dist) ** 2 + 1);
+        // vertices repel
+        const pushAmount = 20 / ((15 * dist) ** 4 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         pushVertex(vertex, pushX, pushY);
@@ -67,41 +108,10 @@ export function compose(glyphStrokesList) {
       }
     }
 
-    const centroids = glyphs.map((glyph) =>
-      calculateCentroid(glyph.vertices.map((vertex) => vertex.position)),
-    );
-    for (let i = 0; i < glyphs.length; i++) {
-      const glyph = glyphs[i];
-      const centroid = centroids[i];
-      for (const vertex of glyph.vertices) {
-        const startOffset = glyph.startOffsets.get(vertex);
-        pushVertex(
-          vertex,
-          (centroid.x + startOffset.x - vertex.position.x) * 0.9,
-          (centroid.y + startOffset.y - vertex.position.y) * 0.9,
-        );
-      }
-
-      for (let j = i + 1; j < glyphs.length; j++) {
-        const dx = centroid.x - centroids[j].x;
-        const dy = centroid.y - centroids[j].y;
-        const dist = Math.hypot(dx, dy);
-        if (dist === 0) continue;
-
-        const pushAmount =
-          6 / ((6 * dist) ** 2 + 1) - 1.5 / ((3 * dist) ** 0.5 + 1);
-        const pushX = (dx / dist) * pushAmount;
-        const pushY = 0 * (dy / dist) * pushAmount;
-        pushGlyph(glyph, pushX, pushY);
-        pushGlyph(glyphs[j], -pushX, -pushY);
-      }
-    }
-
-    const factor = 1 / Math.sqrt(vertices.length);
     for (const vertex of vertices) {
       const offset = offsets.get(vertex);
-      vertex.position.x += offset.x * factor;
-      vertex.position.y += offset.y * factor;
+      vertex.position.x += offset.x;
+      vertex.position.y += offset.y;
     }
   }
 }
@@ -111,7 +121,7 @@ export function compose(glyphStrokesList) {
  * @returns {Map<StrokeVertex, Set<StrokeVertex>>} root vertices within N hops of each root vertex
  */
 function findNearVertices(strokes) {
-  const maxHops = 20;
+  const maxHops = 3;
 
   /** @type {Map<StrokeVertex, Set<StrokeVertex>>} */
   const neighborsByRootVertex = new Map();
@@ -172,4 +182,22 @@ function calculateCentroid(points) {
     sumY += point.y;
   }
   return { x: sumX / points.length, y: sumY / points.length };
+}
+
+/**
+ * @param {Point[]} points
+ * @returns {number}
+ */
+function calculateDiagonalExtent(points) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const point of points) {
+    minX = Math.min(minX, point.x);
+    minY = Math.min(minY, point.y);
+    maxX = Math.max(maxX, point.x);
+    maxY = Math.max(maxY, point.y);
+  }
+  return Math.hypot(maxX - minX, maxY - minY);
 }

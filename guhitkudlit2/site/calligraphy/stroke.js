@@ -205,6 +205,39 @@ function calculateControlPoints(strokes) {
       calculateTerminalControl(last, secondLast, first, false),
     );
   }
+
+  // smoothen
+  for (let iteration = 0; iteration < 4; iteration++) {
+    for (const { vertices } of strokes) {
+      const offsets = vertices.map(() => ({ x: 0, y: 0 }));
+      for (let i = 0; i < vertices.length - 1; i++) {
+        const a = vertices[i];
+        const b = vertices[i + 1];
+        const aControlX = a.position.x + a.control.x;
+        const aControlY = a.position.y + a.control.y;
+        const bControlX = b.position.x - b.control.x;
+        const bControlY = b.position.y - b.control.y;
+        const offsetX = (bControlX - aControlX) * 0.1;
+        const offsetY = (bControlY - aControlY) * 0.1;
+        offsets[i].x += offsetX;
+        offsets[i].y += offsetY;
+        offsets[i + 1].x += offsetX;
+        offsets[i + 1].y += offsetY;
+      }
+      for (let i = 0; i < vertices.length; i++) {
+        const control = vertices[i].control;
+        const newX = control.x + offsets[i].x;
+        const newY = control.y + offsets[i].y;
+        const newLen = Math.hypot(newX, newY);
+        if (newLen === 0) continue;
+        const scale = Math.hypot(control.x, control.y) / newLen;
+        vertices[i].control = {
+          x: newX * scale,
+          y: newY * scale,
+        };
+      }
+    }
+  }
 }
 
 /**
@@ -216,8 +249,6 @@ function calculateMiddleControl(vertices, index) {
   const prev = vertices[index - 1];
   const vertex = vertices[index];
   const next = vertices[index + 1];
-  const first = vertices[0];
-  const last = vertices.at(-1);
 
   const prevDX = vertex.position.x - prev.position.x;
   const prevDY = vertex.position.y - prev.position.y;
@@ -229,25 +260,8 @@ function calculateMiddleControl(vertices, index) {
   const lenFactor = ((dot + 1) / 2) ** 0.25;
   const controlLen = (Math.min(prevLen, nextLen) / 2) * lenFactor;
 
-  let prevTangentPoint = prev.position;
-  if (prev === first && isFreeTerminal(first)) {
-    const firstFreeControl = calculateFreeTerminalControl(first, last, true);
-    prevTangentPoint = {
-      x: first.position.x + firstFreeControl.x * 0.5,
-      y: first.position.y + firstFreeControl.y * 0.5,
-    };
-  }
-  let nextTangentPoint = next.position;
-  if (next === last && isFreeTerminal(last)) {
-    const lastFreeControl = calculateFreeTerminalControl(last, first, false);
-    nextTangentPoint = {
-      x: last.position.x + lastFreeControl.x * 0.5,
-      y: last.position.y + lastFreeControl.y * 0.5,
-    };
-  }
-
-  const tangentX = nextTangentPoint.x - prevTangentPoint.x;
-  const tangentY = nextTangentPoint.y - prevTangentPoint.y;
+  const tangentX = next.position.x - prev.position.x;
+  const tangentY = next.position.y - prev.position.y;
   const tangentLen = Math.hypot(tangentX, tangentY);
   if (tangentLen === 0) return { x: 0, y: 0 };
   return {
@@ -279,9 +293,14 @@ function calculateTerminalControl(
     // align control to tangent of that stroke
     const { prev: parentPrev, next: parentNext } = parent;
     const { prevSideLen, nextSideLen } = parent;
-    const mergesFromParentPrev =
-      prevSideLen === nextSideLen ? isStrokeStart : prevSideLen < nextSideLen;
-    const [handleSideNeighbor, otherSideNeighbor] = mergesFromParentPrev
+    const isSideLenTie = Math.abs(prevSideLen - nextSideLen) < 1e-6;
+    let toNextDir;
+    if (isSideLenTie) {
+      toNextDir = isStrokeStart;
+    } else {
+      toNextDir = prevSideLen < nextSideLen;
+    }
+    const [handleSideNeighbor, otherSideNeighbor] = toNextDir
       ? [parentPrev, parentNext]
       : [parentNext, parentPrev];
 
@@ -301,10 +320,14 @@ function calculateTerminalControl(
     const handleX = doesParentBendTowardStroke ? towardHandleSideX : tangentX;
     const handleY = doesParentBendTowardStroke ? towardHandleSideY : tangentY;
     const scale = (edgeLen * 0.25) / Math.hypot(handleX, handleY);
-    return { x: handleX * scale, y: handleY * scale };
+    return { x: handleX * scale, y: handleY * scale }
   } else if (isFreeTerminal(terminal)) {
     // free terminal
-    return calculateFreeTerminalControl(terminal, otherTerminal, isStrokeStart);
+    const spanX = otherTerminal.position.x - terminal.position.x;
+    const spanY = otherTerminal.position.y - terminal.position.y;
+    const horizontalness = Math.abs(spanX) / Math.hypot(spanX, spanY);
+    const strength = 0.2 + horizontalness * Math.abs(spanX) * 0.05;
+    return { x: 0, y: isStrokeStart ? strength : -strength };
   } else {
     // attached to another terminal
     const nextControlTowardTerminal = isStrokeStart
@@ -327,20 +350,6 @@ function calculateTerminalControl(
  */
 function isFreeTerminal(terminal) {
   return !terminal.parent && !terminal.isJoined;
-}
-
-/**
- * @param {StrokeVertex} terminal
- * @param {StrokeVertex} otherTerminal
- * @param {boolean} isStrokeStart
- * @returns {Point} control of terminal toward next
- */
-function calculateFreeTerminalControl(terminal, otherTerminal, isStrokeStart) {
-  const spanX = otherTerminal.position.x - terminal.position.x;
-  const spanY = otherTerminal.position.y - terminal.position.y;
-  const horizontalness = Math.abs(spanX) / Math.hypot(spanX, spanY);
-  const strength = horizontalness * Math.abs(spanX) * 0.15;
-  return { x: 0, y: isStrokeStart ? strength : -strength };
 }
 
 /**

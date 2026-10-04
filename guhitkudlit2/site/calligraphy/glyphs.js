@@ -69,7 +69,7 @@ export const D = glyph(
   `
 .-.---.
   |
-  |
+  .
   |
   .---.
 `,
@@ -85,11 +85,11 @@ export const G = glyph(
 `,
 );
 export const H = glyph(
-  { xScale: 2 },
+  { xScale: 4 / 3 },
   `
 
 
-.-.
+.-.-.
 
 
 `,

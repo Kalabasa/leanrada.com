@@ -137,7 +137,7 @@ export async function drawCalligraphy(
       getGlyph(baybayinUnit, glyphMap),
     );
 
-    const lineLayout = layoutLine(glyphs, { kern: true });
+    const lineLayout = layoutLine(glyphs, { kern: false });
     const lineVertices = lineLayout
       .flatMap((glyph) => glyph.map.flat())
       .filter((vertex) => vertex);
