@@ -6,7 +6,9 @@
 
 const pushStrength = 0.16;
 const pushDistScale = 2.67;
-const composeSteps = 15;
+const composeSteps = 20;
+const springStrength = 0.3;
+const squeezeStrength = 0.2;
 
 /**
  * @param {GlyphStrokes[]} glyphStrokesList
@@ -67,8 +69,7 @@ export function compose(glyphStrokesList) {
       const dy = point.y - oClosest.y;
       const dist = Math.hypot(dx, dy);
       if (dist === 0) return;
-      const pushAmount =
-        pushStrength / ((pushDistScale * dist) ** 4 + 1);
+      const pushAmount = pushStrength / ((pushDistScale * dist) ** 4 + 1);
       return {
         x: (dx / dist) * pushAmount,
         y: (dy / dist) * pushAmount,
@@ -96,26 +97,26 @@ export function compose(glyphStrokesList) {
       controlPushes.set(edge.end, { x: 0, y: 0 });
     }
 
-    const pullBackFactor = 1 * Math.sqrt((steps - step) / steps);
-    const centerPullFactor =
-      0.3 * (Math.sqrt((steps - step) / steps) / Math.sqrt(extent));
+    const springFactor = springStrength * Math.sqrt((steps - step) / steps);
+    const squeezeFactor =
+      squeezeStrength * (Math.sqrt((steps - step) / steps) / Math.sqrt(extent));
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);
-      const centerDx = (center.x - centroid.x) * centerPullFactor;
-      const centerDy = (center.y - centroid.y) * centerPullFactor;
+      const centerDx = (center.x - centroid.x) * squeezeFactor;
+      const centerDy = (center.y - centroid.y) * squeezeFactor;
 
       for (const vertex of glyph.vertices) {
         // pull back to original shape
         const startOffset = glyph.origOffsets.get(vertex);
         pushVertex(
           vertex,
-          (centroid.x + startOffset.x - vertex.position.x) * pullBackFactor,
-          (centroid.y + startOffset.y - vertex.position.y) * pullBackFactor,
+          (centroid.x + startOffset.x - vertex.position.x) * springFactor,
+          (centroid.y + startOffset.y - vertex.position.y) * springFactor,
         );
 
         // pull all towards center
-        pushVertex(vertex, centerDx, centerDy * 0.5);
+        pushVertex(vertex, centerDx, centerDy * 0.8);
       }
     }
 
@@ -123,13 +124,13 @@ export function compose(glyphStrokesList) {
     for (const curve of edges) {
       pushControl(
         curve.start,
-        (curve.origStartControl.x - curve.start.control.x) * pullBackFactor,
-        (curve.origStartControl.y - curve.start.control.y) * pullBackFactor,
+        (curve.origStartControl.x - curve.start.control.x) * springFactor,
+        (curve.origStartControl.y - curve.start.control.y) * springFactor,
       );
       pushControl(
         curve.end,
-        (curve.origEndControl.x - curve.end.control.x) * pullBackFactor,
-        (curve.origEndControl.y - curve.end.control.y) * pullBackFactor,
+        (curve.origEndControl.x - curve.end.control.x) * springFactor,
+        (curve.origEndControl.y - curve.end.control.y) * springFactor,
       );
     }
 
