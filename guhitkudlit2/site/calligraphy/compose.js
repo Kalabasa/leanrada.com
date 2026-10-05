@@ -4,6 +4,12 @@
  * @typedef {import("./stroke.js").Point} Point
  */
 
+import { DEBUG } from "../app/flags.js";
+
+const composeStepsParam = DEBUG && new URLSearchParams(location.search).get(
+  "composeSteps"
+);
+
 /**
  * @param {GlyphStrokes[]} glyphStrokesList
  */
@@ -12,72 +18,59 @@ export function compose(glyphStrokesList) {
     const vertices = strokes
       .flatMap((stroke) => stroke.vertices)
       .filter((vertex) => !vertex.parent);
-    const centroid = calculateCentroid(
-      vertices.map((vertex) => vertex.position),
-    );
-    const startOffsets = new Map();
+    const centroid = calculateCentroid(vertices);
+    const origOffsets = new Map();
     for (const vertex of vertices) {
-      startOffsets.set(vertex, {
+      origOffsets.set(vertex, {
         x: vertex.position.x - centroid.x,
         y: vertex.position.y - centroid.y,
       });
     }
 
-    return { vertices, startOffsets };
+    return { vertices, origOffsets };
   });
 
   const vertices = glyphs.flatMap((glyph) => glyph.vertices);
-  const nearVerticesByVertex = findNearVertices(
-    glyphStrokesList.flatMap(({ strokes }) => strokes),
-  );
 
   const offsets = new Map();
+
   const pushVertex = (vertex, x, y) => {
-    const offset = offsets.get(findRootVertex(vertex));
+    const offset = offsets.get(getRootVertex(vertex));
     offset.x += x;
     offset.y += y;
   };
-  const pushGlyph = (glyph, x, y) => {
-    for (const vertex of glyph.vertices) {
-      pushVertex(vertex, x / glyph.vertices.length, y / glyph.vertices.length);
-    }
-  };
 
-  for (let step = 0; step < 100; step++) {
+  const center = calculateCentroid(vertices);
+  const extent = calculateDiagonalExtent(vertices);
+
+  const steps = composeStepsParam ? Number.parseInt(composeStepsParam) : 20;
+  for (let step = 0; step < steps; step++) {
     for (const vertex of vertices) {
       offsets.set(vertex, { x: 0, y: 0 });
     }
 
-    const centroids = glyphs.map((glyph) =>
-      calculateCentroid(glyph.vertices.map((vertex) => vertex.position)),
-    );
-    const overallCentroid = calculateCentroid(
-      vertices.map((vertex) => vertex.position),
-    );
-    const overallExtent = calculateDiagonalExtent(
-      vertices.map((vertex) => vertex.position),
-    );
+    for (const glyph of glyphs) {
+      const centroid = calculateCentroid(glyph.vertices);
 
-    for (let i = 0; i < glyphs.length; i++) {
-      const glyph = glyphs[i];
-      const centroid = centroids[i];
+      const centerPullFactor =
+        0.03 * (Math.sqrt(steps - step) / Math.sqrt(extent));
+      const centerDx = (center.x - centroid.x) * centerPullFactor;
+      const centerDy = (center.y - centroid.y) * centerPullFactor;
 
-      // pull back to original shape
       for (const vertex of glyph.vertices) {
-        const startOffset = glyph.startOffsets.get(vertex);
+        // pull back to original shape
+        const startOffset = glyph.origOffsets.get(vertex);
         pushVertex(
           vertex,
-          (centroid.x + startOffset.x - vertex.position.x) * 0.002,
-          (centroid.y + startOffset.y - vertex.position.y) * 0.002,
+          (centroid.x + startOffset.x - vertex.position.x) * 0,
+          (centroid.y + startOffset.y - vertex.position.y) * 0,
         );
+        // pull all towards center
+        pushVertex(vertex, centerDx, centerDy);
       }
-
-      // pull all towards center
-      const dx = centroid.x - overallCentroid.x;
-      const dy = centroid.y - overallCentroid.y;
-      pushGlyph(glyph, -dx * (0.1 / overallExtent), -dy * (0.1 / overallExtent));
     }
 
+    // flush
     for (const vertex of vertices) {
       const offset = offsets.get(vertex);
       vertex.position.x += offset.x;
@@ -88,19 +81,19 @@ export function compose(glyphStrokesList) {
       offsets.set(vertex, { x: 0, y: 0 });
     }
 
+    // vertices repel
     for (let i = 0; i < vertices.length; i++) {
       for (let j = i + 1; j < vertices.length; j++) {
         const vertex = vertices[i];
         const otherVertex = vertices[j];
-        if (nearVerticesByVertex.get(vertex).has(otherVertex)) continue;
+        if (vertex.glyph === otherVertex.glyph) continue;
 
         const dx = vertex.position.x - otherVertex.position.x;
         const dy = vertex.position.y - otherVertex.position.y;
         const dist = Math.hypot(dx, dy);
         if (dist < 1e-6) continue;
 
-        // vertices repel
-        const pushAmount = 20 / ((15 * dist) ** 4 + 1);
+        const pushAmount = 10e3 / ((1.2e3 * dist + 100) ** 2);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         pushVertex(vertex, pushX, pushY);
@@ -117,87 +110,42 @@ export function compose(glyphStrokesList) {
 }
 
 /**
- * @param {{ vertices: StrokeVertex[] }[]} strokes
- * @returns {Map<StrokeVertex, Set<StrokeVertex>>} root vertices within N hops of each root vertex
- */
-function findNearVertices(strokes) {
-  const maxHops = 3;
-
-  /** @type {Map<StrokeVertex, Set<StrokeVertex>>} */
-  const neighborsByRootVertex = new Map();
-  const addNeighbor = (rootVertex, neighbor) => {
-    if (!neighborsByRootVertex.has(rootVertex)) {
-      neighborsByRootVertex.set(rootVertex, new Set());
-    }
-    neighborsByRootVertex.get(rootVertex).add(neighbor);
-  };
-  for (const { vertices } of strokes) {
-    for (let i = 1; i < vertices.length; i++) {
-      const prevRoot = findRootVertex(vertices[i - 1]);
-      const root = findRootVertex(vertices[i]);
-      addNeighbor(prevRoot, root);
-      addNeighbor(root, prevRoot);
-    }
-  }
-
-  /** @type {Map<StrokeVertex, Set<StrokeVertex>>} */
-  const nearVerticesByVertex = new Map();
-  for (const rootVertex of neighborsByRootVertex.keys()) {
-    const nearVertices = new Set([rootVertex]);
-    let frontier = [rootVertex];
-    for (let hop = 0; hop < maxHops; hop++) {
-      const nextFrontier = [];
-      for (const frontierVertex of frontier) {
-        for (const neighbor of neighborsByRootVertex.get(frontierVertex)) {
-          if (nearVertices.has(neighbor)) continue;
-          nearVertices.add(neighbor);
-          nextFrontier.push(neighbor);
-        }
-      }
-      frontier = nextFrontier;
-    }
-    nearVerticesByVertex.set(rootVertex, nearVertices);
-  }
-  return nearVerticesByVertex;
-}
-
-/**
  * @param {StrokeVertex} vertex
  * @returns {StrokeVertex}
  */
-function findRootVertex(vertex) {
+function getRootVertex(vertex) {
   while (vertex.parent) vertex = vertex.parent;
   return vertex;
 }
 
 /**
- * @param {Point[]} points
+ * @param {StrokeVertex[]} vertices
  * @returns {Point}
  */
-function calculateCentroid(points) {
+function calculateCentroid(vertices) {
   let sumX = 0;
   let sumY = 0;
-  for (const point of points) {
-    sumX += point.x;
-    sumY += point.y;
+  for (const vertex of vertices) {
+    sumX += vertex.position.x;
+    sumY += vertex.position.y;
   }
-  return { x: sumX / points.length, y: sumY / points.length };
+  return { x: sumX / vertices.length, y: sumY / vertices.length };
 }
 
 /**
- * @param {Point[]} points
+ * @param {StrokeVertex[]} vertices
  * @returns {number}
  */
-function calculateDiagonalExtent(points) {
+function calculateDiagonalExtent(vertices) {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
-  for (const point of points) {
-    minX = Math.min(minX, point.x);
-    minY = Math.min(minY, point.y);
-    maxX = Math.max(maxX, point.x);
-    maxY = Math.max(maxY, point.y);
+  for (const vertex of vertices) {
+    minX = Math.min(minX, vertex.position.x);
+    minY = Math.min(minY, vertex.position.y);
+    maxX = Math.max(maxX, vertex.position.x);
+    maxY = Math.max(maxY, vertex.position.y);
   }
   return Math.hypot(maxX - minX, maxY - minY);
 }

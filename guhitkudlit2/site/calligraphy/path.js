@@ -16,7 +16,7 @@ export function samplePaths(glyphStrokesList) {
   );
 }
 
-const samplesPerEdge = 6;
+const samplesPerEdge = 8;
 
 /**
  * @param {StrokeVertex[]} vertices

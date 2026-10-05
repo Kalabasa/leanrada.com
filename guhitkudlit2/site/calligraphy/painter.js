@@ -9,16 +9,21 @@ export class BasePainter {
 
   /**
    * @param {Path[]} path
+   * @param {number} scale
    * @param {CanvasRenderingContext2D} canvasContext
    * @yields {void}
    */
-  *drawPath(path, canvasContext) {
-    const scale =
-      Math.min(canvasContext.canvas.width, canvasContext.canvas.height) / 1000;
+  *drawPath(path, scale, canvasContext) {
+    const strokeScale =
+      scale *
+      (Math.min(canvasContext.canvas.width, canvasContext.canvas.height) /
+        3e4);
 
     for (let i = 0; i < path.length; i++) {
-      const color = DEBUG ? `hsl(${(i / path.length) * 360}, 100%, 40%)` : "#000";
-      yield* this.drawStroke(path[i], scale, color, canvasContext);
+      const color = DEBUG
+        ? `hsl(${(i / path.length) * 360}, 100%, 40%)`
+        : "#000";
+      yield* this.drawStroke(path[i], strokeScale, color, canvasContext);
     }
   }
 

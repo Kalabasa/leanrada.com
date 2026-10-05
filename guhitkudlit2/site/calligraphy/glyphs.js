@@ -35,7 +35,7 @@ export const I = glyph(
 `,
 );
 export const U = glyph(
-  { xScale: 1 },
+  { xScale: 2 },
   `
 .
 )
@@ -145,7 +145,7 @@ export const P = glyph(
 `,
 );
 export const S = glyph(
-  { xScale: 4 / 5 },
+  { xScale: 0.8 },
   `
 .-.   .
   |  /)
@@ -165,7 +165,7 @@ export const T = glyph(
 `,
 );
 export const W = glyph(
-  { xScale: 1 },
+  { xScale: 0.8 },
   `
 .-. .-.
   |   |

@@ -11,7 +11,7 @@ export function createCanvas() {
 export function Canvas({ aspectRatio, canvasRef }) {
   const containerRef = useRef();
 
-  const area = 250_000;
+  const area = 500_000;
   const canvasWidth = Math.ceil(Math.sqrt(aspectRatio * area));
   const canvasHeight = Math.ceil(Math.sqrt(area / aspectRatio));
 

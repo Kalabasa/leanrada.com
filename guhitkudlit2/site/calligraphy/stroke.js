@@ -4,6 +4,7 @@
  * @typedef {{ x: number, y: number }} Point
  * @typedef {{
  *  position: Point,
+ *  glyph: Glyph,
  *  control: Point,
  *  parent?: StrokeVertex,
  *  isJoined?: boolean,
@@ -34,7 +35,7 @@ export function traceStrokes(glyph) {
   };
 
   const strokes = chains.map((chain) => ({
-    vertices: interpolateChain(chain, getSharedPosition),
+    vertices: interpolateChain(glyph, chain, getSharedPosition),
   }));
 
   calculateControlPoints(strokes);
@@ -73,12 +74,12 @@ function traceChains(glyph) {
 // Positive go right or down.
 const edgeTypeOffsets = {
   leftCurve: [
-    { progress: 0.25, offset: -0.5 },
-    { progress: 0.75, offset: -0.5 },
+    { progress: 0, offset: -0.5 },
+    { progress: 0.6, offset: -0.5 },
   ],
   rightCurve: [
-    { progress: 0.25, offset: 0.5 },
-    { progress: 0.75, offset: 0.5 },
+    { progress: 0, offset: 0.5 },
+    { progress: 0.6, offset: 0.5 },
   ],
   wavy: [
     { progress: 0.2 ** 1.5, offset: 0.125 * 0.7 ** 0 },
@@ -89,12 +90,13 @@ const edgeTypeOffsets = {
 };
 
 /**
+ * @param {Glyph} glyph
  * @param {GlyphVertex[]} chain
  * @param {(glyphVertex: GlyphVertex) => Point} getSharedPosition
  * @returns {StrokeVertex[]}
  */
-function interpolateChain(chain, getSharedPosition) {
-  const out = [createStrokeVertex(getSharedPosition(chain[0]))];
+function interpolateChain(glyph, chain, getSharedPosition) {
+  const out = [createStrokeVertex(glyph, getSharedPosition(chain[0]))];
   for (let i = 1; i < chain.length; i++) {
     const start = chain[i - 1];
     const end = chain[i];
@@ -104,21 +106,23 @@ function interpolateChain(chain, getSharedPosition) {
     for (const { progress, offset } of midlineOffsets) {
       out.push(
         createStrokeVertex(
+          glyph,
           calculateOffsetPosition(start, end, progress, offset),
         ),
       );
     }
-    out.push(createStrokeVertex(getSharedPosition(end)));
+    out.push(createStrokeVertex(glyph, getSharedPosition(end)));
   }
   return out;
 }
 
 /**
+ * @param {Glyph} glyph
  * @param {Point} position
  * @returns {StrokeVertex}
  */
-function createStrokeVertex(position) {
-  return { position, control: { x: 0, y: 0 } };
+function createStrokeVertex(glyph, position) {
+  return { position, glyph, control: { x: 0, y: 0 } };
 }
 
 /**
@@ -326,7 +330,7 @@ function calculateTerminalControl(
     const spanX = otherTerminal.position.x - terminal.position.x;
     const spanY = otherTerminal.position.y - terminal.position.y;
     const horizontalness = Math.abs(spanX) / Math.hypot(spanX, spanY);
-    const strength = 0.2 + horizontalness * Math.abs(spanX) * 0.05;
+    const strength = 0.4 + horizontalness * Math.abs(spanX) * 0.1;
     return { x: 0, y: isStrokeStart ? strength : -strength };
   } else {
     // attached to another terminal

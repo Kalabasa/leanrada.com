@@ -1,6 +1,7 @@
 import { reaction } from "../lib/mobx.js";
 import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
+import { Brush } from "./painters/brush.js";
 /*
 
 Each glyph is subdivided into a grid. 3 rows, variable columns. Each cell can contain one vertex.
@@ -70,7 +71,7 @@ const memo = Symbol("memo");
 
 export function installCalligraphy(observableBaybayinUnits, canvasRef) {
   // todo: lazy load
-  const painter = new BasePainter();
+  const painter = new Brush();
   let drawingAbortController = new AbortController();
   reaction(
     () => observableBaybayinUnits.get(),
@@ -174,9 +175,9 @@ export async function drawCalligraphy(
     })),
   }));
 
-  const drawing = painter.drawPath(path, canvasContext);
+  const drawing = painter.drawPath(path, cellSize, canvasContext);
   for (const _ of drawing) {
-    await delay(10);
+    // await delay(1);
     if (abortSignal.aborted) return;
   }
 }
