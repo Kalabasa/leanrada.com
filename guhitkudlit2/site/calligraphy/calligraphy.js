@@ -132,9 +132,7 @@ export async function drawCalligraphy(
   const layout2D = [];
   let lineTopY = 0;
   for (const line of lines) {
-    const glyphs = line.map((baybayinUnit) =>
-      getGlyph(baybayinUnit, glyphMap),
-    );
+    const glyphs = line.map((baybayinUnit) => getGlyph(baybayinUnit, glyphMap));
 
     const lineLayout = layoutLine(glyphs);
     const lineVertices = lineLayout
@@ -180,9 +178,10 @@ export async function drawCalligraphy(
     canvasContext.canvas.width,
     canvasContext.canvas.height,
   );
-  const drawing = painter.drawPath(path, cellSize, canvasContext);
-  for (const _ of drawing) {
-    // await delay(1);
+  let drawStep = 0;
+  const drawInterval = Math.round(Math.sqrt(baybayinUnits.length));
+  for (const _ of painter.drawPath(path, cellSize, canvasContext)) {
+    if (drawStep++ % drawInterval === 0) await delay(1);
     if (abortSignal.aborted) return;
   }
 }

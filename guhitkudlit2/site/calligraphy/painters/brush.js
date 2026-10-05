@@ -47,7 +47,7 @@ export class Brush extends BasePainter {
   *drawStroke(stroke, scale, color, canvasContext) {
     if (stroke.vertices.length < 2) return;
 
-    const maxRadius = 9 * scale;
+    const maxRadius = 12 * scale;
     const samples = createBrushSamples(stroke.vertices, maxRadius);
     const paperGrainLen = maxRadius * 0.1;
 

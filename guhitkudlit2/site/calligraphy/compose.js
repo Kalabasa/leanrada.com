@@ -4,7 +4,7 @@
  * @typedef {import("./stroke.js").Point} Point
  */
 
-const pushStrength = 0.12;
+const pushStrength = 0.16;
 const pushDistScale = 2.67;
 const composeSteps = 15;
 
@@ -96,7 +96,7 @@ export function compose(glyphStrokesList) {
       controlPushes.set(edge.end, { x: 0, y: 0 });
     }
 
-    const pullBackFactor = 0.4;
+    const pullBackFactor = 1 * Math.sqrt((steps - step) / steps);
     const centerPullFactor =
       0.3 * (Math.sqrt((steps - step) / steps) / Math.sqrt(extent));
 
@@ -157,7 +157,7 @@ export function compose(glyphStrokesList) {
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
         const pushAmount =
-          pushStrength / ((pushDistScale * 0.5 * dist) ** 2 + 1);
+          pushStrength / ((pushDistScale * 0.33 * dist) ** 2 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         for (const vertex of glyph.vertices) {
