@@ -91,7 +91,7 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
         drawingAbortController.signal,
       );
     },
-    { delay: 1000 },
+    { delay: 1000, fireImmediately: true },
   );
 }
 

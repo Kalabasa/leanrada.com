@@ -9,7 +9,8 @@ import { observer } from "../util/observer.js";
 const memo = Symbol("memo");
 
 export function createTransliterationForm() {
-  const inputText = observable.box("");
+  const initialText = new URLSearchParams(location.search).get("word") ?? "";
+  const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
   const prettify = observable.box(false);
 
@@ -26,7 +27,7 @@ export function createTransliterationForm() {
       prettify.set(true);
       debouncedRemovePrettify();
     },
-    { delay: 100 }
+    { delay: 100, fireImmediately: initialText !== "" }
   );
 
   const TransliterationFormImpl = observer(() => {
@@ -42,6 +43,7 @@ export function createTransliterationForm() {
 
     return html`
       <${TransliterationForm}
+        inputText=${inputText.get()}
         syllabication=${syllabication}
         baybayin=${lazyConvertToUnicode(unicodeFilter(baybayinUnits.get()))}
         onInput=${onInput}
@@ -96,7 +98,12 @@ function prettifyTempBaybayin(baybayinUnits) {
   return [...baybayinUnits.slice(0, -1), lastConsonantMatch[0] + "a"];
 }
 
-export function TransliterationForm({ syllabication, baybayin, onInput }) {
+export function TransliterationForm({
+  inputText,
+  syllabication,
+  baybayin,
+  onInput,
+}) {
   return html`
     <style id=${TransliterationForm.name}>
       .transliterationForm {
@@ -123,6 +130,7 @@ export function TransliterationForm({ syllabication, baybayin, onInput }) {
           class="transliterationFormInput"
           type="text"
           placeholder="kalabasa"
+          value=${inputText}
           onInput=${onInput}
         />
       </label>

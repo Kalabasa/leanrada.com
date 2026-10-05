@@ -6,9 +6,8 @@
 
 import { DEBUG } from "../app/flags.js";
 
-const composeStepsParam = DEBUG && new URLSearchParams(location.search).get(
-  "composeSteps"
-);
+const composeStepsParam =
+  DEBUG && new URLSearchParams(location.search).get("composeSteps");
 
 /**
  * @param {GlyphStrokes[]} glyphStrokesList
@@ -53,7 +52,8 @@ export function compose(glyphStrokesList) {
       const centroid = calculateCentroid(glyph.vertices);
 
       const centerPullFactor =
-        0.03 * (Math.sqrt(steps - step) / Math.sqrt(extent));
+        /* locked. go iterate on pushAmount */ 0.025 *
+        (Math.sqrt(steps - step) / Math.sqrt(extent));
       const centerDx = (center.x - centroid.x) * centerPullFactor;
       const centerDy = (center.y - centroid.y) * centerPullFactor;
 
@@ -93,7 +93,7 @@ export function compose(glyphStrokesList) {
         const dist = Math.hypot(dx, dy);
         if (dist < 1e-6) continue;
 
-        const pushAmount = 10e3 / ((1.2e3 * dist + 100) ** 2);
+        const pushAmount = 40 / ((20 * dist) ** 4 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         pushVertex(vertex, pushX, pushY);
