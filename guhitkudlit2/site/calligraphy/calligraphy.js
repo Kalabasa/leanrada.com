@@ -82,8 +82,6 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
       if (!canvasRef.current) return;
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d");
-      context.reset();
-      context.clearRect(0, 0, canvas.width, canvas.height);
       drawCalligraphy(
         baybayinUnits,
         painter,
@@ -138,7 +136,7 @@ export async function drawCalligraphy(
       getGlyph(baybayinUnit, glyphMap),
     );
 
-    const lineLayout = layoutLine(glyphs, { kern: false });
+    const lineLayout = layoutLine(glyphs);
     const lineVertices = lineLayout
       .flatMap((glyph) => glyph.map.flat())
       .filter((vertex) => vertex);
@@ -175,6 +173,13 @@ export async function drawCalligraphy(
     })),
   }));
 
+  canvasContext.reset();
+  canvasContext.clearRect(
+    0,
+    0,
+    canvasContext.canvas.width,
+    canvasContext.canvas.height,
+  );
   const drawing = painter.drawPath(path, cellSize, canvasContext);
   for (const _ of drawing) {
     // await delay(1);

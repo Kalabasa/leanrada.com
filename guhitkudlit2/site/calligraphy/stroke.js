@@ -327,10 +327,7 @@ function calculateTerminalControl(
     return { x: handleX * scale, y: handleY * scale }
   } else if (isFreeTerminal(terminal)) {
     // free terminal
-    const spanX = otherTerminal.position.x - terminal.position.x;
-    const spanY = otherTerminal.position.y - terminal.position.y;
-    const horizontalness = Math.abs(spanX) / Math.hypot(spanX, spanY);
-    const strength = 0.4 + horizontalness * Math.abs(spanX) * 0.1;
+    const strength = 0.4;
     return { x: 0, y: isStrokeStart ? strength : -strength };
   } else {
     // attached to another terminal

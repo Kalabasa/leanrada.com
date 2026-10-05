@@ -47,13 +47,18 @@ export const U = glyph(
 export const B = glyph(
   { xScale: 4 / 3 },
   `
-  . 
- / x 
+.---. 
+|   |
 .   .
 |   |
 .-*-.
 `,
 );
+B.map[0][0].x += 0.6;
+B.map[0][2].x -= 0.6;
+B.map[2][0].x += 0.25;
+B.map[2][1].y -= 0.5;
+B.map[2][2].x -= 0.25;
 export const K = glyph(
   { xScale: 4 / 3 },
   `
@@ -127,13 +132,17 @@ export const N = glyph(
 export const NG = glyph(
   { xScale: 1 },
   `
-.
- x
+.-.
+  |
   .~~~.
- / 
-.
+  | 
+.-.
 `,
 );
+NG.map[0][1].x -= 0.5;
+NG.map[0][1].y += 0.25;
+NG.map[2][1].x -= 0.5;
+NG.map[2][1].y -= 0.25;
 export const P = glyph(
   { xScale: 1 },
   `
