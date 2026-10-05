@@ -324,11 +324,10 @@ function calculateTerminalControl(
     const handleX = doesParentBendTowardStroke ? towardHandleSideX : tangentX;
     const handleY = doesParentBendTowardStroke ? towardHandleSideY : tangentY;
     const scale = (edgeLen * 0.25) / Math.hypot(handleX, handleY);
-    return { x: handleX * scale, y: handleY * scale }
+    return { x: handleX * scale, y: handleY * scale };
   } else if (isFreeTerminal(terminal)) {
     // free terminal
-    const strength = 0.4;
-    return { x: 0, y: isStrokeStart ? strength : -strength };
+    return { x: isStrokeStart ? 0.4 : -0.4, y: isStrokeStart ? 0.6 : -0.6 };
   } else {
     // attached to another terminal
     const nextControlTowardTerminal = isStrokeStart

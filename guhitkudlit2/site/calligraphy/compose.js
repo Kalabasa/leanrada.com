@@ -7,7 +7,7 @@
 const pushStrength = 0.16;
 const pushDistScale = 2.67;
 const composeSteps = 20;
-const springStrength = 0.3;
+const springStrength = 0.5;
 const squeezeStrength = 0.2;
 
 /**

@@ -21,7 +21,7 @@ const samplesPerYield = 3;
 /** @type {Bristle[]} */
 const bristles = Array.from({ length: bristleCount }, (_, k) => ({
   lateralOffset: (k / (bristleCount - 1)) * 2 - 1,
-  inkLoad: 0 + 0.3 * hash(k, 0),
+  inkLoad: 0.2 + 0.4 * hash(k, 0),
   shortfall: 0.4 * hash(k, 1),
 }));
 
@@ -47,7 +47,7 @@ export class Brush extends BasePainter {
   *drawStroke(stroke, scale, color, canvasContext) {
     if (stroke.vertices.length < 2) return;
 
-    const maxRadius = 12 * scale;
+    const maxRadius = 10 * scale;
     const samples = createBrushSamples(stroke.vertices, maxRadius);
     const paperGrainLen = maxRadius * 0.1;
 
