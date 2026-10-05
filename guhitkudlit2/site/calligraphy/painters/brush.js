@@ -55,9 +55,9 @@ export class Brush extends BasePainter {
     canvasContext.lineCap = "round";
     const bristleThickness = (maxRadius * 2) / bristleCount;
 
-    for (let i = 1; i < samples.length; i++) {
-      const prev = samples[i - 1];
-      const sample = samples[i];
+    let sampleIndex = 0;
+    for (const [prev, sample] of slideWindow(samples, 2)) {
+      sampleIndex++;
 
       for (const bristle of bristles) {
         const footprintOffset = bristle.lateralOffset / sample.pressure;
@@ -84,7 +84,7 @@ export class Brush extends BasePainter {
         canvasContext.lineTo(x, y);
         canvasContext.stroke();
       }
-      if (i % samplesPerYield === 0) yield;
+      if (sampleIndex % samplesPerYield === 0) yield;
     }
   }
 }
@@ -95,17 +95,21 @@ export class Brush extends BasePainter {
  * harder when pulling the brush downward than when pushing it upward.
  * @param {Point[]} vertices
  * @param {number} maxRadius
- * @returns {BrushSample[]}
+ * @yields {BrushSample}
  */
-function createBrushSamples(vertices, maxRadius) {
-  const points = resamplePath(vertices, (maxRadius * 0.1) / samplesPerYield);
-  const strokeLen = points.at(-1).traveledLen;
+function* createBrushSamples(vertices, maxRadius) {
+  const strokeLen = measurePathLen(vertices);
   const landingLen = maxRadius * 1.5;
   const liftOffLen = Math.min(maxRadius * 6, strokeLen * 0.5);
 
-  return points.map((point, i) => {
-    const before = points[Math.max(0, i - 2)];
-    const after = points[Math.min(points.length - 1, i + 2)];
+  const first = vertices[0];
+  const last = vertices.at(-1);
+  const paddedPoints = concat(
+    [first, first],
+    resamplePath(vertices, (maxRadius * 0.1) / samplesPerYield),
+    [last, last],
+  );
+  for (const [before, , point, , after] of slideWindow(paddedPoints, 5)) {
     const tangentX = after.x - before.x;
     const tangentY = after.y - before.y;
     const tangentLen = Math.hypot(tangentX, tangentY) || 1;
@@ -123,7 +127,7 @@ function createBrushSamples(vertices, maxRadius) {
     const velocity = 0.5 + 0.5 * landingProgress + 3 * (1 - liftOffProgress);
     const inkTransfer = Math.min(1, 1.2 / velocity);
 
-    return {
+    yield {
       x: point.x,
       y: point.y,
       normalX: -tangentY / tangentLen,
@@ -131,16 +135,30 @@ function createBrushSamples(vertices, maxRadius) {
       pressure,
       inkTransfer,
     };
-  });
+  }
+}
+
+/**
+ * @param {Point[]} vertices
+ * @returns {number}
+ */
+function measurePathLen(vertices) {
+  let pathLen = 0;
+  for (let i = 1; i < vertices.length; i++) {
+    const start = vertices[i - 1];
+    const end = vertices[i];
+    pathLen += Math.hypot(end.x - start.x, end.y - start.y);
+  }
+  return pathLen;
 }
 
 /**
  * @param {Point[]} vertices
  * @param {number} stepLen
- * @returns {{ x: number, y: number, traveledLen: number }[]}
+ * @yields {{ x: number, y: number, traveledLen: number }}
  */
-function resamplePath(vertices, stepLen) {
-  const points = [{ x: vertices[0].x, y: vertices[0].y, traveledLen: 0 }];
+function* resamplePath(vertices, stepLen) {
+  yield { x: vertices[0].x, y: vertices[0].y, traveledLen: 0 };
   let traveledLen = 0;
   let nextSampleLen = stepLen;
   for (let i = 1; i < vertices.length; i++) {
@@ -149,18 +167,44 @@ function resamplePath(vertices, stepLen) {
     const segmentLen = Math.hypot(end.x - start.x, end.y - start.y);
     while (nextSampleLen <= traveledLen + segmentLen) {
       const progress = (nextSampleLen - traveledLen) / segmentLen;
-      points.push({
+      yield {
         x: start.x + (end.x - start.x) * progress,
         y: start.y + (end.y - start.y) * progress,
         traveledLen: nextSampleLen,
-      });
+      };
       nextSampleLen += stepLen;
     }
     traveledLen += segmentLen;
   }
   const last = vertices.at(-1);
-  points.push({ x: last.x, y: last.y, traveledLen });
-  return points;
+  yield { x: last.x, y: last.y, traveledLen };
+}
+
+/**
+ * @template T
+ * @param {...Iterable<T>} iterables
+ * @yields {T}
+ */
+function* concat(...iterables) {
+  for (const iterable of iterables) {
+    yield* iterable;
+  }
+}
+
+/**
+ * @template T
+ * @param {Iterable<T>} items
+ * @param {number} size
+ * @yields {T[]}
+ */
+function* slideWindow(items, size) {
+  const recentItems = [];
+  for (const item of items) {
+    recentItems.push(item);
+    if (recentItems.length < size) continue;
+    yield recentItems.slice();
+    recentItems.shift();
+  }
 }
 
 /**
