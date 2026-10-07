@@ -1,3 +1,4 @@
+import { DEBUG } from "../app/flags.js";
 import { reaction } from "../lib/mobx.js";
 import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
@@ -66,9 +67,7 @@ export async function drawCalligraphy(
   const layout2D = [];
   let lineTopY = 0;
   for (const line of lines) {
-    const glyphs = line.map((baybayinUnit) =>
-      getGlyph(baybayinUnit),
-    );
+    const glyphs = line.map((baybayinUnit) => getGlyph(baybayinUnit));
 
     const lineLayout = layoutLine(glyphs);
     const lineVertices = lineLayout
@@ -115,7 +114,9 @@ export async function drawCalligraphy(
     canvasContext.canvas.height,
   );
   let drawStep = 0;
-  const drawInterval = Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 1.5));
+  const drawInterval = DEBUG
+    ? 0
+    : Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 1.5));
   for (const _ of painter.drawPaths(path, cellSize, canvasContext)) {
     if (drawStep++ % drawInterval === 0) await delay(16);
     if (abortSignal.aborted) return;

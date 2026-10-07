@@ -77,8 +77,8 @@ export class Brush extends BasePainter {
           Math.max(
             // dot product w/ down
             dirY,
-            // dot product w/ up-left
-            -Math.SQRT1_2 * dirX - Math.SQRT1_2 * dirY,
+            // dot product w/ 30 degrees up from negative x
+            -(Math.sqrt(3) / 2) * dirX - 0.5 * dirY,
           );
       const targetZ =
         -Math.min(1, Math.max(1 / distFromInit, distFromFinal / (60 * scale))) *

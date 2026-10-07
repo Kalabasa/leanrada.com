@@ -9,15 +9,15 @@ const composeStepsOverride = Number.parseInt(
   new URLSearchParams(location.search).get("composeSteps"),
 );
 
-const pushStrength = 0.16;
-const pushDistScale = 2.67;
-const springStrength = 0.5;
-const squeezeStrength = 0.18;
-const kudlitGravityX = 0.008;
+const pushStrength = 0.14;
+const pushDistScale = 3;
+const springStrength = 0.3;
+const squeezeStrength = 0.22;
+const kudlitGravityX = 0.01;
 const kudlitGravityY = 0.04;
-const kudlitPushFactor = 1.1;
+const kudlitPushFactor = 2;
 const composeSteps =
-  DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 20;
+  DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
 /**
  * @param {GlyphStrokes[]} glyphStrokesList
@@ -114,7 +114,7 @@ export function compose(glyphStrokesList) {
 
     const springFactor = springStrength * Math.sqrt((steps - step) / steps);
     const squeezeFactor =
-      squeezeStrength * (Math.sqrt((steps - step) / steps) / Math.sqrt(extent));
+      squeezeStrength * (((steps - step) / steps) ** 2 / Math.sqrt(extent));
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);
