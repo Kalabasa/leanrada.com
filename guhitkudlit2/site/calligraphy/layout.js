@@ -4,8 +4,8 @@
 
 // Layout works on a 2x grid relative to glyph coords
 // to account for edges between vertices.
-// If glyphs have 3 rows, layout has 5 rows
-const layoutRows = 5;
+// If glyphs have 5 rows, layout has 9 rows
+const layoutRows = 9;
 
 /**
  * @param {Glyph[]} glyphs

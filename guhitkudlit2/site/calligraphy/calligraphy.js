@@ -3,8 +3,6 @@ import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
 import { Brush } from "./painters/brush.js";
 
-const memo = Symbol("memo");
-
 export function installCalligraphy(observableBaybayinUnits, canvasRef) {
   // todo: lazy load
   const painter = new Brush();
@@ -42,7 +40,7 @@ export async function drawCalligraphy(
   abortSignal,
 ) {
   const [
-    glyphMap,
+    { getGlyph },
     { layoutLine },
     { traceStrokes },
     { compose },
@@ -68,7 +66,9 @@ export async function drawCalligraphy(
   const layout2D = [];
   let lineTopY = 0;
   for (const line of lines) {
-    const glyphs = line.map((baybayinUnit) => getGlyph(baybayinUnit, glyphMap));
+    const glyphs = line.map((baybayinUnit) =>
+      getGlyph(baybayinUnit),
+    );
 
     const lineLayout = layoutLine(glyphs);
     const lineVertices = lineLayout
@@ -120,14 +120,6 @@ export async function drawCalligraphy(
     if (drawStep++ % drawSpeed === 0) await delay(1);
     if (abortSignal.aborted) return;
   }
-}
-
-function getGlyph(baybayinUnit, glyphMap) {
-  const glyphName = baybayinUnit.startsWith("ng")
-    ? "NG"
-    : baybayinUnit.slice(0, 1).toUpperCase();
-  // todo: add kudlit & memoize
-  return glyphMap[glyphName];
 }
 
 function getBounds(vertices) {

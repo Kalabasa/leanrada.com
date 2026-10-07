@@ -11,7 +11,8 @@
  *  prev?: StrokeVertex,
  *  next?: StrokeVertex,
  *  prevSideLen?: number,
- *  nextSideLen?: number
+ *  nextSideLen?: number,
+ *  isKudlit?: boolean
  * }} StrokeVertex
  * @typedef {{ strokes: { vertices: StrokeVertex[] }[] }} GlyphStrokes
  */
@@ -112,6 +113,11 @@ function interpolateChain(glyph, chain, getSharedPosition) {
       );
     }
     out.push(createStrokeVertex(glyph, getSharedPosition(end)));
+  }
+  if (chain[0].isKudlit) {
+    for (const strokeVertex of out) {
+      strokeVertex.isKudlit = true;
+    }
   }
   return out;
 }
