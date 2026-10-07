@@ -98,7 +98,7 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
       html`
         <div class="canvasPlaceholder">
           <h1 class="canvasHeading">Welcome to Guhit Kudlit</h1>
-          <h2 class="canvasSubheading">Baybayin calligraphy generator</h2>
+          <h2 class="canvasSubheading">Baybayin transliterator & calligraphy generator</h2>
           <p class="canvasText">Type your word below!</p>
         </div>
       `}

@@ -124,6 +124,7 @@ export function TransliterationForm({
         gap: var(--size-xs);
       }
       .transliterationFormInput {
+        anchor-name: --transliterationFormInput;
         width: 100%;
         font-size: var(--font-size-l);
       }
