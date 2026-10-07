@@ -1,30 +1,38 @@
 import { DEBUG } from "../app/flags.js";
 import { reaction } from "../lib/mobx.js";
+import { debounce } from "../util/debounce.js";
 import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
 import { Brush } from "./painters/brush.js";
 
 export function installCalligraphy(observableBaybayinUnits, canvasRef) {
-  // todo: lazy load
+  // todo: lazy load painter by selected style
   const painter = new Brush();
-  let drawingAbortController = new AbortController();
+  let drawingAbortController;
   reaction(
     () => observableBaybayinUnits.get(),
-    async (baybayinUnits) => {
-      drawingAbortController.abort();
-      drawingAbortController = new AbortController();
+    () => {
+      drawingAbortController?.abort();
+      if (!canvasRef.current) return;
+      const context = canvasRef.current.getContext("2d");
+      context.reset();
+      context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    },
+  );
+  reaction(
+    () => observableBaybayinUnits.get(),
+    debounce(async (baybayinUnits) => {
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
+      const context = canvasRef.current.getContext("2d");
+      drawingAbortController = new AbortController();
       drawCalligraphy(
         baybayinUnits,
         painter,
         context,
         drawingAbortController.signal,
       );
-    },
-    { delay: 1000, fireImmediately: true },
+    }, 400),
   );
 }
 
@@ -106,13 +114,6 @@ export async function drawCalligraphy(
     })),
   }));
 
-  canvasContext.reset();
-  canvasContext.clearRect(
-    0,
-    0,
-    canvasContext.canvas.width,
-    canvasContext.canvas.height,
-  );
   let drawStep = 0;
   const drawInterval = DEBUG
     ? 0

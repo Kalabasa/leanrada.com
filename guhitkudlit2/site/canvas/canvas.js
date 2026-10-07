@@ -1,14 +1,29 @@
 import { html } from "../components/html.js";
 import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
+import { observable, when } from "../lib/mobx.js";
+import { observer } from "../util/observer.js";
 
-export function createCanvas() {
+export function createCanvas(observableBaybayinUnits) {
+  const showPlaceholder = observable.box(true);
+  when(
+    () => observableBaybayinUnits.get().length > 0,
+    () => showPlaceholder.set(false),
+  );
+
   const canvasRef = { current: null };
-  const CanvasImpl = () =>
-    html`<${Canvas} aspectRatio=${1.5} canvasRef=${canvasRef} />`;
+  const CanvasImpl = observer(() => {
+    return html`
+      <${Canvas}
+        aspectRatio=${1.5}
+        canvasRef=${canvasRef}
+        showPlaceholder=${showPlaceholder.get()}
+      />
+    `;
+  });
   return { Canvas: CanvasImpl, canvasRef };
 }
 
-export function Canvas({ aspectRatio, canvasRef }) {
+export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
   const containerRef = useRef();
 
   const area = 500_000;
@@ -23,7 +38,7 @@ export function Canvas({ aspectRatio, canvasRef }) {
         entry.contentBoxSize[0].inlineSize,
         entry.contentBoxSize[0].blockSize,
         canvasElement,
-        aspectRatio
+        aspectRatio,
       );
     });
     const containerElement = containerRef.current;
@@ -42,11 +57,34 @@ export function Canvas({ aspectRatio, canvasRef }) {
         place-content: center;
       }
       .canvas {
+        grid-area: 1 / 1 / -1 / -1;
         background: white;
         box-shadow: var(--shadow-l);
         border-radius: 3px;
         width: 100%;
         height: 100%;
+      }
+      .canvasPlaceholder {
+        grid-area: 1 / 1 / -1 / -1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+      .canvasHeading {
+        font-size: 5vh;
+        letter-spacing: -0.44vh;
+      }
+      .canvasSubheading {
+        font-size: 2vh;
+        font-weight: bold;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+      .canvasText {
+        margin-top: 2vh;
+        font-size: 1.5vh;
       }
     </style>
     <div class="canvasContainer" ref=${containerRef}>
@@ -56,6 +94,14 @@ export function Canvas({ aspectRatio, canvasRef }) {
         height=${canvasHeight}
         ref=${canvasRef}
       ></canvas>
+      ${showPlaceholder &&
+      html`
+        <div class="canvasPlaceholder">
+          <h1 class="canvasHeading">Welcome to Guhit Kudlit</h1>
+          <h2 class="canvasSubheading">Baybayin calligraphy generator</h2>
+          <p class="canvasText">Type your word below!</p>
+        </div>
+      `}
     </div>
   `;
 }

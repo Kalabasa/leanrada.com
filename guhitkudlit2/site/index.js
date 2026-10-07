@@ -9,7 +9,7 @@ import { when } from "./lib/mobx.js";
 const { TransliterationForm, observableBaybayinUnits } =
   createTransliterationForm();
 
-const { Canvas, canvasRef } = createCanvas();
+const { Canvas, canvasRef } = createCanvas(observableBaybayinUnits);
 
 when(
   () => observableBaybayinUnits.get().length > 0,
@@ -72,7 +72,9 @@ export function Index() {
         <${AppLogo} />
       </div>
       <nav class="appMenu">menu</nav>
-      <main class="appCanvas"><${Canvas} /></main>
+      <main class="appCanvas">
+        <${Canvas} />
+      </main>
       <aside class="appInputPanelArea">
         <${AppPanel} title=${html`<h2>Text</h2>`}>
           <${TransliterationForm} />
