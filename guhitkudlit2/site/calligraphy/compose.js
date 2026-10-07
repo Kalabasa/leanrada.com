@@ -4,11 +4,19 @@
  * @typedef {import("./stroke.js").Point} Point
  */
 
+import { DEBUG } from "../app/flags.js";
+const composeStepsOverride = Number.parseInt(
+  new URLSearchParams(location.search).get("composeSteps"),
+);
+
 const pushStrength = 0.16;
 const pushDistScale = 2.67;
-const composeSteps = 20;
 const springStrength = 0.5;
 const squeezeStrength = 0.2;
+const kudlitGravity = 0.01;
+const kudlitPush = 1.1;
+const composeSteps =
+  DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 20;
 
 /**
  * @param {GlyphStrokes[]} glyphStrokesList
@@ -63,13 +71,19 @@ export function compose(glyphStrokesList) {
     offset.y += y;
   };
 
+  /**
+   * @param {{ start: StrokeVertex, end: StrokeVertex }} curve
+   * @param {Point[]} points start, start control, end control, end
+   * @param {Point} oClosest
+   */
   const pushCurve = (curve, points, oClosest) => {
     const pushes = points.map((point) => {
       const dx = point.x - oClosest.x;
       const dy = point.y - oClosest.y;
       const dist = Math.hypot(dx, dy);
       if (dist === 0) return;
-      const pushAmount = pushStrength / ((pushDistScale * dist) ** 4 + 1);
+      let pushAmount = pushStrength / ((pushDistScale * dist) ** 4 + 1);
+      if (curve.start.isKudlit) pushAmount *= kudlitPush;
       return {
         x: (dx / dist) * pushAmount,
         y: (dy / dist) * pushAmount,
@@ -108,15 +122,27 @@ export function compose(glyphStrokesList) {
 
       for (const vertex of glyph.vertices) {
         // pull back to original shape
-        const startOffset = glyph.origOffsets.get(vertex);
-        pushVertex(
-          vertex,
-          (centroid.x + startOffset.x - vertex.position.x) * springFactor,
-          (centroid.y + startOffset.y - vertex.position.y) * springFactor,
-        );
+        if (!vertex.isKudlit) {;
+          const startOffset = glyph.origOffsets.get(vertex);
+          pushVertex(
+            vertex,
+            (centroid.x + startOffset.x - vertex.position.x) * springFactor,
+            (centroid.y + startOffset.y - vertex.position.y) * springFactor,
+          );
+        }
 
         // pull all towards center
         pushVertex(vertex, centerDx, centerDy * 0.8);
+      }
+
+      // pull kudlits toward glyph
+      for (const vertex of glyph.vertices) {
+        if (!vertex.isKudlit) continue;
+        pushVertex(
+          vertex,
+          (centroid.x - vertex.position.x) * kudlitGravity,
+          (centroid.y - vertex.position.y) * kudlitGravity,
+        );
       }
     }
 

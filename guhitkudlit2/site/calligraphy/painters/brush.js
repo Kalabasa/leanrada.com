@@ -30,12 +30,13 @@ export class Brush extends BasePainter {
   *drawPath(path, scale, color, canvasContext) {
     const maxRadius = 10 * scale;
     const vertices = path.vertices;
+    const initVertex = vertices[0];
     const finalVertex = vertices.at(-1);
 
     canvasContext.strokeStyle = color;
     canvasContext.lineCap = "round";
 
-    let z = -0.3;
+    let z = -0.5;
     let zVel = 0;
     let speed = 0;
 
@@ -61,6 +62,10 @@ export class Brush extends BasePainter {
       const dirX = dx / edgeLen;
       const dirY = dy / edgeLen;
 
+      const distFromInit = Math.hypot(
+        initVertex.x - brushX,
+        initVertex.y - brushY,
+      );
       const distFromFinal = Math.hypot(
         finalVertex.x - brushX,
         finalVertex.y - brushY,
@@ -76,7 +81,7 @@ export class Brush extends BasePainter {
             -Math.SQRT1_2 * dirX - Math.SQRT1_2 * dirY,
           );
       const targetZ =
-        -Math.min(1, distFromFinal / (60 * scale)) *
+        -Math.min(1, Math.max(1 / distFromInit, distFromFinal / (60 * scale))) *
         (0.5 + 0.5 * directionBias);
       zVel += (targetZ - z) * 0.005 - zVel * 0.14;
       z += zVel;
