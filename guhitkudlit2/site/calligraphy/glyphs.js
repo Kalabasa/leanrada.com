@@ -276,7 +276,7 @@ function addVirama(glyph) {
   );
   const viramaStart = {
     x: rightX + 1,
-    y: 1.5,
+    y: 0,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),
@@ -299,7 +299,7 @@ function addVirama(glyph) {
   viramaMiddle.adjacency.set(viramaStart, { type: undefined });
   viramaMiddle.adjacency.set(viramaEnd, { type: undefined });
   viramaEnd.adjacency.set(viramaMiddle, { type: undefined });
-  glyph.map[1][lastColumn + 1] = viramaStart;
+  glyph.map[0][lastColumn + 1] = viramaStart;
   glyph.map[4][lastColumn + 1] = viramaMiddle;
   glyph.map[4][Math.floor(centerX)] = viramaEnd;
 }

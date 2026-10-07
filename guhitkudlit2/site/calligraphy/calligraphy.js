@@ -33,6 +33,7 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
         drawingAbortController.signal,
       );
     }, 400),
+    { fireImmediately: true },
   );
 }
 

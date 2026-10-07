@@ -13,6 +13,7 @@ export function createTransliterationForm() {
   const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
   const prettify = observable.box(false);
+  const highlight = observable.box(initialText === "");
 
   const debouncedRemovePrettify = debounce(() => {
     prettify.set(false);
@@ -27,12 +28,15 @@ export function createTransliterationForm() {
       prettify.set(true);
       debouncedRemovePrettify();
     },
-    { delay: 100, fireImmediately: initialText !== "" }
+    { delay: 100, fireImmediately: initialText !== "" },
   );
 
   const TransliterationFormImpl = observer(() => {
     const onInput = (event) => {
-      runInAction(() => inputText.set(event.currentTarget.value));
+      runInAction(() => {
+        inputText.set(event.currentTarget.value);
+        highlight.set(false);
+      });
     };
 
     const unicodeFilter = prettify.get()
@@ -46,6 +50,7 @@ export function createTransliterationForm() {
         inputText=${inputText.get()}
         syllabication=${syllabication}
         baybayin=${lazyConvertToUnicode(unicodeFilter(baybayinUnits.get()))}
+        highlight=${highlight.get()}
         onInput=${onInput}
       />
     `;
@@ -102,6 +107,7 @@ export function TransliterationForm({
   inputText,
   syllabication,
   baybayin,
+  highlight,
   onInput,
 }) {
   return html`
@@ -121,13 +127,20 @@ export function TransliterationForm({
         width: 100%;
         font-size: var(--font-size-l);
       }
+      .transliterationFormInputHighlighted {
+        /* fixme: css organisation */
+        border-color: var(--color-green) !important;
+      }
     </style>
     <form class="transliterationForm" action="javascript:false">
       <label class="transliterationFormRow">
         <${LabelText} tag="div">Tagalog word<//>
         <${Input}
           autofocus
-          class="transliterationFormInput"
+          class=${classes(
+            "transliterationFormInput",
+            highlight && "transliterationFormInputHighlighted",
+          )}
           type="text"
           placeholder="kalabasa"
           value=${inputText}
@@ -160,7 +173,7 @@ function Output({ value, placeholder }) {
     <div
       class=${classes(
         "transliterationFormOutput",
-        !value && "transliterationFormOutputPlaceholder"
+        !value && "transliterationFormOutputPlaceholder",
       )}
     >
       ${value || placeholder}
