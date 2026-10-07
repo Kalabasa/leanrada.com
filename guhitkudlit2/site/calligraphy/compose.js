@@ -12,9 +12,10 @@ const composeStepsOverride = Number.parseInt(
 const pushStrength = 0.16;
 const pushDistScale = 2.67;
 const springStrength = 0.5;
-const squeezeStrength = 0.2;
-const kudlitGravity = 0.01;
-const kudlitPush = 1.1;
+const squeezeStrength = 0.18;
+const kudlitGravityX = 0.008;
+const kudlitGravityY = 0.04;
+const kudlitPushFactor = 1.1;
 const composeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 20;
 
@@ -81,9 +82,9 @@ export function compose(glyphStrokesList) {
       const dx = point.x - oClosest.x;
       const dy = point.y - oClosest.y;
       const dist = Math.hypot(dx, dy);
-      if (dist === 0) return;
+      if (dist === 0) return { x: 0, y: 0 };
       let pushAmount = pushStrength / ((pushDistScale * dist) ** 4 + 1);
-      if (curve.start.isKudlit) pushAmount *= kudlitPush;
+      if (curve.start.isKudlit) pushAmount *= kudlitPushFactor;
       return {
         x: (dx / dist) * pushAmount,
         y: (dy / dist) * pushAmount,
@@ -122,7 +123,7 @@ export function compose(glyphStrokesList) {
 
       for (const vertex of glyph.vertices) {
         // pull back to original shape
-        if (!vertex.isKudlit) {;
+        if (!vertex.isKudlit) {
           const startOffset = glyph.origOffsets.get(vertex);
           pushVertex(
             vertex,
@@ -140,8 +141,8 @@ export function compose(glyphStrokesList) {
         if (!vertex.isKudlit) continue;
         pushVertex(
           vertex,
-          (centroid.x - vertex.position.x) * kudlitGravity,
-          (centroid.y - vertex.position.y) * kudlitGravity,
+          (centroid.x - vertex.position.x) * kudlitGravityX,
+          (centroid.y - vertex.position.y) * kudlitGravityY,
         );
       }
     }
@@ -184,7 +185,7 @@ export function compose(glyphStrokesList) {
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
         const pushAmount =
-          pushStrength / ((pushDistScale * 0.33 * dist) ** 2 + 1);
+          pushStrength / ((pushDistScale * 0.4 * dist) ** 2 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         for (const vertex of glyph.vertices) {
@@ -201,7 +202,14 @@ export function compose(glyphStrokesList) {
       for (let j = i + 1; j < edges.length; j++) {
         const curve = edges[i];
         const oCurve = edges[j];
-        if (curve.start.glyph === oCurve.start.glyph) continue;
+        if (
+          curve.start.glyph === oCurve.start.glyph &&
+          !curve.start.isKudlit &&
+          !oCurve.start.isKudlit
+        ) {
+          continue;
+        }
+        if (areCurvesAdjacent(curve, oCurve)) continue;
 
         const points = getCurvePoints(curve);
         const oPoints = getCurvePoints(oCurve);
@@ -280,6 +288,19 @@ function getCubicBezierSamples([p0, p1, p2, p3]) {
         t * t * t * p3.y,
     };
   });
+}
+
+/**
+ * @param {{ start: StrokeVertex, end: StrokeVertex }} curve
+ * @param {{ start: StrokeVertex, end: StrokeVertex }} oCurve
+ * @returns {boolean}
+ */
+function areCurvesAdjacent(curve, oCurve) {
+  const endpoints = [getRootVertex(curve.start), getRootVertex(curve.end)];
+  return (
+    endpoints.includes(getRootVertex(oCurve.start)) ||
+    endpoints.includes(getRootVertex(oCurve.end))
+  );
 }
 
 /**

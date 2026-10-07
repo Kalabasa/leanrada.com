@@ -333,8 +333,8 @@ function calculateTerminalControl(
     return { x: handleX * scale, y: handleY * scale };
   } else if (isFreeTerminal(terminal)) {
     // free terminal
-    const x = terminal.isKudlit ? 0.2 : 0.4;
-    const y = terminal.isKudlit ? 0.1 : 0.6;
+    const x = terminal.isKudlit ? -0.4 : 0.4;
+    const y = terminal.isKudlit ? -0.2 : 0.6;
     return { x: isStrokeStart ? x : -x, y: isStrokeStart ? y : -y };
   } else {
     // attached to another terminal
@@ -443,7 +443,8 @@ function scoreChain(chain) {
     const edge = chain[i - 1].adjacency.get(chain[i]);
     if (edge.type !== prevEdge.type) typeChanges++;
   }
-  return len / deltaY - typeChanges * 4;
+  const kudlitPenalty = chain[0].isKudlit ? 1000 : 0;
+  return len / deltaY - typeChanges * 4 - kudlitPenalty;
 }
 
 /**

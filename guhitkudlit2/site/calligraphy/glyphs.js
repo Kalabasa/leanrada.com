@@ -47,7 +47,7 @@ export const U = glyph(
 `,
 );
 export const B = glyph(
-  { xScale: 4 / 3 },
+  { xScale: 3.75 / 3 },
   `
 .---. 
 |   |
@@ -233,10 +233,10 @@ function addKudlit(glyph, vowel) {
   let kudlitRow, y;
   if ("ei".includes(vowel)) {
     kudlitRow = 0;
-    y = 0.5;
+    y = 0.25;
   } else {
     kudlitRow = 4;
-    y = 3.5;
+    y = 3.75;
   }
 
   const centerX = (glyph.map[1].length - 1) / 2;
@@ -261,11 +261,22 @@ function addKudlit(glyph, vowel) {
 }
 
 function addVirama(glyph) {
-  const rightX = glyph.map[1].length - 1;
-  const centerX = rightX / 2;
+  const lastColumn = glyph.map[1].length - 1;
+  const centerX = lastColumn / 2;
+  const rightX = Math.max(
+    ...glyph.map
+      .map((glyphRow) => glyphRow[lastColumn])
+      .filter((vertex) => vertex)
+      .map((vertex) => {
+        const hasRightCurve = [...vertex.adjacency.values()].some(
+          (edge) => edge.type === "rightCurve",
+        );
+        return hasRightCurve ? vertex.x + 1 : vertex.x;
+      }),
+  );
   const viramaStart = {
     x: rightX + 1,
-    y: 1,
+    y: 1.5,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),
@@ -278,7 +289,7 @@ function addVirama(glyph) {
     adjacency: new Map(),
   };
   const viramaEnd = {
-    x: centerX,
+    x: centerX - 0.5,
     y: 4,
     terminal: false,
     isKudlit: true,
@@ -288,8 +299,8 @@ function addVirama(glyph) {
   viramaMiddle.adjacency.set(viramaStart, { type: undefined });
   viramaMiddle.adjacency.set(viramaEnd, { type: undefined });
   viramaEnd.adjacency.set(viramaMiddle, { type: undefined });
-  glyph.map[1][rightX + 1] = viramaStart;
-  glyph.map[4][rightX + 1] = viramaMiddle;
+  glyph.map[1][lastColumn + 1] = viramaStart;
+  glyph.map[4][lastColumn + 1] = viramaMiddle;
   glyph.map[4][Math.floor(centerX)] = viramaEnd;
 }
 
