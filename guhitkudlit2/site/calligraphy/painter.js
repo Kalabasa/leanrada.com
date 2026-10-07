@@ -8,38 +8,38 @@ export class BasePainter {
   constructor() {}
 
   /**
-   * @param {Path[]} path
+   * @param {Path[]} paths
    * @param {number} scale
    * @param {CanvasRenderingContext2D} canvasContext
    * @yields {void}
    */
-  *drawPath(path, scale, canvasContext) {
+  *drawPaths(paths, scale, canvasContext) {
     const strokeScale =
       scale *
       (Math.min(canvasContext.canvas.width, canvasContext.canvas.height) /
         3e4);
 
-    for (let i = 0; i < path.length; i++) {
+    for (let i = 0; i < paths.length; i++) {
       const color = DEBUG
-        ? `hsl(${(i / path.length) * 360}, 100%, 40%)`
+        ? `hsl(${(i / paths.length) * 360}, 100%, 40%)`
         : "#000";
-      yield* this.drawStroke(path[i], strokeScale, color, canvasContext);
+      yield* this.drawPath(paths[i], strokeScale, color, canvasContext);
     }
   }
 
   /**
-   * @param {Path} stroke
+   * @param {Path} path
    * @param {number} scale
    * @param {string} color
    * @param {CanvasRenderingContext2D} canvasContext
    * @yields {void}
    */
-  *drawStroke(stroke, scale, color, canvasContext) {
-    if (stroke.vertices.length === 0) return;
+  *drawPath(path, scale, color, canvasContext) {
+    if (path.vertices.length === 0) return;
 
     const brush = {
-      x: stroke.vertices[0].x,
-      y: stroke.vertices[0].y,
+      x: path.vertices[0].x,
+      y: path.vertices[0].y,
       z: 20,
     };
 
@@ -48,10 +48,10 @@ export class BasePainter {
 
     let index = 1;
     let limit = 5000;
-    while (index < stroke.vertices.length && limit > 0) {
+    while (index < path.vertices.length && limit > 0) {
       limit--;
 
-      const vertex = stroke.vertices[index];
+      const vertex = path.vertices[index];
 
       const nextX = vertex.x;
       const nextY = vertex.y;

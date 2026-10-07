@@ -115,9 +115,9 @@ export async function drawCalligraphy(
     canvasContext.canvas.height,
   );
   let drawStep = 0;
-  const drawInterval = Math.round(Math.sqrt(baybayinUnits.length));
-  for (const _ of painter.drawPath(path, cellSize, canvasContext)) {
-    if (drawStep++ % drawInterval === 0) await delay(1);
+  const drawSpeed = Math.round(Math.sqrt(1 + baybayinUnits.length) * 0.3);
+  for (const _ of painter.drawPaths(path, cellSize, canvasContext)) {
+    if (drawStep++ % drawSpeed === 0) await delay(1);
     if (abortSignal.aborted) return;
   }
 }
