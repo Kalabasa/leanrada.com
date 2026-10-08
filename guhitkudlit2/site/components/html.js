@@ -14,7 +14,7 @@ export function html(...args) {
 }
 
 function swapStyle(node) {
-  if (node.type === "style") {
+  if (node?.type === "style") {
     node.type = Style;
   }
 }

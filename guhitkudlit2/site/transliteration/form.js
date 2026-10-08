@@ -5,6 +5,8 @@ import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
 import { debounce } from "../util/debounce.js";
 import { observer } from "../util/observer.js";
+import { Tooltip } from "../components/tooltip.js";
+import { useState } from "../lib/htm-preact.js";
 
 const memo = Symbol("memo");
 
@@ -110,6 +112,13 @@ export function TransliterationForm({
   highlight,
   onInput,
 }) {
+  const [isFocused, setIsFocused] = useState(false);
+
+  let tooltipText = null;
+  if (highlight && !inputText && !isFocused) {
+    tooltipText = "Type your word here!";
+  }
+
   return html`
     <style id=${TransliterationForm.name}>
       .transliterationForm {
@@ -142,6 +151,10 @@ export function TransliterationForm({
         background-origin: border-box;
         background-clip: padding-box, border-box;
       }
+      .transliterationTooltip {
+        color: var(--color-green);
+        font-weight: bold;
+      }
     </style>
     <form class="transliterationForm" action="javascript:false">
       <label class="transliterationFormRow">
@@ -156,6 +169,9 @@ export function TransliterationForm({
           placeholder="kalabasa"
           maxlength="30"
           value=${inputText}
+          onPointerDown=${() => setIsFocused(true)}
+          onKeyDown=${() => setIsFocused(true)}
+          onBlur=${() => setIsFocused(false)}
           onInput=${onInput}
         />
       </label>
@@ -168,6 +184,10 @@ export function TransliterationForm({
         <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" />
       </label>
     </form>
+    ${tooltipText &&
+    html`<${Tooltip} anchorName="--transliterationFormInput" direction="top">
+      <span class="transliterationTooltip">${tooltipText}</span>
+    <//>`}
   `;
 }
 
