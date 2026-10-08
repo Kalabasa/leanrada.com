@@ -7,10 +7,10 @@ import { createTransliterationForm } from "./transliteration/form.js";
 import { observable, when } from "./lib/mobx.js";
 import { createFileForm } from "./file/form.js";
 
-const { TransliterationForm, baybayinUnits } = createTransliterationForm();
+const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm();
 const { Canvas, canvasRef } = createCanvas(baybayinUnits);
 const calligraphyComplete = observable.box(false);
-const { FileForm } = createFileForm(canvasRef, calligraphyComplete);
+const { FileForm } = createFileForm(canvasRef, inputText, calligraphyComplete);
 
 when(
   () => baybayinUnits.get().length > 0,

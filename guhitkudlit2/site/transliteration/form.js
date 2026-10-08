@@ -70,6 +70,7 @@ export function createTransliterationForm() {
 
   return {
     TransliterationForm: TransliterationFormImpl,
+    inputText,
     baybayinUnits,
   };
 }
