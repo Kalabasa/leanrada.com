@@ -1,6 +1,9 @@
 export class InvalidLetterError extends Error {
+  letters = [];
+
   constructor(letters) {
     super();
+    if (!Array.isArray(letters)) throw new TypeError();
     this.letters = letters;
   }
 

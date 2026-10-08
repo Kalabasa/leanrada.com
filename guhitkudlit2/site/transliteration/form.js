@@ -7,6 +7,7 @@ import { debounce } from "../util/debounce.js";
 import { observer } from "../util/observer.js";
 import { Tooltip } from "../components/tooltip.js";
 import { useState } from "../lib/htm-preact.js";
+import { InvalidLetterError } from "./invalid-letter-error.js";
 
 const memo = Symbol("memo");
 
@@ -16,6 +17,7 @@ export function createTransliterationForm() {
   const baybayinUnits = observable.box([]);
   const prettify = observable.box(false);
   const highlight = observable.box(initialText === "");
+  const syllabicateError = observable.box(undefined);
 
   const debouncedRemovePrettify = debounce(() => {
     prettify.set(false);
@@ -25,7 +27,14 @@ export function createTransliterationForm() {
     () => inputText.get(),
     async (inputText) => {
       const { syllabicate } = await import("./syllabicate.js");
-      const output = syllabicate(inputText);
+      let output;
+      try {
+        output = syllabicate(inputText);
+      } catch (error) {
+        syllabicateError.set(error);
+        return;
+      }
+      syllabicateError.set(undefined);
       baybayinUnits.set(output);
       prettify.set(true);
       debouncedRemovePrettify();
@@ -53,6 +62,7 @@ export function createTransliterationForm() {
         syllabication=${syllabication}
         baybayin=${lazyConvertToUnicode(unicodeFilter(baybayinUnits.get()))}
         highlight=${highlight.get()}
+        error=${syllabicateError.get()}
         onInput=${onInput}
       />
     `;
@@ -110,13 +120,22 @@ export function TransliterationForm({
   syllabication,
   baybayin,
   highlight,
+  error,
   onInput,
 }) {
   const [isFocused, setIsFocused] = useState(false);
 
-  let tooltipText = null;
-  if (highlight && !inputText && !isFocused) {
-    tooltipText = "Type your word here!";
+  let tooltipContent = null;
+  if (error && error instanceof InvalidLetterError) {
+    const helpLink = "./help/#" + error.letters.join("").toUpperCase();
+    tooltipContent = [
+      "Can't convert letter: " + error.formatLetters() + ". ",
+      html`<a class="transliterationTooltipLink" href=${helpLink}
+        >Learn more</a
+      >`,
+    ];
+  } else if (highlight && !inputText && !isFocused) {
+    tooltipContent = "Type your word here!";
   }
 
   return html`
@@ -132,12 +151,12 @@ export function TransliterationForm({
         flex-direction: column;
         gap: var(--size-xs);
       }
-      .transliterationFormInput {
-        anchor-name: --transliterationFormInput;
+      .transliterationInput {
+        anchor-name: --transliterationInput;
         width: 100%;
         font-size: var(--font-size-l);
       }
-      .transliterationFormInputHighlighted {
+      .transliterationInputHighlighted {
         /* fixme: css organisation */
         border-color: transparent !important;
         background-image:
@@ -155,6 +174,13 @@ export function TransliterationForm({
         color: var(--color-green);
         font-weight: bold;
       }
+      .transliterationTooltipError {
+        color: var(--color-orange);
+      }
+      .transliterationTooltipLink {
+        text-decoration: underline;
+        cursor: pointer;
+      }
     </style>
     <form class="transliterationForm" action="javascript:false">
       <label class="transliterationFormRow">
@@ -162,8 +188,8 @@ export function TransliterationForm({
         <${Input}
           autofocus
           class=${classes(
-            "transliterationFormInput",
-            highlight && "transliterationFormInputHighlighted",
+            "transliterationInput",
+            highlight && "transliterationInputHighlighted",
           )}
           type="text"
           placeholder="kalabasa"
@@ -184,9 +210,15 @@ export function TransliterationForm({
         <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" />
       </label>
     </form>
-    ${tooltipText &&
-    html`<${Tooltip} anchorName="--transliterationFormInput" direction="top">
-      <span class="transliterationTooltip">${tooltipText}</span>
+    ${tooltipContent &&
+    html`<${Tooltip} anchorName="--transliterationInput" direction="top">
+      <span
+        class="${classes(
+          "transliterationTooltip",
+          error && "transliterationTooltipError",
+        )}"
+        >${tooltipContent}</span
+      >
     <//>`}
   `;
 }

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GuhitKudlit Help</title>
+    <link rel="stylesheet" href="../lib/reset.css" />
+    <link rel="stylesheet" href="../global.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&family=Noto+Sans+Tagalog&display=swap"
+    />
+    <style>
+      body {
+        background: var(--color-bg-darker);
+        line-height: 1.5;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: var(--size-l) var(--size-m);
+        display: flex;
+        flex-direction: column;
+        gap: var(--size-l);
+      }
+      a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-color: var(--color-orange);
+        text-underline-offset: 3px;
+      }
+      h1 {
+        font-size: var(--font-size-l);
+        font-weight: bold;
+      }
+      h2 {
+        font-size: var(--font-size-s);
+        font-weight: bold;
+        text-transform: uppercase;
+        color: var(--color-fg-secondary);
+        margin-bottom: var(--size-s);
+      }
+      h3 {
+        font-weight: bold;
+        margin-bottom: var(--size-xs);
+      }
+      p + p {
+        margin-top: var(--size-s);
+      }
+      section,
+      #letterHelp {
+        background: var(--color-bg);
+        border-radius: var(--size-s);
+        box-shadow: var(--shadow-l);
+        padding: var(--size-m);
+      }
+      #letterHelp {
+        border: solid 2px var(--color-orange);
+      }
+      #letterHelp > p:first-child {
+        font-size: var(--font-size-l);
+        margin-bottom: var(--size-s);
+      }
+      em {
+        font-style: normal;
+        font-weight: bold;
+        color: var(--color-orange);
+      }
+      kbd {
+        font-family: monospace;
+        background: var(--color-bg-darker);
+        border-radius: 4px;
+        padding: 0 4px;
+      }
+      .baybayin {
+        font-family: "Noto Sans Tagalog", sans-serif;
+      }
+      ul.examples {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: var(--size-xs) var(--size-m);
+        margin: var(--size-s) 0;
+      }
+      ul.examples li {
+        display: flex;
+        gap: var(--size-xs);
+      }
+      ul.examples .before {
+        color: var(--color-fg-secondary);
+      }
+      ul.examples del {
+        color: var(--color-danger);
+      }
+      ul.examples ins {
+        text-decoration: none;
+        font-weight: bold;
+        color: var(--color-orange);
+      }
+      .glyphs {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+        gap: var(--size-xs);
+        margin: var(--size-s) 0;
+      }
+      .glyphs div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: var(--size-xs);
+        border-radius: var(--size-xs);
+        background: var(--color-bg-darker);
+      }
+      .glyphs .baybayin {
+        font-size: 32px;
+        line-height: 1.4;
+      }
+      .glyphs span:last-child {
+        font-size: var(--font-size-s);
+        color: var(--color-fg-secondary);
+      }
+      .letterCard {
+        padding: var(--size-s) 0;
+        border-top: solid 1px var(--color-fg-tertiary);
+      }
+      #letterList {
+        margin-top: var(--size-s);
+      }
+      .letterCard.requested h3 {
+        color: var(--color-orange);
+      }
+      .tips li {
+        margin-left: var(--size-m);
+        list-style: disc;
+      }
+      .tips li + li {
+        margin-top: var(--size-xs);
+      }
+    </style>
+    <script type="module">
+      import { InvalidLetterError } from "../transliteration/invalid-letter-error.js";
+      import { convertToUnicode } from "../transliteration/unicode.mjs";
+
+      const problemLetters = ["c", "f", "j", "q", "v", "x", "z"];
+
+      const requestedLetters = Array.from(
+        new Set(location.hash.slice(1).toLowerCase()),
+      ).filter((letter) => problemLetters.includes(letter));
+
+      renderGlyphs("vowelGlyphs", ["a", "i", "u"]);
+      renderGlyphs("consonantGlyphs", [
+        "ba", "ka", "da", "ga", "ha", "la", "ma",
+        "na", "nga", "pa", "sa", "ta", "wa", "ya",
+      ]);
+      renderGlyphs("kudlitGlyphs", ["ka", "ki", "ku", "k"]);
+
+      const letterList = document.getElementById("letterList");
+      for (const letter of problemLetters) {
+        const card = document.createElement("div");
+        card.className = "letterCard";
+        if (requestedLetters.includes(letter)) {
+          card.classList.add("requested");
+        }
+        const heading = document.createElement("h3");
+        heading.textContent = letter.toUpperCase();
+        const examples = document.createElement("ul");
+        examples.className = "examples";
+        examples.innerHTML = new InvalidLetterError([
+          letter,
+        ]).generateLetterExamplesHTML();
+        card.append(heading, examples);
+        letterList.append(card);
+      }
+
+      if (requestedLetters.length > 0) {
+        const error = new InvalidLetterError(requestedLetters);
+        document.getElementById("letters").textContent = error.formatLetters();
+        document.getElementById("examples").innerHTML =
+          error.generateLetterExamplesHTML();
+        document.getElementById("letterHelp").hidden = false;
+      }
+
+      function renderGlyphs(containerId, units) {
+        const container = document.getElementById(containerId);
+        for (const unit of units) {
+          const cell = document.createElement("div");
+          const glyph = document.createElement("span");
+          glyph.className = "baybayin";
+          glyph.textContent = convertToUnicode([unit]);
+          const label = document.createElement("span");
+          label.textContent = unit;
+          cell.append(glyph, label);
+          container.append(cell);
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p><a href="../">← Back to GuhitKudlit</a></p>
+        <h1>Help</h1>
+      </header>
+
+      <div id="letterHelp" hidden>
+        <p>Can't unambiguously convert this letter: <em id="letters"></em></p>
+        <p>There is no direct baybayin equivalent for the said letter.</p>
+        <p>
+          You can write it first in the Tagalog alphabet (abakada). For
+          example:
+        </p>
+        <ul id="examples" class="examples"></ul>
+      </div>
+
+      <section>
+        <h2>How baybayin works</h2>
+        <p>
+          Baybayin is an <strong>abugida</strong>: each consonant character
+          carries a built-in “a” sound. There are three vowels:
+        </p>
+        <div id="vowelGlyphs" class="glyphs"></div>
+        <p>and fourteen consonants:</p>
+        <div id="consonantGlyphs" class="glyphs"></div>
+        <p>
+          A mark called the <strong>kudlit</strong> changes the vowel. Above
+          the character, it makes an “e/i” sound. Below, it makes an “o/u”
+          sound. A final mark after the character removes the vowel entirely.
+        </p>
+        <div id="kudlitGlyphs" class="glyphs"></div>
+      </section>
+
+      <section>
+        <h2>Letters without a baybayin character</h2>
+        <p>
+          Baybayin has no characters for C, F, J, Q, V, X, and Z. Spell the
+          word the way it sounds in the Tagalog alphabet (abakada) instead.
+        </p>
+        <div id="letterList"></div>
+      </section>
+
+      <section>
+        <h2>How your text is converted</h2>
+        <ul class="tips">
+          <li>E is written as I, and O is written as U. They share a kudlit.</li>
+          <li>R is written with the DA character.</li>
+          <li>
+            Repeated letters are written once, e.g. <kbd>Anna</kbd> becomes
+            <kbd>Ana</kbd>.
+          </li>
+          <li>
+            <kbd>ng</kbd> and <kbd>mga</kbd> are written with their traditional
+            spellings.
+          </li>
+          <li>Accents are dropped, and punctuation is ignored.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
