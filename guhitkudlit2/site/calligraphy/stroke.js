@@ -333,7 +333,7 @@ function calculateTerminalControl(
     return { x: handleX * scale, y: handleY * scale };
   } else if (isFreeTerminal(terminal)) {
     // free terminal
-    const x = terminal.isKudlit ? -0.4 : 0.4;
+    const x = terminal.isKudlit ? -0.4 : 0.1;
     const y = terminal.isKudlit ? -0.2 : 0.6;
     return { x: isStrokeStart ? x : -x, y: isStrokeStart ? y : -y };
   } else {

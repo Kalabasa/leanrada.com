@@ -130,7 +130,17 @@ export function TransliterationForm({
       }
       .transliterationFormInputHighlighted {
         /* fixme: css organisation */
-        border-color: var(--color-green) !important;
+        border-color: transparent !important;
+        background-image:
+          linear-gradient(var(--color-bg), var(--color-bg)),
+          linear-gradient(
+            to right,
+            var(--color-orange),
+            #000,
+            var(--color-green)
+          );
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
       }
     </style>
     <form class="transliterationForm" action="javascript:false">
