@@ -107,7 +107,6 @@ export function compose(glyphStrokesList) {
       Math.min(maxComposeSteps, maxComposeSteps * (1.2 - glyphs.length / 20)),
     ),
   );
-  console.log({ steps });
   for (let step = 0; step < steps; step++) {
     for (const glyph of glyphs) {
       for (const vertex of glyph.vertices) {
