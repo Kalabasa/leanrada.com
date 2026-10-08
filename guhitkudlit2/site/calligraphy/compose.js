@@ -15,9 +15,9 @@ const springStrength = 0.2;
 const squeezeStrengthX = 0.22;
 const squeezeStrengthY = 0.31;
 const kudlitGravityX = 0.03;
-const kudlitGravityY = 0.05;
-const kudlitPushFactor = 1.15;
-const composeSteps =
+const kudlitGravityY = 0.04;
+const kudlitPushFactor = 1.2;
+const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
 /**
@@ -101,7 +101,13 @@ export function compose(glyphStrokesList) {
   const center = calculateCentroid(glyphs);
   const extent = calculateDiagonalExtent(glyphs);
 
-  const steps = composeSteps;
+  const steps = Math.floor(
+    Math.max(
+      0,
+      Math.min(maxComposeSteps, maxComposeSteps * (1.2 - glyphs.length / 20)),
+    ),
+  );
+  console.log({ steps });
   for (let step = 0; step < steps; step++) {
     for (const glyph of glyphs) {
       for (const vertex of glyph.vertices) {

@@ -154,6 +154,7 @@ export function TransliterationForm({
           )}
           type="text"
           placeholder="kalabasa"
+          maxlength="30"
           value=${inputText}
           onInput=${onInput}
         />
