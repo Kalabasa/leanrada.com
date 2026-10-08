@@ -262,7 +262,6 @@ function addKudlit(glyph, vowel) {
 
 function addVirama(glyph) {
   const lastColumn = glyph.map[1].length - 1;
-  const centerX = lastColumn / 2;
   const rightX = Math.max(
     ...glyph.map
       .map((glyphRow) => glyphRow[lastColumn])
@@ -282,14 +281,14 @@ function addVirama(glyph) {
     adjacency: new Map(),
   };
   const viramaMiddle = {
-    x: (rightX + centerX) / 2 + 1,
+    x: rightX * 0.8 + 1,
     y: 3.5,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),
   };
   const viramaEnd = {
-    x: centerX - 0.5,
+    x: rightX * 0.2,
     y: 4,
     terminal: false,
     isKudlit: true,
@@ -301,7 +300,7 @@ function addVirama(glyph) {
   viramaEnd.adjacency.set(viramaMiddle, { type: undefined });
   glyph.map[0][lastColumn + 1] = viramaStart;
   glyph.map[4][lastColumn + 1] = viramaMiddle;
-  glyph.map[4][Math.floor(centerX)] = viramaEnd;
+  glyph.map[4][Math.floor(viramaEnd.x)] = viramaEnd;
 }
 
 /**

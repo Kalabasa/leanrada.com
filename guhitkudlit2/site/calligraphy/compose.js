@@ -12,7 +12,8 @@ const composeStepsOverride = Number.parseInt(
 const pushStrength = 0.14;
 const pushDistScale = 3;
 const springStrength = 0.3;
-const squeezeStrength = 0.22;
+const squeezeStrengthX = 0.22;
+const squeezeStrengthY = 0.44;
 const kudlitGravityX = 0.03;
 const kudlitGravityY = 0.04;
 const kudlitPushFactor = 2;
@@ -113,13 +114,14 @@ export function compose(glyphStrokesList) {
     }
 
     const springFactor = springStrength * Math.sqrt((steps - step) / steps);
-    const squeezeFactor =
-      squeezeStrength * (((steps - step) / steps) ** 2 / Math.sqrt(extent));
+    const squeezeFactor = ((steps - step) / steps) ** 2 / Math.sqrt(extent);
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);
-      const centerDx = (center.x - centroid.x) * squeezeFactor;
-      const centerDy = (center.y - centroid.y) * squeezeFactor;
+      const centerDx =
+        (center.x - centroid.x) * squeezeStrengthX * squeezeFactor;
+      const centerDy =
+        (center.y - centroid.y) * squeezeStrengthY * squeezeFactor;
 
       for (const vertex of glyph.vertices) {
         // pull back to original shape
@@ -185,7 +187,7 @@ export function compose(glyphStrokesList) {
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
         const pushAmount =
-          pushStrength / ((pushDistScale * 0.4 * dist) ** 2 + 1);
+          pushStrength / ((pushDistScale * 0.6 * dist) ** 2 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         for (const vertex of glyph.vertices) {
