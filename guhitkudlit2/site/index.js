@@ -4,19 +4,27 @@ import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
 import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
-import { when } from "./lib/mobx.js";
+import { observable, when } from "./lib/mobx.js";
+import { createFileForm } from "./file/form.js";
 
-const { TransliterationForm, observableBaybayinUnits } =
-  createTransliterationForm();
-
-const { Canvas, canvasRef } = createCanvas(observableBaybayinUnits);
+const { TransliterationForm, baybayinUnits } = createTransliterationForm();
+const { Canvas, canvasRef } = createCanvas(baybayinUnits);
+const calligraphyComplete = observable.box(false);
+const { FileForm } = createFileForm(canvasRef, calligraphyComplete);
 
 when(
-  () => observableBaybayinUnits.get().length > 0,
+  () => baybayinUnits.get().length > 0,
   async () => {
     const { installCalligraphy } = await import("./calligraphy/calligraphy.js");
-    installCalligraphy(observableBaybayinUnits, canvasRef);
-  }
+    const onProgress = (progress) => {
+      if (progress === "start") {
+        calligraphyComplete.set(false);
+      } else if (progress === "complete") {
+        calligraphyComplete.set(true);
+      }
+    };
+    installCalligraphy(baybayinUnits, canvasRef, onProgress);
+  },
 );
 
 export function Index() {
@@ -84,7 +92,9 @@ export function Index() {
         <${AppPanel} title=${html`<h2>Style</h2>`}>style<//>
       </aside>
       <aside class="appFilePanelArea">
-        <${AppPanel} title=${html`<h2>File</h2>`}>file<//>
+        <${AppPanel} title=${html`<h2>File</h2>`}>
+          <${FileForm} />
+        <//>
       </aside>
     </div>
   `;

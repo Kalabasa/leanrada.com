@@ -70,7 +70,7 @@ export function createTransliterationForm() {
 
   return {
     TransliterationForm: TransliterationFormImpl,
-    observableBaybayinUnits: baybayinUnits,
+    baybayinUnits,
   };
 }
 

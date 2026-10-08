@@ -5,7 +5,11 @@ import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
 import { Brush } from "./painters/brush.js";
 
-export function installCalligraphy(observableBaybayinUnits, canvasRef) {
+export function installCalligraphy(
+  observableBaybayinUnits,
+  canvasRef,
+  onProgress,
+) {
   // todo: lazy load painter by selected style
   const painter = new Brush();
   let drawingAbortController;
@@ -13,10 +17,12 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
     () => observableBaybayinUnits.get(),
     () => {
       drawingAbortController?.abort();
+      onProgress("start");
       if (!canvasRef.current) return;
       const context = canvasRef.current.getContext("2d");
       context.reset();
-      context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, context.canvas.width, context.canvas.height);
     },
   );
   reaction(
@@ -25,13 +31,16 @@ export function installCalligraphy(observableBaybayinUnits, canvasRef) {
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
       const context = canvasRef.current.getContext("2d");
-      drawingAbortController = new AbortController();
-      drawCalligraphy(
+      const abortController = new AbortController();
+      drawingAbortController = abortController;
+      await drawCalligraphy(
         baybayinUnits,
         painter,
         context,
-        drawingAbortController.signal,
+        abortController.signal,
       );
+      if (abortController.signal.aborted) return;
+      onProgress("complete");
     }, 400),
     { fireImmediately: true },
   );

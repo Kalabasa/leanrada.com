@@ -3,10 +3,10 @@ import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
 import { observable, when } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 
-export function createCanvas(observableBaybayinUnits) {
+export function createCanvas(baybayinUnits) {
   const showPlaceholder = observable.box(true);
   when(
-    () => observableBaybayinUnits.get().length > 0,
+    () => baybayinUnits.get().length > 0,
     () => showPlaceholder.set(false),
   );
 
