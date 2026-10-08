@@ -13,10 +13,10 @@ const pushStrength = 0.14;
 const pushDistScale = 3;
 const springStrength = 0.3;
 const squeezeStrengthX = 0.22;
-const squeezeStrengthY = 0.44;
+const squeezeStrengthY = 0.31;
 const kudlitGravityX = 0.03;
 const kudlitGravityY = 0.04;
-const kudlitPushFactor = 2;
+const kudlitPushFactor = 1.15;
 const composeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -187,7 +187,7 @@ export function compose(glyphStrokesList) {
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
         const pushAmount =
-          pushStrength / ((pushDistScale * 0.6 * dist) ** 2 + 1);
+          pushStrength / ((pushDistScale * 0.6 * dist) ** 4 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         for (const vertex of glyph.vertices) {

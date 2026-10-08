@@ -233,10 +233,10 @@ function addKudlit(glyph, vowel) {
   let kudlitRow, y;
   if ("ei".includes(vowel)) {
     kudlitRow = 0;
-    y = 0.25;
+    y = 0.5;
   } else {
     kudlitRow = 4;
-    y = 3.75;
+    y = 3.5;
   }
 
   const centerX = (glyph.map[1].length - 1) / 2;
@@ -275,7 +275,7 @@ function addVirama(glyph) {
   );
   const viramaStart = {
     x: rightX + 1,
-    y: 0,
+    y: 1,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),
@@ -288,7 +288,7 @@ function addVirama(glyph) {
     adjacency: new Map(),
   };
   const viramaEnd = {
-    x: rightX * 0.2,
+    x: rightX * 0.4,
     y: 4,
     terminal: false,
     isKudlit: true,
@@ -298,7 +298,7 @@ function addVirama(glyph) {
   viramaMiddle.adjacency.set(viramaStart, { type: undefined });
   viramaMiddle.adjacency.set(viramaEnd, { type: undefined });
   viramaEnd.adjacency.set(viramaMiddle, { type: undefined });
-  glyph.map[0][lastColumn + 1] = viramaStart;
+  glyph.map[1][lastColumn + 1] = viramaStart;
   glyph.map[4][lastColumn + 1] = viramaMiddle;
   glyph.map[4][Math.floor(viramaEnd.x)] = viramaEnd;
 }
