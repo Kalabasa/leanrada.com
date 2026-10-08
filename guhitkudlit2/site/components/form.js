@@ -92,7 +92,10 @@ export function Button({ class: className, tag = "button", ...props }) {
         background: var(--color-fg);
       }
       .formButton:disabled {
-        opacity: var(--opacity-secondary);
+        opacity: var(--opacity-tertiary);
+      }
+      .formButtonPrimaryVariant {
+        background: var(--color-green-darker);
       }
       .formButtonDangerVariant {
         background: var(--color-danger);
@@ -107,6 +110,8 @@ export function Button({ class: className, tag = "button", ...props }) {
 
 function getVariantClass(variant) {
   switch (variant) {
+    case "primary":
+      return "formButtonPrimaryVariant";
     case "danger":
       return "formButtonDangerVariant";
   }

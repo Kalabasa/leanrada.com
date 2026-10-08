@@ -55,6 +55,7 @@ export function createFileControls(canvasRef, inputText, calligraphyComplete) {
       <div class="fileControls">
         <${Button}
           class="fileControlsButton"
+          variant="primary"
           onClick=${downloadCanvas}
           disabled=${!calligraphyComplete.get()}
         >

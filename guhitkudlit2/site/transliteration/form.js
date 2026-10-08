@@ -128,12 +128,10 @@ export function TransliterationForm({
 
   let tooltipContent = null;
   if (error && error instanceof InvalidLetterError) {
-    const helpLink = "./help/#" + error.letters.join("").toUpperCase();
+    const helpLink = "./help/#" + encodeURIComponent(inputText);
     tooltipContent = [
-      "Can't convert letter: " + error.formatLetters() + ". ",
-      html`<a class="transliterationTooltipLink" href=${helpLink}
-        >Learn more</a
-      >`,
+      `One more step, let’s write ${error.formatLetters()} the Baybayin way. `,
+      html`<a class="transliterationTooltipLink" href=${helpLink}>Guide</a>`,
     ];
   } else if (highlight && !inputText && !isFocused) {
     tooltipContent = "Type your word here!";

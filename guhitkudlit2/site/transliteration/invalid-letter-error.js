@@ -4,14 +4,13 @@ export class InvalidLetterError extends Error {
   constructor(letters) {
     super();
     if (!Array.isArray(letters)) throw new TypeError();
-    this.letters = letters;
+    this.letters = Array.from(
+      new Set(letters.map((letter) => letter.replaceAll("<", ""))),
+    );
   }
 
   formatLetters() {
-    return Array.from(new Set(this.letters))
-      .join(", ")
-      .replace("<", "") // sanitize
-      .toUpperCase();
+    return this.letters.join(", ").toUpperCase();
   }
 
   generateLetterExamplesHTML() {
@@ -53,7 +52,7 @@ const letterExamples = {
 };
 
 function generateLetterExamplesHTML(letters) {
-  return Array.from(new Set(letters))
+  return letters
     .flatMap((l) =>
       letterExamples[l].map(
         ([before, after]) =>
@@ -61,8 +60,8 @@ function generateLetterExamplesHTML(letters) {
           before +
           "</span>→<span class='after'>" +
           after +
-          "</span></li>"
-      )
+          "</span></li>",
+      ),
     )
     .sort()
     .join("");
