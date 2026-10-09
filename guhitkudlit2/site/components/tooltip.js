@@ -16,7 +16,7 @@ export function Tooltip({ anchorName, direction, children }) {
         border-radius: var(--size-xs);
         background: #000;
         color: #fff;
-        box-shadow: var(--shadow-l);
+        box-shadow: var(--shadow-m);
         z-index: 10;
       }
     </style>

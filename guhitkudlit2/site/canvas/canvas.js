@@ -59,7 +59,7 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
       .canvas {
         grid-area: 1 / 1 / -1 / -1;
         background: white;
-        box-shadow: var(--shadow-l);
+        box-shadow: var(--shadow-m);
         border-radius: 3px;
         width: 100%;
         height: 100%;

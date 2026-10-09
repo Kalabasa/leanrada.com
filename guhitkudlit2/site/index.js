@@ -6,9 +6,9 @@ import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
 import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
-import { createStyleControls } from "./style/controls.js";
+import { createSpellingControls } from "./spelling/controls.js";
 
-const { StyleControls, viramaStyle, separateRa, precolonial } = createStyleControls();
+const { SpellingControls, viramaStyle, separateRa, precolonial } = createSpellingControls();
 const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm(viramaStyle, separateRa, precolonial);
 const { Canvas, canvasRef } = createCanvas(baybayinUnits);
 const calligraphyComplete = observable.box(false);
@@ -42,7 +42,7 @@ export function Index() {
         grid-template-columns: ${panelColumnWidth} ${panelColumnWidth} 1fr ${panelColumnWidth};
         grid-template-areas:
           "canvas canvas canvas canvas"
-          "input style - file";
+          "input spelling - file";
         grid-gap: var(--size-m);
         padding: var(--size-m) var(--size-m) 0;
         height: 100vh;
@@ -70,8 +70,8 @@ export function Index() {
       .appInputPanelArea {
         grid-area: input;
       }
-      .appStylePanelArea {
-        grid-area: style;
+      .appSpellingPanelArea {
+        grid-area: spelling;
       }
       .appFilePanelArea {
         grid-area: file;
@@ -90,9 +90,12 @@ export function Index() {
           <${TransliterationForm} />
         <//>
       </aside>
-      <aside class="appStylePanelArea">
-        <${AppPanel} title=${html`<h2>Style</h2>`}>
-          <${StyleControls} inputText=${inputText} />
+      <aside class="appSpellingPanelArea">
+        <${AppPanel} title=${html`<h2>Spelling</h2>`}>
+          <${SpellingControls}
+            inputText=${inputText}
+            baybayinUnits=${baybayinUnits}
+          />
         <//>
       </aside>
       <aside class="appFilePanelArea">

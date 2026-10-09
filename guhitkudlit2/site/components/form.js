@@ -95,7 +95,7 @@ export function Button({ class: className, tag = "button", ...props }) {
         opacity: var(--opacity-tertiary);
       }
       .formButtonPrimaryVariant {
-        background: var(--color-green-darker);
+        background: var(--color-orange-darker);
       }
       .formButtonDangerVariant {
         background: var(--color-danger);

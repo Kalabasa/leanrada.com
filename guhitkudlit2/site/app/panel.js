@@ -17,7 +17,7 @@ export function AppPanel({ title, children }) {
         text-transform: uppercase;
         font-weight: bold;
         font-size: var(--font-size-s);
-        box-shadow: var(--shadow-l);
+        box-shadow: var(--shadow-m);
         position: relative;
         z-index: 2;
       }
@@ -35,7 +35,7 @@ export function AppPanel({ title, children }) {
         padding: var(--size-s);
         background: var(--color-bg);
         border-radius: 0 var(--size-s) 0 0;
-        box-shadow: var(--shadow-l);
+        box-shadow: var(--shadow-m);
         z-index: 1;
       }
     </style>

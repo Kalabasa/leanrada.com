@@ -1,0 +1,213 @@
+import { html } from "../components/html.js";
+import { observable } from "../lib/mobx.js";
+import { observer } from "../util/observer.js";
+import { LabelText } from "../typography/text.js";
+import { useEffect, useRef } from "../lib/htm-preact.js";
+import { hasVirama } from "../transliteration/syllabicate.js";
+import { classes } from "../util/classes.js";
+
+export function createSpellingControls() {
+  const viramaStyle = observable.box("pamudpod");
+  const separateRa = observable.box(false);
+  const precolonial = observable.box(false);
+
+  const SpellingControls = observer(
+    ({ inputText, baybayinUnits }) => html`
+      <style id=${SpellingControls.name}>
+        .spellingControls {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+          height: 100%;
+          padding: var(--size-xs);
+        }
+        .spellingControl {
+          transition: opacity 0.6s ease-out;
+        }
+        .spellingControlDimmed {
+          opacity: var(--opacity-tertiary);
+        }
+        .spellingOptions {
+          display: flex;
+        }
+        .spellingOption {
+          flex: 1 1 1%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: var(--size-xs);
+          background: #fff;
+          cursor: pointer;
+          border: solid 2px #fff;
+          font-size: var(--font-size-s);
+          font-weight: bold;
+          &:first-child {
+            border-top-left-radius: var(--size-xs);
+            border-bottom-left-radius: var(--size-xs);
+          }
+          &:last-child {
+            border-top-right-radius: var(--size-xs);
+            border-bottom-right-radius: var(--size-xs);
+          }
+          &:has(input:checked) {
+            border: solid 2px var(--color-orange-darker);
+          }
+          &:not(:has(input:checked)) {
+            filter: brightness(0.98);
+            &:hover {
+              filter: brightness(0.96);
+            }
+            &:active {
+              filter: brightness(0.94);
+            }
+          }
+          input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+          }
+        }
+      </style>
+      <div class="spellingControls">
+        <div class="spellingControl">
+          <${LabelText}>Syllabication<//>
+          <div class="spellingOptions">
+            <label class="spellingOption">
+              <input
+                type="radio"
+                name="precolonial"
+                value="colonial"
+                checked=${!precolonial.get()}
+                onChange=${() => precolonial.set(false)}
+              />
+              <${SpellingPreview}
+                baybayinUnits=${["ba", "y"]}
+                viramaStyle="pamudpod"
+              />
+              colonial
+            </label>
+            <label class="spellingOption">
+              <input
+                type="radio"
+                name="precolonial"
+                value="precolonial"
+                checked=${precolonial.get()}
+                onChange=${() => precolonial.set(true)}
+              />
+              <${SpellingPreview} baybayinUnits=${["ba"]} viramaStyle="pamudpod" />
+              precolonial
+            </label>
+          </div>
+        </div>
+        <div
+          class=${classes(
+            "spellingControl",
+            (!hasVirama(baybayinUnits.get()) || precolonial.get()) &&
+              "spellingControlDimmed",
+          )}
+        >
+          <${LabelText}>Virama<//>
+          <div class="spellingOptions">
+            <label class="spellingOption">
+              <input
+                type="radio"
+                name="viramaStyle"
+                value="pamudpod"
+                checked=${viramaStyle.get() === "pamudpod"}
+                onChange=${() => viramaStyle.set("pamudpod")}
+              />
+              <${SpellingPreview} baybayinUnits=${["k"]} viramaStyle="pamudpod" />
+              pamudpod
+            </label>
+            <label class="spellingOption">
+              <input
+                type="radio"
+                name="viramaStyle"
+                value="krus"
+                checked=${viramaStyle.get() === "krus"}
+                onChange=${() => viramaStyle.set("krus")}
+              />
+              <${SpellingPreview} baybayinUnits=${["k"]} viramaStyle="krus" />
+              krus
+            </label>
+          </div>
+        </div>
+        <div
+          class=${classes(
+            "spellingControl",
+            !inputText.get().includes("r") && "spellingControlDimmed",
+          )}
+        >
+          <${LabelText}>Distinct R<//>
+          <div class="spellingOptions">
+            <label class="spellingOption">
+              <input
+                type="radio"
+                name="separateRa"
+                value="da"
+                checked=${!separateRa.get()}
+                onChange=${() => separateRa.set(false)}
+              />
+              <${SpellingPreview} baybayinUnits=${["da"]} viramaStyle="krus" />
+              traditional
+            </label>
+            <label class="spellingOption">
+              <input
+                type="radio"
+                name="separateRa"
+                value="ra"
+                checked=${separateRa.get()}
+                onChange=${() => separateRa.set(true)}
+              />
+              <${SpellingPreview} baybayinUnits=${["ra"]} viramaStyle="krus" />
+              modern
+            </label>
+          </div>
+        </div>
+      </div>
+    `,
+  );
+
+  return { SpellingControls, viramaStyle, separateRa, precolonial };
+}
+
+function SpellingPreview({ baybayinUnits, viramaStyle }) {
+  const canvasRef = useRef();
+  useEffect(() => {
+    const abortController = new AbortController();
+    drawSpellingPreview(
+      canvasRef.current,
+      baybayinUnits,
+      viramaStyle,
+      abortController.signal,
+    );
+    return () => abortController.abort();
+  }, []);
+  return html`<canvas
+    ref=${canvasRef}
+    width=${baybayinUnits.length * 30}
+    height="30"
+  />`;
+}
+
+async function drawSpellingPreview(
+  canvas,
+  baybayinUnits,
+  viramaStyle,
+  abortSignal,
+) {
+  const [{ layoutCalligraphy }, { BasePainter }] = await Promise.all([
+    import("../calligraphy/calligraphy.js"),
+    import("../calligraphy/painter.js"),
+  ]);
+  const { path, cellSize } = await layoutCalligraphy(baybayinUnits, canvas, {
+    viramaStyle,
+    maxComposeSteps: 5,
+  });
+  if (abortSignal.aborted) return;
+  for (const _ of new BasePainter().drawPaths(
+    path,
+    cellSize * 25,
+    canvas.getContext("2d"),
+  ));
+}

@@ -1,5 +1,6 @@
 import { DEBUG } from "../app/flags.js";
 import { comparer, computed, reaction } from "../lib/mobx.js";
+import { hasVirama } from "../transliteration/syllabicate.js";
 import { debounce } from "../util/debounce.js";
 import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
@@ -28,10 +29,9 @@ export function installCalligraphy(
     () => {
       const b = baybayinUnits.get();
       const v = viramaStyle.get();
-      const needsVirama = b.some((u) => u !== " " && !u.match(/[aeiou]/));
       return {
         baybayinUnits: b,
-        viramaStyle: needsVirama ? v : "krus",
+        viramaStyle: hasVirama(b) ? v : "krus",
       };
     },
     { equals: comparer.structural },
@@ -89,6 +89,35 @@ export async function drawCalligraphy(
   canvasContext,
   abortSignal,
 ) {
+  const { path, cellSize } = await layoutCalligraphy(
+    baybayinUnits,
+    canvasContext.canvas,
+    { viramaStyle },
+  );
+  if (abortSignal.aborted) return;
+
+  let drawStep = 0;
+  const drawInterval = DEBUG
+    ? 0
+    : Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2));
+  for (const _ of painter.drawPaths(path, cellSize, canvasContext)) {
+    if (drawStep++ % drawInterval === 0) await delay(22);
+    if (abortSignal.aborted) return;
+  }
+}
+
+/**
+ * @param {string[]} baybayinUnits
+ * @param {HTMLCanvasElement} canvas
+ * @param {object} opts
+ * @param {"krus" | "pamudpod"} opts.viramaStyle
+ * @param {number} [opts.maxComposeSteps]
+ */
+export async function layoutCalligraphy(
+  baybayinUnits,
+  canvas,
+  { viramaStyle, maxComposeSteps },
+) {
   const [
     { getGlyph },
     { layoutLine },
@@ -102,7 +131,6 @@ export async function drawCalligraphy(
     import("./compose.js"),
     import("./path.js"),
   ]);
-  if (abortSignal.aborted) return;
 
   const lines = [[]];
   for (const unit of baybayinUnits) {
@@ -135,36 +163,25 @@ export async function drawCalligraphy(
 
   const glyphStrokesList = layout2D.map(traceStrokes);
 
-  compose(glyphStrokesList);
+  compose(glyphStrokesList, { maxComposeSteps });
 
   const strokes = samplePaths(glyphStrokesList);
   const vertices = strokes.flatMap((stroke) => stroke.vertices);
 
   const layoutBounds = getBounds(vertices);
   const cellSize = Math.min(
-    canvasContext.canvas.width / (layoutBounds.width + 1),
-    canvasContext.canvas.height / (layoutBounds.height + 1),
+    canvas.width / (layoutBounds.width + 1),
+    canvas.height / (layoutBounds.height + 1),
   );
 
   const path = strokes.map((stroke) => ({
     vertices: stroke.vertices.map((vertex) => ({
-      x:
-        canvasContext.canvas.width / 2 +
-        (vertex.x - layoutBounds.centerX) * cellSize,
-      y:
-        canvasContext.canvas.height / 2 +
-        (vertex.y - layoutBounds.centerY) * cellSize,
+      x: canvas.width / 2 + (vertex.x - layoutBounds.centerX) * cellSize,
+      y: canvas.height / 2 + (vertex.y - layoutBounds.centerY) * cellSize,
     })),
   }));
 
-  let drawStep = 0;
-  const drawInterval = DEBUG
-    ? 0
-    : Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2));
-  for (const _ of painter.drawPaths(path, cellSize, canvasContext)) {
-    if (drawStep++ % drawInterval === 0) await delay(22);
-    if (abortSignal.aborted) return;
-  }
+  return { path, cellSize };
 }
 
 function getBounds(vertices) {

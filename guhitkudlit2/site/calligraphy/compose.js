@@ -22,8 +22,11 @@ const maxComposeSteps =
 
 /**
  * @param {GlyphStrokes[]} glyphStrokesList
+ * @param {{
+ *   maxComposeSteps: number
+ * }} opts
  */
-export function compose(glyphStrokesList) {
+export function compose(glyphStrokesList, opts = {}) {
   const glyphs = glyphStrokesList.map(({ strokes }) => {
     const vertices = strokes
       .flatMap((stroke) => stroke.vertices)
@@ -105,7 +108,11 @@ export function compose(glyphStrokesList) {
   const steps = Math.floor(
     Math.max(
       0,
-      Math.min(maxComposeSteps, maxComposeSteps * (1.2 - glyphs.length / 20)),
+      Math.min(
+        maxComposeSteps,
+        opts?.maxComposeSteps ?? Infinity,
+        maxComposeSteps * (1.2 - glyphs.length / 20),
+      ),
     ),
   );
   for (let step = 0; step < steps; step++) {

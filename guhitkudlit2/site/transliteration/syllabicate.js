@@ -84,11 +84,20 @@ export function syllabicate(phrase, how = {}) {
     }
 
     if (how?.precolonial) {
-      baybayinUnits = baybayinUnits.filter((u) => u.match(/[aeiou]/));
+      baybayinUnits = baybayinUnits.filter((u) => u === " " || !hasVirama(u));
     }
 
     return [...wordBoundary, ...baybayinUnits];
   });
+}
+
+/** @param {string[]|string} baybayin */
+export function hasVirama(baybayin) {
+  if (Array.isArray(baybayin)) {
+    return baybayin.some((u) => hasVirama(u));
+  } else {
+    return baybayin.match(/^.(?![aeiou])/);
+  }
 }
 
 function isVowel(letter) {
