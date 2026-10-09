@@ -67,7 +67,10 @@ const map = {
 
 /**
  * @param {Array<keyof map>} romanizedBaybayinUnits
+ * @param {"krus" | "pamudpod"} viramaStyle
  */
-export function convertToUnicode(romanizedBaybayinUnits) {
-  return romanizedBaybayinUnits.map((unit) => map[unit]).join("");
+export function convertToUnicode(romanizedBaybayinUnits, viramaStyle) {
+  const unicode = romanizedBaybayinUnits.map((unit) => map[unit]).join("");
+  if (viramaStyle === "krus") return unicode.replaceAll("᜕", "᜔");
+  return unicode;
 }

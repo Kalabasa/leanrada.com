@@ -11,7 +11,7 @@ import { InvalidLetterError } from "./invalid-letter-error.js";
 
 const memo = Symbol("memo");
 
-export function createTransliterationForm() {
+export function createTransliterationForm(viramaStyle) {
   const initialText = new URLSearchParams(location.search).get("word") ?? "";
   const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
@@ -69,7 +69,10 @@ export function createTransliterationForm() {
       <${TransliterationForm}
         inputText=${inputText.get()}
         syllabication=${syllabication}
-        baybayin=${lazyConvertToUnicode(unicodeFilter(baybayinUnits.get()))}
+        baybayin=${lazyConvertToUnicode(
+          unicodeFilter(baybayinUnits.get()),
+          viramaStyle.get(),
+        )}
         highlight=${highlight.get()}
         error=${syllabicateError.get()}
         onInput=${onInput}
@@ -103,7 +106,7 @@ function formatSyllabication(baybayinUnits) {
   return syllabication;
 }
 
-function lazyConvertToUnicode(baybayinUnits) {
+function lazyConvertToUnicode(baybayinUnits, viramaStyle) {
   if (baybayinUnits.length === 0) return "";
 
   if (!lazyConvertToUnicode[memo]) {
@@ -112,7 +115,7 @@ function lazyConvertToUnicode(baybayinUnits) {
     });
   }
 
-  return lazyConvertToUnicode[memo]?.(baybayinUnits) ?? "";
+  return lazyConvertToUnicode[memo]?.(baybayinUnits, viramaStyle) ?? "";
 }
 
 // Hide final kudlit or the 'n' in 'ng', looks better while typing
