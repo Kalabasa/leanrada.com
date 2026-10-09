@@ -96,7 +96,7 @@ export function hasVirama(baybayin) {
   if (Array.isArray(baybayin)) {
     return baybayin.some((u) => hasVirama(u));
   } else {
-    return baybayin.match(/^.(?![aeiou])/);
+    return baybayin.match(/^[^aeiou ](?![aeiou])/);
   }
 }
 

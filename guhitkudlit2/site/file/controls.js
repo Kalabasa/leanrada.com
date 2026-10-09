@@ -20,9 +20,7 @@ export function createFileControls(
   }
 
   async function downloadHiresCanvas() {
-    const { drawCalligraphy } = await import(
-      "../calligraphy/calligraphy.js"
-    );
+    const { drawCalligraphy } = await import("../calligraphy/calligraphy.js");
     const hiresCanvas = document.createElement("canvas");
     hiresCanvas.width = canvasRef.current.width * 2;
     hiresCanvas.height = canvasRef.current.height * 2;
@@ -55,27 +53,26 @@ export function createFileControls(
           flex-direction: column;
           justify-content: center;
           align-items: stretch;
-          padding: var(--size-m) var(--size-m) var(--size-s);
+          padding: var(--size-m) var(--size-m) 0;
           height: 100%;
           gap: var(--size-s);
         }
         .fileControlsButton {
           text-align: center;
         }
-        .fileControlsFirstBottomRow {
-          margin-top: auto;
-        }
         .fileControlsSocial {
+          margin-top: auto;
           font-size: var(--font-size-s);
           display: flex;
           justify-content: center;
+          align-items: center;
           gap: var(--size-m);
+          color: var(--color-fg-secondary);
         }
         .fileControlsSocialLink {
           display: inline-flex;
-          gap: var(--size-xs);
-          align-items: center;
           text-decoration: underline;
+          color: var(--color-orange-darker);
         }
       </style>
       <div class="fileControls">
@@ -92,7 +89,7 @@ export function createFileControls(
           onClick=${downloadHiresCanvas}
           disabled=${!calligraphyComplete.get()}
         >
-          Save hi-res image
+          Save HD image
         <//>
         ${navigator.share &&
         html`<${Button}
@@ -102,17 +99,14 @@ export function createFileControls(
         >
           Share image
         <//>`}
-        <div class="fileControlsSocial fileControlsFirstBottomRow">
+        <div class="fileControlsSocial">
           <a
             class="fileControlsSocialLink"
             href="https://www.instagram.com/guhitkudlit/"
             target="_blank"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24">
+          ><svg width="24" height="24" viewBox="0 0 24 24">
               <use href=${instagramIconUrl} />
-            </svg>
-            @guhitkudlit
-          </a>
+            </svg></a>
           <a
             class="fileControlsSocialLink"
             href="mailto:guhitkudlit@leanrada.com"
@@ -121,10 +115,7 @@ export function createFileControls(
             <svg width="24" height="24" viewBox="0 0 24 24">
               <use href=${mailIconUrl} />
             </svg>
-            guhitkudlit@leanrada.com
           </a>
-        </div>
-        <div class="fileControlsSocial">
           <span>
             no AI. webapp made with ${"<3"} by${" "}
             <a
