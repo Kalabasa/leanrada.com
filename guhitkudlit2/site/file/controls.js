@@ -4,6 +4,7 @@ import { observer } from "../util/observer.js";
 
 const instagramIconUrl = new URL("./instagram.svg#icon", import.meta.url).href;
 const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
+const kofiIconUrl = new URL("./kofi.svg#icon", import.meta.url).href;
 
 export function createFileControls(
   canvasRef,
@@ -104,9 +105,15 @@ export function createFileControls(
             class="fileControlsSocialLink"
             href="https://www.instagram.com/guhitkudlit/"
             target="_blank"
-          ><svg width="24" height="24" viewBox="0 0 24 24">
+            ><svg width="24" height="24" viewBox="0 0 24 24">
               <use href=${instagramIconUrl} />
-            </svg></a>
+            </svg>
+          </a>
+          <a class="fileControlsSocialLink" href="#" target="_blank">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <use href=${kofiIconUrl} />
+            </svg>
+          </a>
           <a
             class="fileControlsSocialLink"
             href="mailto:guhitkudlit@leanrada.com"

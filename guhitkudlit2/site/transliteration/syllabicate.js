@@ -53,14 +53,21 @@ export function syllabicate(phrase, how = {}) {
         if (letter === "e") letter = "i";
         if (letter === "o") letter = "u";
 
-        if (currentUnit && isVowel(lastLetter)) {
-          baybayinUnits.push(currentUnit);
-          currentUnit = "";
+        currentUnit += letter;
+
+        if (how?.precolonial) {
+          currentUnit = collapseConsonant(currentUnit);
         }
 
-        currentUnit += letter;
+        baybayinUnits.push(currentUnit);
+        currentUnit = "";
       } else if (isConsonant(letter)) {
-        if (currentUnit && !(lastLetter === "n" && letter === "g")) {
+        if (
+          currentUnit &&
+          isConsonant(lastLetter) &&
+          !(lastLetter === "n" && letter === "g") &&
+          !how?.precolonial
+        ) {
           baybayinUnits.push(currentUnit);
           currentUnit = "";
         }
@@ -79,12 +86,8 @@ export function syllabicate(phrase, how = {}) {
       throw new InvalidLetterError(invalidChars);
     }
 
-    if (currentUnit) {
+    if (currentUnit && !how?.precolonial) {
       baybayinUnits.push(currentUnit);
-    }
-
-    if (how?.precolonial) {
-      baybayinUnits = baybayinUnits.filter((u) => u === " " || !hasVirama(u));
     }
 
     return [...wordBoundary, ...baybayinUnits];
@@ -96,7 +99,7 @@ export function hasVirama(baybayin) {
   if (Array.isArray(baybayin)) {
     return baybayin.some((u) => hasVirama(u));
   } else {
-    return baybayin.match(/^[^aeiou ](?![aeiou])/);
+    return baybayin.match(/[bkdghlmnprstwy]/) && !baybayin.match(/[aeiou]/);
   }
 }
 
@@ -112,4 +115,38 @@ function syllabicateSpecial(word) {
   if (word === "ng") return ["na", "ng"];
   if (word === "mga") return ["ma", "nga"];
   return null;
+}
+
+const consonantRanking = [
+  "ng",
+  "m",
+  "n",
+  "k",
+  "g",
+  "t",
+  "d",
+  "r",
+  "p",
+  "b",
+  "s",
+  "h",
+  "l",
+  "y",
+  "w",
+];
+
+function collapseConsonant(unit) {
+  const consonants = unit.match(/ng|[^aeiou]/g);
+  if (!consonants) return unit;
+  const vowel = unit.match(/[aeiou]$/)?.[0] ?? "";
+  let strongestConsonant = consonants[0];
+  for (const consonant of consonants) {
+    if (
+      consonantRanking.indexOf(consonant) <
+      consonantRanking.indexOf(strongestConsonant)
+    ) {
+      strongestConsonant = consonant;
+    }
+  }
+  return strongestConsonant + vowel;
 }

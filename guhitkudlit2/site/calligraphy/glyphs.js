@@ -321,13 +321,13 @@ function addPamudpod(glyph) {
   };
   const pamudpodMiddle = {
     x: rightX * 0.8 + 1,
-    y: 3.5,
+    y: 4,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),
   };
   const pamudpodEnd = {
-    x: rightX * 0.4,
+    x: rightX * 0.1,
     y: 4,
     terminal: false,
     isKudlit: true,
@@ -339,7 +339,7 @@ function addPamudpod(glyph) {
   pamudpodEnd.adjacency.set(pamudpodMiddle, { type: undefined });
   glyph.map[1][lastColumn + 1] = pamudpodStart;
   glyph.map[4][lastColumn + 1] = pamudpodMiddle;
-  glyph.map[4][Math.floor(pamudpodEnd.x)] = pamudpodEnd;
+  glyph.map[4][1] = pamudpodEnd;
 }
 
 function calculateRightX(glyph) {

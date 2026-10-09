@@ -324,7 +324,7 @@ function calculateTerminalControl(stroke, isStrokeStart) {
   } else if (isFreeTerminal(terminal)) {
     // free terminal
     if (isKudlit) {
-      return { x: 0, y: -0.2 };
+      return { x: 0, y: 0 };
     }
     const x = 0.1;
     const y = 0.6;

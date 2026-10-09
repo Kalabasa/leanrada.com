@@ -22,6 +22,7 @@ export function createSpellingControls() {
           padding: var(--size-xs);
         }
         .spellingControl {
+          anchor-scope: --spellingOptionActive;
           transition: opacity 0.6s ease-out;
         }
         .spellingControlDimmed {
@@ -29,6 +30,28 @@ export function createSpellingControls() {
         }
         .spellingOptions {
           display: flex;
+          position: relative;
+          &::before {
+            content: "";
+            background: #f0f0f0;
+            position: absolute;
+            inset: 0;
+            border-radius: var(--size-xs);
+            z-index: -2;
+          }
+          &::after {
+            content: "";
+            background: #fff;
+            border: solid 2px var(--color-orange-darker);
+            border-radius: var(--size-xs);
+            position: absolute;
+            inset: anchor(--spellingOptionActive top)
+              anchor(--spellingOptionActive right)
+              anchor(--spellingOptionActive bottom)
+              anchor(--spellingOptionActive left);
+            transition: inset 0.15s;
+            z-index: -1;
+          }
         }
         .spellingOption {
           flex: 1 1 1%;
@@ -36,29 +59,19 @@ export function createSpellingControls() {
           flex-direction: column;
           align-items: center;
           padding: var(--size-xs);
-          background: #fff;
           cursor: pointer;
-          border: solid 2px #fff;
           font-size: var(--font-size-s);
           font-weight: bold;
-          &:first-child {
-            border-top-left-radius: var(--size-xs);
-            border-bottom-left-radius: var(--size-xs);
-          }
-          &:last-child {
-            border-top-right-radius: var(--size-xs);
-            border-bottom-right-radius: var(--size-xs);
-          }
+          border-radius: var(--size-xs);
           &:has(input:checked) {
-            border: solid 2px var(--color-orange-darker);
+            anchor-name: --spellingOptionActive;
           }
           &:not(:has(input:checked)) {
-            filter: brightness(0.98);
             &:hover {
-              filter: brightness(0.96);
+              background: #0001;
             }
             &:active {
-              filter: brightness(0.94);
+              background: #0002;
             }
           }
           input {
