@@ -91,7 +91,7 @@ export class Brush extends BasePainter {
           );
       const distThreshold = 60;
       const targetZ =
-        -Math.min(1, Math.max(1 / distFromInit, distFromFinal / (distThreshold * scale))) *
+        -Math.min(1, Math.max(scale / distFromInit, distFromFinal / (distThreshold * scale))) *
         (0.5 + 0.5 * directionBias);
       zVel += (targetZ - z) * 0.005 - zVel * 0.14;
       z += zVel;

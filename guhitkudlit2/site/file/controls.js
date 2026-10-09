@@ -5,12 +5,37 @@ import { observer } from "../util/observer.js";
 const instagramIconUrl = new URL("./instagram.svg#icon", import.meta.url).href;
 const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
 
-export function createFileControls(canvasRef, inputText, calligraphyComplete) {
-  function downloadCanvas() {
+export function createFileControls(
+  canvasRef,
+  inputText,
+  baybayinUnits,
+  viramaStyle,
+  calligraphyComplete,
+) {
+  function downloadCanvas(canvas) {
     const link = document.createElement("a");
-    link.href = canvasRef.current.toDataURL("image/png");
+    link.href = canvas.toDataURL("image/png");
     link.download = formatFileName(inputText.get()) + ".png";
     link.click();
+  }
+
+  async function downloadHiresCanvas() {
+    const { drawCalligraphy } = await import(
+      "../calligraphy/calligraphy.js"
+    );
+    const hiresCanvas = document.createElement("canvas");
+    hiresCanvas.width = canvasRef.current.width * 2;
+    hiresCanvas.height = canvasRef.current.height * 2;
+    const context = hiresCanvas.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, hiresCanvas.width, hiresCanvas.height);
+    await drawCalligraphy(
+      baybayinUnits.get(),
+      context,
+      new AbortController().signal,
+      { viramaStyle: viramaStyle.get() },
+    );
+    downloadCanvas(hiresCanvas);
   }
 
   function shareCanvas() {
@@ -57,10 +82,17 @@ export function createFileControls(canvasRef, inputText, calligraphyComplete) {
         <${Button}
           class="fileControlsButton"
           variant="primary"
-          onClick=${downloadCanvas}
+          onClick=${() => downloadCanvas(canvasRef.current)}
           disabled=${!calligraphyComplete.get()}
         >
           Save image
+        <//>
+        <${Button}
+          class="fileControlsButton"
+          onClick=${downloadHiresCanvas}
+          disabled=${!calligraphyComplete.get()}
+        >
+          Save hi-res image
         <//>
         ${navigator.share &&
         html`<${Button}

@@ -213,7 +213,7 @@ async function drawSpellingPreview(
   if (abortSignal.aborted) return;
   for (const _ of new BasePainter().drawPaths(
     path,
-    cellSize * 25,
+    cellSize,
     canvas.getContext("2d"),
   ));
 }

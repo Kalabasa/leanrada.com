@@ -12,7 +12,7 @@ const { SpellingControls, viramaStyle, separateRa, precolonial } = createSpellin
 const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm(viramaStyle, separateRa, precolonial);
 const { Canvas, canvasRef } = createCanvas(baybayinUnits);
 const calligraphyComplete = observable.box(false);
-const { FileControls } = createFileControls(canvasRef, inputText, calligraphyComplete);
+const { FileControls } = createFileControls(canvasRef, inputText, baybayinUnits, viramaStyle, calligraphyComplete);
 
 when(
   () => baybayinUnits.get().length > 0,
