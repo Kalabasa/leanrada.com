@@ -323,8 +323,11 @@ function calculateTerminalControl(stroke, isStrokeStart) {
     return { x: handleX * scale, y: handleY * scale };
   } else if (isFreeTerminal(terminal)) {
     // free terminal
-    const x = isKudlit ? -0.4 : 0.1;
-    const y = isKudlit ? -0.2 : 0.6;
+    if (isKudlit) {
+      return { x: 0, y: -0.2 };
+    }
+    const x = 0.1;
+    const y = 0.6;
     return { x: isStrokeStart ? x : -x, y: isStrokeStart ? y : -y };
   } else {
     // attached to another terminal
