@@ -81,7 +81,7 @@ export function createSpellingControls() {
                 onChange=${() => precolonial.set(false)}
               />
               <${SpellingPreview}
-                baybayinUnits=${["ba", "y"]}
+                baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
                 viramaStyle="pamudpod"
               />
               colonial
@@ -94,7 +94,10 @@ export function createSpellingControls() {
                 checked=${precolonial.get()}
                 onChange=${() => precolonial.set(true)}
               />
-              <${SpellingPreview} baybayinUnits=${["ba"]} viramaStyle="pamudpod" />
+              <${SpellingPreview}
+                baybayinUnits=${["ba", "ba", "yi"]}
+                viramaStyle="pamudpod"
+              />
               precolonial
             </label>
           </div>
@@ -116,7 +119,10 @@ export function createSpellingControls() {
                 checked=${viramaStyle.get() === "pamudpod"}
                 onChange=${() => viramaStyle.set("pamudpod")}
               />
-              <${SpellingPreview} baybayinUnits=${["k"]} viramaStyle="pamudpod" />
+              <${SpellingPreview}
+                baybayinUnits=${["k"]}
+                viramaStyle="pamudpod"
+              />
               pamudpod
             </label>
             <label class="spellingOption">
