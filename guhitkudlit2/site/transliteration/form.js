@@ -42,6 +42,15 @@ export function createTransliterationForm() {
     { delay: 100, fireImmediately: initialText !== "" },
   );
 
+  reaction(
+    () => inputText.get(),
+    (inputText) => {
+      const url = new URL(location.href);
+      url.searchParams.set("word", inputText);
+      history.replaceState(history.state, "", url);
+    },
+  );
+
   const TransliterationFormImpl = observer(() => {
     const onInput = (event) => {
       runInAction(() => {
