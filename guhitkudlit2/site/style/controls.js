@@ -5,6 +5,7 @@ import { observer } from "../util/observer.js";
 export function createStyleControls() {
   const viramaStyle = observable.box("pamudpod");
   const separateRa = observable.box(false);
+  const precolonial = observable.box(false);
 
   const StyleControls = observer(
     ({ inputText }) => html`
@@ -31,8 +32,7 @@ export function createStyleControls() {
           Pamudpod
         </label>
       </fieldset>
-      ${/r/i.test(inputText.get()) &&
-      html`<fieldset>
+      <fieldset>
         <legend>R</legend>
         <label>
           <input
@@ -54,9 +54,32 @@ export function createStyleControls() {
           />
           Modern
         </label>
-      </fieldset>`}
+      </fieldset>
+      <fieldset>
+        <legend>Syllabication</legend>
+        <label>
+          <input
+            type="radio"
+            name="precolonial"
+            value="colonial"
+            checked=${!precolonial.get()}
+            onChange=${() => precolonial.set(false)}
+          />
+          Colonial
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="precolonial"
+            value="precolonial"
+            checked=${precolonial.get()}
+            onChange=${() => precolonial.set(true)}
+          />
+          Precolonial
+        </label>
+      </fieldset>
     `,
   );
 
-  return { StyleControls, viramaStyle, separateRa };
+  return { StyleControls, viramaStyle, separateRa, precolonial };
 }

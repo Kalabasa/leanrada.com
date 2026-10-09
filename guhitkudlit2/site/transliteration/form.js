@@ -11,7 +11,11 @@ import { InvalidLetterError } from "./invalid-letter-error.js";
 
 const memo = Symbol("memo");
 
-export function createTransliterationForm(viramaStyle, separateRa) {
+export function createTransliterationForm(
+  viramaStyle,
+  separateRa,
+  precolonial,
+) {
   const initialText = new URLSearchParams(location.search).get("word") ?? "";
   const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
@@ -24,13 +28,16 @@ export function createTransliterationForm(viramaStyle, separateRa) {
   }, 400);
 
   reaction(
-    () => [inputText.get(), separateRa.get()],
-    async ([inputText, separateRa]) => {
+    () => [inputText.get(), separateRa.get(), precolonial.get()],
+    async ([inputText, separateRa, precolonial]) => {
       const { syllabicate } = await import("./syllabicate.js");
       let output;
       try {
-        output = syllabicate(inputText, { separateRa });
+        output = syllabicate(inputText, { separateRa, precolonial });
       } catch (error) {
+        if (!(error instanceof InvalidLetterError)) {
+          throw error;
+        }
         syllabicateError.set(error);
         return;
       }
@@ -142,7 +149,8 @@ export function TransliterationForm({
   if (error && error instanceof InvalidLetterError) {
     const helpLink = "./help/#" + encodeURIComponent(inputText);
     tooltipContent = [
-      html`Um, we have to write <strong>${error.formatLetters()}</strong> the Baybayin way. `,
+      html`Um, we have to write <strong>${error.formatLetters()}</strong> the
+        Baybayin way. `,
       html`<a class="transliterationTooltipLink" href=${helpLink}
         >Here’s a quick guide!</a
       >`,

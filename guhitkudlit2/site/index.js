@@ -8,8 +8,8 @@ import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
 import { createStyleControls } from "./style/controls.js";
 
-const { StyleControls, viramaStyle, separateRa } = createStyleControls();
-const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm(viramaStyle, separateRa);
+const { StyleControls, viramaStyle, separateRa, precolonial } = createStyleControls();
+const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm(viramaStyle, separateRa, precolonial);
 const { Canvas, canvasRef } = createCanvas(baybayinUnits);
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(canvasRef, inputText, calligraphyComplete);

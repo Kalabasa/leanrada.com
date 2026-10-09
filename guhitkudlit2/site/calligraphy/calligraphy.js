@@ -27,13 +27,12 @@ export function installCalligraphy(
   const inputs = computed(() => {
     const b = baybayinUnits.get();
     const v = viramaStyle.get();
-    const needsVirama = b.some((u) => !u.match(/[aeiou]/));
-    console.log({ b, v, needsVirama });
+    const needsVirama = b.some((u) => u !== " " && !u.match(/[aeiou]/));
     return {
       baybayinUnits: b,
       viramaStyle: needsVirama ? v : "krus",
     };
-  });
+  }, { equals: comparer.structural });
 
   let drawingAbortController;
   reaction(

@@ -16,8 +16,9 @@ import { InvalidLetterError } from "./invalid-letter-error.js";
  * @param {{
  *   simple?: boolean,
  *   separateRa?: boolean,
+ *   precolonial?: boolean,
  * }} [how={}]
- * 
+ *
  * @returns {string[]}
  */
 export function syllabicate(phrase, how = {}) {
@@ -80,6 +81,10 @@ export function syllabicate(phrase, how = {}) {
 
     if (currentUnit) {
       baybayinUnits.push(currentUnit);
+    }
+
+    if (how?.precolonial) {
+      baybayinUnits = baybayinUnits.filter((u) => u.match(/[aeiou]/));
     }
 
     return [...wordBoundary, ...baybayinUnits];
