@@ -16,8 +16,7 @@ export class BasePainter {
   *drawPaths(paths, scale, canvasContext) {
     const strokeScale =
       scale *
-      (Math.min(canvasContext.canvas.width, canvasContext.canvas.height) /
-        4e4);
+      (Math.min(canvasContext.canvas.width, canvasContext.canvas.height) / 4e4);
 
     for (let i = 0; i < paths.length; i++) {
       const color = DEBUG
