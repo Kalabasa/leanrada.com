@@ -8,8 +8,8 @@ import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
 import { createStyleControls } from "./style/controls.js";
 
-const { StyleControls, viramaStyle } = createStyleControls();
-const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm(viramaStyle);
+const { StyleControls, viramaStyle, separateRa } = createStyleControls();
+const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm(viramaStyle, separateRa);
 const { Canvas, canvasRef } = createCanvas(baybayinUnits);
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(canvasRef, inputText, calligraphyComplete);
@@ -92,7 +92,7 @@ export function Index() {
       </aside>
       <aside class="appStylePanelArea">
         <${AppPanel} title=${html`<h2>Style</h2>`}>
-          <${StyleControls} />
+          <${StyleControls} inputText=${inputText} />
         <//>
       </aside>
       <aside class="appFilePanelArea">

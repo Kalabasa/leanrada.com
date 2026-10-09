@@ -11,7 +11,7 @@ import { InvalidLetterError } from "./invalid-letter-error.js";
 
 const memo = Symbol("memo");
 
-export function createTransliterationForm(viramaStyle) {
+export function createTransliterationForm(viramaStyle, separateRa) {
   const initialText = new URLSearchParams(location.search).get("word") ?? "";
   const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
@@ -24,12 +24,12 @@ export function createTransliterationForm(viramaStyle) {
   }, 400);
 
   reaction(
-    () => inputText.get(),
-    async (inputText) => {
+    () => [inputText.get(), separateRa.get()],
+    async ([inputText, separateRa]) => {
       const { syllabicate } = await import("./syllabicate.js");
       let output;
       try {
-        output = syllabicate(inputText);
+        output = syllabicate(inputText, { separateRa });
       } catch (error) {
         syllabicateError.set(error);
         return;

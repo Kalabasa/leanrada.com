@@ -429,6 +429,7 @@ function extendChain(chain, untracedNeighbors) {
  */
 function scoreChain(chain) {
   const len = chain.length - 1;
+  const deltaX = Math.abs(chain[chain.length - 1].x - chain[0].x) + 1;
   const deltaY = Math.abs(chain[chain.length - 1].y - chain[0].y) + 1;
   let typeChanges = 0;
   for (let i = 2; i < chain.length; i++) {
@@ -437,7 +438,7 @@ function scoreChain(chain) {
     if (edge.type !== prevEdge.type) typeChanges++;
   }
   const kudlitPenalty = chain[0].isKudlit ? 1000 : 0;
-  return len / deltaY - typeChanges * 4 - kudlitPenalty;
+  return len * (deltaX / deltaY) - typeChanges * 15 - kudlitPenalty;
 }
 
 /**

@@ -81,6 +81,25 @@ export const D = glyph(
   .---.
 `,
 );
+export const R = glyph(
+  { xScale: 1 },
+  `
+.-.---.
+  |
+  .
+  |
+  .-.-.
+`,
+);
+const rTail = {
+  x: 2,
+  y: 2.25,
+  terminal: false,
+  adjacency: new Map(),
+};
+R.map[3][2].adjacency.set(rTail, { type: undefined });
+rTail.adjacency.set(R.map[3][2], { type: undefined });
+R.map[4][0] = rTail;
 export const G = glyph(
   { xScale: 4 / 3 },
   `

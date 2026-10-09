@@ -4,9 +4,10 @@ import { observer } from "../util/observer.js";
 
 export function createStyleControls() {
   const viramaStyle = observable.box("pamudpod");
+  const separateRa = observable.box(false);
 
   const StyleControls = observer(
-    () => html`
+    ({ inputText }) => html`
       <fieldset>
         <legend>Kudlit</legend>
         <label>
@@ -30,8 +31,32 @@ export function createStyleControls() {
           Pamudpod
         </label>
       </fieldset>
+      ${/r/i.test(inputText.get()) &&
+      html`<fieldset>
+        <legend>R</legend>
+        <label>
+          <input
+            type="radio"
+            name="separateRa"
+            value="da"
+            checked=${!separateRa.get()}
+            onChange=${() => separateRa.set(false)}
+          />
+          Traditional
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="separateRa"
+            value="ra"
+            checked=${separateRa.get()}
+            onChange=${() => separateRa.set(true)}
+          />
+          Modern
+        </label>
+      </fieldset>`}
     `,
   );
 
-  return { StyleControls, viramaStyle };
+  return { StyleControls, viramaStyle, separateRa };
 }
