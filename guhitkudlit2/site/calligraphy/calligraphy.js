@@ -5,6 +5,16 @@ import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
 import { Brush } from "./painters/brush.js";
 
+const painterClasses = { brush: Brush, basic: BasePainter };
+
+function createPainter() {
+  const painterName = new URL(location).searchParams.get("painter");
+  if (DEBUG && painterName) {
+    return new painterClasses[painterName]();
+  }
+  return new Brush();
+}
+
 export function installCalligraphy(
   baybayinUnits,
   viramaStyle,
@@ -12,7 +22,7 @@ export function installCalligraphy(
   onProgress,
 ) {
   // todo: lazy load painter by selected style
-  const painter = new Brush();
+  const painter = createPainter();
   let drawingAbortController;
   reaction(
     () => [baybayinUnits.get(), viramaStyle.get()],
