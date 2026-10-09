@@ -95,7 +95,7 @@ export function createSpellingControls() {
               />
               <${SpellingPreview}
                 baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
-                viramaStyle="pamudpod"
+                viramaStyle="krus"
               />
               colonial
             </label>
@@ -109,7 +109,7 @@ export function createSpellingControls() {
               />
               <${SpellingPreview}
                 baybayinUnits=${["ba", "ba", "yi"]}
-                viramaStyle="pamudpod"
+                viramaStyle="krus"
               />
               precolonial
             </label>

@@ -124,7 +124,7 @@ export function createFileControls(
             </svg>
           </a>
           <span>
-            no AI. webapp made with ${"<3"} by${" "}
+            webapp made with ${"<3"} by${" "}
             <a
               class="fileControlsSocialLink"
               href="https://leanrada.com/"
