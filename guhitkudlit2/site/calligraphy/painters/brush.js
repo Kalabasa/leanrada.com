@@ -80,8 +80,9 @@ export class Brush extends BasePainter {
             // dot product w/ 30 degrees up from negative x
             -(Math.sqrt(3) / 2) * dirX - 0.5 * dirY,
           );
+      const distThreshold = 60;
       const targetZ =
-        -Math.min(1, Math.max(1 / distFromInit, distFromFinal / (60 * scale))) *
+        -Math.min(1, Math.max(1 / distFromInit, distFromFinal / (distThreshold * scale))) *
         (0.5 + 0.5 * directionBias);
       zVel += (targetZ - z) * 0.005 - zVel * 0.14;
       z += zVel;
