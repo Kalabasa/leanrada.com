@@ -1,5 +1,5 @@
 import { DEBUG } from "../app/flags.js";
-import { comparer, reaction } from "../lib/mobx.js";
+import { comparer, computed, reaction } from "../lib/mobx.js";
 import { debounce } from "../util/debounce.js";
 import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
@@ -23,9 +23,21 @@ export function installCalligraphy(
 ) {
   // todo: lazy load painter by selected style
   const painter = createPainter();
+
+  const inputs = computed(() => {
+    const b = baybayinUnits.get();
+    const v = viramaStyle.get();
+    const needsVirama = b.some((u) => !u.match(/[aeiou]/));
+    console.log({ b, v, needsVirama });
+    return {
+      baybayinUnits: b,
+      viramaStyle: needsVirama ? v : "krus",
+    };
+  });
+
   let drawingAbortController;
   reaction(
-    () => [baybayinUnits.get(), viramaStyle.get()],
+    () => inputs.get(),
     () => {
       drawingAbortController?.abort();
       onProgress("start");
@@ -38,8 +50,8 @@ export function installCalligraphy(
     { equals: comparer.shallow },
   );
   reaction(
-    () => [baybayinUnits.get(), viramaStyle.get()],
-    debounce(async ([baybayinUnits, viramaStyle]) => {
+    () => inputs.get(),
+    debounce(async ({ baybayinUnits, viramaStyle }) => {
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
       const context = canvasRef.current.getContext("2d");
