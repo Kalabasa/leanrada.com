@@ -1,12 +1,13 @@
 import { DEBUG } from "../app/flags.js";
-import { reaction } from "../lib/mobx.js";
+import { comparer, reaction } from "../lib/mobx.js";
 import { debounce } from "../util/debounce.js";
 import { delay } from "../util/delay.js";
 import { BasePainter } from "./painter.js";
 import { Brush } from "./painters/brush.js";
 
 export function installCalligraphy(
-  observableBaybayinUnits,
+  baybayinUnits,
+  viramaStyle,
   canvasRef,
   onProgress,
 ) {
@@ -14,7 +15,7 @@ export function installCalligraphy(
   const painter = new Brush();
   let drawingAbortController;
   reaction(
-    () => observableBaybayinUnits.get(),
+    () => [baybayinUnits.get(), viramaStyle.get()],
     () => {
       drawingAbortController?.abort();
       onProgress("start");
@@ -24,10 +25,11 @@ export function installCalligraphy(
       context.fillStyle = "#fff";
       context.fillRect(0, 0, context.canvas.width, context.canvas.height);
     },
+    { equals: comparer.shallow },
   );
   reaction(
-    () => observableBaybayinUnits.get(),
-    debounce(async (baybayinUnits) => {
+    () => [baybayinUnits.get(), viramaStyle.get()],
+    debounce(async ([baybayinUnits, viramaStyle]) => {
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
       const context = canvasRef.current.getContext("2d");
@@ -35,6 +37,7 @@ export function installCalligraphy(
       drawingAbortController = abortController;
       await drawCalligraphy(
         baybayinUnits,
+        viramaStyle,
         painter,
         context,
         abortController.signal,
@@ -42,18 +45,20 @@ export function installCalligraphy(
       if (abortController.signal.aborted) return;
       onProgress("complete");
     }, 400),
-    { fireImmediately: true },
+    { fireImmediately: true, equals: comparer.shallow },
   );
 }
 
 /**
  * @param {string[]} baybayinUnits
+ * @param {"krus" | "pamudpod"} viramaStyle
  * @param {BasePainter} painter
  * @param {CanvasRenderingContext2D} canvasContext
  * @param {AbortSignal} abortSignal
  */
 export async function drawCalligraphy(
   baybayinUnits,
+  viramaStyle,
   painter,
   canvasContext,
   abortSignal,
@@ -85,7 +90,9 @@ export async function drawCalligraphy(
   const layout2D = [];
   let lineTopY = 0;
   for (const line of lines) {
-    const glyphs = line.map((baybayinUnit) => getGlyph(baybayinUnit));
+    const glyphs = line.map((baybayinUnit) =>
+      getGlyph(baybayinUnit, viramaStyle),
+    );
 
     const lineLayout = layoutLine(glyphs);
     const lineVertices = lineLayout

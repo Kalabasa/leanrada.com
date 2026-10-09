@@ -198,16 +198,17 @@ export const Y = glyph(
 
 const cache = new Map();
 
-export function getGlyph(baybayinUnit) {
-  let glyph = cache.get(baybayinUnit);
+export function getGlyph(baybayinUnit, viramaStyle) {
+  const cacheKey = baybayinUnit + "/" + viramaStyle;
+  let glyph = cache.get(cacheKey);
   if (!glyph) {
-    glyph = createGlyph(baybayinUnit);
-    cache.set(baybayinUnit, glyph);
+    glyph = createGlyph(baybayinUnit, viramaStyle);
+    cache.set(cacheKey, glyph);
   }
   return glyph;
 }
 
-function createGlyph(baybayinUnit) {
+function createGlyph(baybayinUnit, viramaStyle) {
   const glyphName = baybayinUnit.startsWith("ng")
     ? "NG"
     : baybayinUnit.slice(0, 1).toUpperCase();
@@ -221,7 +222,11 @@ function createGlyph(baybayinUnit) {
 
   const glyph = structuredClone(baseGlyph);
   if (!"eiou".includes(vowel)) {
-    addVirama(glyph);
+    if (viramaStyle === "krus") {
+      addKrusKudlit(glyph);
+    } else {
+      addPamudpod(glyph);
+    }
     return glyph;
   }
 
@@ -260,9 +265,67 @@ function addKudlit(glyph, vowel) {
   glyph.map[kudlitRow][Math.floor(centerX) + 1] = kudlitRight;
 }
 
-function addVirama(glyph) {
+function addKrusKudlit(glyph) {
+  const centerX = calculateRightX(glyph) / 2;
+  const centerY = 3.9;
+  const armLength = 0.3;
+  const crossSegments = [
+    [
+      { x: centerX - armLength, y: centerY - armLength },
+      { x: centerX + armLength, y: centerY + armLength },
+    ],
+    [
+      { x: centerX + armLength, y: centerY - armLength },
+      { x: centerX - armLength, y: centerY + armLength },
+    ],
+  ];
+  let column = glyph.map[4].length;
+  for (const [startPoint, endPoint] of crossSegments) {
+    const start = { ...startPoint, terminal: false, isKudlit: true, adjacency: new Map() };
+    const end = { ...endPoint, terminal: false, isKudlit: true, adjacency: new Map() };
+    start.adjacency.set(end, { type: undefined });
+    end.adjacency.set(start, { type: undefined });
+    glyph.map[4][column++] = start;
+    glyph.map[4][column++] = end;
+  }
+}
+
+function addPamudpod(glyph) {
   const lastColumn = glyph.map[1].length - 1;
-  const rightX = Math.max(
+  const rightX = calculateRightX(glyph);
+  const pamudpodStart = {
+    x: rightX + 1,
+    y: 1,
+    terminal: false,
+    isKudlit: true,
+    adjacency: new Map(),
+  };
+  const pamudpodMiddle = {
+    x: rightX * 0.8 + 1,
+    y: 3.5,
+    terminal: false,
+    isKudlit: true,
+    adjacency: new Map(),
+  };
+  const pamudpodEnd = {
+    x: rightX * 0.4,
+    y: 4,
+    terminal: false,
+    isKudlit: true,
+    adjacency: new Map(),
+  };
+  pamudpodStart.adjacency.set(pamudpodMiddle, { type: undefined });
+  pamudpodMiddle.adjacency.set(pamudpodStart, { type: undefined });
+  pamudpodMiddle.adjacency.set(pamudpodEnd, { type: undefined });
+  pamudpodEnd.adjacency.set(pamudpodMiddle, { type: undefined });
+  glyph.map[1][lastColumn + 1] = pamudpodStart;
+  glyph.map[4][lastColumn + 1] = pamudpodMiddle;
+  glyph.map[4][Math.floor(pamudpodEnd.x)] = pamudpodEnd;
+}
+
+function calculateRightX(glyph) {
+  const lastColumn = glyph.map[1].length - 1;
+  return Math.max(
     ...glyph.map
       .map((glyphRow) => glyphRow[lastColumn])
       .filter((vertex) => vertex)
@@ -273,34 +336,6 @@ function addVirama(glyph) {
         return hasRightCurve ? vertex.x + 1 : vertex.x;
       }),
   );
-  const viramaStart = {
-    x: rightX + 1,
-    y: 1,
-    terminal: false,
-    isKudlit: true,
-    adjacency: new Map(),
-  };
-  const viramaMiddle = {
-    x: rightX * 0.8 + 1,
-    y: 3.5,
-    terminal: false,
-    isKudlit: true,
-    adjacency: new Map(),
-  };
-  const viramaEnd = {
-    x: rightX * 0.4,
-    y: 4,
-    terminal: false,
-    isKudlit: true,
-    adjacency: new Map(),
-  };
-  viramaStart.adjacency.set(viramaMiddle, { type: undefined });
-  viramaMiddle.adjacency.set(viramaStart, { type: undefined });
-  viramaMiddle.adjacency.set(viramaEnd, { type: undefined });
-  viramaEnd.adjacency.set(viramaMiddle, { type: undefined });
-  glyph.map[1][lastColumn + 1] = viramaStart;
-  glyph.map[4][lastColumn + 1] = viramaMiddle;
-  glyph.map[4][Math.floor(viramaEnd.x)] = viramaEnd;
 }
 
 /**

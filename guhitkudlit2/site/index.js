@@ -6,11 +6,13 @@ import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
 import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
+import { createStyleControls } from "./style/controls.js";
 
 const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm();
 const { Canvas, canvasRef } = createCanvas(baybayinUnits);
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(canvasRef, inputText, calligraphyComplete);
+const { StyleControls, viramaStyle } = createStyleControls();
 
 when(
   () => baybayinUnits.get().length > 0,
@@ -23,7 +25,7 @@ when(
         calligraphyComplete.set(true);
       }
     };
-    installCalligraphy(baybayinUnits, canvasRef, onProgress);
+    installCalligraphy(baybayinUnits, viramaStyle, canvasRef, onProgress);
   },
 );
 
@@ -89,7 +91,9 @@ export function Index() {
         <//>
       </aside>
       <aside class="appStylePanelArea">
-        <${AppPanel} title=${html`<h2>Style</h2>`}>style<//>
+        <${AppPanel} title=${html`<h2>Style</h2>`}>
+          <${StyleControls} />
+        <//>
       </aside>
       <aside class="appFilePanelArea">
         <${AppPanel} title=${html`<h2>File</h2>`}>
