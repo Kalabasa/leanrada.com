@@ -24,15 +24,18 @@ export function installCalligraphy(
   // todo: lazy load painter by selected style
   const painter = createPainter();
 
-  const inputs = computed(() => {
-    const b = baybayinUnits.get();
-    const v = viramaStyle.get();
-    const needsVirama = b.some((u) => u !== " " && !u.match(/[aeiou]/));
-    return {
-      baybayinUnits: b,
-      viramaStyle: needsVirama ? v : "krus",
-    };
-  }, { equals: comparer.structural });
+  const inputs = computed(
+    () => {
+      const b = baybayinUnits.get();
+      const v = viramaStyle.get();
+      const needsVirama = b.some((u) => u !== " " && !u.match(/[aeiou]/));
+      return {
+        baybayinUnits: b,
+        viramaStyle: needsVirama ? v : "krus",
+      };
+    },
+    { equals: comparer.structural },
+  );
 
   let drawingAbortController;
   reaction(
@@ -54,6 +57,8 @@ export function installCalligraphy(
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
       const context = canvasRef.current.getContext("2d");
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, context.canvas.width, context.canvas.height);
       const abortController = new AbortController();
       drawingAbortController = abortController;
       await drawCalligraphy(

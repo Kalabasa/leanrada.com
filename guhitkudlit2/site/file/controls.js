@@ -9,13 +9,13 @@ export function createFileControls(canvasRef, inputText, calligraphyComplete) {
   function downloadCanvas() {
     const link = document.createElement("a");
     link.href = canvasRef.current.toDataURL("image/png");
-    link.download = toFileName(inputText.get()) + ".png";
+    link.download = formatFileName(inputText.get()) + ".png";
     link.click();
   }
 
   function shareCanvas() {
     canvasRef.current.toBlob(async (blob) => {
-      const file = new File([blob], toFileName(inputText.get()) + ".png", {
+      const file = new File([blob], formatFileName(inputText.get()) + ".png", {
         type: "image/png",
       });
       await navigator.share({ files: [file] });
@@ -108,9 +108,11 @@ export function createFileControls(canvasRef, inputText, calligraphyComplete) {
   return { FileControls };
 }
 
-function toFileName(text) {
-  return text
-    .trim()
-    .replace(/[\s\\/:*?"<>|\x00-\x1f]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+function formatFileName(text) {
+  return (
+    text
+      .trim()
+      .replace(/[\s\\/:*?"<>|\x00-\x1f]+/g, "-")
+      .replace(/^-+|-+$/g, "") + "-guhitkudlit"
+  );
 }
