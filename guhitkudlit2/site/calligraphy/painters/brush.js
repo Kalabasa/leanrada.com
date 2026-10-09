@@ -6,20 +6,29 @@ import { createNoise2D } from "../../lib/simplex-noise.js";
  */
 
 const bristleCount = 80;
-const sampleNoise2D = createNoise2D();
-
-const bristles = Array.from({ length: bristleCount }, () => {
-  const r = Math.sqrt(Math.random());
-  const a = Math.random() * 2 * Math.PI;
-  return {
-    x: r * Math.cos(a),
-    y: r * Math.sin(a),
-    ink: 0.2 + 0.4 * Math.random(),
-    length: 1 - r - 0.4 * Math.random(),
-  };
-});
 
 export class Brush extends BasePainter {
+  #sampleNoise2D;
+  #bristles;
+
+  /**
+   * @param {() => number} random
+   */
+  constructor(random) {
+    super();
+    this.#sampleNoise2D = createNoise2D(random);
+    this.#bristles = Array.from({ length: bristleCount }, () => {
+      const r = Math.sqrt(random());
+      const a = random() * 2 * Math.PI;
+      return {
+        x: r * Math.cos(a),
+        y: r * Math.sin(a),
+        ink: 0.2 + 0.4 * random(),
+        length: 1 - r - 0.4 * random(),
+      };
+    });
+  }
+
   /**
    * @param {Path} path
    * @param {number} scale
@@ -99,7 +108,7 @@ export class Brush extends BasePainter {
       speed += (1 + 3 * Math.max(0, straightness) - speed) * 0.05;
 
       if (prev) {
-        for (const bristle of bristles) {
+        for (const bristle of this.#bristles) {
           const spread = Math.max(0, bristle.length * 0.5 - z);
           const bristleX = maxRadius * bristle.x * spread;
           const bristleY = maxRadius * bristle.y * spread;
@@ -111,7 +120,7 @@ export class Brush extends BasePainter {
             1 -
             z +
             bristle.ink * Math.min(1, 1.2 / speed) -
-            0.1 * sampleNoise2D(x / scale, y / scale);
+            0.1 * this.#sampleNoise2D(x / scale, y / scale);
 
           if (strength <= 0) continue;
 

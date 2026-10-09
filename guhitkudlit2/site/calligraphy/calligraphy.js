@@ -3,17 +3,21 @@ import { comparer, computed, reaction } from "../lib/mobx.js";
 import { hasVirama } from "../transliteration/syllabicate.js";
 import { debounce } from "../util/debounce.js";
 import { delay } from "../util/delay.js";
-import { BasePainter } from "./painter.js";
-import { Brush } from "./painters/brush.js";
+import { createRandom } from "../util/random.js";
 
-const painterClasses = { brush: Brush, basic: BasePainter };
+const painterLoaders = {
+  brush: async () => (await import("./painters/brush.js")).Brush,
+  basic: async () => (await import("./painter.js")).BasePainter,
+};
 
-function createPainter() {
+async function createPainter(random) {
   const painterName = new URL(location).searchParams.get("painter");
   if (DEBUG && painterName) {
-    return new painterClasses[painterName]();
+    const PainterClass = await painterLoaders[painterName]();
+    return new PainterClass(random);
   }
-  return new Brush();
+  const Brush = await painterLoaders.brush();
+  return new Brush(random);
 }
 
 export function installCalligraphy(
@@ -22,9 +26,6 @@ export function installCalligraphy(
   canvasRef,
   onProgress,
 ) {
-  // todo: lazy load painter by selected style
-  const painter = createPainter();
-
   const inputs = computed(
     () => {
       const b = baybayinUnits.get();
@@ -63,10 +64,9 @@ export function installCalligraphy(
       drawingAbortController = abortController;
       await drawCalligraphy(
         baybayinUnits,
-        viramaStyle,
-        painter,
         context,
         abortController.signal,
+        { viramaStyle },
       );
       if (abortController.signal.aborted) return;
       onProgress("complete");
@@ -77,18 +77,19 @@ export function installCalligraphy(
 
 /**
  * @param {string[]} baybayinUnits
- * @param {"krus" | "pamudpod"} viramaStyle
- * @param {BasePainter} painter
  * @param {CanvasRenderingContext2D} canvasContext
  * @param {AbortSignal} abortSignal
+ * @param {object} opts
+ * @param {"krus" | "pamudpod"} opts.viramaStyle
+ * @param {number} [opts.seed]
  */
 export async function drawCalligraphy(
   baybayinUnits,
-  viramaStyle,
-  painter,
   canvasContext,
   abortSignal,
+  { viramaStyle, seed = 0 },
 ) {
+  const painter = await createPainter(createRandom(seed));
   const { path, cellSize } = await layoutCalligraphy(
     baybayinUnits,
     canvasContext.canvas,
