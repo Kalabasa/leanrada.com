@@ -72,10 +72,6 @@ export function syllabicate(phrase, how = {}) {
           currentUnit = "";
         }
 
-        if (!how?.separateRa && letter === "r") {
-          letter = "d";
-        }
-
         currentUnit += letter;
       } else {
         invalidChars.push(letter);
@@ -88,6 +84,12 @@ export function syllabicate(phrase, how = {}) {
 
     if (currentUnit && !how?.precolonial) {
       baybayinUnits.push(currentUnit);
+    }
+
+    if (!how?.separateRa) {
+      baybayinUnits = baybayinUnits.map((u) =>
+        u.startsWith("r") ? "d" + u.slice(1) : u,
+      );
     }
 
     return [...wordBoundary, ...baybayinUnits];
@@ -117,36 +119,23 @@ function syllabicateSpecial(word) {
   return null;
 }
 
-const consonantRanking = [
-  "ng",
-  "m",
-  "n",
-  "k",
-  "g",
-  "t",
-  "d",
-  "r",
-  "p",
-  "b",
-  "s",
-  "h",
-  "l",
-  "y",
-  "w",
-];
-
-function collapseConsonant(unit) {
-  const consonants = unit.match(/ng|[^aeiou]/g);
-  if (!consonants) return unit;
-  const vowel = unit.match(/[aeiou]$/)?.[0] ?? "";
-  let strongestConsonant = consonants[0];
-  for (const consonant of consonants) {
-    if (
-      consonantRanking.indexOf(consonant) <
-      consonantRanking.indexOf(strongestConsonant)
-    ) {
-      strongestConsonant = consonant;
-    }
+// (pi)sngi => ngi
+// pri(to) => pi
+// (ba)nta => ta
+function collapseConsonant(candidate) {
+  const vowel = candidate.match(/[aeiou]$/)?.[0] ?? "";
+  const consonants = candidate
+    .replace(/[aeiou]/g, "")
+    .split(/([ptkbdg]|ng)/g) // cluster by airflow stops
+    .flatMap((c) => c.split(/(ng|n(?!g)|[^aeiou])/g))
+    .filter((c) => c)
+    .reverse();
+  // generally, the first consonant after the last stop wins
+  let consonant = "";
+  for (const c of consonants) {
+    consonant = c;
+    if ("wy".includes(c)) continue;
+    if (c === "ng" || "ptkbdg".includes(c)) break;
   }
-  return strongestConsonant + vowel;
+  return consonant + vowel;
 }
