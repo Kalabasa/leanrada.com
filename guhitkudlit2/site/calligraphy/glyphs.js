@@ -93,7 +93,7 @@ export const R = glyph(
 );
 const rTail = {
   x: 2,
-  y: 2.25,
+  y: 3.4,
   terminal: false,
   adjacency: new Map(),
 };
