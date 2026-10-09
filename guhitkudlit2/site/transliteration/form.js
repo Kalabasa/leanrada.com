@@ -142,8 +142,10 @@ export function TransliterationForm({
   if (error && error instanceof InvalidLetterError) {
     const helpLink = "./help/#" + encodeURIComponent(inputText);
     tooltipContent = [
-      `One more step, let’s write ${error.formatLetters()} the Baybayin way. `,
-      html`<a class="transliterationTooltipLink" href=${helpLink}>Guide</a>`,
+      html`Um, we have to write <strong>${error.formatLetters()}</strong> the Baybayin way. `,
+      html`<a class="transliterationTooltipLink" href=${helpLink}
+        >Here’s a quick guide!</a
+      >`,
     ];
   } else if (highlight && !inputText && !isFocused) {
     tooltipContent = "Type your word here!";
@@ -182,8 +184,15 @@ export function TransliterationForm({
         background-clip: padding-box, border-box;
       }
       .transliterationTooltip {
+        display: block;
+        max-width: 325px;
         color: var(--color-green);
-        font-weight: bold;
+        font-size: 110%;
+        animation: transliterationTooltipEnter 0.2s;
+
+        strong {
+          font-weight: bold;
+        }
       }
       .transliterationTooltipError {
         color: var(--color-orange);
@@ -191,6 +200,12 @@ export function TransliterationForm({
       .transliterationTooltipLink {
         text-decoration: underline;
         cursor: pointer;
+      }
+      @keyframes transliterationTooltipEnter {
+        from {
+          opacity: 0;
+          translate: 0 20px;
+        }
       }
     </style>
     <form class="transliterationForm" action="javascript:false">
