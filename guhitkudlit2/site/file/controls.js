@@ -54,7 +54,6 @@ export function createFileControls(
           flex-direction: column;
           justify-content: center;
           align-items: stretch;
-          padding: var(--size-m) var(--size-m) 0;
           height: 100%;
           gap: var(--size-s);
         }
@@ -83,14 +82,14 @@ export function createFileControls(
           onClick=${() => downloadCanvas(canvasRef.current)}
           disabled=${!calligraphyComplete.get()}
         >
-          Save image
+          Save
         <//>
         <${Button}
           class="fileControlsButton"
           onClick=${downloadHiresCanvas}
           disabled=${!calligraphyComplete.get()}
         >
-          Save HD image
+          Save HD
         <//>
         ${navigator.share &&
         html`<${Button}
@@ -98,7 +97,7 @@ export function createFileControls(
           onClick=${shareCanvas}
           disabled=${!calligraphyComplete.get()}
         >
-          Share image
+          Share
         <//>`}
         <div class="fileControlsSocial">
           <a

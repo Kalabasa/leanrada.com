@@ -165,7 +165,6 @@ export function TransliterationForm({
         display: flex;
         flex-direction: column;
         gap: var(--size-l);
-        margin: var(--size-m) var(--size-xs);
       }
       .transliterationFormRow {
         display: flex;

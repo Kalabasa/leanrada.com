@@ -19,7 +19,6 @@ export function createSpellingControls() {
           flex-direction: column;
           justify-content: space-around;
           height: 100%;
-          padding: var(--size-xs);
         }
         .spellingControl {
           anchor-scope: --spellingOptionActive;

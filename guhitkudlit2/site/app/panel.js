@@ -32,7 +32,7 @@ export function AppPanel({ title, children }) {
       }
       .appPanelContent {
         flex: 1 1 auto;
-        padding: var(--size-s);
+        padding: var(--size-m);
         background: var(--color-bg);
         border-radius: 0 var(--size-s) 0 0;
         box-shadow: var(--shadow-m);
