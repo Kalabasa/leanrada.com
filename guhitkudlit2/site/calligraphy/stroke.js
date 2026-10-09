@@ -319,7 +319,7 @@ function calculateTerminalControl(stroke, isStrokeStart) {
     const doesParentBendTowardStroke = parentBendCross * strokeCross > 0;
     const handleX = doesParentBendTowardStroke ? towardHandleSideX : tangentX;
     const handleY = doesParentBendTowardStroke ? towardHandleSideY : tangentY;
-    const scale = (edgeLen * 0.25) / Math.hypot(handleX, handleY);
+    const scale = (edgeLen * 0.3) / Math.hypot(handleX, handleY);
     return { x: handleX * scale, y: handleY * scale };
   } else if (isFreeTerminal(terminal)) {
     // free terminal
