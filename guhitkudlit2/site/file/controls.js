@@ -41,6 +41,7 @@ export function createFileControls(canvasRef, inputText, calligraphyComplete) {
           margin-top: auto;
         }
         .fileControlsSocial {
+          font-size: var(--font-size-s);
           display: flex;
           justify-content: center;
           gap: var(--size-m);
@@ -92,15 +93,15 @@ export function createFileControls(canvasRef, inputText, calligraphyComplete) {
           </a>
         </div>
         <div class="fileControlsSocial">
-          <span style="font-size:80%">
+          <span>
             no AI. webapp made with ${"<3"} by${" "}
             <a
               class="fileControlsSocialLink"
               href="https://leanrada.com/"
               target="_blank"
-              >Lean.</a
-            ></span
-          >
+              >Lean</a
+            >.
+          </span>
         </div>
       </div>
     `,

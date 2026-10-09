@@ -193,9 +193,9 @@ export function TransliterationForm({
       }
       .transliterationTooltip {
         display: block;
-        max-width: 325px;
+        max-width: 300px;
         color: var(--color-green);
-        font-size: 110%;
+        font-size: var(--font-size-m);
         animation: transliterationTooltipEnter 0.2s;
 
         strong {
