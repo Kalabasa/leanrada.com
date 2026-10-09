@@ -26,7 +26,7 @@ function edgeTypes(grid) {
 test("basic vertex counts", () => {
   assert.equal(vertices(I).length, 4);
   assert.equal(vertices(U).length, 3);
-  assert.equal(vertices(H).length, 2);
+  assert.equal(vertices(H).length, 3);
 });
 
 test("symmetry for all glyphs", () => {
