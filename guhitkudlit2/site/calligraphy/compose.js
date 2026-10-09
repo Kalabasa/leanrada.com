@@ -51,6 +51,7 @@ export function compose(glyphStrokesList) {
           end,
           origStartControl: { ...start.control },
           origEndControl: { ...end.control },
+          isKudlit: stroke.isKudlit,
         });
       }
     }
@@ -74,7 +75,7 @@ export function compose(glyphStrokesList) {
   };
 
   /**
-   * @param {{ start: StrokeVertex, end: StrokeVertex }} curve
+   * @param {{ start: StrokeVertex, end: StrokeVertex, isKudlit: boolean }} curve
    * @param {Point[]} points start, start control, end control, end
    * @param {Point} oClosest
    */
@@ -85,7 +86,7 @@ export function compose(glyphStrokesList) {
       const dist = Math.hypot(dx, dy);
       if (dist === 0) return { x: 0, y: 0 };
       let pushAmount = pushStrength / ((pushDistScale * dist) ** 4 + 1);
-      if (curve.start.isKudlit) pushAmount *= kudlitPushFactor;
+      if (curve.isKudlit) pushAmount *= kudlitPushFactor;
       return {
         x: (dx / dist) * pushAmount,
         y: (dy / dist) * pushAmount,
@@ -216,8 +217,8 @@ export function compose(glyphStrokesList) {
         const oCurve = edges[j];
         if (
           curve.start.glyph === oCurve.start.glyph &&
-          !curve.start.isKudlit &&
-          !oCurve.start.isKudlit
+          !curve.isKudlit &&
+          !oCurve.isKudlit
         ) {
           continue;
         }

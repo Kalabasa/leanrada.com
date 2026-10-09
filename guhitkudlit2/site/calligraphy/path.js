@@ -2,7 +2,8 @@
  * @typedef {import("./stroke.js").GlyphStrokes} GlyphStrokes
  * @typedef {import("./stroke.js").StrokeVertex} StrokeVertex
  * @typedef {{
- *  vertices: { x: number, y: number }[]
+ *  vertices: { x: number, y: number }[],
+ *  isKudlit: boolean
  * }} Path
  */
 
@@ -12,7 +13,10 @@
  */
 export function samplePaths(glyphStrokesList) {
   return glyphStrokesList.flatMap(({ strokes }) =>
-    strokes.map((stroke) => ({ vertices: sampleVertices(stroke.vertices) })),
+    strokes.map((stroke) => ({
+      vertices: sampleVertices(stroke.vertices),
+      isKudlit: stroke.isKudlit,
+    })),
   );
 }
 
@@ -38,7 +42,13 @@ function sampleVertices(vertices) {
     for (let sample = 1; sample < samplesPerEdge; sample++) {
       const t = sample / samplesPerEdge;
       out.push(
-        sampleCubicBezier(start.position, startHandle, endHandle, end.position, t),
+        sampleCubicBezier(
+          start.position,
+          startHandle,
+          endHandle,
+          end.position,
+          t,
+        ),
       );
     }
     out.push({ ...end.position });

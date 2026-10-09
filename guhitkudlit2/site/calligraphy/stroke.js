@@ -14,7 +14,7 @@
  *  nextSideLen?: number,
  *  isKudlit?: boolean
  * }} StrokeVertex
- * @typedef {{ strokes: { vertices: StrokeVertex[] }[] }} GlyphStrokes
+ * @typedef {{ strokes: { vertices: StrokeVertex[], isKudlit: boolean }[] }} GlyphStrokes
  */
 
 /**
@@ -37,6 +37,7 @@ export function traceStrokes(glyph) {
 
   const strokes = chains.map((chain) => ({
     vertices: interpolateChain(glyph, chain, getSharedPosition),
+    isKudlit: chain[0].isKudlit === true,
   }));
 
   calculateControlPoints(strokes);
@@ -154,7 +155,7 @@ function calculateOffsetPosition(start, end, progress, offset) {
 }
 
 /**
- * @param {{ vertices: StrokeVertex[] }[]} strokes
+ * @param {{ vertices: StrokeVertex[], isKudlit: boolean }[]} strokes
  */
 function calculateControlPoints(strokes) {
   /** @type {Map<Point, StrokeVertex>} */
@@ -200,20 +201,13 @@ function calculateControlPoints(strokes) {
     }
   }
 
-  for (const { vertices } of strokes) {
-    const first = vertices[0];
-    const second = vertices[1];
-    const last = vertices.at(-1);
-    const secondLast = vertices.at(-2);
-
+  for (const stroke of strokes) {
+    const { vertices } = stroke;
     for (let i = 1; i < vertices.length - 1; i++) {
       vertices[i].control = calculateMiddleControl(vertices, i);
     }
-
-    first.control = calculateTerminalControl(first, second, last, true);
-    last.control = negate(
-      calculateTerminalControl(last, secondLast, first, false),
-    );
+    vertices[0].control = calculateTerminalControl(stroke, true);
+    vertices.at(-1).control = negate(calculateTerminalControl(stroke, false));
   }
 
   // smoothen
@@ -281,18 +275,14 @@ function calculateMiddleControl(vertices, index) {
 }
 
 /**
- * @param {StrokeVertex} terminal
- * @param {StrokeVertex} next
- * @param {StrokeVertex} otherTerminal
+ * @param {{ vertices: StrokeVertex[], isKudlit: boolean }} stroke
  * @param {boolean} isStrokeStart
  * @returns {Point} control of terminal toward next
  */
-function calculateTerminalControl(
-  terminal,
-  next,
-  otherTerminal,
-  isStrokeStart,
-) {
+function calculateTerminalControl(stroke, isStrokeStart) {
+  const { vertices, isKudlit } = stroke;
+  const terminal = isStrokeStart ? vertices[0] : vertices.at(-1);
+  const next = isStrokeStart ? vertices[1] : vertices.at(-2);
   const edgeX = next.position.x - terminal.position.x;
   const edgeY = next.position.y - terminal.position.y;
   const edgeLen = Math.hypot(edgeX, edgeY);
@@ -333,8 +323,8 @@ function calculateTerminalControl(
     return { x: handleX * scale, y: handleY * scale };
   } else if (isFreeTerminal(terminal)) {
     // free terminal
-    const x = terminal.isKudlit ? -0.4 : 0.1;
-    const y = terminal.isKudlit ? -0.2 : 0.6;
+    const x = isKudlit ? -0.4 : 0.1;
+    const y = isKudlit ? -0.2 : 0.6;
     return { x: isStrokeStart ? x : -x, y: isStrokeStart ? y : -y };
   } else {
     // attached to another terminal
