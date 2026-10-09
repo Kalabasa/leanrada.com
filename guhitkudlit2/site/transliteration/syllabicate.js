@@ -56,7 +56,10 @@ export function syllabicate(phrase, how = {}) {
         currentUnit += letter;
 
         if (how?.precolonial) {
-          currentUnit = collapseConsonant(currentUnit);
+          currentUnit = collapseConsonant(
+            currentUnit,
+            baybayinUnits.length === 0,
+          );
         }
 
         baybayinUnits.push(currentUnit);
@@ -119,23 +122,35 @@ function syllabicateSpecial(word) {
   return null;
 }
 
-// (pi)sngi => ngi
-// pri(to) => pi
-// (ba)nta => ta
-function collapseConsonant(candidate) {
-  const vowel = candidate.match(/[aeiou]$/)?.[0] ?? "";
-  const consonants = candidate
+// pi [sngi] => pi [ngi]
+// [pri] to => [pi] to
+// ba [nta] => ba [ta]
+// ko [mpyu] ter => ko [pu] te
+function collapseConsonant(candidate, isFirst) {
+  const vowel = candidate.match(/[aeiou]$/)?.[0] || "";
+  const clusters = candidate
     .replace(/[aeiou]/g, "")
-    .split(/([ptkbdg]|ng)/g) // cluster by airflow stops
-    .flatMap((c) => c.split(/(ng|n(?!g)|[^aeiou])/g))
-    .filter((c) => c)
-    .reverse();
-  // generally, the first consonant after the last stop wins
-  let consonant = "";
-  for (const c of consonants) {
-    consonant = c;
-    if ("wy".includes(c)) continue;
-    if (c === "ng" || "ptkbdg".includes(c)) break;
+    .split(/([ptkbd]|(?<!n)g)/) // split by airflow stop
+    .map((g) => g.split(/(ng|n(?!g)|[^aeioun])/g).filter((c) => c));
+  if (!clusters.length) {
+    return vowel;
+  } else if (isFirst) {
+    return (clusters.filter((g) => g.length)[0]?.[0] || "") + vowel;
+  } else {
+    let last = "";
+    let stop = "";
+    let next = "";
+    for (let i = 0; i < clusters.length; i++) {
+      const g = clusters[i];
+      if (i % 2 === 0) {
+        // non-stop cluster
+        last = next;
+        next = g.at(-1) || "";
+      } else {
+        // stop cluster
+        stop = g.at(-1) || "";
+      }
+    }
+    return (last ? stop : next || stop) + vowel;
   }
-  return consonant + vowel;
 }
