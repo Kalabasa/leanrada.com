@@ -56,6 +56,7 @@ export function createFileControls(
           align-items: stretch;
           height: 100%;
           gap: var(--size-s);
+          padding: var(--size-s) var(--size-s) 0;
         }
         .fileControlsButton {
           text-align: center;

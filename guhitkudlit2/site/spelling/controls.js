@@ -156,7 +156,7 @@ export function createSpellingControls() {
             !inputText.get().includes("r") && "spellingControlDimmed",
           )}
         >
-          <${LabelText}>Distinct R<//>
+          <${LabelText}>R distinction<//>
           <div class="spellingOptions">
             <label class="spellingOption">
               <input

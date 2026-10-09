@@ -84,15 +84,19 @@ export function Button({ class: className, tag = "button", ...props }) {
         pointer-events: none;
         opacity: 0.1;
       }
-      .formButton:not(:disabled):hover::after,
-      .formButton:not(:disabled):focus-visible::after {
-        background: var(--color-bg);
-      }
-      .formButton:not(:disabled):active::after {
-        background: var(--color-fg);
+      .formButton:not(:disabled) {
+        cursor: pointer;
+        &:hover::after,
+        &:focus-visible::after {
+          background: var(--color-bg);
+        }
+        &:active::after {
+          background: var(--color-fg);
+        }
       }
       .formButton:disabled {
         opacity: var(--opacity-tertiary);
+        transition: opacity 0.4s;
       }
       .formButtonPrimaryVariant {
         background: var(--color-orange-darker);
