@@ -1,5 +1,5 @@
 import { AppLogo } from "./app/logo.js";
-import { AppPanel } from "./app/panel.js";
+import { AppPanelGroup } from "./app/panel-group.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
 import { render } from "./lib/htm-preact.js";
@@ -30,7 +30,6 @@ when(
 );
 
 export function Index() {
-  const panelColumnWidth = "minmax(300px, 500px)";
   return html`
     <style id=${Index.name}>
       .app {
@@ -39,10 +38,10 @@ export function Index() {
       .appDesktopLayout {
         display: grid;
         grid-template-rows: minmax(0, 1fr) min-content;
-        grid-template-columns: ${panelColumnWidth} ${panelColumnWidth} 1fr ${panelColumnWidth};
+        grid-template-columns: 1fr;
         grid-template-areas:
-          "canvas canvas canvas canvas"
-          "input spelling - file";
+          "canvas"
+          "panels";
         grid-gap: var(--size-m);
         padding: var(--size-m) var(--size-m) 0;
         height: 100vh;
@@ -67,14 +66,8 @@ export function Index() {
         grid-area: canvas;
         padding: var(--size-l);
       }
-      .appInputPanelArea {
-        grid-area: input;
-      }
-      .appSpellingPanelArea {
-        grid-area: spelling;
-      }
-      .appFilePanelArea {
-        grid-area: file;
+      .appPanelGroupArea {
+        grid-area: panels;
       }
     </style>
     <div class="app appDesktopLayout">
@@ -85,24 +78,21 @@ export function Index() {
       <main class="appCanvas">
         <${Canvas} />
       </main>
-      <aside class="appInputPanelArea">
-        <${AppPanel} title=${html`<h2>Text</h2>`}>
-          <${TransliterationForm} />
-        <//>
-      </aside>
-      <aside class="appSpellingPanelArea">
-        <${AppPanel} title=${html`<h2>Spelling</h2>`}>
-          <${SpellingControls}
-            inputText=${inputText}
-            baybayinUnits=${baybayinUnits}
-          />
-        <//>
-      </aside>
-      <aside class="appFilePanelArea">
-        <${AppPanel} title=${html`<h2>File</h2>`}>
-          <${FileControls} />
-        <//>
-      </aside>
+      <div class="appPanelGroupArea">
+        <${AppPanelGroup}
+          panels=${[
+            { title: html`<h2>Text</h2>`, content: html`<${TransliterationForm} />` },
+            {
+              title: html`<h2>Spelling</h2>`,
+              content: html`<${SpellingControls}
+                inputText=${inputText}
+                baybayinUnits=${baybayinUnits}
+              />`,
+            },
+            { title: html`<h2>File</h2>`, content: html`<${FileControls} />` },
+          ]}
+        />
+      </div>
     </div>
   `;
 }

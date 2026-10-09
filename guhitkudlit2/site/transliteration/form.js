@@ -164,12 +164,13 @@ export function TransliterationForm({
       .transliterationForm {
         display: flex;
         flex-direction: column;
-        gap: var(--size-l);
+        gap: var(--size-m);
       }
-      .transliterationFormRow {
+      .transliterationRow {
         display: flex;
         flex-direction: column;
         gap: var(--size-xs);
+        min-height: calc(var(--size-l) * 1.5);
       }
       .transliterationInput {
         anchor-name: --transliterationInput;
@@ -216,7 +217,7 @@ export function TransliterationForm({
       }
     </style>
     <form class="transliterationForm" action="javascript:false">
-      <label class="transliterationFormRow">
+      <label class="transliterationRow">
         <${LabelText} tag="div">Tagalog word<//>
         <${Input}
           autofocus
@@ -234,11 +235,11 @@ export function TransliterationForm({
           onInput=${onInput}
         />
       </label>
-      <label class="transliterationFormRow">
+      <label class="transliterationRow">
         <${LabelText} tag="div">Syllabication<//>
         <${Output} value=${syllabication} placeholder="ka · la · ba · sa" />
       </label>
-      <label class="transliterationFormRow">
+      <label class="transliterationRow">
         <${LabelText} tag="div">Baybayin<//>
         <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" />
       </label>
@@ -259,18 +260,18 @@ export function TransliterationForm({
 function Output({ value, placeholder }) {
   return html`
     <style id=${TransliterationForm.name + Output.name}>
-      .transliterationFormOutput {
+      .transliterationOutput {
         font-size: var(--font-size-l);
         word-break: break-all;
       }
-      .transliterationFormOutputPlaceholder {
+      .transliterationOutputPlaceholder {
         opacity: var(--opacity-placeholder);
       }
     </style>
     <div
       class=${classes(
-        "transliterationFormOutput",
-        !value && "transliterationFormOutputPlaceholder",
+        "transliterationOutput",
+        !value && "transliterationOutputPlaceholder",
       )}
     >
       ${value || placeholder}
