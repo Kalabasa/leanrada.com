@@ -56,8 +56,16 @@ export function createFileControls(
           gap: var(--size-s);
           padding: var(--size-s) var(--size-s) 0;
         }
+        .fileControlsActions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--size-s);
+        }
         .fileControlsButton {
           text-align: center;
+        }
+        .fileControlsShareButton {
+          grid-column: 1 / -1;
         }
         .fileControlsSocial {
           margin-top: auto;
@@ -75,29 +83,31 @@ export function createFileControls(
         }
       </style>
       <div class="fileControls">
-        <${Button}
-          class="fileControlsButton"
-          variant="primary"
-          onClick=${() => downloadCanvas(canvasRef.current)}
-          disabled=${!calligraphyComplete.get()}
-        >
-          Save
-        <//>
-        <${Button}
-          class="fileControlsButton"
-          onClick=${downloadFullCanvas}
-          disabled=${!calligraphyComplete.get()}
-        >
-          Save HD
-        <//>
-        ${navigator.share &&
-        html`<${Button}
-          class="fileControlsButton"
-          onClick=${shareCanvas}
-          disabled=${!calligraphyComplete.get()}
-        >
-          Share
-        <//>`}
+        <div class="fileControlsActions">
+          <${Button}
+            class="fileControlsButton"
+            variant="primary"
+            onClick=${() => downloadCanvas(canvasRef.current)}
+            disabled=${!calligraphyComplete.get()}
+          >
+            Save
+          <//>
+          <${Button}
+            class="fileControlsButton"
+            onClick=${downloadFullCanvas}
+            disabled=${!calligraphyComplete.get()}
+          >
+            Save HD
+          <//>
+          ${navigator.share &&
+          html`<${Button}
+            class="fileControlsButton fileControlsShareButton"
+            onClick=${shareCanvas}
+            disabled=${!calligraphyComplete.get()}
+          >
+            Share
+          <//>`}
+        </div>
         <div class="fileControlsSocial">
           <a
             class="fileControlsSocialLink"
