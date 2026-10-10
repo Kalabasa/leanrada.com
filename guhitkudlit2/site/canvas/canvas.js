@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
 import { observable, when } from "../lib/mobx.js";
 import { classes } from "../util/classes.js";
 import { observer } from "../util/observer.js";
-import { CanvasPlaceholder } from "./placeholder.js";
+import { IntroCanvas } from "./intro.js";
 
 export function createCanvas(baybayinUnits, onConfig) {
   const showPlaceholder = observable.box(true);
@@ -19,19 +19,17 @@ export function createCanvas(baybayinUnits, onConfig) {
         aspectRatio=${1.5}
         canvasRef=${canvasRef}
         showPlaceholder=${showPlaceholder.get()}
-        onConfig=${onConfig}
+        onConfig=${(config) => {
+          showPlaceholder.set(false);
+          onConfig(config);
+        }}
       />
     `;
   });
   return { Canvas: CanvasImpl, canvasRef };
 }
 
-export function Canvas({
-  aspectRatio,
-  canvasRef,
-  showPlaceholder,
-  onConfig,
-}) {
+export function Canvas({ aspectRatio, canvasRef, showPlaceholder, onConfig }) {
   const containerRef = useRef();
 
   const canvasWidth =
@@ -86,7 +84,7 @@ export function Canvas({
       ></canvas>
       ${showPlaceholder &&
       html`
-        <${CanvasPlaceholder}
+        <${IntroCanvas}
           canvasWidth=${canvasWidth}
           canvasHeight=${canvasHeight}
           onConfig=${onConfig}

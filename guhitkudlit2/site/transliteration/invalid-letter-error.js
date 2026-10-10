@@ -12,11 +12,13 @@ export class InvalidLetterError extends Error {
   formatLetters() {
     return (
       this.letters.slice(0, -1).join(", ").toUpperCase() +
-      (this.letters.length === 2
-        ? " and " + this.letters.at(-1).toUpperCase()
-        : this.letters.length > 2
-          ? ", and " + this.letters.at(-1).toUpperCase()
-          : "")
+      (this.letters.length === 1
+        ? this.letters[0].toUpperCase()
+        : this.letters.length === 2
+          ? " and " + this.letters.at(-1).toUpperCase()
+          : this.letters.length > 2
+            ? ", and " + this.letters.at(-1).toUpperCase()
+            : "")
     );
   }
 

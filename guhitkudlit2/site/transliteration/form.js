@@ -147,7 +147,8 @@ export function TransliterationForm({
   error,
   onInput,
 }) {
-  const [isTransformedHintOpen, setIsTransformedHintOpen] = useState(false);
+  const [isSyllabicationHintOn, setSyllabicationHintOn] = useState(false);
+  const [hasFocused, setHasFocused] = useState(false);
 
   const helpLink = "./help/#" + encodeURIComponent(inputText);
 
@@ -172,6 +173,8 @@ export function TransliterationForm({
           >Check this quick guide!</a
         >
       </p>`;
+  } else if (inputText && !hasFocused) {
+    tooltipContent = html`<p>You can edit this!</p>`;
   }
 
   return html`
@@ -196,8 +199,12 @@ export function TransliterationForm({
           flex: 1;
         }
       }
-      .transliterationTransformedButton {
-        anchor-name: --transliterationTransformedButton;
+      .transliterationSyllabicationButton {
+        anchor-name: --transliterationSyllabicationButton;
+        border-radius: 50%;
+        aspect-ratio: 1;
+        display: grid;
+        place-content: center;
       }
       .transliterationInput {
         anchor-name: --transliterationInput;
@@ -278,6 +285,7 @@ export function TransliterationForm({
           maxlength="30"
           value=${inputText}
           onInput=${onInput}
+          onFocus=${() => setHasFocused(true)}
         />
       </label>
       <div class="transliterationRowWithButton">
@@ -287,17 +295,17 @@ export function TransliterationForm({
         </label>
         ${transformed &&
         html`<${Button}
-          class="transliterationTransformedButton"
+          class="transliterationSyllabicationButton"
           type="button"
           aria-label="Why is the spelling different?"
-          onClick=${() => setIsTransformedHintOpen(!isTransformedHintOpen)}
+          onClick=${() => setSyllabicationHintOn(!isSyllabicationHintOn)}
         >
           ?
         <//>`}
       </div>
       <label class="transliterationRow">
         <${LabelText} tag="div">Baybayin<//>
-        <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" />
+        <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" big />
       </label>
     </form>
     ${tooltipContent &&
@@ -313,10 +321,10 @@ export function TransliterationForm({
       ${tooltipContent}
     <//>`}
     ${transformed &&
-    isTransformedHintOpen &&
+    isSyllabicationHintOn &&
     html`<${Tooltip}
       class="transliterationTooltip"
-      anchorName="--transliterationTransformedButton"
+      anchorName="--transliterationSyllabicationButton"
       direction="top"
     >
       <p class="transliterationTransformedIntro">
@@ -407,7 +415,7 @@ function explainTransform({ type, from }) {
   }
 }
 
-function Output({ value, placeholder }) {
+function Output({ value, placeholder, big }) {
   return html`
     <style id=${TransliterationForm.name + Output.name}>
       .transliterationOutput {
@@ -417,11 +425,15 @@ function Output({ value, placeholder }) {
       .transliterationOutputPlaceholder {
         opacity: var(--opacity-placeholder);
       }
+      .transliterationOutputBig {
+        font-size: var(--font-size-xl);
+      }
     </style>
     <div
       class=${classes(
         "transliterationOutput",
         !value && "transliterationOutputPlaceholder",
+        big && "transliterationOutputBig",
       )}
     >
       ${value || placeholder}
