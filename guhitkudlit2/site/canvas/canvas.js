@@ -3,6 +3,8 @@ import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
 import { observable, when } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 
+const placeholderImageUrl = new URL("./placeholder.png", import.meta.url).href;
+
 export function createCanvas(baybayinUnits) {
   const showPlaceholder = observable.box(true);
   when(
@@ -68,9 +70,13 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
         grid-area: 1 / 1 / -1 / -1;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: space-around;
         align-items: center;
         overflow: hidden;
+      }
+      .canvasHeader {
+        padding: 3vh 0;
+        text-align: center;
       }
       .canvasHeading {
         font-size: 5vh;
@@ -82,9 +88,31 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
         text-transform: uppercase;
         opacity: 0.7;
       }
+      .canvasImage {
+        min-height: 0;
+        max-width: 100%;
+        object-fit: contain;
+        opacity: 0.2;
+      }
+      .canvasColumns {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--size-l);
+        width: 100%;
+        contain: inline-size;
+        padding: var(--size-l);
+        text-align: left;
+      }
+      .canvasColumnHeading {
+        font-size: var(--font-size-l);
+        font-weight: bold;
+      }
       .canvasText {
-        margin-top: 2vh;
-        font-size: 1.5vh;
+        margin-top: var(--size-m);
+        font-size: var(--font-size-m);
+        em {
+          font-style: italic;
+        }
       }
     </style>
     <div class="canvasContainer" ref=${containerRef}>
@@ -97,11 +125,46 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
       ${showPlaceholder &&
       html`
         <div class="canvasPlaceholder">
-          <h1 class="canvasHeading">Welcome to Guhit Kudlit</h1>
-          <h2 class="canvasSubheading">
-            The Baybayin transliterator & calligraphy generator
-          </h2>
-          <p class="canvasText">Type your word below!</p>
+          <div class="canvasHeader">
+            <h1 class="canvasHeading">Maligayang padating sa Guhit Kudlit</h1>
+            <h2 class="canvasSubheading">
+              Baybayin translator (transliterator) & calligraphy generator
+            </h2>
+          </div>
+          <img class="canvasImage" src=${placeholderImageUrl} alt="" />
+          <div class="canvasColumns">
+            <div>
+              <h3 class="canvasColumnHeading">Transliterate with care</h3>
+              <p class="canvasText">
+                This app uses predetermined rules of Baybayin. No AI sloppy
+                guessing. It also guides you to be better and confident in
+                Baybayin. Sa madaling salita, iingatan ka.
+              </p>
+              <p class="canvasText">Type your word below!</p>
+            </div>
+            <div>
+              <h3 class="canvasColumnHeading">
+                Handcrafted calligraphy algorithm
+              </h3>
+              <p class="canvasText">
+                Dynamic calligraphy composition and brush simulation developed
+                over the years. Not just a font. Every stroke is unique and
+                drawn live in your browser.
+              </p>
+              <p class="canvasText">Check out the different styles too!</p>
+            </div>
+            <div>
+              <h3 class="canvasColumnHeading">Free for all</h3>
+              <p class="canvasText">
+                I’m a Filipino software engineer from the Philippines and this
+                is my passion project, an intersection of my love for procedural
+                art and Baybayin.
+              </p>
+              <p class="canvasText">
+                No need to sign up. Just download and share!
+              </p>
+            </div>
+          </div>
         </div>
       `}
     </div>

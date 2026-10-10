@@ -17,9 +17,10 @@ export class BasePainter {
     const strokeScale = scale / 40;
 
     for (let i = 0; i < paths.length; i++) {
-      const color = DEBUG
-        ? `hsl(${(i / paths.length) * 360}, 100%, 40%)`
-        : "#000";
+      const color =
+        DEBUG && new URLSearchParams(location.search).has("colorize")
+          ? `hsl(${(i / paths.length) * 360}, 100%, 40%)`
+          : "#000";
       yield* this.drawPath(paths[i], strokeScale, color, canvasContext);
     }
   }
