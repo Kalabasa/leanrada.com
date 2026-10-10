@@ -19,7 +19,7 @@ export function createCanvas(baybayinUnits, inputText) {
         aspectRatio=${1.5}
         canvasRef=${canvasRef}
         showPlaceholder=${showPlaceholder.get()}
-        onClickExample=${(exampleWord) => inputText.set(exampleWord)}
+        onSubmitText=${(text) => inputText.set(text)}
       />
     `;
   });
@@ -30,7 +30,7 @@ export function Canvas({
   aspectRatio,
   canvasRef,
   showPlaceholder,
-  onClickExample,
+  onSubmitText,
 }) {
   const containerRef = useRef();
 
@@ -89,7 +89,7 @@ export function Canvas({
         <${CanvasPlaceholder}
           canvasWidth=${canvasWidth}
           canvasHeight=${canvasHeight}
-          onClickExample=${onClickExample}
+          onSubmitText=${onSubmitText}
         />
       `}
     </div>

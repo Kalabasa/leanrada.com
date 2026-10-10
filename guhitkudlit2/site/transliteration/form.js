@@ -22,7 +22,6 @@ export function createTransliterationForm(
   const baybayinUnits = observable.box([]);
   const transformed = observable.box(undefined);
   const prettify = observable.box(false);
-  const highlight = observable.box(initialText === "");
   const syllabicateError = observable.box(undefined);
 
   const debouncedRemovePrettify = debounce(() => {
@@ -68,7 +67,6 @@ export function createTransliterationForm(
     const onInput = (event) => {
       runInAction(() => {
         inputText.set(event.currentTarget.value);
-        highlight.set(false);
       });
     };
 
@@ -87,7 +85,6 @@ export function createTransliterationForm(
           unicodeFilter(baybayinUnits.get()),
           viramaStyle.get(),
         )}
-        highlight=${highlight.get()}
         error=${syllabicateError.get()}
         onInput=${onInput}
       />
@@ -147,11 +144,9 @@ export function TransliterationForm({
   syllabication,
   transformed,
   baybayin,
-  highlight,
   error,
   onInput,
 }) {
-  const [isFocused, setIsFocused] = useState(false);
   const [isTransformedHintOpen, setIsTransformedHintOpen] = useState(false);
 
   const helpLink = "./help/#" + encodeURIComponent(inputText);
@@ -177,8 +172,6 @@ export function TransliterationForm({
           >Check this quick guide!</a
         >
       </p>`;
-  } else if (highlight && !inputText && !isFocused) {
-    tooltipContent = "Type your word here!";
   }
 
   return html`
@@ -210,20 +203,6 @@ export function TransliterationForm({
         anchor-name: --transliterationInput;
         width: 100%;
         font-size: var(--font-size-l);
-      }
-      .transliterationInputHighlighted {
-        /* fixme: css organisation */
-        border-color: transparent !important;
-        background-image:
-          linear-gradient(var(--color-bg), var(--color-bg)),
-          linear-gradient(
-            to right,
-            var(--color-orange),
-            #000,
-            var(--color-green)
-          );
-        background-origin: border-box;
-        background-clip: padding-box, border-box;
       }
 
       .transliterationTooltip {
@@ -293,18 +272,11 @@ export function TransliterationForm({
       <label class="transliterationRow">
         <${LabelText} tag="div">Tagalog word<//>
         <${Input}
-          autofocus
-          class=${classes(
-            "transliterationInput",
-            highlight && "transliterationInputHighlighted",
-          )}
+          class="transliterationInput"
           type="text"
           placeholder="kalabasa"
           maxlength="30"
           value=${inputText}
-          onPointerDown=${() => setIsFocused(true)}
-          onKeyDown=${() => setIsFocused(true)}
-          onBlur=${() => setIsFocused(false)}
           onInput=${onInput}
         />
       </label>

@@ -1,4 +1,4 @@
-import { Button } from "../components/form.js";
+import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
 import { useEffect, useRef } from "../lib/htm-preact.js";
 import { delay } from "../util/delay.js";
@@ -24,11 +24,7 @@ const backgroundWords = [
 ];
 const backgroundPauseMs = 3000;
 
-export function CanvasPlaceholder({
-  canvasWidth,
-  canvasHeight,
-  onClickExample,
-}) {
+export function CanvasPlaceholder({ canvasWidth, canvasHeight, onSubmitText }) {
   const backgroundCanvasRef = useRef();
 
   useEffect(() => {
@@ -38,6 +34,13 @@ export function CanvasPlaceholder({
       abortController.abort();
     };
   }, []);
+
+  const onSubmitTextForm = (event) => {
+    event.preventDefault();
+    const text = event.currentTarget.elements.text.value;
+    if (text === "") return;
+    onSubmitText(text);
+  };
 
   return html`
     <style id=${CanvasPlaceholder.name}>
@@ -58,7 +61,7 @@ export function CanvasPlaceholder({
         inset: 0;
         width: 100%;
         height: 100%;
-        opacity: 0.08;
+        opacity: 0.04;
       }
       .canvasHeader {
         position: relative;
@@ -74,8 +77,17 @@ export function CanvasPlaceholder({
         text-transform: uppercase;
         color: var(--color-fg-secondary);
       }
-      .canvasExamples {
+      .canvasExamplesCard {
         position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--size-s);
+      }
+      .canvasExamplesBlurb {
+        font-size: var(--font-size-m);
+      }
+      .canvasExamples {
         display: flex;
         gap: var(--size-s);
       }
@@ -93,17 +105,31 @@ export function CanvasPlaceholder({
           Baybayin translator (transliterator) & calligraphy generator
         </h2>
       </div>
-      <div class="canvasExamples">
-        ${exampleWords.map(
-          (exampleWord) => html`
-            <${Button}
-              type="button"
-              onClick=${() => onClickExample(exampleWord)}
-            >
-              ${exampleWord}
-            <//>
-          `,
-        )}
+      <div class="canvasExamplesCard">
+        <p class="canvasExamplesBlurb">Enter a word to generate</p>
+        <form onSubmit=${onSubmitTextForm}>
+          <${Input}
+            autofocus
+            type="text"
+            name="text"
+            maxlength="30"
+            autocomplete="off"
+            placeholder="kumusta"
+          />
+        </form>
+        <p class="canvasExamplesBlurb">or start with an example</p>
+        <div class="canvasExamples">
+          ${exampleWords.map(
+            (exampleWord) => html`
+              <${Button}
+                type="button"
+                onClick=${() => onSubmitText(exampleWord)}
+              >
+                ${exampleWord}
+              <//>
+            `,
+          )}
+        </div>
       </div>
     </div>
   `;
