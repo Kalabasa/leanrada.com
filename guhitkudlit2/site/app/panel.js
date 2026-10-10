@@ -19,7 +19,6 @@ export function AppPanel({ title, children }) {
         font-size: var(--font-size-s);
         box-shadow: var(--shadow-m);
         position: relative;
-        z-index: 2;
       }
       .appPanelTitle::after {
         content: "";
@@ -36,7 +35,6 @@ export function AppPanel({ title, children }) {
         background: var(--color-bg);
         border-radius: 0 var(--size-s) 0 0;
         box-shadow: var(--shadow-m);
-        z-index: 1;
       }
     </style>
     <aside class="appPanelContainer">

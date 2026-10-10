@@ -8,7 +8,13 @@ const cases = [
     ["aso"],
     {
       baybayinUnits: ["a", "su"],
-      transformed: [{ type: "vowel", from: "o", to: "u", context: "aso" }],
+      transformed: [
+        {
+          fromWord: "aso",
+          toWord: "asu",
+          transforms: [{ type: "vowel", from: "so", to: "su" }],
+        },
+      ],
     },
   ],
   [["pusa"], { baybayinUnits: ["pu", "sa"] }],
@@ -16,7 +22,13 @@ const cases = [
     ["araw"],
     {
       baybayinUnits: ["a", "da", "w"],
-      transformed: [{ type: "ra", from: "ra", to: "da", context: "araw" }],
+      transformed: [
+        {
+          fromWord: "araw",
+          toWord: "adaw",
+          transforms: [{ type: "ra", from: "ra", to: "da" }],
+        },
+      ],
     },
   ],
   [
@@ -24,9 +36,15 @@ const cases = [
     {
       baybayinUnits: ["i", "li", "pa", "n", "ti"],
       transformed: [
-        { type: "vowel", from: "e", to: "i", context: "elepante" },
-        { type: "vowel", from: "e", to: "i", context: "elepante" },
-        { type: "vowel", from: "e", to: "i", context: "elepante" },
+        {
+          fromWord: "elepante",
+          toWord: "ilipanti",
+          transforms: [
+            { type: "vowel", from: "e", to: "i" },
+            { type: "vowel", from: "le", to: "li" },
+            { type: "vowel", from: "te", to: "ti" },
+          ],
+        },
       ],
     },
   ],
@@ -37,8 +55,14 @@ const cases = [
     {
       baybayinUnits: ["du", "u", "n"],
       transformed: [
-        { type: "vowel", from: "o", to: "u", context: "doon" },
-        { type: "vowel", from: "o", to: "u", context: "doon" },
+        {
+          fromWord: "doon",
+          toWord: "duun",
+          transforms: [
+            { type: "vowel", from: "do", to: "du" },
+            { type: "vowel", from: "o", to: "u" },
+          ],
+        },
       ],
     },
   ],
@@ -48,7 +72,13 @@ const cases = [
     ["baon"],
     {
       baybayinUnits: ["ba", "u", "n"],
-      transformed: [{ type: "vowel", from: "o", to: "u", context: "baon" }],
+      transformed: [
+        {
+          fromWord: "baon",
+          toWord: "baun",
+          transforms: [{ type: "vowel", from: "o", to: "u" }],
+        },
+      ],
     },
   ],
   [["baul"], { baybayinUnits: ["ba", "u", "l"] }],
@@ -59,11 +89,33 @@ const cases = [
     {
       baybayinUnits: ["ba", "ka"],
       transformed: [
-        { type: "repetition", from: "kk", to: "k", context: "bakka" },
+        {
+          fromWord: "bakka",
+          toWord: "baka",
+          transforms: [{ type: "repetition", from: "kk", to: "k" }],
+        },
       ],
     },
   ],
   [["Pusà!"], { baybayinUnits: ["pu", "sa"] }],
+  [
+    ["aso pusa suri"],
+    {
+      baybayinUnits: ["a", "su", " ", "pu", "sa", " ", "su", "di"],
+      transformed: [
+        {
+          fromWord: "aso",
+          toWord: "asu",
+          transforms: [{ type: "vowel", from: "so", to: "su" }],
+        },
+        {
+          fromWord: "suri",
+          toWord: "sudi",
+          transforms: [{ type: "ra", from: "ri", to: "di" }],
+        },
+      ],
+    },
+  ],
 
   // Bigkas na iba sa baybay
   [
@@ -71,7 +123,11 @@ const cases = [
     {
       baybayinUnits: ["na", "ng"],
       transformed: [
-        { type: "special", from: "ng", to: "nang", context: "ng" },
+        {
+          fromWord: "ng",
+          toWord: "nang",
+          transforms: [{ type: "special", from: "ng", to: "nang" }],
+        },
       ],
     },
   ],
@@ -80,7 +136,11 @@ const cases = [
     {
       baybayinUnits: ["ma", "nga"],
       transformed: [
-        { type: "special", from: "mga", to: "manga", context: "mga" },
+        {
+          fromWord: "mga",
+          toWord: "manga",
+          transforms: [{ type: "special", from: "mga", to: "manga" }],
+        },
       ],
     },
   ],
@@ -91,10 +151,33 @@ const cases = [
     ["suri"],
     {
       baybayinUnits: ["su", "di"],
-      transformed: [{ type: "ra", from: "ri", to: "di", context: "suri" }],
+      transformed: [
+        {
+          fromWord: "suri",
+          toWord: "sudi",
+          transforms: [{ type: "ra", from: "ri", to: "di" }],
+        },
+      ],
     },
   ],
   [["suri", { separateRa: true }], { baybayinUnits: ["su", "ri"] }],
+  [
+    ["regalo"],
+    {
+      baybayinUnits: ["di", "ga", "lu"],
+      transformed: [
+        {
+          fromWord: "regalo",
+          toWord: "digalu",
+          transforms: [
+            { type: "vowel", from: "re", to: "di" },
+            { type: "ra", from: "ri", to: "di" },
+            { type: "vowel", from: "lo", to: "lu" },
+          ],
+        },
+      ],
+    },
+  ],
   [
     ["durian", { separateRa: true }],
     { baybayinUnits: ["du", "ri", "a", "n"] },
@@ -106,8 +189,14 @@ const cases = [
     {
       baybayinUnits: ["ba", "ta"],
       transformed: [
-        { type: "drop", from: "n", to: "", context: "bantay" },
-        { type: "drop", from: "y", to: "", context: "bantay" },
+        {
+          fromWord: "bantay",
+          toWord: "bata",
+          transforms: [
+            { type: "cluster", from: "n", to: "" },
+            { type: "drop", from: "y", to: "" },
+          ],
+        },
       ],
     },
   ],
@@ -116,8 +205,14 @@ const cases = [
     {
       baybayinUnits: ["pi"],
       transformed: [
-        { type: "collapse", from: "p", to: "pi", context: "pr" },
-        { type: "drop", from: "r", to: "", context: "pr" },
+        {
+          fromWord: "pr",
+          toWord: "pi",
+          transforms: [
+            { type: "cluster", from: "p", to: "pi" },
+            { type: "drop", from: "r", to: "" },
+          ],
+        },
       ],
     },
   ],

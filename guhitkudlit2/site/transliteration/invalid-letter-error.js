@@ -10,7 +10,14 @@ export class InvalidLetterError extends Error {
   }
 
   formatLetters() {
-    return this.letters.join(", ").toUpperCase();
+    return (
+      this.letters.slice(0, -1).join(", ").toUpperCase() +
+      (this.letters.length === 2
+        ? " and " + this.letters.at(-1).toUpperCase()
+        : this.letters.length > 2
+          ? ", and " + this.letters.at(-1).toUpperCase()
+          : "")
+    );
   }
 
   generateLetterExamplesHTML() {
@@ -58,7 +65,7 @@ function generateLetterExamplesHTML(letters) {
         ([before, after]) =>
           "<li><span class='before'>" +
           before +
-          "</span>→<span class='after'>" +
+          "</span>⟶<span class='after'>" +
           after +
           "</span></li>",
       ),

@@ -30,6 +30,7 @@ export function createSpellingControls() {
         .spellingOptions {
           display: flex;
           position: relative;
+          z-index: 0;
           &::before {
             content: "";
             background: #f0f0f0;
@@ -81,7 +82,12 @@ export function createSpellingControls() {
         }
       </style>
       <div class="spellingControls">
-        <div class="spellingControl">
+        <div
+          class=${classes(
+            "spellingControl",
+            !inputText.get().length && "spellingControlDimmed",
+          )}
+        >
           <${LabelText}>Syllabication<//>
           <div class="spellingOptions">
             <label class="spellingOption">
@@ -117,7 +123,9 @@ export function createSpellingControls() {
         <div
           class=${classes(
             "spellingControl",
-            (!hasVirama(baybayinUnits.get()) || precolonial.get()) &&
+            (!inputText.get().length ||
+              !hasVirama(baybayinUnits.get()) ||
+              precolonial.get()) &&
               "spellingControlDimmed",
           )}
         >

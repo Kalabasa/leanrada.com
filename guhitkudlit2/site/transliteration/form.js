@@ -1,5 +1,5 @@
 import { html } from "../components/html.js";
-import { Input } from "../components/form.js";
+import { Button, Input } from "../components/form.js";
 import { observable, reaction, runInAction } from "../lib/mobx.js";
 import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
@@ -8,6 +8,7 @@ import { observer } from "../util/observer.js";
 import { Tooltip } from "../components/tooltip.js";
 import { useState } from "../lib/htm-preact.js";
 import { InvalidLetterError } from "./invalid-letter-error.js";
+import { InvalidSyllabicationError } from "./invalid-syllabication-error.js";
 
 const memo = Symbol("memo");
 
@@ -19,6 +20,7 @@ export function createTransliterationForm(
   const initialText = new URLSearchParams(location.search).get("word") ?? "";
   const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
+  const transformed = observable.box(undefined);
   const prettify = observable.box(false);
   const highlight = observable.box(initialText === "");
   const syllabicateError = observable.box(undefined);
@@ -35,7 +37,10 @@ export function createTransliterationForm(
       try {
         output = syllabicate(inputText, { separateRa, precolonial });
       } catch (error) {
-        if (!(error instanceof InvalidLetterError)) {
+        const isInputError =
+          error instanceof InvalidLetterError ||
+          error instanceof InvalidSyllabicationError;
+        if (!isInputError) {
           throw error;
         }
         syllabicateError.set(error);
@@ -43,6 +48,7 @@ export function createTransliterationForm(
       }
       syllabicateError.set(undefined);
       baybayinUnits.set(output.baybayinUnits);
+      transformed.set(output.transformed);
       prettify.set(true);
       debouncedRemovePrettify();
     },
@@ -76,6 +82,7 @@ export function createTransliterationForm(
       <${TransliterationForm}
         inputText=${inputText.get()}
         syllabication=${syllabication}
+        transformed=${transformed.get()}
         baybayin=${lazyConvertToUnicode(
           unicodeFilter(baybayinUnits.get()),
           viramaStyle.get(),
@@ -138,23 +145,38 @@ function prettifyTempBaybayin(baybayinUnits) {
 export function TransliterationForm({
   inputText,
   syllabication,
+  transformed,
   baybayin,
   highlight,
   error,
   onInput,
 }) {
   const [isFocused, setIsFocused] = useState(false);
+  const [isTransformedHintOpen, setIsTransformedHintOpen] = useState(false);
+
+  const helpLink = "./help/#" + encodeURIComponent(inputText);
 
   let tooltipContent = null;
   if (error && error instanceof InvalidLetterError) {
-    const helpLink = "./help/#" + encodeURIComponent(inputText);
-    tooltipContent = [
-      html`Um, we have to write <strong>${error.formatLetters()}</strong> the
-        Baybayin way. `,
-      html`<a class="transliterationTooltipLink" href=${helpLink}
-        >Here’s a quick guide!</a
-      >`,
-    ];
+    tooltipContent = html`<p>
+        Um, for the letter ${error.formatLetters()}, we have to write it the
+        Baybayin way.
+      </p>
+      <p>
+        <a class="transliterationTooltipLink" href=${helpLink}
+          >Check this quick guide!</a
+        >
+      </p>`;
+  } else if (error && error instanceof InvalidSyllabicationError) {
+    tooltipContent = html`<p>
+        So... we can’t really spell just ‘${error.word}’ in the precolonial way.
+        Needs a vowel!
+      </p>
+      <p>
+        <a class="transliterationTooltipLink" href=${helpLink}
+          >Check this quick guide!</a
+        >
+      </p>`;
   } else if (highlight && !inputText && !isFocused) {
     tooltipContent = "Type your word here!";
   }
@@ -171,6 +193,18 @@ export function TransliterationForm({
         flex-direction: column;
         gap: var(--size-xs);
         min-height: calc(var(--size-l) * 1.5);
+      }
+      .transliterationRowWithButton {
+        display: flex;
+        align-items: center;
+        gap: var(--size-s);
+
+        .transliterationRow {
+          flex: 1;
+        }
+      }
+      .transliterationTransformedButton {
+        anchor-name: --transliterationTransformedButton;
       }
       .transliterationInput {
         anchor-name: --transliterationInput;
@@ -191,21 +225,60 @@ export function TransliterationForm({
         background-origin: border-box;
         background-clip: padding-box, border-box;
       }
+
       .transliterationTooltip {
         display: block;
         max-width: 300px;
         color: var(--color-green);
         font-size: var(--font-size-m);
-        animation: transliterationTooltipEnter 0.2s;
-
-        strong {
-          font-weight: bold;
+        font-weight: bold;
+        * + p {
+          margin-top: var(--size-xs);
         }
+      }
+      .transliterationInputTooltip {
+        animation: transliterationTooltipEnter 0.2s 1s both;
       }
       .transliterationTooltipError {
         color: var(--color-orange);
       }
+      .transliterationTransformedIntro {
+        margin-bottom: var(--size-s);
+      }
+      .transliterationTransformedWord {
+        margin-bottom: var(--size-m);
+      }
+      .transliterationTransformedWordTitle {
+        margin-bottom: var(--size-xs);
+        color: #fff;
+      }
+      .transliterationTransforms {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: baseline;
+        gap: var(--size-xs) var(--size-s);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+          display: contents;
+        }
+      }
+      .transliterationTransformPair {
+        white-space: nowrap;
+      }
+      .transliterationTransformFrom {
+        color: var(--color-orange);
+      }
+      .transliterationTransformReason {
+        color: #fff;
+        font-size: var(--font-size-s);
+        font-weight: normal;
+        opacity: var(--opacity-secondary);
+      }
       .transliterationTooltipLink {
+        color: var(--color-green);
         text-decoration: underline;
         cursor: pointer;
       }
@@ -235,26 +308,131 @@ export function TransliterationForm({
           onInput=${onInput}
         />
       </label>
-      <label class="transliterationRow">
-        <${LabelText} tag="div">Syllabication<//>
-        <${Output} value=${syllabication} placeholder="ka · la · ba · sa" />
-      </label>
+      <div class="transliterationRowWithButton">
+        <label class="transliterationRow">
+          <${LabelText} tag="div">Syllabication<//>
+          <${Output} value=${syllabication} placeholder="ka · la · ba · sa" />
+        </label>
+        ${transformed &&
+        html`<${Button}
+          class="transliterationTransformedButton"
+          type="button"
+          aria-label="Why is the spelling different?"
+          onClick=${() => setIsTransformedHintOpen(!isTransformedHintOpen)}
+        >
+          ?
+        <//>`}
+      </div>
       <label class="transliterationRow">
         <${LabelText} tag="div">Baybayin<//>
         <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" />
       </label>
     </form>
     ${tooltipContent &&
-    html`<${Tooltip} anchorName="--transliterationInput" direction="top">
-      <span
-        class="${classes(
-          "transliterationTooltip",
-          error && "transliterationTooltipError",
-        )}"
-        >${tooltipContent}</span
+    html`<${Tooltip}
+      class=${classes(
+        "transliterationTooltip",
+        "transliterationInputTooltip",
+        error && "transliterationTooltipError",
+      )}
+      anchorName="--transliterationInput"
+      direction="top"
+    >
+      ${tooltipContent}
+    <//>`}
+    ${transformed &&
+    isTransformedHintOpen &&
+    html`<${Tooltip}
+      class="transliterationTooltip"
+      anchorName="--transliterationTransformedButton"
+      direction="top"
+    >
+      <p class="transliterationTransformedIntro">
+        Some of your text have automatically been respelled for Baybayin.
+      </p>
+      ${transformed.map(
+        ({ fromWord, toWord, transforms }) => html`
+          <div class="transliterationTransformedWord">
+            <div class="transliterationTransformedWordTitle">
+              ${fromWord} ⟶ ${toWord}
+            </div>
+            <ul class="transliterationTransforms">
+              ${dedupeTransforms(transforms).map(
+                (transform) => html`
+                  <li>
+                    <span class="transliterationTransformPair">
+                      <span class="transliterationTransformFrom"
+                        >${transform.from} ⟶ ${!transform.to && "—"}</span
+                      >${transform.to && " " + transform.to}
+                    </span>
+                    <span class="transliterationTransformReason">
+                      ${explainTransform(transform)}
+                    </span>
+                  </li>
+                `,
+              )}
+            </ul>
+          </div>
+        `,
+      )}
+      <a class="transliterationTooltipLink" href=${helpLink}
+        >Learn more in this quick guide!</a
       >
     <//>`}
   `;
+}
+
+function dedupeTransforms(transforms) {
+  const result = [];
+
+  for (const transform of transforms) {
+    if (
+      result.every((other) => {
+        if (
+          other.type === transform.type &&
+          other.from === transform.from &&
+          other.to === transform.to
+        ) {
+          return false;
+        }
+        if (
+          transform.type === "vowel" &&
+          other.type === transform.type &&
+          other.from.at(-1) === other.from.at(-1)
+        ) {
+          return false;
+        }
+        if (transform.type === "ra" && other.type === transform.type) {
+          return false;
+        }
+        return true;
+      })
+    ) {
+      result.push(transform);
+    }
+  }
+
+  return result;
+}
+
+function explainTransform({ type, from }) {
+  switch (type) {
+    case "vowel":
+      if (from.endsWith("e")) {
+        return "E and I are interchangeable";
+      }
+      return "O and U are interchangeable";
+    case "ra":
+      return "D and R are interchangeable";
+    case "repetition":
+      return "double letters have the same sound";
+    case "special":
+      return "is how it’s pronounced";
+    case "drop":
+      return "precolonial spelling omits syllable ending consonants";
+    case "cluster":
+      return "precolonial spelling has to break up consonant clusters";
+  }
 }
 
 function Output({ value, placeholder }) {

@@ -12,7 +12,15 @@ import { InvalidSyllabicationError } from "./invalid-syllabication-error.js";
  *
  * @returns {{
  *   baybayinUnits: string[],
- *   transformed?: { type: string, from: string, to: string, context: string }[],
+ *   transformed?: {
+ *     fromWord: string,
+ *     toWord: string,
+ *     transforms: {
+ *       type: "special" | "repetition" | "vowel" | "drop" | "cluster" | "ra",
+ *       from: string,
+ *       to: string,
+ *     }[],
+ *   }[],
  * }}
  */
 export function syllabicate(phrase, how = {}) {
@@ -29,17 +37,17 @@ export function syllabicate(phrase, how = {}) {
   const words = phrase.split(/\s+/g).filter((word) => word);
   const baybayinUnits = words.flatMap((word, wordIndex) => {
     const wordBoundary = wordIndex > 0 ? [" "] : [];
-
-    const context = word;
+    const fromWord = word;
+    const transforms = [];
 
     if (!how?.simple) {
       const specialWord = syllabicateSpecial(word);
       if (specialWord) {
+        const toWord = specialWord.join("");
         transformed.push({
-          type: "special",
-          from: word,
-          to: specialWord.join(""),
-          context,
+          fromWord,
+          toWord,
+          transforms: [{ type: "special", from: fromWord, to: toWord }],
         });
         return [...wordBoundary, ...specialWord];
       }
@@ -48,19 +56,19 @@ export function syllabicate(phrase, how = {}) {
       word = word.replace(
         /(ng|(?<!n)g|[^aeioug])\1+/g,
         (repetition, repeated) => {
-          transformed.push({
+          transforms.push({
             type: "repetition",
             from: repetition,
             to: repeated,
-            context,
           });
           return repeated;
         },
       );
     }
 
-    let baybayinUnits = [];
+    const baybayinUnits = [];
     let currentUnit = "";
+    let unitTransforms = [];
 
     for (let letter of word) {
       letter = letter.toLowerCase();
@@ -68,11 +76,11 @@ export function syllabicate(phrase, how = {}) {
 
       if (isVowel(letter)) {
         if (letter === "e") {
-          transformed.push({ type: "vowel", from: "e", to: "i", context });
+          unitTransforms.push({ type: "vowel", from: currentUnit + "e" });
           letter = "i";
         }
         if (letter === "o") {
-          transformed.push({ type: "vowel", from: "o", to: "u", context });
+          unitTransforms.push({ type: "vowel", from: currentUnit + "o" });
           letter = "u";
         }
 
@@ -84,18 +92,12 @@ export function syllabicate(phrase, how = {}) {
             baybayinUnits.length === 0,
           );
           if (collapsedUnit !== currentUnit) {
-            transformed.push({
-              type: "collapse",
-              from: currentUnit,
-              to: collapsedUnit,
-              context,
-            });
+            unitTransforms.push({ type: "drop", from: currentUnit });
+            currentUnit = collapsedUnit;
           }
-          currentUnit = collapsedUnit;
         }
 
-        baybayinUnits.push(currentUnit);
-        currentUnit = "";
+        commitUnit(currentUnit);
       } else if (isConsonant(letter)) {
         if (
           currentUnit &&
@@ -107,25 +109,20 @@ export function syllabicate(phrase, how = {}) {
               const collapsedUnit =
                 collapseConsonant(currentUnit, true) +
                 (letter === "w" ? "u" : "i");
-              transformed.push({
-                type: "collapse",
+              unitTransforms.push({
+                type:
+                  collapsedUnit.at(-1) === currentUnit.at(-1)
+                    ? "drop"
+                    : "cluster",
                 from: currentUnit,
-                to: collapsedUnit,
-                context,
               });
-              baybayinUnits.push(collapsedUnit);
+              commitUnit(collapsedUnit);
             } else {
-              transformed.push({
-                type: "drop",
-                from: currentUnit,
-                to: "",
-                context,
-              });
+              unitTransforms.push({ type: "drop", from: currentUnit });
+              commitUnit("");
             }
-            currentUnit = "";
           } else {
-            baybayinUnits.push(currentUnit);
-            currentUnit = "";
+            commitUnit(currentUnit);
           }
         }
 
@@ -139,29 +136,43 @@ export function syllabicate(phrase, how = {}) {
       throw new InvalidLetterError(invalidChars);
     }
 
-    if (currentUnit && !how?.precolonial) {
-      baybayinUnits.push(currentUnit);
-    }
-    if (currentUnit && how?.precolonial) {
-      transformed.push({ type: "drop", from: currentUnit, to: "", context });
-    }
-
-    if (!how?.separateRa) {
-      baybayinUnits = baybayinUnits.map((u) => {
-        if (!u.startsWith("r")) return u;
-        const mergedUnit = "d" + u.slice(1);
-        transformed.push({ type: "ra", from: u, to: mergedUnit, context });
-        return mergedUnit;
-      });
+    if (currentUnit) {
+      if (how?.precolonial) {
+        unitTransforms.push({ type: "drop", from: currentUnit });
+        commitUnit("");
+      } else {
+        commitUnit(currentUnit);
+      }
     }
 
     if (baybayinUnits.length === 0) {
       throw new InvalidSyllabicationError(word);
     }
 
+    if (transforms.length) {
+      const toWord = baybayinUnits.join("");
+      transformed.push({ fromWord, toWord, transforms });
+    }
+
     return [...wordBoundary, ...baybayinUnits];
+
+    function commitUnit(unit) {
+      if (!how?.separateRa && unit.startsWith("r")) {
+        unitTransforms.push({ type: "ra", from: unit });
+        unit = "d" + unit.slice(1);
+      }
+      if (unit) {
+        baybayinUnits.push(unit);
+      }
+      for (const unitTransform of unitTransforms) {
+        transforms.push({ ...unitTransform, to: unit });
+      }
+      unitTransforms = [];
+      currentUnit = "";
+    }
   });
 
+  console.log(phrase, transformed);
   if (transformed.length === 0) return { baybayinUnits };
   return { baybayinUnits, transformed };
 }
