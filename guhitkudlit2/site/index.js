@@ -53,21 +53,23 @@ export function Index() {
           "canvas"
           "panels";
         grid-gap: var(--size-m);
-        padding: var(--size-m) var(--size-m) 0;
         height: 100vh;
         overflow: hidden;
       }
       .appLogo {
         grid-area: canvas;
         position: relative;
-        left: calc(var(--size-s) * -1);
-        top: calc(var(--size-s) * -1);
+        left: var(--size-s);
+        top: var(--size-s);
         justify-self: start;
         align-self: start;
         z-index: 1;
       }
       .appMenu {
         grid-area: canvas;
+        position: relative;
+        right: var(--size-s);
+        top: var(--size-s);
         justify-self: end;
         align-self: start;
         z-index: 2;
@@ -78,6 +80,8 @@ export function Index() {
       }
       .appPanelGroupArea {
         grid-area: panels;
+        padding: 0 var(--size-m);
+        overflow: auto;
       }
     </style>
     <div class="app appDesktopLayout">
