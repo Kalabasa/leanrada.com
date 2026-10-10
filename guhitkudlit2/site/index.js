@@ -21,12 +21,13 @@ const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
   if (config.formation !== undefined) formation.set(config.formation);
   inputText.set(config.text);
 
-  document.startViewTransition();
-  inputTextWrapperRef.current?.style.setProperty(
-    "view-transition-name",
-    config.sourceElement.style.viewTransitionName,
-  );
-  config.sourceElement.style.removeProperty("view-transition-name");
+  document.startViewTransition(() => {
+    inputTextWrapperRef.current?.style.setProperty(
+      "view-transition-name",
+      config.sourceElement.style.viewTransitionName,
+    );
+    config.sourceElement.style.removeProperty("view-transition-name");
+  });
 });
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(
@@ -101,6 +102,9 @@ export function Index() {
         grid-area: panels;
         padding: 0 var(--size-m);
         overflow: auto;
+      }
+      ::view-transition-old(introConfig) {
+        height: 100%;
       }
     </style>
     <div class="app appDesktopLayout">
