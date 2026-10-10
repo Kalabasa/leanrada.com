@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert";
 import { syllabicate } from "../syllabicate.js";
+import { InvalidLetterError } from "../invalid-letter-error.js";
+import { InvalidSyllabicationError } from "../invalid-syllabication-error.js";
 
 const cases = [
   // Karaniwan
@@ -178,9 +180,11 @@ const cases = [
       ],
     },
   ],
+  [["durian", { separateRa: true }], { baybayinUnits: ["du", "ri", "a", "n"] }],
+
   [
-    ["durian", { separateRa: true }],
-    { baybayinUnits: ["du", "ri", "a", "n"] },
+    ["walang pag-asa"],
+    { baybayinUnits: ["wa", "la", "ng", " ", "pa", "g", "a", "sa"] },
   ],
 
   // Precolonial
@@ -193,7 +197,7 @@ const cases = [
           fromWord: "bantay",
           toWord: "bata",
           transforms: [
-            { type: "cluster", from: "n", to: "" },
+            { type: "drop", from: "n", to: "" },
             { type: "drop", from: "y", to: "" },
           ],
         },
@@ -225,6 +229,28 @@ cases.forEach(([input, output], i) => {
       (input[1] ? ", " + JSON.stringify(input[1]) : ""),
     () => {
       assert.deepStrictEqual(syllabicate(...input), output);
-    }
+    },
+  );
+});
+
+test('syllabicate: "vex" throws InvalidLetterError', () => {
+  assert.throws(
+    () => syllabicate("vex"),
+    (error) => {
+      assert.ok(error instanceof InvalidLetterError);
+      assert.deepStrictEqual(error.letters, ["v", "x"]);
+      return true;
+    },
+  );
+});
+
+test('syllabicate: "p", precolonial throws InvalidSyllabicationError', () => {
+  assert.throws(
+    () => syllabicate("p", { precolonial: true }),
+    (error) => {
+      assert.ok(error instanceof InvalidSyllabicationError);
+      assert.strictEqual(error.word, "p");
+      return true;
+    },
   );
 });
