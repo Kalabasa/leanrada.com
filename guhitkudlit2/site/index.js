@@ -7,12 +7,22 @@ import { createTransliterationForm } from "./transliteration/form.js";
 import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
+import { createStyleControls } from "./style/controls.js";
 
-const { SpellingControls, viramaStyle, separateRa, precolonial } = createSpellingControls();
-const { TransliterationForm, inputText, baybayinUnits } = createTransliterationForm(viramaStyle, separateRa, precolonial);
+const { SpellingControls, viramaStyle, separateRa, precolonial } =
+  createSpellingControls();
+const { TransliterationForm, inputText, baybayinUnits } =
+  createTransliterationForm(viramaStyle, separateRa, precolonial);
+const { StyleControls } = createStyleControls();
 const { Canvas, canvasRef } = createCanvas(baybayinUnits);
 const calligraphyComplete = observable.box(false);
-const { FileControls } = createFileControls(canvasRef, inputText, baybayinUnits, viramaStyle, calligraphyComplete);
+const { FileControls } = createFileControls(
+  canvasRef,
+  inputText,
+  baybayinUnits,
+  viramaStyle,
+  calligraphyComplete,
+);
 
 when(
   () => baybayinUnits.get().length > 0,
@@ -81,15 +91,16 @@ export function Index() {
       <div class="appPanelGroupArea">
         <${AppPanelGroup}
           panels=${[
-            { title: html`<h2>Text</h2>`, content: html`<${TransliterationForm} />` },
+            { title: "Text", content: html`<${TransliterationForm} />` },
             {
-              title: html`<h2>Spelling</h2>`,
+              title: "Spelling",
               content: html`<${SpellingControls}
                 inputText=${inputText}
                 baybayinUnits=${baybayinUnits}
               />`,
             },
-            { title: html`<h2>File</h2>`, content: html`<${FileControls} />` },
+            { title: "Style", content: html`<${StyleControls} />` },
+            { title: "File", content: html`<${FileControls} />` },
           ]}
         />
       </div>

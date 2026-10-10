@@ -16,7 +16,7 @@ export function AppPanelGroup({ panels }) {
       ${panels.map(
         ({ title, content }, index) => html`
           <div class="appPanelGroupItem" key=${index}>
-            <${AppPanel} title=${title}>${content}<//>
+            <${AppPanel} title=${html`<h2>${title}</h2>`}>${content}<//>
           </div>
         `,
       )}
