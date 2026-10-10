@@ -1,4 +1,5 @@
 import { DEBUG } from "../app/flags.js";
+import { render } from "../canvas/render.js";
 import { comparer, computed, reaction } from "../lib/mobx.js";
 import { hasVirama } from "../transliteration/syllabicate.js";
 import { debounce } from "../util/debounce.js";
@@ -57,17 +58,14 @@ export function installCalligraphy(
     debounce(async ({ baybayinUnits, viramaStyle }) => {
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
-      const context = canvasRef.current.getContext("2d");
-      context.fillStyle = "#fff";
-      context.fillRect(0, 0, context.canvas.width, context.canvas.height);
       const abortController = new AbortController();
       drawingAbortController = abortController;
-      await drawCalligraphy(
+      await render({
         baybayinUnits,
-        context,
-        abortController.signal,
-        { viramaStyle },
-      );
+        viramaStyle,
+        canvas: canvasRef.current,
+        abortSignal: abortController.signal,
+      });
       if (abortController.signal.aborted) return;
       onProgress("complete");
     }, 400),
@@ -81,13 +79,14 @@ export function installCalligraphy(
  * @param {AbortSignal} abortSignal
  * @param {object} opts
  * @param {"krus" | "pamudpod"} opts.viramaStyle
+ * @param {number} opts.speedFactor
  * @param {number} [opts.seed]
  */
 export async function drawCalligraphy(
   baybayinUnits,
   canvasContext,
   abortSignal,
-  { viramaStyle, seed = 0 },
+  { viramaStyle, speedFactor, seed = 0 },
 ) {
   const painter = await createPainter(createRandom(seed));
   const { path, cellSize } = await layoutCalligraphy(
@@ -98,9 +97,13 @@ export async function drawCalligraphy(
   if (abortSignal.aborted) return;
 
   let drawStep = 0;
-  const drawInterval = DEBUG
-    ? 0
-    : Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2));
+  const debugSpeedFactor = Number(
+    new URL(location).searchParams.get("speedFactor"),
+  );
+  const drawInterval = Math.round(
+    (DEBUG ? debugSpeedFactor : speedFactor) *
+      Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2)),
+  );
   for (const _ of painter.drawPaths(path, cellSize, canvasContext)) {
     if (drawStep++ % drawInterval === 0) await delay(22);
     if (abortSignal.aborted) return;

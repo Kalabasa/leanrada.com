@@ -21,20 +21,17 @@ export function createFileControls(
   }
 
   async function downloadFullCanvas() {
-    const { drawCalligraphy } = await import("../calligraphy/calligraphy.js");
+    const { render } = await import("../canvas/render.js");
     const fullCanvas = document.createElement("canvas");
     const ratio = canvasRef.current.width / canvasRef.current.height;
     fullCanvas.width = Math.max(canvasRef.current.width, 2000);
     fullCanvas.height = fullCanvas.width / ratio;
-    const context = fullCanvas.getContext("2d");
-    context.fillStyle = "#fff";
-    context.fillRect(0, 0, fullCanvas.width, fullCanvas.height);
-    await drawCalligraphy(
-      baybayinUnits.get(),
-      context,
-      new AbortController().signal,
-      { viramaStyle: viramaStyle.get() },
-    );
+    await render({
+      baybayinUnits: baybayinUnits.get(),
+      viramaStyle: viramaStyle.get(),
+      canvas: fullCanvas,
+      speedFactor: 10,
+    });
     downloadCanvas(fullCanvas);
   }
 
