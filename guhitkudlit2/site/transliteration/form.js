@@ -42,7 +42,7 @@ export function createTransliterationForm(
         return;
       }
       syllabicateError.set(undefined);
-      baybayinUnits.set(output);
+      baybayinUnits.set(output.baybayinUnits);
       prettify.set(true);
       debouncedRemovePrettify();
     },
