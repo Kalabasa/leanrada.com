@@ -5,34 +5,39 @@ import { delay } from "../util/delay.js";
 
 const exampleConfigs = [
   {
-    text: "ma sig la",
+    text: "masigla",
     viramaStyle: "krus",
     separateRa: false,
     precolonial: false,
+    formation: "diamond",
   },
   {
-    text: "ii yak",
+    text: "iiyak",
     viramaStyle: "pamudpod",
     separateRa: false,
     precolonial: true,
+    formation: "grid",
   },
   {
-    text: "tata wa",
+    text: "tatawa",
     viramaStyle: "pamudpod",
     separateRa: false,
     precolonial: false,
+    formation: "grid",
   },
   {
     text: "kuting",
     viramaStyle: "krus",
     separateRa: false,
     precolonial: false,
+    formation: "normal",
   },
   {
-    text: "ba sag ulo",
+    text: "basag-ulo",
     viramaStyle: "krus",
     separateRa: false,
     precolonial: false,
+    formation: "diamond",
   },
 ];
 const backgroundWords = [
@@ -146,10 +151,7 @@ export function CanvasPlaceholder({ canvasWidth, canvasHeight, onConfig }) {
         <div class="canvasExamples">
           ${exampleConfigs.map(
             (exampleConfig) => html`
-              <${Button}
-                type="button"
-                onClick=${() => onConfig(exampleConfig)}
-              >
+              <${Button} type="button" onClick=${() => onConfig(exampleConfig)}>
                 ${exampleConfig.text}
               <//>
             `,

@@ -10,7 +10,6 @@ const layoutRows = 9;
 /**
  * @param {Glyph[]} glyphs
  * @param {{
- *   alterStems?: boolean,
  *   kern?: boolean,
  *   gap?: number,
  * }} [opts]
@@ -52,6 +51,56 @@ export function layoutLine(glyphs, opts = {}) {
   }
 
   return layout;
+}
+
+/**
+ * @param {string[]} baybayinUnits
+ * @param {"normal" | "grid" | "diamond"} formation
+ * @returns {string[][]}
+ */
+export function wrapLines(baybayinUnits, formation) {
+  const lines = [[]];
+  switch (formation) {
+    case "normal":
+      for (const unit of baybayinUnits) {
+        if (unit === " ") {
+          lines.push([]);
+        } else {
+          lines.at(-1).push(unit);
+        }
+      }
+      break;
+    case "grid":
+      const gridUnits = baybayinUnits.filter((u) => u !== " ");
+      const gridWidth = Math.round(Math.sqrt(gridUnits.length));
+      for (const unit of gridUnits) {
+        if (lines.at(-1).length >= gridWidth) {
+          lines.push([]);
+        }
+        lines.at(-1).push(unit);
+      }
+      break;
+    case "diamond":
+      const diamondUnits = baybayinUnits.filter((u) => u !== " ");
+      const diamondWidth = Math.ceil(Math.sqrt(diamondUnits.length));
+      for (const unit of diamondUnits) {
+        if (
+          lines.at(-1).length >=
+          Math.max(
+            1,
+            diamondWidth -
+              Math.abs(Math.ceil(diamondWidth * 0.5) - lines.length + 1),
+          )
+        ) {
+          lines.push([]);
+        }
+        lines.at(-1).push(unit);
+      }
+      break;
+    default:
+      throw new TypeError("invalid formation");
+  }
+  return lines;
 }
 
 /**

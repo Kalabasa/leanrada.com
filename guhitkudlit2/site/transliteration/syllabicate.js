@@ -29,7 +29,7 @@ export function syllabicate(phrase, how = {}) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/gu, " ")
-    .replace(/[^a-z\p{Letter}\s]|\p{Symbol}/gu, "-");
+    .replace(/[^a-z\p{Letter}\/\s]|\p{Symbol}/gu, "-");
 
   if (!phrase.match(/[a-z]/)) {
     return { baybayinUnits: [] };
@@ -38,7 +38,7 @@ export function syllabicate(phrase, how = {}) {
   const invalidChars = [];
   const transformed = [];
 
-  const words = phrase.split(/\s+/g).filter((word) => word);
+  const words = phrase.split(/\/|\s+/g).filter((word) => word);
   const baybayinUnits = words.flatMap((word, wordIndex) => {
     const wordBoundary = wordIndex > 0 ? [" "] : [];
     const fromWord = word;

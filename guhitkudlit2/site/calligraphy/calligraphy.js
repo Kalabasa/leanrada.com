@@ -24,6 +24,7 @@ async function createPainter(random) {
 export function installCalligraphy(
   baybayinUnits,
   viramaStyle,
+  formation,
   canvasRef,
   onProgress,
 ) {
@@ -34,6 +35,7 @@ export function installCalligraphy(
       return {
         baybayinUnits: b,
         viramaStyle: hasVirama(b) ? v : "krus",
+        formation: formation.get(),
       };
     },
     { equals: comparer.structural },
@@ -55,7 +57,7 @@ export function installCalligraphy(
   );
   reaction(
     () => inputs.get(),
-    debounce(async ({ baybayinUnits, viramaStyle }) => {
+    debounce(async ({ baybayinUnits, viramaStyle, formation }) => {
       if (baybayinUnits.length === 0) return;
       if (!canvasRef.current) return;
       const abortController = new AbortController();
@@ -63,6 +65,7 @@ export function installCalligraphy(
       await render({
         baybayinUnits,
         viramaStyle,
+        formation,
         canvas: canvasRef.current,
         abortSignal: abortController.signal,
         drawInterval: calculateDrawInterval(baybayinUnits),
@@ -96,6 +99,7 @@ function calculateDrawInterval(baybayinUnits) {
  * @param {AbortSignal} abortSignal
  * @param {object} opts
  * @param {"krus" | "pamudpod"} opts.viramaStyle
+ * @param {"normal" | "grid" | "diamond"} [opts.formation]
  * @param {number} opts.drawInterval 0 means instant
  * @param {number} [opts.seed]
  * @param {number} [opts.maxComposeSteps]
@@ -106,13 +110,13 @@ export async function* drawCalligraphy(
   baybayinUnits,
   canvasContext,
   abortSignal,
-  { viramaStyle, drawInterval, seed = 0, maxComposeSteps, scale },
+  { viramaStyle, formation, drawInterval, seed = 0, maxComposeSteps, scale },
 ) {
   const painter = await createPainter(createRandom(seed));
   const { path, cellSize } = await layoutCalligraphy(
     baybayinUnits,
     canvasContext.canvas,
-    { viramaStyle, maxComposeSteps, scale },
+    { viramaStyle, formation, maxComposeSteps, scale },
   );
   if (abortSignal.aborted) return;
 
@@ -132,17 +136,18 @@ export async function* drawCalligraphy(
  * @param {HTMLCanvasElement} canvas
  * @param {object} opts
  * @param {"krus" | "pamudpod"} opts.viramaStyle
+ * @param {"normal" | "grid" | "diamond"} [opts.formation]
  * @param {number} [opts.maxComposeSteps]
  * @param {number} [opts.scale]
  */
 export async function layoutCalligraphy(
   baybayinUnits,
   canvas,
-  { viramaStyle, maxComposeSteps, scale = 1 },
+  { viramaStyle, formation = "normal", maxComposeSteps, scale = 1 },
 ) {
   const [
     { getGlyph },
-    { layoutLine },
+    { layoutLine, wrapLines },
     { traceStrokes },
     { compose },
     { samplePaths },
@@ -154,14 +159,7 @@ export async function layoutCalligraphy(
     import("./path.js"),
   ]);
 
-  const lines = [[]];
-  for (const unit of baybayinUnits) {
-    if (unit === " ") {
-      lines.push([]);
-    } else {
-      lines.at(-1).push(unit);
-    }
-  }
+  const lines = wrapLines(baybayinUnits, formation);
 
   const layout2D = [];
   let lineTopY = 0;
@@ -170,7 +168,7 @@ export async function layoutCalligraphy(
       getGlyph(baybayinUnit, viramaStyle),
     );
 
-    const lineLayout = layoutLine(glyphs, { kern: true });
+    const lineLayout = layoutLine(glyphs, { kern: true, formation });
     const lineVertices = lineLayout
       .flatMap((glyph) => glyph.map.flat())
       .filter((vertex) => vertex);

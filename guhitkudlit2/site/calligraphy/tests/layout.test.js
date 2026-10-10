@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { layoutLine } from "../layout.js";
+import { layoutLine, wrapLines } from "../layout.js";
 
 function v(x, y) {
   return { x, y, adjacency: new Map() };
@@ -36,9 +36,7 @@ test("second glyph offset by width of first", () => {
   };
   const g2 = {
     xScale: 1,
-    map: [
-      [v(0, 0)],
-    ],
+    map: [[v(0, 0)]],
   };
 
   const [out1, out2] = layoutLine([g1, g2], { gap: 1 });
@@ -68,9 +66,7 @@ test("handles sparse rows correctly in width calculation", () => {
   };
   const g2 = {
     xScale: 1,
-    map: [
-      [v(0, 0)],
-    ],
+    map: [[v(0, 0)]],
   };
 
   const [, out2] = layoutLine([g1, g2], { gap: 1 });
@@ -103,7 +99,7 @@ test("preserves y and clones adjacency", () => {
   // same content
   assert.deepEqual(
     Array.from(out.map[0][0].adjacency.entries()),
-    Array.from(adjacency.entries())
+    Array.from(adjacency.entries()),
   );
 });
 
@@ -120,4 +116,22 @@ test("multiple rows contribute to width", () => {
   const [, out2] = layoutLine([g1, g2], { gap: 1 });
 
   assert.equal(out2.map[0][0].x, 3);
+});
+
+test("normal formation: 4 units in 1 line", () => {
+  const lines = wrapLines(["a", "ba", "ka", "da"], "normal");
+  assert.deepEqual(lines, [["a", "ba", "ka", "da"]]);
+});
+
+test("grid formation: 4 units in 2 and 2", () => {
+  const lines = wrapLines(["a", "ba", "ka", "da"], "grid");
+  assert.deepEqual(lines, [
+    ["a", "ba"],
+    ["ka", "da"],
+  ]);
+});
+
+test("diamond formation: 4 units in 1, 2, 1", () => {
+  const lines = wrapLines(["a", "ba", "ka", "da"], "diamond");
+  assert.deepEqual(lines, [["a"], ["ba", "ka"], ["da"]]);
 });
