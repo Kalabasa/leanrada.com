@@ -34,7 +34,7 @@ export class Brush extends BasePainter {
    * @param {number} scale
    * @param {string} color
    * @param {CanvasRenderingContext2D} canvasContext
-   * @yields {void}
+   * @yields {number} progress [0,1]
    */
   *drawPath(path, scale, color, canvasContext) {
     const maxRadius = 10 * scale;
@@ -62,7 +62,7 @@ export class Brush extends BasePainter {
       if (edgeLen === 0 || edgeProgressLen > edgeLen) {
         edgeProgressLen -= edgeLen;
         edgeIndex++;
-        yield;
+        yield (edgeIndex - 1) / (vertices.length - 1);
         continue;
       }
       const progress = edgeProgressLen / edgeLen;

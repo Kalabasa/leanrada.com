@@ -11,7 +11,7 @@ export class BasePainter {
    * @param {Path[]} paths
    * @param {number} scale
    * @param {CanvasRenderingContext2D} canvasContext
-   * @yields {void}
+   * @yields {number} progress [0,1]
    */
   *drawPaths(paths, scale, canvasContext) {
     const strokeScale = scale / 40;
@@ -21,7 +21,14 @@ export class BasePainter {
         DEBUG && new URLSearchParams(location.search).has("colorize")
           ? `hsl(${(i / paths.length) * 360}, 100%, 40%)`
           : "#000";
-      yield* this.drawPath(paths[i], strokeScale, color, canvasContext);
+      for (const pathProgress of this.drawPath(
+        paths[i],
+        strokeScale,
+        color,
+        canvasContext,
+      )) {
+        yield (i + pathProgress) / paths.length;
+      }
     }
   }
 
@@ -30,7 +37,7 @@ export class BasePainter {
    * @param {number} scale
    * @param {string} color
    * @param {CanvasRenderingContext2D} canvasContext
-   * @yields {void}
+   * @yields {number} progress [0,1]
    */
   *drawPath(path, scale, color, canvasContext) {
     if (path.vertices.length === 0) return;
@@ -59,7 +66,8 @@ export class BasePainter {
       canvasContext.moveTo(brush.x, brush.y);
       canvasContext.lineTo(nextX, nextY);
       canvasContext.lineWidth = (400 * scale) / (20 + brush.z);
-      yield canvasContext.stroke();
+      canvasContext.stroke();
+      yield index / (path.vertices.length - 1);
       brush.x = nextX;
       brush.y = nextY;
 

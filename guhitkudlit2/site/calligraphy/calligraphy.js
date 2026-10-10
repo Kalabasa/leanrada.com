@@ -81,8 +81,9 @@ export function installCalligraphy(
  * @param {"krus" | "pamudpod"} opts.viramaStyle
  * @param {number} opts.speedFactor
  * @param {number} [opts.seed]
+ * @yields {number} progress [0,1]
  */
-export async function drawCalligraphy(
+export async function* drawCalligraphy(
   baybayinUnits,
   canvasContext,
   abortSignal,
@@ -104,9 +105,10 @@ export async function drawCalligraphy(
     (DEBUG ? debugSpeedFactor : speedFactor) *
       Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2)),
   );
-  for (const _ of painter.drawPaths(path, cellSize, canvasContext)) {
+  for (const progress of painter.drawPaths(path, cellSize, canvasContext)) {
     if (drawStep++ % drawInterval === 0) await delay(22);
     if (abortSignal.aborted) return;
+    yield progress;
   }
 }
 
