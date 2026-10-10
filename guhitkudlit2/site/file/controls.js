@@ -20,21 +20,22 @@ export function createFileControls(
     link.click();
   }
 
-  async function downloadHiresCanvas() {
+  async function downloadFullCanvas() {
     const { drawCalligraphy } = await import("../calligraphy/calligraphy.js");
-    const hiresCanvas = document.createElement("canvas");
-    hiresCanvas.width = canvasRef.current.width * 2;
-    hiresCanvas.height = canvasRef.current.height * 2;
-    const context = hiresCanvas.getContext("2d");
+    const fullCanvas = document.createElement("canvas");
+    const ratio = canvasRef.current.width / canvasRef.current.height;
+    fullCanvas.width = Math.max(canvasRef.current.width, 2000);
+    fullCanvas.height = fullCanvas.width / ratio;
+    const context = fullCanvas.getContext("2d");
     context.fillStyle = "#fff";
-    context.fillRect(0, 0, hiresCanvas.width, hiresCanvas.height);
+    context.fillRect(0, 0, fullCanvas.width, fullCanvas.height);
     await drawCalligraphy(
       baybayinUnits.get(),
       context,
       new AbortController().signal,
       { viramaStyle: viramaStyle.get() },
     );
-    downloadCanvas(hiresCanvas);
+    downloadCanvas(fullCanvas);
   }
 
   function shareCanvas() {
@@ -87,7 +88,7 @@ export function createFileControls(
         <//>
         <${Button}
           class="fileControlsButton"
-          onClick=${downloadHiresCanvas}
+          onClick=${downloadFullCanvas}
           disabled=${!calligraphyComplete.get()}
         >
           Save HD

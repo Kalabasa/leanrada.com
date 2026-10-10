@@ -88,7 +88,7 @@ export function createSpellingControls() {
               <input
                 type="radio"
                 name="precolonial"
-                value="colonial"
+                value="virama"
                 checked=${!precolonial.get()}
                 onChange=${() => precolonial.set(false)}
               />
@@ -96,7 +96,7 @@ export function createSpellingControls() {
                 baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
                 viramaStyle="krus"
               />
-              colonial
+              virama
             </label>
             <label class="spellingOption">
               <input
@@ -167,7 +167,7 @@ export function createSpellingControls() {
                 onChange=${() => separateRa.set(false)}
               />
               <${SpellingPreview} baybayinUnits=${["da"]} viramaStyle="krus" />
-              traditional
+              traditional D/R
             </label>
             <label class="spellingOption">
               <input
@@ -178,7 +178,7 @@ export function createSpellingControls() {
                 onChange=${() => separateRa.set(true)}
               />
               <${SpellingPreview} baybayinUnits=${["ra"]} viramaStyle="krus" />
-              modern
+              modern R
             </label>
           </div>
         </div>

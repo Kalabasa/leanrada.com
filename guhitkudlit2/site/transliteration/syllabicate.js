@@ -68,11 +68,20 @@ export function syllabicate(phrase, how = {}) {
         if (
           currentUnit &&
           isConsonant(lastLetter) &&
-          !(lastLetter === "n" && letter === "g") &&
-          !how?.precolonial
+          !(lastLetter === "n" && letter === "g")
         ) {
-          baybayinUnits.push(currentUnit);
-          currentUnit = "";
+          if (how?.precolonial) {
+            if (baybayinUnits.length === 0 || "wy".includes(letter)) {
+              baybayinUnits.push(
+                collapseConsonant(currentUnit, true) +
+                  (letter === "w" ? "u" : "i"),
+              );
+            }
+            currentUnit = "";
+          } else {
+            baybayinUnits.push(currentUnit);
+            currentUnit = "";
+          }
         }
 
         currentUnit += letter;
@@ -123,10 +132,9 @@ function syllabicateSpecial(word) {
 }
 
 // pi [sngi] => pi [ngi]
-// [pri] to => [pi] to
 // ba [nta] => ba [ta]
 // ko [mpyu] ter => ko [pu] te
-function collapseConsonant(candidate, isFirst) {
+function collapseConsonant(candidate, initial) {
   const vowel = candidate.match(/[aeiou]$/)?.[0] || "";
   const clusters = candidate
     .replace(/[aeiou]/g, "")
@@ -134,8 +142,6 @@ function collapseConsonant(candidate, isFirst) {
     .map((g) => g.split(/(ng|n(?!g)|[^aeioun])/g).filter((c) => c));
   if (!clusters.length) {
     return vowel;
-  } else if (isFirst) {
-    return (clusters.filter((g) => g.length)[0]?.[0] || "") + vowel;
   } else {
     let last = "";
     let stop = "";
@@ -151,6 +157,7 @@ function collapseConsonant(candidate, isFirst) {
         stop = g.at(-1) || "";
       }
     }
-    return (last ? stop : next || stop) + vowel;
+    if (initial) return (last || stop || next) + vowel;
+    return (clusters.length > 3 || last ? stop : next || stop) + vowel;
   }
 }

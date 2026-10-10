@@ -26,9 +26,9 @@ export function createCanvas(baybayinUnits) {
 export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
   const containerRef = useRef();
 
-  const area = 500_000;
-  const canvasWidth = Math.ceil(Math.sqrt(aspectRatio * area));
-  const canvasHeight = Math.ceil(Math.sqrt(area / aspectRatio));
+  const canvasWidth =
+    Math.min(window.innerWidth, window.innerHeight * aspectRatio) * 0.8;
+  const canvasHeight = canvasWidth / aspectRatio;
 
   useLayoutEffect(() => {
     const resizeObserver = new ResizeObserver(([entry]) => {
@@ -98,7 +98,9 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
       html`
         <div class="canvasPlaceholder">
           <h1 class="canvasHeading">Welcome to Guhit Kudlit</h1>
-          <h2 class="canvasSubheading">The Baybayin transliterator & calligraphy generator</h2>
+          <h2 class="canvasSubheading">
+            The Baybayin transliterator & calligraphy generator
+          </h2>
           <p class="canvasText">Type your word below!</p>
         </div>
       `}
