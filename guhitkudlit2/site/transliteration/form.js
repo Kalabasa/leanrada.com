@@ -23,6 +23,7 @@ export function createTransliterationForm(
   const transformed = observable.box(undefined);
   const prettify = observable.box(false);
   const syllabicateError = observable.box(undefined);
+  const inputTextWrapperRef = { current: null };
 
   const debouncedRemovePrettify = debounce(() => {
     prettify.set(false);
@@ -79,6 +80,7 @@ export function createTransliterationForm(
     return html`
       <${TransliterationForm}
         inputText=${inputText.get()}
+        inputTextWrapperRef=${inputTextWrapperRef}
         syllabication=${syllabication}
         transformed=${transformed.get()}
         baybayin=${lazyConvertToUnicode(
@@ -94,6 +96,7 @@ export function createTransliterationForm(
   return {
     TransliterationForm: TransliterationFormImpl,
     inputText,
+    inputTextWrapperRef,
     baybayinUnits,
   };
 }
@@ -141,6 +144,7 @@ function prettifyTempBaybayin(baybayinUnits) {
 
 export function TransliterationForm({
   inputText,
+  inputTextWrapperRef,
   syllabication,
   transformed,
   baybayin,
@@ -278,15 +282,17 @@ export function TransliterationForm({
     <form class="transliterationForm" action="javascript:false">
       <label class="transliterationRow">
         <${LabelText} tag="div">Tagalog word<//>
-        <${Input}
-          class="transliterationInput"
-          type="text"
-          placeholder="kalabasa"
-          maxlength="30"
-          value=${inputText}
-          onInput=${onInput}
-          onFocus=${() => setHasFocused(true)}
-        />
+        <div ref=${inputTextWrapperRef}>
+          <${Input}
+            class="transliterationInput"
+            type="text"
+            placeholder="kalabasa"
+            maxlength="30"
+            value=${inputText}
+            onInput=${onInput}
+            onFocus=${() => setHasFocused(true)}
+          />
+        </div>
       </label>
       <div class="transliterationRowWithButton">
         <label class="transliterationRow">

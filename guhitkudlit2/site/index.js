@@ -11,7 +11,7 @@ import { createStyleControls } from "./style/controls.js";
 
 const { SpellingControls, viramaStyle, separateRa, precolonial } =
   createSpellingControls();
-const { TransliterationForm, inputText, baybayinUnits } =
+const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa, precolonial);
 const { StyleControls, formation } = createStyleControls();
 const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
@@ -20,6 +20,13 @@ const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
   if (config.precolonial !== undefined) precolonial.set(config.precolonial);
   if (config.formation !== undefined) formation.set(config.formation);
   inputText.set(config.text);
+
+  document.startViewTransition();
+  inputTextWrapperRef.current?.style.setProperty(
+    "view-transition-name",
+    config.sourceElement.style.viewTransitionName,
+  );
+  config.sourceElement.style.removeProperty("view-transition-name");
 });
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(
