@@ -28,8 +28,12 @@ export function syllabicate(phrase, how = {}) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\P{Letter}|\p{Symbol}/u, " ")
-    .replace(/[^a-zA-Z]/g, " ");
+    .replace(/\s+/gu, " ")
+    .replace(/[^a-z\p{Letter}\s]|\p{Symbol}/gu, "-");
+
+  if (!phrase.match(/[a-z]/)) {
+    return { baybayinUnits: [] };
+  }
 
   const invalidChars = [];
   const transformed = [];
@@ -127,6 +131,13 @@ export function syllabicate(phrase, how = {}) {
         }
 
         currentUnit += letter;
+      } else if (letter === "-") {
+        if (how?.precolonial) {
+          unitTransforms.push({ type: "drop", from: currentUnit });
+          commitUnit("");
+        } else {
+          commitUnit(currentUnit);
+        }
       } else {
         invalidChars.push(letter);
       }
@@ -172,7 +183,6 @@ export function syllabicate(phrase, how = {}) {
     }
   });
 
-  console.log(phrase, transformed);
   if (transformed.length === 0) return { baybayinUnits };
   return { baybayinUnits, transformed };
 }
