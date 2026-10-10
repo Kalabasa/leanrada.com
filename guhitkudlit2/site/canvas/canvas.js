@@ -5,7 +5,7 @@ import { classes } from "../util/classes.js";
 import { observer } from "../util/observer.js";
 import { CanvasPlaceholder } from "./placeholder.js";
 
-export function createCanvas(baybayinUnits, inputText) {
+export function createCanvas(baybayinUnits, onConfig) {
   const showPlaceholder = observable.box(true);
   when(
     () => baybayinUnits.get().length > 0,
@@ -19,7 +19,7 @@ export function createCanvas(baybayinUnits, inputText) {
         aspectRatio=${1.5}
         canvasRef=${canvasRef}
         showPlaceholder=${showPlaceholder.get()}
-        onSubmitText=${(text) => inputText.set(text)}
+        onConfig=${onConfig}
       />
     `;
   });
@@ -30,7 +30,7 @@ export function Canvas({
   aspectRatio,
   canvasRef,
   showPlaceholder,
-  onSubmitText,
+  onConfig,
 }) {
   const containerRef = useRef();
 
@@ -89,7 +89,7 @@ export function Canvas({
         <${CanvasPlaceholder}
           canvasWidth=${canvasWidth}
           canvasHeight=${canvasHeight}
-          onSubmitText=${onSubmitText}
+          onConfig=${onConfig}
         />
       `}
     </div>

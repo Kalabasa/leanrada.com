@@ -3,12 +3,37 @@ import { html } from "../components/html.js";
 import { useEffect, useRef } from "../lib/htm-preact.js";
 import { delay } from "../util/delay.js";
 
-const exampleWords = [
-  "ma sig la", // krus
-  "ii yak", // precolonial
-  "tata wa",
-  "kuting", // krus
-  "ba sag ulo", // krus
+const exampleConfigs = [
+  {
+    text: "ma sig la",
+    viramaStyle: "krus",
+    separateRa: false,
+    precolonial: false,
+  },
+  {
+    text: "ii yak",
+    viramaStyle: "pamudpod",
+    separateRa: false,
+    precolonial: true,
+  },
+  {
+    text: "tata wa",
+    viramaStyle: "pamudpod",
+    separateRa: false,
+    precolonial: false,
+  },
+  {
+    text: "kuting",
+    viramaStyle: "krus",
+    separateRa: false,
+    precolonial: false,
+  },
+  {
+    text: "ba sag ulo",
+    viramaStyle: "krus",
+    separateRa: false,
+    precolonial: false,
+  },
 ];
 const backgroundWords = [
   "bay bayin",
@@ -24,7 +49,7 @@ const backgroundWords = [
 ];
 const backgroundPauseMs = 3000;
 
-export function CanvasPlaceholder({ canvasWidth, canvasHeight, onSubmitText }) {
+export function CanvasPlaceholder({ canvasWidth, canvasHeight, onConfig }) {
   const backgroundCanvasRef = useRef();
 
   useEffect(() => {
@@ -39,7 +64,7 @@ export function CanvasPlaceholder({ canvasWidth, canvasHeight, onSubmitText }) {
     event.preventDefault();
     const text = event.currentTarget.elements.text.value;
     if (text === "") return;
-    onSubmitText(text);
+    onConfig({ text });
   };
 
   return html`
@@ -119,13 +144,13 @@ export function CanvasPlaceholder({ canvasWidth, canvasHeight, onSubmitText }) {
         </form>
         <p class="canvasExamplesBlurb">or start with an example</p>
         <div class="canvasExamples">
-          ${exampleWords.map(
-            (exampleWord) => html`
+          ${exampleConfigs.map(
+            (exampleConfig) => html`
               <${Button}
                 type="button"
-                onClick=${() => onSubmitText(exampleWord)}
+                onClick=${() => onConfig(exampleConfig)}
               >
-                ${exampleWord}
+                ${exampleConfig.text}
               <//>
             `,
           )}

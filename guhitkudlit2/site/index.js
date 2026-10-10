@@ -14,7 +14,18 @@ const { SpellingControls, viramaStyle, separateRa, precolonial } =
 const { TransliterationForm, inputText, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa, precolonial);
 const { StyleControls } = createStyleControls();
-const { Canvas, canvasRef } = createCanvas(baybayinUnits, inputText);
+const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
+  if (config.viramaStyle !== undefined) {
+    viramaStyle.set(config.viramaStyle);
+  }
+  if (config.separateRa !== undefined) {
+    separateRa.set(config.separateRa);
+  }
+  if (config.precolonial !== undefined) {
+    precolonial.set(config.precolonial);
+  }
+  inputText.set(config.text);
+});
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(
   canvasRef,
