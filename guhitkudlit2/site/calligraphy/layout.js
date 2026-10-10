@@ -18,10 +18,10 @@ const layoutRows = 9;
  */
 export function layoutLine(glyphs, opts = {}) {
   const layout = glyphs.map((g) => structuredClone(g));
-  const gap = opts.gap ?? 1;
+  const gap = opts.gap ?? 0.5;
 
   // keep track of the max X laid per row to determine next placement
-  const maxX = Array(layoutRows).fill(-Infinity);
+  const maxX = Array(layoutRows).fill(0);
 
   for (let i = 0; i < layout.length; i++) {
     const glyph = layout[i];
@@ -34,26 +34,20 @@ export function layoutLine(glyphs, opts = {}) {
 
     const extents = calculateExtents(glyph, gap);
 
-    let offset = 0;
-    if (opts.kern) {
-      for (let row = 0; row < layoutRows; row++) {
-        const extent = extents[row];
-        offset = Math.max(offset, maxX[row] - extent.minX);
-      }
-    } else {
-      for (const rowMaxX of maxX) {
-        offset = Math.max(offset, rowMaxX);
-      }
+    let glyphX = 0;
+    for (let row = 0; row < layoutRows; row++) {
+      const kernOffset = opts.kern ? -extents[row].minX : 0;
+      glyphX = Math.max(glyphX, maxX[row] + kernOffset);
     }
 
     for (const glyphRow of glyph.map) {
       for (const v of glyphRow) {
-        if (v) v.x += offset;
+        if (v) v.x += glyphX;
       }
     }
 
     for (let row = 0; row < layoutRows; row++) {
-      maxX[row] = Math.max(maxX[row], extents[row].maxX + offset);
+      maxX[row] = Math.max(maxX[row], glyphX + extents[row].maxX);
     }
   }
 
@@ -91,8 +85,8 @@ function calculateExtents(glyph, gap) {
           const x = vertex.x + (neighbor.x - vertex.x) * progress;
           let minX = x - gap;
           let maxX = x + gap;
-          if (edge.type === "leftCurve") minX -= 1;
-          if (edge.type === "rightCurve") maxX += 1;
+          if (edge.type === "leftCurve") minX -= 0.5;
+          if (edge.type === "rightCurve") maxX += 0.5;
           extents[row].minX = Math.min(extents[row].minX, minX);
           extents[row].maxX = Math.max(extents[row].maxX, maxX);
         }
@@ -100,11 +94,12 @@ function calculateExtents(glyph, gap) {
     }
   }
 
+  // smoothen the hull
   const min = Math.min(...extents.map((e) => e.minX));
   const max = Math.max(...extents.map((e) => e.maxX));
   for (let e of extents) {
-    e.minX = Math.min(e.minX, min + 1);
-    e.maxX = Math.max(e.maxX, max - 1);
+    e.minX = e.minX * 0.25 + min * 0.75;
+    e.maxX = e.maxX * 0.25 + max * 0.75;
   }
 
   return extents;

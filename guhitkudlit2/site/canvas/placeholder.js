@@ -3,24 +3,24 @@ import { html } from "../components/html.js";
 import { useEffect, useRef } from "../lib/htm-preact.js";
 import { delay } from "../util/delay.js";
 
-const exampleWords = ["kumusta", "mabuhay", "kalayaan"];
+const exampleWords = [
+  "ma sig la", // krus
+  "ii yak", // precolonial
+  "tata wa",
+  "kuting", // krus
+  "ba sag ulo", // krus
+];
 const backgroundWords = [
-  "pili pinas",
   "bay bayin",
-  "baybayin",
   "guhi kuli",
-  "guhit kudlit",
-  "sago gulaman",
-  "tinolang manok",
+  "mahal bigas",
+  "salamin salamin",
   "manila",
-  "teka lang",
-  "bayang magiliw",
-  "malayong lupain",
-  "hahahaha hahahaha",
+  "haha hahaha haha",
   "bababa ba bababa",
-  "astig yon",
-  "basta",
-  "oo sige go",
+  "oo sige na",
+  "kala basa",
+  "sagi sag",
 ];
 const backgroundPauseMs = 3000;
 
@@ -149,7 +149,7 @@ async function drawBackgroundWords(backgroundCanvas, abortSignal) {
       canvas: backgroundCanvas,
       abortSignal,
       drawInterval: 1,
-      composeSteps: Math.round(15 + Math.random() * 60),
+      composeSteps: Math.round(10 + Math.random() * 40),
       scale: 1.2 + Math.random() * 0.4,
     });
     await delay(backgroundPauseMs);

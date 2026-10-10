@@ -9,14 +9,14 @@ const composeStepsOverride = Number.parseInt(
   new URLSearchParams(location.search).get("composeSteps"),
 );
 
-const pushStrength = 0.16;
+const pushStrength = 0.3;
 const pushDistScale = 3.2;
 const springStrength = 0.2;
-const squeezeStrengthX = 0.23;
-const squeezeStrengthY = 0.32;
-const kudlitGravityX = 0.1;
-const kudlitGravityY = 0.3;
-const kudlitPushFactor = 1.2;
+const squeezeStrengthX = 0.12;
+const squeezeStrengthY = 0.2;
+const kudlitGravityX = 0.04;
+const kudlitGravityY = 0.06;
+const kudlitDistFactor = 2.2;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -80,16 +80,20 @@ export function compose(glyphStrokesList, opts = {}) {
   /**
    * @param {{ start: StrokeVertex, end: StrokeVertex, isKudlit: boolean }} curve
    * @param {Point[]} points start, start control, end control, end
+   * @param {{ isKudlit: boolean }} oCurve
    * @param {Point} oClosest
    */
-  const pushCurve = (curve, points, oClosest) => {
+  const pushCurve = (curve, points, oCurve, oClosest) => {
     const pushes = points.map((point) => {
       const dx = point.x - oClosest.x;
       const dy = point.y - oClosest.y;
       const dist = Math.hypot(dx, dy);
       if (dist === 0) return { x: 0, y: 0 };
-      let pushAmount = pushStrength / ((pushDistScale * dist) ** 4 + 1);
-      if (curve.isKudlit) pushAmount *= kudlitPushFactor;
+      const distFactor = curve.isKudlit ? kudlitDistFactor : 1;
+      const pushFactor = oCurve.isKudlit ? 0 : 1;
+      let pushAmount =
+        (pushStrength * pushFactor) /
+        ((pushDistScale * distFactor * dist) ** 4 + 1);
       return {
         x: (dx / dist) * pushAmount,
         y: (dy / dist) * pushAmount,
@@ -103,7 +107,8 @@ export function compose(glyphStrokesList, opts = {}) {
   };
 
   const center = calculateCentroid(glyphs);
-  const extent = calculateDiagonalExtent(glyphs);
+  const extents = calculateExtents(glyphs);
+  const extent = Math.hypot(extents.x, extents.y);
 
   const steps = Math.floor(
     Math.max(
@@ -124,17 +129,18 @@ export function compose(glyphStrokesList, opts = {}) {
     }
 
     const springFactor = springStrength * Math.sqrt((steps - step) / steps);
-    const squishFactor = ((steps - step) / steps) ** 2 / Math.sqrt(extent);
+    const squeezeFactor = ((steps - step) / steps) ** 2 / Math.sqrt(extent);
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);
       const centerDx =
-        (center.x - centroid.x) * squeezeStrengthX * squishFactor;
+        (center.x - centroid.x) * squeezeStrengthX * squeezeFactor;
       const centerDy =
-        (center.y - centroid.y) * squeezeStrengthY * squishFactor;
+        (center.y - centroid.y) * squeezeStrengthY * squeezeFactor;
 
-      const glyphExtent = calculateDiagonalExtent([glyph]);
-      const glyphSpringFactor = springFactor * (4 / glyphExtent);
+      const glyphExtents = calculateExtents([glyph]);
+      const glyphSpringFactor =
+        springFactor * (4 / Math.max(glyphExtents.x, glyphExtents.y));
 
       for (const vertex of glyph.vertices) {
         // pull back to original shape
@@ -154,12 +160,18 @@ export function compose(glyphStrokesList, opts = {}) {
       }
 
       // pull kudlits toward glyph
+      const baseCentroid = calculateCentroid([
+        {
+          vertices: glyph.vertices.filter((v) => !v.isKudlit),
+        },
+      ]);
+      const gravityFactor = ((steps - step) / steps) ** 2;
       for (const vertex of glyph.vertices) {
         if (!vertex.isKudlit) continue;
         pushVertex(
           vertex,
-          (centroid.x - vertex.position.x) * kudlitGravityX * squishFactor,
-          (centroid.y - vertex.position.y) * kudlitGravityY * squishFactor,
+          (baseCentroid.x - vertex.position.x) * kudlitGravityX * gravityFactor,
+          (baseCentroid.y - vertex.position.y) * kudlitGravityY * gravityFactor,
         );
       }
     }
@@ -190,24 +202,24 @@ export function compose(glyphStrokesList, opts = {}) {
       controlPushes.set(vertex, { x: 0, y: 0 });
     }
 
+    // TODO cache centroids & extents
     // glyphs repel
     for (let i = 0; i < glyphs.length; i++) {
+      const glyph = glyphs[i];
+      const extent = calculateExtents([glyph]);
+      const centroid = calculateCentroid([glyph]);
       for (let j = i + 1; j < glyphs.length; j++) {
-        const glyph = glyphs[i];
         const oGlyph = glyphs[j];
-        const centroid = calculateCentroid([glyph]);
         const oCentroid = calculateCentroid([oGlyph]);
+        const oExtent = calculateExtents([oGlyph]);
         const dx = centroid.x - oCentroid.x;
         const dy = centroid.y - oCentroid.y;
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
-        const extent = calculateDiagonalExtent([glyph]);
-        const oExtent = calculateDiagonalExtent([oGlyph]);
-        const spanFactor = 1.5 / (extent + oExtent);
         const pushAmount =
-          pushStrength / ((pushDistScale * spanFactor * dist) ** 4 + 1);
-        const pushX = (dx / dist) * pushAmount;
-        const pushY = (dy / dist) * pushAmount;
+          (0 * pushStrength) / ((0.5 * pushDistScale * dist) ** 4 + 1);
+        const pushX = (dx / dist) * pushAmount * (extent.x + oExtent.x);
+        const pushY = (dy / dist) * pushAmount * (extent.y + oExtent.y);
         for (const vertex of glyph.vertices) {
           pushVertex(vertex, pushX, pushY);
         }
@@ -253,8 +265,8 @@ export function compose(glyphStrokesList, opts = {}) {
           }
         }
 
-        pushCurve(curve, points, oClosest);
-        pushCurve(oCurve, oPoints, closest);
+        pushCurve(curve, points, oCurve, oClosest);
+        pushCurve(oCurve, oPoints, curve, closest);
       }
     }
 
@@ -277,12 +289,12 @@ function getCurvePoints({ start, end }) {
   return [
     start.position,
     {
-      x: start.position.x + start.control.x * 0.5,
-      y: start.position.y + start.control.y * 0.5,
+      x: start.position.x + start.control.x * 0.25,
+      y: start.position.y + start.control.y * 0.25,
     },
     {
-      x: end.position.x - end.control.x * 0.5,
-      y: end.position.y - end.control.y * 0.5,
+      x: end.position.x - end.control.x * 0.25,
+      y: end.position.y - end.control.y * 0.25,
     },
     end.position,
   ];
@@ -349,9 +361,9 @@ function calculateCentroid(array) {
 
 /**
  * @param {{ vertices: StrokeVertex[] }[]} array
- * @returns {number}
+ * @returns {{ x: number, y: number }}
  */
-function calculateDiagonalExtent(array) {
+function calculateExtents(array) {
   const vertices = array.flatMap((obj) => obj.vertices);
   let minX = Infinity;
   let minY = Infinity;
@@ -363,5 +375,5 @@ function calculateDiagonalExtent(array) {
     maxX = Math.max(maxX, vertex.position.x);
     maxY = Math.max(maxY, vertex.position.y);
   }
-  return Math.hypot(maxX - minX, maxY - minY);
+  return { x: maxX - minX, y: maxY - minY };
 }

@@ -81,10 +81,10 @@ function calculateDrawInterval(baybayinUnits) {
   );
 
   if (DEBUG) {
-    const debugSpeedFactor = Number(
-      new URL(location).searchParams.get("speedFactor"),
+    const debugSpeed = Number.parseInt(
+      new URL(location).searchParams.get("speed") ?? 0,
     );
-    return Math.max(1, Math.round(debugSpeedFactor * inputLengthDrawInterval));
+    return Math.round(debugSpeed * inputLengthDrawInterval);
   }
 
   return inputLengthDrawInterval;
@@ -170,7 +170,7 @@ export async function layoutCalligraphy(
       getGlyph(baybayinUnit, viramaStyle),
     );
 
-    const lineLayout = layoutLine(glyphs);
+    const lineLayout = layoutLine(glyphs, { kern: true });
     const lineVertices = lineLayout
       .flatMap((glyph) => glyph.map.flat())
       .filter((vertex) => vertex);

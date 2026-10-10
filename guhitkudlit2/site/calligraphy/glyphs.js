@@ -321,7 +321,7 @@ function addPamudpod(glyph) {
   };
   const pamudpodMiddle = {
     x: rightX * 0.8 + 1,
-    y: 4,
+    y: 3.5,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),
