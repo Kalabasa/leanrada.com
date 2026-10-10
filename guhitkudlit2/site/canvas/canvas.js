@@ -3,10 +3,9 @@ import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
 import { observable, when } from "../lib/mobx.js";
 import { classes } from "../util/classes.js";
 import { observer } from "../util/observer.js";
+import { CanvasPlaceholder } from "./placeholder.js";
 
-const placeholderImageUrl = new URL("./placeholder.png", import.meta.url).href;
-
-export function createCanvas(baybayinUnits) {
+export function createCanvas(baybayinUnits, inputText) {
   const showPlaceholder = observable.box(true);
   when(
     () => baybayinUnits.get().length > 0,
@@ -20,13 +19,19 @@ export function createCanvas(baybayinUnits) {
         aspectRatio=${1.5}
         canvasRef=${canvasRef}
         showPlaceholder=${showPlaceholder.get()}
+        onClickExample=${(exampleWord) => inputText.set(exampleWord)}
       />
     `;
   });
   return { Canvas: CanvasImpl, canvasRef };
 }
 
-export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
+export function Canvas({
+  aspectRatio,
+  canvasRef,
+  showPlaceholder,
+  onClickExample,
+}) {
   const containerRef = useRef();
 
   const canvasWidth =
@@ -71,57 +76,6 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
       .canvasHidden {
         opacity: 0;
       }
-      .canvasPlaceholder {
-        grid-area: 1 / 1 / -1 / -1;
-        background: #fff;
-        box-shadow: var(--shadow-m);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        align-items: center;
-        overflow: hidden;
-      }
-      .canvasHeader {
-        padding: 3vh;
-        text-align: center;
-      }
-      .canvasHeading {
-        font-size: 5vh;
-        letter-spacing: -0.44vh;
-      }
-      .canvasSubheading {
-        font-size: 2vh;
-        font-weight: bold;
-        text-transform: uppercase;
-        opacity: 0.7;
-      }
-      .canvasImage {
-        flex: 1 1 auto;
-        min-height: 0;
-        max-width: 100%;
-        object-fit: contain;
-        opacity: 0.2;
-      }
-      .canvasColumns {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--size-l);
-        width: 100%;
-        contain: inline-size;
-        padding: var(--size-l);
-        text-align: left;
-      }
-      .canvasColumnHeading {
-        font-size: var(--font-size-l);
-        font-weight: bold;
-      }
-      .canvasText {
-        margin-top: var(--size-m);
-        font-size: var(--font-size-m);
-        em {
-          font-style: italic;
-        }
-      }
     </style>
     <div class="canvasContainer" ref=${containerRef}>
       <canvas
@@ -132,46 +86,11 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder }) {
       ></canvas>
       ${showPlaceholder &&
       html`
-        <div class="canvasPlaceholder">
-          <div class="canvasHeader">
-            <h1 class="canvasHeading">Maligayang padating sa Guhit Kudlit</h1>
-            <h2 class="canvasSubheading">
-              Baybayin translator (transliterator) & calligraphy generator
-            </h2>
-          </div>
-          <img class="canvasImage" src=${placeholderImageUrl} alt="" />
-          <div class="canvasColumns">
-            <div>
-              <h3 class="canvasColumnHeading">Iingatan ka</h3>
-              <p class="canvasText">
-                This app uses careful and predetermined rules of Baybayin.
-                There’s no AI sloppily guessing. You’ll be guided to become
-                better and confident in Baybayin.
-              </p>
-              <p class="canvasText">Type your word below!</p>
-            </div>
-            <div>
-              <h3 class="canvasColumnHeading">Huhusayan para sa ‘yo</h3>
-              <p class="canvasText">
-                Handcrafted dynamic calligraphy composition algorithm and brush
-                simulation developed over the years. No fonts, no ‘image
-                generation’. Every stroke is unique.
-              </p>
-              <p class="canvasText">Check out the different styles too!</p>
-            </div>
-            <div>
-              <h3 class="canvasColumnHeading">Libreng sining para sa lahat</h3>
-              <p class="canvasText">
-                I’m a Filipino software engineer from the Philippines and this
-                is my passion project, an intersection of my love for procedural
-                art and Baybayin.
-              </p>
-              <p class="canvasText">
-                No need to sign up. Just download and share! (donate? :D)
-              </p>
-            </div>
-          </div>
-        </div>
+        <${CanvasPlaceholder}
+          canvasWidth=${canvasWidth}
+          canvasHeight=${canvasHeight}
+          onClickExample=${onClickExample}
+        />
       `}
     </div>
   `;

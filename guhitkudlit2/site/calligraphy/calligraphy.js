@@ -65,6 +65,7 @@ export function installCalligraphy(
         viramaStyle,
         canvas: canvasRef.current,
         abortSignal: abortController.signal,
+        drawInterval: calculateDrawInterval(baybayinUnits),
       });
       if (abortController.signal.aborted) return;
       onProgress("complete");
@@ -73,40 +74,54 @@ export function installCalligraphy(
   );
 }
 
+function calculateDrawInterval(baybayinUnits) {
+  const inputLengthDrawInterval = Math.min(
+    20,
+    1 + Math.round(0.1 * baybayinUnits.length ** 2),
+  );
+
+  if (DEBUG) {
+    const debugSpeedFactor = Number(
+      new URL(location).searchParams.get("speedFactor"),
+    );
+    return Math.max(1, Math.round(debugSpeedFactor * inputLengthDrawInterval));
+  }
+
+  return inputLengthDrawInterval;
+}
+
 /**
  * @param {string[]} baybayinUnits
  * @param {CanvasRenderingContext2D} canvasContext
  * @param {AbortSignal} abortSignal
  * @param {object} opts
  * @param {"krus" | "pamudpod"} opts.viramaStyle
- * @param {number} opts.speedFactor
+ * @param {number} opts.drawInterval 0 means instant
  * @param {number} [opts.seed]
+ * @param {number} [opts.maxComposeSteps]
+ * @param {number} [opts.scale]
  * @yields {number} progress [0,1]
  */
 export async function* drawCalligraphy(
   baybayinUnits,
   canvasContext,
   abortSignal,
-  { viramaStyle, speedFactor, seed = 0 },
+  { viramaStyle, drawInterval, seed = 0, maxComposeSteps, scale },
 ) {
   const painter = await createPainter(createRandom(seed));
   const { path, cellSize } = await layoutCalligraphy(
     baybayinUnits,
     canvasContext.canvas,
-    { viramaStyle },
+    { viramaStyle, maxComposeSteps, scale },
   );
   if (abortSignal.aborted) return;
 
   let drawStep = 0;
-  const debugSpeedFactor = Number(
-    new URL(location).searchParams.get("speedFactor"),
-  );
-  const drawInterval = Math.round(
-    (DEBUG ? debugSpeedFactor : speedFactor) *
-      Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2)),
-  );
   for (const progress of painter.drawPaths(path, cellSize, canvasContext)) {
-    if (drawStep++ % drawInterval === 0) await delay(22);
+    if (drawInterval > 0) {
+      if (drawStep % drawInterval === 0) await delay(22);
+      drawStep++;
+    }
     if (abortSignal.aborted) return;
     yield progress;
   }
@@ -118,11 +133,12 @@ export async function* drawCalligraphy(
  * @param {object} opts
  * @param {"krus" | "pamudpod"} opts.viramaStyle
  * @param {number} [opts.maxComposeSteps]
+ * @param {number} [opts.scale]
  */
 export async function layoutCalligraphy(
   baybayinUnits,
   canvas,
-  { viramaStyle, maxComposeSteps },
+  { viramaStyle, maxComposeSteps, scale = 1 },
 ) {
   const [
     { getGlyph },
@@ -175,10 +191,12 @@ export async function layoutCalligraphy(
   const vertices = strokes.flatMap((stroke) => stroke.vertices);
 
   const layoutBounds = getBounds(vertices);
-  const cellSize = Math.min(
-    canvas.width / (layoutBounds.width + 1),
-    canvas.height / (layoutBounds.height + 1),
-  );
+  const cellSize =
+    scale *
+    Math.min(
+      canvas.width / (layoutBounds.width + 1),
+      canvas.height / (layoutBounds.height + 1),
+    );
 
   const path = strokes.map((stroke) => ({
     vertices: stroke.vertices.map((vertex) => ({

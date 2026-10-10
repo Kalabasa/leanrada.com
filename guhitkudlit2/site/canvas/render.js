@@ -6,7 +6,9 @@ import { drawCalligraphy } from "../calligraphy/calligraphy.js";
  * @param {"krus" | "pamudpod"} params.viramaStyle
  * @param {HTMLCanvasElement} params.canvas
  * @param {AbortSignal} [params.abortSignal]
- * @param {number} [params.speedFactor]
+ * @param {number} params.drawInterval
+ * @param {number} [params.composeSteps]
+ * @param {number} [params.scale]
  * @param {(progress: number) => void} [params.onProgress]
  */
 export async function render({
@@ -14,7 +16,9 @@ export async function render({
   viramaStyle,
   canvas,
   abortSignal = new AbortController().signal,
-  speedFactor = 1,
+  drawInterval,
+  composeSteps,
+  scale,
   onProgress = () => {},
 }) {
   const context = canvas.getContext("2d");
@@ -22,7 +26,9 @@ export async function render({
   context.fillRect(0, 0, canvas.width, canvas.height);
   const progresses = drawCalligraphy(baybayinUnits, context, abortSignal, {
     viramaStyle,
-    speedFactor,
+    drawInterval,
+    maxComposeSteps: composeSteps,
+    scale,
   });
   let latestProgress = 0;
   let pendingFrameId = null;

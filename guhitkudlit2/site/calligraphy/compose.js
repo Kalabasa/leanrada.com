@@ -14,9 +14,9 @@ const pushDistScale = 3.2;
 const springStrength = 0.2;
 const squeezeStrengthX = 0.23;
 const squeezeStrengthY = 0.32;
-const kudlitGravityX = 0.04;
-const kudlitGravityY = 0.06;
-const kudlitPushFactor = 1.1;
+const kudlitGravityX = 0.1;
+const kudlitGravityY = 0.3;
+const kudlitPushFactor = 1.2;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -108,11 +108,8 @@ export function compose(glyphStrokesList, opts = {}) {
   const steps = Math.floor(
     Math.max(
       0,
-      Math.min(
-        maxComposeSteps,
-        opts?.maxComposeSteps ?? Infinity,
-        maxComposeSteps * (1.2 - glyphs.length / 20),
-      ),
+      (opts?.maxComposeSteps ?? maxComposeSteps) *
+        Math.min(1, 1.2 - glyphs.length / 20),
     ),
   );
   for (let step = 0; step < steps; step++) {
@@ -127,14 +124,14 @@ export function compose(glyphStrokesList, opts = {}) {
     }
 
     const springFactor = springStrength * Math.sqrt((steps - step) / steps);
-    const squeezeFactor = ((steps - step) / steps) ** 2 / Math.sqrt(extent);
+    const squishFactor = ((steps - step) / steps) ** 2 / Math.sqrt(extent);
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);
       const centerDx =
-        (center.x - centroid.x) * squeezeStrengthX * squeezeFactor;
+        (center.x - centroid.x) * squeezeStrengthX * squishFactor;
       const centerDy =
-        (center.y - centroid.y) * squeezeStrengthY * squeezeFactor;
+        (center.y - centroid.y) * squeezeStrengthY * squishFactor;
 
       const glyphExtent = calculateDiagonalExtent([glyph]);
       const glyphSpringFactor = springFactor * (4 / glyphExtent);
@@ -161,8 +158,8 @@ export function compose(glyphStrokesList, opts = {}) {
         if (!vertex.isKudlit) continue;
         pushVertex(
           vertex,
-          (centroid.x - vertex.position.x) * kudlitGravityX,
-          (centroid.y - vertex.position.y) * kudlitGravityY,
+          (centroid.x - vertex.position.x) * kudlitGravityX * squishFactor,
+          (centroid.y - vertex.position.y) * kudlitGravityY * squishFactor,
         );
       }
     }

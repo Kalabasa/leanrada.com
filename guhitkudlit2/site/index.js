@@ -14,7 +14,7 @@ const { SpellingControls, viramaStyle, separateRa, precolonial } =
 const { TransliterationForm, inputText, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa, precolonial);
 const { StyleControls } = createStyleControls();
-const { Canvas, canvasRef } = createCanvas(baybayinUnits);
+const { Canvas, canvasRef } = createCanvas(baybayinUnits, inputText);
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(
   canvasRef,

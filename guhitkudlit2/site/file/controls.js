@@ -30,7 +30,7 @@ export function createFileControls(
       baybayinUnits: baybayinUnits.get(),
       viramaStyle: viramaStyle.get(),
       canvas: fullCanvas,
-      speedFactor: 10,
+      drawInterval: 0,
     });
     downloadCanvas(fullCanvas);
   }
