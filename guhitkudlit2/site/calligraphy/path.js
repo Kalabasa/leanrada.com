@@ -3,7 +3,7 @@
  * @typedef {import("./stroke.js").StrokeVertex} StrokeVertex
  * @typedef {{
  *  vertices: { x: number, y: number }[],
- *  isKudlit: boolean
+ *  isKudlit: boolean | 'krus'
  * }} Path
  */
 

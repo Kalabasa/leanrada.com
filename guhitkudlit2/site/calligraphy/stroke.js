@@ -12,9 +12,9 @@
  *  next?: StrokeVertex,
  *  prevSideLen?: number,
  *  nextSideLen?: number,
- *  isKudlit?: boolean
+ *  isKudlit?: boolean | 'krus'
  * }} StrokeVertex
- * @typedef {{ strokes: { vertices: StrokeVertex[], isKudlit: boolean }[] }} GlyphStrokes
+ * @typedef {{ strokes: { vertices: StrokeVertex[], isKudlit: boolean | 'krus' }[] }} GlyphStrokes
  */
 
 /**
@@ -37,7 +37,7 @@ export function traceStrokes(glyph) {
 
   const strokes = chains.map((chain) => ({
     vertices: interpolateChain(glyph, chain, getSharedPosition),
-    isKudlit: chain[0].isKudlit === true,
+    isKudlit: chain[0].isKudlit ?? false,
   }));
 
   calculateControlPoints(strokes);
@@ -117,7 +117,7 @@ function interpolateChain(glyph, chain, getSharedPosition) {
   }
   if (chain[0].isKudlit) {
     for (const strokeVertex of out) {
-      strokeVertex.isKudlit = true;
+      strokeVertex.isKudlit = chain[0].isKudlit;
     }
   }
   return out;
@@ -155,7 +155,7 @@ function calculateOffsetPosition(start, end, progress, offset) {
 }
 
 /**
- * @param {{ vertices: StrokeVertex[], isKudlit: boolean }[]} strokes
+ * @param {{ vertices: StrokeVertex[], isKudlit: boolean | 'krus' }[]} strokes
  */
 function calculateControlPoints(strokes) {
   /** @type {Map<Point, StrokeVertex>} */
@@ -275,7 +275,7 @@ function calculateMiddleControl(vertices, index) {
 }
 
 /**
- * @param {{ vertices: StrokeVertex[], isKudlit: boolean }} stroke
+ * @param {{ vertices: StrokeVertex[], isKudlit: boolean | 'krus' }} stroke
  * @param {boolean} isStrokeStart
  * @returns {Point} control of terminal toward next
  */

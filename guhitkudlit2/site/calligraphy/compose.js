@@ -12,11 +12,12 @@ const composeStepsOverride = Number.parseInt(
 const pushStrength = 0.4;
 const basePushDistScale = 3.1;
 const springStrength = 0.2;
-const squeezeStrengthX = 0.1;
-const squeezeStrengthY = 0.15;
+const squeezeStrengthX = 0.10;
+const squeezeStrengthY = 0.12;
 const kudlitGravityX = 0.08;
-const kudlitGravityY = 0.08;
+const kudlitGravityY = 0.06;
 const kudlitDistFactor = 1.8;
+const krusSpringStrength = 0.03;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -45,7 +46,7 @@ export function compose(glyphStrokesList, opts = {}) {
       });
     }
 
-    return { vertices, origOffsets };
+    return { strokes, vertices, origOffsets };
   });
 
   const edges = [];
@@ -83,9 +84,9 @@ export function compose(glyphStrokesList, opts = {}) {
   };
 
   /**
-   * @param {{ start: StrokeVertex, end: StrokeVertex, isKudlit: boolean }} curve
+   * @param {{ start: StrokeVertex, end: StrokeVertex, isKudlit: boolean | 'krus' }} curve
    * @param {Point[]} points start, start control, end control, end
-   * @param {{ isKudlit: boolean }} oCurve
+   * @param {{ isKudlit: boolean | 'krus' }} oCurve
    * @param {Point} oClosest
    */
   const pushCurve = (curve, points, oCurve, oClosest) => {
@@ -188,6 +189,34 @@ export function compose(glyphStrokesList, opts = {}) {
           (baseCentroid.y - vertex.position.y) * kudlitGravityY * gravityFactor,
         );
       }
+
+      // pull krus kudlit together
+      const krusStrokes = glyph.strokes.filter(
+        (stroke) => stroke.isKudlit === "krus",
+      );
+      if (krusStrokes.length === 2) {
+        const [stroke, oStroke] = krusStrokes;
+        const centroid = calculateCentroid([stroke]);
+        const oCentroid = calculateCentroid([oStroke]);
+        for (const vertex of stroke.vertices) {
+          pushVertex(
+            vertex,
+            (oCentroid.x - centroid.x) * 0.5,
+            (oCentroid.y - centroid.y) * 0.5,
+          );
+          for (const oVertex of oStroke.vertices) {
+            const dx = vertex.position.x - oVertex.position.x;
+            const dy = vertex.position.y - oVertex.position.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist === 0) continue;
+            pushVertex(
+              vertex,
+              (dx / dist) * (krusSpringStrength / ((2 * dist) ** 2 + 1)),
+              (dy / dist) * (krusSpringStrength / ((2 * dist) ** 2 + 1)),
+            );
+          }
+        }
+      }
     }
 
     // pull controls back to original shape
@@ -226,8 +255,10 @@ export function compose(glyphStrokesList, opts = {}) {
         const oGlyph = glyphs[j];
         const oCentroid = calculateCentroid([oGlyph]);
         const oExtent = calculateExtents([oGlyph]);
-        const dx = (centroid.x - oCentroid.x) / ((1 + extent.x + oExtent.x) / 2);
-        const dy = (centroid.y - oCentroid.y) / ((1 + extent.y + oExtent.y) / 2);
+        const dx =
+          (centroid.x - oCentroid.x) / ((1 + extent.x + oExtent.x) / 2);
+        const dy =
+          (centroid.y - oCentroid.y) / ((1 + extent.y + oExtent.y) / 2);
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
         const pushAmount =

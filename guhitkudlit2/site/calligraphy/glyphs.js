@@ -242,7 +242,7 @@ function createGlyph(baybayinUnit, viramaStyle) {
   const glyph = structuredClone(baseGlyph);
   if (!"eiou".includes(vowel)) {
     if (viramaStyle === "krus") {
-      addKrusKudlit(glyph);
+      addKrus(glyph);
     } else if (viramaStyle === "pamudpod") {
       addPamudpod(glyph);
     }
@@ -284,10 +284,10 @@ function addKudlit(glyph, vowel) {
   glyph.map[kudlitRow][Math.floor(centerX) + 1] = kudlitRight;
 }
 
-function addKrusKudlit(glyph) {
+function addKrus(glyph) {
   const centerX = calculateRightX(glyph) / 2;
   const centerY = 4;
-  const armLength = 0.4;
+  const armLength = 0.3;
   const crossSegments = [
     [
       { x: centerX - armLength, y: centerY - armLength },
@@ -300,8 +300,8 @@ function addKrusKudlit(glyph) {
   ];
   let column = glyph.map[4].length;
   for (const [startPoint, endPoint] of crossSegments) {
-    const start = { ...startPoint, terminal: false, isKudlit: true, adjacency: new Map() };
-    const end = { ...endPoint, terminal: false, isKudlit: true, adjacency: new Map() };
+    const start = { ...startPoint, terminal: false, isKudlit: "krus", adjacency: new Map() };
+    const end = { ...endPoint, terminal: false, isKudlit: "krus", adjacency: new Map() };
     start.adjacency.set(end, { type: undefined });
     end.adjacency.set(start, { type: undefined });
     glyph.map[4][column++] = start;
@@ -362,7 +362,7 @@ function calculateRightX(glyph) {
  *  x: number,
  *  y: number,
  *  terminal: boolean,
- *  isKudlit?: boolean,
+ *  isKudlit?: boolean | 'krus',
  *  adjacency: Map<GlyphVertex, {
  *    type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined,
  *    control?: { dx: number, dy: number }

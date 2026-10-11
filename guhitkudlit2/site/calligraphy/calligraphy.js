@@ -85,7 +85,7 @@ export function installCalligraphy(
 }
 
 function calculateSpeed(baybayinUnits) {
-  const speed = Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2));
+  const speed = Math.min(20, 1 + Math.round(0.12 * baybayinUnits.length ** 2));
 
   if (DEBUG) {
     const debugSpeed = Number.parseFloat(
