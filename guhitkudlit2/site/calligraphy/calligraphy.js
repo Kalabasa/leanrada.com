@@ -26,10 +26,7 @@ async function createPainter(random, painterName) {
 }
 
 export function installCalligraphy(
-  baybayinUnits,
-  viramaStyle,
-  arrangement,
-  density,
+  { baybayinUnits, viramaStyle, arrangement, density },
   canvasRef,
   onProgress,
 ) {

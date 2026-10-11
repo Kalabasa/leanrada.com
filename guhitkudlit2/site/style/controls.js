@@ -5,10 +5,17 @@ import { observable } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
+import { colorStyles, formatColorStyleFilter } from "./color-styles.js";
 
 const previewBaybayinUnits = ["ka", "la", "ba", "sa"];
 
 export function createStyleControls() {
+  const colorStyle = observable.box(colorStyles[0].name);
+
+  const onColorStyleChange = (selectedColorStyle) => {
+    colorStyle.set(selectedColorStyle);
+  };
+
   const arrangement = observable.box("normal");
 
   const onArrangementChange = (selectedArrangement) => {
@@ -36,8 +43,45 @@ export function createStyleControls() {
         .styleControlDimmed {
           opacity: var(--opacity-tertiary);
         }
+        .styleControlColorPreview {
+          display: flex;
+          background: #fff;
+          border-radius: var(--size-xs);
+        }
       </style>
       <div class="styleControls">
+        <div
+          class=${classes(
+            "styleControl",
+            !baybayinUnits.get().length && "styleControlDimmed",
+          )}
+        >
+          <${LabelText}>Color<//>
+          <${OptionGroup}
+            name="colorStyle"
+            value=${colorStyle.get()}
+            onChange=${onColorStyleChange}
+          >
+            ${colorStyles.map(
+              (previewedColorStyle) => html`
+                <${OptionGroupOption} value=${previewedColorStyle.name}>
+                  <span
+                    class="styleControlColorPreview"
+                    style=${{
+                      filter: formatColorStyleFilter(previewedColorStyle.name),
+                    }}
+                  >
+                    <${ControlPreview}
+                      baybayinUnits=${previewBaybayinUnits}
+                      viramaStyle="pamudpod"
+                      composeSteps=${15}
+                    />
+                  </span>
+                <//>
+              `,
+            )}
+          <//>
+        </div>
         <div
           class=${classes(
             "styleControl",
@@ -127,5 +171,5 @@ export function createStyleControls() {
     `,
   );
 
-  return { StyleControls, arrangement, density };
+  return { StyleControls, colorStyle, arrangement, density };
 }

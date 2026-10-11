@@ -23,7 +23,7 @@ export function OptionGroup({ name, value, onChange, children }) {
           &::after {
             content: "";
             background: #fff;
-            border: solid 2px var(--color-orange-darker);
+            border: solid 2px var(--color-orange);
             border-radius: var(--size-xs);
             position: absolute;
             inset: anchor(--optionGroupOptionActive top)

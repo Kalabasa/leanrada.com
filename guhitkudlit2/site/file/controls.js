@@ -3,6 +3,7 @@ import { Button } from "../components/form.js";
 import { observer } from "../util/observer.js";
 import { observable } from "../lib/mobx.js";
 import { delay } from "../util/delay.js";
+import { drawColorStyledCanvas } from "../style/color-styles.js";
 
 const instagramIconUrl = new URL("./instagram.svg#icon", import.meta.url).href;
 const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
@@ -11,8 +12,8 @@ const kofiIconUrl = new URL("./kofi.svg#icon", import.meta.url).href;
 export function createFileControls(
   canvasRef,
   inputText,
-  baybayinUnits,
-  viramaStyle,
+  calligraphyInputs,
+  colorStyle,
   calligraphyComplete,
 ) {
   const isRenderingFull = observable.box(false);
@@ -20,23 +21,27 @@ export function createFileControls(
 
   function downloadCanvas(canvas) {
     const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
+    link.href = drawColorStyledCanvas(canvas, colorStyle.get()).toDataURL(
+      "image/png",
+    );
     link.download = formatFileName(inputText.get()) + ".png";
     link.click();
   }
 
   async function downloadFullCanvas() {
-    const { render } = await import("../canvas/render.js");
     const fullCanvas = document.createElement("canvas");
     const ratio = canvasRef.current.width / canvasRef.current.height;
     fullCanvas.width = Math.max(canvasRef.current.width, 2000);
     fullCanvas.height = fullCanvas.width / ratio;
 
-    const renderedBaybayinUnits = baybayinUnits.get();
-    const renderedViramaStyle = viramaStyle.get();
+    const renderedInputs = {
+      baybayinUnits: calligraphyInputs.baybayinUnits.get(),
+      viramaStyle: calligraphyInputs.viramaStyle.get(),
+      arrangement: calligraphyInputs.arrangement.get(),
+      density: calligraphyInputs.density.get(),
+    };
     const renderKey = JSON.stringify([
-      renderedBaybayinUnits,
-      renderedViramaStyle,
+      renderedInputs,
       fullCanvas.width,
       fullCanvas.height,
     ]);
@@ -47,10 +52,10 @@ export function createFileControls(
 
     isRenderingFull.set(true);
     try {
+      const { render } = await import("../canvas/render.js");
       await delay(25);
       await render({
-        baybayinUnits: renderedBaybayinUnits,
-        viramaStyle: renderedViramaStyle,
+        ...renderedInputs,
         canvas: fullCanvas,
         speed: 0,
       });
@@ -62,12 +67,19 @@ export function createFileControls(
   }
 
   function shareCanvas() {
-    canvasRef.current.toBlob(async (blob) => {
-      const file = new File([blob], formatFileName(inputText.get()) + ".png", {
-        type: "image/png",
-      });
-      await navigator.share({ files: [file] });
-    }, "image/png");
+    drawColorStyledCanvas(canvasRef.current, colorStyle.get()).toBlob(
+      async (blob) => {
+        const file = new File(
+          [blob],
+          formatFileName(inputText.get()) + ".png",
+          {
+            type: "image/png",
+          },
+        );
+        await navigator.share({ files: [file] });
+      },
+      "image/png",
+    );
   }
 
   const FileControls = observer(

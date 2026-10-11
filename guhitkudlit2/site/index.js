@@ -8,31 +8,38 @@ import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
 import { createStyleControls } from "./style/controls.js";
+import { ColorStyleFilters } from "./style/color-styles.js";
 
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa);
-const { StyleControls, arrangement, density } = createStyleControls();
-const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
-  if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
-  if (config.separateRa !== undefined) separateRa.set(config.separateRa);
-  if (config.arrangement !== undefined) arrangement.set(config.arrangement);
-  inputText.set(config.text);
+const { StyleControls, colorStyle, arrangement, density } =
+  createStyleControls();
+const { Canvas, canvasRef } = createCanvas(
+  baybayinUnits,
+  colorStyle,
+  (config) => {
+    if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
+    if (config.separateRa !== undefined) separateRa.set(config.separateRa);
+    if (config.arrangement !== undefined) arrangement.set(config.arrangement);
+    inputText.set(config.text);
 
-  document.startViewTransition(() => {
-    inputTextWrapperRef.current?.style.setProperty(
-      "view-transition-name",
-      config.sourceElement.style.viewTransitionName,
-    );
-    config.sourceElement.style.removeProperty("view-transition-name");
-  });
-});
+    document.startViewTransition(() => {
+      inputTextWrapperRef.current?.style.setProperty(
+        "view-transition-name",
+        config.sourceElement.style.viewTransitionName,
+      );
+      config.sourceElement.style.removeProperty("view-transition-name");
+    });
+  },
+);
+const calligraphyInputs = { baybayinUnits, viramaStyle, arrangement, density };
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(
   canvasRef,
   inputText,
-  baybayinUnits,
-  viramaStyle,
+  calligraphyInputs,
+  colorStyle,
   calligraphyComplete,
 );
 
@@ -47,14 +54,7 @@ when(
         calligraphyComplete.set(true);
       }
     };
-    installCalligraphy(
-      baybayinUnits,
-      viramaStyle,
-      arrangement,
-      density,
-      canvasRef,
-      onProgress,
-    );
+    installCalligraphy(calligraphyInputs, canvasRef, onProgress);
   },
 );
 
@@ -127,12 +127,15 @@ export function Index() {
             },
             {
               title: "Style",
-              content: html`<${StyleControls} baybayinUnits=${baybayinUnits} />`,
+              content: html`<${StyleControls}
+                baybayinUnits=${baybayinUnits}
+              />`,
             },
             { title: "File", content: html`<${FileControls} />` },
           ]}
         />
       </div>
+      <${ColorStyleFilters} />
     </div>
   `;
 }

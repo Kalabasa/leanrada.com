@@ -3,9 +3,10 @@ import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
 import { observable, when } from "../lib/mobx.js";
 import { classes } from "../util/classes.js";
 import { observer } from "../util/observer.js";
+import { formatColorStyleFilter } from "../style/color-styles.js";
 import { IntroCanvas } from "./intro.js";
 
-export function createCanvas(baybayinUnits, onConfig) {
+export function createCanvas(baybayinUnits, colorStyle, onConfig) {
   const showPlaceholder = observable.box(true);
   when(
     () => baybayinUnits.get().length > 0,
@@ -18,6 +19,7 @@ export function createCanvas(baybayinUnits, onConfig) {
       <${Canvas}
         aspectRatio=${1.5}
         canvasRef=${canvasRef}
+        colorStyle=${colorStyle.get()}
         showPlaceholder=${showPlaceholder.get()}
         onConfig=${(config) => {
           showPlaceholder.set(false);
@@ -29,7 +31,13 @@ export function createCanvas(baybayinUnits, onConfig) {
   return { Canvas: CanvasImpl, canvasRef };
 }
 
-export function Canvas({ aspectRatio, canvasRef, showPlaceholder, onConfig }) {
+export function Canvas({
+  aspectRatio,
+  canvasRef,
+  colorStyle,
+  showPlaceholder,
+  onConfig,
+}) {
   const containerRef = useRef();
 
   const canvasWidth =
@@ -66,7 +74,6 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder, onConfig }) {
       .canvas {
         grid-area: 1 / 1 / -1 / -1;
         background: #fff;
-        box-shadow: var(--shadow-m);
         border-radius: 3px;
         width: 100%;
         height: 100%;
@@ -78,6 +85,9 @@ export function Canvas({ aspectRatio, canvasRef, showPlaceholder, onConfig }) {
     <div class="canvasContainer" ref=${containerRef}>
       <canvas
         class=${classes("canvas", showPlaceholder && "canvasHidden")}
+        style=${{
+          filter: `${formatColorStyleFilter(colorStyle)} drop-shadow(0 0 6px var(--color-shadow))`,
+        }}
         width=${canvasWidth}
         height=${canvasHeight}
         ref=${canvasRef}
