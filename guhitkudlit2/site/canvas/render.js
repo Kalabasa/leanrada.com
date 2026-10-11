@@ -4,37 +4,44 @@ import { drawCalligraphy } from "../calligraphy/calligraphy.js";
  * @param {object} params
  * @param {string[]} params.baybayinUnits
  * @param {"krus" | "pamudpod" | "precolonial"} params.viramaStyle
- * @param {"grid" | "diamond"} [params.formation]
+ * @param {"grid" | "diamond"} [params.arrangement]
  * @param {number} [params.density]
  * @param {HTMLCanvasElement} params.canvas
  * @param {AbortSignal} [params.abortSignal]
  * @param {number} params.drawInterval
  * @param {number} [params.composeSteps]
  * @param {number} [params.scale]
+ * @param {boolean} [params.transparent]
+ * @param {"brush" | "basic"} [params.painterName]
  * @param {(progress: number) => void} [params.onProgress]
  */
 export async function render({
   baybayinUnits,
   viramaStyle,
-  formation,
+  arrangement,
   density,
   canvas,
   abortSignal = new AbortController().signal,
   drawInterval,
   composeSteps,
   scale,
+  transparent,
+  painterName,
   onProgress = () => {},
 }) {
   const context = canvas.getContext("2d");
-  context.fillStyle = "#fff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  if (!transparent) {
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }
   const progresses = drawCalligraphy(baybayinUnits, context, abortSignal, {
     viramaStyle,
-    formation,
+    arrangement,
     density,
     drawInterval,
     maxComposeSteps: composeSteps,
     scale,
+    painterName,
   });
   let latestProgress = 0;
   let pendingFrameId = null;

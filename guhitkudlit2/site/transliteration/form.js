@@ -9,6 +9,7 @@ import { Tooltip } from "../components/tooltip.js";
 import { useState } from "../lib/htm-preact.js";
 import { InvalidLetterError } from "./invalid-letter-error.js";
 import { InvalidSyllabicationError } from "./invalid-syllabication-error.js";
+import { DEBUG } from "../app/flags.js";
 
 const memo = Symbol("memo");
 
@@ -22,7 +23,7 @@ export function createTransliterationForm(viramaStyle, separateRa) {
   const syllabicateError = observable.box(undefined);
   const inputTextWrapperRef = { current: null };
 
-  if (initialText) {
+  if (initialText && !DEBUG) {
     const url = new URL(location.href);
     url.searchParams.delete("word");
     history.replaceState(history.state, "", url);

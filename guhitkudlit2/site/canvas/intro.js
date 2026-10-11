@@ -8,31 +8,31 @@ const exampleConfigs = [
     text: "masigla",
     viramaStyle: "krus",
     separateRa: false,
-    formation: "diamond",
+    arrangement: "diamond",
   },
   {
     text: "iiyak",
     viramaStyle: "precolonial",
     separateRa: false,
-    formation: "grid",
+    arrangement: "grid",
   },
   {
     text: "tatawa",
     viramaStyle: "pamudpod",
     separateRa: false,
-    formation: "grid",
+    arrangement: "grid",
   },
   {
     text: "kuting",
     viramaStyle: "krus",
     separateRa: false,
-    formation: "normal",
+    arrangement: "normal",
   },
   {
     text: "basag-ulo",
     viramaStyle: "krus",
     separateRa: false,
-    formation: "diamond",
+    arrangement: "diamond",
   },
 ];
 const backgroundWords = [
@@ -45,7 +45,7 @@ const backgroundWords = [
   "bababa ba bababa",
   "oo sige na",
   "kala basa",
-  "sagi sag",
+  "sagisag",
 ];
 const backgroundPauseMs = 3000;
 
@@ -199,7 +199,7 @@ async function drawBackgroundWords(backgroundCanvas, abortSignal) {
     await render({
       baybayinUnits,
       viramaStyle: Math.random() < 0.5 ? "pamudpod" : "krus",
-      density: Math.random() * 3 - 1.5,
+      density: Math.random() * 4 - 2,
       canvas: backgroundCanvas,
       abortSignal,
       drawInterval: 1,

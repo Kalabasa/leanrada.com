@@ -55,12 +55,12 @@ export function layoutLine(glyphs, opts = {}) {
 
 /**
  * @param {string[]} baybayinUnits
- * @param {"normal" | "grid" | "diamond"} formation
+ * @param {"normal" | "grid" | "diamond"} arrangement
  * @returns {string[][]}
  */
-export function wrapLines(baybayinUnits, formation) {
+export function wrapLines(baybayinUnits, arrangement) {
   const lines = [[]];
-  switch (formation) {
+  switch (arrangement) {
     case "normal":
       for (const unit of baybayinUnits) {
         if (unit === " ") {
@@ -98,7 +98,7 @@ export function wrapLines(baybayinUnits, formation) {
       }
       break;
     default:
-      throw new TypeError("invalid formation");
+      throw new TypeError("invalid arrangement");
   }
   return lines;
 }
@@ -131,16 +131,19 @@ function calculateExtents(glyph, gap) {
       );
 
       for (const [neighbor, edge] of vertex.adjacency) {
+        const startRow = Math.round(vertex.y * 2);
         const endRow = Math.round(neighbor.y * 2);
-        for (let row = vertexRow + 1; row < endRow; row++) {
-          const progress = (row - vertexRow) / (endRow - vertexRow);
+        for (let row = startRow + 1; row < endRow; row++) {
+          const progress = (row - startRow) / (endRow - startRow);
           const x = vertex.x + (neighbor.x - vertex.x) * progress;
           let minX = x - gap;
           let maxX = x + gap;
           if (edge.type === "leftCurve") minX -= 0.5;
           if (edge.type === "rightCurve") maxX += 0.5;
-          extents[row].minX = Math.min(extents[row].minX, minX);
-          extents[row].maxX = Math.max(extents[row].maxX, maxX);
+          if (row >= 0 && row < layoutRows) {
+            extents[row].minX = Math.min(extents[row].minX, minX);
+            extents[row].maxX = Math.max(extents[row].maxX, maxX);
+          }
         }
       }
     }

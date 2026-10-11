@@ -12,11 +12,11 @@ import { createStyleControls } from "./style/controls.js";
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa);
-const { StyleControls, formation, density } = createStyleControls();
+const { StyleControls, arrangement, density } = createStyleControls();
 const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
   if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
   if (config.separateRa !== undefined) separateRa.set(config.separateRa);
-  if (config.formation !== undefined) formation.set(config.formation);
+  if (config.arrangement !== undefined) arrangement.set(config.arrangement);
   inputText.set(config.text);
 
   document.startViewTransition(() => {
@@ -50,7 +50,7 @@ when(
     installCalligraphy(
       baybayinUnits,
       viramaStyle,
-      formation,
+      arrangement,
       density,
       canvasRef,
       onProgress,
@@ -125,7 +125,10 @@ export function Index() {
                 baybayinUnits=${baybayinUnits}
               />`,
             },
-            { title: "Style", content: html`<${StyleControls} />` },
+            {
+              title: "Style",
+              content: html`<${StyleControls} baybayinUnits=${baybayinUnits} />`,
+            },
             { title: "File", content: html`<${FileControls} />` },
           ]}
         />

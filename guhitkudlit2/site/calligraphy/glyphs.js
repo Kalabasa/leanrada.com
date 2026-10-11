@@ -286,8 +286,8 @@ function addKudlit(glyph, vowel) {
 
 function addKrusKudlit(glyph) {
   const centerX = calculateRightX(glyph) / 2;
-  const centerY = 3.9;
-  const armLength = 0.5;
+  const centerY = 4;
+  const armLength = 0.4;
   const crossSegments = [
     [
       { x: centerX - armLength, y: centerY - armLength },
@@ -321,14 +321,14 @@ function addPamudpod(glyph) {
   };
   const pamudpodMiddle = {
     x: rightX * 0.8 + 1,
-    y: 3.5,
+    y: 4,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),
   };
   const pamudpodEnd = {
     x: rightX * 0.1,
-    y: 4,
+    y: 5,
     terminal: false,
     isKudlit: true,
     adjacency: new Map(),

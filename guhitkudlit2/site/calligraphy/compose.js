@@ -9,12 +9,12 @@ const composeStepsOverride = Number.parseInt(
   new URLSearchParams(location.search).get("composeSteps"),
 );
 
-const pushStrength = 0.3;
-const basePushDistScale = 3.2;
+const pushStrength = 0.4;
+const basePushDistScale = 3.1;
 const springStrength = 0.2;
-const squeezeStrengthX = 0.12;
-const squeezeStrengthY = 0.16;
-const kudlitGravityX = 0.04;
+const squeezeStrengthX = 0.10;
+const squeezeStrengthY = 0.12;
+const kudlitGravityX = 0.08;
 const kudlitGravityY = 0.08;
 const kudlitDistFactor = 1.8;
 const maxComposeSteps =
@@ -28,9 +28,9 @@ const maxComposeSteps =
  * }} opts
  */
 export function compose(glyphStrokesList, opts = {}) {
-  const optDensity = Math.min(Math.max(opts?.density ?? 0, -1.5), 1.5);
-  const density = 0.75 * optDensity - 0.25 * optDensity ** 2;
-  const pushDistScale = basePushDistScale * 1.2 ** density;
+  const optDensity = Math.min(Math.max(opts?.density ?? 0, -2), 2);
+  const density = (5 / 6) * optDensity - (1 / 6) * optDensity ** 2;
+  const pushDistScale = basePushDistScale * 1.5 ** density;
 
   const glyphs = glyphStrokesList.map(({ strokes }) => {
     const vertices = strokes
@@ -94,8 +94,15 @@ export function compose(glyphStrokesList, opts = {}) {
       const dy = point.y - oClosest.y;
       const dist = Math.hypot(dx, dy);
       if (dist === 0) return { x: 0, y: 0 };
-      const distFactor = curve.isKudlit ? kudlitDistFactor : 1;
-      const pushFactor = !curve.isKudlit && oCurve.isKudlit ? 0 : 1;
+
+      const sameGlyph = curve.start.glyph === oCurve.start.glyph;
+      const distFactor = !curve.isKudlit
+        ? 1
+        : sameGlyph && !oCurve.isKudlit
+          ? kudlitDistFactor
+          : 0.9;
+      const pushFactor =
+        sameGlyph && !curve.isKudlit && oCurve.isKudlit ? 0.1 : 1;
       let pushAmount =
         (pushStrength * pushFactor) /
         ((pushDistScale * distFactor * dist) ** 4 + 1);
@@ -136,7 +143,7 @@ export function compose(glyphStrokesList, opts = {}) {
     const springFactor =
       springStrength * Math.sqrt((steps - step) / steps) * 2.2 ** -density;
     const squeezeFactor =
-      (((steps - step) / steps) ** 2 / extent ** 0.25) * 1.7 ** density;
+      (((steps - step) / steps) ** 2 / extent ** 0.25) * 2.2 ** density;
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);
@@ -219,14 +226,14 @@ export function compose(glyphStrokesList, opts = {}) {
         const oGlyph = glyphs[j];
         const oCentroid = calculateCentroid([oGlyph]);
         const oExtent = calculateExtents([oGlyph]);
-        const dx = centroid.x - oCentroid.x;
-        const dy = centroid.y - oCentroid.y;
+        const dx = (centroid.x - oCentroid.x) * (extent.x + oExtent.x);
+        const dy = (centroid.y - oCentroid.y) * (extent.y + oExtent.y);
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
         const pushAmount =
-          (0 * pushStrength) / ((0.5 * pushDistScale * dist) ** 4 + 1);
-        const pushX = (dx / dist) * pushAmount * (extent.x + oExtent.x);
-        const pushY = (dy / dist) * pushAmount * (extent.y + oExtent.y);
+          pushStrength / ((0.2 * pushDistScale * dist) ** 2 + 1);
+        const pushX = (dx / dist) * pushAmount;
+        const pushY = (dy / dist) * pushAmount;
         for (const vertex of glyph.vertices) {
           pushVertex(vertex, pushX, pushY);
         }

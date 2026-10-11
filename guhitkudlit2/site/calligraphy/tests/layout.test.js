@@ -118,12 +118,12 @@ test("multiple rows contribute to width", () => {
   assert.equal(out2.map[0][0].x, 3);
 });
 
-test("normal formation: 4 units in 1 line", () => {
+test("normal arrangement: 4 units in 1 line", () => {
   const lines = wrapLines(["a", "ba", "ka", "da"], "normal");
   assert.deepEqual(lines, [["a", "ba", "ka", "da"]]);
 });
 
-test("grid formation: 4 units in 2 and 2", () => {
+test("grid arrangement: 4 units in 2 and 2", () => {
   const lines = wrapLines(["a", "ba", "ka", "da"], "grid");
   assert.deepEqual(lines, [
     ["a", "ba"],
@@ -131,7 +131,7 @@ test("grid formation: 4 units in 2 and 2", () => {
   ]);
 });
 
-test("diamond formation: 4 units in 1, 2, 1", () => {
+test("diamond arrangement: 4 units in 1, 2, 1", () => {
   const lines = wrapLines(["a", "ba", "ka", "da"], "diamond");
   assert.deepEqual(lines, [["a"], ["ba", "ka"], ["da"]]);
 });
