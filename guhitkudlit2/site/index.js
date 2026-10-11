@@ -1,4 +1,4 @@
-import { AppLogo } from "./app/logo.js";
+import "./app/logo.js";
 import { AppPanelGroup } from "./app/panel-group.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
@@ -108,7 +108,7 @@ export function Index() {
     </style>
     <div class="app appDesktopLayout">
       <div class="appLogo">
-        <${AppLogo} />
+        <app-logo></app-logo>
       </div>
       <nav class="appMenu">menu</nav>
       <main class="appCanvas">

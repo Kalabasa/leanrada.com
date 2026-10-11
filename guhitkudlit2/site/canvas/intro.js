@@ -11,6 +11,12 @@ const exampleConfigs = [
     arrangement: "diamond",
   },
   {
+    text: "kuting",
+    viramaStyle: "krus",
+    separateRa: false,
+    arrangement: "normal",
+  },
+  {
     text: "iiyak",
     viramaStyle: "precolonial",
     separateRa: false,
@@ -21,12 +27,6 @@ const exampleConfigs = [
     viramaStyle: "pamudpod",
     separateRa: false,
     arrangement: "grid",
-  },
-  {
-    text: "kuting",
-    viramaStyle: "krus",
-    separateRa: false,
-    arrangement: "normal",
   },
   {
     text: "basag-ulo",
