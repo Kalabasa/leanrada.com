@@ -7,9 +7,18 @@ import { hasVirama } from "../transliteration/syllabicate.js";
 import { classes } from "../util/classes.js";
 
 export function createSpellingControls() {
+  const initialSpellingStyle = new URLSearchParams(location.search).get(
+    "spellingStyle",
+  );
   const viramaStyle = observable.box("pamudpod");
   const separateRa = observable.box(false);
-  const precolonial = observable.box(false);
+  const precolonial = observable.box(initialSpellingStyle === "precolonial");
+
+  if (initialSpellingStyle) {
+    const url = new URL(location.href);
+    url.searchParams.delete("spellingStyle");
+    history.replaceState(history.state, "", url);
+  }
 
   const SpellingControls = observer(
     ({ inputText, baybayinUnits }) => html`

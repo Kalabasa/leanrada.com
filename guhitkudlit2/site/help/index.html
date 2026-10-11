@@ -24,7 +24,7 @@
       }
 
       header,
-      #letterErrorHelp {
+      .errorHelp {
         width: 100%;
         max-width: 800px;
         align-self: center;
@@ -106,7 +106,7 @@
       }
 
       section,
-      #letterErrorHelp {
+      .errorHelp {
         background: var(--color-bg);
         border-radius: var(--size-s);
         box-shadow: var(--shadow-m);
@@ -139,21 +139,46 @@
         }
       }
 
-      #letterErrorHelp {
+      #errorHelpContainer {
+        display: none;
+        min-height: 60vh;
+        place-items: center;
+
+        [data-error-help-pending] &,
+        &:has(.errorHelp:not([hidden])) {
+          display: grid;
+        }
+      }
+
+      .errorHelp {
         border: solid 2px var(--color-green);
+        animation: errorHelpFlash 6s cubic-bezier(0, 0.8, 0.2, 1);
 
         > p:first-child {
           font-size: var(--font-size-l);
-        }
 
+          em {
+            font-style: normal;
+            font-weight: bold;
+            color: var(--color-orange-darker);
+          }
+        }
+      }
+      @keyframes errorHelpFlash {
+        from {
+          opacity: 0;
+          scale: 0.8;
+          background: var(--color-green);
+        }
+        10% {
+          opacity: 1;
+          scale: 1;
+        }
+      }
+
+      #letterErrorHelp {
         .examples {
           margin: var(--size-m) var(--size-s);
-        }
-
-        #letterErrorLetters {
-          font-style: normal;
-          font-weight: bold;
-          color: var(--color-orange-darker);
         }
 
         p:has(+ #letterErrorExamples:empty),
@@ -269,15 +294,28 @@
         }
       }
     </style>
+    <script>
+      if (new URLSearchParams(location.search).get("word")) {
+        document.documentElement.dataset.errorHelpPending = "";
+      }
+    </script>
     <script type="module">
       const requestParams = new URLSearchParams(location.search);
       const requestedWord = requestParams.get("word") ?? "";
       const precolonial = requestParams.has("precolonial");
 
+      const backParams = new URLSearchParams();
       if (requestedWord) {
-        document.getElementById("backLink").href =
-          "../?word=" + encodeURIComponent(requestedWord);
+        backParams.set("word", requestedWord);
+      }
+      if (precolonial) {
+        backParams.set("spellingStyle", "precolonial");
+      }
+      if (backParams.size > 0) {
+        document.getElementById("backLink").href = "../?" + backParams;
+      }
 
+      if (requestedWord) {
         const { InvalidLetterError } =
           await import("../transliteration/invalid-letter-error.js");
         const { InvalidSyllabicationError } =
@@ -290,16 +328,22 @@
         } catch (error) {
           if (error instanceof InvalidLetterError) {
             showInvalidLetterHelp(error);
-          } else if (!(error instanceof InvalidSyllabicationError)) {
+          } else if (error instanceof InvalidSyllabicationError) {
+            showInvalidSyllabicationHelp(error);
+          } else {
             throw error;
           }
+        } finally {
+          delete document.documentElement.dataset.errorHelpPending;
         }
       }
 
       function showInvalidLetterHelp(invalidLetterError) {
         document.getElementById("letterErrorLetters").textContent =
           invalidLetterError.formatLetters();
-        const letterErrorExamples = document.getElementById("letterErrorExamples");
+        const letterErrorExamples = document.getElementById(
+          "letterErrorExamples",
+        );
         for (const letter of invalidLetterError.letters) {
           const letterExamples = document.querySelectorAll(
             `[data-letter="${letter}"] li`,
@@ -310,6 +354,14 @@
         }
         document.getElementById("letterErrorHelp").hidden = false;
       }
+
+      function showInvalidSyllabicationHelp(invalidSyllabicationError) {
+        document.getElementById("precolonialErrorWord").textContent =
+          invalidSyllabicationError.word;
+        document.getElementById("precolonialErrorViramaLink").href =
+          "../?word=" + encodeURIComponent(requestedWord) + "&spellingStyle=virama";
+        document.getElementById("precolonialErrorHelp").hidden = false;
+      }
     </script>
   </head>
   <body>
@@ -319,28 +371,52 @@
         <h1>Guhit Kudlit Guide</h1>
       </header>
 
-      <div id="letterErrorHelp" hidden>
-        <p>Actually, Baybayin doesn’t have <em id="letterErrorLetters"></em>.</p>
-        <p>
-          There’s no direct equivalent for this letter. If you want to convert a
-          word with this letter, you’d need to respell it in Tagalog for a more
-          accurate Baybayin conversion.
-        </p>
-        <p>
-          First, you can try substituting this letter with the equivalent
-          Tagalog sounds. For example:
-        </p>
-        <ul id="letterErrorExamples" class="examples"></ul>
-        <p>
-          Unlike other apps, GuhitKudlit will not guess and convert to avoid
-          mistakes. You know your word better, so give respelling a try. Trust,
-          this part is best left to <em>humans</em> (thinking of a permanent
-          tattoo?).
-        </p>
-        <p>
-          Want to learn more? Read below for a quick guide! It’s easier than it
-          looks!
-        </p>
+      <div id="errorHelpContainer">
+        <div id="letterErrorHelp" class="errorHelp" hidden>
+          <p>
+            Actually, Baybayin doesn’t have <em id="letterErrorLetters"></em>.
+          </p>
+          <p>
+            There’s no direct equivalent for this letter. If you want to convert
+            a word with this letter, you’d need to respell it in Tagalog for a
+            more accurate Baybayin conversion.
+          </p>
+          <p>
+            First, you can try substituting this letter with the equivalent
+            Tagalog sounds. For example:
+          </p>
+          <ul id="letterErrorExamples" class="examples"></ul>
+          <p>
+            Unlike other apps, GuhitKudlit will not guess and convert to avoid
+            mistakes. You know your word better, so give respelling a try.
+            Trust, this part is best left to <em>humans</em> (thinking of a
+            permanent tattoo?).
+          </p>
+          <p>
+            Want to learn more? Read below for a quick guide! It’s easier than
+            it looks!
+          </p>
+        </div>
+
+        <div id="precolonialErrorHelp" class="errorHelp" hidden>
+          <p>
+            You are using the <strong>precolonial</strong> mode, where we can’t
+            just spell <em id="precolonialErrorWord"></em>.
+          </p>
+          <p>
+            In precolonial Baybayin, the sound is always written as a whole
+            syllable with a vowel. A consonant on its own cannot be written.
+          </p>
+          <p>
+            You can give it a vowel, or switch to the
+            <a id="precolonialErrorViramaLink">virama spelling</a>, which has a
+            way to mark pure consonant sounds.
+          </p>
+          <p>
+            Want to learn more? Read below for a quick guide! It’s easier than
+            it looks!
+          </p>
+        </div>
       </div>
 
       <div id="cheatsheetCards">
@@ -610,9 +686,7 @@
                     >
                   </td>
                   <td class="specimen">
-                    <ruby
-                      >ᜊ<rt>ba</rt>ᜊ<rt>ba</rt>ᜌᜒ<rt>yi</rt></ruby
-                    >
+                    <ruby>ᜊ<rt>ba</rt>ᜊ<rt>ba</rt>ᜌᜒ<rt>yi</rt></ruby>
                   </td>
                 </tr>
                 <tr>
@@ -624,9 +698,7 @@
                     >
                   </td>
                   <td class="specimen">
-                    <ruby
-                      >ᜐ<rt>sa</rt>ᜎ<rt>la</rt>ᜋ<rt>ma</rt></ruby
-                    >
+                    <ruby>ᜐ<rt>sa</rt>ᜎ<rt>la</rt>ᜋ<rt>ma</rt></ruby>
                   </td>
                 </tr>
                 <tr>
@@ -656,9 +728,7 @@
                 <tr>
                   <td class="word">plano</td>
                   <td class="specimen">
-                    <ruby
-                      >ᜉ᜔<rt>p</rt>ᜎ<rt>la</rt>ᜈᜓ<rt>nu</rt></ruby
-                    >
+                    <ruby>ᜉ᜔<rt>p</rt>ᜎ<rt>la</rt>ᜈᜓ<rt>nu</rt></ruby>
                   </td>
                   <td class="specimen">
                     <ruby
@@ -669,9 +739,7 @@
                 <tr>
                   <td class="word">pwede</td>
                   <td class="specimen">
-                    <ruby
-                      >ᜉ᜔<rt>p</rt>ᜏᜒ<rt>wi</rt>ᜇᜒ<rt>di</rt></ruby
-                    >
+                    <ruby>ᜉ᜔<rt>p</rt>ᜏᜒ<rt>wi</rt>ᜇᜒ<rt>di</rt></ruby>
                   </td>
                   <td class="specimen">
                     <ruby

@@ -26,14 +26,9 @@ export function createTransliterationForm(
   const inputTextWrapperRef = { current: null };
 
   if (initialText) {
-    reaction(
-      () => inputText.get(),
-      () => {
-        const url = new URL(location.href);
-        url.searchParams.delete("word");
-        history.replaceState(history.state, "", url);
-      },
-    );
+    const url = new URL(location.href);
+    url.searchParams.delete("word");
+    history.replaceState(history.state, "", url);
   }
 
   const debouncedRemovePrettify = debounce(() => {
@@ -236,7 +231,10 @@ export function TransliterationForm({
         }
       }
       .transliterationInputTooltip {
-        animation: transliterationTooltipEnter 0.2s 1s both;
+        animation: transliterationTooltipEnter 0.2s both;
+        .transliterationForm:focus-within ~ & {
+          animation-delay: 1s;
+        }
       }
       .transliterationTooltipError {
         color: var(--color-orange);
