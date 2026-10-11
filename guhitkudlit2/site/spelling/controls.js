@@ -3,20 +3,22 @@ import { observable } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 import { LabelText } from "../typography/text.js";
 import { useEffect, useRef } from "../lib/htm-preact.js";
-import { hasVirama } from "../transliteration/syllabicate.js";
 import { classes } from "../util/classes.js";
 
-export function createSpellingControls() {
-  const initialSpellingStyle = new URLSearchParams(location.search).get(
-    "spellingStyle",
-  );
-  const viramaStyle = observable.box("pamudpod");
-  const separateRa = observable.box(false);
-  const precolonial = observable.box(initialSpellingStyle === "precolonial");
+const viramaStyles = ["pamudpod", "krus", "precolonial"];
 
-  if (initialSpellingStyle) {
+export function createSpellingControls() {
+  const initialViramaStyle = new URLSearchParams(location.search).get(
+    "viramaStyle",
+  );
+  const viramaStyle = observable.box(
+    viramaStyles.includes(initialViramaStyle) ? initialViramaStyle : "pamudpod",
+  );
+  const separateRa = observable.box(false);
+
+  if (initialViramaStyle) {
     const url = new URL(location.href);
-    url.searchParams.delete("spellingStyle");
+    url.searchParams.delete("viramaStyle");
     history.replaceState(history.state, "", url);
   }
 
@@ -26,7 +28,7 @@ export function createSpellingControls() {
         .spellingControls {
           display: flex;
           flex-direction: column;
-          justify-content: space-around;
+          justify-content: space-evenly;
           height: 100%;
         }
         .spellingControl {
@@ -97,47 +99,6 @@ export function createSpellingControls() {
             !baybayinUnits.get().length && "spellingControlDimmed",
           )}
         >
-          <${LabelText}>Syllabication<//>
-          <div class="spellingOptions">
-            <label class="spellingOption">
-              <input
-                type="radio"
-                name="precolonial"
-                value="virama"
-                checked=${!precolonial.get()}
-                onChange=${() => precolonial.set(false)}
-              />
-              <${SpellingPreview}
-                baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
-                viramaStyle="krus"
-              />
-              virama
-            </label>
-            <label class="spellingOption">
-              <input
-                type="radio"
-                name="precolonial"
-                value="precolonial"
-                checked=${precolonial.get()}
-                onChange=${() => precolonial.set(true)}
-              />
-              <${SpellingPreview}
-                baybayinUnits=${["ba", "ba", "yi"]}
-                viramaStyle="krus"
-              />
-              precolonial
-            </label>
-          </div>
-        </div>
-        <div
-          class=${classes(
-            "spellingControl",
-            (!baybayinUnits.get().length ||
-              !hasVirama(baybayinUnits.get()) ||
-              precolonial.get()) &&
-              "spellingControlDimmed",
-          )}
-        >
           <${LabelText}>Virama<//>
           <div class="spellingOptions">
             <label class="spellingOption">
@@ -149,7 +110,7 @@ export function createSpellingControls() {
                 onChange=${() => viramaStyle.set("pamudpod")}
               />
               <${SpellingPreview}
-                baybayinUnits=${["k"]}
+                baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
                 viramaStyle="pamudpod"
               />
               pamudpod
@@ -162,8 +123,25 @@ export function createSpellingControls() {
                 checked=${viramaStyle.get() === "krus"}
                 onChange=${() => viramaStyle.set("krus")}
               />
-              <${SpellingPreview} baybayinUnits=${["k"]} viramaStyle="krus" />
+              <${SpellingPreview}
+                baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
+                viramaStyle="krus"
+              />
               krus
+            </label>
+            <label class="spellingOption">
+              <input
+                type="radio"
+                name="viramaStyle"
+                value="precolonial"
+                checked=${viramaStyle.get() === "precolonial"}
+                onChange=${() => viramaStyle.set("precolonial")}
+              />
+              <${SpellingPreview}
+                baybayinUnits=${["ba", "ba", "yi"]}
+                viramaStyle="precolonial"
+              />
+              none (precolonial)
             </label>
           </div>
         </div>
@@ -204,7 +182,7 @@ export function createSpellingControls() {
     `,
   );
 
-  return { SpellingControls, viramaStyle, separateRa, precolonial };
+  return { SpellingControls, viramaStyle, separateRa };
 }
 
 function SpellingPreview({ baybayinUnits, viramaStyle }) {
@@ -221,7 +199,7 @@ function SpellingPreview({ baybayinUnits, viramaStyle }) {
   }, []);
   return html`<canvas
     ref=${canvasRef}
-    width=${baybayinUnits.length * 30}
+    width=${baybayinUnits.length * 25}
     height="30"
   />`;
 }

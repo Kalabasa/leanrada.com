@@ -9,15 +9,13 @@ import { createFileControls } from "./file/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
 import { createStyleControls } from "./style/controls.js";
 
-const { SpellingControls, viramaStyle, separateRa, precolonial } =
-  createSpellingControls();
+const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
-  createTransliterationForm(viramaStyle, separateRa, precolonial);
+  createTransliterationForm(viramaStyle, separateRa);
 const { StyleControls, formation } = createStyleControls();
 const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
   if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
   if (config.separateRa !== undefined) separateRa.set(config.separateRa);
-  if (config.precolonial !== undefined) precolonial.set(config.precolonial);
   if (config.formation !== undefined) formation.set(config.formation);
   inputText.set(config.text);
 

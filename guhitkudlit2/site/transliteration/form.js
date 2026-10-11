@@ -1,6 +1,6 @@
 import { html } from "../components/html.js";
 import { Button, Input } from "../components/form.js";
-import { observable, reaction, runInAction } from "../lib/mobx.js";
+import { computed, observable, reaction, runInAction } from "../lib/mobx.js";
 import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
 import { debounce } from "../util/debounce.js";
@@ -12,11 +12,8 @@ import { InvalidSyllabicationError } from "./invalid-syllabication-error.js";
 
 const memo = Symbol("memo");
 
-export function createTransliterationForm(
-  viramaStyle,
-  separateRa,
-  precolonial,
-) {
+export function createTransliterationForm(viramaStyle, separateRa) {
+  const precolonial = computed(() => viramaStyle.get() === "precolonial");
   const initialText = new URLSearchParams(location.search).get("word") ?? "";
   const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
@@ -87,7 +84,7 @@ export function createTransliterationForm(
           viramaStyle.get(),
         )}
         error=${syllabicateError.get()}
-        precolonial=${precolonial.get()}
+        viramaStyle=${viramaStyle.get()}
         onInput=${onInput}
       />
     `;
@@ -149,7 +146,7 @@ export function TransliterationForm({
   transformed,
   baybayin,
   error,
-  precolonial,
+  viramaStyle,
   onInput,
 }) {
   const [isSyllabicationHintOn, setSyllabicationHintOn] = useState(false);
@@ -158,7 +155,8 @@ export function TransliterationForm({
   const helpLink =
     "./help/?word=" +
     encodeURIComponent(inputText) +
-    (precolonial ? "&precolonial" : "");
+    "&viramaStyle=" +
+    viramaStyle;
 
   let tooltipContent = null;
   if (error && error instanceof InvalidLetterError) {

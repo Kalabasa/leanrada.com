@@ -243,7 +243,7 @@ function createGlyph(baybayinUnit, viramaStyle) {
   if (!"eiou".includes(vowel)) {
     if (viramaStyle === "krus") {
       addKrusKudlit(glyph);
-    } else {
+    } else if (viramaStyle === "pamudpod") {
       addPamudpod(glyph);
     }
     return glyph;

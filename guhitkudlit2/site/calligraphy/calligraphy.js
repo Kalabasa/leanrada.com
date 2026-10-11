@@ -34,7 +34,7 @@ export function installCalligraphy(
       const v = viramaStyle.get();
       return {
         baybayinUnits: b,
-        viramaStyle: hasVirama(b) ? v : "krus",
+        viramaStyle: hasVirama(b) ? v : "precolonial",
         formation: formation.get(),
       };
     },
@@ -98,7 +98,7 @@ function calculateDrawInterval(baybayinUnits) {
  * @param {CanvasRenderingContext2D} canvasContext
  * @param {AbortSignal} abortSignal
  * @param {object} opts
- * @param {"krus" | "pamudpod"} opts.viramaStyle
+ * @param {"krus" | "pamudpod" | "precolonial"} opts.viramaStyle
  * @param {"normal" | "grid" | "diamond"} [opts.formation]
  * @param {number} opts.drawInterval 0 means instant
  * @param {number} [opts.seed]
@@ -135,7 +135,7 @@ export async function* drawCalligraphy(
  * @param {string[]} baybayinUnits
  * @param {HTMLCanvasElement} canvas
  * @param {object} opts
- * @param {"krus" | "pamudpod"} opts.viramaStyle
+ * @param {"krus" | "pamudpod" | "precolonial"} opts.viramaStyle
  * @param {"normal" | "grid" | "diamond"} [opts.formation]
  * @param {number} [opts.maxComposeSteps]
  * @param {number} [opts.scale]

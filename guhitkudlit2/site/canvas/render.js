@@ -3,7 +3,7 @@ import { drawCalligraphy } from "../calligraphy/calligraphy.js";
 /**
  * @param {object} params
  * @param {string[]} params.baybayinUnits
- * @param {"krus" | "pamudpod"} params.viramaStyle
+ * @param {"krus" | "pamudpod" | "precolonial"} params.viramaStyle
  * @param {"grid" | "diamond"} [params.formation]
  * @param {HTMLCanvasElement} params.canvas
  * @param {AbortSignal} [params.abortSignal]

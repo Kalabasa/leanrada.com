@@ -302,14 +302,14 @@
     <script type="module">
       const requestParams = new URLSearchParams(location.search);
       const requestedWord = requestParams.get("word") ?? "";
-      const precolonial = requestParams.has("precolonial");
+      const viramaStyle = requestParams.get("viramaStyle");
 
       const backParams = new URLSearchParams();
       if (requestedWord) {
         backParams.set("word", requestedWord);
       }
-      if (precolonial) {
-        backParams.set("spellingStyle", "precolonial");
+      if (viramaStyle) {
+        backParams.set("viramaStyle", viramaStyle);
       }
       if (backParams.size > 0) {
         document.getElementById("backLink").href = "../?" + backParams;
@@ -324,7 +324,9 @@
           await import("../transliteration/syllabicate.js");
 
         try {
-          syllabicate(requestedWord, { precolonial });
+          syllabicate(requestedWord, {
+            precolonial: viramaStyle === "precolonial",
+          });
         } catch (error) {
           if (error instanceof InvalidLetterError) {
             showInvalidLetterHelp(error);
@@ -359,7 +361,7 @@
         document.getElementById("precolonialErrorWord").textContent =
           invalidSyllabicationError.word;
         document.getElementById("precolonialErrorViramaLink").href =
-          "../?word=" + encodeURIComponent(requestedWord) + "&spellingStyle=virama";
+          "../?word=" + encodeURIComponent(requestedWord) + "&viramaStyle=pamudpod";
         document.getElementById("precolonialErrorHelp").hidden = false;
       }
     </script>
