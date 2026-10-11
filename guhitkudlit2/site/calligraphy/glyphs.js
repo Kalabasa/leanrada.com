@@ -92,8 +92,8 @@ export const R = glyph(
 `,
 );
 const rTail = {
-  x: 2,
-  y: 3.4,
+  x: 2.5,
+  y: 3.6,
   terminal: false,
   adjacency: new Map(),
 };
@@ -287,7 +287,7 @@ function addKudlit(glyph, vowel) {
 function addKrusKudlit(glyph) {
   const centerX = calculateRightX(glyph) / 2;
   const centerY = 3.9;
-  const armLength = 0.3;
+  const armLength = 0.5;
   const crossSegments = [
     [
       { x: centerX - armLength, y: centerY - armLength },

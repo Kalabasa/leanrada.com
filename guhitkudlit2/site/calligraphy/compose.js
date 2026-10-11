@@ -12,11 +12,11 @@ const composeStepsOverride = Number.parseInt(
 const pushStrength = 0.3;
 const pushDistScale = 3.2;
 const springStrength = 0.2;
-const squeezeStrengthX = 0.12;
-const squeezeStrengthY = 0.2;
+const squeezeStrengthX = 0.13;
+const squeezeStrengthY = 0.17;
 const kudlitGravityX = 0.04;
-const kudlitGravityY = 0.06;
-const kudlitDistFactor = 2.2;
+const kudlitGravityY = 0.08;
+const kudlitDistFactor = 1.8;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -90,7 +90,7 @@ export function compose(glyphStrokesList, opts = {}) {
       const dist = Math.hypot(dx, dy);
       if (dist === 0) return { x: 0, y: 0 };
       const distFactor = curve.isKudlit ? kudlitDistFactor : 1;
-      const pushFactor = oCurve.isKudlit ? 0 : 1;
+      const pushFactor = !curve.isKudlit && oCurve.isKudlit ? 0 : 1;
       let pushAmount =
         (pushStrength * pushFactor) /
         ((pushDistScale * distFactor * dist) ** 4 + 1);
@@ -129,7 +129,7 @@ export function compose(glyphStrokesList, opts = {}) {
     }
 
     const springFactor = springStrength * Math.sqrt((steps - step) / steps);
-    const squeezeFactor = ((steps - step) / steps) ** 2 / Math.sqrt(extent);
+    const squeezeFactor = ((steps - step) / steps) ** 2 / extent ** 0.25;
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);

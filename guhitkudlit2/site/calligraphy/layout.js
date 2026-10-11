@@ -117,7 +117,10 @@ function calculateExtents(glyph, gap) {
     for (const vertex of glyphRow) {
       if (!vertex) continue;
 
-      const vertexRow = Math.round(vertex.y * 2);
+      const vertexRow = Math.min(
+        Math.max(Math.round(vertex.y * 2), 0),
+        layoutRows - 1,
+      );
       extents[vertexRow].minX = Math.min(
         extents[vertexRow].minX,
         vertex.x - gap,
