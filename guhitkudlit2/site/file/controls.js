@@ -1,6 +1,8 @@
 import { html } from "../components/html.js";
 import { Button } from "../components/form.js";
 import { observer } from "../util/observer.js";
+import { observable } from "../lib/mobx.js";
+import { delay } from "../util/delay.js";
 
 const instagramIconUrl = new URL("./instagram.svg#icon", import.meta.url).href;
 const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
@@ -13,6 +15,9 @@ export function createFileControls(
   viramaStyle,
   calligraphyComplete,
 ) {
+  const isRenderingFull = observable.box(false);
+  let cachedFullRender = null;
+
   function downloadCanvas(canvas) {
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
@@ -26,13 +31,34 @@ export function createFileControls(
     const ratio = canvasRef.current.width / canvasRef.current.height;
     fullCanvas.width = Math.max(canvasRef.current.width, 2000);
     fullCanvas.height = fullCanvas.width / ratio;
-    await render({
-      baybayinUnits: baybayinUnits.get(),
-      viramaStyle: viramaStyle.get(),
-      canvas: fullCanvas,
-      drawInterval: 0,
-    });
-    downloadCanvas(fullCanvas);
+
+    const renderedBaybayinUnits = baybayinUnits.get();
+    const renderedViramaStyle = viramaStyle.get();
+    const renderKey = JSON.stringify([
+      renderedBaybayinUnits,
+      renderedViramaStyle,
+      fullCanvas.width,
+      fullCanvas.height,
+    ]);
+    if (cachedFullRender !== null && cachedFullRender.renderKey === renderKey) {
+      downloadCanvas(cachedFullRender.fullCanvas);
+      return;
+    }
+
+    isRenderingFull.set(true);
+    try {
+      await delay(25);
+      await render({
+        baybayinUnits: renderedBaybayinUnits,
+        viramaStyle: renderedViramaStyle,
+        canvas: fullCanvas,
+        drawInterval: 0,
+      });
+      cachedFullRender = { renderKey, fullCanvas };
+      downloadCanvas(fullCanvas);
+    } finally {
+      isRenderingFull.set(false);
+    }
   }
 
   function shareCanvas() {
@@ -95,9 +121,9 @@ export function createFileControls(
           <${Button}
             class="fileControlsButton"
             onClick=${downloadFullCanvas}
-            disabled=${!calligraphyComplete.get()}
+            disabled=${isRenderingFull.get() || !calligraphyComplete.get()}
           >
-            Save HD
+            ${isRenderingFull.get() ? "Rendering..." : "Save HD"}
           <//>
           ${navigator.share &&
           html`<${Button}
