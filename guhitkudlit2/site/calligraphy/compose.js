@@ -28,7 +28,7 @@ const maxComposeSteps =
  * }} opts
  */
 export function compose(glyphStrokesList, opts = {}) {
-  const optDensity = opts?.density ?? 0;
+  const optDensity = Math.min(Math.max(opts?.density ?? 0, -1.5), 1.5);
   const density = 0.75 * optDensity - 0.25 * optDensity ** 2;
   const pushDistScale = basePushDistScale * 1.2 ** density;
 

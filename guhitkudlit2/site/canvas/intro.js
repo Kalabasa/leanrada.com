@@ -199,6 +199,7 @@ async function drawBackgroundWords(backgroundCanvas, abortSignal) {
     await render({
       baybayinUnits,
       viramaStyle: Math.random() < 0.5 ? "pamudpod" : "krus",
+      density: Math.random() * 3 - 1.5,
       canvas: backgroundCanvas,
       abortSignal,
       drawInterval: 1,
