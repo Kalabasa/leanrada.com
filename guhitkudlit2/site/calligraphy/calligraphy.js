@@ -84,10 +84,10 @@ function calculateDrawInterval(baybayinUnits) {
   );
 
   if (DEBUG) {
-    const debugSpeed = Number.parseInt(
+    const debugSpeed = Number.parseFloat(
       new URL(location).searchParams.get("speed") ?? 0,
     );
-    return Math.round(debugSpeed * inputLengthDrawInterval);
+    return Math.ceil(debugSpeed * inputLengthDrawInterval);
   }
 
   return inputLengthDrawInterval;
