@@ -17,12 +17,17 @@
       }
 
       main {
-        max-width: 800px;
-        margin: 0 auto;
         padding: var(--size-l) var(--size-m);
         display: flex;
         flex-direction: column;
         gap: var(--size-l);
+      }
+
+      header,
+      #reqHelp {
+        width: 100%;
+        max-width: 800px;
+        align-self: center;
       }
 
       a {
@@ -37,11 +42,10 @@
       }
 
       h2 {
-        font-size: var(--font-size-s);
+        font-size: var(--font-size-l);
         font-weight: bold;
-        text-transform: uppercase;
-        color: var(--color-fg-secondary);
         margin-bottom: var(--size-s);
+        text-transform: uppercase;
       }
 
       p {
@@ -60,6 +64,23 @@
         border-radius: var(--size-s);
         box-shadow: var(--shadow-m);
         padding: var(--size-m);
+      }
+
+      #cheatsheetCards {
+        width: 100%;
+        max-width: calc(3 * 600px + 2 * var(--size-l));
+        align-self: center;
+        column-width: 480px;
+        column-gap: var(--size-l);
+
+        section {
+          break-inside: avoid;
+          margin-bottom: var(--size-l);
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
       }
 
       #reqHelp {
@@ -95,14 +116,14 @@
         ruby {
           font-size: var(--font-size-xl);
         }
+      }
 
-        rt {
-          font-family: "Karla", sans-serif;
-          font-size: var(--font-size-s);
-          font-weight: bold;
-          color: var(--color-fg-secondary);
-          padding: 0 var(--size-xs);
-        }
+      rt {
+        font-family: "Karla", sans-serif;
+        font-size: var(--font-size-s);
+        font-weight: bold;
+        color: var(--color-fg-secondary);
+        padding: 0 var(--size-xs);
       }
 
       ul.examples {
@@ -118,22 +139,22 @@
         .before {
           color: var(--color-fg-secondary);
         }
+      }
 
-        del {
-          font-weight: bold;
-          color: var(--color-danger);
-          background: #fed;
-          box-shadow: 0 0 0 1px #fed;
-          border-radius: 50%;
-        }
+      del {
+        font-weight: bold;
+        color: var(--color-danger);
+        background: #fed;
+        box-shadow: 0 0 0 1px #fed;
+        border-radius: var(--size-xs);
+      }
 
-        ins {
-          font-weight: bold;
-          color: var(--color-green-darker);
-          background: #efd;
-          box-shadow: 0 0 0 1px #efd;
-          border-radius: 50%;
-        }
+      ins {
+        font-weight: bold;
+        color: var(--color-green-darker);
+        background: #efd;
+        box-shadow: 0 0 0 1px #efd;
+        border-radius: var(--size-xs);
       }
 
       .glyphs {
@@ -143,22 +164,66 @@
         margin: var(--size-s) 0;
 
         div {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          text-align: center;
           padding: var(--size-xs);
           border-radius: var(--size-xs);
-          background: var(--color-bg-darker);
+          background: var(--color-bg-secondary);
         }
 
-        .baybayin {
+        ruby {
           font-size: var(--font-size-xl);
-          line-height: 1.4;
         }
 
-        span:last-child {
+        rt {
+          padding-bottom: var(--size-xs);
+        }
+      }
+
+      #precolonialTables {
+        display: grid;
+        grid-template-columns: auto 1fr 1fr;
+        column-gap: var(--size-s);
+        margin-top: var(--size-s);
+
+        > p {
+          grid-column: 1 / -1;
+        }
+      }
+
+      .precolonialExamples {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+        align-items: center;
+        gap: var(--size-xs) var(--size-s);
+        margin: var(--size-s) 0;
+
+        thead,
+        tbody,
+        tr {
+          display: contents;
+        }
+
+        .spellingName {
           font-size: var(--font-size-s);
           font-weight: bold;
+          color: var(--color-fg-secondary);
+          text-align: center;
+        }
+
+        .spelling {
+          text-align: center;
+          padding: var(--size-xs);
+          border-radius: var(--size-xs);
+          background: var(--color-bg-secondary);
+        }
+
+        ruby {
+          font-size: var(--font-size-l);
+        }
+
+        rt {
+          padding-bottom: var(--size-xs);
         }
       }
 
@@ -179,6 +244,10 @@
         margin-top: var(--size-s);
       }
 
+      p + .conversionRules {
+        margin-top: var(--size-s);
+      }
+
       .conversionRules li {
         margin-left: var(--size-m);
         list-style: disc;
@@ -189,7 +258,7 @@
 
         q {
           font-family: monospace;
-          background: var(--color-bg-darker);
+          background: var(--color-bg-secondary);
           border-radius: 4px;
           padding: 0 4px;
         }
@@ -211,7 +280,6 @@
     </style>
     <script type="module">
       import { InvalidLetterError } from "../transliteration/invalid-letter-error.js";
-      import { convertToUnicode } from "../transliteration/unicode.mjs";
 
       const problemLetters = ["c", "f", "j", "q", "v", "x", "z"];
 
@@ -227,61 +295,20 @@
         new Set(requestedWord.toLowerCase()),
       ).filter((letter) => problemLetters.includes(letter));
 
-      renderGlyphs("vowelGlyphs", ["a", "i/e", "u/o"]);
-      renderGlyphs("consonantGlyphs", [
-        "ba",
-        "ka",
-        "da/ra",
-        "ga",
-        "ha",
-        "la",
-        "ma",
-        "na",
-        "nga",
-        "pa",
-        "sa",
-        "ta",
-        "wa",
-        "ya",
-      ]);
-      renderGlyphs("kudlitGlyphs", ["ka", "ki/ke", "ku/ko", "k"]);
-
-      const letterList = document.getElementById("unsupportedLetters");
-      for (const letter of problemLetters) {
-        const card = document.createElement("div");
-        card.className = "unsupportedLetter";
-        const heading = document.createElement("h3");
-        heading.textContent = letter.toUpperCase();
-        const examples = document.createElement("ul");
-        examples.className = "examples";
-        examples.innerHTML = new InvalidLetterError([
-          letter,
-        ]).generateLetterExamplesHTML();
-        card.append(heading, examples);
-        letterList.append(card);
-      }
-
       if (requestedLetters.length > 0) {
         const error = new InvalidLetterError(requestedLetters);
         document.getElementById("reqLetters").textContent =
           error.formatLetters();
-        document.getElementById("reqExamples").innerHTML =
-          error.generateLetterExamplesHTML();
-        document.getElementById("reqHelp").hidden = false;
-      }
-
-      function renderGlyphs(containerId, units) {
-        const container = document.getElementById(containerId);
-        for (const unit of units) {
-          const cell = document.createElement("div");
-          const glyph = document.createElement("span");
-          glyph.className = "baybayin";
-          glyph.textContent = convertToUnicode([unit.split("/")[0]]);
-          const label = document.createElement("span");
-          label.textContent = unit;
-          cell.append(glyph, label);
-          container.append(cell);
+        const reqExamples = document.getElementById("reqExamples");
+        for (const letter of requestedLetters) {
+          const letterExamples = document.querySelectorAll(
+            `[data-letter="${letter}"] li`,
+          );
+          for (const letterExample of letterExamples) {
+            reqExamples.append(letterExample.cloneNode(true));
+          }
         }
+        document.getElementById("reqHelp").hidden = false;
       }
     </script>
   </head>
@@ -289,7 +316,7 @@
     <main>
       <header>
         <p><a id="backLink" href="../">⟵ Back to GuhitKudlit</a></p>
-        <h1>Help</h1>
+        <h1>Guhit Kudlit Guide</h1>
       </header>
 
       <div id="reqHelp" hidden>
@@ -316,66 +343,331 @@
         </p>
       </div>
 
-      <section>
-        <h2>Letters with no Baybayin equivalent</h2>
-        <p>
-          Baybayin has no symbols for C, F, J, Q, V, X, and Z. To use foreign
-          words or names in Baybayin, spell the word the way it sounds in the
-          Tagalog alphabet (<a
-            href="https://en.wikipedia.org/wiki/Abakada_alphabet"
-            target="_blank"
-            >abakada</a
-          >) instead.
-        </p>
-        <div id="unsupportedLetters"></div>
-      </section>
-
-      <section>
-        <h2>Baybayin cheatsheet</h2>
-        <p>
-          Baybayin is generally one symbol per syllable. It’s an
-          <strong
-            ><a
-              href="https://www.omniglot.com/writing/abugidas.htm"
+      <div id="cheatsheetCards">
+        <section>
+          <h2>Foreign sounds</h2>
+          <p>
+            Baybayin has no symbols for C, F, J, Q, V, X, and Z. To use foreign
+            words or names in Baybayin, spell the word the way it sounds in the
+            Tagalog alphabet (<a
+              href="https://en.wikipedia.org/wiki/Abakada_alphabet"
               target="_blank"
-              >abugida</a
-            ></strong
-          >, you see.
-        </p>
-        <p id="cheatExample">
-          <ruby class="baybayin">ᜊᜓ<rt>bu</rt>ᜑ<rt>ha</rt>ᜌ᜕<rt>y</rt></ruby>
-        </p>
-        <p>Only three vowels</p>
-        <div id="vowelGlyphs" class="glyphs"></div>
-        <p>Fourteen consonants</p>
-        <div id="consonantGlyphs" class="glyphs"></div>
-        <p>
-          The <strong>kudlit</strong> mark changes the vowel. When above it
-          makes an ‘e/i’ sound. Below it makes an ‘o/u’ sound. A final mark
-          kills the vowel.
-        </p>
-        <div id="kudlitGlyphs" class="glyphs"></div>
-      </section>
+              >abakada</a
+            >) instead.
+          </p>
+          <div id="unsupportedLetters">
+            <div class="unsupportedLetter" data-letter="c">
+              <h3>C</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>C</del>at</span>⟶<span><ins>K</ins>at</span>
+                </li>
+                <li>
+                  <span class="before"><del>Ch</del>art</span>⟶<span><ins>Ts</ins>art</span>
+                </li>
+                <li>
+                  <span class="before"><del>Ch</del>rome</span>⟶<span><ins>K</ins>rowm</span>
+                </li>
+                <li>
+                  <span class="before">A<del>c</del>tion</span>⟶<span>Ak<ins>siy</ins>on</span>
+                </li>
+                <li>
+                  <span class="before">Bra<del>c</del>e</span>⟶<span>Brey<ins>s</ins></span>
+                </li>
+                <li>
+                  <span class="before">O<del>c</del>ean</span>⟶<span>Ow<ins>sy</ins>an</span>
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="f">
+              <h3>F</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>F</del>ootball</span>⟶<span><ins>P</ins>utbol</span>
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="j">
+              <h3>J</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>J</del>eepney</span>⟶<span><ins>Dy</ins>ipni</span>
+                </li>
+                <li>
+                  <span class="before">F<del>j</del>ord</span>⟶<span>P<ins>y</ins>ord</span>
+                </li>
+                <li>
+                  <span class="before">Mo<del>j</del>ito</span>⟶<span>Mo<ins>h</ins>ito</span>
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="q">
+              <h3>Q</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>Q</del>ueen</span>⟶<span><ins>K</ins>win</span>
+                </li>
+                <li>
+                  <span class="before">Uni<del>q</del>ue</span>⟶<span>Yuni<ins>k</ins></span>
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="v">
+              <h3>V</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>V</del>ase</span>⟶<span><ins>B</ins>eys</span>
+                </li>
+                <li>
+                  <span class="before">Ali<del>v</del>e</span>⟶<span>Alay<ins>b</ins></span>
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="x">
+              <h3>X</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>X</del>ero<del>x</del></span>⟶<span><ins>S</ins>ero<ins>ks</ins></span>
+                </li>
+                <li>
+                  <span class="before"><del>X</del>ylophone</span>⟶<span><ins>S</ins>aylopon</span>
+                </li>
+                <li>
+                  <span class="before">Bo<del>x</del></span>⟶<span>Ba<ins>ks</ins></span>
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="z">
+              <h3>Z</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>Z</del>oo</span>⟶<span><ins>S</ins>u</span>
+                </li>
+                <li>
+                  <span class="before">Ama<del>z</del>ing</span>⟶<span>Amey<ins>s</ins>ing</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
 
-      <section>
-        <h2>Guhit Kudlit quirks</h2>
-        <ul class="conversionRules">
-          <li>
-            Repeated letters are written once, <q>Anna</q> becomes <q>Ana</q>.
-          </li>
-          <li>
-            <q>ng</q> and <q>mga</q> are written with their traditional
-            spellings.
-          </li>
-          <li>
-            Check my
-            <a href="https://leanrada.com/wares/guhit-kudlit/" target="_blank"
-              >blog post</a
-            >
-            for more details!
-          </li>
-        </ul>
-      </section>
+        <section>
+          <h2>Baybayin cheatsheet</h2>
+          <p>
+            Baybayin is generally one symbol per syllable. It’s an
+            <strong
+              ><a
+                href="https://www.omniglot.com/writing/abugidas.htm"
+                target="_blank"
+                >abugida</a
+              ></strong
+            >, you see.
+          </p>
+          <p id="cheatExample">
+            <ruby class="baybayin">ᜊᜓ<rt>bu</rt>ᜑ<rt>ha</rt>ᜌ᜕<rt>y</rt></ruby>
+          </p>
+          <p>Only three vowels</p>
+          <div class="glyphs">
+            <div>
+              <ruby class="baybayin">ᜀ<rt>a</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜁ<rt>i/e</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜂ<rt>u/o</rt></ruby>
+            </div>
+          </div>
+          <p>Fourteen consonants</p>
+          <div class="glyphs">
+            <div>
+              <ruby class="baybayin">ᜊ<rt>ba</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜃ<rt>ka</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜇ<rt>da/ra</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜄ<rt>ga</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜑ<rt>ha</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜎ<rt>la</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜋ<rt>ma</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜈ<rt>na</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜅ<rt>nga</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜉ<rt>pa</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜐ<rt>sa</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜆ<rt>ta</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜏ<rt>wa</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜌ<rt>ya</rt></ruby>
+            </div>
+          </div>
+          <p>
+            The <strong>kudlit</strong> mark changes the vowel. When above it
+            makes an ‘e/i’ sound. Below it makes an ‘o/u’ sound. A final mark
+            kills the vowel.
+          </p>
+          <div class="glyphs">
+            <div>
+              <ruby class="baybayin">ᜃ<rt>ka</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜃᜒ<rt>ki/ke</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜃᜓ<rt>ku/ko</rt></ruby>
+            </div>
+            <div>
+              <ruby class="baybayin">ᜃ᜕<rt>k</rt></ruby>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Precolonial primer</h2>
+          <p>
+            Guhit supports two spelling methods: precolonial (no virama) and
+            virama. Before the Spanish introduction, only the starting consonant
+            of each syllable was written and the final consonants were not
+            written.
+          </p>
+          <div id="precolonialTables">
+            <table class="precolonialExamples">
+              <thead>
+                <tr>
+                  <td></td>
+                  <th class="spellingName">virama</th>
+                  <th class="spellingName">precolonial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>baybayin</td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜊ<rt>ba</rt><del>ᜌ᜔</del><rt>y</rt>ᜊ<rt>ba</rt>ᜌᜒ<rt>yi</rt><del>ᜈ᜔</del><rt>n</rt></ruby>
+                  </td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜊ<rt>ba</rt>ᜊ<rt>ba</rt>ᜌᜒ<rt>yi</rt></ruby>
+                  </td>
+                </tr>
+                <tr>
+                  <td>salamat</td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜐ<rt>sa</rt>ᜎ<rt>la</rt>ᜋ<rt>ma</rt><del>ᜆ᜔</del><rt>t</rt></ruby>
+                  </td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜐ<rt>sa</rt>ᜎ<rt>la</rt>ᜋ<rt>ma</rt></ruby>
+                  </td>
+                </tr>
+                <tr>
+                  <td>bundok</td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜊᜓ<rt>bu</rt><del>ᜈ᜔</del><rt>n</rt>ᜇᜓ<rt>du</rt><del>ᜃ᜔</del><rt>k</rt></ruby>
+                  </td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜊᜓ<rt>bu</rt>ᜇᜓ<rt>du</rt></ruby>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>Consonant clusters need to be broken up into extra syllables</p>
+            <table class="precolonialExamples">
+              <thead>
+                <tr>
+                  <td></td>
+                  <th class="spellingName">virama</th>
+                  <th class="spellingName">precolonial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>plano</td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜉ᜔<rt>p</rt>ᜎ<rt>la</rt>ᜈᜓ<rt>nu</rt></ruby>
+                  </td>
+                  <td class="spelling">
+                    <ruby class="baybayin"><ins>ᜉᜒ</ins><rt>pi</rt>ᜎ<rt>la</rt>ᜈᜓ<rt>nu</rt></ruby>
+                  </td>
+                </tr>
+                <tr>
+                  <td>pwede</td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜉ᜔<rt>p</rt>ᜏᜒ<rt>wi</rt>ᜇᜒ<rt>di</rt></ruby>
+                  </td>
+                  <td class="spelling">
+                    <ruby class="baybayin"><ins>ᜉᜓ</ins><rt>pu</rt>ᜏᜒ<rt>wi</rt>ᜇᜒ<rt>di</rt></ruby>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              Reading written words were inferred from context, so it’s not good
+              with uncommon or foreign names.
+            </p>
+            <table class="precolonialExamples">
+              <thead>
+                <tr>
+                  <td></td>
+                  <th class="spellingName">virama</th>
+                  <th class="spellingName">precolonial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>kristo</td>
+                  <td class="spelling">
+                    <ruby class="baybayin">ᜃ᜔<rt>k</rt>ᜇᜒ<rt>di</rt><del>ᜐ᜔</del><rt>s</rt>ᜆᜓ<rt>tu</rt></ruby>
+                  </td>
+                  <td class="spelling">
+                    <ruby class="baybayin"><ins>ᜃᜒ</ins><rt>ki</rt>ᜇᜒ<rt>di</rt>ᜆᜓ<rt>tu</rt></ruby>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2>Guhit Kudlit quirks</h2>
+          <ul class="conversionRules">
+            <li>
+              Repeated letters are written once, <q>Anna</q> becomes <q>Ana</q>.
+            </li>
+            <li>
+              <q>ng</q> and <q>mga</q> are written with their traditional
+              spellings.
+            </li>
+            <li>
+              Check my
+              <a href="https://leanrada.com/wares/guhit-kudlit/" target="_blank"
+                >blog post</a
+              >
+              for more details!
+            </li>
+          </ul>
+        </section>
+      </div>
     </main>
     <footer>
       <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
