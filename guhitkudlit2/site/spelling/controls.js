@@ -1,4 +1,5 @@
 import { html } from "../components/html.js";
+import { OptionGroup, OptionGroupOption } from "../components/option-group.js";
 import { observable } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 import { LabelText } from "../typography/text.js";
@@ -32,64 +33,10 @@ export function createSpellingControls() {
           height: 100%;
         }
         .spellingControl {
-          anchor-scope: --spellingOptionActive;
           transition: opacity 0.6s ease-out;
         }
         .spellingControlDimmed {
           opacity: var(--opacity-tertiary);
-        }
-        .spellingOptions {
-          display: flex;
-          position: relative;
-          z-index: 0;
-          &::before {
-            content: "";
-            background: #f0f0f0;
-            position: absolute;
-            inset: 0;
-            border-radius: var(--size-xs);
-            z-index: -2;
-          }
-          &::after {
-            content: "";
-            background: #fff;
-            border: solid 2px var(--color-orange-darker);
-            border-radius: var(--size-xs);
-            position: absolute;
-            inset: anchor(--spellingOptionActive top)
-              anchor(--spellingOptionActive right)
-              anchor(--spellingOptionActive bottom)
-              anchor(--spellingOptionActive left);
-            transition: inset 0.15s;
-            z-index: -1;
-          }
-        }
-        .spellingOption {
-          flex: 1 1 1%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: var(--size-xs);
-          cursor: pointer;
-          font-size: var(--font-size-s);
-          font-weight: bold;
-          border-radius: var(--size-xs);
-          &:has(input:checked) {
-            anchor-name: --spellingOptionActive;
-          }
-          &:not(:has(input:checked)) {
-            &:hover {
-              background: #0001;
-            }
-            &:active {
-              background: #0002;
-            }
-          }
-          input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-          }
         }
       </style>
       <div class="spellingControls">
@@ -100,50 +47,33 @@ export function createSpellingControls() {
           )}
         >
           <${LabelText}>Virama<//>
-          <div class="spellingOptions">
-            <label class="spellingOption">
-              <input
-                type="radio"
-                name="viramaStyle"
-                value="pamudpod"
-                checked=${viramaStyle.get() === "pamudpod"}
-                onChange=${() => viramaStyle.set("pamudpod")}
-              />
+          <${OptionGroup}
+            name="viramaStyle"
+            value=${viramaStyle.get()}
+            onChange=${(value) => viramaStyle.set(value)}
+          >
+            <${OptionGroupOption} value="pamudpod">
               <${SpellingPreview}
                 baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
                 viramaStyle="pamudpod"
               />
               pamudpod
-            </label>
-            <label class="spellingOption">
-              <input
-                type="radio"
-                name="viramaStyle"
-                value="krus"
-                checked=${viramaStyle.get() === "krus"}
-                onChange=${() => viramaStyle.set("krus")}
-              />
+            <//>
+            <${OptionGroupOption} value="krus">
               <${SpellingPreview}
                 baybayinUnits=${["ba", "y", "ba", "yi", "n"]}
                 viramaStyle="krus"
               />
               krus
-            </label>
-            <label class="spellingOption">
-              <input
-                type="radio"
-                name="viramaStyle"
-                value="precolonial"
-                checked=${viramaStyle.get() === "precolonial"}
-                onChange=${() => viramaStyle.set("precolonial")}
-              />
+            <//>
+            <${OptionGroupOption} value="precolonial">
               <${SpellingPreview}
                 baybayinUnits=${["ba", "ba", "yi"]}
                 viramaStyle="precolonial"
               />
               none (precolonial)
-            </label>
-          </div>
+            <//>
+          <//>
         </div>
         <div
           class=${classes(
@@ -153,30 +83,20 @@ export function createSpellingControls() {
           )}
         >
           <${LabelText}>R distinction<//>
-          <div class="spellingOptions">
-            <label class="spellingOption">
-              <input
-                type="radio"
-                name="separateRa"
-                value="da"
-                checked=${!separateRa.get()}
-                onChange=${() => separateRa.set(false)}
-              />
+          <${OptionGroup}
+            name="separateRa"
+            value=${separateRa.get() ? "ra" : "da"}
+            onChange=${(value) => separateRa.set(value === "ra")}
+          >
+            <${OptionGroupOption} value="da">
               <${SpellingPreview} baybayinUnits=${["da"]} viramaStyle="krus" />
               traditional D/R
-            </label>
-            <label class="spellingOption">
-              <input
-                type="radio"
-                name="separateRa"
-                value="ra"
-                checked=${separateRa.get()}
-                onChange=${() => separateRa.set(true)}
-              />
+            <//>
+            <${OptionGroupOption} value="ra">
               <${SpellingPreview} baybayinUnits=${["ra"]} viramaStyle="krus" />
               modern R
-            </label>
-          </div>
+            <//>
+          <//>
         </div>
       </div>
     `,
