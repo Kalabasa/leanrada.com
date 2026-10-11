@@ -25,6 +25,17 @@ export function createTransliterationForm(
   const syllabicateError = observable.box(undefined);
   const inputTextWrapperRef = { current: null };
 
+  if (initialText) {
+    reaction(
+      () => inputText.get(),
+      () => {
+        const url = new URL(location.href);
+        url.searchParams.delete("word");
+        history.replaceState(history.state, "", url);
+      },
+    );
+  }
+
   const debouncedRemovePrettify = debounce(() => {
     prettify.set(false);
   }, 400);
@@ -56,15 +67,6 @@ export function createTransliterationForm(
     },
     { delay: 100, fireImmediately: initialText !== "" },
   );
-
-  // reaction(
-  //   () => inputText.get(),
-  //   (inputText) => {
-  //     const url = new URL(location.href);
-  //     url.searchParams.set("word", inputText);
-  //     history.replaceState(history.state, "", url);
-  //   },
-  // );
 
   const TransliterationFormImpl = observer(() => {
     const onInput = (event) => {
