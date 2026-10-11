@@ -90,6 +90,7 @@ export function createTransliterationForm(
           viramaStyle.get(),
         )}
         error=${syllabicateError.get()}
+        precolonial=${precolonial.get()}
         onInput=${onInput}
       />
     `;
@@ -151,12 +152,16 @@ export function TransliterationForm({
   transformed,
   baybayin,
   error,
+  precolonial,
   onInput,
 }) {
   const [isSyllabicationHintOn, setSyllabicationHintOn] = useState(false);
   const [hasFocused, setHasFocused] = useState(false);
 
-  const helpLink = "./help/?word=" + encodeURIComponent(inputText);
+  const helpLink =
+    "./help/?word=" +
+    encodeURIComponent(inputText) +
+    (precolonial ? "&precolonial" : "");
 
   let tooltipContent = null;
   if (error && error instanceof InvalidLetterError) {
