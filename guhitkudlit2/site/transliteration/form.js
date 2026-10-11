@@ -154,7 +154,7 @@ export function TransliterationForm({
   const [isSyllabicationHintOn, setSyllabicationHintOn] = useState(false);
   const [hasFocused, setHasFocused] = useState(false);
 
-  const helpLink = "./help/#" + encodeURIComponent(inputText);
+  const helpLink = "./help/?word=" + encodeURIComponent(inputText);
 
   let tooltipContent = null;
   if (error && error instanceof InvalidLetterError) {
