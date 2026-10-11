@@ -44,6 +44,8 @@ export function createTransliterationForm(
           throw error;
         }
         syllabicateError.set(error);
+        baybayinUnits.set([]);
+        transformed.set(undefined);
         return;
       }
       syllabicateError.set(undefined);

@@ -85,7 +85,7 @@ export function createSpellingControls() {
         <div
           class=${classes(
             "spellingControl",
-            !inputText.get().length && "spellingControlDimmed",
+            !baybayinUnits.get().length && "spellingControlDimmed",
           )}
         >
           <${LabelText}>Syllabication<//>
@@ -123,7 +123,7 @@ export function createSpellingControls() {
         <div
           class=${classes(
             "spellingControl",
-            (!inputText.get().length ||
+            (!baybayinUnits.get().length ||
               !hasVirama(baybayinUnits.get()) ||
               precolonial.get()) &&
               "spellingControlDimmed",
@@ -161,7 +161,8 @@ export function createSpellingControls() {
         <div
           class=${classes(
             "spellingControl",
-            !inputText.get().includes("r") && "spellingControlDimmed",
+            (!baybayinUnits.get().length || !inputText.get().includes("r")) &&
+              "spellingControlDimmed",
           )}
         >
           <${LabelText}>R distinction<//>
