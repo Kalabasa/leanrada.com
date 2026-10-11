@@ -151,6 +151,7 @@ export function TransliterationForm({
 }) {
   const [isSyllabicationHintOn, setSyllabicationHintOn] = useState(false);
   const [hasFocused, setHasFocused] = useState(false);
+  const showEditHint = !error && inputText && !hasFocused;
 
   const helpLink =
     "./help/?word=" +
@@ -179,7 +180,7 @@ export function TransliterationForm({
           >Check this quick guide!</a
         >
       </p>`;
-  } else if (inputText && !hasFocused) {
+  } else if (showEditHint) {
     tooltipContent = html`<p>You can edit this!</p>`;
   }
 
@@ -233,6 +234,9 @@ export function TransliterationForm({
         .transliterationForm:focus-within ~ & {
           animation-delay: 1s;
         }
+      }
+      .transliterationEditHint {
+        animation-delay: 3s;
       }
       .transliterationTooltipError {
         color: var(--color-orange);
@@ -325,6 +329,7 @@ export function TransliterationForm({
         "transliterationTooltip",
         "transliterationInputTooltip",
         error && "transliterationTooltipError",
+        showEditHint && "transliterationEditHint",
       )}
       anchorName="--transliterationInput"
       direction="top"
