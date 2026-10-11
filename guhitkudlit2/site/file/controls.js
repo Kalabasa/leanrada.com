@@ -52,7 +52,7 @@ export function createFileControls(
         baybayinUnits: renderedBaybayinUnits,
         viramaStyle: renderedViramaStyle,
         canvas: fullCanvas,
-        drawInterval: 0,
+        speed: 0,
       });
       cachedFullRender = { renderKey, fullCanvas };
       downloadCanvas(fullCanvas);

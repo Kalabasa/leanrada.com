@@ -8,7 +8,7 @@ import { drawCalligraphy } from "../calligraphy/calligraphy.js";
  * @param {number} [params.density]
  * @param {HTMLCanvasElement} params.canvas
  * @param {AbortSignal} [params.abortSignal]
- * @param {number} params.drawInterval
+ * @param {number} params.speed
  * @param {number} [params.composeSteps]
  * @param {number} [params.scale]
  * @param {boolean} [params.transparent]
@@ -22,7 +22,7 @@ export async function render({
   density,
   canvas,
   abortSignal = new AbortController().signal,
-  drawInterval,
+  speed,
   composeSteps,
   scale,
   transparent,
@@ -38,7 +38,7 @@ export async function render({
     viramaStyle,
     arrangement,
     density,
-    drawInterval,
+    speed,
     maxComposeSteps: composeSteps,
     scale,
     painterName,

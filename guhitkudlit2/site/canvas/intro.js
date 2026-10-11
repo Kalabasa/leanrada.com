@@ -202,7 +202,7 @@ async function drawBackgroundWords(backgroundCanvas, abortSignal) {
       density: Math.random() * 4 - 2,
       canvas: backgroundCanvas,
       abortSignal,
-      drawInterval: 1,
+      speed: 1,
       composeSteps: Math.round(10 + Math.random() * 40),
       scale: 1.2 + Math.random() * 0.4,
     });

@@ -69,7 +69,7 @@ async function drawControlPreview(
     density,
     canvas,
     abortSignal,
-    drawInterval: 0,
+    speed: 20,
     composeSteps,
     transparent: true,
     painterName: "basic",

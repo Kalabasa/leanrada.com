@@ -75,7 +75,7 @@ export function installCalligraphy(
         density,
         canvas: canvasRef.current,
         abortSignal: abortController.signal,
-        drawInterval: calculateDrawInterval(baybayinUnits),
+        speed: calculateSpeed(baybayinUnits),
       });
       if (abortController.signal.aborted) return;
       onProgress("complete");
@@ -84,20 +84,17 @@ export function installCalligraphy(
   );
 }
 
-function calculateDrawInterval(baybayinUnits) {
-  const inputLengthDrawInterval = Math.min(
-    20,
-    1 + Math.round(0.1 * baybayinUnits.length ** 2),
-  );
+function calculateSpeed(baybayinUnits) {
+  const speed = Math.min(20, 1 + Math.round(0.1 * baybayinUnits.length ** 2));
 
   if (DEBUG) {
     const debugSpeed = Number.parseFloat(
       new URL(location).searchParams.get("speed") ?? 0,
     );
-    return Math.ceil(debugSpeed * inputLengthDrawInterval);
+    return Math.ceil(debugSpeed * speed);
   }
 
-  return inputLengthDrawInterval;
+  return speed;
 }
 
 /**
@@ -108,7 +105,7 @@ function calculateDrawInterval(baybayinUnits) {
  * @param {"krus" | "pamudpod" | "precolonial"} opts.viramaStyle
  * @param {"normal" | "grid" | "diamond"} [opts.arrangement]
  * @param {number} [opts.density]
- * @param {number} opts.drawInterval 0 means instant
+ * @param {number} opts.speed
  * @param {number} [opts.seed]
  * @param {number} [opts.maxComposeSteps]
  * @param {number} [opts.scale]
@@ -123,7 +120,7 @@ export async function* drawCalligraphy(
     viramaStyle,
     arrangement,
     density,
-    drawInterval,
+    speed,
     seed = 0,
     maxComposeSteps,
     scale,
@@ -139,12 +136,12 @@ export async function* drawCalligraphy(
   if (abortSignal.aborted) return;
 
   let tick = 0;
-  const interval = Math.ceil(drawInterval);
-  const ms = 22 * Math.min(1, Math.max(0, drawInterval));
+  const interval = Math.ceil(speed);
+  const ms = 1000 / 24 / Math.min(1, speed);
   for (const progress of painter.drawPaths(path, cellSize, canvasContext)) {
-    if (drawInterval > 0) {
-      if (tick % interval === 0) await delay(ms);
-      tick++;
+    tick++;
+    if (tick % interval === 0) {
+      await delay(ms);
     }
     if (abortSignal.aborted) return;
     yield progress;

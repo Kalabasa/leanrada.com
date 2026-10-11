@@ -12,8 +12,8 @@ const composeStepsOverride = Number.parseInt(
 const pushStrength = 0.4;
 const basePushDistScale = 3.1;
 const springStrength = 0.2;
-const squeezeStrengthX = 0.10;
-const squeezeStrengthY = 0.12;
+const squeezeStrengthX = 0.1;
+const squeezeStrengthY = 0.15;
 const kudlitGravityX = 0.08;
 const kudlitGravityY = 0.08;
 const kudlitDistFactor = 1.8;
@@ -226,12 +226,12 @@ export function compose(glyphStrokesList, opts = {}) {
         const oGlyph = glyphs[j];
         const oCentroid = calculateCentroid([oGlyph]);
         const oExtent = calculateExtents([oGlyph]);
-        const dx = (centroid.x - oCentroid.x) * (extent.x + oExtent.x);
-        const dy = (centroid.y - oCentroid.y) * (extent.y + oExtent.y);
+        const dx = (centroid.x - oCentroid.x) / ((1 + extent.x + oExtent.x) / 2);
+        const dy = (centroid.y - oCentroid.y) / ((1 + extent.y + oExtent.y) / 2);
         const dist = Math.hypot(dx, dy);
         if (dist === 0) continue;
         const pushAmount =
-          pushStrength / ((0.2 * pushDistScale * dist) ** 2 + 1);
+          pushStrength / ((10 * pushDistScale * dist) ** 2 + 1);
         const pushX = (dx / dist) * pushAmount;
         const pushY = (dy / dist) * pushAmount;
         for (const vertex of glyph.vertices) {
