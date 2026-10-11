@@ -94,6 +94,8 @@ export function createFileControls(
           grid-column: 1 / -1;
         }
         .fileControlsSocial {
+          position: relative;
+          top: var(--size-s);
           margin-top: auto;
           font-size: var(--font-size-s);
           display: flex;
