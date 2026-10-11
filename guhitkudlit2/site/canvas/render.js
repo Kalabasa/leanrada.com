@@ -5,6 +5,7 @@ import { drawCalligraphy } from "../calligraphy/calligraphy.js";
  * @param {string[]} params.baybayinUnits
  * @param {"krus" | "pamudpod" | "precolonial"} params.viramaStyle
  * @param {"grid" | "diamond"} [params.formation]
+ * @param {number} [params.density]
  * @param {HTMLCanvasElement} params.canvas
  * @param {AbortSignal} [params.abortSignal]
  * @param {number} params.drawInterval
@@ -16,6 +17,7 @@ export async function render({
   baybayinUnits,
   viramaStyle,
   formation,
+  density,
   canvas,
   abortSignal = new AbortController().signal,
   drawInterval,
@@ -29,6 +31,7 @@ export async function render({
   const progresses = drawCalligraphy(baybayinUnits, context, abortSignal, {
     viramaStyle,
     formation,
+    density,
     drawInterval,
     maxComposeSteps: composeSteps,
     scale,

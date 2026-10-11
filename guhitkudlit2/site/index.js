@@ -12,7 +12,7 @@ import { createStyleControls } from "./style/controls.js";
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa);
-const { StyleControls, formation } = createStyleControls();
+const { StyleControls, formation, density } = createStyleControls();
 const { Canvas, canvasRef } = createCanvas(baybayinUnits, (config) => {
   if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
   if (config.separateRa !== undefined) separateRa.set(config.separateRa);
@@ -51,6 +51,7 @@ when(
       baybayinUnits,
       viramaStyle,
       formation,
+      density,
       canvasRef,
       onProgress,
     );

@@ -10,10 +10,10 @@ const composeStepsOverride = Number.parseInt(
 );
 
 const pushStrength = 0.3;
-const pushDistScale = 3.2;
+const basePushDistScale = 3.2;
 const springStrength = 0.2;
-const squeezeStrengthX = 0.13;
-const squeezeStrengthY = 0.17;
+const squeezeStrengthX = 0.12;
+const squeezeStrengthY = 0.16;
 const kudlitGravityX = 0.04;
 const kudlitGravityY = 0.08;
 const kudlitDistFactor = 1.8;
@@ -23,10 +23,15 @@ const maxComposeSteps =
 /**
  * @param {GlyphStrokes[]} glyphStrokesList
  * @param {{
- *   maxComposeSteps: number
+ *   maxComposeSteps: number,
+ *   density?: number
  * }} opts
  */
 export function compose(glyphStrokesList, opts = {}) {
+  const optDensity = opts?.density ?? 0;
+  const density = 0.75 * optDensity - 0.25 * optDensity ** 2;
+  const pushDistScale = basePushDistScale * 1.2 ** density;
+
   const glyphs = glyphStrokesList.map(({ strokes }) => {
     const vertices = strokes
       .flatMap((stroke) => stroke.vertices)
@@ -128,8 +133,10 @@ export function compose(glyphStrokesList, opts = {}) {
       controlPushes.set(edge.end, { x: 0, y: 0 });
     }
 
-    const springFactor = springStrength * Math.sqrt((steps - step) / steps);
-    const squeezeFactor = ((steps - step) / steps) ** 2 / extent ** 0.25;
+    const springFactor =
+      springStrength * Math.sqrt((steps - step) / steps) * 2.2 ** -density;
+    const squeezeFactor =
+      (((steps - step) / steps) ** 2 / extent ** 0.25) * 1.7 ** density;
 
     for (const glyph of glyphs) {
       const centroid = calculateCentroid([glyph]);

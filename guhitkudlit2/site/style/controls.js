@@ -15,6 +15,12 @@ export function createStyleControls() {
     formation.set(selectedFormation);
   };
 
+  const density = observable.box(0);
+
+  const onDensityChange = (selectedDensity) => {
+    density.set(selectedDensity);
+  };
+
   const StyleControls = observer(
     () => html`
       <style id=${StyleControls.name}>
@@ -38,9 +44,21 @@ export function createStyleControls() {
             <${OptionGroupOption} value="diamond">diamond<//>
           <//>
         </div>
+        <div class="styleControl">
+          <${LabelText}>Density<//>
+          <${OptionGroup}
+            name="density"
+            value=${density.get()}
+            onChange=${onDensityChange}
+          >
+            <${OptionGroupOption} value=${-1}>spacious<//>
+            <${OptionGroupOption} value=${0}>normal<//>
+            <${OptionGroupOption} value=${1}>compact<//>
+          <//>
+        </div>
       </div>
     `,
   );
 
-  return { StyleControls, formation };
+  return { StyleControls, formation, density };
 }
