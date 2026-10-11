@@ -38,6 +38,7 @@ export function OptionGroup({ name, value, onChange, children }) {
           flex: 1 1 1%;
           display: flex;
           flex-direction: column;
+          justify-content: center;
           align-items: center;
           padding: var(--size-xs);
           cursor: pointer;

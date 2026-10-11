@@ -101,7 +101,7 @@ export function createStyleControls() {
                 arrangement="normal"
                 composeSteps=${5}
                 width="100"
-                height="45"
+                height="21"
               />
             <//>
             <${OptionGroupOption} value="grid">
@@ -111,7 +111,7 @@ export function createStyleControls() {
                 arrangement="grid"
                 composeSteps=${5}
                 width="100"
-                height="45"
+                height="33"
               />
             <//>
             <${OptionGroupOption} value="diamond">
