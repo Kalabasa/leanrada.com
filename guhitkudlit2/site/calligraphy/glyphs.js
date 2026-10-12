@@ -81,9 +81,6 @@ export const D = glyph(
   .-.-.
 `,
 );
-D.map[1][1].x += 0.25;
-D.map[1][1].y += 0.15;
-D.map[2][1].x -= 0.5;
 export const R = glyph(
   { xScale: 1 },
   `
@@ -94,9 +91,6 @@ export const R = glyph(
   .-.-.
 `,
 );
-R.map[1][1].x += 0.25;
-R.map[1][1].y += 0.15;
-R.map[2][1].x -= 0.5;
 const rTail = {
   x: 2.5,
   y: 3.6,
@@ -106,6 +100,11 @@ const rTail = {
 R.map[3][2].adjacency.set(rTail, { type: undefined });
 rTail.adjacency.set(R.map[3][2], { type: undefined });
 R.map[4][0] = rTail;
+for (const dr of [D, R]) {
+  dr.map[1][1].x += 0.25;
+  dr.map[1][1].y += 0.15;
+  dr.map[2][1].x -= 0.5;
+}
 export const G = glyph(
   { xScale: 4 / 3 },
   `
@@ -212,6 +211,7 @@ export const W = glyph(
   .-/
 `,
 );
+W.map[2][3].x -= 0.5;
 export const Y = glyph(
   { xScale: 1 },
   `
@@ -222,6 +222,15 @@ export const Y = glyph(
   .
 `,
 );
+for (const a of [A, M, P, W, Y, S]) {
+  a.map[1][0].y += 0.25;
+  a.map[1][1].x -= 0.25;
+  a.map[1][1].y += 0.5;
+}
+for (const a of [A, M, P, Y]) {
+  a.map[1][2].x += 0.25;
+  a.map[2][2].x -= 0.25;
+}
 
 const cache = new Map();
 
