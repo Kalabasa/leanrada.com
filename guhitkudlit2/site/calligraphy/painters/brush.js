@@ -6,16 +6,19 @@ import { createNoise2D } from "../../lib/simplex-noise.js";
  */
 
 const bristleCount = 80;
+const splatterProbability = 0.005;
 
 export class Brush extends BasePainter {
   #sampleNoise2D;
   #bristles;
+  #random;
 
   /**
    * @param {() => number} random
    */
   constructor(random) {
     super();
+    this.#random = random;
     this.#sampleNoise2D = createNoise2D(random);
     this.#bristles = Array.from({ length: bristleCount }, () => {
       const r = Math.sqrt(random());
@@ -43,6 +46,7 @@ export class Brush extends BasePainter {
     const finalVertex = vertices.at(-1);
 
     canvasContext.strokeStyle = color;
+    canvasContext.fillStyle = color;
     canvasContext.lineCap = "round";
 
     let z = -0.5;
@@ -91,7 +95,13 @@ export class Brush extends BasePainter {
           );
       const distThreshold = 60;
       const targetZ =
-        -Math.min(1, Math.max(scale / distFromInit, distFromFinal / (distThreshold * scale))) *
+        -Math.min(
+          1,
+          Math.max(
+            scale / distFromInit,
+            distFromFinal / (distThreshold * scale),
+          ),
+        ) *
         (0.5 + 0.5 * directionBias);
       zVel += (targetZ - z) * 0.005 - zVel * 0.14;
       z += zVel;
@@ -131,8 +141,31 @@ export class Brush extends BasePainter {
           canvasContext.stroke();
         }
       }
+      if (this.#random() < splatterProbability / Math.max(1, 2 - z)) {
+        this.#drawSplatter(brushX, brushY, maxRadius, canvasContext);
+      }
       prev = { x: brushX, y: brushY };
       edgeProgressLen += maxRadius / 30;
+    }
+  }
+
+  #drawSplatter(brushX, brushY, maxRadius, canvasContext) {
+    const count = 1 + Math.floor(8 * this.#random() ** 2);
+    let a = 2 * Math.PI * this.#random();
+    let r = 0.4 * maxRadius * this.#random();
+    const as = (this.#random() * 2 - 1) * 0.5;
+    for (let i = 0; i < count; i++) {
+      r += 0.4 * maxRadius * this.#random() ** 2;
+      a += as;
+      canvasContext.beginPath();
+      canvasContext.arc(
+        brushX + r * Math.cos(a),
+        brushY + r * Math.sin(a),
+        0.1 * maxRadius * this.#random() ** 2,
+        0,
+        2 * Math.PI,
+      );
+      canvasContext.fill();
     }
   }
 }
