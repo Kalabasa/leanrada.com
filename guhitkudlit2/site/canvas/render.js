@@ -12,7 +12,7 @@ import { drawCalligraphy } from "../calligraphy/calligraphy.js";
  * @param {number} [params.composeSteps]
  * @param {number} [params.scale]
  * @param {boolean} [params.transparent]
- * @param {"brush" | "basic" | "flatNib"} [params.painterName]
+ * @param {"brush" | "basic" | "flatNib" | "spray"} [params.painterName]
  * @param {(progress: number) => void} [params.onProgress]
  */
 export async function render({
