@@ -11,7 +11,7 @@ const composeStepsOverride = Number.parseInt(
 
 const pushStrength = 0.4;
 const basePushDistScale = 3.1;
-const springStrength = 0.2;
+const springStrength = 0.3;
 const squeezeStrengthX = 0.10;
 const squeezeStrengthY = 0.12;
 const kudlitGravityX = 0.06;
