@@ -101,7 +101,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         text-align: center;
       }
       .introHeading {
-        font-size: 4vh;
+        font-size: 5vh;
         letter-spacing: -0.44vh;
       }
       .introSubheading {
@@ -151,9 +151,9 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         ref=${backgroundCanvasRef}
       ></canvas>
       <div class="introHeader">
-        <h1 class="introHeading">Maligayang padating sa Guhit Kudlit</h1>
+        <h1 class="introHeading">GuhitKudlit</h1>
         <h2 class="introSubheading">
-          Baybayin translator (transliterator) & calligraphy generator
+          Baybayin translator (transliterator)<br />& calligraphy generator
         </h2>
       </div>
       <div class="introStarter">

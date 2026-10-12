@@ -14,7 +14,7 @@ const basePushDistScale = 3.1;
 const springStrength = 0.2;
 const squeezeStrengthX = 0.10;
 const squeezeStrengthY = 0.12;
-const kudlitGravityX = 0.08;
+const kudlitGravityX = 0.06;
 const kudlitGravityY = 0.06;
 const kudlitDistFactor = 1.8;
 const krusSpringStrength = 0.03;
@@ -334,12 +334,12 @@ function getCurvePoints({ start, end }) {
   return [
     start.position,
     {
-      x: start.position.x + start.control.x * 0.25,
-      y: start.position.y + start.control.y * 0.25,
+      x: start.position.x + start.control.x * 0.67,
+      y: start.position.y + start.control.y * 0.67,
     },
     {
-      x: end.position.x - end.control.x * 0.25,
-      y: end.position.y - end.control.y * 0.25,
+      x: end.position.x - end.control.x * 0.67,
+      y: end.position.y - end.control.y * 0.67,
     },
     end.position,
   ];

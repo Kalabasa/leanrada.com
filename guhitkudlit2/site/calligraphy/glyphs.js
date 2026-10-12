@@ -78,9 +78,12 @@ export const D = glyph(
   |
   .
   |
-  .---.
+  .-.-.
 `,
 );
+D.map[1][1].x += 0.25;
+D.map[1][1].y += 0.15;
+D.map[2][1].x -= 0.5;
 export const R = glyph(
   { xScale: 1 },
   `
@@ -91,6 +94,9 @@ export const R = glyph(
   .-.-.
 `,
 );
+R.map[1][1].x += 0.25;
+R.map[1][1].y += 0.15;
+R.map[2][1].x -= 0.5;
 const rTail = {
   x: 2.5,
   y: 3.6,
@@ -194,6 +200,8 @@ export const T = glyph(
 .
 `,
 );
+T.map[2][1].x += 0.25;
+T.map[2][1].y += 0.15;
 export const W = glyph(
   { xScale: 0.8 },
   `
@@ -300,8 +308,18 @@ function addKrus(glyph) {
   ];
   let column = glyph.map[4].length;
   for (const [startPoint, endPoint] of crossSegments) {
-    const start = { ...startPoint, terminal: false, isKudlit: "krus", adjacency: new Map() };
-    const end = { ...endPoint, terminal: false, isKudlit: "krus", adjacency: new Map() };
+    const start = {
+      ...startPoint,
+      terminal: false,
+      isKudlit: "krus",
+      adjacency: new Map(),
+    };
+    const end = {
+      ...endPoint,
+      terminal: false,
+      isKudlit: "krus",
+      adjacency: new Map(),
+    };
     start.adjacency.set(end, { type: undefined });
     end.adjacency.set(start, { type: undefined });
     glyph.map[4][column++] = start;

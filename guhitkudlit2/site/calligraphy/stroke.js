@@ -327,7 +327,7 @@ function calculateTerminalControl(stroke, isStrokeStart) {
       return { x: 0, y: 0 };
     }
     const x = 0.1;
-    const y = 0.6;
+    const y = 0.4;
     return { x: isStrokeStart ? x : -x, y: isStrokeStart ? y : -y };
   } else {
     // attached to another terminal

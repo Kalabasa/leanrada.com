@@ -9,6 +9,7 @@ import { createRandom } from "../util/random.js";
 const painterLoaders = {
   brush: async () => (await import("./painters/brush.js")).Brush,
   basic: async () => (await import("./painter.js")).BasePainter,
+  flatNib: async () => (await import("./painters/flat-nib.js")).FlatNib,
 };
 
 async function createPainter(random, painterName) {
@@ -73,6 +74,7 @@ export function installCalligraphy(
         canvas: canvasRef.current,
         abortSignal: abortController.signal,
         speed: calculateSpeed(baybayinUnits),
+        painterName: "flatNib",
       });
       if (abortController.signal.aborted) return;
       onProgress("complete");
@@ -106,7 +108,7 @@ function calculateSpeed(baybayinUnits) {
  * @param {number} [opts.seed]
  * @param {number} [opts.maxComposeSteps]
  * @param {number} [opts.scale]
- * @param {"brush" | "basic"} [opts.painterName]
+ * @param {"brush" | "basic" | "flatNib"} [opts.painterName]
  * @yields {number} progress [0,1]
  */
 export async function* drawCalligraphy(
