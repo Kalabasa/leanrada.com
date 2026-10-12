@@ -56,9 +56,7 @@ export function createSpellingControls() {
             <${OptionGroupOption} value="pamudpod">
               <${ControlPreview}
                 baybayinUnits=${["k", "du", "s"]}
-                viramaStyle="pamudpod"
                 density=${-1.5}
-                composeSteps=${5}
               />
               pamudpod
             <//>
@@ -67,7 +65,6 @@ export function createSpellingControls() {
                 baybayinUnits=${["k", "du", "s"]}
                 viramaStyle="krus"
                 density=${-1.5}
-                composeSteps=${5}
               />
               krus
             <//>
@@ -76,7 +73,6 @@ export function createSpellingControls() {
                 baybayinUnits=${["ki", "du"]}
                 viramaStyle="precolonial"
                 density=${-1.5}
-                composeSteps=${5}
               />
               none (precolonial)
             <//>
@@ -100,7 +96,6 @@ export function createSpellingControls() {
                 baybayinUnits=${["da"]}
                 viramaStyle="krus"
                 density=${-1.5}
-                composeSteps=${5}
               />
               traditional D=R
             <//>
@@ -109,7 +104,6 @@ export function createSpellingControls() {
                 baybayinUnits=${["ra"]}
                 viramaStyle="krus"
                 density=${-1.5}
-                composeSteps=${5}
               />
               modern R
             <//>

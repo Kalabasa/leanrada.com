@@ -6,6 +6,7 @@ import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
 import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
+import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
 import { createStyleControls } from "./style/controls.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
@@ -13,8 +14,8 @@ import { ColorStyleFilters } from "./style/color-styles.js";
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa);
-const { StyleControls, colorStyle, arrangement, density } =
-  createStyleControls();
+const { StyleControls, colorStyle, painterName } = createStyleControls();
+const { LayoutControls, arrangement, density } = createLayoutControls();
 const { Canvas, canvasRef } = createCanvas(
   baybayinUnits,
   colorStyle,
@@ -33,7 +34,13 @@ const { Canvas, canvasRef } = createCanvas(
     });
   },
 );
-const calligraphyInputs = { baybayinUnits, viramaStyle, arrangement, density };
+const calligraphyInputs = {
+  baybayinUnits,
+  viramaStyle,
+  arrangement,
+  density,
+  painterName,
+};
 const calligraphyComplete = observable.box(false);
 const { FileControls } = createFileControls(
   canvasRef,
@@ -128,6 +135,12 @@ export function Index() {
             {
               title: "Style",
               content: html`<${StyleControls}
+                baybayinUnits=${baybayinUnits}
+              />`,
+            },
+            {
+              title: "Layout",
+              content: html`<${LayoutControls}
                 baybayinUnits=${baybayinUnits}
               />`,
             },

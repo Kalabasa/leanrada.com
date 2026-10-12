@@ -5,12 +5,13 @@ let queuedRenders = Promise.resolve();
 
 export function ControlPreview({
   baybayinUnits,
-  viramaStyle,
-  arrangement,
-  density,
-  composeSteps,
-  width = baybayinUnits.length * 25,
-  height = 30,
+  viramaStyle = "pamudpod",
+  arrangement = "normal",
+  density = 0,
+  composeSteps = 5,
+  painterName = "basic",
+  width = baybayinUnits.length * 40,
+  height = 50,
 }) {
   const canvasRef = useRef();
   useEffect(() => {
@@ -23,6 +24,7 @@ export function ControlPreview({
         arrangement,
         density,
         composeSteps,
+        painterName,
         abortController.signal,
       ),
     ).finally(() => {
@@ -59,6 +61,7 @@ async function drawControlPreview(
   arrangement,
   density,
   composeSteps,
+  painterName,
   abortSignal,
 ) {
   const { render } = await import("./render.js");
@@ -72,6 +75,6 @@ async function drawControlPreview(
     speed: 20,
     composeSteps,
     transparent: true,
-    painterName: "basic",
+    painterName,
   });
 }

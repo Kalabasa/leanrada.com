@@ -7,7 +7,6 @@ import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
 import { colorStyles, formatColorStyleFilter } from "./color-styles.js";
 
-const previewBaybayinUnits = ["ka", "la", "ba", "sa"];
 
 export function createStyleControls() {
   const colorStyle = observable.box(colorStyles[0].name);
@@ -16,16 +15,10 @@ export function createStyleControls() {
     colorStyle.set(selectedColorStyle);
   };
 
-  const arrangement = observable.box("normal");
+  const painterName = observable.box("brush");
 
-  const onArrangementChange = (selectedArrangement) => {
-    arrangement.set(selectedArrangement);
-  };
-
-  const density = observable.box(0);
-
-  const onDensityChange = (selectedDensity) => {
-    density.set(selectedDensity);
+  const onPainterNameChange = (selectedPainterName) => {
+    painterName.set(selectedPainterName);
   };
 
   const StyleControls = observer(
@@ -72,9 +65,9 @@ export function createStyleControls() {
                     }}
                   >
                     <${ControlPreview}
-                      baybayinUnits=${previewBaybayinUnits}
-                      viramaStyle="pamudpod"
-                      composeSteps=${15}
+                      baybayinUnits=${["ku", "la", "y"]}
+                      width="100"
+                      height="65"
                     />
                   </span>
                 <//>
@@ -88,82 +81,35 @@ export function createStyleControls() {
             !baybayinUnits.get().length && "styleControlDimmed",
           )}
         >
-          <${LabelText}>Arrangement<//>
+          <${LabelText}>Brush<//>
           <${OptionGroup}
-            name="arrangement"
-            value=${arrangement.get()}
-            onChange=${onArrangementChange}
+            name="painterName"
+            value=${painterName.get()}
+            onChange=${onPainterNameChange}
           >
-            <${OptionGroupOption} value="normal">
+            <${OptionGroupOption} value="brush">
               <${ControlPreview}
-                baybayinUnits=${previewBaybayinUnits}
-                viramaStyle="pamudpod"
-                arrangement="normal"
-                composeSteps=${5}
-                width="100"
-                height="21"
+                baybayinUnits=${["sa"]}
+                painterName="brush"
+                width="65"
+                height="65"
               />
             <//>
-            <${OptionGroupOption} value="grid">
+            <${OptionGroupOption} value="flat">
               <${ControlPreview}
-                baybayinUnits=${previewBaybayinUnits}
-                viramaStyle="pamudpod"
-                arrangement="grid"
-                composeSteps=${5}
-                width="100"
-                height="33"
+                baybayinUnits=${["sa"]}
+                painterName="flat"
+                width="65"
+                height="65"
               />
             <//>
-            <${OptionGroupOption} value="diamond">
+            <${OptionGroupOption} value="spray">
               <${ControlPreview}
-                baybayinUnits=${previewBaybayinUnits}
-                viramaStyle="pamudpod"
-                arrangement="diamond"
-                composeSteps=${5}
-                width="100"
-                height="45"
+                baybayinUnits=${["sa"]}
+                painterName="spray"
+                width="65"
+                height="65"
               />
-            <//>
-          <//>
-        </div>
-        <div
-          class=${classes(
-            "styleControl",
-            !baybayinUnits.get().length && "styleControlDimmed",
-          )}
-        >
-          <${LabelText}>Density<//>
-          <${OptionGroup}
-            name="density"
-            value=${density.get()}
-            onChange=${onDensityChange}
-          >
-            <${OptionGroupOption} value=${-1}>
-              <${ControlPreview}
-                baybayinUnits=${previewBaybayinUnits}
-                viramaStyle="pamudpod"
-                density=${-1.5}
-                composeSteps=${15}
-              />
-              maluwag
-            <//>
-            <${OptionGroupOption} value=${0}>
-              <${ControlPreview}
-                baybayinUnits=${previewBaybayinUnits}
-                viramaStyle="pamudpod"
-                density=${0}
-                composeSteps=${15}
-              />
-              saks lang
-            <//>
-            <${OptionGroupOption} value=${1}>
-              <${ControlPreview}
-                baybayinUnits=${previewBaybayinUnits}
-                viramaStyle="pamudpod"
-                density=${1.5}
-                composeSteps=${15}
-              />
-              siksik
             <//>
           <//>
         </div>
@@ -171,5 +117,5 @@ export function createStyleControls() {
     `,
   );
 
-  return { StyleControls, colorStyle, arrangement, density };
+  return { StyleControls, colorStyle, painterName };
 }

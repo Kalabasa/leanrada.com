@@ -9,7 +9,7 @@ import { createRandom } from "../util/random.js";
 const painterLoaders = {
   basic: async () => (await import("./painter.js")).BasePainter,
   brush: async () => (await import("./painters/brush.js")).Brush,
-  flat: async () => (await import("./painters/flat-nib.js")).FlatNib,
+  flat: async () => (await import("./painters/flat.js")).FlatNib,
   spray: async () => (await import("./painters/spray.js")).SprayPainter,
 };
 
@@ -28,7 +28,7 @@ async function createPainter(random, painterName) {
 }
 
 export function installCalligraphy(
-  { baybayinUnits, viramaStyle, arrangement, density },
+  { baybayinUnits, viramaStyle, arrangement, density, painterName },
   canvasRef,
   onProgress,
 ) {
@@ -41,6 +41,7 @@ export function installCalligraphy(
         viramaStyle: hasVirama(b) ? v : "precolonial",
         arrangement: arrangement.get(),
         density: density.get(),
+        painterName: painterName.get(),
       };
     },
     { equals: comparer.structural },
@@ -62,24 +63,33 @@ export function installCalligraphy(
   );
   reaction(
     () => inputs.get(),
-    debounce(async ({ baybayinUnits, viramaStyle, arrangement, density }) => {
-      if (baybayinUnits.length === 0) return;
-      if (!canvasRef.current) return;
-      const abortController = new AbortController();
-      drawingAbortController = abortController;
-      await render({
+    debounce(
+      async ({
         baybayinUnits,
         viramaStyle,
         arrangement,
         density,
-        canvas: canvasRef.current,
-        abortSignal: abortController.signal,
-        speed: calculateSpeed(baybayinUnits),
-        painterName: "spray",
-      });
-      if (abortController.signal.aborted) return;
-      onProgress("complete");
-    }, 400),
+        painterName,
+      }) => {
+        if (baybayinUnits.length === 0) return;
+        if (!canvasRef.current) return;
+        const abortController = new AbortController();
+        drawingAbortController = abortController;
+        await render({
+          baybayinUnits,
+          viramaStyle,
+          arrangement,
+          density,
+          canvas: canvasRef.current,
+          abortSignal: abortController.signal,
+          speed: calculateSpeed(baybayinUnits),
+          painterName,
+        });
+        if (abortController.signal.aborted) return;
+        onProgress("complete");
+      },
+      400,
+    ),
     { fireImmediately: true, equals: comparer.shallow },
   );
 }
