@@ -30,7 +30,7 @@ export function createSpellingControls() {
         .spellingControls {
           display: flex;
           flex-direction: column;
-          justify-content: space-evenly;
+          gap: var(--size-m);
           height: 100%;
         }
         .spellingControl {

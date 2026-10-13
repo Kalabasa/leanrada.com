@@ -25,7 +25,7 @@ export function createLayoutControls() {
         .layoutControls {
           display: flex;
           flex-direction: column;
-          justify-content: space-evenly;
+          gap: var(--size-m);
           height: 100%;
         }
         .layoutControl {

@@ -27,7 +27,7 @@ export function createStyleControls() {
         .styleControls {
           display: flex;
           flex-direction: column;
-          justify-content: space-evenly;
+          gap: var(--size-m);
           height: 100%;
         }
         .styleControl {
@@ -89,7 +89,7 @@ export function createStyleControls() {
           >
             <${OptionGroupOption} value="brush">
               <${ControlPreview}
-                baybayinUnits=${["sa"]}
+                baybayinUnits=${["ga"]}
                 painterName="brush"
                 width="65"
                 height="65"
@@ -97,7 +97,7 @@ export function createStyleControls() {
             <//>
             <${OptionGroupOption} value="flat">
               <${ControlPreview}
-                baybayinUnits=${["sa"]}
+                baybayinUnits=${["ga"]}
                 painterName="flat"
                 width="65"
                 height="65"
@@ -105,7 +105,7 @@ export function createStyleControls() {
             <//>
             <${OptionGroupOption} value="spray">
               <${ControlPreview}
-                baybayinUnits=${["sa"]}
+                baybayinUnits=${["ga"]}
                 painterName="spray"
                 width="65"
                 height="65"
