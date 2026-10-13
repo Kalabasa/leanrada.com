@@ -18,11 +18,6 @@ async function createPainter(random, painterName) {
     const PainterClass = await painterLoaders[painterName]();
     return new PainterClass(random);
   }
-  const debugPainterName = new URL(location).searchParams.get("painter");
-  if (DEBUG && debugPainterName) {
-    const PainterClass = await painterLoaders[debugPainterName]();
-    return new PainterClass(random);
-  }
   const Brush = await painterLoaders.brush();
   return new Brush(random);
 }
@@ -32,6 +27,9 @@ export function installCalligraphy(
   canvasRef,
   onProgress,
 ) {
+  const debugPainterName =
+    (DEBUG && new URL(location).searchParams.get("painter")) || null;
+
   const inputs = computed(
     () => {
       const b = baybayinUnits.get();
@@ -83,7 +81,7 @@ export function installCalligraphy(
           canvas: canvasRef.current,
           abortSignal: abortController.signal,
           speed: calculateSpeed(baybayinUnits),
-          painterName,
+          painterName: debugPainterName ?? painterName,
         });
         if (abortController.signal.aborted) return;
         onProgress("complete");

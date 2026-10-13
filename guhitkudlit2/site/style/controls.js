@@ -7,7 +7,6 @@ import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
 import { colorStyles, formatColorStyleFilter } from "./color-styles.js";
 
-
 export function createStyleControls() {
   const colorStyle = observable.box(colorStyles[0].name);
 
@@ -95,18 +94,18 @@ export function createStyleControls() {
                 height="65"
               />
             <//>
-            <${OptionGroupOption} value="flat">
-              <${ControlPreview}
-                baybayinUnits=${["ga"]}
-                painterName="flat"
-                width="65"
-                height="65"
-              />
-            <//>
             <${OptionGroupOption} value="spray">
               <${ControlPreview}
                 baybayinUnits=${["ga"]}
                 painterName="spray"
+                width="65"
+                height="65"
+              />
+            <//>
+            <${OptionGroupOption} value="flat">
+              <${ControlPreview}
+                baybayinUnits=${["ga"]}
+                painterName="flat"
                 width="65"
                 height="65"
               />

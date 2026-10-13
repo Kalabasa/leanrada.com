@@ -21,6 +21,12 @@ export class SprayPainter extends BasePainter {
     canvasContext.save();
     canvasContext.fillStyle = color;
 
+    const midX = (vertices[0].x + vertices.at(-1).x) / 2;
+    const midY = (vertices[0].y + vertices.at(-1).y) / 2 + 15 * scale;
+    let sourceX = vertices[0].x;
+    let sourceY = vertices[0].y;
+    let z = 0.15 + this.#random() * 0.4;
+
     let edgeProgressLen = 0;
     for (let i = 1; i < vertices.length; i++) {
       const start = vertices[i - 1];
@@ -30,10 +36,22 @@ export class SprayPainter extends BasePainter {
       const edgeLen = Math.hypot(dx, dy);
       while (edgeProgressLen < edgeLen) {
         const progress = edgeProgressLen / edgeLen;
-        const x = start.x + dx * progress;
-        const y = start.y + dy * progress;
-        this.#sprayMist(x, y, 8 * scale, canvasContext);
+        const x =
+          start.x + dx * progress + (this.#random() * 2 - 1) * scale * 0.5;
+        const y =
+          start.y + dy * progress + (this.#random() * 2 - 1) * scale * 0.5;
+        const strokeProgress = (i - 1 + progress) / (vertices.length - 1);
+        const midness = 1 - Math.abs(strokeProgress * 2 - 1) ** 2;
+        z += (midness * 1.1 - z) * 0.06;
+        const st = midness * 0.5;
+        sourceX += (midX * st + x * (1 - st) - sourceX) * 0.07;
+        sourceY += (midY * st + y * (1 - st) - sourceY) * 0.04;
+        this.spray(x, y, z, sourceX, sourceY, 8 * scale, canvasContext);
         edgeProgressLen += stepLen;
+      }
+      const dripAmount = 1 / z - 2;
+      if (this.#random() < dripAmount * 0.06) {
+        this.drip(start.x, start.y, dripAmount, scale, canvasContext);
       }
       edgeProgressLen -= edgeLen;
       yield i / (vertices.length - 1);
@@ -41,25 +59,71 @@ export class SprayPainter extends BasePainter {
     canvasContext.restore();
   }
 
-  #sprayMist(x, y, radius, canvasContext) {
+  spray(x, y, z, sourceX, sourceY, radius, canvasContext) {
+    const dist3 = Math.hypot(x - sourceX, y - sourceY, z);
+    canvasContext.globalAlpha = 1 / (dist3 * 0.2 + 0.5);
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.002), 0, 2 * Math.PI);
+    canvasContext.fill();
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, z * radius * 1.0, 0, 2 * Math.PI);
+    canvasContext.fill();
+    canvasContext.beginPath();
+    canvasContext.arc(x, y, z * radius * 0.6, 0, 2 * Math.PI);
+    canvasContext.fill();
+
     for (let i = 0; i < 250; i++) {
       const a = 2 * Math.PI * this.#random();
-      const r = this.#random() ** 0.5;
+      const ru = this.#random();
+      const r = z * (0.25 + 0.75 * ru ** 0.5 + ru ** 16);
       const cx = Math.sin(a);
       const cy = Math.cos(a);
-      const tx = 0.6;
-      const ty = 0.4;
-      const d = 1 / (Math.hypot(cx - tx, cy - ty) + 1);
+      let dotX = x + cx * radius * r;
+      let dotY = y + cy * radius * r;
+
+      const fromSrcDist = Math.hypot(dotX - sourceX, dotY - sourceY);
+      let fromSrcDirX = 0;
+      let fromSrcDirY = 0;
+      if (fromSrcDist > 0) {
+        fromSrcDirX = (dotX - sourceX) / fromSrcDist;
+        fromSrcDirY = (dotY - sourceY) / fromSrcDist;
+      }
+      const fromSrcProj = cx * fromSrcDirX + cy * fromSrcDirY;
+      dotX += fromSrcDirX * fromSrcDist * r * fromSrcProj * 0.3;
+      dotY += fromSrcDirY * fromSrcDist * r * fromSrcProj * 0.3;
+
+      const dotR = radius * (0.02 + 0.03 * this.#random() ** 2);
+      canvasContext.globalAlpha = 0.4 + 0.2 / dotR ** 2;
       canvasContext.beginPath();
-      canvasContext.globalAlpha = 0.01 + 0.04 / d ** 2;
-      canvasContext.arc(
-        x + (cx + tx) * radius * r,
-        y + (cy + ty) * radius * r,
-        radius * 0.15 * d,
-        0,
-        2 * Math.PI,
-      );
+      canvasContext.arc(dotX, dotY, dotR, 0, 2 * Math.PI);
       canvasContext.fill();
     }
+  }
+
+  drip(x, y, dripAmount, scale, canvasContext) {
+    const dripWidth = (1.1 + this.#random() * 0.1) * scale;
+    const dripLen = dripAmount * 5 * scale;
+    canvasContext.globalAlpha = 0.85;
+    canvasContext.strokeStyle = canvasContext.fillStyle;
+    canvasContext.lineWidth = dripWidth;
+    canvasContext.lineJoin = "round";
+    canvasContext.beginPath();
+    canvasContext.moveTo(x, y);
+    const stepLen = scale;
+    let dripX = x;
+    for (
+      let dripProgressLen = stepLen;
+      dripProgressLen < dripLen;
+      dripProgressLen += stepLen
+    ) {
+      dripX += (this.#random() - 0.5) * 0.3 * scale;
+      canvasContext.lineTo(dripX, y + dripProgressLen);
+    }
+    canvasContext.lineTo(dripX, y + dripLen);
+    canvasContext.stroke();
+    canvasContext.globalAlpha = 1;
+    canvasContext.beginPath();
+    canvasContext.arc(dripX, y + dripLen, dripWidth * 0.6, 0, 2 * Math.PI);
+    canvasContext.fill();
   }
 }

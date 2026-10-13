@@ -39,6 +39,7 @@ export function createFileControls(
       viramaStyle: calligraphyInputs.viramaStyle.get(),
       arrangement: calligraphyInputs.arrangement.get(),
       density: calligraphyInputs.density.get(),
+      painterName: calligraphyInputs.painterName.get(),
     };
     const renderKey = JSON.stringify([
       renderedInputs,
