@@ -89,7 +89,7 @@ export function createPresetControls(presetInputs) {
                   style=${{ filter: formatColorStyleFilter(preset.colorStyle) }}
                 >
                   <${ControlPreview}
-                    baybayinUnits=${["ku", "la", "y"]}
+                    baybayinUnits=${["ku", "d", "li", "t"]}
                     painterName=${preset.painterName}
                     viramaStyle=${preset.viramaStyle}
                     arrangement=${preset.arrangement}

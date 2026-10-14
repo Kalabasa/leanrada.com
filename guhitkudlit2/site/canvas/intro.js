@@ -87,6 +87,10 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         align-items: center;
         gap: var(--size-l);
         overflow: hidden;
+        contain: inline-size;
+        @media (max-width: 800px) {
+          gap: 0;
+        }
       }
       .introBackground {
         position: absolute;
@@ -120,11 +124,17 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         box-shadow: var(--shadow-m);
         background: #fff6;
         border-radius: var(--size-s);
+        max-width: 100%;
+        box-sizing: border-box;
+        @media (max-width: 750px) {
+          padding: var(--size-s);
+        }
       }
       .introText {
         font-size: var(--font-size-m);
       }
       .introInput {
+        width: 100%;
         font-size: var(--font-size-xl);
         text-align: center;
         border-color: transparent;
@@ -144,6 +154,8 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
       }
       .introExamples {
         display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: var(--size-s);
       }
     </style>

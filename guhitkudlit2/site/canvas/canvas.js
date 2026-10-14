@@ -13,11 +13,17 @@ export function createCanvas(baybayinUnits, colorStyle, onConfig) {
     () => showPlaceholder.set(false),
   );
 
+  const aspectRatio = Math.min(
+    1.5,
+    2 * (window.innerWidth / window.innerHeight),
+  );
+  console.log(aspectRatio);
+
   const canvasRef = { current: null };
   const CanvasImpl = observer(() => {
     return html`
       <${Canvas}
-        aspectRatio=${1.5}
+        aspectRatio=${aspectRatio}
         canvasRef=${canvasRef}
         colorStyle=${colorStyle.get()}
         showPlaceholder=${showPlaceholder.get()}
