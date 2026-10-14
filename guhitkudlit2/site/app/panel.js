@@ -8,10 +8,22 @@ export function AppPanel({ title, children }) {
         flex-direction: column;
         height: 100%;
         pointer-events: none;
+        outline: none !important;
         &:focus-within {
+          .appPanelTitle {
+            color: var(--color-fg);
+          }
           .appPanelTitle,
           .appPanelContent {
             box-shadow: var(--shadow-l);
+          }
+        }
+        &:not(:focus-within) {
+          .appPanelTitle {
+            cursor: pointer;
+            &:hover {
+              color: var(--color-fg);
+            }
           }
         }
       }
@@ -39,6 +51,7 @@ export function AppPanel({ title, children }) {
         right: calc(var(--size-m) * -1);
         top: calc(100% - 1px);
         height: calc(var(--size-m) + 1px);
+        pointer-events: none;
       }
       .appPanelContent {
         flex: 1 1 auto;

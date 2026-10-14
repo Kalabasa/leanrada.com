@@ -6,7 +6,7 @@ const tabStepPx = 80;
 
 export function AppPanelGroup({ panels }) {
   const contentPanels = panels.filter((panel) => !panel.spacer);
-  const firstPanelUnoccludedWidthPx =
+  const narrowScreenPx =
     2 * panelWidthPx + (contentPanels.length - 2) * tabStepPx;
   return html`
     <style id=${AppPanelGroup.name}>
@@ -25,9 +25,6 @@ export function AppPanelGroup({ panels }) {
         right: calc(var(--panels-after) * var(--app-panel-tab-step));
         pointer-events: none;
       }
-      .appPanelGroupItem:first-child {
-        z-index: 1;
-      }
       .appPanelGroupItem:focus-within {
         z-index: 1;
       }
@@ -39,7 +36,10 @@ export function AppPanelGroup({ panels }) {
               (var(--app-panel-width) + var(--size-s))
           );
       }
-      @container not (min-width: ${firstPanelUnoccludedWidthPx}px) {
+      @container not (min-width: ${narrowScreenPx}px) {
+        .appPanelGroupItem:first-child {
+          z-index: 1;
+        }
         .appPanelGroup {
           width: calc(
             var(--app-panel-width) + var(--app-panel-tab-step) *
@@ -49,7 +49,7 @@ export function AppPanelGroup({ panels }) {
         }
       }
     </style>
-    <div class="appPanelGroup">
+    <div class="appPanelGroup" onWheel=${onWheel}>
       ${panels.map((panel, index) => {
         const panelsBefore = contentPanels.filter(
           (contentPanel) => panels.indexOf(contentPanel) < index,
@@ -83,4 +83,10 @@ export function AppPanelGroup({ panels }) {
       })}
     </div>
   `;
+}
+
+function onWheel(event) {
+  if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+  event.preventDefault();
+  event.currentTarget.parentElement.scrollLeft += event.deltaY;
 }

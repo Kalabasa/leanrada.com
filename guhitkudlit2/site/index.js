@@ -27,19 +27,21 @@ const { PresetControls } = createPresetControls({
 const { Canvas, canvasRef } = createCanvas(
   baybayinUnits,
   colorStyle,
-  (config) => {
+  async (config) => {
     if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
     if (config.separateRa !== undefined) separateRa.set(config.separateRa);
     if (config.arrangement !== undefined) arrangement.set(config.arrangement);
     inputText.set(config.text);
 
-    document.startViewTransition(() => {
+    await document.startViewTransition(() => {
       inputTextWrapperRef.current?.style.setProperty(
         "view-transition-name",
         config.sourceElement.style.viewTransitionName,
       );
       config.sourceElement.style.removeProperty("view-transition-name");
-    });
+    }).finished;
+
+    // inputTextWrapperRef.current?.querySelector("input").focus();
   },
 );
 const calligraphyInputs = {
