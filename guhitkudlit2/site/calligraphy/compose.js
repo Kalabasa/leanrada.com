@@ -12,7 +12,7 @@ const composeStepsOverride = Number.parseInt(
 const pushStrength = 0.4;
 const basePushDistScale = 3.1;
 const springStrength = 0.3;
-const squeezeStrengthX = 0.10;
+const squeezeStrengthX = 0.1;
 const squeezeStrengthY = 0.12;
 const kudlitGravityX = 0.06;
 const kudlitGravityY = 0.06;
@@ -142,7 +142,7 @@ export function compose(glyphStrokesList, opts = {}) {
     }
 
     const springFactor =
-      springStrength * Math.sqrt((steps - step) / steps) * 2.2 ** -density;
+      springStrength * Math.sqrt((steps - step) / steps) * 1.8 ** -density;
     const squeezeFactor =
       (((steps - step) / steps) ** 2 / extent ** 0.25) * 2.2 ** density;
 
@@ -188,34 +188,6 @@ export function compose(glyphStrokesList, opts = {}) {
           (baseCentroid.x - vertex.position.x) * kudlitGravityX * gravityFactor,
           (baseCentroid.y - vertex.position.y) * kudlitGravityY * gravityFactor,
         );
-      }
-
-      // pull krus kudlit together
-      const krusStrokes = glyph.strokes.filter(
-        (stroke) => stroke.isKudlit === "krus",
-      );
-      if (krusStrokes.length === 2) {
-        const [stroke, oStroke] = krusStrokes;
-        const centroid = calculateCentroid([stroke]);
-        const oCentroid = calculateCentroid([oStroke]);
-        for (const vertex of stroke.vertices) {
-          pushVertex(
-            vertex,
-            (oCentroid.x - centroid.x) * 0.5,
-            (oCentroid.y - centroid.y) * 0.5,
-          );
-          for (const oVertex of oStroke.vertices) {
-            const dx = vertex.position.x - oVertex.position.x;
-            const dy = vertex.position.y - oVertex.position.y;
-            const dist = Math.hypot(dx, dy);
-            if (dist === 0) continue;
-            pushVertex(
-              vertex,
-              (dx / dist) * (krusSpringStrength / ((2 * dist) ** 2 + 1)),
-              (dy / dist) * (krusSpringStrength / ((2 * dist) ** 2 + 1)),
-            );
-          }
-        }
       }
     }
 
@@ -312,6 +284,36 @@ export function compose(glyphStrokesList, opts = {}) {
 
         pushCurve(curve, points, oCurve, oClosest);
         pushCurve(oCurve, oPoints, curve, closest);
+      }
+    }
+
+    // pull krus kudlit together
+    for (const glyph of glyphs) {
+      const krusStrokes = glyph.strokes.filter(
+        (stroke) => stroke.isKudlit === "krus",
+      );
+      if (krusStrokes.length === 2) {
+        const [stroke, oStroke] = krusStrokes;
+        const centroid = calculateCentroid([stroke]);
+        const oCentroid = calculateCentroid([oStroke]);
+        for (const vertex of stroke.vertices) {
+          pushVertex(
+            vertex,
+            (oCentroid.x - centroid.x) * 0.5,
+            (oCentroid.y - centroid.y) * 0.5,
+          );
+          for (const oVertex of oStroke.vertices) {
+            const dx = vertex.position.x - oVertex.position.x;
+            const dy = vertex.position.y - oVertex.position.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist === 0) continue;
+            pushVertex(
+              vertex,
+              (dx / dist) * (krusSpringStrength / ((2 * dist) ** 2 + 1)),
+              (dy / dist) * (krusSpringStrength / ((2 * dist) ** 2 + 1)),
+            );
+          }
+        }
       }
     }
 

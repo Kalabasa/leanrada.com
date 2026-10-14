@@ -60,22 +60,22 @@ export class SprayPainter extends BasePainter {
   }
 
   spray(x, y, z, sourceX, sourceY, radius, canvasContext) {
-    const dist3 = Math.hypot(x - sourceX, y - sourceY, z);
-    canvasContext.globalAlpha = 1 / (dist3 * 0.2 + 0.5);
+    const dist3 = Math.hypot(x - sourceX, y - sourceY, z) / radius;
+    canvasContext.globalAlpha = 1 / (dist3 * 6 + 0.5);
     canvasContext.beginPath();
-    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.002), 0, 2 * Math.PI);
+    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.12), 0, 2 * Math.PI);
     canvasContext.fill();
     canvasContext.beginPath();
-    canvasContext.arc(x, y, z * radius * 1.0, 0, 2 * Math.PI);
+    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.06), 0, 2 * Math.PI);
     canvasContext.fill();
     canvasContext.beginPath();
-    canvasContext.arc(x, y, z * radius * 0.6, 0, 2 * Math.PI);
+    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.02), 0, 2 * Math.PI);
     canvasContext.fill();
 
     for (let i = 0; i < 250; i++) {
       const a = 2 * Math.PI * this.#random();
       const ru = this.#random();
-      const r = z * (0.25 + 0.75 * ru ** 0.5 + ru ** 16);
+      const r = z * (0.2 + 0.8 * ru ** 0.5 + ru ** 16);
       const cx = Math.sin(a);
       const cy = Math.cos(a);
       let dotX = x + cx * radius * r;
@@ -92,7 +92,8 @@ export class SprayPainter extends BasePainter {
       dotX += fromSrcDirX * fromSrcDist * r * fromSrcProj * 0.3;
       dotY += fromSrcDirY * fromSrcDist * r * fromSrcProj * 0.3;
 
-      const dotR = radius * (0.02 + 0.03 * this.#random() ** 2);
+      const dotR =
+        0.01 + radius * (0.01 + (0.06 / (ru + 2)) * this.#random() ** 2);
       canvasContext.globalAlpha = 0.4 + 0.2 / dotR ** 2;
       canvasContext.beginPath();
       canvasContext.arc(dotX, dotY, dotR, 0, 2 * Math.PI);
