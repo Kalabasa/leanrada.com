@@ -8,6 +8,12 @@ export function AppPanel({ title, children }) {
         flex-direction: column;
         height: 100%;
         pointer-events: none;
+        &:focus-within {
+          .appPanelTitle,
+          .appPanelContent {
+            box-shadow: var(--shadow-l);
+          }
+        }
       }
       .appPanelTitle {
         align-self: start;
@@ -30,9 +36,9 @@ export function AppPanel({ title, children }) {
         position: absolute;
         background: inherit;
         left: 0;
-        right: 0;
+        right: calc(var(--size-m) * -1);
         top: calc(100% - 1px);
-        height: calc(var(--size-s) + 1px);
+        height: calc(var(--size-m) + 1px);
       }
       .appPanelContent {
         flex: 1 1 auto;
@@ -43,7 +49,7 @@ export function AppPanel({ title, children }) {
         pointer-events: auto;
       }
     </style>
-    <aside class="appPanelContainer">
+    <aside class="appPanelContainer" tabindex="-1">
       <div class="appPanelTitle" tabindex="0">${title}</div>
       <div class="appPanelContent">${children}</div>
     </aside>

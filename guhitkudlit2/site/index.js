@@ -116,6 +116,7 @@ export function Index() {
         grid-area: panels;
         padding: 0 var(--size-m);
         overflow: auto;
+        container-type: inline-size;
       }
       ::view-transition-old(introConfig) {
         height: 100%;
@@ -133,6 +134,7 @@ export function Index() {
         <${AppPanelGroup}
           panels=${[
             { title: "Text", content: html`<${TransliterationForm} />` },
+            { spacer: true },
             {
               title: "Theme",
               content: html`<${PresetControls}
