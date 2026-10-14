@@ -37,6 +37,7 @@ export function createStyleControls() {
         }
         .styleControlColorPreview {
           display: flex;
+          min-width: 0;
           background: #fff;
           border-radius: var(--size-xs);
           overflow: hidden;

@@ -46,6 +46,7 @@ export function OptionGroup({ name, value, onChange, columns, children }) {
         }
         .optionGroupOption {
           flex: 1 1 1%;
+          min-width: 0;
           display: flex;
           flex-direction: column;
           justify-content: center;

@@ -39,7 +39,11 @@ export function ControlPreview({
     <style id=${ControlPreview.name}>
       .controlPreview {
         display: flex;
+        min-width: 0;
         canvas {
+          min-width: 0;
+          max-width: 100%;
+          height: auto;
           transition: opacity 0.4s;
         }
       }
