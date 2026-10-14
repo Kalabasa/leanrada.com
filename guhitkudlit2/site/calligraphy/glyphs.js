@@ -211,6 +211,8 @@ export const W = glyph(
   .-/
 `,
 );
+W.map[1][2].x -= 0.5;
+W.map[1][3].x -= 0.5;
 W.map[2][3].x -= 0.5;
 export const Y = glyph(
   { xScale: 1 },
