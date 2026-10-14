@@ -39,6 +39,7 @@ export function createStyleControls() {
           display: flex;
           background: #fff;
           border-radius: var(--size-xs);
+          overflow: hidden;
         }
       </style>
       <div class="styleControls">

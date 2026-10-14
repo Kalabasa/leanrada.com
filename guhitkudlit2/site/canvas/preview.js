@@ -13,6 +13,7 @@ export function ControlPreview({
   width = baybayinUnits.length * 40,
   height = 50,
 }) {
+  const containerRef = useRef();
   const canvasRef = useRef();
   useEffect(() => {
     const abortController = new AbortController();
@@ -28,23 +29,38 @@ export function ControlPreview({
         abortController.signal,
       ),
     ).finally(() => {
-      if (canvasRef.current) canvasRef.current.style.opacity = 1;
+      if (containerRef.current) {
+        containerRef.current.removeAttribute("loading");
+      }
     });
     return () => abortController.abort();
   }, []);
   return html`
     <style id=${ControlPreview.name}>
       .controlPreview {
-        opacity: 0;
-        transition: opacity 0.4s;
+        display: flex;
+        canvas {
+          transition: opacity 0.4s;
+        }
+      }
+      .controlPreview[loading] {
+        animation: controlPreviewFlash 0.6s infinite alternate;
+        canvas {
+          opacity: 0;
+        }
+      }
+      @keyframes controlPreviewFlash {
+        from {
+          background-color: transparent;
+        }
+        to {
+          background-color: color-mix(in srgb, currentColor 15%, transparent);
+        }
       }
     </style>
-    <canvas
-      class="controlPreview"
-      ref=${canvasRef}
-      width=${width}
-      height=${height}
-    />
+    <span class="controlPreview" loading ref=${containerRef}>
+      <canvas ref=${canvasRef} width=${width} height=${height} />
+    </span>
   `;
 }
 
@@ -72,7 +88,7 @@ async function drawControlPreview(
     density,
     canvas,
     abortSignal,
-    speed: 20,
+    speed: 10,
     composeSteps,
     transparent: true,
     painterName,
