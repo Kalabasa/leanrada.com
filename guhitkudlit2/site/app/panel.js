@@ -1,6 +1,6 @@
 import { html } from "../components/html.js";
 
-export function AppPanel({ title, children }) {
+export function AppPanel({ title, onTitleClick, children }) {
   return html`
     <style id=${AppPanel.name}>
       .appPanelContainer {
@@ -63,7 +63,9 @@ export function AppPanel({ title, children }) {
       }
     </style>
     <aside class="appPanelContainer" tabindex="-1">
-      <div class="appPanelTitle" tabindex="0">${title}</div>
+      <div class="appPanelTitle" tabindex="0" onClick=${onTitleClick}>
+        ${title}
+      </div>
       <div class="appPanelContent">${children}</div>
     </aside>
   `;
