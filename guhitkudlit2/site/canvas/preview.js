@@ -44,21 +44,21 @@ export function ControlPreview({
           min-width: 0;
           max-width: 100%;
           height: auto;
-          transition: opacity 0.4s;
+          transition: opacity 1s;
         }
       }
       .controlPreview[loading] {
-        animation: controlPreviewFlash 0.6s infinite alternate;
+        animation: controlPreviewFlash 1s ease-in-out infinite alternate;
         canvas {
           opacity: 0;
         }
       }
       @keyframes controlPreviewFlash {
         from {
-          background-color: transparent;
+          background-color: color-mix(in srgb, #888 5%, transparent);
         }
         to {
-          background-color: color-mix(in srgb, currentColor 15%, transparent);
+          background-color: color-mix(in srgb, #888 10%, transparent);
         }
       }
     </style>
