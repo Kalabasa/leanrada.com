@@ -133,7 +133,12 @@ export function Index() {
         <${AppPanelGroup}
           panels=${[
             { title: "Text", content: html`<${TransliterationForm} />` },
-            { title: "Theme", content: html`<${PresetControls} />` },
+            {
+              title: "Theme",
+              content: html`<${PresetControls}
+                baybayinUnits=${baybayinUnits}
+              />`,
+            },
             {
               title: "Spelling",
               content: html`<${SpellingControls}

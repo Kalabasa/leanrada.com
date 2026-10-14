@@ -3,6 +3,7 @@ import { html } from "../components/html.js";
 import { OptionGroup, OptionGroupOption } from "../components/option-group.js";
 import { observer } from "../util/observer.js";
 import { formatColorStyleFilter } from "../style/color-styles.js";
+import { classes } from "../util/classes.js";
 
 const presets = [
   {
@@ -51,41 +52,54 @@ export function createPresetControls(presetInputs) {
   };
 
   const PresetControls = observer(
-    () => html`
+    ({ baybayinUnits }) => html`
       <style id=${PresetControls.name}>
+        .presetControl {
+          transition: opacity 0.6s ease-out;
+        }
+        .presetControlDimmed {
+          opacity: var(--opacity-tertiary);
+        }
         .presetControlPreview {
           display: flex;
           background: #fff;
           border-radius: var(--size-xs);
         }
       </style>
-      <${OptionGroup}
-        name="preset"
-        value=${findActivePresetIndex()}
-        onChange=${onPresetChange}
-        columns=${2}
-      >
-        ${presets.map(
-          (preset, presetIndex) => html`
-            <${OptionGroupOption} value=${presetIndex}>
-              <span
-                class="presetControlPreview"
-                style=${{ filter: formatColorStyleFilter(preset.colorStyle) }}
-              >
-                <${ControlPreview}
-                  baybayinUnits=${["ku", "la", "y"]}
-                  painterName=${preset.painterName}
-                  viramaStyle=${preset.viramaStyle}
-                  arrangement=${preset.arrangement}
-                  density=${preset.density}
-                  width="214"
-                  height="104"
-                />
-              </span>
-            <//>
-          `,
+      <div
+        class=${classes(
+          "presetControl",
+          !baybayinUnits.get().length && "presetControlDimmed",
         )}
-      <//>
+      >
+        <${OptionGroup}
+          name="preset"
+          value=${findActivePresetIndex()}
+          onChange=${onPresetChange}
+          columns=${2}
+        >
+          ${presets.map(
+            (preset, presetIndex) => html`
+              <${OptionGroupOption} value=${presetIndex}>
+                <span
+                  class="presetControlPreview"
+                  style=${{ filter: formatColorStyleFilter(preset.colorStyle) }}
+                >
+                  <${ControlPreview}
+                    baybayinUnits=${["ku", "la", "y"]}
+                    painterName=${preset.painterName}
+                    viramaStyle=${preset.viramaStyle}
+                    arrangement=${preset.arrangement}
+                    density=${preset.density}
+                    width="214"
+                    height="104"
+                  />
+                </span>
+              <//>
+            `,
+          )}
+        <//>
+      </div>
     `,
   );
 
