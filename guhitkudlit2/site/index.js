@@ -80,8 +80,6 @@ export function Index() {
     <style id=${Index.name}>
       .app {
         background: var(--color-bg-darker);
-      }
-      .appDesktopLayout {
         display: grid;
         grid-template-rows: minmax(0, 1fr) min-content;
         grid-template-columns: 1fr;
@@ -121,11 +119,22 @@ export function Index() {
         scroll-snap-type: x mandatory;
         container-type: inline-size;
       }
+      @media (max-width: 750px) {
+        .app {
+          gap: var(--size-xs);
+        }
+        .appCanvas {
+          padding: var(--size-m) var(--size-xs) var(--size-xs);
+        }
+        .appPanelGroupArea {
+          padding: 0 var(--size-xs);
+        }
+      }
       ::view-transition-old(introConfig) {
         height: 100%;
       }
     </style>
-    <div class="app appDesktopLayout">
+    <div class="app">
       <div class="appLogo">
         <app-logo></app-logo>
       </div>

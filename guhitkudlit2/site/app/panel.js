@@ -50,7 +50,7 @@ export function AppPanel({ title, onTitleClick, children }) {
         left: 0;
         right: calc(var(--size-m) * -1);
         top: calc(100% - 1px);
-        height: calc(var(--size-m) + 1px);
+        height: calc(var(--size-s) + 1px);
         pointer-events: none;
       }
       .appPanelContent {
@@ -60,6 +60,9 @@ export function AppPanel({ title, onTitleClick, children }) {
         border-radius: 0 var(--size-s) 0 0;
         box-shadow: var(--shadow-m);
         pointer-events: auto;
+        @container (max-width: 750px) {
+          padding: var(--size-s);
+        }
       }
     </style>
     <aside class="appPanelContainer" tabindex="-1">

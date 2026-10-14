@@ -55,6 +55,9 @@ export function createPresetControls(presetInputs) {
     ({ baybayinUnits }) => html`
       <style id=${PresetControls.name}>
         .presetControl {
+          display: flex;
+          align-items: center;
+          height: 100%;
           transition: opacity 0.6s ease-out;
         }
         .presetControlDimmed {
