@@ -151,8 +151,8 @@ export function TransliterationForm({
   onInput,
 }) {
   const [isSyllabicationHintOn, setSyllabicationHintOn] = useState(false);
-  const [hasFocused, setHasFocused] = useState(false);
-  const showEditHint = !error && inputText && !hasFocused;
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const showEditHint = !error && inputText && !hasInteracted;
 
   const helpLink =
     "./help/?word=" +
@@ -300,7 +300,9 @@ export function TransliterationForm({
             maxlength="30"
             value=${inputText}
             onInput=${onInput}
-            onFocus=${() => setHasFocused(true)}
+            onPointerDown=${() => setHasInteracted(true)}
+            onKeyDown=${() => setHasInteracted(true)}
+            onBlur=${() => setHasInteracted(true)}
           />
         </div>
       </label>

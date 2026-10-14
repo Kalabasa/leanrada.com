@@ -33,6 +33,7 @@ const { Canvas, canvasRef } = createCanvas(
     if (config.arrangement !== undefined) arrangement.set(config.arrangement);
     inputText.set(config.text);
 
+    inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
     await document.startViewTransition(() => {
       inputTextWrapperRef.current?.style.setProperty(
         "view-transition-name",
@@ -40,8 +41,7 @@ const { Canvas, canvasRef } = createCanvas(
       );
       config.sourceElement.style.removeProperty("view-transition-name");
     }).finished;
-
-    // inputTextWrapperRef.current?.querySelector("input").focus();
+    inputTextWrapperRef.current?.querySelector("input").focus();
   },
 );
 const calligraphyInputs = {
