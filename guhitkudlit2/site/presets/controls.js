@@ -78,7 +78,7 @@ export function createPresetControls(presetInputs) {
                   viramaStyle=${preset.viramaStyle}
                   arrangement=${preset.arrangement}
                   density=${preset.density}
-                  width="220"
+                  width="214"
                   height="104"
                 />
               </span>

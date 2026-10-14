@@ -51,6 +51,7 @@ export function createLayoutControls() {
             <${OptionGroupOption} value="normal">
               <${ControlPreview}
                 baybayinUnits=${["ka", "la", "ba", "sa"]}
+                width="120"
                 height="30"
               />
             <//>
@@ -58,6 +59,7 @@ export function createLayoutControls() {
               <${ControlPreview}
                 baybayinUnits=${["ka", "la", "ba", "sa"]}
                 arrangement="grid"
+                width="47"
                 height="47"
               />
             <//>
@@ -65,6 +67,7 @@ export function createLayoutControls() {
               <${ControlPreview}
                 baybayinUnits=${["ka", "la", "ba", "sa"]}
                 arrangement="diamond"
+                width="47"
                 height="65"
               />
             <//>
