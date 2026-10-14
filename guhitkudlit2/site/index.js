@@ -10,12 +10,20 @@ import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
 import { createStyleControls } from "./style/controls.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
+import { createPresetControls } from "./presets/controls.js";
 
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa);
 const { StyleControls, colorStyle, painterName } = createStyleControls();
 const { LayoutControls, arrangement, density } = createLayoutControls();
+const { PresetControls } = createPresetControls({
+  painterName,
+  colorStyle,
+  viramaStyle,
+  arrangement,
+  density,
+});
 const { Canvas, canvasRef } = createCanvas(
   baybayinUnits,
   colorStyle,
@@ -125,6 +133,7 @@ export function Index() {
         <${AppPanelGroup}
           panels=${[
             { title: "Text", content: html`<${TransliterationForm} />` },
+            { title: "Presets", content: html`<${PresetControls} />` },
             {
               title: "Spelling",
               content: html`<${SpellingControls}

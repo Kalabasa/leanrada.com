@@ -3,7 +3,10 @@ import { html } from "./html.js";
 
 const OptionGroupContext = createContext(null);
 
-export function OptionGroup({ name, value, onChange, children }) {
+export function OptionGroup({ name, value, onChange, columns, children }) {
+  const gridStyle = columns
+    ? { display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)` }
+    : null;
   return html`
     <style id=${OptionGroup.name}>
       @layer base {
@@ -32,6 +35,9 @@ export function OptionGroup({ name, value, onChange, children }) {
               anchor(--optionGroupOptionActive left);
             transition: inset 0.15s;
             z-index: -1;
+          }
+          &:not(:has(input:checked))::after {
+            display: none;
           }
         }
         .optionGroupOption {
@@ -65,7 +71,7 @@ export function OptionGroup({ name, value, onChange, children }) {
       }
     </style>
     <${OptionGroupContext.Provider} value=${{ name, value, onChange }}>
-      <div class="optionGroup">${children}</div>
+      <div class="optionGroup" style=${gridStyle}>${children}</div>
     <//>
   `;
 }
