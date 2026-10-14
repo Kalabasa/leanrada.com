@@ -1,5 +1,6 @@
 import { html } from "../components/html.js";
 import { useEffect, useRef, useState } from "../lib/htm-preact.js";
+import { classes } from "../util/classes.js";
 import { AppPanel } from "./panel.js";
 
 const panelWidthPx = 500;
@@ -7,20 +8,45 @@ const tabStepPx = 80;
 
 export function AppPanelGroup({ panels }) {
   const contentPanels = panels.filter((panel) => !panel.spacer);
-  const narrowScreenPx =
+  const narrowWidthPx =
     2 * panelWidthPx + (contentPanels.length - 2) * tabStepPx;
   const collapsedWidthPx =
     panelWidthPx + (contentPanels.length - 1) * tabStepPx;
+
   const groupRef = useRef();
-  const [snappedPanelIndex, setSnappedPanelIndex] = useState(0);
+  const isAutoScrollingRef = useRef(false);
+  const [raisedIndex, setRaisedIndex] = useState(0);
+
   useEffect(() => {
     const scroller = groupRef.current.parentElement;
-    const onScrollEnd = () => {
-      setSnappedPanelIndex(Math.round(scroller.scrollLeft / tabStepPx));
+    const onScroll = () => {
+      if (isAutoScrollingRef.current) return;
+      const scrollerStyle = getComputedStyle(scroller);
+      const containerWidthPx =
+        scroller.clientWidth -
+        parseFloat(scrollerStyle.paddingLeft) -
+        parseFloat(scrollerStyle.paddingRight);
+      if (containerWidthPx >= collapsedWidthPx) return;
+      setRaisedIndex(Math.floor(0.25 + scroller.scrollLeft / tabStepPx));
     };
-    scroller.addEventListener("scrollend", onScrollEnd);
-    return () => scroller.removeEventListener("scrollend", onScrollEnd);
+    const onScrollEnd = () => {
+      isAutoScrollingRef.current = false;
+    };
+    const abortController = new AbortController();
+    scroller.addEventListener("scroll", onScroll, abortController);
+    scroller.addEventListener("scrollend", onScrollEnd, abortController);
+    return () => abortController.abort();
   }, []);
+
+  const activatePanel = (event, panelIndex) => {
+    setRaisedIndex(panelIndex);
+    const groupItem = event.currentTarget.closest(".appPanelGroupItem");
+    if (getComputedStyle(groupItem).scrollSnapAlign === "none") return;
+    const scroller = groupItem.parentElement.parentElement;
+    isAutoScrollingRef.current = true;
+    scroller.scrollTo({ left: panelIndex * tabStepPx, behavior: "smooth" });
+  };
+
   return html`
     <style id=${AppPanelGroup.name}>
       .appPanelGroup {
@@ -37,9 +63,7 @@ export function AppPanelGroup({ panels }) {
         left: calc(var(--panels-before) * var(--app-panel-tab-step));
         right: calc(var(--panels-after) * var(--app-panel-tab-step));
         pointer-events: none;
-      }
-      .appPanelGroupItem:focus-within {
-        z-index: 1;
+        z-index: var(--panel-z);
       }
       .appPanelGroupSpacer {
         flex: 0 0
@@ -49,9 +73,11 @@ export function AppPanelGroup({ panels }) {
               (var(--app-panel-width) + var(--size-s))
           );
       }
-      @container not (min-width: ${narrowScreenPx}px) {
-        .appPanelGroupItem:first-child {
-          z-index: 1;
+      @container not (min-width: ${narrowWidthPx}px) {
+        .appPanelGroupItem {
+          &:not(.appPanelGroupItemRaised) {
+            filter: brightness(0.98);
+          }
         }
         .appPanelGroup {
           width: calc(
@@ -77,9 +103,6 @@ export function AppPanelGroup({ panels }) {
         .appPanelGroupSpacer {
           display: none;
         }
-        .appPanelGroupItem[snapped] {
-          z-index: 2;
-        }
       }
     </style>
     <div class="appPanelGroup" ref=${groupRef} onWheel=${onWheel}>
@@ -101,17 +124,22 @@ export function AppPanelGroup({ panels }) {
         }
         return html`
           <div
-            class="appPanelGroupItem"
-            snapped=${panelsBefore === snappedPanelIndex}
+            class=${classes(
+              "appPanelGroupItem",
+              raisedIndex === panelsBefore && "appPanelGroupItemRaised",
+            )}
+            onfocusin=${(event) => activatePanel(event, panelsBefore)}
             style=${{
               "--panels-before": panelsBefore,
               "--panels-after": contentPanels.length - 1 - panelsBefore,
+              "--panel-z":
+                contentPanels.length - Math.abs(panelsBefore - raisedIndex),
             }}
             key=${index}
           >
             <${AppPanel}
               title=${html`<h2>${panel.title}</h2>`}
-              onTitleClick=${(event) => scrollToPanel(event, panelsBefore)}
+              onTitleClick=${(event) => activatePanel(event, panelsBefore)}
               >${panel.content}<//
             >
           </div>
@@ -119,13 +147,6 @@ export function AppPanelGroup({ panels }) {
       })}
     </div>
   `;
-}
-
-function scrollToPanel(event, panelIndex) {
-  const groupItem = event.currentTarget.closest(".appPanelGroupItem");
-  if (getComputedStyle(groupItem).scrollSnapAlign === "none") return;
-  const scroller = groupItem.parentElement.parentElement;
-  scroller.scrollTo({ left: panelIndex * tabStepPx, behavior: "smooth" });
 }
 
 function onWheel(event) {

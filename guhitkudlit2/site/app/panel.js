@@ -38,7 +38,7 @@ export function AppPanel({ title, onTitleClick, children }) {
         text-transform: uppercase;
         font-weight: bold;
         font-size: var(--font-size-s);
-        box-shadow: var(--shadow-m);
+        box-shadow: var(--shadow-l);
         position: relative;
         pointer-events: auto;
         user-select: none;
@@ -49,7 +49,7 @@ export function AppPanel({ title, onTitleClick, children }) {
         background: inherit;
         left: 0;
         right: calc(var(--size-m) * -1);
-        top: calc(100% - 1px);
+        top: 100%;
         height: calc(var(--size-s) + 1px);
         pointer-events: none;
       }
@@ -58,7 +58,7 @@ export function AppPanel({ title, onTitleClick, children }) {
         padding: var(--size-m);
         background: var(--color-bg);
         border-radius: 0 var(--size-s) 0 0;
-        box-shadow: var(--shadow-m);
+        box-shadow: var(--shadow-l);
         pointer-events: auto;
         @container (max-width: 750px) {
           padding: var(--size-s);
