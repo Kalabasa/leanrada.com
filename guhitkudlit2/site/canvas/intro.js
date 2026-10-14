@@ -137,6 +137,10 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
               var(--color-orange-darker)
             )
             border-box;
+        &:focus-visible {
+          outline: solid 4px var(--color-bg-darker);
+          outline-offset: 1px;
+        }
       }
       .introExamples {
         display: flex;

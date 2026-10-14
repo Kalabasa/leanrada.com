@@ -7,9 +7,12 @@ export function AppPanel({ title, children }) {
         display: flex;
         flex-direction: column;
         height: 100%;
+        pointer-events: none;
       }
       .appPanelTitle {
         align-self: start;
+        min-width: var(--app-panel-tab-step);
+        text-align: center;
         padding: var(--size-xs) var(--size-s) 0;
         border-radius: var(--size-s) var(--size-s) 0 0;
         background: var(--color-bg);
@@ -19,6 +22,8 @@ export function AppPanel({ title, children }) {
         font-size: var(--font-size-s);
         box-shadow: var(--shadow-m);
         position: relative;
+        pointer-events: auto;
+        user-select: none;
       }
       .appPanelTitle::after {
         content: "";
@@ -35,10 +40,11 @@ export function AppPanel({ title, children }) {
         background: var(--color-bg);
         border-radius: 0 var(--size-s) 0 0;
         box-shadow: var(--shadow-m);
+        pointer-events: auto;
       }
     </style>
     <aside class="appPanelContainer">
-      <div class="appPanelTitle">${title}</div>
+      <div class="appPanelTitle" tabindex="0">${title}</div>
       <div class="appPanelContent">${children}</div>
     </aside>
   `;

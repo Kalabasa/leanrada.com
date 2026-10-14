@@ -39,6 +39,10 @@ export function OptionGroup({ name, value, onChange, columns, children }) {
           &:not(:has(input:checked))::after {
             display: none;
           }
+          &:has(input:focus-visible) {
+            outline: solid 2px var(--color-green);
+            outline-offset: 2px;
+          }
         }
         .optionGroupOption {
           flex: 1 1 1%;
