@@ -30,7 +30,7 @@ const presets = [
   {
     painterName: "brush",
     colorStyle: "whiteOnBlack",
-    viramaStyle: "pamudpod",
+    viramaStyle: "krus",
     arrangement: "grid",
     density: 0,
   },

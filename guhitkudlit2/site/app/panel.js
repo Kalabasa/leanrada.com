@@ -13,9 +13,8 @@ export function AppPanel({ title, onTitleClick, children }) {
           .appPanelTitle {
             color: var(--color-fg);
           }
-          .appPanelTitle,
           .appPanelContent {
-            box-shadow: var(--shadow-l);
+            box-shadow: var(--shadow-xl);
           }
         }
         &:not(:focus-within) {
@@ -38,7 +37,7 @@ export function AppPanel({ title, onTitleClick, children }) {
         text-transform: uppercase;
         font-weight: bold;
         font-size: var(--font-size-s);
-        box-shadow: var(--shadow-l);
+        box-shadow: var(--shadow-m);
         position: relative;
         pointer-events: auto;
         user-select: none;

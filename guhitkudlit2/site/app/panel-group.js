@@ -27,7 +27,7 @@ export function AppPanelGroup({ panels }) {
         parseFloat(scrollerStyle.paddingLeft) -
         parseFloat(scrollerStyle.paddingRight);
       if (containerWidthPx >= collapsedWidthPx) return;
-      setRaisedIndex(Math.floor(0.25 + scroller.scrollLeft / tabStepPx));
+      setRaisedIndex(Math.floor(0.5 + scroller.scrollLeft / tabStepPx));
     };
     const onScrollEnd = () => {
       isAutoScrollingRef.current = false;
@@ -55,7 +55,7 @@ export function AppPanelGroup({ panels }) {
         display: flex;
         width: max-content;
         gap: var(--size-s);
-        padding-top: var(--size-m);
+        padding: var(--size-s) var(--size-s) 0;
       }
       .appPanelGroupItem {
         flex: 0 0 var(--app-panel-width);
@@ -76,13 +76,13 @@ export function AppPanelGroup({ panels }) {
       @container not (min-width: ${narrowWidthPx}px) {
         .appPanelGroupItem {
           &:not(.appPanelGroupItemRaised) {
-            filter: brightness(0.98);
+            filter: contrast(0.94);
           }
         }
         .appPanelGroup {
           width: calc(
             var(--app-panel-width) + var(--app-panel-tab-step) *
-              ${contentPanels.length - 1}
+              ${contentPanels.length - 1} + var(--size-s) * 2
           );
           overflow: hidden;
         }

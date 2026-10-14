@@ -27,21 +27,25 @@ const { PresetControls } = createPresetControls({
 const { Canvas, canvasRef } = createCanvas(
   baybayinUnits,
   colorStyle,
-  async (config) => {
+  (config) => {
     if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
     if (config.separateRa !== undefined) separateRa.set(config.separateRa);
     if (config.arrangement !== undefined) arrangement.set(config.arrangement);
     inputText.set(config.text);
 
     inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
-    await document.startViewTransition(() => {
+    document.startViewTransition(() => {
       inputTextWrapperRef.current?.style.setProperty(
         "view-transition-name",
         config.sourceElement.style.viewTransitionName,
       );
       config.sourceElement.style.removeProperty("view-transition-name");
-    }).finished;
-    inputTextWrapperRef.current?.querySelector("input").focus();
+    });
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        inputTextWrapperRef.current?.querySelector("input").focus();
+      }, 125);
+    });
   },
 );
 const calligraphyInputs = {
@@ -129,6 +133,9 @@ export function Index() {
         .appPanelGroupArea {
           padding: 0 var(--size-xs);
         }
+      }
+      ::view-transition-group(introConfig) {
+        animation-duration: 250ms;
       }
       ::view-transition-old(introConfig) {
         height: 100%;
