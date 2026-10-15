@@ -1,4 +1,5 @@
 import { html } from "../components/html.js";
+import { Button } from "../components/form.js";
 import { observer } from "../util/observer.js";
 
 export function createAppMenuButton(
@@ -7,6 +8,13 @@ export function createAppMenuButton(
   resetApp,
   saveCanvas,
 ) {
+  const resetDialogRef = { current: null };
+
+  function confirmReset() {
+    resetDialogRef.current.close();
+    resetApp();
+  }
+
   const AppMenuButton = observer(
     () => html`
       <style id=${AppMenuButton.name}>
@@ -93,6 +101,24 @@ export function createAppMenuButton(
             }
           }
         }
+        .appMenuResetDialog {
+          max-width: calc(100vw - 2 * var(--size-m));
+          padding: var(--size-m);
+          border: none;
+          border-radius: var(--size-s);
+          background: var(--color-bg);
+          color: var(--color-fg);
+          box-shadow: var(--shadow-xl);
+          &::backdrop {
+            background: #0002;
+          }
+        }
+        .appMenuResetDialogActions {
+          display: flex;
+          justify-content: end;
+          gap: var(--size-s);
+          margin-top: var(--size-m);
+        }
       </style>
       <button
         class="appMenuButton"
@@ -105,21 +131,39 @@ export function createAppMenuButton(
       <div class="appMenuPopup" id="appMenuPopup" popover>
         <button
           type="button"
-          onClick=${resetApp}
-          disabled=${inputText.get() === ""}
-        >
-          Reset
-        </button>
-        <button
-          type="button"
+          popovertarget="appMenuPopup"
+          popovertargetaction="hide"
           onClick=${saveCanvas}
           disabled=${!calligraphyComplete.get()}
         >
-          Save
+          Download image
         </button>
-        <a href="help/">Help</a>
-        <a href="about/">About</a>
+        <a href="help/">Baybayin guide</a>
+        <a href="about/">About GuhitKudlit</a>
+        <button
+          type="button"
+          popovertarget="appMenuPopup"
+          popovertargetaction="hide"
+          onClick=${() => resetDialogRef.current.showModal()}
+          disabled=${!inputText.get().length}
+        >
+          New canvas
+        </button>
       </div>
+      <dialog class="appMenuResetDialog" ref=${resetDialogRef}>
+        <p>Start a new canvas? Your current piece will be lost.</p>
+        <div class="appMenuResetDialogActions">
+          <${Button}
+            type="button"
+            onClick=${() => resetDialogRef.current.close()}
+          >
+            Cancel
+          <//>
+          <${Button} type="button" variant="danger" onClick=${confirmReset}>
+            New canvas
+          <//>
+        </div>
+      </dialog>
     `,
   );
   return { AppMenuButton };
