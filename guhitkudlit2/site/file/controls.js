@@ -67,6 +67,10 @@ export function createFileControls(
     }
   }
 
+  function saveCanvas() {
+    downloadCanvas(canvasRef.current);
+  }
+
   function shareCanvas() {
     drawColorStyledCanvas(canvasRef.current, colorStyle.get()).toBlob(
       async (blob) => {
@@ -128,7 +132,7 @@ export function createFileControls(
           <${Button}
             class="fileControlsButton"
             variant="primary"
-            onClick=${() => downloadCanvas(canvasRef.current)}
+            onClick=${saveCanvas}
             disabled=${!calligraphyComplete.get()}
           >
             Save
@@ -185,7 +189,7 @@ export function createFileControls(
       </div>
     `,
   );
-  return { FileControls };
+  return { FileControls, saveCanvas };
 }
 
 function formatFileName(text) {

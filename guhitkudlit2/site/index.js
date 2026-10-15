@@ -1,5 +1,5 @@
 import "./app/logo.js";
-import { AppMenuButton } from "./app/menu-button.js";
+import { createAppMenuButton } from "./app/menu-button.js";
 import { AppPanelGroup } from "./app/panel-group.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
@@ -74,12 +74,18 @@ const calligraphyInputs = {
   painterName,
 };
 const calligraphyComplete = observable.box(false);
-const { FileControls } = createFileControls(
+const { FileControls, saveCanvas } = createFileControls(
   canvasRef,
   inputText,
   calligraphyInputs,
   colorStyle,
   calligraphyComplete,
+);
+const { AppMenuButton } = createAppMenuButton(
+  inputText,
+  calligraphyComplete,
+  resetApp,
+  saveCanvas,
 );
 
 when(
@@ -110,6 +116,10 @@ const Logo = observer(
 
 function onLogoClick(event) {
   event.preventDefault();
+  resetApp();
+}
+
+function resetApp() {
   runInAction(() => {
     inputText.set("");
     showPlaceholder.set(true);
