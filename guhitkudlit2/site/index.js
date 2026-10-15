@@ -5,7 +5,7 @@ import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
 import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
-import { observable, when } from "./lib/mobx.js";
+import { observable, runInAction, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
 import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
@@ -29,12 +29,6 @@ const { PresetControls } = createPresetControls({
 });
 
 const showPlaceholder = observable.box(true);
-when(
-  () => baybayinUnits.get().length > 0,
-  () => {
-    if (showPlaceholder.get()) hidePlaceholder();
-  },
-);
 const { Canvas, canvasRef } = createCanvas(
   colorStyle,
   showPlaceholder,
@@ -106,11 +100,21 @@ when(
 const appLogoRef = { current: null };
 const Logo = observer(
   () =>
-    html`<app-logo
-      ref=${appLogoRef}
-      style=${{ opacity: showPlaceholder.get() ? 0 : 1 }}
-    ></app-logo>`,
+    html`<a href=${location.pathname} onClick=${onLogoClick}
+      ><app-logo
+        ref=${appLogoRef}
+        style=${{ opacity: showPlaceholder.get() ? 0 : 1 }}
+      ></app-logo
+    ></a>`,
 );
+
+function onLogoClick(event) {
+  event.preventDefault();
+  runInAction(() => {
+    inputText.set("");
+    showPlaceholder.set(true);
+  });
+}
 
 const PanelGroupArea = observer(
   ({ children }) => html`
@@ -119,6 +123,7 @@ const PanelGroupArea = observer(
         "appPanelGroupArea",
         !showPlaceholder.get() && "appPanelGroupAreaShown",
       )}
+      inert=${showPlaceholder.get()}
     >
       <div class="appPanelGroupClip">${children}</div>
     </div>

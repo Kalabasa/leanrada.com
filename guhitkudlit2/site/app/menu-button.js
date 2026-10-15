@@ -6,7 +6,6 @@ export function AppMenuButton() {
       .appMenuButton {
         border: none;
         cursor: pointer;
-        outline: none;
         position: relative;
         padding: 0 var(--size-xs);
         font-family: "Cubao Narrow", sans-serif;

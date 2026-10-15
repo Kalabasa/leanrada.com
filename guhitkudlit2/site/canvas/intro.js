@@ -47,7 +47,6 @@ const backgroundWords = [
   "kala basa",
   "sagisag",
 ];
-const backgroundPauseMs = 3000;
 
 export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
   const backgroundCanvasRef = useRef();
@@ -99,7 +98,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         inset: 0;
         width: 100%;
         height: 100%;
-        opacity: 0.04;
+        opacity: 0.1;
       }
       .introHeader {
         padding: 2vh;
@@ -222,7 +221,7 @@ async function drawBackgroundWords(backgroundCanvas, abortSignal) {
       composeSteps: Math.round(10 + Math.random() * 40),
       scale: 1.2 + Math.random() * 0.4,
     });
-    await delay(backgroundPauseMs);
+    await delay(2000);
   }
 }
 
