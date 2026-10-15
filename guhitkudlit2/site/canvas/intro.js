@@ -90,7 +90,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         gap: var(--size-l);
         overflow: hidden;
         contain: inline-size;
-        @media (max-width: 800px) {
+        @media (max-width: 750px) {
           gap: 0;
         }
       }
@@ -127,6 +127,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         box-sizing: border-box;
         @media (max-width: 750px) {
           padding: var(--size-s);
+          box-shadow: none;
         }
       }
       .introText {
