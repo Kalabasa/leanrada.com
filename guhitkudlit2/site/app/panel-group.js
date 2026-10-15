@@ -69,7 +69,7 @@ export function AppPanelGroup({ panels }) {
       .appPanelGroupSpacer {
         flex: 0 0
           calc(
-            100vw - 2 * var(--size-m) - (var(--panels-after) - 1) *
+            100vw - 3 * var(--size-m) - (var(--panels-after) - 1) *
               var(--app-panel-tab-step) - (var(--panels-before) + 2) *
               (var(--app-panel-width) + var(--size-s))
           );
