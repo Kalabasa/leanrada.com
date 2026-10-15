@@ -11,6 +11,7 @@ import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
 import { createStyleControls } from "./style/controls.js";
 import { observer } from "./util/observer.js";
+import { classes } from "./util/classes.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
 
@@ -26,22 +27,31 @@ const { PresetControls } = createPresetControls({
   arrangement,
   density,
 });
-const { Canvas, canvasRef, showPlaceholder } = createCanvas(
-  baybayinUnits,
-  colorStyle,
-  (config) => {
-    if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
-    if (config.separateRa !== undefined) separateRa.set(config.separateRa);
-    if (config.arrangement !== undefined) arrangement.set(config.arrangement);
-    inputText.set(config.text);
 
+const showPlaceholder = observable.box(true);
+when(
+  () => baybayinUnits.get().length > 0,
+  () => {
+    if (showPlaceholder.get()) hidePlaceholder();
+  },
+);
+const { Canvas, canvasRef } = createCanvas(
+  colorStyle,
+  showPlaceholder,
+  (config) => {
     inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
-    document.startViewTransition(() => {
+    hidePlaceholder(() => {
+      if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
+      if (config.separateRa !== undefined) separateRa.set(config.separateRa);
+      if (config.arrangement !== undefined) arrangement.set(config.arrangement);
+      inputText.set(config.text);
       inputTextWrapperRef.current?.style.setProperty(
         "view-transition-name",
         config.sourceElement.style.viewTransitionName,
       );
       config.sourceElement.style.removeProperty("view-transition-name");
+      appLogoRef.current.style.viewTransitionName = "logo";
+      config.logoElement.style.removeProperty("view-transition-name");
     });
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -50,6 +60,18 @@ const { Canvas, canvasRef, showPlaceholder } = createCanvas(
     });
   },
 );
+function hidePlaceholder(updateDom) {
+  if (updateDom) {
+    document.startViewTransition(async () => {
+      showPlaceholder.set(false);
+      updateDom();
+      await new Promise((resolve) => setTimeout(resolve));
+    });
+  } else {
+    showPlaceholder.set(false);
+  }
+}
+
 const calligraphyInputs = {
   baybayinUnits,
   viramaStyle,
@@ -81,8 +103,26 @@ when(
   },
 );
 
+const appLogoRef = { current: null };
 const Logo = observer(
-  () => !showPlaceholder.get() && html`<app-logo></app-logo>`,
+  () =>
+    html`<app-logo
+      ref=${appLogoRef}
+      style=${{ opacity: showPlaceholder.get() ? 0 : 1 }}
+    ></app-logo>`,
+);
+
+const PanelGroupArea = observer(
+  ({ children }) => html`
+    <div
+      class=${classes(
+        "appPanelGroupArea",
+        !showPlaceholder.get() && "appPanelGroupAreaShown",
+      )}
+    >
+      <div class="appPanelGroupClip">${children}</div>
+    </div>
+  `,
 );
 
 export function Index() {
@@ -124,6 +164,17 @@ export function Index() {
       }
       .appPanelGroupArea {
         grid-area: panels;
+        display: grid;
+        grid-template-rows: 0fr;
+      }
+      .appPanelGroupAreaShown {
+        grid-template-rows: 1fr;
+      }
+      .appPanelGroupClip {
+        min-height: 0;
+        overflow: hidden;
+      }
+      .appPanelGroupArea {
         padding: 0 var(--size-m);
         overflow: auto;
         scroll-snap-type: x mandatory;
@@ -142,6 +193,7 @@ export function Index() {
       }
       ::view-transition-group(introConfig) {
         animation-duration: 250ms;
+        z-index: 1;
       }
       ::view-transition-old(introConfig) {
         height: 100%;
@@ -157,40 +209,42 @@ export function Index() {
       <main class="appCanvas">
         <${Canvas} />
       </main>
-      <div class="appPanelGroupArea">
-        <${AppPanelGroup}
-          panels=${[
-            { title: "Text", content: html`<${TransliterationForm} />` },
-            { spacer: true },
-            {
-              title: "Theme",
-              content: html`<${PresetControls}
-                baybayinUnits=${baybayinUnits}
-              />`,
-            },
-            {
-              title: "Spelling",
-              content: html`<${SpellingControls}
-                inputText=${inputText}
-                baybayinUnits=${baybayinUnits}
-              />`,
-            },
-            {
-              title: "Style",
-              content: html`<${StyleControls}
-                baybayinUnits=${baybayinUnits}
-              />`,
-            },
-            {
-              title: "Layout",
-              content: html`<${LayoutControls}
-                baybayinUnits=${baybayinUnits}
-              />`,
-            },
-            { title: "File", content: html`<${FileControls} />` },
-          ]}
-        />
-      </div>
+      <${PanelGroupArea}>
+        <div>
+          <${AppPanelGroup}
+            panels=${[
+              { title: "Text", content: html`<${TransliterationForm} />` },
+              { spacer: true },
+              {
+                title: "Theme",
+                content: html`<${PresetControls}
+                  baybayinUnits=${baybayinUnits}
+                />`,
+              },
+              {
+                title: "Spelling",
+                content: html`<${SpellingControls}
+                  inputText=${inputText}
+                  baybayinUnits=${baybayinUnits}
+                />`,
+              },
+              {
+                title: "Style",
+                content: html`<${StyleControls}
+                  baybayinUnits=${baybayinUnits}
+                />`,
+              },
+              {
+                title: "Layout",
+                content: html`<${LayoutControls}
+                  baybayinUnits=${baybayinUnits}
+                />`,
+              },
+              { title: "File", content: html`<${FileControls} />` },
+            ]}
+          />
+        </div>
+      <//>
       <${ColorStyleFilters} />
     </div>
   `;

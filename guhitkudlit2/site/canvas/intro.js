@@ -51,6 +51,7 @@ const backgroundPauseMs = 3000;
 
 export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
   const backgroundCanvasRef = useRef();
+  const logoRef = useRef();
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -62,8 +63,9 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
 
   const configure = (config, sourceElement) => {
     sourceElement.style.viewTransitionName = "introConfig";
+    logoRef.current.style.viewTransitionName = "logo";
     requestAnimationFrame(() => {
-      onConfig({ ...config, sourceElement });
+      onConfig({ ...config, sourceElement, logoElement: logoRef.current });
     });
   };
 
@@ -108,6 +110,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         margin-top: 0.5vh;
         font-size: 1.5vh;
         text-transform: uppercase;
+        font-weight: bold;
         color: var(--color-fg-secondary);
       }
       .introStarter {
@@ -163,7 +166,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         ref=${backgroundCanvasRef}
       ></canvas>
       <div class="introHeader">
-        <app-logo height="14vh"></app-logo>
+        <app-logo ref=${logoRef} height="14vh"></app-logo>
         <h2 class="introSubheading">
           Baybayin translator (transliterator)<br />& calligraphy generator
         </h2>

@@ -50,6 +50,7 @@ export function AppPanelGroup({ panels }) {
   return html`
     <style id=${AppPanelGroup.name}>
       .appPanelGroup {
+        view-transition-name: appPanelGroup;
         --app-panel-tab-step: ${tabStepPx}px;
         --app-panel-width: ${panelWidthPx}px;
         display: flex;

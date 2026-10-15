@@ -1,18 +1,11 @@
 import { html } from "../components/html.js";
 import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
-import { observable, when } from "../lib/mobx.js";
 import { classes } from "../util/classes.js";
 import { observer } from "../util/observer.js";
 import { formatColorStyleFilter } from "../style/color-styles.js";
 import { IntroCanvas } from "./intro.js";
 
-export function createCanvas(baybayinUnits, colorStyle, onConfig) {
-  const showPlaceholder = observable.box(true);
-  when(
-    () => baybayinUnits.get().length > 0,
-    () => showPlaceholder.set(false),
-  );
-
+export function createCanvas(colorStyle, showPlaceholder, onConfig) {
   const aspectRatio = Math.min(
     1.5,
     2 * (window.innerWidth / window.innerHeight),
@@ -27,14 +20,11 @@ export function createCanvas(baybayinUnits, colorStyle, onConfig) {
         canvasRef=${canvasRef}
         colorStyle=${colorStyle.get()}
         showPlaceholder=${showPlaceholder.get()}
-        onConfig=${(config) => {
-          showPlaceholder.set(false);
-          onConfig(config);
-        }}
+        onConfig=${onConfig}
       />
     `;
   });
-  return { Canvas: CanvasImpl, canvasRef, showPlaceholder };
+  return { Canvas: CanvasImpl, canvasRef };
 }
 
 export function Canvas({
@@ -78,6 +68,7 @@ export function Canvas({
         place-content: center;
       }
       .canvas {
+        view-transition-name: canvas;
         grid-area: 1 / 1 / -1 / -1;
         background: #fff;
         border-radius: 3px;
