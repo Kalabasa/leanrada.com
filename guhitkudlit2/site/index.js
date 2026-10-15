@@ -174,7 +174,7 @@ export function Index() {
         min-height: 0;
         overflow: hidden;
       }
-      .appPanelGroupArea {
+      .appPanelGroupScroll {
         padding: 0 var(--size-m);
         overflow: auto;
         scroll-snap-type: x mandatory;
@@ -187,7 +187,7 @@ export function Index() {
         .appCanvas {
           padding: var(--size-m) var(--size-xs) var(--size-xs);
         }
-        .appPanelGroupArea {
+        .appPanelGroupScroll {
           padding: 0 var(--size-xs);
         }
       }
@@ -210,7 +210,7 @@ export function Index() {
         <${Canvas} />
       </main>
       <${PanelGroupArea}>
-        <div>
+        <div class="appPanelGroupScroll">
           <${AppPanelGroup}
             panels=${[
               { title: "Text", content: html`<${TransliterationForm} />` },
