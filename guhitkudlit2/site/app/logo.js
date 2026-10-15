@@ -28,8 +28,8 @@ customElements.define(
                 var(--color-green),
                 var(--color-green) 40%,
                 var(--color-bg) 40%,
-                var(--color-bg) 55%,
-                var(--color-orange) 55%,
+                var(--color-bg) 54%,
+                var(--color-orange) 54%,
                 var(--color-orange)
               );
               color: transparent;
