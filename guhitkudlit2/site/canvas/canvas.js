@@ -34,7 +34,7 @@ export function createCanvas(baybayinUnits, colorStyle, onConfig) {
       />
     `;
   });
-  return { Canvas: CanvasImpl, canvasRef };
+  return { Canvas: CanvasImpl, canvasRef, showPlaceholder };
 }
 
 export function Canvas({

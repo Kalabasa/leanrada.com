@@ -104,10 +104,6 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         position: relative;
         text-align: center;
       }
-      .introHeading {
-        font-size: 5vh;
-        letter-spacing: -0.44vh;
-      }
       .introSubheading {
         margin-top: 0.5vh;
         font-size: 1.5vh;
@@ -167,7 +163,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         ref=${backgroundCanvasRef}
       ></canvas>
       <div class="introHeader">
-        <h1 class="introHeading">GuhitKudlit</h1>
+        <app-logo height="14vh"></app-logo>
         <h2 class="introSubheading">
           Baybayin translator (transliterator)<br />& calligraphy generator
         </h2>

@@ -14,10 +14,11 @@ customElements.define(
             box-sizing: border-box;
             margin: 0;
             padding: 0.2em;
-            width: 3.82em;
-            border-radius: 0.09em;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.03em;
             font-family: "Cubao Regular", sans-serif;
-            font-size: 1.6em;
+            font-size: calc(100cqw / 3.82);
             line-height: 0.7em;
             font-weight: normal;
             background: #000;
@@ -25,8 +26,8 @@ customElements.define(
             > div {
               background-image: linear-gradient(
                 var(--color-green),
-                var(--color-green) 35%,
-                var(--color-bg) 35%,
+                var(--color-green) 40%,
+                var(--color-bg) 40%,
                 var(--color-bg) 55%,
                 var(--color-orange) 55%,
                 var(--color-orange)
@@ -45,6 +46,13 @@ customElements.define(
           <div>Guhit<br />Kudlit</div>
         </h1>
       `;
+    }
+
+    connectedCallback() {
+      const width = this.getAttribute("width");
+      const height = this.getAttribute("height");
+      if (width) this.style.width = width;
+      if (height) this.style.height = height;
     }
   },
 );

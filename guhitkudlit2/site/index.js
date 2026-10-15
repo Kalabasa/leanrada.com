@@ -10,6 +10,7 @@ import { createFileControls } from "./file/controls.js";
 import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
 import { createStyleControls } from "./style/controls.js";
+import { observer } from "./util/observer.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
 
@@ -25,7 +26,7 @@ const { PresetControls } = createPresetControls({
   arrangement,
   density,
 });
-const { Canvas, canvasRef } = createCanvas(
+const { Canvas, canvasRef, showPlaceholder } = createCanvas(
   baybayinUnits,
   colorStyle,
   (config) => {
@@ -78,6 +79,10 @@ when(
     };
     installCalligraphy(calligraphyInputs, canvasRef, onProgress);
   },
+);
+
+const Logo = observer(
+  () => !showPlaceholder.get() && html`<app-logo></app-logo>`,
 );
 
 export function Index() {
@@ -144,7 +149,7 @@ export function Index() {
     </style>
     <div class="app">
       <div class="appLogo">
-        <app-logo></app-logo>
+        <${Logo} />
       </div>
       <nav class="appMenu">
         <${AppMenuButton} />
