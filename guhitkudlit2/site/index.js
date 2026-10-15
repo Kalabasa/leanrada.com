@@ -1,4 +1,5 @@
 import "./app/logo.js";
+import { AppMenuButton } from "./app/menu-button.js";
 import { AppPanelGroup } from "./app/panel-group.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
@@ -145,7 +146,9 @@ export function Index() {
       <div class="appLogo">
         <app-logo></app-logo>
       </div>
-      <nav class="appMenu">menu</nav>
+      <nav class="appMenu">
+        <${AppMenuButton} />
+      </nav>
       <main class="appCanvas">
         <${Canvas} />
       </main>
