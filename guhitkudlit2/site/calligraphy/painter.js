@@ -1,4 +1,4 @@
-import { DEBUG } from "../app/flags.js";
+import { DEBUG, PARAMS } from "../app/flags.js";
 
 /**
  * @typedef {import("./path.js").Path} Path
@@ -18,7 +18,7 @@ export class BasePainter {
 
     for (let i = 0; i < paths.length; i++) {
       const color =
-        DEBUG && new URLSearchParams(location.search).has("colorize")
+        DEBUG && PARAMS.has("colorize")
           ? `hsl(${(i / paths.length) * 360}, 100%, 40%)`
           : "#000";
       for (const pathProgress of this.drawPath(

@@ -5,14 +5,12 @@ import { observable } from "../lib/mobx.js";
 import { observer } from "../util/observer.js";
 import { LabelText } from "../typography/text.js";
 import { classes } from "../util/classes.js";
-import { DEBUG } from "../app/flags.js";
+import { DEBUG, PARAMS } from "../app/flags.js";
 
 const viramaStyles = ["pamudpod", "krus", "precolonial"];
 
 export function createSpellingControls() {
-  const initialViramaStyle = new URLSearchParams(location.search).get(
-    "viramaStyle",
-  );
+  const initialViramaStyle = PARAMS.get("viramaStyle");
   const viramaStyle = observable.box(
     viramaStyles.includes(initialViramaStyle) ? initialViramaStyle : "pamudpod",
   );

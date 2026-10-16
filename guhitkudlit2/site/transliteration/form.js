@@ -9,13 +9,13 @@ import { Tooltip } from "../components/tooltip.js";
 import { useState } from "../lib/htm-preact.js";
 import { InvalidLetterError } from "./invalid-letter-error.js";
 import { InvalidSyllabicationError } from "./invalid-syllabication-error.js";
-import { DEBUG } from "../app/flags.js";
+import { DEBUG, PARAMS } from "../app/flags.js";
 
 const memo = Symbol("memo");
 
 export function createTransliterationForm(viramaStyle, separateRa) {
   const precolonial = computed(() => viramaStyle.get() === "precolonial");
-  const initialText = new URLSearchParams(location.search).get("word") ?? "";
+  const initialText = PARAMS.get("word") ?? "";
   const inputText = observable.box(initialText);
   const baybayinUnits = observable.box([]);
   const transformed = observable.box(undefined);

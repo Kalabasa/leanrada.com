@@ -1,1 +1,2 @@
-export const DEBUG = new URL(location).searchParams.has("debug");
+export const PARAMS = new URL(location).searchParams;
+export const DEBUG = PARAMS.has("debug");

@@ -1,4 +1,4 @@
-import { DEBUG } from "../app/flags.js";
+import { DEBUG, PARAMS } from "../app/flags.js";
 import { render } from "../canvas/render.js";
 import { comparer, computed, reaction } from "../lib/mobx.js";
 import { hasVirama } from "../transliteration/syllabicate.js";
@@ -27,8 +27,7 @@ export function installCalligraphy(
   canvasRef,
   onProgress,
 ) {
-  const debugPainterName =
-    (DEBUG && new URL(location).searchParams.get("painter")) || null;
+  const debugPainterName = (DEBUG && PARAMS.get("painter")) || null;
 
   const inputs = computed(
     () => {
@@ -96,9 +95,7 @@ function calculateSpeed(baybayinUnits) {
   const speed = Math.min(20, 1 + Math.round(0.12 * baybayinUnits.length ** 2));
 
   if (DEBUG) {
-    const debugSpeed = Number.parseFloat(
-      new URL(location).searchParams.get("speed") ?? 0,
-    );
+    const debugSpeed = Number.parseFloat(PARAMS.get("speed") ?? 0);
     return Math.ceil(debugSpeed * speed);
   }
 
@@ -135,7 +132,12 @@ export async function* drawCalligraphy(
     painterName,
   },
 ) {
-  const painter = await createPainter(createRandom(seed), painterName);
+  const painter = await createPainter(
+    createRandom(
+      Number(new URLSearchParams(location.search).get("seed") ?? seed),
+    ),
+    painterName,
+  );
   const { path, cellSize } = await layoutCalligraphy(
     baybayinUnits,
     canvasContext.canvas,

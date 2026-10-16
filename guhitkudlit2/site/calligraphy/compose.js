@@ -4,10 +4,8 @@
  * @typedef {import("./stroke.js").Point} Point
  */
 
-import { DEBUG } from "../app/flags.js";
-const composeStepsOverride = Number.parseInt(
-  new URLSearchParams(location.search).get("composeSteps"),
-);
+import { DEBUG, PARAMS } from "../app/flags.js";
+const composeStepsOverride = Number.parseInt(PARAMS.get("composeSteps"));
 
 const pushStrength = 0.4;
 const basePushDistScale = 3.1;
