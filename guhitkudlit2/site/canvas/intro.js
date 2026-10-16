@@ -81,7 +81,6 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         grid-area: 1 / 1 / -1 / -1;
         position: relative;
         background: #fff;
-        box-shadow: var(--shadow-m);
         display: flex;
         flex-direction: column;
         justify-content: space-evenly;

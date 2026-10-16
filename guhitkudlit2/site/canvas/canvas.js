@@ -73,6 +73,7 @@ export function Canvas({
         border-radius: 3px;
         width: 100%;
         height: 100%;
+        box-shadow: var(--shadow-m);
         view-transition-name: canvas;
       }
     </style>
@@ -80,7 +81,7 @@ export function Canvas({
       <canvas
         class="canvas"
         style=${{
-          filter: `${formatColorStyleFilter(colorStyle)} drop-shadow(0 0 6px var(--color-shadow))`,
+          filter: formatColorStyleFilter(colorStyle),
         }}
         width=${canvasWidth}
         height=${canvasHeight}

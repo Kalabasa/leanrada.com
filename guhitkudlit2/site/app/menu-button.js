@@ -30,7 +30,7 @@ export function createAppMenuButton(
           border-radius: var(--size-xs);
           background: #f8f7f6;
           color: #bd1003;
-          box-shadow: 0 0.1em 0.2em #6408;
+          box-shadow: var(--shadow-l);
           z-index: 0;
           transform-origin: bottom;
           transition: none 0.04s ease-in;
@@ -53,11 +53,11 @@ export function createAppMenuButton(
           }
           &:focus-visible,
           &:hover {
-            box-shadow: 0 0.1em 0.3em #6408;
+            box-shadow: var(--shadow-xl);
             transform: scale(1.02);
           }
           &:active {
-            box-shadow: 0 0.05em 0.05em #6408;
+            box-shadow: var(--shadow-m);
             transform: scale(1);
           }
         }
@@ -68,7 +68,7 @@ export function createAppMenuButton(
           min-width: 10em;
           border-radius: var(--size-xs);
           background: var(--color-bg);
-          box-shadow: var(--shadow-l);
+          box-shadow: var(--shadow-m);
           &:popover-open {
             display: flex;
             flex-direction: column;
@@ -77,7 +77,6 @@ export function createAppMenuButton(
             padding: var(--size-s);
             border-radius: var(--size-xs);
             cursor: pointer;
-            transition: background 0.1s;
             &:hover,
             &:focus-visible {
               background: var(--color-bg-secondary);
@@ -121,6 +120,15 @@ export function createAppMenuButton(
           type="button"
           popovertarget="appMenuPopup"
           popovertargetaction="hide"
+          onClick=${() => resetDialogRef.current.showModal()}
+          disabled=${!inputText.get().length}
+        >
+          New canvas
+        </button>
+        <button
+          type="button"
+          popovertarget="appMenuPopup"
+          popovertargetaction="hide"
           onClick=${saveCanvas}
           disabled=${!calligraphyComplete.get()}
         >
@@ -128,15 +136,6 @@ export function createAppMenuButton(
         </button>
         <a href="help/">Baybayin guide</a>
         <a href="about/">About GuhitKudlit</a>
-        <button
-          type="button"
-          popovertarget="appMenuPopup"
-          popovertargetaction="hide"
-          onClick=${() => resetDialogRef.current.showModal()}
-          disabled=${!inputText.get().length}
-        >
-          New canvas
-        </button>
       </div>
       <dialog class="appMenuResetDialog" ref=${resetDialogRef}>
         <p>Start a new canvas? Your current piece will be lost.</p>
