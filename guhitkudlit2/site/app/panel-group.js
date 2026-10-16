@@ -141,6 +141,9 @@ export function AppPanelGroup({ panels }) {
             <${AppPanel}
               title=${html`<h2>${panel.title}</h2>`}
               onTitleClick=${(event) => activatePanel(event, panelsBefore)}
+              onDrag=${(dx) => {
+                groupRef.current.parentElement.scrollLeft -= dx;
+              }}
               >${panel.content}<//
             >
           </div>
