@@ -13,13 +13,13 @@ customElements.define(
           h1 {
             box-sizing: border-box;
             margin: 0;
-            padding: 0.2em;
+            padding: 0.02em 0.05em;
             width: 100%;
             height: 100%;
             border-radius: 0.03em;
             font-family: "Cubao Regular", sans-serif;
-            font-size: calc(100cqw / 3.82);
-            line-height: 0.7em;
+            font-size: calc(100cqw / 3.5);
+            line-height: 0.65em;
             font-weight: normal;
             background: #000;
 
