@@ -121,7 +121,6 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         padding: var(--size-l);
         background: #fff6;
         box-shadow: 0 0 30px 30px #fff6;
-        border-radius: var(--size-s);
         max-width: 100%;
         box-sizing: border-box;
         @media (max-width: 750px) {

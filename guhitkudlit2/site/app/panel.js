@@ -30,8 +30,8 @@ export function AppPanel({ title, onTitleClick, children }) {
         align-self: start;
         min-width: var(--app-panel-tab-step);
         text-align: center;
-        padding: var(--size-xs) var(--size-s) 0;
-        border-radius: var(--size-s) var(--size-s) 0 0;
+        padding: var(--size-xs) var(--size-s);
+        border-radius: var(--size-xs) var(--size-xs) 0 0;
         background: var(--color-bg);
         color: var(--color-fg-secondary);
         text-transform: uppercase;

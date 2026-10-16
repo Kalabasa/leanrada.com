@@ -213,7 +213,9 @@ export function Index() {
         animation-duration: 0.8s;
         animation-timing-function: cubic-bezier(0.8, 0, 0.8, 1);
       }
-      ::view-transition-group(logo),
+      ::view-transition-group(logo) {
+        animation-duration: 0.8s;
+      }
       ::view-transition-group(canvas),
       ::view-transition-group(appPanelGroup) {
         animation-duration: 0.8s;

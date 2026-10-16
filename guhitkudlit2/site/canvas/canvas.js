@@ -68,20 +68,17 @@ export function Canvas({
         place-content: center;
       }
       .canvas {
-        view-transition-name: canvas;
         grid-area: 1 / 1 / -1 / -1;
         background: #fff;
         border-radius: 3px;
         width: 100%;
         height: 100%;
-      }
-      .canvasHidden {
-        opacity: 0;
+        view-transition-name: canvas;
       }
     </style>
     <div class="canvasContainer" ref=${containerRef}>
       <canvas
-        class=${classes("canvas", showPlaceholder && "canvasHidden")}
+        class="canvas"
         style=${{
           filter: `${formatColorStyleFilter(colorStyle)} drop-shadow(0 0 6px var(--color-shadow))`,
         }}

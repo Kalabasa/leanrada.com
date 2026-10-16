@@ -25,12 +25,11 @@ export function createAppMenuButton(
           padding: 0 var(--size-xs);
           font-family: "Cubao Narrow", sans-serif;
           font-weight: normal;
-          font-size: var(--font-size-l);
+          font-size: var(--font-size-xl);
           letter-spacing: 0.02em;
           border-radius: var(--size-xs);
-          background: none;
+          background: #f8f7f6;
           color: #bd1003;
-          overflow: hidden;
           box-shadow: 0 0.1em 0.2em #6408;
           z-index: 0;
           transform-origin: bottom;
@@ -39,20 +38,9 @@ export function createAppMenuButton(
 
           > span {
             display: block;
-            line-height: 1.8em;
-            transform: scaleY(2);
+            line-height: 1.2em;
           }
           &::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            background: #f8f7f6;
-            z-index: -1;
-          }
-          &::after {
             content: "";
             position: absolute;
             left: 5%;
@@ -78,7 +66,7 @@ export function createAppMenuButton(
           position-area: bottom span-left;
           margin: var(--size-xs) 0 0;
           min-width: 10em;
-          border-radius: var(--size-s);
+          border-radius: var(--size-xs);
           background: var(--color-bg);
           box-shadow: var(--shadow-l);
           &:popover-open {
@@ -86,7 +74,7 @@ export function createAppMenuButton(
             flex-direction: column;
           }
           > * {
-            padding: var(--size-s) var(--size-m);
+            padding: var(--size-s);
             border-radius: var(--size-xs);
             cursor: pointer;
             transition: background 0.1s;
@@ -105,7 +93,7 @@ export function createAppMenuButton(
           max-width: calc(100vw - 2 * var(--size-m));
           padding: var(--size-m);
           border: none;
-          border-radius: var(--size-s);
+          border-radius: var(--size-xs);
           background: var(--color-bg);
           color: var(--color-fg);
           box-shadow: var(--shadow-xl);
@@ -126,7 +114,7 @@ export function createAppMenuButton(
         popovertarget="appMenuPopup"
         style=${{ anchorName: "--appMenuButton" }}
       >
-        <span>menu</span>
+        <span>·menu·</span>
       </button>
       <div class="appMenuPopup" id="appMenuPopup" popover>
         <button
