@@ -28,17 +28,16 @@ const { PresetControls } = createPresetControls({
   density,
 });
 
-const showPlaceholder = observable.box(true);
+const showPlaceholder = observable.box(inputText.get().length === 0);
 const { Canvas, canvasRef } = createCanvas(
   colorStyle,
   showPlaceholder,
-  (config) => {
+  async (config) => {
     inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
-    hidePlaceholder(() => {
+    await hidePlaceholder(() => {
       if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
       if (config.separateRa !== undefined) separateRa.set(config.separateRa);
       if (config.arrangement !== undefined) arrangement.set(config.arrangement);
-      inputText.set(config.text);
       inputTextWrapperRef.current?.style.setProperty(
         "view-transition-name",
         config.sourceElement.style.viewTransitionName,
@@ -47,6 +46,7 @@ const { Canvas, canvasRef } = createCanvas(
       appLogoRef.current.style.viewTransitionName = "logo";
       config.logoElement.style.removeProperty("view-transition-name");
     });
+    inputText.set(config.text);
     requestAnimationFrame(() => {
       setTimeout(() => {
         inputTextWrapperRef.current?.querySelector("input").focus();
@@ -54,13 +54,13 @@ const { Canvas, canvasRef } = createCanvas(
     });
   },
 );
-function hidePlaceholder(updateDom) {
+async function hidePlaceholder(updateDom) {
   if (updateDom) {
-    document.startViewTransition(async () => {
+    await document.startViewTransition(async () => {
       showPlaceholder.set(false);
       updateDom();
       await new Promise((resolve) => setTimeout(resolve));
-    });
+    }).finished;
   } else {
     showPlaceholder.set(false);
   }
@@ -206,8 +206,20 @@ export function Index() {
           padding: 0 var(--size-xs);
         }
       }
+      ::view-transition-group(*) {
+        animation-duration: 0.2s;
+      }
       ::view-transition-group(introConfig) {
-        animation-duration: 250ms;
+        animation-duration: 0.8s;
+        animation-timing-function: cubic-bezier(0.8, 0, 0.8, 1);
+      }
+      ::view-transition-group(logo),
+      ::view-transition-group(canvas),
+      ::view-transition-group(appPanelGroup) {
+        animation-duration: 0.8s;
+        animation-timing-function: cubic-bezier(0.7, 0, 0.7, 1);
+      }
+      ::view-transition-group(introConfig) {
         z-index: 1;
       }
       ::view-transition-old(introConfig) {

@@ -163,22 +163,22 @@ export function TransliterationForm({
   let tooltipContent = null;
   if (error && error instanceof InvalidLetterError) {
     tooltipContent = html`<p>
-        Um, for the letter ${error.formatLetters()}, we have to write it the
-        Baybayin way.
+        For the letter ${error.formatLetters()}, you have to respell
+        it for Baybayin.
       </p>
       <p>
         <a class="transliterationTooltipLink" href=${helpLink}
-          >Check this quick guide!</a
+          >Choose from the quick guide!</a
         >
       </p>`;
   } else if (error && error instanceof InvalidSyllabicationError) {
     tooltipContent = html`<p>
-        So... we can’t really spell just ‘${error.word}’ in the precolonial way.
+        We can’t really spell just ‘${error.word}’ in the precolonial way.
         Needs a vowel!
       </p>
       <p>
         <a class="transliterationTooltipLink" href=${helpLink}
-          >Check this quick guide!</a
+          >Check the quick guide!</a
         >
       </p>`;
   } else if (showEditHint) {
@@ -375,7 +375,7 @@ export function TransliterationForm({
         `,
       )}
       <a class="transliterationTooltipLink" href=${helpLink}
-        >Learn more in this quick guide!</a
+        >Learn more in the quick guide!</a
       >
     <//>`}
   `;

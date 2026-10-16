@@ -119,14 +119,13 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         align-items: center;
         gap: var(--size-s);
         padding: var(--size-l);
-        box-shadow: var(--shadow-m);
         background: #fff6;
+        box-shadow: 0 0 30px 30px #fff6;
         border-radius: var(--size-s);
         max-width: 100%;
         box-sizing: border-box;
         @media (max-width: 750px) {
           padding: var(--size-s);
-          box-shadow: none;
         }
       }
       .introText {
