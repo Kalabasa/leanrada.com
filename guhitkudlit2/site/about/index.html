@@ -93,7 +93,7 @@
         margin: var(--size-l) auto;
         padding: 0 var(--size-l);
         max-width: 300px;
-        height: 75px;
+        height: 60px;
         font-size: var(--font-size-m);
       }
 
@@ -111,6 +111,9 @@
       section {
         &[lang="tl"] {
           font-family: "Noto Sans Tagalog", "Karla", sans-serif;
+          .revealed {
+            animation: reveal 1.2s;
+          }
         }
         ::view-transition-old(*),
         ::view-transition-new(*) {
@@ -119,8 +122,9 @@
         }
         > p,
         > div {
+          min-height: 400px;
           max-width: 800px;
-          margin: 30vh auto;
+          margin: 20vh auto;
           &:nth-child(2n) {
             margin-right: calc(max(0px, 10vw - 100px));
             text-align: right;
@@ -140,6 +144,19 @@
         h2 {
           margin-bottom: var(--size-s);
           font-weight: bold;
+        }
+      }
+
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          filter: blur(4px);
+        }
+        50% {
+          opacity: 1;
+        }
+        to {
+          filter: blur(0);
         }
       }
 
@@ -186,76 +203,109 @@
         const { convertToUnicode } =
           await import("../transliteration/unicode.mjs");
 
-        const section = document.querySelector('section[lang="tl"]');
+        const blockSelector = "p, h2";
+        const tlSection = document.querySelector('section[lang="tl"]');
+
+        const textNodes = [];
         const textWalker = document.createTreeWalker(
-          section,
+          tlSection,
           NodeFilter.SHOW_TEXT,
         );
-        const textNodes = [];
         while (textWalker.nextNode()) {
           const textNode = textWalker.currentNode;
-          if (textNode.parentElement.closest("[lang]").lang === "tl") {
+          const parent = textNode.parentElement;
+          if (parent.closest(blockSelector)) {
             textNodes.push(textNode);
           }
         }
 
-        for (const textNode of textNodes) {
-          textNode.replaceWith(transliterateText(textNode.textContent));
-        }
-
-        section.querySelectorAll("span").forEach((wordSpan, index) => {
-          wordSpan.style.viewTransitionName = `word-${index}`;
-        });
-
-        function transliterateText(text) {
+        const spans = [];
+        for (let i = 0; i < textNodes.length; i++) {
+          const textNode = textNodes[i];
+          const parent = textNode.parentElement;
+          const block = parent.closest(blockSelector);
           const fragment = new DocumentFragment();
-          const tokens = text.split(/([\p{Letter}\-]+)/u);
-          tokens.forEach((part, index) => {
-            const isWord = index % 2 === 1;
-            if (isWord) {
-              fragment.append(transliterateWord(part));
-            } else {
-              fragment.append(part);
-            }
-          });
-          return fragment;
-        }
+          const isTl = textNode.parentElement.closest("[lang]").lang === "tl";
 
-        function transliterateWord(word) {
-          try {
-            const { baybayinUnits } = syllabicate(word);
-            const wordSpan = document.createElement("span");
-            wordSpan.dataset.latin = word;
-            wordSpan.textContent = convertToUnicode(baybayinUnits, "pamudpod");
-            wordSpan.addEventListener(
-              "mouseenter",
-              () => revealWordsUntil(wordSpan),
-              { once: true },
-            );
-            return wordSpan;
-          } catch {
-            return word;
-          }
-        }
+          textNode.textContent
+            .split(/([a-z-]+|[.,;!?])/i)
+            .forEach((token, j) => {
+              if (!token) return;
 
-        function revealWordsUntil(lastWordSpan) {
-          const block = lastWordSpan.closest("p, h2");
-          const update = () => {
-            const spans = section.querySelectorAll("span[data-latin]");
-            for (const span of spans) {
-              if (!span.hasAttribute("revealed")) {
-                span.textContent = span.dataset.latin;
-                span.setAttribute("revealed", "");
+              const span = document.createElement("span");
+              const spanIndex = spans.length;
+              spans.push(span);
+              span.addEventListener("mouseenter", () => reveal(spanIndex), {
+                once: true,
+              });
+              fragment.append(span);
+
+              if (token === ".") {
+                span.dataset.latin = token;
+                span.textContent = " ᜶";
+              } else if (token === ",") {
+                span.dataset.latin = token;
+                span.textContent = " ᜵";
+              } else if (/[a-z-]/i.test(token) && isTl) {
+                try {
+                  const { baybayinUnits } = syllabicate(token);
+                  span.dataset.latin = token;
+                  span.textContent = convertToUnicode(
+                    baybayinUnits,
+                    "pamudpod",
+                  );
+                } catch {
+                  span.textContent = token;
+                }
+              } else {
+                span.textContent = token;
               }
-              if (span === lastWordSpan) break;
+            });
+
+          textNode.replaceWith(fragment);
+        }
+
+        let unrevealedIndex = 0;
+
+        function reveal(toIndex) {
+          const block = spans[toIndex].closest(blockSelector);
+
+          let lastY = null;
+          let lastLine = false;
+          for (let i = unrevealedIndex; i < spans.length; i++) {
+            const span = spans[i];
+            if (span.closest(blockSelector) !== block) break;
+            if (i > toIndex) lastLine = true;
+
+            const rects = span.getClientRects();
+            const rect = rects[rects.length - 1];
+            if (lastY != null && rect.top > lastY) {
+              if (span.previousElementSibling?.tagName !== "BR") {
+                span.before(document.createElement("br"));
+              }
+              if (lastLine) break;
             }
-          };
-          if (block.startViewTransition) {
-            block.startViewTransition(update);
-          } else {
-            update();
+            lastY = rect.bottom;
+          }
+
+          for (let i = unrevealedIndex; i < spans.length && i <= toIndex; i++) {
+            const span = spans[i];
+            if (span.dataset.latin) span.textContent = span.dataset.latin;
+            span.classList.add("revealed");
+            unrevealedIndex = i + 1;
           }
         }
+
+        tlSection.querySelectorAll("p").forEach((paragraph) => {
+          let previousWidth = paragraph.getBoundingClientRect().width;
+          new ResizeObserver(([entry]) => {
+            const width = entry.borderBoxSize[0].inlineSize;
+            if (width !== previousWidth) {
+              paragraph.querySelectorAll("br").forEach((br) => br.remove());
+            }
+            previousWidth = width;
+          }).observe(paragraph);
+        });
       }
     </script>
   </head>
