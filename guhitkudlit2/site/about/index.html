@@ -176,49 +176,49 @@
 
       document
         .querySelector('input[name="language"][value="tl"]')
-        .addEventListener("change", transliterateTagalogSection, {
+        .addEventListener("change", initTagalog, {
           once: true,
         });
 
-      async function transliterateTagalogSection() {
+      async function initTagalog() {
         const { syllabicate } =
           await import("../transliteration/syllabicate.js");
         const { convertToUnicode } =
           await import("../transliteration/unicode.mjs");
 
-        const tagalogSection = document.querySelector('section[lang="tl"]');
+        const section = document.querySelector('section[lang="tl"]');
         const textWalker = document.createTreeWalker(
-          tagalogSection,
+          section,
           NodeFilter.SHOW_TEXT,
         );
-        const tagalogTextNodes = [];
+        const textNodes = [];
         while (textWalker.nextNode()) {
           const textNode = textWalker.currentNode;
           if (textNode.parentElement.closest("[lang]").lang === "tl") {
-            tagalogTextNodes.push(textNode);
+            textNodes.push(textNode);
           }
         }
 
-        for (const textNode of tagalogTextNodes) {
+        for (const textNode of textNodes) {
           textNode.replaceWith(transliterateText(textNode.textContent));
         }
 
-        tagalogSection.querySelectorAll("span").forEach((wordSpan, index) => {
+        section.querySelectorAll("span").forEach((wordSpan, index) => {
           wordSpan.style.viewTransitionName = `word-${index}`;
         });
 
         function transliterateText(text) {
-          const transliteratedFragment = new DocumentFragment();
-          const wordsAndSeparators = text.split(/(\p{Letter}+)/u);
-          wordsAndSeparators.forEach((part, index) => {
+          const fragment = new DocumentFragment();
+          const tokens = text.split(/([\p{Letter}\-]+)/u);
+          tokens.forEach((part, index) => {
             const isWord = index % 2 === 1;
             if (isWord) {
-              transliteratedFragment.append(transliterateWord(part));
+              fragment.append(transliterateWord(part));
             } else {
-              transliteratedFragment.append(part);
+              fragment.append(part);
             }
           });
-          return transliteratedFragment;
+          return fragment;
         }
 
         function transliterateWord(word) {
@@ -239,18 +239,22 @@
         }
 
         function revealWordsUntil(lastWordSpan) {
-          const revealedParagraph = lastWordSpan.closest("p, h2");
-          revealedParagraph.startViewTransition(() => {
-            const wordSpans =
-              tagalogSection.querySelectorAll("span[data-latin]");
-            for (const wordSpan of wordSpans) {
-              if (!wordSpan.hasAttribute("revealed")) {
-                wordSpan.textContent = wordSpan.dataset.latin;
-                wordSpan.setAttribute("revealed", "");
+          const block = lastWordSpan.closest("p, h2");
+          const update = () => {
+            const spans = section.querySelectorAll("span[data-latin]");
+            for (const span of spans) {
+              if (!span.hasAttribute("revealed")) {
+                span.textContent = span.dataset.latin;
+                span.setAttribute("revealed", "");
               }
-              if (wordSpan === lastWordSpan) break;
+              if (span === lastWordSpan) break;
             }
-          });
+          };
+          if (block.startViewTransition) {
+            block.startViewTransition(update);
+          } else {
+            update();
+          }
         }
       }
     </script>
