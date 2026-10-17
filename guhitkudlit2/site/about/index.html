@@ -112,6 +112,11 @@
         &[lang="tl"] {
           font-family: "Noto Sans Tagalog", "Karla", sans-serif;
         }
+        ::view-transition-old(*),
+        ::view-transition-new(*) {
+          inline-size: auto;
+          block-size: auto;
+        }
         > p,
         > div {
           max-width: 800px;
@@ -195,19 +200,57 @@
         }
 
         for (const textNode of tagalogTextNodes) {
-          textNode.textContent = textNode.textContent.replace(
-            /\p{Letter}+/gu,
-            (word) => transliterateWord(word),
-          );
+          textNode.replaceWith(transliterateText(textNode.textContent));
+        }
+
+        tagalogSection.querySelectorAll("span").forEach((wordSpan, index) => {
+          wordSpan.style.viewTransitionName = `word-${index}`;
+        });
+
+        function transliterateText(text) {
+          const transliteratedFragment = new DocumentFragment();
+          const wordsAndSeparators = text.split(/(\p{Letter}+)/u);
+          wordsAndSeparators.forEach((part, index) => {
+            const isWord = index % 2 === 1;
+            if (isWord) {
+              transliteratedFragment.append(transliterateWord(part));
+            } else {
+              transliteratedFragment.append(part);
+            }
+          });
+          return transliteratedFragment;
         }
 
         function transliterateWord(word) {
           try {
             const { baybayinUnits } = syllabicate(word);
-            return convertToUnicode(baybayinUnits, "pamudpod");
+            const wordSpan = document.createElement("span");
+            wordSpan.dataset.latin = word;
+            wordSpan.textContent = convertToUnicode(baybayinUnits, "pamudpod");
+            wordSpan.addEventListener(
+              "mouseenter",
+              () => revealWordsUntil(wordSpan),
+              { once: true },
+            );
+            return wordSpan;
           } catch {
             return word;
           }
+        }
+
+        function revealWordsUntil(lastWordSpan) {
+          const revealedParagraph = lastWordSpan.closest("p, h2");
+          revealedParagraph.startViewTransition(() => {
+            const wordSpans =
+              tagalogSection.querySelectorAll("span[data-latin]");
+            for (const wordSpan of wordSpans) {
+              if (!wordSpan.hasAttribute("revealed")) {
+                wordSpan.textContent = wordSpan.dataset.latin;
+                wordSpan.setAttribute("revealed", "");
+              }
+              if (wordSpan === lastWordSpan) break;
+            }
+          });
         }
       }
     </script>
