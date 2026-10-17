@@ -86,19 +86,6 @@ const cases = [
   [["baul"], { baybayinUnits: ["ba", "u", "l"] }],
   [["kain"], { baybayinUnits: ["ka", "i", "n"] }],
   [["upuan"], { baybayinUnits: ["u", "pu", "a", "n"] }],
-  [
-    ["bakka"],
-    {
-      baybayinUnits: ["ba", "ka"],
-      transformed: [
-        {
-          fromWord: "bakka",
-          toWord: "baka",
-          transforms: [{ type: "repetition", from: "kk", to: "k" }],
-        },
-      ],
-    },
-  ],
   [["Pusà!"], { baybayinUnits: ["pu", "sa"] }],
   [
     ["aso pusa suri"],

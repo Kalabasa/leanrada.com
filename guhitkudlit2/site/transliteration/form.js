@@ -423,8 +423,6 @@ function explainTransform({ type, from }) {
       return "O and U are interchangeable";
     case "ra":
       return "D and R are interchangeable";
-    case "repetition":
-      return "double letters have the same sound";
     case "special":
       return "is how it’s pronounced";
     case "drop":

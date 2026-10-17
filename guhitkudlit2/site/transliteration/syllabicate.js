@@ -16,7 +16,7 @@ import { InvalidSyllabicationError } from "./invalid-syllabication-error.js";
  *     fromWord: string,
  *     toWord: string,
  *     transforms: {
- *       type: "special" | "repetition" | "vowel" | "drop" | "cluster" | "ra",
+ *       type: "special" | "vowel" | "drop" | "cluster" | "ra",
  *       from: string,
  *       to: string,
  *     }[],
@@ -55,19 +55,6 @@ export function syllabicate(phrase, how = {}) {
         });
         return [...wordBoundary, ...specialWord];
       }
-
-      // remove repetition
-      word = word.replace(
-        /(ng|(?<!n)g|[^aeioug])\1+/g,
-        (repetition, repeated) => {
-          transforms.push({
-            type: "repetition",
-            from: repetition,
-            to: repeated,
-          });
-          return repeated;
-        },
-      );
     }
 
     const baybayinUnits = [];

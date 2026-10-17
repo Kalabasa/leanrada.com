@@ -33,6 +33,7 @@ export function OptionGroup({ name, value, onChange, columns, children }) {
               anchor(--optionGroupOptionActive right)
               anchor(--optionGroupOptionActive bottom)
               anchor(--optionGroupOptionActive left);
+            position-visibility: anchors-valid;
             transition: inset 0.15s;
             z-index: -1;
           }

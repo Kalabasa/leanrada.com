@@ -202,7 +202,7 @@ export function createFileControls(
               href="https://leanrada.com/"
               target="_blank"
               >Lean</a
-            >.
+            >
           </span>
         </div>
       </div>
