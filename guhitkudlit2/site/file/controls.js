@@ -194,6 +194,7 @@ export function createFileControls(
               <use href=${mailIconUrl} />
             </svg>
           </a>
+          <a class="fileControlsSocialLink" href="about/">ABOUT</a>
           <span>
             webapp made with ${"<3"} by${" "}
             <a

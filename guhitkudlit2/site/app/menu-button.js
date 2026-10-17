@@ -138,7 +138,7 @@ export function createAppMenuButton(
         <a href="about/">About GuhitKudlit</a>
       </div>
       <dialog class="appMenuResetDialog" ref=${resetDialogRef}>
-        <p>Start a new canvas? Your current piece will be lost.</p>
+        <p>Create a new canvas? Your current piece will be lost.</p>
         <div class="appMenuResetDialogActions">
           <${Button}
             type="button"
