@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../font/font.css" />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&family=Noto+Sans+Tagalog&display=swap"
     />
     <style>
       header {
@@ -109,6 +109,9 @@
       }
 
       section {
+        &[lang="tl"] {
+          font-family: "Noto Sans Tagalog", "Karla", sans-serif;
+        }
         > p,
         > div {
           max-width: 800px;
@@ -131,7 +134,6 @@
 
         h2 {
           margin-bottom: var(--size-s);
-          text-align: center;
           font-weight: bold;
         }
       }
@@ -166,6 +168,48 @@
     </style>
     <script type="module">
       import "../app/logo.js";
+
+      document
+        .querySelector('input[name="language"][value="tl"]')
+        .addEventListener("change", transliterateTagalogSection, {
+          once: true,
+        });
+
+      async function transliterateTagalogSection() {
+        const { syllabicate } =
+          await import("../transliteration/syllabicate.js");
+        const { convertToUnicode } =
+          await import("../transliteration/unicode.mjs");
+
+        const tagalogSection = document.querySelector('section[lang="tl"]');
+        const textWalker = document.createTreeWalker(
+          tagalogSection,
+          NodeFilter.SHOW_TEXT,
+        );
+        const tagalogTextNodes = [];
+        while (textWalker.nextNode()) {
+          const textNode = textWalker.currentNode;
+          if (textNode.parentElement.closest("[lang]").lang === "tl") {
+            tagalogTextNodes.push(textNode);
+          }
+        }
+
+        for (const textNode of tagalogTextNodes) {
+          textNode.textContent = textNode.textContent.replace(
+            /\p{Letter}+/gu,
+            (word) => transliterateWord(word),
+          );
+        }
+
+        function transliterateWord(word) {
+          try {
+            const { baybayinUnits } = syllabicate(word);
+            return convertToUnicode(baybayinUnits, "pamudpod");
+          } catch {
+            return word;
+          }
+        }
+      }
     </script>
   </head>
   <body>
@@ -259,7 +303,7 @@
           panggawa ng kaligrapiyang baybayin. Sinimulan ko ang proyektong to
           noong 2023 at patuloy na pinagpabuti hanggang ngayon. Ako ay isang
           <span lang="en">software engineer</span> at ito ay bunga ng hilig ko
-          sa <span>procedural art</span> at Baybayin.
+          sa <span lang="en">procedural art</span> at Baybayin.
         </p>
         <p>
           Una kong natutunan ang Baybayin noong elementarya. Alibata pa ang
