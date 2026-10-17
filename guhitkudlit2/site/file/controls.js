@@ -158,12 +158,24 @@ export function createFileControls(
             class="fileControlsSocialLink"
             href="https://www.instagram.com/guhitkudlit/"
             target="_blank"
-            ><svg width="24" height="24" viewBox="0 0 24 24">
+            ><svg
+              role="img"
+              aria-label="Instagram"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
               <use href=${instagramIconUrl} />
             </svg>
           </a>
           <a class="fileControlsSocialLink" href="#" target="_blank">
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg
+              role="img"
+              aria-label="Tip"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
               <use href=${kofiIconUrl} />
             </svg>
           </a>
@@ -172,7 +184,13 @@ export function createFileControls(
             href="mailto:guhitkudlit@leanrada.com"
             target="_blank"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg
+              role="img"
+              aria-label="Mail"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
               <use href=${mailIconUrl} />
             </svg>
           </a>
