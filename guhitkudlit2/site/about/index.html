@@ -12,16 +12,112 @@
       href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&display=swap"
     />
     <style>
+      header {
+        margin: var(--size-l) auto;
+        padding: 0 var(--size-l);
+        width: 100%;
+        max-width: 800px;
+        align-self: center;
+      }
+
       body {
         background: var(--color-bg-darker);
         line-height: 1.5;
+      }
+
+      .optionGroup {
+        anchor-scope: --optionGroupOptionActive;
+        height: 100%;
+        display: flex;
+        position: relative;
+        z-index: 0;
+        &::before {
+          content: "";
+          background: #f0f0f0;
+          position: absolute;
+          inset: 0;
+          border-radius: var(--size-xs);
+          z-index: -2;
+        }
+        &::after {
+          content: "";
+          background: #fff;
+          border: solid 2px var(--color-orange);
+          border-radius: var(--size-xs);
+          position: absolute;
+          inset: anchor(--optionGroupOptionActive top)
+            anchor(--optionGroupOptionActive right)
+            anchor(--optionGroupOptionActive bottom)
+            anchor(--optionGroupOptionActive left);
+          transition: inset 0.15s;
+          z-index: -1;
+        }
+        &:not(:has(input:checked))::after {
+          display: none;
+        }
+        &:has(input:focus-visible) {
+          outline: solid 2px var(--color-green);
+          outline-offset: 2px;
+        }
+      }
+      .optionGroupOption {
+        flex: 1 1 1%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: var(--size-xs);
+        cursor: pointer;
+        font-weight: bold;
+        border-radius: var(--size-xs);
+        &:has(input:checked) {
+          anchor-name: --optionGroupOptionActive;
+        }
+        &:not(:has(input:checked)) {
+          &:hover {
+            background: #0001;
+          }
+          &:active {
+            background: #0002;
+          }
+        }
+        input {
+          position: absolute;
+          opacity: 0;
+          pointer-events: none;
+        }
+      }
+
+      .languageSelector {
+        margin: var(--size-l) auto;
+        padding: 0 var(--size-l);
+        max-width: 300px;
+        height: 75px;
+        font-size: var(--font-size-m);
+      }
+
+      main {
+        max-width: 800x;
+        &:has(input[name="language"][value="en"]:checked) > div[lang="tl"],
+        &:has(input[name="language"][value="tl"]:checked) > div[lang="en"] {
+          display: none;
+        }
+      }
+
+      h1 {
+        margin: var(--size-l) auto;
+        padding: 0 var(--size-l);
+        text-align: center;
+        font-size: var(--font-size-xl);
+        font-weight: bold;
       }
 
       footer {
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
-        gap: var(--size-l);
+        gap: var(--size-m) var(--size-l);
         margin: var(--size-l);
 
         a {
@@ -30,67 +126,155 @@
           align-items: center;
         }
       }
+
+      a {
+        text-decoration: underline;
+        color: var(--color-orange-darker);
+        text-underline-offset: 0.2em;
+      }
     </style>
+    <script type="module">
+      import "../app/logo.js";
+    </script>
   </head>
   <body>
-    <header></header>
-    <main lang="tl">
+    <header>
       <p>
-        Ang GuhitKudlit ay isang libreng <span lang="en">webapp</span> na
-        panggawa ng kaligrapiyang baybayin. Sinimulan ko ang proyektong to noong
-        2023 at patuloy na pinagpabuti hanggang ngayon. Ako ay isang
-        <span lang="en">software engineer</span> at ito ay bunga ng hilig ko sa
-        <span>procedural art</span> at Baybayin.
+        <!--prettier-ignore-->
+        <a id="backLink" href="../">
+            <app-logo></app-logo><br>
+            ⟵ Back to GuhitKudlit
+          </a>
       </p>
-      <p>
-        Una kong natutunan ang Baybayin noong elementarya. Alibata pa ang tawag
-        nila noon. Ngayon, makikita mo ang Baybayin sa mga karatula, logo, sa
-        dyipni, at pati na sa pera. Dumarami na ang mga Pilipinong gumagamit ng
-        Baybayin, kahit minsan pang-estetik lang.
-      </p>
-      <p>
-        Minsan nasosobrahan sa estetik, tapos mali naman yung pagkakabaybay.
-        Minsan makakakita ka ng Baybayin na tato pero di maintidihan pag binasa.
-        Madalas kasi, gusto natin yung madali kahit di tama (lalo na ngayong may
-        <span lang="en">AI</span> na).
-      </p>
-      <p>
-        Kaya sinimulan ko ang GuhitKudlit. Kaya namang pagsabayin ang estetik at
-        kawastuhan, di ba? Heto ang ilan sa mga prinsipyo ng proyektong to.
-      </p>
-      <h2>Malinaw na pagkakabaybay</h2>
-      <p>
-        Noong una kong ginawa ang GuhitKudlit <span lang="en">v1</span>, ito
-        lang ang tanging Baybayin <span lang="en">app</span> na pinapakita yung
-        pagkakabaybay. Sa iba kasi binibigay lang ang sagot nang walang
-        paliwanag. Kung kayang suriin ang <span lang="en">output</span> ng kahit
-        di eksperto sa Baybayin, mas madaling makakatiyak sa tamang pagbaybay.
-        Bukod roon, matututo ka rin.
-      </p>
-      <h2>Walang dunung-dunungan</h2>
-      <p>
-        Aaminin ko, hindi matalino ang GuhitKudlit, at tama lang yon. Ang talino
-        ay nasa tao. Kapag may di malinaw, gaya ng pagsalin ng letrang
-        <span lang="en">C</span>, hahayaan nito na ikaw ang magpasya, bilang
-        ikaw na may konteksto sa salita o pangalan na gusto mong maging
-        Baybayin. Sa ganitong paraan, ikaw rin ay mas gagaling pa sa pagsalin sa
-        Baybayin.
-      </p>
-      <h2>Libre para sa lahat</h2>
-      <p>
-        Lahat ng kayang gawin sa GuhitKudlit ay walang bayad. Lahat ng
-        pagpipilian sa istilo, kulay, at iba pa ay libre para sa lahat. Ginagawa
-        ko ang proyektong to hindi para pagkakitaan, kundi para ipakita sa mundo
-        ang ganda ng Baybayin. Sa totoo lang, libangan ko ang paggawa ng mga
-        ganitong proyekto at masaya na akong may natutuwa, gumagamit, at
-        nakikinabang sa mga ito.
-      </p>
-      <p>
-        Sa panahon ng <span lang="en">AI</span>, natatakot ako na baka malimutan
-        natin ang tunay na kasaysayan, anyo, at paggamit ng mga titik Baybayin.
-        Sana sa pamamagitan ng proyektong to, makatulong akong pagyamanin ang
-        Baybayin.
-      </p>
+    </header>
+    <main>
+      <h1>About GuhitKudlit</h1>
+      <div class="languageSelector">
+        <div class="optionGroup">
+          <label class="optionGroupOption">
+            <input type="radio" name="language" value="en" checked />
+            English
+          </label>
+          <label class="optionGroupOption">
+            <input type="radio" name="language" value="tl" />
+            Tagalog
+          </label>
+        </div>
+      </div>
+      <div lang="en">
+        <p>
+          GuhitKudlit is a free webapp for making Baybayin calligraphy. I
+          started this project in 2023 and have kept improving it since. I’m a
+          software engineer, and this was born by my interest in procedural art
+          and Baybayin.
+        </p>
+        <p>
+          I first learned Baybayin in elementary school. Back then they still
+          called it alibata. Now you can see Baybayin on signs, logos, jeepneys,
+          and even money. More and more Filipinos are using Baybayin, even if
+          sometimes only for the aesthetic.
+        </p>
+        <p>
+          Sometimes the aesthetic becomes the sole focus, and the actual
+          spelling ends up incorrect. Sometimes you’d see Baybayin tattoos but
+          on closer look are actually unintelligible. We often want what’s easy
+          even at the cost of correctness (especially now that there’s AI).
+        </p>
+        <p>
+          So I started GuhitKudlit. Aesthetics and correctness can still go
+          together, right? Here are some of the principles for this project.
+        </p>
+        <h2>Transparency with spelling</h2>
+        <p>
+          When I first made GuhitKudlit v1, it was the only Baybayin app that
+          showed how the syllabication worked. Others just gave you an answer
+          without explanation. How do you know it’s correct? If we enable
+          everyone, including non-Baybayin experts, to easily verify the output,
+          we can have more confidence that users are getting the right Baybayin.
+          On top of that, you get to learn too.
+        </p>
+        <h2>No smarts</h2>
+        <p>
+          I admit GuhitKudlit isn’t very sophisticated, and that’s fine.
+          Intelligence comes from the user. When something is unclear, like
+          transliterating the letter C, it lets you decide, because you possess
+          the context around the word or name you want to convert into Baybayin.
+          This way, you also get to know and understand Baybayin more.
+        </p>
+        <h2>Free for everyone</h2>
+        <p>
+          Everything GuhitKudlit can do is free of charge. All options for
+          style, color, and more are free for everyone. I do this project not
+          for profit, but to show the world the beauty of Baybayin. Honestly,
+          making projects like this is both passion and hobby, and I’m happy to
+          see people enjoy, use, and benefit from it.
+        </p>
+        <p>
+          In the age of AI, I’m afraid we might forget the true history, form,
+          and usage of the Baybayin script. I hope that through this project, I
+          can help enrich and preserve Baybayin.
+        </p>
+      </div>
+      <div lang="tl">
+        <p>
+          Ang GuhitKudlit ay isang libreng <span lang="en">webapp</span> na
+          panggawa ng kaligrapiyang baybayin. Sinimulan ko ang proyektong to
+          noong 2023 at patuloy na pinagpabuti hanggang ngayon. Ako ay isang
+          <span lang="en">software engineer</span> at ito ay bunga ng hilig ko
+          sa <span>procedural art</span> at Baybayin.
+        </p>
+        <p>
+          Una kong natutunan ang Baybayin noong elementarya. Alibata pa ang
+          tawag nila noon. Ngayon, makikita mo ang Baybayin sa mga karatula,
+          logo, sa dyipni, at pati na sa pera. Dumarami na ang mga Pilipinong
+          gumagamit ng Baybayin, kahit minsan pang-estetik lang.
+        </p>
+        <p>
+          Minsan hanggang estetik lang, tapos mali naman yung pagkakabaybay.
+          Minsan makakakita ka ng Baybayin na tato pero di maintidihan pag
+          binasa. Madalas kasi, gusto natin yung madali kahit di tama (lalo na
+          ngayong may
+          <span lang="en">AI</span> na).
+        </p>
+        <p>
+          Kaya sinimulan ko ang GuhitKudlit. Kaya namang pagsabayin ang estetik
+          at kawastuhan, di ba? Heto ang ilan sa mga prinsipyo ng proyektong to.
+        </p>
+        <h2>Malinaw na pagkakabaybay</h2>
+        <p>
+          Noong una kong ginawa ang GuhitKudlit <span lang="en">v1</span>, ito
+          lang ang tanging Baybayin <span lang="en">app</span> na pinapakita
+          yung pagkakabaybay. Sa iba kasi binibigay lang ang sagot nang walang
+          paliwanag. Paano mo malalaman kung tama? Kung kayang suriin ang
+          <span lang="en">output</span> ng kahit sino, kahit di eksperto sa
+          Baybayin, mas madali tayong makakatiyak sa tamang pagbaybay. Bukod
+          roon, matututo ka rin.
+        </p>
+        <h2>Walang dunung-dunungan</h2>
+        <p>
+          Aaminin ko, hindi matalino ang GuhitKudlit, at tama lang yon. Ang
+          talino ay nasa tao. Kapag may di malinaw, gaya ng pagsalin ng letrang
+          <span lang="en">C</span>, hahayaan nito na ikaw ang magpasya, bilang
+          ikaw na may konteksto sa salita o pangalan na gusto mong maging
+          Baybayin. Sa ganitong paraan, mas makikilala at mauunawaan mo pa ang
+          Baybayin.
+        </p>
+        <h2>Libre para sa lahat</h2>
+        <p>
+          Lahat ng kayang gawin sa GuhitKudlit ay walang bayad. Lahat ng
+          pagpipilian sa istilo, kulay, at iba pa ay libre para sa lahat.
+          Ginagawa ko ang proyektong to hindi para pagkakitaan, kundi para
+          ipakita sa mundo ang ganda ng Baybayin. Sa totoo lang, ang paggawa ng
+          mga ganitong proyekto ay isang dedikasyon at libangan ko na rin, at
+          masaya na akong may natutuwa, gumagamit, at nakikinabang sa mga ito.
+        </p>
+        <p>
+          Sa panahon ng <span lang="en">AI</span>, natatakot ako na baka
+          malimutan natin ang tunay na kasaysayan, anyo, at paggamit ng mga
+          titik Baybayin. Sana sa pamamagitan ng proyektong to, makatulong akong
+          pagyamanin ang Baybayin.
+        </p>
+      </div>
     </main>
     <footer>
       <a href="../">GuhitKudlit</a>
