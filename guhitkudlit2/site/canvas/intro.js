@@ -165,11 +165,11 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
       <div class="introHeader">
         <app-logo ref=${logoRef} height="14vh"></app-logo>
         <h2 class="introSubheading">
-          Baybayin translator (transliterator)<br />& calligraphy generator
+          Baybayin translator (transliterator)<br />& calligraphy maker
         </h2>
       </div>
       <div class="introStarter">
-        <p class="introText">Enter word to generate</p>
+        <p class="introText">Write a word</p>
         <form onSubmit=${onSubmitTextForm}>
           <${Input}
             autofocus
