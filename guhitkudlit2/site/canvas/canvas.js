@@ -10,7 +10,6 @@ export function createCanvas(colorStyle, showPlaceholder, onConfig) {
     1.5,
     2 * (window.innerWidth / window.innerHeight),
   );
-  console.log(aspectRatio);
 
   const canvasRef = { current: null };
   const CanvasImpl = observer(() => {
