@@ -89,10 +89,27 @@
         }
       }
 
+      .headerRow {
+        margin: var(--size-s) 0;
+        gap: var(--size-m);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: var(--font-size-xl);
+        font-weight: bold;
+      }
+
       .languageSelector {
-        margin: var(--size-l) auto;
-        padding: 0 var(--size-l);
-        max-width: 300px;
+        padding: var(--size-xs);
+        border-radius: var(--size-xs);
+        background: var(--color-bg);
+        box-shadow: var(--shadow-m);
+        margin-left: auto;
+        width: 200px;
         height: 60px;
         font-size: var(--font-size-m);
       }
@@ -103,8 +120,12 @@
         font-size: var(--font-size-l);
         line-height: 1.6;
 
-        &:has(input[name="language"][value="en"]:checked) > section[lang="tl"],
-        &:has(input[name="language"][value="tl"]:checked) > section[lang="en"] {
+        body:has(input[name="language"][value="en"]:checked)
+          &
+          > section[lang="tl"],
+        body:has(input[name="language"][value="tl"]:checked)
+          &
+          > section[lang="en"] {
           display: none;
         }
       }
@@ -112,7 +133,6 @@
       section {
         text-shadow: 0 0 6px #fff;
         &[lang="tl"] {
-          line-height: calc(var(--font-size-l) * 2);
           font-family: "Noto Sans Tagalog", "Karla", sans-serif;
           .revealed {
             letter-spacing: -1.5px;
@@ -126,9 +146,13 @@
         }
         > p,
         > div {
-          min-height: 400px;
+          min-height: 300px;
           max-width: 800px;
-          margin: 20vh auto;
+          margin: 10vh auto;
+          &:first-child {
+            font-size: var(--font-size-xl);
+            margin: 25vh auto;
+          }
           &:nth-child(2n) {
             margin-right: calc(max(0px, 10vw - 100px));
             text-align: right;
@@ -149,6 +173,14 @@
           margin-bottom: var(--size-s);
           font-weight: bold;
         }
+
+        img {
+          max-width: 100%;
+          margin: var(--size-l) 0;
+          box-shadow: var(--shadow-xl);
+          border-radius: var(--size-xs);
+          filter: brightness(1.02);
+        }
       }
 
       @keyframes reveal {
@@ -162,14 +194,6 @@
         to {
           filter: blur(0);
         }
-      }
-
-      h1 {
-        margin: var(--size-l) auto;
-        padding: 0 var(--size-l);
-        text-align: center;
-        font-size: var(--font-size-xl);
-        font-weight: bold;
       }
 
       footer {
@@ -204,7 +228,7 @@
         height: 100vh;
         z-index: -1;
         pointer-events: none;
-        opacity: 0.15;
+        opacity: 0.1;
         @media (max-width: 800px) {
           opacity: 0.05;
         }
@@ -390,21 +414,23 @@
             ⟵ Back to GuhitKudlit
           </a>
       </p>
-    </header>
-    <main>
-      <h1>About GuhitKudlit</h1>
-      <div class="languageSelector">
-        <div class="optionGroup">
-          <label class="optionGroupOption">
-            <input type="radio" name="language" value="en" checked />
-            English
-          </label>
-          <label class="optionGroupOption">
-            <input type="radio" name="language" value="tl" />
-            Tagalog
-          </label>
+      <div class="headerRow">
+        <h1>About GuhitKudlit</h1>
+        <div class="languageSelector">
+          <div class="optionGroup">
+            <label class="optionGroupOption">
+              <input type="radio" name="language" value="en" checked />
+              English
+            </label>
+            <label class="optionGroupOption">
+              <input type="radio" name="language" value="tl" />
+              Tagalog
+            </label>
+          </div>
         </div>
       </div>
+    </header>
+    <main>
       <section lang="en">
         <p>
           GuhitKudlit is a free webapp for making
@@ -430,18 +456,20 @@
           principles for this project.
         </p>
         <div>
+          <img src="syllabication.png" />
           <h2>Transparency with spelling</h2>
           <p>
             When I first made GuhitKudlit v1, it was the only Baybayin app that
             showed how the syllabication worked. Others just gave you an answer
             without explanation. How would you know whether the Baybayin was
-            accurate? But if we enable everyone, including non-Baybayin experts,
+            accurate? But if we empower anyone, including non-Baybayin experts,
             to easily verify the output, we can have more confidence that users
             are getting the right Baybayin. On top of that, you get to learn as
             you use it too.
           </p>
         </div>
         <div>
+          <img src="respell.png" />
           <h2>No smarts</h2>
           <p>
             I admit GuhitKudlit isn’t very sophisticated, and that’s fine
@@ -452,18 +480,20 @@
           </p>
         </div>
         <div>
+          <img src="calligraphy.png" />
           <h2>Crafted calligraphy</h2>
           <p>
             The calligraphy is procedurally generated using handcrafted
-            algorithms I developed over the years. Every Baybayin glyph vector
-            was authored by hand. Baybayin composition and brush simulations
-            implemented by me. There are no AI image generators in use and there
-            are no fonts. This results in verifiably accurate but still dynamic
-            calligraphy where each stroke is unique (Just ignore the numerical
-            instability bugs in the high density mode).
+            algorithms I developed over the years. I implemented Baybayin glyph
+            vectors, Baybayin composition, and brush simulations. This app does
+            not use AI image generators nor fonts. This results in verifiably
+            accurate but still dynamic calligraphy where each stroke is unique
+            (Just ignore the numerical instability bugs in the high density
+            mode).
           </p>
         </div>
         <div>
+          <img src="libre.png" />
           <h2>Free for everyone</h2>
           <p>
             Everything GuhitKudlit can do is free of charge. All options for
@@ -507,6 +537,7 @@
           ng ilang mga prinsipyo para sa proyektong to.
         </p>
         <div>
+          <img src="syllabication.png" />
           <h2>Malinaw na pagkakabaybay</h2>
           <p>
             Noong una kong ginawa ang GuhitKudlit <span lang="en">v1</span>, ito
@@ -519,6 +550,7 @@
           </p>
         </div>
         <div>
+          <img src="respell.png" />
           <h2>Walang dunung-dunungan</h2>
           <p>
             Aaminin ko, hindi masyadong matalino ang GuhitKudlit, at tama lang
@@ -529,7 +561,8 @@
           </p>
         </div>
         <div>
-          <h2>Kaligrapiyang mala-gawang-kamay</h2>
+          <img src="calligraphy.png" />
+          <h2>Kaligrapiyang tila gawang-kamay</h2>
           <p>
             Ang kaligrapiya nito ay gumagamit ng mga algoritmong dinisenyo ko at
             pinagpabuti nang ilang taon. Ang bawat
@@ -545,6 +578,7 @@
           </p>
         </div>
         <div>
+          <img src="libre.png" />
           <h2>Libre para sa lahat</h2>
           <p>
             Lahat ng kayang gawin sa GuhitKudlit ay walang bayad. Lahat ng
@@ -561,7 +595,7 @@
           ako na baka malimutan natin ang tunay na anyo, paggamit, at kasaysayan
           ng titik Baybayin. Sana sa pamamagitan ng proyektong to, makatulong
           ako sa pagpayaman at pagpanatili ng Baybayin.
-          <span lang="">-Lean</span>
+          <span lang="" style="display: block">- ᜎᜒᜌᜈ᜕ (Lean)</span>
         </p>
       </section>
     </main>
