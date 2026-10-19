@@ -120,8 +120,8 @@ export class SprayPainter extends BasePainter {
 
   drip(x, y, dripAmount, scale, canvasContext) {
     const dripWidth = (1.1 + this.#random() * 0.1) * scale;
-    const dripLen = dripAmount * 5 * scale;
-    canvasContext.globalAlpha = 0.85;
+    const dripLen = dripAmount * (2 + this.#random() * 2) * scale;
+    canvasContext.globalAlpha = 0.9;
     canvasContext.strokeStyle = canvasContext.fillStyle;
     canvasContext.lineWidth = dripWidth;
     canvasContext.lineJoin = "round";
@@ -141,7 +141,7 @@ export class SprayPainter extends BasePainter {
     canvasContext.stroke();
     canvasContext.globalAlpha = 1;
     canvasContext.beginPath();
-    canvasContext.arc(dripX, y + dripLen, dripWidth * 0.6, 0, 2 * Math.PI);
+    canvasContext.arc(dripX, y + dripLen, dripWidth * 0.55, 0, 2 * Math.PI);
     canvasContext.fill();
   }
 }
