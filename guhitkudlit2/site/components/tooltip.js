@@ -8,13 +8,20 @@ import { html } from "./html.js";
  * @param {string} props.anchorName
  * @param {Direction} props.direction
  */
-export function Tooltip({ class: className, anchorName, direction, children }) {
+export function Tooltip({
+  class: className,
+  anchorName,
+  direction,
+  children,
+  ...props
+}) {
   return html`
     <style id=${Tooltip.name}>
       @layer base {
         .tooltip {
           position: fixed;
           margin: var(--size-xs);
+          border: none;
           padding: var(--size-s);
           border-radius: var(--size-xs);
           background: #000;
@@ -25,6 +32,7 @@ export function Tooltip({ class: className, anchorName, direction, children }) {
       }
     </style>
     <div
+      ...${props}
       class=${classes("tooltip", className)}
       style=${{ positionAnchor: anchorName, positionArea: direction }}
     >

@@ -115,7 +115,7 @@ export function createAppMenuButton(
       >
         <span>·menu·</span>
       </button>
-      <div class="appMenuPopup" id="appMenuPopup" popover>
+      <div class="appMenuPopup" id="appMenuPopup" popover="auto">
         <button
           type="button"
           popovertarget="appMenuPopup"

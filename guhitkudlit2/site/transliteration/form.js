@@ -150,7 +150,6 @@ export function TransliterationForm({
   viramaStyle,
   onInput,
 }) {
-  const [isSyllabicationHintOn, setSyllabicationHintOn] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const showEditHint = !error && inputText && !hasInteracted;
 
@@ -221,7 +220,6 @@ export function TransliterationForm({
       }
 
       .transliterationTooltip {
-        display: block;
         max-width: 300px;
         color: var(--color-green);
         font-size: var(--font-size-m);
@@ -316,7 +314,7 @@ export function TransliterationForm({
           class="transliterationSyllabicationButton"
           type="button"
           aria-label="Why is the spelling different?"
-          onClick=${() => setSyllabicationHintOn(!isSyllabicationHintOn)}
+          popovertarget="transliterationSyllabicationHint"
         >
           ?
         <//>`}
@@ -340,8 +338,9 @@ export function TransliterationForm({
       ${tooltipContent}
     <//>`}
     ${transformed &&
-    isSyllabicationHintOn &&
     html`<${Tooltip}
+      id="transliterationSyllabicationHint"
+      popover="auto"
       class="transliterationTooltip"
       anchorName="--transliterationSyllabicationButton"
       direction="top"
