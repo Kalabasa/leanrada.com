@@ -246,7 +246,7 @@ export function Index() {
               { title: "Text", content: html`<${TransliterationForm} />` },
               { spacer: true },
               {
-                title: "Theme",
+                title: "Presets",
                 content: html`<${PresetControls}
                   baybayinUnits=${baybayinUnits}
                 />`,
