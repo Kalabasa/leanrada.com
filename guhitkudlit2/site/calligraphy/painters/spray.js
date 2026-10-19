@@ -1,5 +1,10 @@
 import { BasePainter } from "../painter.js";
 
+const dotCount = 250;
+const dotSrcPush = 0.2;
+const dotRadiusBase = 0.01;
+const dotRadiusRange = 0.06;
+
 /**
  * @typedef {import("../path.js").Path} Path
  */
@@ -37,9 +42,9 @@ export class SprayPainter extends BasePainter {
       while (edgeProgressLen < edgeLen) {
         const progress = edgeProgressLen / edgeLen;
         const x =
-          start.x + dx * progress + (this.#random() * 2 - 1) * scale * 0.5;
+          start.x + dx * progress + (this.#random() * 2 - 1) * scale * 0.2;
         const y =
-          start.y + dy * progress + (this.#random() * 2 - 1) * scale * 0.5;
+          start.y + dy * progress + (this.#random() * 2 - 1) * scale * 0.2;
         const strokeProgress = (i - 1 + progress) / (vertices.length - 1);
         const midness = 1 - Math.abs(strokeProgress * 2 - 1) ** 2;
         z += (midness * 1.1 - z) * 0.06;
@@ -60,26 +65,36 @@ export class SprayPainter extends BasePainter {
   }
 
   spray(x, y, z, sourceX, sourceY, radius, canvasContext) {
-    const dist3 = Math.hypot(x - sourceX, y - sourceY, z) / radius;
-    canvasContext.globalAlpha = 1 / (dist3 * 6 + 0.5);
+    const srcDist = Math.hypot(x - sourceX, y - sourceY);
+    const srcAngle = Math.atan2(y - sourceY, x - sourceX);
+    const alongSrcStretch = 1 + (srcDist / radius) * dotSrcPush;
+    const meanDotRadius =
+      radius * (dotRadiusBase + (dotRadiusRange * Math.log(3 / 2)) / 3);
+    const dotsArea = dotCount * meanDotRadius ** 2;
+    const spreadRadius = z * radius;
+    const fillArea = spreadRadius ** 2 * alongSrcStretch;
+    canvasContext.globalAlpha = Math.min(1, 0.9 * (dotsArea / fillArea));
     canvasContext.beginPath();
-    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.12), 0, 2 * Math.PI);
-    canvasContext.fill();
-    canvasContext.beginPath();
-    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.06), 0, 2 * Math.PI);
-    canvasContext.fill();
-    canvasContext.beginPath();
-    canvasContext.arc(x, y, z * radius * (1 + dist3 * 0.02), 0, 2 * Math.PI);
+    canvasContext.ellipse(
+      x,
+      y,
+      spreadRadius * alongSrcStretch,
+      spreadRadius,
+      srcAngle,
+      0,
+      2 * Math.PI,
+    );
     canvasContext.fill();
 
-    for (let i = 0; i < 250; i++) {
+    for (let i = 0; i < dotCount; i++) {
       const a = 2 * Math.PI * this.#random();
       const ru = this.#random();
-      const r = z * (0.2 + 0.8 * ru ** 0.5 + ru ** 16);
+      const r = z * (0.2 + 0.8 * ru ** 0.25 + ru ** 32);
       const cx = Math.sin(a);
       const cy = Math.cos(a);
-      let dotX = x + cx * radius * r;
-      let dotY = y + cy * radius * r;
+      const dotOffset = (spreadRadius * r) / z;
+      let dotX = x + cx * dotOffset;
+      let dotY = y + cy * dotOffset;
 
       const fromSrcDist = Math.hypot(dotX - sourceX, dotY - sourceY);
       let fromSrcDirX = 0;
@@ -89,11 +104,13 @@ export class SprayPainter extends BasePainter {
         fromSrcDirY = (dotY - sourceY) / fromSrcDist;
       }
       const fromSrcProj = cx * fromSrcDirX + cy * fromSrcDirY;
-      dotX += fromSrcDirX * fromSrcDist * r * fromSrcProj * 0.3;
-      dotY += fromSrcDirY * fromSrcDist * r * fromSrcProj * 0.3;
+      dotX += fromSrcDirX * fromSrcDist * r * fromSrcProj * dotSrcPush;
+      dotY += fromSrcDirY * fromSrcDist * r * fromSrcProj * dotSrcPush;
 
       const dotR =
-        0.01 + radius * (0.01 + (0.06 / (ru + 2)) * this.#random() ** 2);
+        0.01 +
+        radius *
+          (dotRadiusBase + (dotRadiusRange / (ru + 2)) * this.#random() ** 2);
       canvasContext.globalAlpha = 0.4 + 0.2 / dotR ** 2;
       canvasContext.beginPath();
       canvasContext.arc(dotX, dotY, dotR, 0, 2 * Math.PI);
