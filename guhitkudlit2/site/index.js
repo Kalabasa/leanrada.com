@@ -10,7 +10,7 @@ import { createFileControls } from "./file/controls.js";
 import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
 import { createStyleControls } from "./style/controls.js";
-import { observer } from "./util/observer.js";
+import { flushObservers, observer } from "./util/observer.js";
 import { classes } from "./util/classes.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
@@ -59,6 +59,7 @@ async function hidePlaceholder(updateDom) {
     await document.startViewTransition(async () => {
       showPlaceholder.set(false);
       updateDom();
+      flushObservers();
       await new Promise((resolve) => setTimeout(resolve));
     }).finished;
   } else {
