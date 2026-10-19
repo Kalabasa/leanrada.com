@@ -30,7 +30,7 @@ export function createAppMenuButton(
           border-radius: var(--size-xs);
           background: #f8f7f6;
           color: #bd1003;
-          box-shadow: var(--shadow-l);
+          box-shadow: var(--shadow-l), var(--inset-shade);
           z-index: 0;
           transform-origin: bottom;
           transition: none 0.04s ease-in;
@@ -53,11 +53,11 @@ export function createAppMenuButton(
           }
           &:focus-visible,
           &:hover {
-            box-shadow: var(--shadow-xl);
+            box-shadow: var(--shadow-xl), var(--inset-shade);
             transform: scale(1.02);
           }
           &:active {
-            box-shadow: var(--shadow-m);
+            box-shadow: var(--shadow-m), var(--inset-shade);
             transform: scale(1);
           }
         }
@@ -68,7 +68,7 @@ export function createAppMenuButton(
           min-width: 10em;
           border-radius: var(--size-xs);
           background: var(--color-bg);
-          box-shadow: var(--shadow-m);
+          box-shadow: var(--shadow-m), var(--inset-shade);
           &:popover-open {
             display: flex;
             flex-direction: column;

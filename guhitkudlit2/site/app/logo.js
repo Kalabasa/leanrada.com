@@ -22,6 +22,7 @@ customElements.define(
             line-height: 0.65em;
             font-weight: normal;
             background: #000;
+            box-shadow: inset 0 0.015em 0 #fff4;
 
             > div {
               background-image: linear-gradient(

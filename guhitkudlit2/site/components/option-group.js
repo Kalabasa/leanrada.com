@@ -26,13 +26,13 @@ export function OptionGroup({ name, value, onChange, columns, children }) {
           &::after {
             content: "";
             background: #fff;
-            border: solid 2px var(--color-orange);
             border-radius: var(--size-xs);
             position: absolute;
             inset: anchor(--optionGroupOptionActive top)
               anchor(--optionGroupOptionActive right)
               anchor(--optionGroupOptionActive bottom)
               anchor(--optionGroupOptionActive left);
+            box-shadow: var(--inset-shade), inset 0 0 0 4px var(--color-orange);
             position-visibility: anchors-valid;
             transition: inset 0.15s;
             z-index: -1;

@@ -78,6 +78,7 @@ export function Button({ class: className, tag = "button", ...props }) {
           font-size: var(--font-size-s);
           border-radius: var(--size-xs);
           padding: var(--size-s);
+          box-shadow: var(--inset-shade);
           overflow: hidden;
         }
         .formButton::after {
