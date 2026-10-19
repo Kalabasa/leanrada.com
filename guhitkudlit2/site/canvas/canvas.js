@@ -1,5 +1,4 @@
 import { html } from "../components/html.js";
-import { useLayoutEffect, useRef } from "../lib/htm-preact.js";
 import { classes } from "../util/classes.js";
 import { observer } from "../util/observer.js";
 import { formatColorStyleFilter } from "../style/color-styles.js";
@@ -33,29 +32,9 @@ export function Canvas({
   showPlaceholder,
   onConfig,
 }) {
-  const containerRef = useRef();
-
   const canvasWidth =
     Math.min(window.innerWidth, window.innerHeight * aspectRatio) * 0.8;
   const canvasHeight = canvasWidth / aspectRatio;
-
-  useLayoutEffect(() => {
-    const resizeObserver = new ResizeObserver(([entry]) => {
-      const canvasElement = canvasRef.current;
-      if (!canvasElement) return;
-      fitToContainer(
-        entry.contentBoxSize[0].inlineSize,
-        entry.contentBoxSize[0].blockSize,
-        canvasElement,
-        aspectRatio,
-      );
-    });
-    const containerElement = containerRef.current;
-    resizeObserver.observe(containerElement);
-    return () => {
-      resizeObserver.unobserve(containerElement);
-    };
-  }, [containerRef.current, canvasRef.current]);
 
   return html`
     <style id=${Canvas.name}>
@@ -65,18 +44,19 @@ export function Canvas({
         position: relative;
         display: grid;
         place-content: center;
+        container-type: size;
       }
       .canvas {
         grid-area: 1 / 1 / -1 / -1;
         background: #fff;
         border-radius: 3px;
-        width: 100%;
-        height: 100%;
+        width: min(100cqw, 100cqh * ${aspectRatio});
+        height: auto;
         box-shadow: var(--shadow-m);
         view-transition-name: canvas;
       }
     </style>
-    <div class="canvasContainer" ref=${containerRef}>
+    <div class="canvasContainer">
       <canvas
         class="canvas"
         style=${{
@@ -96,14 +76,4 @@ export function Canvas({
       `}
     </div>
   `;
-}
-function fitToContainer(containerWidth, containerHeight, element, aspectRatio) {
-  const containerAspectRatio = containerWidth / containerHeight;
-  if (aspectRatio > containerAspectRatio) {
-    element.style.width = containerWidth + "px";
-    element.style.height = Math.ceil(containerWidth / aspectRatio) + "px";
-  } else {
-    element.style.height = containerHeight + "px";
-    element.style.width = Math.ceil(containerHeight * aspectRatio) + "px";
-  }
 }
