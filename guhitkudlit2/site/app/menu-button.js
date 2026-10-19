@@ -2,6 +2,10 @@ import { html } from "../components/html.js";
 import { Button } from "../components/form.js";
 import { observer } from "../util/observer.js";
 
+const instagramIconUrl = new URL("../file/instagram.svg#icon", import.meta.url)
+  .href;
+const kofiIconUrl = new URL("../file/kofi.svg#icon", import.meta.url).href;
+
 export function createAppMenuButton(
   inputText,
   calligraphyComplete,
@@ -77,16 +81,23 @@ export function createAppMenuButton(
             padding: var(--size-s);
             border-radius: var(--size-xs);
             cursor: pointer;
-            &:hover,
-            &:focus-visible {
+            &:where(a, button):hover,
+            &:where(a, button):focus-visible {
               background: var(--color-bg-secondary);
             }
-            &:disabled {
+            &:where(a, button):disabled {
               cursor: default;
               opacity: var(--opacity-tertiary);
               background: none;
             }
           }
+        }
+        .appMenuSocial {
+          padding: var(--size-xs);
+          display: flex;
+          justify-content: center;
+          gap: var(--size-m);
+          cursor: default;
         }
         .appMenuResetDialog {
           max-width: calc(100vw - 2 * var(--size-m));
@@ -136,6 +147,30 @@ export function createAppMenuButton(
         </button>
         <a href="help/">Baybayin guide</a>
         <a href="about/">About GuhitKudlit</a>
+        <div class="appMenuSocial">
+          <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
+            <svg
+              role="img"
+              aria-label="Instagram"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <use href=${instagramIconUrl} />
+            </svg>
+          </a>
+          <a href="#" target="_blank">
+            <svg
+              role="img"
+              aria-label="Tip"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <use href=${kofiIconUrl} />
+            </svg>
+          </a>
+        </div>
       </div>
       <dialog class="appMenuResetDialog" ref=${resetDialogRef}>
         <p>Create a new canvas? Your current piece will be lost.</p>
