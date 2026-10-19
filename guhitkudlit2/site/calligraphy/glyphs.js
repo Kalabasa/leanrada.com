@@ -287,14 +287,14 @@ function addKudlit(glyph, vowel) {
     x: centerX - 0.1,
     y,
     terminal: false,
-    isKudlit: true,
+    isKudlit: "tuldok",
     adjacency: new Map(),
   };
   const kudlitRight = {
     x: centerX + 0.1,
     y,
     terminal: false,
-    isKudlit: true,
+    isKudlit: "tuldok",
     adjacency: new Map(),
   };
   kudlitLeft.adjacency.set(kudlitRight, { type: undefined });
@@ -391,7 +391,7 @@ function calculateRightX(glyph) {
  *  x: number,
  *  y: number,
  *  terminal: boolean,
- *  isKudlit?: boolean | 'krus',
+ *  isKudlit?: boolean | 'tuldok' | 'krus',
  *  adjacency: Map<GlyphVertex, {
  *    type: 'wavy' | 'leftCurve' | 'rightCurve' | undefined,
  *    control?: { dx: number, dy: number }

@@ -14,7 +14,7 @@
  *  nextSideLen?: number,
  *  isKudlit?: boolean | 'krus'
  * }} StrokeVertex
- * @typedef {{ strokes: { vertices: StrokeVertex[], isKudlit: boolean | 'krus' }[] }} GlyphStrokes
+ * @typedef {{ strokes: { vertices: StrokeVertex[], isKudlit: boolean | 'tuldok' | 'krus' }[] }} GlyphStrokes
  */
 
 /**

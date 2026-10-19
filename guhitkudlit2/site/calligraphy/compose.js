@@ -13,9 +13,9 @@ const springStrength = 0.3;
 const squeezeStrengthX = 0.1;
 const squeezeStrengthY = 0.12;
 const kudlitGravityX = 0.06;
-const kudlitGravityY = 0.06;
-const kudlitDistFactor = 1.8;
-const krusSpringStrength = 0.03;
+const kudlitGravityY = 0.05;
+const kudlitDistFactor = 1.6;
+const krusSpringStrength = 0.04;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -285,11 +285,27 @@ export function compose(glyphStrokesList, opts = {}) {
       }
     }
 
-    // pull krus kudlit together
+    // pull kudlits together
     for (const glyph of glyphs) {
+      const tuldokStrokes = glyph.strokes.filter(
+        (stroke) => stroke.isKudlit === "tuldok",
+      );
+
+      for (const stroke of tuldokStrokes) {
+        const centroid = calculateCentroid([stroke]);
+        for (const vertex of stroke.vertices) {
+          pushVertex(
+            vertex,
+            (centroid.x - vertex.position.x) * 0.3,
+            (centroid.y - vertex.position.y) * 0.3,
+          );
+        }
+      }
+
       const krusStrokes = glyph.strokes.filter(
         (stroke) => stroke.isKudlit === "krus",
       );
+
       if (krusStrokes.length === 2) {
         const [stroke, oStroke] = krusStrokes;
         const centroid = calculateCentroid([stroke]);
@@ -297,8 +313,10 @@ export function compose(glyphStrokesList, opts = {}) {
         for (const vertex of stroke.vertices) {
           pushVertex(
             vertex,
-            (oCentroid.x - centroid.x) * 0.5,
-            (oCentroid.y - centroid.y) * 0.5,
+            (centroid.x - vertex.position.x) * 0.2 +
+              (oCentroid.x - centroid.x) * 0.5,
+            (centroid.y - vertex.position.y) * 0.2 +
+              (oCentroid.y - centroid.y) * 0.5,
           );
           for (const oVertex of oStroke.vertices) {
             const dx = vertex.position.x - oVertex.position.x;
