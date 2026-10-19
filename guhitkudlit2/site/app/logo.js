@@ -18,7 +18,7 @@ customElements.define(
             height: 100%;
             border-radius: 0.03em;
             font-family: "Cubao Regular", sans-serif;
-            font-size: calc(100cqw / 3.5);
+            font-size: 1em;
             line-height: 0.65em;
             font-weight: normal;
             background: #000;
@@ -52,8 +52,8 @@ customElements.define(
     connectedCallback() {
       const width = this.getAttribute("width");
       const height = this.getAttribute("height");
-      if (width) this.style.width = width;
-      if (height) this.style.height = height;
+      if (width) this.style.fontSize = `calc(${width} / 3.5)`;
+      if (height) this.style.fontSize = `calc(${height} * 2.6 / 3.5)`;
     }
   },
 );
