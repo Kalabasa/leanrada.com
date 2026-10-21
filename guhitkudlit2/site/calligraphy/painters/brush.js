@@ -26,7 +26,7 @@ export class Brush extends BasePainter {
       return {
         x: r * Math.cos(a),
         y: r * Math.sin(a),
-        ink: 0.2 + 0.4 * random(),
+        paint: 0.2 + 0.4 * random(),
         length: 1 - r - 0.4 * random(),
       };
     });
@@ -129,7 +129,7 @@ export class Brush extends BasePainter {
             bristle.length -
             1 -
             z +
-            bristle.ink * Math.min(1, 1.2 / speed) -
+            bristle.paint * Math.min(1, 1.2 / speed) -
             0.1 * this.#sampleNoise2D(x / scale, y / scale);
 
           if (strength <= 0) continue;

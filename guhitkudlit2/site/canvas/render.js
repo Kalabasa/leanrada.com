@@ -65,6 +65,9 @@ export async function render({
     cancelAnimationFrame(pendingFrameId);
     onProgress(latestProgress);
   }
+  if (canvas.width >= 300 || canvas.height >= 300) {
+    drawUrl(canvas);
+  }
   if (colorStyleName !== undefined) {
     context.save();
     context.filter = formatColorStyleFilter(colorStyleName);
@@ -93,4 +96,104 @@ export async function stampLogo(canvas) {
       logoWidth,
       logoHeight,
     );
+}
+
+function drawUrl(canvas) {
+  const text = atob("TGVhblJhZGEuY29tL0d1aGl0LUt1ZGxpdA==").toUpperCase();
+  const context = canvas.getContext("2d");
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+  context.save();
+  context.font = `bold ${14}px Georgia, "Noto Serif", serif`;
+  context.letterSpacing = `${1}px`;
+  context.fillStyle = "#000";
+  context.globalAlpha = 0.05;
+  context.textBaseline = "bottom";
+
+  const contourY = [];
+  for (let x = 0; x < canvas.width; x++) {
+    contourY.push(findContourY(pixels, canvas.width, canvas.height, x));
+  }
+
+  const chars = [];
+  for (let i = 0; i < text.length; i++) {
+    const leftX = context.measureText(text.slice(0, i)).width;
+    const charWidth = context.measureText(text[i]).width;
+    chars.push({
+      char: text[i],
+      leftX,
+      centerX: Math.round(leftX + charWidth / 2),
+    });
+  }
+
+  const textWidth = context.measureText(text).width;
+  const maxStartX = Math.max(0, Math.floor(canvas.width - textWidth));
+  let bestChars = null;
+  let bestCost = Infinity;
+  for (let x = 0; x <= maxStartX; x++) {
+    const placedChars = placeChars(chars, contourY, x);
+    if (placedChars === null) continue;
+
+    const charYs = placedChars.map((c) => c.y);
+    const extentY = Math.max(...charYs) - Math.min(...charYs);
+    const gaps = chars.filter(
+      (c) => (contourY[x + c.centerX] ?? null) === null,
+    ).length;
+
+    const cost = extentY + gaps * 20;
+    if (cost < bestCost) {
+      bestCost = cost;
+      bestChars = placedChars;
+    }
+  }
+  if (bestChars === null) {
+    context.restore();
+    return;
+  }
+
+  for (const c of bestChars) {
+    context.fillText(c.char, c.x, c.y - 1);
+  }
+  context.restore();
+}
+
+function findContourY(pixels, width, height, x) {
+  for (let y = 0; y < height; y++) {
+    const offset = (y * width + x) * 4;
+    const blackness =
+      ((pixels[offset + 3] / 255) *
+        (255 -
+          Math.min(pixels[offset], pixels[offset + 1], pixels[offset + 2]))) /
+      255;
+    if (blackness >= 0.5) return y;
+  }
+  return null;
+}
+
+function placeChars(chars, contourYs, startX) {
+  const charYs = chars.map((c) => contourYs[startX + c.centerX] ?? null);
+  if (charYs.every((y) => y === null)) return null;
+  return chars.map((c, i) => ({
+    char: c.char,
+    x: startX + c.leftX,
+    y: lerpY(charYs, i),
+  }));
+}
+
+function lerpY(charYs, index) {
+  if (charYs[index] !== null) {
+    return charYs[index];
+  }
+  const prevIndex = charYs.findLastIndex((y, i) => i < index && y !== null);
+  const nextIndex = charYs.findIndex((y, i) => i > index && y !== null);
+  if (prevIndex === -1) {
+    return charYs[nextIndex];
+  }
+  if (nextIndex === -1) {
+    return charYs[prevIndex];
+  }
+  const t = (index - prevIndex) / (nextIndex - prevIndex);
+  const prevY = charYs[prevIndex];
+  const nextY = charYs[nextIndex];
+  return prevY + (nextY - prevY) * t;
 }
