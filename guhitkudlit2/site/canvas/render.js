@@ -1,4 +1,7 @@
 import { drawCalligraphy } from "../calligraphy/calligraphy.js";
+import { formatColorStyleFilter } from "../style/color-styles.js";
+
+const logoUrl = new URL("../app/logo.svg", import.meta.url).href;
 
 /**
  * @param {object} params
@@ -13,6 +16,8 @@ import { drawCalligraphy } from "../calligraphy/calligraphy.js";
  * @param {number} [params.scale]
  * @param {boolean} [params.transparent]
  * @param {"brush" | "basic" | "flatNib" | "spray"} [params.painterName]
+ * @param {string} [params.colorStyleName]
+ * @param {boolean} [params.logo]
  * @param {(progress: number) => void} [params.onProgress]
  */
 export async function render({
@@ -27,6 +32,8 @@ export async function render({
   scale,
   transparent,
   painterName,
+  colorStyleName,
+  logo = false,
   onProgress = () => {},
 }) {
   const context = canvas.getContext("2d");
@@ -58,4 +65,32 @@ export async function render({
     cancelAnimationFrame(pendingFrameId);
     onProgress(latestProgress);
   }
+  if (colorStyleName !== undefined) {
+    context.save();
+    context.filter = formatColorStyleFilter(colorStyleName);
+    context.globalCompositeOperation = "copy";
+    context.drawImage(canvas, 0, 0);
+    context.restore();
+  }
+  if (logo) {
+    await stampLogo(canvas);
+  }
+}
+
+export async function stampLogo(canvas) {
+  const logoImage = new Image();
+  logoImage.src = logoUrl;
+  await logoImage.decode();
+  const logoHeight = 30;
+  const logoWidth =
+    (logoHeight * logoImage.naturalWidth) / logoImage.naturalHeight;
+  canvas
+    .getContext("2d")
+    .drawImage(
+      logoImage,
+      canvas.width - logoWidth,
+      canvas.height - logoHeight,
+      logoWidth,
+      logoHeight,
+    );
 }

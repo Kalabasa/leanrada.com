@@ -21,9 +21,7 @@ export function createFileControls(
 
   function downloadCanvas(canvas) {
     const link = document.createElement("a");
-    link.href = drawColorStyledCanvas(canvas, colorStyle.get()).toDataURL(
-      "image/png",
-    );
+    link.href = canvas.toDataURL("image/png");
     link.download = formatFileName(inputText.get()) + ".png";
     link.click();
   }
@@ -40,6 +38,7 @@ export function createFileControls(
       arrangement: calligraphyInputs.arrangement.get(),
       density: calligraphyInputs.density.get(),
       painterName: calligraphyInputs.painterName.get(),
+      colorStyleName: colorStyle.get(),
     };
     const renderKey = JSON.stringify([
       renderedInputs,
@@ -59,6 +58,7 @@ export function createFileControls(
         ...renderedInputs,
         canvas: fullCanvas,
         speed: 0,
+        logo: true,
       });
       cachedFullRender = { renderKey, fullCanvas };
       downloadCanvas(fullCanvas);
@@ -67,12 +67,22 @@ export function createFileControls(
     }
   }
 
-  function saveCanvas() {
-    downloadCanvas(canvasRef.current);
+  async function drawExportCanvas() {
+    const { stampLogo } = await import("../canvas/render.js");
+    const exportCanvas = drawColorStyledCanvas(
+      canvasRef.current,
+      colorStyle.get(),
+    );
+    await stampLogo(exportCanvas);
+    return exportCanvas;
   }
 
-  function shareCanvas() {
-    drawColorStyledCanvas(canvasRef.current, colorStyle.get()).toBlob(
+  async function saveCanvas() {
+    downloadCanvas(await drawExportCanvas());
+  }
+
+  async function shareCanvas() {
+    (await drawExportCanvas()).toBlob(
       async (blob) => {
         const file = new File(
           [blob],
