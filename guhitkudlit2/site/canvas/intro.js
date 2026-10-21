@@ -163,7 +163,12 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         ref=${backgroundCanvasRef}
       ></canvas>
       <div class="introHeader">
-        <app-logo ref=${logoRef} height="14vh"></app-logo>
+        <img
+          src="app/logo.svg"
+          alt="GuhitKudlit"
+          ref=${logoRef}
+          style=${{ height: "14vh" }}
+        />
         <h2 class="introSubheading">
           Baybayin translator (transliterator)<br />& calligraphy maker
         </h2>

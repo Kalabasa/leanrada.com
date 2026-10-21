@@ -1,4 +1,3 @@
-import "../app/logo.js";
 import { PARAMS } from "../app/flags.js";
 import { render } from "../canvas/render.js";
 import { syllabicate } from "../transliteration/syllabicate.js";

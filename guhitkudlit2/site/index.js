@@ -1,4 +1,3 @@
-import "./app/logo.js";
 import { createAppMenuButton } from "./app/menu-button.js";
 import { AppPanelGroup } from "./app/panel-group.js";
 import { createCanvas } from "./canvas/canvas.js";
@@ -108,11 +107,12 @@ const appLogoRef = { current: null };
 const Logo = observer(
   () =>
     html`<a href=${location.pathname} onClick=${onLogoClick}
-      ><app-logo
+      ><img
+        src="app/logo.svg"
+        alt="GuhitKudlit"
         ref=${appLogoRef}
         style=${{ opacity: showPlaceholder.get() ? 0 : 1 }}
-      ></app-logo
-    ></a>`,
+    /></a>`,
 );
 
 function onLogoClick(event) {
