@@ -152,6 +152,9 @@ export function TransliterationForm({
 }) {
   const [hasInteracted, setHasInteracted] = useState(false);
   const showEditHint = !error && inputText && !hasInteracted;
+  const hasPrecolonialTransform = transformed?.some(({ transforms }) =>
+    transforms.some(({ type }) => type === "drop" || type === "cluster"),
+  );
 
   const helpLink =
     "./help/?word=" +
@@ -162,8 +165,8 @@ export function TransliterationForm({
   let tooltipContent = null;
   if (error && error instanceof InvalidLetterError) {
     tooltipContent = html`<p>
-        For the letter ${error.formatLetters()}, you have to respell
-        it for Baybayin.
+        For the letter ${error.formatLetters()}, you have to respell it for
+        Baybayin.
       </p>
       <p>
         <a class="transliterationTooltipLink" href=${helpLink}
@@ -172,8 +175,8 @@ export function TransliterationForm({
       </p>`;
   } else if (error && error instanceof InvalidSyllabicationError) {
     tooltipContent = html`<p>
-        We can’t really spell just ‘${error.word}’ in the precolonial way.
-        Needs a vowel!
+        We can’t really spell just ‘${error.word}’ in the precolonial way. Needs
+        a vowel!
       </p>
       <p>
         <a class="transliterationTooltipLink" href=${helpLink}
@@ -373,6 +376,8 @@ export function TransliterationForm({
           </div>
         `,
       )}
+      ${hasPrecolonialTransform &&
+      " Note: You are using the precolonial spelling mode. If this doesn’t sound right, you can rewrite your word or "}
       <a class="transliterationTooltipLink" href=${helpLink}
         >Learn more in the quick guide!</a
       >

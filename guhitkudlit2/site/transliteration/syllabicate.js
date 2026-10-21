@@ -61,8 +61,9 @@ export function syllabicate(phrase, how = {}) {
     let currentUnit = "";
     let unitTransforms = [];
 
-    for (let letter of word) {
-      letter = letter.toLowerCase();
+    const letters = [...word];
+    for (let i = 0; i < letters.length; i++) {
+      let letter = letters[i].toLowerCase();
       const lastLetter = currentUnit && currentUnit.slice(-1);
 
       if (isVowel(letter)) {
@@ -99,7 +100,7 @@ export function syllabicate(phrase, how = {}) {
             if (baybayinUnits.length === 0 || "wy".includes(letter)) {
               const collapsedUnit =
                 collapseConsonant(currentUnit, true) +
-                (letter === "w" ? "u" : "i");
+                selectClusterVowel(letter, letters.slice(i));
               unitTransforms.push({
                 type:
                   collapsedUnit.at(-1) === currentUnit.at(-1)
@@ -189,6 +190,15 @@ function isVowel(letter) {
 
 function isConsonant(letter) {
   return "bkdghlmnprstwy".includes(letter);
+}
+
+function selectClusterVowel(letter, remainingLetters) {
+  if (letter === "w") return "u";
+  if (letter === "y") return "i";
+  const nextVowel = remainingLetters.find((remaining) => isVowel(remaining));
+  if (nextVowel === "e") return "i";
+  if (nextVowel === "o") return "u";
+  return nextVowel ?? "i";
 }
 
 function syllabicateSpecial(word) {

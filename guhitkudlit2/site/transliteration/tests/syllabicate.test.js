@@ -207,6 +207,22 @@ const cases = [
       ],
     },
   ],
+  [
+    ["plato", { precolonial: true }],
+    {
+      baybayinUnits: ["pa", "la", "tu"],
+      transformed: [
+        {
+          fromWord: "plato",
+          toWord: "palatu",
+          transforms: [
+            { type: "cluster", from: "p", to: "pa" },
+            { type: "vowel", from: "to", to: "tu" },
+          ],
+        },
+      ],
+    },
+  ],
 ];
 
 cases.forEach(([input, output], i) => {
