@@ -145,7 +145,7 @@ export function Index() {
   return html`
     <style id=${Index.name}>
       .app {
-        background: var(--color-bg-darker);
+        background: url("bgnoise.png"), var(--color-bg-darker);
         display: grid;
         grid-template-rows: minmax(0, 1fr) min-content;
         grid-template-columns: 1fr;
