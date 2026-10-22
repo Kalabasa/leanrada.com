@@ -82,19 +82,12 @@ export function createFileControls(
   }
 
   async function shareCanvas() {
-    (await drawExportCanvas()).toBlob(
-      async (blob) => {
-        const file = new File(
-          [blob],
-          formatFileName(inputText.get()) + ".png",
-          {
-            type: "image/png",
-          },
-        );
-        await navigator.share({ files: [file] });
-      },
-      "image/png",
-    );
+    (await drawExportCanvas()).toBlob(async (blob) => {
+      const file = new File([blob], formatFileName(inputText.get()) + ".png", {
+        type: "image/png",
+      });
+      await navigator.share({ files: [file] });
+    }, "image/png");
   }
 
   const FileControls = observer(
@@ -145,14 +138,14 @@ export function createFileControls(
             onClick=${saveCanvas}
             disabled=${!calligraphyComplete.get()}
           >
-            Save
+            Download
           <//>
           <${Button}
             class="fileControlsButton"
             onClick=${downloadFullCanvas}
             disabled=${isRenderingFull.get() || !calligraphyComplete.get()}
           >
-            ${isRenderingFull.get() ? "Rendering..." : "Save HD"}
+            ${isRenderingFull.get() ? "Rendering..." : "Download HD"}
           <//>
           ${navigator.share &&
           html`<${Button}
