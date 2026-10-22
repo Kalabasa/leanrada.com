@@ -55,7 +55,7 @@
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
         font-optical-sizing: auto;
-        overflow-x: clip;
+        overflow-x: hidden;
       }
 
       .optionGroup {
@@ -148,6 +148,7 @@
         width: 200px;
         height: 60px;
         font-size: var(--font-size-m);
+        z-index: 1;
       }
 
       main {
@@ -233,33 +234,38 @@
           filter: brightness(1.03);
         }
 
+        .introParagraph {
+          position: relative;
+        }
         .floatingGlyph {
           position: absolute;
           width: min(25vw, 400px);
-          max-width: none;
-          margin: 0;
-          box-shadow: none;
-          border-radius: 0;
           pointer-events: none;
+          animation: floatingGlyphParallax linear both;
+          animation-timeline: scroll();
           &.gu {
-            top: 53vh;
-            left: -1vw;
+            top: 12vh;
+            right: calc(500px + 36vw);
             rotate: 2deg;
+            --parallax-offset: -60vh;
           }
           &.hi {
-            top: 13vh;
-            left: 6vw;
+            top: -23vh;
+            right: calc(500px + 28vw);
             rotate: -4deg;
+            --parallax-offset: -140vh;
           }
           &.ku {
-            top: 12vh;
-            right: 6vw;
+            top: -28vh;
+            left: calc(500px + 29vw);
             rotate: -7deg;
+            --parallax-offset: -100vh;
           }
           &.li {
-            top: 48vh;
-            right: -3vw;
-            rotate: -2deg;
+            top: 9vh;
+            left: calc(500px + 41vw);
+            rotate: -3deg;
+            --parallax-offset: -180vh;
           }
         }
       }
@@ -270,6 +276,12 @@
         font-size: clamp(120%, 5vw, 200%);
         line-height: 1.2;
         letter-spacing: -2px;
+      }
+
+      @keyframes floatingGlyphParallax {
+        to {
+          translate: 0 var(--parallax-offset);
+        }
       }
 
       @keyframes reveal {
@@ -345,8 +357,8 @@
         {
           viramaStyle: "krus",
           speed: 20,
-          scale: 1.1,
-          density: 2,
+          scale: 1.2,
+          density: 1.2,
         },
       );
       let calligraphyProgress = 0;
@@ -540,7 +552,7 @@
     </header>
     <main>
       <section lang="en">
-        <p>
+        <p class="introParagraph">
           <img class="floatingGlyph gu" src="gu.png" alt="" />
           <img class="floatingGlyph ku" src="ku.png" alt="" />
           <img class="floatingGlyph hi" src="hi.png" alt="" />
@@ -628,7 +640,7 @@
         </p>
       </section>
       <section lang="tl">
-        <p>
+        <p class="introParagraph">
           <img class="floatingGlyph gu" src="gu.png" alt="" />
           <img class="floatingGlyph ku" src="ku.png" alt="" />
           <img class="floatingGlyph hi" src="hi.png" alt="" />
