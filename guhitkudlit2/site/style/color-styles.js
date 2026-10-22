@@ -51,8 +51,10 @@ export function drawColorStyledCanvas(sourceCanvas, colorStyleName) {
   colorStyledCanvas.width = sourceCanvas.width;
   colorStyledCanvas.height = sourceCanvas.height;
   const context = colorStyledCanvas.getContext("2d");
+  context.save();
   context.filter = formatColorStyleFilter(colorStyleName);
   context.drawImage(sourceCanvas, 0, 0);
+  context.restore();
   return colorStyledCanvas;
 }
 
