@@ -15,7 +15,7 @@ const squeezeStrengthY = 0.12;
 const kudlitGravityX = 0.06;
 const kudlitGravityY = 0.05;
 const kudlitDistFactor = 1.6;
-const krusSpringStrength = 0.04;
+const krusSpringStrength = 0.08;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -296,8 +296,8 @@ export function compose(glyphStrokesList, opts = {}) {
         for (const vertex of stroke.vertices) {
           pushVertex(
             vertex,
-            (centroid.x - vertex.position.x) * 0.1,
-            (centroid.y - vertex.position.y) * 0.1,
+            (centroid.x - vertex.position.x) * 0.05,
+            (centroid.y - vertex.position.y) * 0.05,
           );
         }
       }
