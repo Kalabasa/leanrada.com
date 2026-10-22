@@ -1,5 +1,4 @@
 import { html } from "../components/html.js";
-import { classes } from "../util/classes.js";
 import { observer } from "../util/observer.js";
 import { formatColorStyleFilter } from "../style/color-styles.js";
 import { IntroCanvas } from "./intro.js";

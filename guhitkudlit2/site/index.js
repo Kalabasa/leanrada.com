@@ -42,8 +42,6 @@ const { Canvas, canvasRef } = createCanvas(
         config.sourceElement.style.viewTransitionName,
       );
       config.sourceElement.style.removeProperty("view-transition-name");
-      appLogoRef.current.style.viewTransitionName = "logo";
-      config.logoElement.style.removeProperty("view-transition-name");
     });
     inputText.set(config.text);
     requestAnimationFrame(() => {
@@ -211,8 +209,9 @@ export function Index() {
         animation-duration: 0.2s;
       }
       ::view-transition-group(introConfig) {
-        animation-duration: 0.8s;
-        animation-timing-function: cubic-bezier(0.8, 0, 0.8, 1);
+        animation-duration: 0.7s;
+        animation-delay: 0.1s;
+        animation-timing-function: cubic-bezier(1, 0, 0.4, 1);
       }
       ::view-transition-group(logo) {
         animation-duration: 0.8s;

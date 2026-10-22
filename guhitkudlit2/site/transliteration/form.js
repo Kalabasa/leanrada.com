@@ -310,7 +310,10 @@ export function TransliterationForm({
       <div class="transliterationRowWithButton">
         <label class="transliterationRow">
           <${LabelText} tag="div">Syllabication<//>
-          <${Output} value=${syllabication} placeholder="ka · la · ba · sa" />
+          <${Output}
+            value=${syllabication}
+            placeholder=${hasInteracted ? "ka · la · ba · sa" : ""}
+          />
         </label>
         ${transformed &&
         html`<${Button}
@@ -324,7 +327,11 @@ export function TransliterationForm({
       </div>
       <label class="transliterationRow">
         <${LabelText} tag="div">Baybayin<//>
-        <${Output} value=${baybayin} placeholder="ᜃᜎᜊᜐ" big />
+        <${Output}
+          value=${baybayin}
+          placeholder=${hasInteracted ? "ᜃᜎᜊᜐ" : ""}
+          big
+        />
       </label>
     </form>
     ${tooltipContent &&

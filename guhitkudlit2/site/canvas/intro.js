@@ -50,7 +50,6 @@ const backgroundWords = [
 
 export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
   const backgroundCanvasRef = useRef();
-  const logoRef = useRef();
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -62,9 +61,8 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
 
   const configure = (config, sourceElement) => {
     sourceElement.style.viewTransitionName = "introConfig";
-    logoRef.current.style.viewTransitionName = "logo";
     requestAnimationFrame(() => {
-      onConfig({ ...config, sourceElement, logoElement: logoRef.current });
+      onConfig({ ...config, sourceElement });
     });
   };
 
@@ -88,6 +86,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         gap: var(--size-l);
         overflow: hidden;
         contain: inline-size;
+        view-transition-name: intro;
         @media (max-width: 750px) {
           gap: 0;
         }
@@ -163,12 +162,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         ref=${backgroundCanvasRef}
       ></canvas>
       <div class="introHeader">
-        <img
-          src="app/logo.svg"
-          alt="GuhitKudlit"
-          ref=${logoRef}
-          style=${{ height: "14vh" }}
-        />
+        <img src="app/logo.svg" alt="GuhitKudlit" style=${{ height: "14vh" }} />
         <h2 class="introSubheading">
           Baybayin translator (transliterator)<br />& calligraphy maker
         </h2>
