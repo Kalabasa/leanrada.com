@@ -5,17 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>About GuhitKudlit</title>
-    <meta property="og:title" content="GuhitKudlit Baybayin calligraphy maker - About" />
+    <meta
+      property="og:title"
+      content="GuhitKudlit Baybayin calligraphy maker - About"
+    />
 
     <link rel="icon" href="../favicon.png" />
 
-    <meta property="og:url" content="https://leanrada.com/guhit-kudlit/about/" />
+    <meta
+      property="og:url"
+      content="https://leanrada.com/guhit-kudlit/about/"
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:description" content="Baybayin calligraphy maker and transliterator!" />
-    <meta property="og:image"content="https://leanrada.com/guhit-kudlit/preview/image.png" />
+    <meta
+      property="og:description"
+      content="Baybayin calligraphy maker and transliterator!"
+    />
+    <meta
+      property="og:image"
+      content="https://leanrada.com/guhit-kudlit/preview/image.png"
+    />
     <meta property="og:image:width" content="1260" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Screenshot of GuhitKudlit showing ‘sigabo’ in Baybayin calligraphy" />
+    <meta
+      property="og:image:alt"
+      content="Screenshot of GuhitKudlit showing ‘sigabo’ in Baybayin calligraphy"
+    />
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="stylesheet" href="../lib/reset.css" />
@@ -36,6 +51,10 @@
 
       body {
         background: var(--color-bg-darker);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        font-optical-sizing: auto;
       }
 
       .optionGroup {
@@ -62,7 +81,9 @@
             anchor(--optionGroupOptionActive bottom)
             anchor(--optionGroupOptionActive left);
           position-visibility: anchors-valid;
-          box-shadow: var(--inset-shade), inset 0 0 0 4px var(--color-orange);
+          box-shadow:
+            var(--inset-shade),
+            inset 0 0 0 4px var(--color-orange);
           transition: inset 0.15s;
           z-index: -1;
         }
@@ -131,8 +152,9 @@
       main {
         margin: var(--size-l) auto;
         padding: 0 var(--size-l);
-        font-size: var(--font-size-l);
-        line-height: 1.6;
+        font-size: var(--font-size-xl);
+        letter-spacing: -1px;
+        line-height: 1.8;
 
         body:has(input[name="language"][value="en"]:checked)
           &
@@ -145,11 +167,12 @@
       }
 
       section {
-        text-shadow: 0 0 6px #fff;
         &[lang="tl"] {
           font-family: "Noto Sans Tagalog", "Karla", sans-serif;
+          word-spacing: 7px;
           .revealed {
-            letter-spacing: -1.5px;
+            word-spacing: 0;
+            letter-spacing: -1.6px;
             animation: reveal 1.2s;
           }
         }
@@ -160,16 +183,22 @@
         }
         > p,
         > div {
-          min-height: 300px;
-          max-width: 800px;
-          margin: 10vh auto;
+          min-height: 400px;
+          max-width: 1000px;
+          margin: 15vh auto;
           &:nth-child(2n) {
             margin-right: calc(max(0px, 10vw - 100px));
             text-align: right;
+            img {
+              rotate: 1deg;
+            }
           }
           &:nth-child(2n + 1) {
             margin-left: calc(max(0px, 10vw - 100px));
             text-align: left;
+            img {
+              rotate: -1deg;
+            }
           }
           &:first-child,
           &:last-child {
@@ -178,9 +207,20 @@
           }
         }
 
+        p {
+          background: color-mix(
+            in srgb,
+            var(--color-bg-darker) 50%,
+            transparent
+          );
+          box-shadow: 0 0 70px 70px
+            color-mix(in srgb, var(--color-bg-darker) 50%, transparent);
+        }
+
         h2 {
           margin-bottom: var(--size-s);
           font-weight: bold;
+          font-size: 120%;
         }
 
         img {
@@ -194,8 +234,10 @@
 
       .headline {
         display: block;
+        margin-bottom: 0.15em;
         font-size: 150%;
         line-height: 1.2;
+        letter-spacing: -2px;
       }
 
       @keyframes reveal {
@@ -248,6 +290,14 @@
           opacity: 0.05;
         }
       }
+
+      #bgnoise {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: url("bgnoise.png");
+      }
     </style>
     <script type="module">
       import { drawCalligraphy } from "../calligraphy/calligraphy.js";
@@ -257,10 +307,15 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const calligraphyProgresses = drawCalligraphy(
-        syllabicate("gu hit kud lit").baybayinUnits,
+        syllabicate("nasa-tao ang-gawa").baybayinUnits,
         canvas.getContext("2d"),
         new AbortController().signal,
-        { viramaStyle: "krus", speed: 100, scale: 1.1 },
+        {
+          viramaStyle: "krus",
+          speed: 20,
+          scale: 1.1,
+          density: 2,
+        },
       );
       let calligraphyProgress = 0;
       document.addEventListener("scroll", onScroll);
@@ -350,10 +405,10 @@
 
               if (token === ".") {
                 span.dataset.latin = token;
-                span.textContent = " ᜶";
+                span.innerHTML = "&nbsp;᜶";
               } else if (token === ",") {
                 span.dataset.latin = token;
-                span.textContent = " ᜵";
+                span.innerHTML = "&nbsp;᜵";
               } else if (/[a-z-]/i.test(token) && isTl) {
                 try {
                   const { baybayinUnits } = syllabicate(token, {
@@ -392,7 +447,9 @@
             if (lastY != null && (rect.top + rect.bottom) / 2 > lastY) {
               if (
                 span.previousElementSibling &&
-                span.previousElementSibling.tagName !== "BR"
+                span.previousElementSibling.tagName !== "BR" &&
+                getComputedStyle(span.previousElementSibling).display !==
+                  "block"
               ) {
                 span.before(document.createElement("br"));
               }
@@ -424,6 +481,7 @@
   </head>
   <body>
     <canvas id="calligraphy"></canvas>
+    <div id="bgnoise"></div>
     <header>
       <p>
         <!--prettier-ignore-->
