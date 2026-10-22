@@ -161,7 +161,7 @@ export class Brush extends BasePainter {
       canvasContext.arc(
         brushX + r * Math.cos(a),
         brushY + r * Math.sin(a),
-        0.1 * maxRadius * this.#random() ** 2,
+        0.05 * maxRadius * this.#random() ** 2,
         0,
         2 * Math.PI,
       );

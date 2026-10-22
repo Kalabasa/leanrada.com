@@ -296,8 +296,8 @@ export function compose(glyphStrokesList, opts = {}) {
         for (const vertex of stroke.vertices) {
           pushVertex(
             vertex,
-            (centroid.x - vertex.position.x) * 0.3,
-            (centroid.y - vertex.position.y) * 0.3,
+            (centroid.x - vertex.position.x) * 0.1,
+            (centroid.y - vertex.position.y) * 0.1,
           );
         }
       }
