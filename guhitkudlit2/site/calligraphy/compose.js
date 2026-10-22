@@ -314,9 +314,9 @@ export function compose(glyphStrokesList, opts = {}) {
           pushVertex(
             vertex,
             (centroid.x - vertex.position.x) * 0.2 +
-              (oCentroid.x - centroid.x) * 0.5,
+              (oCentroid.x - centroid.x) * 0.9,
             (centroid.y - vertex.position.y) * 0.2 +
-              (oCentroid.y - centroid.y) * 0.5,
+              (oCentroid.y - centroid.y) * 0.9,
           );
           for (const oVertex of oStroke.vertices) {
             const dx = vertex.position.x - oVertex.position.x;
