@@ -1,5 +1,5 @@
 import { createAppMenuButton } from "./app/menu-button.js";
-import { AppPanelGroup } from "./app/panel-group.js";
+import { createPanelGroup } from "./app/panel-group.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
 import { render } from "./lib/htm-preact.js";
@@ -14,6 +14,7 @@ import { classes } from "./util/classes.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
 
+const { AppPanelGroup, setRaisedIndex } = createPanelGroup();
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa);
@@ -47,6 +48,7 @@ const { Canvas, canvasRef } = createCanvas(
     requestAnimationFrame(() => {
       setTimeout(() => {
         inputTextWrapperRef.current?.querySelector("input").focus();
+        setRaisedIndex(/* File */ 5);
       }, 125);
     });
   },

@@ -1,12 +1,31 @@
 import { html } from "../components/html.js";
-import { useEffect, useRef, useState } from "../lib/htm-preact.js";
+import { useEffect, useRef } from "../lib/htm-preact.js";
+import { observable } from "../lib/mobx.js";
 import { classes } from "../util/classes.js";
+import { observer } from "../util/observer.js";
 import { AppPanel } from "./panel.js";
 
 const panelWidthPx = 500;
 const tabStepPx = 80;
 
-export function AppPanelGroup({ panels }) {
+export function createPanelGroup() {
+  const raisedIndex = observable.box(0);
+
+  const setRaisedIndex = (panelIndex) => raisedIndex.set(panelIndex);
+
+  const AppPanelGroupImpl = observer(
+    ({ panels }) => html`
+      <${AppPanelGroup}
+        panels=${panels}
+        raisedIndex=${raisedIndex.get()}
+        setRaisedIndex=${setRaisedIndex}
+      />
+    `,
+  );
+  return { AppPanelGroup: AppPanelGroupImpl, setRaisedIndex };
+}
+
+function AppPanelGroup({ panels, raisedIndex, setRaisedIndex }) {
   const contentPanels = panels.filter((panel) => !panel.spacer);
   const narrowWidthPx =
     2 * panelWidthPx + (contentPanels.length - 2) * tabStepPx;
@@ -15,7 +34,6 @@ export function AppPanelGroup({ panels }) {
 
   const groupRef = useRef();
   const isAutoScrollingRef = useRef(false);
-  const [raisedIndex, setRaisedIndex] = useState(0);
 
   useEffect(() => {
     const scroller = groupRef.current.parentElement;
