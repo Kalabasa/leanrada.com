@@ -13,9 +13,9 @@ const basePushDistScale = 3.1;
 const springStrength = 0.3;
 const squeezeStrengthX = 0.1;
 const squeezeStrengthY = 0.12;
-const kudlitGravityX = 0.08;
+const kudlitGravityX = 0.07;
 const kudlitGravityY = 0.05;
-const kudlitDistFactor = 1.6;
+const kudlitDistFactor = 1.4;
 const krusSpringStrength = 0.08;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
