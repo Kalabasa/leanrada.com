@@ -45,6 +45,7 @@ const { PresetControls } = createPresetControls({
   density,
 });
 
+const calligraphyComplete = observable.box(false);
 const showPlaceholder = observable.box(inputText.get().length === 0);
 const { Canvas, canvasRef } = createCanvas(
   colorStyle,
@@ -60,14 +61,19 @@ const { Canvas, canvasRef } = createCanvas(
         config.sourceElement.style.viewTransitionName,
       );
       config.sourceElement.style.removeProperty("view-transition-name");
+      const destInput = inputTextWrapperRef.current?.querySelector("input");
+      if (destInput) destInput.value = config.text;
     });
     inputText.set(config.text);
     requestAnimationFrame(() => {
       setTimeout(() => {
         inputTextWrapperRef.current?.querySelector("input").focus();
-        setRaisedIndex(/* File */ 5);
       }, 125);
     });
+    when(
+      () => calligraphyComplete.get(),
+      () => setRaisedIndex(/* File */ 5),
+    );
   },
 );
 async function hidePlaceholder(updateDom) {
@@ -90,7 +96,6 @@ const calligraphyInputs = {
   density,
   painterName,
 };
-const calligraphyComplete = observable.box(false);
 const { FileControls, saveCanvas } = createFileControls(
   canvasRef,
   inputText,

@@ -26,7 +26,7 @@ const maxComposeSteps =
  *   density?: number
  * }} opts
  */
-export function compose(glyphStrokesList, opts = {}) {
+export async function compose(glyphStrokesList, opts = {}) {
   const optDensity = Math.min(Math.max(opts?.density ?? 0, -2), 2);
   const density = (5 / 6) * optDensity - (1 / 6) * optDensity ** 2;
   const pushDistScale = basePushDistScale * 1.5 ** density;
@@ -129,6 +129,7 @@ export function compose(glyphStrokesList, opts = {}) {
     ),
   );
   for (let step = 0; step < steps; step++) {
+    await new Promise((resolve) => setTimeout(resolve));
     for (const glyph of glyphs) {
       for (const vertex of glyph.vertices) {
         vertexPushes.set(vertex, { x: 0, y: 0 });

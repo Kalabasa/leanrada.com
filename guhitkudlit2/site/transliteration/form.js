@@ -297,7 +297,7 @@ export function TransliterationForm({
           <${Input}
             class="transliterationInput"
             type="text"
-            placeholder="kalabasa"
+            placeholder=${hasInteracted ? "kalabasa" : ""}
             maxlength="30"
             value=${inputText}
             onInput=${onInput}

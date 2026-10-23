@@ -211,7 +211,7 @@ export async function layoutCalligraphy(
 
   const glyphStrokesList = layout2D.map(traceStrokes);
 
-  compose(glyphStrokesList, { maxComposeSteps, density });
+  await compose(glyphStrokesList, { maxComposeSteps, density });
 
   const strokes = samplePaths(glyphStrokesList);
   const vertices = strokes.flatMap((stroke) => stroke.vertices);
