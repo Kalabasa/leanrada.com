@@ -1,5 +1,5 @@
 import { drawCalligraphy } from "../calligraphy/calligraphy.js";
-import { formatColorStyleFilter } from "../style/color-styles.js";
+import { applyColorStyle } from "../style/color-styles.js";
 
 const logoUrl = new URL("../app/logo.svg", import.meta.url).href;
 
@@ -69,11 +69,7 @@ export async function render({
     drawUrl(canvas);
   }
   if (colorStyleName !== undefined) {
-    context.save();
-    context.filter = formatColorStyleFilter(colorStyleName);
-    context.globalCompositeOperation = "copy";
-    context.drawImage(canvas, 0, 0);
-    context.restore();
+    applyColorStyle(context, colorStyleName);
   }
   if (logo) {
     await stampLogo(canvas);

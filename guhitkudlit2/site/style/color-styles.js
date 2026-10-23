@@ -1,10 +1,10 @@
 import { html } from "../components/html.js";
 
 export const colorStyles = [
-  { name: "blackOnWhite", inkRgb: [0, 0, 0], paperRgb: [255, 255, 255] },
-  { name: "orangeOnWhite", inkRgb: [251, 119, 86], paperRgb: [255, 255, 255] },
-  { name: "whiteOnBlack", inkRgb: [255, 255, 255], paperRgb: [0, 0, 0] },
-  { name: "greenOnBlack", inkRgb: [142, 249, 21], paperRgb: [0, 0, 0] },
+  { name: "blackOnWhite", fg: [0, 0, 0], bg: [255, 255, 255] },
+  { name: "orangeOnWhite", fg: [251, 119, 86], bg: [255, 255, 255] },
+  { name: "whiteOnBlack", fg: [255, 255, 255], bg: [0, 0, 0] },
+  { name: "greenOnBlack", fg: [142, 249, 21], bg: [0, 0, 0] },
 ];
 
 export function ColorStyleFilters() {
@@ -51,11 +51,36 @@ export function drawColorStyledCanvas(sourceCanvas, colorStyleName) {
   colorStyledCanvas.width = sourceCanvas.width;
   colorStyledCanvas.height = sourceCanvas.height;
   const context = colorStyledCanvas.getContext("2d");
-  context.save();
-  context.filter = formatColorStyleFilter(colorStyleName);
   context.drawImage(sourceCanvas, 0, 0);
-  context.restore();
+  applyColorStyle(context, colorStyleName);
   return colorStyledCanvas;
+}
+
+export function applyColorStyle(context, colorStyleName) {
+  const colorStyle = colorStyles.find(
+    (style) => style.name === colorStyleName,
+  );
+  const { width, height } = context.canvas;
+  context.save();
+  if (colorStyle.bg.every((value) => value === 255)) {
+    context.globalCompositeOperation = "screen";
+    context.fillStyle = formatRgb(colorStyle.fg);
+    context.fillRect(0, 0, width, height);
+  } else if (colorStyle.bg.every((value) => value === 0)) {
+    context.globalCompositeOperation = "difference";
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, width, height);
+    context.globalCompositeOperation = "multiply";
+    context.fillStyle = formatRgb(colorStyle.fg);
+    context.fillRect(0, 0, width, height);
+  } else {
+    throw new Error(`Unexpected bg color: ${colorStyle.bg}`);
+  }
+  context.restore();
+}
+
+function formatRgb(rgb) {
+  return `rgb(${rgb.join(" ")})`;
 }
 
 function formatFilterId(colorStyleName) {
@@ -63,7 +88,7 @@ function formatFilterId(colorStyleName) {
 }
 
 function formatTableValues(colorStyle, channelIndex) {
-  const inkValue = colorStyle.inkRgb[channelIndex] / 255;
-  const paperValue = colorStyle.paperRgb[channelIndex] / 255;
-  return `${inkValue} ${paperValue}`;
+  const fgValue = colorStyle.fg[channelIndex] / 255;
+  const bgValue = colorStyle.bg[channelIndex] / 255;
+  return `${fgValue} ${bgValue}`;
 }
