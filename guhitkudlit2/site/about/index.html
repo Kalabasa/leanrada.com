@@ -57,7 +57,6 @@
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
         font-optical-sizing: auto;
-        overflow-x: hidden;
       }
 
       .optionGroup {
@@ -154,12 +153,17 @@
       }
 
       main {
-        margin: var(--size-l) auto;
+        margin: 0 auto;
         padding: 0 var(--size-l);
         font-size: clamp(var(--font-size-l), 1.5vw, var(--font-size-xl));
         letter-spacing: -1px;
         line-height: 1.8;
         text-wrap: balance;
+        overflow: hidden;
+
+        @media (max-width: 800px) {
+          padding: 0 var(--size-s);
+        }
 
         body:has(input[name="language"][value="en"]:checked)
           &
@@ -207,7 +211,7 @@
           }
           &:first-child,
           &:last-child {
-            margin: 25vmin auto;
+            margin: calc(min(25vw, 5vh)) auto;
             text-align: center;
           }
         }
@@ -235,6 +239,9 @@
           box-shadow: var(--shadow-l);
           border-radius: var(--size-xs);
           filter: brightness(1.03);
+          @media (max-width: 800px) {
+            margin: var(--size-s) 0;
+          }
         }
 
         .introParagraph {
@@ -368,9 +375,6 @@
         z-index: -1;
         pointer-events: none;
         opacity: 0.1;
-        @media (max-width: 800px) {
-          opacity: 0.05;
-        }
       }
 
       #bgnoise {
@@ -389,7 +393,11 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const calligraphyProgresses = drawCalligraphy(
-        syllabicate("nasa-tao ang-gawa").baybayinUnits,
+        syllabicate(
+          canvas.width / canvas.height < 1
+            ? "nasa tao ang gawa"
+            : "nasa-tao ang-gawa",
+        ).baybayinUnits,
         canvas.getContext("2d"),
         new AbortController().signal,
         {
@@ -797,7 +805,7 @@
         </svg>
         @guhitkudlit
       </a>
-      <a href="#" target="_blank">
+      <a href="../tip/" target="_blank">
         <svg width="24" height="24" viewBox="0 0 24 24">
           <use href="../file/kofi.svg#icon" />
         </svg>

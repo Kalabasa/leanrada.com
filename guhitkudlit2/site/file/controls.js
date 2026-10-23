@@ -8,6 +8,7 @@ import { drawColorStyledCanvas } from "../style/color-styles.js";
 const instagramIconUrl = new URL("./instagram.svg#icon", import.meta.url).href;
 const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
 const kofiIconUrl = new URL("./kofi.svg#icon", import.meta.url).href;
+const tipPageUrl = new URL("../tip/", import.meta.url).href;
 
 export function createFileControls(
   canvasRef,
@@ -171,7 +172,7 @@ export function createFileControls(
               <use href=${instagramIconUrl} />
             </svg>
           </a>
-          <a class="fileControlsSocialLink" href="#" target="_blank">
+          <a class="fileControlsSocialLink" href=${tipPageUrl} target="_blank">
             <svg
               role="img"
               aria-label="Tip"

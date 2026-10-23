@@ -5,6 +5,7 @@ import { observer } from "../util/observer.js";
 const instagramIconUrl = new URL("../file/instagram.svg#icon", import.meta.url)
   .href;
 const kofiIconUrl = new URL("../file/kofi.svg#icon", import.meta.url).href;
+const tipPageUrl = new URL("../tip/", import.meta.url).href;
 
 export function createAppMenuButton(
   inputText,
@@ -159,7 +160,7 @@ export function createAppMenuButton(
               <use href=${instagramIconUrl} />
             </svg>
           </a>
-          <a href="#" target="_blank">
+          <a href=${tipPageUrl} target="_blank">
             <svg
               role="img"
               aria-label="Tip"
