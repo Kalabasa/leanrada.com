@@ -5,6 +5,7 @@
  */
 
 import { DEBUG, PARAMS } from "../app/flags.js";
+import { delay } from "../util/delay.js";
 const composeStepsOverride = Number.parseInt(PARAMS.get("composeSteps"));
 
 const pushStrength = 0.4;
@@ -130,7 +131,7 @@ export async function compose(glyphStrokesList, opts = {}) {
     ),
   );
   for (let step = 0; step < steps; step++) {
-    await new Promise((resolve) => setTimeout(resolve));
+    await delay(25);
     if (opts.abortSignal.aborted) return;
     for (const glyph of glyphs) {
       for (const vertex of glyph.vertices) {
