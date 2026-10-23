@@ -84,6 +84,7 @@ async function drawControlPreview(
   painterName,
   abortSignal,
 ) {
+  // TODO use static images
   const { render } = await import("./render.js");
   await render({
     baybayinUnits,
