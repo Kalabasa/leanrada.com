@@ -52,6 +52,7 @@ const { Canvas, canvasRef } = createCanvas(
   showPlaceholder,
   async (config) => {
     inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
+
     await hidePlaceholder(() => {
       if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
       if (config.separateRa !== undefined) separateRa.set(config.separateRa);
@@ -64,15 +65,30 @@ const { Canvas, canvasRef } = createCanvas(
       const destInput = inputTextWrapperRef.current?.querySelector("input");
       if (destInput) destInput.value = config.text;
     });
+
     inputText.set(config.text);
     requestAnimationFrame(() => {
       setTimeout(() => {
         inputTextWrapperRef.current?.querySelector("input").focus();
       }, 125);
     });
+
+    const interaction = new AbortController();
+    const lopts = {
+      once: true,
+      capture: true,
+      signal: interaction.signal,
+    };
+    window.addEventListener("pointerdown", () => interaction.abort(), lopts);
+    window.addEventListener("scroll", () => interaction.abort(), lopts);
+
     when(
       () => calligraphyComplete.get(),
-      () => activatePanel(/* File */ 5),
+      () => {
+        if (interaction.signal.aborted) return;
+        interaction.abort();
+        activatePanel(/* File */ 5);
+      },
     );
   },
 );
