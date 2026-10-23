@@ -23,7 +23,8 @@ const maxComposeSteps =
  * @param {GlyphStrokes[]} glyphStrokesList
  * @param {{
  *   maxComposeSteps: number,
- *   density?: number
+ *   density?: number,
+ *   abortSignal: AbortSignal
  * }} opts
  */
 export async function compose(glyphStrokesList, opts = {}) {
@@ -130,6 +131,7 @@ export async function compose(glyphStrokesList, opts = {}) {
   );
   for (let step = 0; step < steps; step++) {
     await new Promise((resolve) => setTimeout(resolve));
+    if (opts.abortSignal.aborted) return;
     for (const glyph of glyphs) {
       for (const vertex of glyph.vertices) {
         vertexPushes.set(vertex, { x: 0, y: 0 });

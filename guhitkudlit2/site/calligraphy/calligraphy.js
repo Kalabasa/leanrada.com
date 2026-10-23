@@ -141,7 +141,7 @@ export async function* drawCalligraphy(
   const { path, cellSize } = await layoutCalligraphy(
     baybayinUnits,
     canvasContext.canvas,
-    { viramaStyle, arrangement, density, maxComposeSteps, scale },
+    { viramaStyle, arrangement, density, maxComposeSteps, scale, abortSignal },
   );
   if (abortSignal.aborted) return;
 
@@ -167,11 +167,19 @@ export async function* drawCalligraphy(
  * @param {number} [opts.density]
  * @param {number} [opts.maxComposeSteps]
  * @param {number} [opts.scale]
+ * @param {AbortSignal} opts.abortSignal
  */
 export async function layoutCalligraphy(
   baybayinUnits,
   canvas,
-  { viramaStyle, arrangement = "normal", density, maxComposeSteps, scale = 1 },
+  {
+    viramaStyle,
+    arrangement = "normal",
+    density,
+    maxComposeSteps,
+    scale = 1,
+    abortSignal,
+  },
 ) {
   const [
     { getGlyph },
@@ -211,7 +219,7 @@ export async function layoutCalligraphy(
 
   const glyphStrokesList = layout2D.map(traceStrokes);
 
-  await compose(glyphStrokesList, { maxComposeSteps, density });
+  await compose(glyphStrokesList, { maxComposeSteps, density, abortSignal });
 
   const strokes = samplePaths(glyphStrokesList);
   const vertices = strokes.flatMap((stroke) => stroke.vertices);
