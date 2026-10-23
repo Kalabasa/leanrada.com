@@ -7,11 +7,13 @@ import { html } from "./html.js";
  * @param {string} props.class
  * @param {string} props.anchorName
  * @param {Direction} props.direction
+ * @param {(element: HTMLDivElement | null) => void} props.elementRef
  */
 export function Tooltip({
   class: className,
   anchorName,
   direction,
+  elementRef,
   children,
   ...props
 }) {
@@ -33,6 +35,7 @@ export function Tooltip({
     </style>
     <div
       ...${props}
+      ref=${elementRef}
       class=${classes("tooltip", className)}
       style=${{ positionAnchor: anchorName, positionArea: direction }}
     >

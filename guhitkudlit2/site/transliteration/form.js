@@ -342,6 +342,8 @@ export function TransliterationForm({
         error && "transliterationTooltipError",
         showEditHint && "transliterationEditHint",
       )}
+      popover="manual"
+      elementRef=${showTooltipPopover}
       anchorName="--transliterationInput"
       direction="top"
     >
@@ -467,4 +469,10 @@ function Output({ value, placeholder, big }) {
       ${value || placeholder}
     </div>
   `;
+}
+
+function showTooltipPopover(element) {
+  if (element && !element.matches(":popover-open")) {
+    element.showPopover();
+  }
 }
