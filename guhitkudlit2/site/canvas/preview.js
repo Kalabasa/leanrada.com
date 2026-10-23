@@ -84,7 +84,25 @@ async function drawControlPreview(
   painterName,
   abortSignal,
 ) {
-  // TODO use static images
+  const fileName = formatPreviewFileName(
+    baybayinUnits,
+    viramaStyle,
+    arrangement,
+    density,
+    composeSteps,
+    painterName,
+    canvas.width,
+    canvas.height,
+  );
+  const cachedImage = new Image();
+  cachedImage.src = new URL(`../preview/options/${fileName}`, import.meta.url);
+  try {
+    await cachedImage.decode();
+    canvas.getContext("2d").drawImage(cachedImage, 0, 0);
+    return;
+  } catch {
+    console.warn(`Cached preview not found: ${fileName}`);
+  }
   const { render } = await import("./render.js");
   await render({
     baybayinUnits,
@@ -98,4 +116,25 @@ async function drawControlPreview(
     transparent: true,
     painterName,
   });
+}
+
+export function formatPreviewFileName(
+  baybayinUnits,
+  viramaStyle,
+  arrangement,
+  density,
+  composeSteps,
+  painterName,
+  width,
+  height,
+) {
+  return `${[
+    baybayinUnits.join("-"),
+    viramaStyle,
+    arrangement,
+    density,
+    composeSteps,
+    painterName,
+    `${width}x${height}`,
+  ].join("_")}.png`;
 }

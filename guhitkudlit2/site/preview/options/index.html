@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GuhitKudlit - Option previews</title>
+    <link rel="icon" href="../../favicon.png" />
+    <script async type="module">
+      import { render } from "../../canvas/render.js";
+      import { formatPreviewFileName } from "../../canvas/preview.js";
+
+      const previewParamsList = [
+        { baybayinUnits: ["ka", "la", "ba", "sa"], width: 120, height: 30 },
+        { baybayinUnits: ["ka", "la", "ba", "sa"], arrangement: "grid", width: 47, height: 47 },
+        { baybayinUnits: ["ka", "la", "ba", "sa"], arrangement: "diamond", width: 47, height: 65 },
+        { baybayinUnits: ["si", "ya", "ma", "n", "ya", "n"], density: -1.5, composeSteps: 15, width: 100 },
+        { baybayinUnits: ["si", "ya", "ma", "n", "ya", "n"], composeSteps: 15, width: 100 },
+        { baybayinUnits: ["si", "ya", "ma", "n", "ya", "n"], density: 1.5, composeSteps: 15, width: 100 },
+        { baybayinUnits: ["ku", "la", "y"], width: 100, height: 65 },
+        { baybayinUnits: ["ga"], painterName: "brush", width: 65, height: 65 },
+        { baybayinUnits: ["ga"], painterName: "spray", width: 65, height: 65 },
+        { baybayinUnits: ["ga"], painterName: "flat", width: 65, height: 65 },
+        { baybayinUnits: ["k", "du", "s"], density: -1.5 },
+        { baybayinUnits: ["k", "du", "s"], viramaStyle: "krus", density: -1.5 },
+        { baybayinUnits: ["ki", "du"], viramaStyle: "precolonial", density: -1.5 },
+        { baybayinUnits: ["da"], viramaStyle: "krus", density: -1.5 },
+        { baybayinUnits: ["ra"], viramaStyle: "krus", density: -1.5 },
+        { baybayinUnits: ["ku", "d", "li", "t"], painterName: "brush", viramaStyle: "pamudpod", arrangement: "normal", density: 0, width: 214, height: 104 },
+        { baybayinUnits: ["ku", "d", "li", "t"], painterName: "flat", viramaStyle: "pamudpod", arrangement: "normal", density: -1, width: 214, height: 104 },
+        { baybayinUnits: ["ku", "d", "li", "t"], painterName: "spray", viramaStyle: "krus", arrangement: "diamond", density: 1, width: 214, height: 104 },
+        { baybayinUnits: ["ku", "d", "li", "t"], painterName: "brush", viramaStyle: "krus", arrangement: "grid", density: 0, width: 214, height: 104 },
+      ];
+
+      const renderedCanvases = [];
+      const list = document.querySelector(".previewList");
+
+      for (const previewParams of previewParamsList) {
+        const {
+          baybayinUnits,
+          viramaStyle = "pamudpod",
+          arrangement = "normal",
+          density = 0,
+          composeSteps = 5,
+          painterName = "basic",
+          width = baybayinUnits.length * 40,
+          height = 50,
+        } = previewParams;
+        const fileName = formatPreviewFileName(
+          baybayinUnits,
+          viramaStyle,
+          arrangement,
+          density,
+          composeSteps,
+          painterName,
+          width,
+          height,
+        );
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const item = document.createElement("li");
+        const label = document.createElement("code");
+        label.textContent = fileName;
+        item.append(canvas, label);
+        list.append(item);
+
+        await render({
+          baybayinUnits,
+          viramaStyle,
+          arrangement,
+          density,
+          canvas,
+          speed: 100,
+          composeSteps,
+          transparent: true,
+          painterName,
+        });
+        renderedCanvases.push({ canvas, fileName });
+      }
+
+      const downloadButton = document.querySelector(".downloadButton");
+      downloadButton.disabled = false;
+      downloadButton.addEventListener("click", async () => {
+        for (const { canvas, fileName } of renderedCanvases) {
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = fileName;
+          link.click();
+          await delay(200);
+        }
+      });
+
+      function delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+    </script>
+    <style>
+      .previewList {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+        li {
+          display: flex;
+          align-items: center;
+          gap: 1em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="downloadButton" disabled>Download all</button>
+    <ul class="previewList"></ul>
+  </body>
+</html>

@@ -13,7 +13,7 @@ const basePushDistScale = 3.1;
 const springStrength = 0.3;
 const squeezeStrengthX = 0.1;
 const squeezeStrengthY = 0.12;
-const kudlitGravityX = 0.06;
+const kudlitGravityX = 0.08;
 const kudlitGravityY = 0.05;
 const kudlitDistFactor = 1.6;
 const krusSpringStrength = 0.08;
@@ -97,11 +97,8 @@ export async function compose(glyphStrokesList, opts = {}) {
       if (dist === 0) return { x: 0, y: 0 };
 
       const sameGlyph = curve.start.glyph === oCurve.start.glyph;
-      const distFactor = !curve.isKudlit
-        ? 1
-        : sameGlyph && !oCurve.isKudlit
-          ? kudlitDistFactor
-          : 0.9;
+      const distFactor =
+        sameGlyph && (curve.isKudlit || oCurve.isKudlit) ? kudlitDistFactor : 1;
       const pushFactor =
         sameGlyph && !curve.isKudlit && oCurve.isKudlit ? 0.1 : 1;
       let pushAmount =
