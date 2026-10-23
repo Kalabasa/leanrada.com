@@ -457,6 +457,7 @@ function Output({ value, placeholder, big }) {
       }
       .transliterationOutputBig {
         font-size: var(--font-size-xl);
+        min-height: calc(var(--font-size-xl) * 1.5);
       }
     </style>
     <div
