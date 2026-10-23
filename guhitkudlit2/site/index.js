@@ -31,7 +31,7 @@ import { classes } from "./util/classes.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
 
-const { AppPanelGroup, setRaisedIndex } = createPanelGroup();
+const { AppPanelGroup, activatePanel } = createPanelGroup();
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
   createTransliterationForm(viramaStyle, separateRa);
@@ -72,7 +72,7 @@ const { Canvas, canvasRef } = createCanvas(
     });
     when(
       () => calligraphyComplete.get(),
-      () => setRaisedIndex(/* File */ 5),
+      () => activatePanel(/* File */ 5),
     );
   },
 );
