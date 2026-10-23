@@ -369,7 +369,7 @@ function getCurvePoints({ start, end }) {
  * @returns {Point[]}
  */
 function getCubicBezierSamples([p0, p1, p2, p3]) {
-  return [0, 1 / 3, 2 / 3, 1].map((t) => {
+  return [0, 1 / 7, 2 / 7, 3 / 7, 4 / 7, 5 / 7, 6 / 7, 1].map((t) => {
     const u = 1 - t;
     return {
       x:
