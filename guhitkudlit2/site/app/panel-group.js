@@ -35,6 +35,11 @@ function AppPanelGroup({ panels, activeIndex, onActivateIndex }) {
   const groupRef = useRef();
 
   useEffect(() => {
+    const activeItem =
+      groupRef.current.querySelectorAll(".appPanelGroupItem")[activeIndex];
+    if (!activeItem.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
     if (!isSnapping(groupRef.current)) return;
     groupRef.current.parentElement.scrollTo({
       left: activeIndex * tabStepPx,
