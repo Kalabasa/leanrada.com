@@ -232,7 +232,7 @@ export function TransliterationForm({
         }
       }
       .transliterationInputTooltip {
-        animation: transliterationTooltipEnter 0.2s both;
+        animation: transliterationTooltipEnter 0.2s 0.1s both;
         .transliterationForm:focus-within ~ & {
           animation-delay: 1s;
         }
