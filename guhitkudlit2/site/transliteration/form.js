@@ -291,7 +291,14 @@ export function TransliterationForm({
         }
       }
     </style>
-    <form class="transliterationForm" action="javascript:false">
+    <form
+      class="transliterationForm"
+      action="javascript:false"
+      onSubmit=${() => {
+        if (matchMedia("(pointer: fine)").matches) return;
+        document.activeElement.blur();
+      }}
+    >
       <label class="transliterationRow">
         <${LabelText} tag="div">Tagalog word<//>
         <div ref=${inputTextWrapperRef}>
