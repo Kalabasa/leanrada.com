@@ -67,11 +67,10 @@ const { Canvas, canvasRef } = createCanvas(
     });
 
     inputText.set(config.text);
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        inputTextWrapperRef.current?.querySelector("input").focus();
-      }, 125);
-    });
+    setTimeout(() => {
+      if (!matchMedia("(pointer: fine)").matches) return;
+      inputTextWrapperRef.current?.querySelector("input").focus();
+    }, 125);
 
     const interaction = new AbortController();
     const lopts = {
