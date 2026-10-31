@@ -30,7 +30,7 @@ export function createAppMenuButton(
           padding: 0 var(--size-xs);
           font-family: "Cubao Narrow", sans-serif;
           font-weight: normal;
-          font-size: var(--font-size-xl);
+          font-size: 30px;
           letter-spacing: 0.02em;
           border-radius: var(--size-xs);
           background: #f8f7f6;
@@ -40,6 +40,10 @@ export function createAppMenuButton(
           transform-origin: bottom;
           transition: none 0.04s ease-in;
           transition-property: box-shadow, transform;
+
+          @media (max-width: 800px) {
+            font-size: 24px;
+          }
 
           > span {
             display: block;
