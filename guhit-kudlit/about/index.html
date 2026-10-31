@@ -40,7 +40,7 @@
     <link rel="stylesheet" href="../font/font.css" />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&family=Noto+Sans+Tagalog&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&display=swap"
     />
     <style>
       header {
@@ -280,10 +280,41 @@
         }
       }
 
+      .logotype {
+        font-family: "Cubao Wide", sans-serif;
+        .logotype1 {
+          font-family: "Cubao Wide", sans-serif;
+          letter-spacing: 1px;
+          color: var(--color-green-darker);
+        }
+        .logotype2 {
+          font-family: "Cubao Regular", sans-serif;
+          letter-spacing: 0px;
+          color: var(--color-orange-darker);
+        }
+        &.logotypeMask :is(.logotype1, .logotype2):not(:has(.revealed)) {
+          display: inline-block;
+          height: 1em;
+          vertical-align: middle;
+          aspect-ratio: 346 / 100;
+          background-color: currentColor;
+          mask-size: 100% 100%;
+          -webkit-text-fill-color: transparent;
+          overflow: hidden;
+
+          &.logotype1 {
+            mask-image: url("guhit.svg");
+          }
+          &.logotype2 {
+            mask-image: url("kudlit.svg");
+          }
+        }
+      }
+
       .headline {
         display: block;
         margin-bottom: 0.15em;
-        font-size: clamp(120%, 5vw, 200%);
+        font-size: clamp(160%, 5vw, 200%);
         line-height: 1.2;
         letter-spacing: -2px;
       }
@@ -374,7 +405,7 @@
         height: 100vh;
         z-index: -1;
         pointer-events: none;
-        opacity: 0.1;
+        opacity: 0.05;
       }
 
       #bgnoise {
@@ -402,22 +433,42 @@
         new AbortController().signal,
         {
           viramaStyle: "krus",
-          speed: 20,
-          scale: 1.2,
-          density: 1.2,
+          speed: 3,
+          scale: 1.22,
+          density: 1.1,
         },
       );
       let calligraphyProgress = 0;
+      let calligraphyProgressTarget = 0;
+      let lastScrollY = window.scrollY;
       document.addEventListener("scroll", onScroll);
       onScroll();
 
-      async function onScroll() {
+      async function onScroll(event) {
         if (calligraphyProgress >= 1) return;
-        while (
-          calligraphyProgress <
+
+        calligraphyProgressTarget = Math.max(
+          calligraphyProgressTarget,
           window.scrollY /
-            (document.documentElement.scrollHeight - window.innerHeight)
-        ) {
+            (document.documentElement.scrollHeight - window.innerHeight * 2),
+        );
+
+        let deltaProgress = 0;
+        if (Math.abs(window.scrollY - lastScrollY) > 10) {
+          deltaProgress = 1e-12;
+          lastScrollY = window.scrollY;
+        }
+
+        const target = Math.max(
+          1e-12,
+          calligraphyProgress + deltaProgress,
+          Math.min(
+            calligraphyProgress + deltaProgress,
+            calligraphyProgressTarget,
+          ),
+        );
+
+        while (calligraphyProgress < target) {
           const { value, done } = await calligraphyProgresses.next();
           if (done) {
             calligraphyProgress = 1;
@@ -576,7 +627,7 @@
       <p>
         <!--prettier-ignore-->
         <a id="backLink" href="../">
-            <img src="../app/logo.svg" alt="GuhitKudlit"><br>
+            <img src="../app/logo-tl.svg" alt="GuhitKudlit"><br>
             ⟵ Back to GuhitKudlit
           </a>
       </p>
@@ -604,8 +655,12 @@
           <img class="floatingGlyph hi" src="hi.png" alt="" />
           <img class="floatingGlyph li" src="li.png" alt="" />
           <span class="headline">
-            GuhitKudlit is a free webapp for making
-            <strong>Baybayin calligraphy</strong>.
+            <span class="logotype">
+              <span class="logotype1">Guhit</span>&shy;<span class="logotype2"
+                >Kudlit</span
+              ></span
+            >
+            is a free webapp for making <strong>Baybayin calligraphy</strong>.
           </span>
           I started this project in 2023 and have kept improving it in my free
           time. I’m a software engineer and artist and this was born of my
@@ -621,8 +676,9 @@
         <div>
           <p>
             Sometimes aesthetics become the only goal that the right spelling
-            and meaning of the actual words are lost. Sometimes you’d even see
-            tattoos that are actually unreadable. Often we choose
+            and meaning of the actual words are lost. You’d see tattoos,
+            posters, illustrations, etc. that don’t actually make sense. Often
+            we choose
             <strong>convenience over correctness</strong>, especially now with
             AI adding fuel to the fire.
           </p>
@@ -649,12 +705,12 @@
         </div>
         <div>
           <img class="image" src="respell.png" />
-          <h2>Human intelligence</h2>
+          <h2>Your human intelligence</h2>
           <p>
-            GuhitKudlit is not ‘smart’. There’s no AI or anything like that.
-            When something is unclear, like foreign letters, it leaves the
-            disambiguation to you who knows the name or word you want to convey
-            best. This way, you can create a result you can be proud of.
+            GuhitKudlit doesn’t try to be smart. When something is unclear, like
+            foreign letters, it leaves the disambiguation to you who knows the
+            name or word you want to convey best. This way, you can create a
+            result you can be proud of.
           </p>
         </div>
         <div>
@@ -669,7 +725,7 @@
             I’ve honed over the years. GuhitKudlit v2 uses a system of
             hand-authored Baybayin vector glyphs, mathematical layout and
             composition optimizers, and various brush and paint simulations. It
-            doesn’t use AI image generators.
+            doesn’t use AI.
           </p>
         </div>
         <div>
@@ -698,8 +754,13 @@
           <img class="floatingGlyph hi" src="hi.png" alt="" />
           <img class="floatingGlyph li" src="li.png" alt="" />
           <span class="headline">
-            Ang GuhitKudlit ay panggawa ng
-            <strong>kaligrapiyang Baybayin</strong>.
+            Ang
+            <span class="logotype logotypeMask">
+              <span class="logotype1">Guhit</span>&shy;<span class="logotype2"
+                >Kudlit</span
+              ></span
+            >
+            ay panggawa ng <strong>kaligrapiyang Baybayin</strong>.
           </span>
           Sinimulan ko ang proyektong to noong 2023 at pinagpatuloy sa sarili
           kong oras. Ako ay isang tagasining na
@@ -716,10 +777,12 @@
         <div>
           <p>
             Minsan hanggang estetik lang talaga tapos mali naman yung hulog o
-            mismong pagkakabaybay. Minsan makakakita ka pa ng tato na di naman
-            mabasa. Madalas kasi pinipili natin yung
+            mismong pagkakabaybay. Makakakita ka pa ng Baybayin na tato, poster,
+            larawan,
+            <span data-latin="at iba pa">ᜀᜆ᜕ ᜁᜊ ᜉ</span> na di naman
+            maintindihan. Madalas kasi pinipili natin yung
             <strong>madali kahit di tama</strong>, lalo na ngayong may
-            <span lang="en">AI</span> pang nakikisawsaw.
+            <span lang="en">AI</span> pang nakikigulo.
           </p>
           <img class="image" src="slop.png" />
         </div>
@@ -745,14 +808,13 @@
         </div>
         <div>
           <img class="image" src="respell.png" />
-          <h2>Walang dunung-dunungan</h2>
+          <h2>Karunungan mo</h2>
           <p>
-            Aaminin kong hindi masyadong matalino ang GuhitKudlit at tama lang
-            yon dahil ang tunay na karunungan ay nasa tao. Kapag may di malinaw
-            gaya ng banyagang letra, hahayaan nitong ikaw ang magpasya at
-            maglinaw bilang ikaw ang pinakanakakaalam sa pangalan o salitang
-            gusto mong iparating. Sa ganitong paraan ay makakagawa ka ng
-            resultang maipagmamalaki mo.
+            Hindi nagmamatalino ang GuhitKudlit. Kapag may di malinaw gaya ng
+            banyagang letra, hahayaan nitong ikaw ang magpasya at maglinaw
+            bilang ikaw ang pinakanakakaalam sa pangalan o salitang gusto mong
+            iparating. Sa ganitong paraan ay makakagawa ka ng resultang
+            maipagmamalaki mo.
           </p>
         </div>
         <div>
@@ -768,7 +830,7 @@
             <span lang="en">vector</span> para sa bawat simbolong Baybayin,
             matematikal na paglapat at pagkomposisyon, at simulasyon ng
             <span data-latin="iba’t-ibang">ᜁᜊᜁᜊᜅ᜕</span> pinsel at pintura. Di
-            ito gumagamit ng <span lang="en">AI image generator</span>.
+            ito gumagamit ng <span lang="en">AI</span>.
           </p>
         </div>
         <div>

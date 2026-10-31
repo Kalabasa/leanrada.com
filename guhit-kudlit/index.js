@@ -54,9 +54,16 @@ const { Canvas, canvasRef } = createCanvas(
     inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
 
     await hidePlaceholder(() => {
-      if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
-      if (config.separateRa !== undefined) separateRa.set(config.separateRa);
-      if (config.arrangement !== undefined) arrangement.set(config.arrangement);
+      for (const [key, input] of Object.entries({
+        painterName,
+        colorStyle,
+        viramaStyle,
+        separateRa,
+        arrangement,
+        density,
+      })) {
+        if (config[key] !== undefined) input.set(config[key]);
+      }
       inputTextWrapperRef.current?.style.setProperty(
         "view-transition-name",
         config.sourceElement.style.viewTransitionName,
@@ -67,11 +74,10 @@ const { Canvas, canvasRef } = createCanvas(
     });
 
     inputText.set(config.text);
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        inputTextWrapperRef.current?.querySelector("input").focus();
-      }, 125);
-    });
+    setTimeout(() => {
+      if (!matchMedia("(pointer: fine)").matches) return;
+      inputTextWrapperRef.current?.querySelector("input").focus();
+    }, 125);
 
     const interaction = new AbortController();
     const lopts = {
@@ -196,6 +202,7 @@ export function Index() {
           "panels";
         grid-gap: var(--size-m);
         height: 100vh;
+        height: 100svh;
         overflow: hidden;
       }
       .appLogo {

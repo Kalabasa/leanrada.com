@@ -150,8 +150,9 @@ export function TransliterationForm({
   viramaStyle,
   onInput,
 }) {
+  const [hasFocused, setHasFocused] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const showEditHint = !error && inputText && !hasInteracted;
+  const showEditHint = !error && inputText && hasFocused && !hasInteracted;
   const hasPrecolonialTransform = transformed?.some(({ transforms }) =>
     transforms.some(({ type }) => type === "drop" || type === "cluster"),
   );
@@ -290,7 +291,14 @@ export function TransliterationForm({
         }
       }
     </style>
-    <form class="transliterationForm" action="javascript:false">
+    <form
+      class="transliterationForm"
+      action="javascript:false"
+      onSubmit=${() => {
+        if (matchMedia("(pointer: fine)").matches) return;
+        document.activeElement.blur();
+      }}
+    >
       <label class="transliterationRow">
         <${LabelText} tag="div">Tagalog word<//>
         <div ref=${inputTextWrapperRef}>
@@ -304,6 +312,7 @@ export function TransliterationForm({
             onPointerDown=${() => setHasInteracted(true)}
             onKeyDown=${() => setHasInteracted(true)}
             onBlur=${() => setHasInteracted(true)}
+            onFocus=${() => setHasFocused(true)}
           />
         </div>
       </label>
@@ -456,6 +465,7 @@ function Output({ value, placeholder, big }) {
         opacity: var(--opacity-placeholder);
       }
       .transliterationOutputBig {
+        font-family: "Noto Sans Tagalog", "Karla", sans-serif;
         font-size: var(--font-size-xl);
         min-height: calc(var(--font-size-xl) * 1.5);
       }

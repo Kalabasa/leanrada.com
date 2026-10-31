@@ -57,6 +57,7 @@ export function OptionGroup({ name, value, onChange, columns, children }) {
           font-size: var(--font-size-s);
           font-weight: bold;
           border-radius: var(--size-xs);
+          text-align: center;
           &:has(input:checked) {
             anchor-name: --optionGroupOptionActive;
           }

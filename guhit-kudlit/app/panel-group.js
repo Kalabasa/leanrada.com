@@ -37,7 +37,10 @@ function AppPanelGroup({ panels, activeIndex, onActivateIndex }) {
   useEffect(() => {
     const activeItem =
       groupRef.current.querySelectorAll(".appPanelGroupItem")[activeIndex];
-    if (!activeItem.contains(document.activeElement)) {
+    if (
+      groupRef.current.contains(document.activeElement) &&
+      !activeItem.contains(document.activeElement)
+    ) {
       document.activeElement.blur();
     }
     if (!isSnapping(groupRef.current)) return;

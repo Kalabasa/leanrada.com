@@ -79,7 +79,7 @@ export function createSpellingControls() {
         <div
           class=${classes(
             "spellingControl",
-            (!baybayinUnits.get().length || !inputText.get().includes("r")) &&
+            (!baybayinUnits.get().length || !inputText.get().toLowerCase().includes("r")) &&
               "spellingControlDimmed",
           )}
         >

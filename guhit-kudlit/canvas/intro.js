@@ -1,40 +1,63 @@
 import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
-import { useEffect, useRef } from "../lib/htm-preact.js";
+import { useEffect, useRef, useState } from "../lib/htm-preact.js";
 import { delay } from "../util/delay.js";
 
+const now = new Date();
 const exampleConfigs = [
+  now.getMonth() === /*May*/ 4 && {
+    text: "pamana",
+    arrangement: "grid",
+    density: 1,
+  },
+  now.getMonth() === /*Jun*/ 5 && {
+    text: "malaya",
+    viramaStyle: "pamudpod",
+    arrangement: "normal",
+    density: 1,
+  },
+  now.getMonth() === /*Aug*/ 7 && {
+    text: "wika",
+    arrangement: "grid",
+  },
+  now.getMonth() === /*Dec*/ 11 && {
+    text: "pasko",
+    viramaStyle: "krus",
+    arrangement: "grid",
+    painterName: "flat",
+    colorStyle: "greenOnBlack",
+    density: 1,
+  },
   {
     text: "masigla",
     viramaStyle: "krus",
-    separateRa: false,
     arrangement: "diamond",
-  },
-  {
-    text: "kuting",
-    viramaStyle: "krus",
-    separateRa: false,
-    arrangement: "normal",
-  },
-  {
-    text: "iiyak",
-    viramaStyle: "precolonial",
-    separateRa: false,
-    arrangement: "grid",
-  },
-  {
-    text: "tatawa",
-    viramaStyle: "pamudpod",
-    separateRa: false,
-    arrangement: "grid",
   },
   {
     text: "basag-ulo",
     viramaStyle: "krus",
-    separateRa: false,
     arrangement: "diamond",
+    density: 1,
   },
-];
+  {
+    text: "kuting",
+    viramaStyle: "krus",
+    arrangement: "normal",
+  },
+  {
+    text: "tatawa",
+    viramaStyle: "pamudpod",
+    arrangement: "grid",
+  },
+  {
+    text: "iiyak",
+    viramaStyle: "precolonial",
+    arrangement: "grid",
+  },
+]
+  .filter(Boolean)
+  .slice(0, 5);
+
 const backgroundWords = [
   "bay bayin",
   "guhi kuli",
@@ -50,6 +73,7 @@ const backgroundWords = [
 
 export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
   const backgroundCanvasRef = useRef();
+  const [tlLogo, setTlLogo] = useState(false);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -162,7 +186,12 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         ref=${backgroundCanvasRef}
       ></canvas>
       <div class="introHeader">
-        <img src="app/logo.svg" alt="GuhitKudlit" style=${{ height: "14vh" }} />
+        <img
+          src=${tlLogo ? "app/logo-tl.svg" : "app/logo.svg"}
+          alt="GuhitKudlit"
+          style=${{ height: "14vh" }}
+          onClick=${() => setTlLogo(!tlLogo)}
+        />
         <h2 class="introSubheading">
           Baybayin translator (transliterator)<br />& calligraphy maker
         </h2>
