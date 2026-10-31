@@ -98,10 +98,11 @@ function drawUrl(canvas) {
   const text = atob("TGVhblJhZGEuY29tL0d1aGl0LUt1ZGxpdA==").toUpperCase();
   const context = canvas.getContext("2d");
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  const scale = Math.max(6, canvas.width * 0.007);
 
   context.save();
-  context.font = `bold ${14}px Georgia, "Noto Serif", serif`;
-  context.letterSpacing = `${1}px`;
+  context.font = `bold ${scale}px Georgia, "Noto Serif", serif`;
+  context.letterSpacing = `${scale * 0.08}px`;
   context.fillStyle = "#000";
   context.globalAlpha = 0.05;
   context.textBaseline = "bottom";
@@ -148,7 +149,7 @@ function drawUrl(canvas) {
   }
 
   for (const c of bestChars) {
-    context.fillText(c.char, c.x, c.y - 1);
+    context.fillText(c.char, c.x, c.y - scale * 0.08);
   }
   context.restore();
 }
