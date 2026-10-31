@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GuhitKudlit - Baybayin calligraphy maker</title>
+    <link rel="icon" href="../favicon.png" />
+    <script defer>
+      if (!location.pathname.endsWith("/")) {
+        const url = new URL(location);
+        url.pathname += "/";
+        location.replace(url);
+      }
+    </script>
+    <script async type="module">
+      import { PARAMS } from "../app/flags.js";
+      import { render } from "../canvas/render.js";
+      import { syllabicate } from "../transliteration/syllabicate.js";
+
+      if (window.innerWidth !== 1260 || window.innerHeight !== 630) {
+        alert(
+          `Viewport is ${window.innerWidth}×${window.innerHeight}, expected 1260×630`,
+        );
+      }
+
+      const word = PARAMS.get("word") ?? "";
+      const { baybayinUnits } = syllabicate(word);
+
+      const aspectRatio = Math.min(1.5, 2 * (window.innerWidth / window.innerHeight));
+      const canvasWidth =
+        Math.min(window.innerWidth, window.innerHeight * aspectRatio) * 0.9;
+
+      const canvas = document.querySelector(".previewCanvas canvas");
+      canvas.width = canvasWidth;
+      canvas.height = canvasWidth / aspectRatio;
+      canvas.style.setProperty("--aspect-ratio", aspectRatio);
+
+      document.querySelector(".previewInput").textContent = word;
+
+      render({
+        baybayinUnits,
+        viramaStyle: "pamudpod",
+        arrangement: "normal",
+        density: 0.5,
+        canvas,
+        speed: 20,
+        painterName: "brush",
+      });
+    </script>
+    <link rel="stylesheet" href="../lib/reset.css" />
+    <link rel="stylesheet" href="../global.css" />
+    <link rel="stylesheet" href="../font/font.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Karla&display=swap"
+      fetchpriority="low"
+    />
+  </head>
+  <body>
+    <style>
+      .preview {
+        background: var(--color-bg-darker);
+        display: grid;
+        grid-template-areas: "canvas";
+        height: 100vh;
+        overflow: hidden;
+      }
+      .previewLogo {
+        grid-area: canvas;
+        justify-self: center;
+        align-self: start;
+        margin-top: var(--size-xs);
+        box-shadow: var(--shadow-xl);
+        z-index: 1;
+      }
+      .previewCanvas {
+        grid-area: canvas;
+        display: grid;
+        place-content: center;
+        container-type: size;
+        margin: 5vh;
+
+        canvas {
+          background: #fff;
+          border-radius: 3px;
+          width: min(100cqw, 100cqh * var(--aspect-ratio));
+          height: auto;
+          box-shadow: var(--shadow-m);
+        }
+      }
+      .previewInput {
+        grid-area: canvas;
+        justify-self: center;
+        align-self: end;
+        margin-bottom: var(--size-xs);
+        z-index: 1;
+        width: 20vw;
+        border: solid 2px var(--color-fg-secondary);
+        border-radius: var(--size-xs);
+        padding: var(--size-xs);
+        font-size: 4vh;
+        text-align: center;
+        background: var(--color-bg);
+        box-shadow: var(--shadow-xl);
+        zoom: 2;
+
+        &::after {
+          content: "";
+          display: inline-block;
+          width: 1px;
+          height: 1lh;
+          vertical-align: text-bottom;
+          background: var(--color-fg);
+        }
+      }
+    </style>
+    <div class="preview">
+      <div class="previewLogo"><img src="../app/logo.svg" alt="GuhitKudlit" style="height: 20svh"></div>
+      <main class="previewCanvas"><canvas></canvas></main>
+      <div class="previewInput"></div>
+    </div>
+  </body>
+</html>

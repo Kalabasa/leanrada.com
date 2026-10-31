@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>GuhitKudlit Guide to Baybayin</title>
+    <meta
+      property="og:title"
+      content="GuhitKudlit Baybayin calligraphy maker - Guide"
+    />
+
+    <link rel="icon" href="../favicon.png" />
+
+    <meta property="og:url" content="https://leanrada.com/guhit-kudlit/help/" />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:description"
+      content="Baybayin calligraphy maker and transliterator!"
+    />
+    <meta
+      property="og:image"
+      content="https://leanrada.com/guhit-kudlit/preview/image.png"
+    />
+    <meta property="og:image:width" content="1260" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Screenshot of GuhitKudlit showing ‘sigabo’ in Baybayin calligraphy"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script async src="/analytics/analytics.js"></script>
+
+    <link rel="stylesheet" href="../lib/reset.css" />
+    <link rel="stylesheet" href="../global.css" />
+    <link rel="stylesheet" href="../font/font.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&family=Noto+Sans+Tagalog&display=swap"
+    />
+    <style>
+      body {
+        background: url("../bgnoise.png"), var(--color-bg-darker);
+      }
+
+      main {
+        margin: var(--size-l) var(--size-m);
+        display: flex;
+        flex-direction: column;
+        gap: var(--size-l);
+        line-height: 1.3;
+      }
+
+      header,
+      .errorHelp {
+        margin: var(--size-l) auto;
+        padding: 0 var(--size-l);
+        max-width: 800px;
+        align-self: center;
+      }
+
+      footer {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: var(--size-m) var(--size-l);
+        margin: var(--size-l);
+
+        a {
+          display: inline-flex;
+          gap: var(--size-xs);
+          align-items: center;
+        }
+      }
+
+      a {
+        text-decoration: underline;
+        color: var(--color-orange-darker);
+        text-underline-offset: 0.2em;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: var(--font-size-xl);
+        font-weight: bold;
+      }
+
+      h2 {
+        font-size: var(--font-size-l);
+        font-weight: bold;
+        margin-bottom: var(--size-s);
+        text-transform: uppercase;
+      }
+
+      p {
+        em {
+          font-style: italic;
+        }
+
+        + p {
+          margin-top: var(--size-s);
+        }
+      }
+
+      strong {
+        font-weight: bold;
+      }
+
+      del {
+        font-weight: bold;
+        color: var(--color-danger);
+        background: #fed;
+        box-shadow: 0 0 0 1px #fed;
+        border-radius: var(--size-xs);
+      }
+
+      ins {
+        font-weight: bold;
+        color: var(--color-green-darker);
+        background: #efd;
+        box-shadow: 0 0 0 1px #efd;
+        border-radius: var(--size-xs);
+      }
+
+      ruby {
+        font-family: "Noto Sans Tagalog", sans-serif;
+        font-size: var(--font-size-xl);
+      }
+
+      rt {
+        font-family: "Karla", sans-serif;
+        font-size: var(--font-size-s);
+        font-weight: bold;
+        color: var(--color-fg-secondary);
+        padding: 0 var(--size-xs);
+      }
+
+      section,
+      .errorHelp {
+        background: var(--color-bg);
+        border-radius: var(--size-s);
+        box-shadow: var(--shadow-m), var(--inset-shade);
+        padding: var(--size-m);
+      }
+
+      ul.examples {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: var(--size-xs) var(--size-m);
+
+        li {
+          display: flex;
+          gap: var(--size-xs);
+        }
+
+        .before {
+          color: var(--color-fg-secondary);
+        }
+      }
+
+      .specimen {
+        text-align: center;
+        padding: var(--size-xs);
+        border-radius: var(--size-xs);
+        background: var(--color-bg-secondary);
+        rt {
+          padding-bottom: var(--size-xs);
+        }
+      }
+
+      #errorHelpContainer {
+        display: none;
+        min-height: 60vh;
+        place-items: center;
+
+        [data-error-help-pending] &,
+        &:has(.errorHelp:not([hidden])) {
+          display: grid;
+        }
+      }
+
+      .highlightFlash {
+        animation: errorHelpFlash 6s cubic-bezier(0, 0.8, 0.2, 1);
+      }
+
+      .errorHelp {
+        > p:first-child {
+          font-size: var(--font-size-l);
+
+          em {
+            font-style: normal;
+            font-weight: bold;
+            color: var(--color-orange-darker);
+          }
+        }
+      }
+      @keyframes errorHelpFlash {
+        from {
+          opacity: 0;
+          scale: 0.8;
+          background: var(--color-green);
+        }
+        10% {
+          opacity: 1;
+          scale: 1;
+        }
+      }
+
+      #letterErrorHelp {
+        .examples {
+          margin: var(--size-m) var(--size-s);
+        }
+
+        p:has(+ #letterErrorExamples:empty),
+        #letterErrorExamples:empty {
+          display: none;
+        }
+
+        #letterErrorExamples + p {
+          margin-top: var(--size-s);
+        }
+      }
+
+      #cheatsheetCards {
+        width: 100%;
+        max-width: calc(3 * 600px + 2 * var(--size-l));
+        align-self: center;
+        column-width: 480px;
+        column-gap: var(--size-l);
+
+        section {
+          break-inside: avoid;
+          margin-bottom: var(--size-l);
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      #unsupportedLetters {
+        margin-top: var(--size-s);
+      }
+
+      .unsupportedLetter {
+        padding: var(--size-s) 0;
+
+        h3 {
+          font-weight: bold;
+          font-size: var(--font-size-l);
+        }
+
+        .examples {
+          margin-left: var(--size-s);
+        }
+      }
+
+      #cheatExample {
+        text-align: center;
+        margin: var(--size-m) 0;
+      }
+
+      .glyphs {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+        gap: var(--size-xs);
+        margin: var(--size-s) 0;
+      }
+
+      #precolonialTables {
+        display: grid;
+        overflow-x: auto;
+        margin: 0 calc(var(--size-m) * -1);
+        padding: 0 var(--size-m);
+        grid-template-columns: auto 1fr 1fr;
+        column-gap: var(--size-s);
+        margin-top: var(--size-s);
+
+        > p {
+          grid-column: 1 / -1;
+        }
+      }
+
+      .precolonialExamples {
+        display: grid;
+        grid-template-columns: subgrid;
+        grid-column: 1 / -1;
+        align-items: center;
+        gap: var(--size-xs) var(--size-s);
+        margin: var(--size-s) 0;
+
+        thead,
+        tbody,
+        tr {
+          display: contents;
+        }
+
+        .word {
+          font-style: italic;
+        }
+
+        .spellingName {
+          font-size: var(--font-size-s);
+          font-weight: bold;
+          color: var(--color-fg-secondary);
+          text-align: center;
+        }
+
+        ruby {
+          font-size: var(--font-size-l);
+        }
+      }
+
+      .conversionRules li {
+        margin-left: var(--size-m);
+        list-style: disc;
+
+        & + li {
+          margin-top: var(--size-xs);
+        }
+
+        q {
+          font-family: monospace;
+          background: var(--color-bg-secondary);
+          border-radius: 4px;
+          padding: 0 4px;
+        }
+      }
+    </style>
+    <script>
+      if (new URLSearchParams(location.search).get("word")) {
+        document.documentElement.dataset.errorHelpPending = "";
+      }
+    </script>
+    <script type="module">
+      import { PARAMS } from "../app/flags.js";
+
+      const requestParams = PARAMS;
+      const requestedWord = requestParams.get("word") ?? "";
+      const viramaStyle = requestParams.get("viramaStyle");
+
+      const backParams = new URLSearchParams();
+      if (requestedWord) {
+        backParams.set("word", requestedWord);
+      }
+      if (viramaStyle) {
+        backParams.set("viramaStyle", viramaStyle);
+      }
+      if (viramaStyle === "precolonial") {
+        document
+          .getElementById("precolonialHelp")
+          .classList.add("highlightFlash");
+      }
+      if (backParams.size > 0) {
+        document.getElementById("backLink").href = "../?" + backParams;
+      }
+
+      if (requestedWord) {
+        const { InvalidLetterError } =
+          await import("../transliteration/invalid-letter-error.js");
+        const { InvalidSyllabicationError } =
+          await import("../transliteration/invalid-syllabication-error.js");
+        const { syllabicate } =
+          await import("../transliteration/syllabicate.js");
+
+        try {
+          syllabicate(requestedWord, {
+            precolonial: viramaStyle === "precolonial",
+          });
+        } catch (error) {
+          if (error instanceof InvalidLetterError) {
+            showInvalidLetterHelp(error);
+          } else if (error instanceof InvalidSyllabicationError) {
+            showInvalidSyllabicationHelp(error);
+          } else {
+            throw error;
+          }
+        } finally {
+          delete document.documentElement.dataset.errorHelpPending;
+        }
+      }
+
+      function showInvalidLetterHelp(invalidLetterError) {
+        document.getElementById("letterErrorLetters").textContent =
+          invalidLetterError.formatLetters();
+        const letterErrorExamples = document.getElementById(
+          "letterErrorExamples",
+        );
+        for (const letter of invalidLetterError.letters) {
+          const letterExamples = document.querySelectorAll(
+            `[data-letter="${letter}"] li`,
+          );
+          for (const letterExample of letterExamples) {
+            letterErrorExamples.append(letterExample.cloneNode(true));
+          }
+        }
+        document.getElementById("letterErrorHelp").hidden = false;
+      }
+
+      function showInvalidSyllabicationHelp(invalidSyllabicationError) {
+        document.getElementById("precolonialErrorWord").textContent =
+          invalidSyllabicationError.word;
+        document.getElementById("precolonialErrorViramaLink").href =
+          "../?word=" +
+          encodeURIComponent(requestedWord) +
+          "&viramaStyle=pamudpod";
+        document.getElementById("precolonialErrorHelp").hidden = false;
+      }
+    </script>
+  </head>
+  <body>
+    <header>
+      <p>
+        <!--prettier-ignore-->
+        <a id="backLink" href="../">
+            <img src="../app/logo.svg" alt="GuhitKudlit"><br>
+            ⟵ Back to GuhitKudlit
+          </a>
+      </p>
+    </header>
+    <main>
+      <div id="errorHelpContainer">
+        <div id="letterErrorHelp" class="errorHelp highlightFlash" hidden>
+          <p>
+            Baybayin doesn’t really have the letter
+            <em id="letterErrorLetters"></em>.
+          </p>
+          <p>
+            There’s no direct equivalent for this letter. If you want to convert
+            a word or name with this letter, you’d need to respell it in Tagalog
+            for a more accurate Baybayin conversion.
+          </p>
+          <p>
+            First, you can try substituting this letter with the equivalent
+            Tagalog sounds. For example:
+          </p>
+          <ul id="letterErrorExamples" class="examples"></ul>
+          <p>
+            GuhitKudlit will not guess to avoid mistakes. You know your word or
+            name better, so I highly recommend respelling it by yourself. Trust,
+            this part is best left to humans (thinking of a permanent tattoo?).
+          </p>
+          <p>
+            Read below for a quick guide! Baybayin is easy, you can learn it in
+            a few minutes!
+          </p>
+        </div>
+
+        <div id="precolonialErrorHelp" class="errorHelp highlightFlash" hidden>
+          <p>
+            You are using <strong>precolonial</strong> spelling mode. We can’t
+            spell ‘<em id="precolonialErrorWord"></em>’ by itself.
+          </p>
+          <p>
+            In precolonial Baybayin, sounds are written as syllables with
+            vowels. A consonant on its own cannot be expressed. You can try
+            adding a vowel, or switch to the
+            <a id="precolonialErrorViramaLink">virama spelling</a>.
+          </p>
+          <p>Read below for a quick guide!</p>
+        </div>
+      </div>
+
+      <h1>GuhitKudlit Guide</h1>
+      <div id="cheatsheetCards">
+        <section>
+          <h2>Foreign sounds</h2>
+          <p>
+            Baybayin has no symbols for C, F, J, Q, V, X, and Z. To use foreign
+            words or names in Baybayin, spell the word the way it sounds in the
+            Tagalog alphabet (<a
+              href="https://en.wikipedia.org/wiki/Abakada_alphabet"
+              target="_blank"
+              >abakada</a
+            >) instead. Kung ano ang bigkas, siya rin ang baybay.
+          </p>
+          <div id="unsupportedLetters">
+            <div class="unsupportedLetter" data-letter="c">
+              <h3>C</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>C</del>at</span>⟶<span
+                    ><ins>K</ins>at</span
+                  >
+                </li>
+                <li>
+                  <span class="before"><del>Ch</del>art</span>⟶<span
+                    ><ins>Ts</ins>art</span
+                  >
+                </li>
+                <li>
+                  <span class="before"><del>Ch</del>rome</span>⟶<span
+                    ><ins>K</ins>rowm</span
+                  >
+                </li>
+                <li>
+                  <span class="before">A<del>c</del>tion</span>⟶<span
+                    >Ak<ins>siy</ins>on</span
+                  >
+                </li>
+                <li>
+                  <span class="before">Bra<del>c</del>e</span>⟶<span
+                    >Brey<ins>s</ins></span
+                  >
+                </li>
+                <li>
+                  <span class="before">O<del>c</del>ean</span>⟶<span
+                    >Ow<ins>sy</ins>an</span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="f">
+              <h3>F</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>F</del>ootball</span>⟶<span
+                    ><ins>P</ins>utbol</span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="j">
+              <h3>J</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>J</del>eepney</span>⟶<span
+                    ><ins>Dy</ins>ipni</span
+                  >
+                </li>
+                <li>
+                  <span class="before">F<del>j</del>ord</span>⟶<span
+                    >P<ins>y</ins>ord</span
+                  >
+                </li>
+                <li>
+                  <span class="before">Mo<del>j</del>ito</span>⟶<span
+                    >Mo<ins>h</ins>ito</span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="q">
+              <h3>Q</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>Q</del>ueen</span>⟶<span
+                    ><ins>K</ins>win</span
+                  >
+                </li>
+                <li>
+                  <span class="before">Uni<del>q</del>ue</span>⟶<span
+                    >Yuni<ins>k</ins></span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="v">
+              <h3>V</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>V</del>ase</span>⟶<span
+                    ><ins>B</ins>eys</span
+                  >
+                </li>
+                <li>
+                  <span class="before">Ali<del>v</del>e</span>⟶<span
+                    >Alay<ins>b</ins></span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="x">
+              <h3>X</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>X</del>ero<del>x</del></span
+                  >⟶<span><ins>S</ins>ero<ins>ks</ins></span>
+                </li>
+                <li>
+                  <span class="before"><del>X</del>ylophone</span>⟶<span
+                    ><ins>S</ins>aylopon</span
+                  >
+                </li>
+                <li>
+                  <span class="before">Bo<del>x</del></span
+                  >⟶<span>Ba<ins>ks</ins></span>
+                </li>
+              </ul>
+            </div>
+            <div class="unsupportedLetter" data-letter="z">
+              <h3>Z</h3>
+              <ul class="examples">
+                <li>
+                  <span class="before"><del>Z</del>oo</span>⟶<span
+                    ><ins>S</ins>u</span
+                  >
+                </li>
+                <li>
+                  <span class="before">Ama<del>z</del>ing</span>⟶<span
+                    >Amey<ins>s</ins>ing</span
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Baybayin cheatsheet</h2>
+          <p>
+            Baybayin is generally one symbol per syllable. It’s an
+            <strong
+              ><a
+                href="https://www.omniglot.com/writing/abugidas.htm"
+                target="_blank"
+                >abugida</a
+              ></strong
+            >.
+          </p>
+          <p id="cheatExample">
+            <ruby>ᜊᜓ<rt>bu</rt>ᜑ<rt>ha</rt>ᜌ᜕<rt>y</rt></ruby>
+          </p>
+          <p>Here are the vowel syllables</p>
+          <div class="glyphs">
+            <div class="specimen">
+              <ruby>ᜀ<rt>a</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜁ<rt>i/e</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜂ<rt>u/o</rt></ruby>
+            </div>
+          </div>
+          <p>And the consonant syllables</p>
+          <div class="glyphs">
+            <div class="specimen">
+              <ruby>ᜊ<rt>ba</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜃ<rt>ka</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜇ<rt>da/ra</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜄ<rt>ga</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜑ<rt>ha</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜎ<rt>la</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜋ<rt>ma</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜈ<rt>na</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜅ<rt>nga</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜉ<rt>pa</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜐ<rt>sa</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜆ<rt>ta</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜏ<rt>wa</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜌ<rt>ya</rt></ruby>
+            </div>
+          </div>
+          <p>
+            To indicate the vowel for a syllable, a
+            <strong>kudlit</strong> diacritic is used. When placed above it
+            changes the syllable’s vowel to an E/I sound. Below it becomes an
+            O/U sound. To remove the vowel, a final mark called a
+            <strong>virama</strong> is used.
+          </p>
+          <div class="glyphs">
+            <div class="specimen">
+              <ruby>ᜃ<rt>ka</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜃᜒ<rt>ki/ke</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜃᜓ<rt>ku/ko</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜃ᜕<rt>k</rt></ruby>
+            </div>
+            <div class="specimen">
+              <ruby>ᜃ᜔<rt>k</rt></ruby>
+            </div>
+          </div>
+        </section>
+
+        <section id="precolonialHelp">
+          <h2>Precolonial</h2>
+          <p>
+            GuhitKudlit supports two major spelling modes:
+            <strong>precolonial</strong> (no vowel canceller) and
+            <strong>virama</strong> (vowel canceller). Before the Spanish introduction, only the
+            beginning consonant and vowel of each syllable were written and any
+            final consonant was inferred from context.
+          </p>
+          <div id="precolonialTables">
+            <table class="precolonialExamples">
+              <thead>
+                <tr>
+                  <td></td>
+                  <th class="spellingName">virama</th>
+                  <th class="spellingName">precolonial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="word">baybayin</td>
+                  <td class="specimen">
+                    <ruby
+                      >ᜊ<rt>ba</rt><del>ᜌ᜔</del><rt>y</rt>ᜊ<rt>ba</rt>ᜌᜒ<rt
+                        >yi</rt
+                      ><del>ᜈ᜔</del><rt>n</rt></ruby
+                    >
+                  </td>
+                  <td class="specimen">
+                    <ruby>ᜊ<rt>ba</rt>ᜊ<rt>ba</rt>ᜌᜒ<rt>yi</rt></ruby>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="word">salamat</td>
+                  <td class="specimen">
+                    <ruby
+                      >ᜐ<rt>sa</rt>ᜎ<rt>la</rt>ᜋ<rt>ma</rt><del>ᜆ᜔</del
+                      ><rt>t</rt></ruby
+                    >
+                  </td>
+                  <td class="specimen">
+                    <ruby>ᜐ<rt>sa</rt>ᜎ<rt>la</rt>ᜋ<rt>ma</rt></ruby>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="word">bundok</td>
+                  <td class="specimen">
+                    <ruby
+                      >ᜊᜓ<rt>bu</rt><del>ᜈ᜔</del><rt>n</rt>ᜇᜓ<rt>du</rt
+                      ><del>ᜃ᜔</del><rt>k</rt></ruby
+                    >
+                  </td>
+                  <td class="specimen">
+                    <ruby>ᜊᜓ<rt>bu</rt>ᜇᜓ<rt>du</rt></ruby>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>Consonant clusters could be broken up into extra syllables</p>
+            <table class="precolonialExamples">
+              <thead>
+                <tr>
+                  <td></td>
+                  <th class="spellingName">virama</th>
+                  <th class="spellingName">precolonial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="word">plano</td>
+                  <td class="specimen">
+                    <ruby>ᜉ᜔<rt>p</rt>ᜎ<rt>la</rt>ᜈᜓ<rt>nu</rt></ruby>
+                  </td>
+                  <td class="specimen">
+                    <ruby
+                      ><ins>ᜉ</ins><rt>pa</rt>ᜎ<rt>la</rt>ᜈᜓ<rt>nu</rt></ruby
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td class="word">pwede</td>
+                  <td class="specimen">
+                    <ruby>ᜉ᜔<rt>p</rt>ᜏᜒ<rt>wi</rt>ᜇᜒ<rt>di</rt></ruby>
+                  </td>
+                  <td class="specimen">
+                    <ruby
+                      ><ins>ᜉᜓ</ins><rt>pu</rt>ᜏᜒ<rt>wi</rt>ᜇᜒ<rt>di</rt></ruby
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              Since words were inferred from context, it’s not great for
+              uncommon or foreign names.
+            </p>
+            <table class="precolonialExamples">
+              <thead>
+                <tr>
+                  <td></td>
+                  <th class="spellingName">virama</th>
+                  <th class="spellingName">precolonial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="word">kristo</td>
+                  <td class="specimen">
+                    <ruby
+                      >ᜃ᜔<rt>k</rt>ᜇᜒ<rt>di</rt><del>ᜐ᜔</del><rt>s</rt>ᜆᜓ<rt
+                        >tu</rt
+                      ></ruby
+                    >
+                  </td>
+                  <td class="specimen">
+                    <ruby
+                      ><ins>ᜃᜒ</ins><rt>ki</rt>ᜇᜒ<rt>di</rt>ᜆᜓ<rt>tu</rt></ruby
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2>Guhit Kudlit quirks</h2>
+          <ul class="conversionRules">
+            <li><q>ng</q> and <q>mga</q> are spelled as pronounced.</li>
+          </ul>
+        </section>
+      </div>
+    </main>
+    <footer>
+      <a href="../">GuhitKudlit</a>
+      <a href="../about/">About</a>
+      <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="../file/instagram.svg#icon" />
+        </svg>
+        @guhitkudlit
+      </a>
+      <a href="../tip/" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="../file/kofi.svg#icon" />
+        </svg>
+        Tip
+      </a>
+      <a href="mailto:guhitkudlit@leanrada.com" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="../file/mail.svg#icon" />
+        </svg>
+        guhitkudlit@leanrada.com
+      </a>
+      <span>
+        made with &lt;3 by
+        <a href="https://leanrada.com/" target="_blank">Lean</a>
+      </span>
+      <span>&copy;2023-2026 Lean Rada</span>
+    </footer>
+  </body>
+</html>

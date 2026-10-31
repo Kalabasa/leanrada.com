@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>About GuhitKudlit</title>
+    <meta
+      property="og:title"
+      content="GuhitKudlit Baybayin calligraphy maker - About"
+    />
+
+    <link rel="icon" href="../favicon.png" />
+
+    <meta
+      property="og:url"
+      content="https://leanrada.com/guhit-kudlit/about/"
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:description"
+      content="Baybayin calligraphy maker and transliterator!"
+    />
+    <meta
+      property="og:image"
+      content="https://leanrada.com/guhit-kudlit/preview/image.png"
+    />
+    <meta property="og:image:width" content="1260" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Screenshot of GuhitKudlit showing ‘sigabo’ in Baybayin calligraphy"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script async src="/analytics/analytics.js"></script>
+
+    <link rel="stylesheet" href="../lib/reset.css" />
+    <link rel="stylesheet" href="../global.css" />
+    <link rel="stylesheet" href="../font/font.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&family=Noto+Sans+Tagalog&display=swap"
+    />
+    <style>
+      header {
+        margin: var(--size-l) auto;
+        padding: 0 var(--size-l);
+        width: 100%;
+        max-width: 800px;
+        align-self: center;
+      }
+
+      body {
+        background: var(--color-bg-darker);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        font-optical-sizing: auto;
+      }
+
+      .optionGroup {
+        anchor-scope: --optionGroupOptionActive;
+        height: 100%;
+        display: flex;
+        position: relative;
+        z-index: 0;
+        &::before {
+          content: "";
+          background: #f0f0f0;
+          position: absolute;
+          inset: 0;
+          border-radius: var(--size-xs);
+          z-index: -2;
+        }
+        &::after {
+          content: "";
+          background: #fff;
+          border-radius: var(--size-xs);
+          position: absolute;
+          inset: anchor(--optionGroupOptionActive top)
+            anchor(--optionGroupOptionActive right)
+            anchor(--optionGroupOptionActive bottom)
+            anchor(--optionGroupOptionActive left);
+          position-visibility: anchors-valid;
+          box-shadow:
+            var(--inset-shade),
+            inset 0 0 0 4px var(--color-orange);
+          transition: inset 0.15s;
+          z-index: -1;
+        }
+        &:not(:has(input:checked))::after {
+          display: none;
+        }
+        &:has(input:focus-visible) {
+          outline: solid 2px var(--color-green);
+          outline-offset: 2px;
+        }
+      }
+      .optionGroupOption {
+        flex: 1 1 1%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: var(--size-xs);
+        cursor: pointer;
+        font-weight: bold;
+        border-radius: var(--size-xs);
+        &:has(input:checked) {
+          anchor-name: --optionGroupOptionActive;
+        }
+        &:not(:has(input:checked)) {
+          &:hover {
+            background: #0001;
+          }
+          &:active {
+            background: #0002;
+          }
+        }
+        input {
+          position: absolute;
+          opacity: 0;
+          pointer-events: none;
+        }
+      }
+
+      .headerRow {
+        margin: var(--size-s) 0;
+        gap: var(--size-m);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: var(--font-size-l);
+        font-weight: bold;
+      }
+
+      .languageSelector {
+        padding: var(--size-xs);
+        border-radius: var(--size-xs);
+        background: var(--color-bg);
+        box-shadow: var(--shadow-m), var(--inset-shade);
+        margin-left: auto;
+        width: 200px;
+        height: 60px;
+        font-size: var(--font-size-m);
+        z-index: 1;
+      }
+
+      main {
+        margin: 0 auto;
+        padding: 0 var(--size-l);
+        font-size: clamp(var(--font-size-l), 1.5vw, var(--font-size-xl));
+        letter-spacing: -1px;
+        line-height: 1.8;
+        text-wrap: balance;
+        overflow-x: clip;
+
+        @media (max-width: 800px) {
+          padding: 0 var(--size-s);
+        }
+
+        body:has(input[name="language"][value="en"]:checked)
+          &
+          > section[lang="tl"],
+        body:has(input[name="language"][value="tl"]:checked)
+          &
+          > section[lang="en"] {
+          display: none;
+        }
+      }
+
+      section {
+        &[lang="tl"] {
+          font-family: "Noto Sans Tagalog", "Karla", sans-serif;
+          word-spacing: 7px;
+          .revealed {
+            word-spacing: 0;
+            letter-spacing: -1.6px;
+            animation: reveal 1.2s;
+          }
+        }
+        ::view-transition-old(*),
+        ::view-transition-new(*) {
+          inline-size: auto;
+          block-size: auto;
+        }
+        > p,
+        > div {
+          min-height: 300px;
+          max-width: 1000px;
+          margin: 15vmin auto;
+          &:nth-child(2n) {
+            margin-right: calc(max(0px, 10vw - 100px));
+            text-align: right;
+            .image {
+              rotate: 1deg;
+            }
+          }
+          &:nth-child(2n + 1) {
+            margin-left: calc(max(0px, 10vw - 100px));
+            text-align: left;
+            .image {
+              rotate: -1deg;
+            }
+          }
+          &:first-child,
+          &:last-child {
+            margin: 10vmax auto;
+            text-align: center;
+          }
+        }
+
+        p {
+          border-radius: 40px;
+          background: color-mix(
+            in srgb,
+            var(--color-bg-darker) 50%,
+            transparent
+          );
+          box-shadow: 0 0 40px 40px
+            color-mix(in srgb, var(--color-bg-darker) 50%, transparent);
+        }
+
+        h2 {
+          margin-bottom: var(--size-s);
+          font-weight: bold;
+          font-size: 120%;
+        }
+
+        .image {
+          max-width: 100%;
+          margin: var(--size-l) 0;
+          box-shadow: var(--shadow-l);
+          border-radius: var(--size-xs);
+          filter: brightness(1.03);
+          @media (max-width: 800px) {
+            margin: var(--size-s) 0;
+          }
+        }
+
+        .introParagraph {
+          position: relative;
+        }
+        .floatingGlyph {
+          position: absolute;
+          width: min(25vw, 400px);
+          pointer-events: none;
+          animation: floatingGlyphParallax linear both;
+          animation-timeline: scroll();
+          &.gu {
+            top: 12vh;
+            right: calc(500px + 36vw);
+            rotate: 2deg;
+            --parallax-offset: -60vh;
+          }
+          &.hi {
+            top: -23vh;
+            right: calc(500px + 28vw);
+            rotate: -4deg;
+            --parallax-offset: -140vh;
+          }
+          &.ku {
+            top: -28vh;
+            left: calc(500px + 29vw);
+            rotate: -7deg;
+            --parallax-offset: -100vh;
+          }
+          &.li {
+            top: 9vh;
+            left: calc(500px + 41vw);
+            rotate: -3deg;
+            --parallax-offset: -180vh;
+          }
+        }
+      }
+
+      .headline {
+        display: block;
+        margin-bottom: 0.15em;
+        font-size: clamp(120%, 5vw, 200%);
+        line-height: 1.2;
+        letter-spacing: -2px;
+      }
+
+      @keyframes floatingGlyphParallax {
+        to {
+          translate: 0 var(--parallax-offset);
+        }
+      }
+
+      @keyframes reveal {
+        from {
+          opacity: 0;
+          filter: blur(4px);
+        }
+        50% {
+          opacity: 1;
+        }
+        to {
+          filter: blur(0);
+        }
+      }
+
+      aside {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--size-l);
+        margin: 10vh var(--size-l);
+
+        h2 {
+          flex-basis: 100%;
+          text-align: center;
+          font-weight: bold;
+          font-size: var(--font-size-l);
+        }
+
+        .card {
+          display: flex;
+          flex-direction: column;
+          gap: var(--size-s);
+          width: 400px;
+          padding: var(--size-s);
+          border-radius: var(--size-xs);
+          background: var(--color-bg);
+          box-shadow: var(--shadow-m);
+          font-weight: bold;
+          font-size: var(--font-size-m);
+
+          img {
+            width: 100%;
+            aspect-ratio: 1.5;
+            object-fit: cover;
+            border-radius: var(--size-xs);
+          }
+        }
+      }
+
+      footer {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: var(--size-m) var(--size-l);
+        margin: var(--size-l);
+
+        a {
+          display: inline-flex;
+          gap: var(--size-xs);
+          align-items: center;
+        }
+      }
+
+      a {
+        text-decoration: underline;
+        color: var(--color-orange-darker);
+        text-underline-offset: 0.2em;
+      }
+
+      strong {
+        font-weight: bold;
+      }
+
+      #calligraphy {
+        position: fixed;
+        inset: 0;
+        margin: auto;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.1;
+      }
+
+      #bgnoise {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: url("../bgnoise.png");
+      }
+    </style>
+    <script type="module">
+      import { drawCalligraphy } from "../calligraphy/calligraphy.js";
+      import { syllabicate } from "../transliteration/syllabicate.js";
+
+      const canvas = document.getElementById("calligraphy");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const calligraphyProgresses = drawCalligraphy(
+        syllabicate(
+          canvas.width / canvas.height < 1
+            ? "nasa tao ang gawa"
+            : "nasa-tao ang-gawa",
+        ).baybayinUnits,
+        canvas.getContext("2d"),
+        new AbortController().signal,
+        {
+          viramaStyle: "krus",
+          speed: 20,
+          scale: 1.2,
+          density: 1.2,
+        },
+      );
+      let calligraphyProgress = 0;
+      document.addEventListener("scroll", onScroll);
+      onScroll();
+
+      async function onScroll() {
+        if (calligraphyProgress >= 1) return;
+        while (
+          calligraphyProgress <
+          window.scrollY /
+            (document.documentElement.scrollHeight - window.innerHeight)
+        ) {
+          const { value, done } = await calligraphyProgresses.next();
+          if (done) {
+            calligraphyProgress = 1;
+            break;
+          }
+          calligraphyProgress = value;
+        }
+      }
+
+      const langInputs = Object.fromEntries(
+        [...document.querySelectorAll('input[name="language"]')].map(
+          (langInput) => [langInput.value, langInput],
+        ),
+      );
+
+      langInputs.tl.addEventListener("change", initTagalog, { once: true });
+
+      for (const [lang, langInput] of Object.entries(langInputs)) {
+        langInput.addEventListener("change", () => {
+          const url = new URL(location.href);
+          url.searchParams.set("lang", lang);
+          history.replaceState(null, "", url);
+        });
+      }
+
+      const langParam = new URLSearchParams(location.search).get("lang");
+      if (Object.hasOwn(langInputs, langParam)) {
+        const paramLangInput = langInputs[langParam];
+        paramLangInput.checked = true;
+        paramLangInput.dispatchEvent(new Event("change"));
+      }
+
+      async function initTagalog() {
+        const { syllabicate } =
+          await import("../transliteration/syllabicate.js");
+        const { convertToUnicode } =
+          await import("../transliteration/unicode.mjs");
+
+        const blockSelector = "p, h2";
+        const tlSection = document.querySelector('section[lang="tl"]');
+
+        const textNodes = [];
+        const textWalker = document.createTreeWalker(
+          tlSection,
+          NodeFilter.SHOW_TEXT,
+        );
+        while (textWalker.nextNode()) {
+          const textNode = textWalker.currentNode;
+          const parent = textNode.parentElement;
+          if (parent.closest(blockSelector)) {
+            textNodes.push(textNode);
+          }
+        }
+
+        const spans = [];
+        for (let i = 0; i < textNodes.length; i++) {
+          const textNode = textNodes[i];
+          const parent = textNode.parentElement;
+          const block = parent.closest(blockSelector);
+          const fragment = new DocumentFragment();
+          const isTl = textNode.parentElement.closest("[lang]").lang === "tl";
+
+          textNode.textContent
+            .split(/([a-z-]+|[.,;!?])/i)
+            .forEach((token, j) => {
+              if (!token) return;
+
+              const span = document.createElement("span");
+              const spanIndex = spans.length;
+              spans.push(span);
+              span.addEventListener("mouseenter", () => reveal(spanIndex), {
+                once: true,
+              });
+              fragment.append(span);
+
+              if (token === ".") {
+                span.dataset.latin = token;
+                span.innerHTML = "&nbsp;᜶";
+              } else if (token === ",") {
+                span.dataset.latin = token;
+                span.innerHTML = "&nbsp;᜵";
+              } else if (/[a-z-]/i.test(token) && isTl) {
+                try {
+                  const { baybayinUnits } = syllabicate(token, {
+                    separateRa: true,
+                  });
+                  span.dataset.latin = token;
+                  span.textContent = convertToUnicode(
+                    baybayinUnits,
+                    "pamudpod",
+                  );
+                } catch {
+                  span.textContent = token;
+                }
+              } else {
+                if (textNode.parentElement?.dataset.latin) {
+                  span.dataset.latin = textNode.parentElement.dataset.latin;
+                }
+                span.textContent = token;
+              }
+            });
+
+          textNode.replaceWith(fragment);
+        }
+
+        let unrevealedIndex = 0;
+
+        function reveal(toIndex) {
+          let lastY = null;
+          let lastLine = false;
+          for (let i = unrevealedIndex; i < spans.length; i++) {
+            const span = spans[i];
+            if (i > toIndex) lastLine = true;
+
+            const rects = span.getClientRects();
+            const rect = rects[rects.length - 1];
+            if (lastY != null && (rect.top + rect.bottom) / 2 > lastY) {
+              if (
+                span.previousElementSibling &&
+                span.previousElementSibling.tagName !== "BR" &&
+                getComputedStyle(span.previousElementSibling).display !==
+                  "block"
+              ) {
+                span.before(document.createElement("br"));
+              }
+              if (lastLine) break;
+            }
+            lastY = span.getClientRects()[rects.length - 1].bottom;
+          }
+
+          for (let i = unrevealedIndex; i < spans.length && i <= toIndex; i++) {
+            const span = spans[i];
+            if (span.dataset.latin) span.textContent = span.dataset.latin;
+            span.classList.add("revealed");
+            unrevealedIndex = i + 1;
+          }
+        }
+
+        tlSection.querySelectorAll("p").forEach((paragraph) => {
+          let previousWidth = paragraph.getBoundingClientRect().width;
+          new ResizeObserver(([entry]) => {
+            const width = entry.borderBoxSize[0].inlineSize;
+            if (width !== previousWidth) {
+              paragraph.querySelectorAll("br").forEach((br) => br.remove());
+            }
+            previousWidth = width;
+          }).observe(paragraph);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="calligraphy"></canvas>
+    <div id="bgnoise"></div>
+    <header>
+      <p>
+        <!--prettier-ignore-->
+        <a id="backLink" href="../">
+            <img src="../app/logo.svg" alt="GuhitKudlit"><br>
+            ⟵ Back to GuhitKudlit
+          </a>
+      </p>
+      <div class="headerRow">
+        <h1>About GuhitKudlit</h1>
+        <div class="languageSelector">
+          <div class="optionGroup">
+            <label class="optionGroupOption">
+              <input type="radio" name="language" value="en" checked />
+              English
+            </label>
+            <label class="optionGroupOption">
+              <input type="radio" name="language" value="tl" />
+              Tagalog
+            </label>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section lang="en">
+        <p class="introParagraph">
+          <img class="floatingGlyph gu" src="gu.png" alt="" />
+          <img class="floatingGlyph ku" src="ku.png" alt="" />
+          <img class="floatingGlyph hi" src="hi.png" alt="" />
+          <img class="floatingGlyph li" src="li.png" alt="" />
+          <span class="headline">
+            GuhitKudlit is a free webapp for making
+            <strong>Baybayin calligraphy</strong>.
+          </span>
+          I started this project in 2023 and have kept improving it in my free
+          time. I’m a software engineer and artist and this was born of my
+          interest in procedural art and Baybayin.
+        </p>
+        <p>
+          I first learned about Baybayin in elementary school. Back then it was
+          just a piece of ancient history and no one really used it. Nowadays,
+          you could see Baybayin on signs, logos, clothing, jeepneys, tattoos,
+          and more. Filipinos are increasingly using Baybayin, even if only for
+          aesthetic purposes.
+        </p>
+        <div>
+          <p>
+            Sometimes aesthetics become the only goal that the right spelling
+            and meaning of the actual words are lost. Sometimes you’d even see
+            tattoos that are actually unreadable. Often we choose
+            <strong>convenience over correctness</strong>, especially now with
+            AI adding fuel to the fire.
+          </p>
+          <img class="image" src="slop.png" />
+        </div>
+        <p>
+          So I started <strong>GuhitKudlit</strong>. Aesthetics, convenience,
+          and correctness can still go together, right? With these goals in
+          mind, I settled into a few guiding principles for this project.
+        </p>
+        <div>
+          <img class="image" src="syllabication.png" />
+          <h2>Transparency with spelling</h2>
+          <p>
+            When I first made GuhitKudlit
+            <a href="/guhit-kudlit/v1/" target="_blank">v1</a>, it was the only
+            Baybayin app that showed how the syllabication worked. Others just
+            gave you an answer with no explanation. How would you know if it was
+            accurate? If we give everyone, even non-experts, the means to easily
+            verify the output, we will get better results for more people. On
+            top of that, users will naturally learn when they can see how it
+            works.
+          </p>
+        </div>
+        <div>
+          <img class="image" src="respell.png" />
+          <h2>Human intelligence</h2>
+          <p>
+            GuhitKudlit is not ‘smart’. There’s no AI or anything like that.
+            When something is unclear, like foreign letters, it leaves the
+            disambiguation to you who knows the name or word you want to convey
+            best. This way, you can create a result you can be proud of.
+          </p>
+        </div>
+        <div>
+          <img class="image" src="calligraphy.png" />
+          <h2>Crafted calligraphy</h2>
+          <p>
+            The calligraphy is procedurally generated using graphical algorithms
+            &
+            <a href="https://leanrada.com/wares/guhit-kudlit/" target="_blank"
+              >techniques</a
+            >
+            I’ve honed over the years. GuhitKudlit v2 uses a system of
+            hand-authored Baybayin vector glyphs, mathematical layout and
+            composition optimizers, and various brush and paint simulations. It
+            doesn’t use AI image generators.
+          </p>
+        </div>
+        <div>
+          <img class="image" src="libre.png" />
+          <h2>Free for everyone</h2>
+          <p>
+            Everything GuhitKudlit can do is free of charge. All styles, color
+            choices, and more are free for everyone. Honestly, making projects
+            like this is both my passion and hobby, and I’m happy to see people
+            use and enjoy them.
+          </p>
+        </div>
+        <p>
+          In the this age where
+          <strong>answers arrive faster than truth</strong>, I’m afraid we may
+          start forgetting the real form, usage, and history of the Baybayin
+          script. I hope that through this project, I can help enrich and
+          preserve Baybayin for future generations.
+          <span lang="" style="display: block">- ᜎᜒᜌᜈ᜕ (Lean)</span>
+        </p>
+      </section>
+      <section lang="tl">
+        <p class="introParagraph">
+          <img class="floatingGlyph gu" src="gu.png" alt="" />
+          <img class="floatingGlyph ku" src="ku.png" alt="" />
+          <img class="floatingGlyph hi" src="hi.png" alt="" />
+          <img class="floatingGlyph li" src="li.png" alt="" />
+          <span class="headline">
+            Ang GuhitKudlit ay panggawa ng
+            <strong>kaligrapiyang Baybayin</strong>.
+          </span>
+          Sinimulan ko ang proyektong to noong 2023 at pinagpatuloy sa sarili
+          kong oras. Ako ay isang tagasining na
+          <span lang="en">software engineer</span> at ito ay bunga ng hilig ko
+          sa <span lang="en">procedural art</span> at Baybayin.
+        </p>
+        <p>
+          Una kong natutunan ang Baybayin noong elementarya. Noon ay lumang
+          piraso lang ito ng kasaysayan at wala talagang gumagamit nito. Pero
+          ngayon makikita mo na ang Baybayin sa karatula, logo, damit, sa
+          dyipni, tato, at iba pa. Dumarami na ang Pilipinong gumagamit ng
+          Baybayin kahit na pang-estetik lang.
+        </p>
+        <div>
+          <p>
+            Minsan hanggang estetik lang talaga tapos mali naman yung hulog o
+            mismong pagkakabaybay. Minsan makakakita ka pa ng tato na di naman
+            mabasa. Madalas kasi pinipili natin yung
+            <strong>madali kahit di tama</strong>, lalo na ngayong may
+            <span lang="en">AI</span> pang nakikisawsaw.
+          </p>
+          <img class="image" src="slop.png" />
+        </div>
+        <p>
+          Kaya sinimulan ko ang <strong>GuhitKudlit</strong>. Kakayanin namang
+          pagsabayin ang estetik, pagkakadaling gamitin, at kawastuhan di ba?
+          Para makamtan to ay nagkaroon ako ng ilang mga prinsipyo para sa
+          proyektong to.
+        </p>
+        <div>
+          <img class="image" src="syllabication.png" />
+          <h2>Malinaw na pagkakabaybay</h2>
+          <p>
+            Noong una kong ginawa ang GuhitKudlit
+            <a href="/guhit-kudlit/v1/" target="_blank" lang="en">v1</a>, ito
+            lang ang tanging Baybayin <span lang="en">app</span> na pinapakita
+            yung pagkakapantig. Sa iba kasi sagot lang walang paliwanag. E paano
+            ka naman makakatiyak na tama yon? Kung bibigyan lahat pati mga di
+            eksperto ng kakayahang suriin ang <span lang="en">output</span>, mas
+            gaganda ang resulta para sa lahat. Bukod pa ron ay natural na
+            matututo tayo kung makikita natin kung paano ito nangyayari.
+          </p>
+        </div>
+        <div>
+          <img class="image" src="respell.png" />
+          <h2>Walang dunung-dunungan</h2>
+          <p>
+            Aaminin kong hindi masyadong matalino ang GuhitKudlit at tama lang
+            yon dahil ang tunay na karunungan ay nasa tao. Kapag may di malinaw
+            gaya ng banyagang letra, hahayaan nitong ikaw ang magpasya at
+            maglinaw bilang ikaw ang pinakanakakaalam sa pangalan o salitang
+            gusto mong iparating. Sa ganitong paraan ay makakagawa ka ng
+            resultang maipagmamalaki mo.
+          </p>
+        </div>
+        <div>
+          <img class="image" src="calligraphy.png" />
+          <h2>Kaligrapiyang tila gawang-kamay</h2>
+          <p>
+            Ang kaligrapiya nito ay galing sa mga algoritmong grapikal at
+            <a href="https://leanrada.com/wares/guhit-kudlit/" target="_blank"
+              >mga pamamaraang</a
+            >
+            hinasa ko nang ilang taon. Ang GuhitKudlit
+            <span lang="en">v2</span> ay gumagamit ng minanu-manong
+            <span lang="en">vector</span> para sa bawat simbolong Baybayin,
+            matematikal na paglapat at pagkomposisyon, at simulasyon ng
+            <span data-latin="iba’t-ibang">ᜁᜊᜁᜊᜅ᜕</span> pinsel at pintura. Di
+            ito gumagamit ng <span lang="en">AI image generator</span>.
+          </p>
+        </div>
+        <div>
+          <img class="image" src="libre.png" />
+          <h2>Libre para sa lahat</h2>
+          <p>
+            Lahat ng kayang gawin sa GuhitKudlit ay walang bayad. Lahat ng
+            istilo, pagpipilian ng kulay, at iba pa ay libre para sa lahat. Sa
+            totoo lang, ang ganitong mga proyekto ay isang dedikasyon at
+            libangan ko na rin, at masaya na akong may gumagamit at natutuwa sa
+            mga to.
+          </p>
+        </div>
+        <p>
+          Sa panahon ngayon kung saan mas
+          <strong>nauuna pa ang sagot kaysa katotohanan</strong>, natatakot
+          akong baka malimutan natin ang tunay na anyo, paggamit, at kasaysayan
+          ng sulat Baybayin. Sana sa pamamagitan ng proyektong to, makatulong
+          ako sa pagpayaman at pagpanatili ng Baybayin para sa susunod na mga
+          henerasyon.
+          <span lang="" style="display: block">- ᜎᜒᜌᜈ᜕ (Lean)</span>
+        </p>
+      </section>
+    </main>
+    <aside>
+      <h2>Check out my other projects</h2>
+      <a class="card" href="https://leanrada.com/wikaraoke/" target="_blank">
+        <img src="https://leanrada.com/wikaraoke/preview.png" alt="" />
+        Wikaraoke
+      </a>
+      <a class="card" href="https://leanrada.com/wikawik/" target="_blank">
+        <img src="https://leanrada.com/wikawik/images/preview.png" alt="" />
+        Wikawik
+      </a>
+      <a class="card" href="https://leanrada.com/art/kumot/" target="_blank">
+        <img src="https://leanrada.com/art/kumot/preview.png" alt="" />
+        Kumot
+      </a>
+    </aside>
+    <footer>
+      <a href="../">GuhitKudlit</a>
+      <a href="../help/">Guide</a>
+      <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="../file/instagram.svg#icon" />
+        </svg>
+        @guhitkudlit
+      </a>
+      <a href="../tip/" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="../file/kofi.svg#icon" />
+        </svg>
+        Tip
+      </a>
+      <a href="mailto:guhitkudlit@leanrada.com" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="../file/mail.svg#icon" />
+        </svg>
+        guhitkudlit@leanrada.com
+      </a>
+      <span>
+        made with &lt;3 by
+        <a href="https://leanrada.com/" target="_blank">Lean</a>
+      </span>
+      <span>&copy;2023-2026 Lean Rada</span>
+    </footer>
+  </body>
+</html>

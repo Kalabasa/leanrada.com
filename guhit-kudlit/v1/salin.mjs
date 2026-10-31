@@ -1,4 +1,5 @@
 const tl = {
+  bagongBersyon: () => `Ito ang lumang bersyon ng GuhitKudlit. <a href="/guhit-kudlit/">Subukan ang bagong GuhitKudlit!</a>`,
   pakilala: () => "Pansalin at panlikha ng kaligrapiyang baybayin 🖌️",
   tagalogNaSalita: () => "Tagalog na salita",
   tagalogBukodAngRa: () => "Tagalog (Magkabukod na 'da' at 'ra')",
@@ -12,6 +13,7 @@ const tl = {
 };
 
 const en = {
+  bagongBersyon: () => `This is the old version of GuhitKudlit. <a href="/guhit-kudlit/">Try the new GuhitKudlit!</a>`,
   pakilala: () => "Baybayin translator (transliterator) & calligraphy image generator 🖌️",
   tagalogNaSalita: () => "Tagalog word",
   tagalogBukodAngRa: () => "Tagalog (Distinct 'd' and 'r')",
