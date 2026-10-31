@@ -43,6 +43,7 @@ const exampleConfigs = [
     text: "kuting",
     viramaStyle: "krus",
     arrangement: "normal",
+    colorStyle: "orangeOnWhite",
   },
   {
     text: "tatawa",
@@ -53,6 +54,7 @@ const exampleConfigs = [
     text: "iiyak",
     viramaStyle: "precolonial",
     arrangement: "grid",
+    colorStyle: "blackOnWhite",
   },
 ]
   .filter(Boolean)
