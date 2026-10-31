@@ -1,0 +1,45 @@
+import { classes } from "../util/classes.js";
+import { html } from "./html.js";
+
+/**
+ * @typedef {"top"|"bottom"|"left"|"right"} Direction
+ * @param {object} props
+ * @param {string} props.class
+ * @param {string} props.anchorName
+ * @param {Direction} props.direction
+ * @param {(element: HTMLDivElement | null) => void} props.elementRef
+ */
+export function Tooltip({
+  class: className,
+  anchorName,
+  direction,
+  elementRef,
+  children,
+  ...props
+}) {
+  return html`
+    <style id=${Tooltip.name}>
+      @layer base {
+        .tooltip {
+          position: fixed;
+          margin: var(--size-xs);
+          border: none;
+          padding: var(--size-s);
+          border-radius: var(--size-xs);
+          background: #000;
+          color: #fff;
+          box-shadow: var(--shadow-m);
+          z-index: calc(1 * infinity);
+        }
+      }
+    </style>
+    <div
+      ...${props}
+      ref=${elementRef}
+      class=${classes("tooltip", className)}
+      style=${{ positionAnchor: anchorName, positionArea: direction }}
+    >
+      ${children}
+    </div>
+  `;
+}
