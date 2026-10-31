@@ -1,6 +1,6 @@
 import { Button, Input } from "../components/form.js";
 import { html } from "../components/html.js";
-import { useEffect, useRef } from "../lib/htm-preact.js";
+import { useEffect, useRef, useState } from "../lib/htm-preact.js";
 import { delay } from "../util/delay.js";
 
 const exampleConfigs = [
@@ -50,6 +50,7 @@ const backgroundWords = [
 
 export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
   const backgroundCanvasRef = useRef();
+  const [tlLogo, setTlLogo] = useState(false);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -162,7 +163,12 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         ref=${backgroundCanvasRef}
       ></canvas>
       <div class="introHeader">
-        <img src="app/logo.svg" alt="GuhitKudlit" style=${{ height: "14vh" }} />
+        <img
+          src=${tlLogo ? "app/logo-tl.svg" : "app/logo.svg"}
+          alt="GuhitKudlit"
+          style=${{ height: "14vh" }}
+          onClick=${() => setTlLogo(!tlLogo)}
+        />
         <h2 class="introSubheading">
           Baybayin translator (transliterator)<br />& calligraphy maker
         </h2>
