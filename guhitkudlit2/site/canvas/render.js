@@ -98,7 +98,7 @@ function drawUrl(canvas) {
   const text = atob("TGVhblJhZGEuY29tL0d1aGl0LUt1ZGxpdA==").toUpperCase();
   const context = canvas.getContext("2d");
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-  const scale = Math.max(6, canvas.width * 0.007);
+  const scale = Math.max(6, Math.min(15, canvas.width * 0.007));
 
   context.save();
   context.font = `bold ${scale}px Georgia, "Noto Serif", serif`;
