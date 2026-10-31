@@ -150,8 +150,9 @@ export function TransliterationForm({
   viramaStyle,
   onInput,
 }) {
+  const [hasFocused, setHasFocused] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const showEditHint = !error && inputText && !hasInteracted;
+  const showEditHint = !error && inputText && hasFocused && !hasInteracted;
   const hasPrecolonialTransform = transformed?.some(({ transforms }) =>
     transforms.some(({ type }) => type === "drop" || type === "cluster"),
   );
@@ -304,6 +305,7 @@ export function TransliterationForm({
             onPointerDown=${() => setHasInteracted(true)}
             onKeyDown=${() => setHasInteracted(true)}
             onBlur=${() => setHasInteracted(true)}
+            onFocus=${() => setHasFocused(true)}
           />
         </div>
       </label>
