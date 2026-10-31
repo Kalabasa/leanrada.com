@@ -17,6 +17,9 @@ export function createFileControls(
   colorStyle,
   calligraphyComplete,
 ) {
+  const canShareFiles = navigator.canShare?.({
+    files: [new File([], "x.png", { type: "image/png" })],
+  });
   const isRenderingFull = observable.box(false);
   let cachedFullRender = null;
 
@@ -148,7 +151,7 @@ export function createFileControls(
           >
             ${isRenderingFull.get() ? "Rendering..." : "Download HD"}
           <//>
-          ${navigator.share &&
+          ${canShareFiles &&
           html`<${Button}
             class="fileControlsButton fileControlsShareButton"
             onClick=${shareCanvas}
