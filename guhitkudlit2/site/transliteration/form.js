@@ -458,6 +458,7 @@ function Output({ value, placeholder, big }) {
         opacity: var(--opacity-placeholder);
       }
       .transliterationOutputBig {
+        font-family: "Noto Sans Tagalog", "Karla", sans-serif;
         font-size: var(--font-size-xl);
         min-height: calc(var(--font-size-xl) * 1.5);
       }
