@@ -45,7 +45,7 @@ export function createSpellingControls() {
             !baybayinUnits.get().length && "spellingControlDimmed",
           )}
         >
-          <${LabelText}>Virama<//>
+          <${LabelText}>Vowel cancelling<//>
           <${OptionGroup}
             name="viramaStyle"
             value=${viramaStyle.get()}
