@@ -374,7 +374,7 @@
         height: 100vh;
         z-index: -1;
         pointer-events: none;
-        opacity: 0.1;
+        opacity: 0.05;
       }
 
       #bgnoise {
@@ -402,22 +402,42 @@
         new AbortController().signal,
         {
           viramaStyle: "krus",
-          speed: 20,
-          scale: 1.2,
-          density: 1.2,
+          speed: 3,
+          scale: 1.22,
+          density: 1.1,
         },
       );
       let calligraphyProgress = 0;
+      let calligraphyProgressTarget = 0;
+      let lastScrollY = window.scrollY;
       document.addEventListener("scroll", onScroll);
       onScroll();
 
-      async function onScroll() {
+      async function onScroll(event) {
         if (calligraphyProgress >= 1) return;
-        while (
-          calligraphyProgress <
+
+        calligraphyProgressTarget = Math.max(
+          calligraphyProgressTarget,
           window.scrollY /
-            (document.documentElement.scrollHeight - window.innerHeight)
-        ) {
+            (document.documentElement.scrollHeight - window.innerHeight * 2),
+        );
+
+        let deltaProgress = 0;
+        if (Math.abs(window.scrollY - lastScrollY) > 10) {
+          deltaProgress = 1e-12;
+          lastScrollY = window.scrollY;
+        }
+
+        const target = Math.max(
+          1e-12,
+          calligraphyProgress + deltaProgress,
+          Math.min(
+            calligraphyProgress + deltaProgress,
+            calligraphyProgressTarget,
+          ),
+        );
+
+        while (calligraphyProgress < target) {
           const { value, done } = await calligraphyProgresses.next();
           if (done) {
             calligraphyProgress = 1;
