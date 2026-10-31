@@ -93,15 +93,19 @@ const { Canvas, canvasRef } = createCanvas(
   },
 );
 async function hidePlaceholder(updateDom) {
-  if (updateDom) {
+  const run = () => {
+    showPlaceholder.set(false);
+    updateDom();
+  };
+
+  if (document.startViewTransition) {
     await document.startViewTransition(async () => {
-      showPlaceholder.set(false);
-      updateDom();
+      run();
       flushObservers();
       await new Promise((resolve) => setTimeout(resolve));
     }).finished;
   } else {
-    showPlaceholder.set(false);
+    run();
   }
 }
 
