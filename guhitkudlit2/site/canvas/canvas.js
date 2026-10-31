@@ -32,7 +32,9 @@ export function Canvas({
   onConfig,
 }) {
   const canvasWidth =
-    Math.min(window.innerWidth, window.innerHeight * aspectRatio) * 0.8;
+    Math.min(window.innerWidth, window.innerHeight * aspectRatio) *
+    0.8 *
+    window.devicePixelRatio;
   const canvasHeight = canvasWidth / aspectRatio;
 
   return html`
