@@ -195,6 +195,7 @@ export function Index() {
           "panels";
         grid-gap: var(--size-m);
         height: 100vh;
+        height: 100svh;
         overflow: hidden;
       }
       .appLogo {
