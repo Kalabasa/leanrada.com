@@ -54,9 +54,16 @@ const { Canvas, canvasRef } = createCanvas(
     inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
 
     await hidePlaceholder(() => {
-      if (config.viramaStyle !== undefined) viramaStyle.set(config.viramaStyle);
-      if (config.separateRa !== undefined) separateRa.set(config.separateRa);
-      if (config.arrangement !== undefined) arrangement.set(config.arrangement);
+      for (const [key, input] of Object.entries({
+        painterName,
+        colorStyle,
+        viramaStyle,
+        separateRa,
+        arrangement,
+        density,
+      })) {
+        if (config[key] !== undefined) input.set(config[key]);
+      }
       inputTextWrapperRef.current?.style.setProperty(
         "view-transition-name",
         config.sourceElement.style.viewTransitionName,
