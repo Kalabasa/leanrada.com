@@ -80,7 +80,7 @@ export async function stampLogo(canvas) {
   const logoImage = new Image();
   logoImage.src = logoUrl;
   await logoImage.decode();
-  const logoHeight = 30;
+  const logoHeight = 30 * window.devicePixelRatio;
   const logoWidth =
     (logoHeight * logoImage.naturalWidth) / logoImage.naturalHeight;
   canvas
