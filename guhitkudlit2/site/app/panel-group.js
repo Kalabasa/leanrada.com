@@ -2,6 +2,7 @@ import { html } from "../components/html.js";
 import { useEffect, useRef } from "../lib/htm-preact.js";
 import { observable } from "../lib/mobx.js";
 import { classes } from "../util/classes.js";
+import { delay } from "../util/delay.js";
 import { observer } from "../util/observer.js";
 import { AppPanel } from "./panel.js";
 
@@ -33,6 +34,7 @@ function AppPanelGroup({ panels, activeIndex, onActivateIndex }) {
     panelWidthPx + (contentPanels.length - 1) * tabStepPx;
 
   const groupRef = useRef();
+  const isAutoScrollingRef = useRef(false);
 
   useEffect(() => {
     const activeItem =
@@ -43,21 +45,31 @@ function AppPanelGroup({ panels, activeIndex, onActivateIndex }) {
     ) {
       document.activeElement.blur();
     }
+
     if (!isSnapping(groupRef.current)) return;
-    groupRef.current.parentElement.scrollTo({
-      left: activeIndex * tabStepPx,
-      behavior: "smooth",
+    const scroller = groupRef.current.parentElement;
+    if (Math.round(scroller.scrollLeft / tabStepPx) === activeIndex) return;
+
+    isAutoScrollingRef.current = true;
+    const scrolling =
+      scroller.scrollTo({
+        left: activeIndex * tabStepPx,
+        behavior: "smooth",
+      }) ?? delay(1000);
+    scrolling.finally(() => {
+      isAutoScrollingRef.current = false;
     });
   }, [activeIndex]);
 
   useEffect(() => {
     const scroller = groupRef.current.parentElement;
-    const onScrollEnd = () => {
+    const onScroll = () => {
       if (!isSnapping(groupRef.current)) return;
+      if (isAutoScrollingRef.current) return;
       onActivateIndex(Math.round(scroller.scrollLeft / tabStepPx));
     };
     const abortController = new AbortController();
-    scroller.addEventListener("scrollend", onScrollEnd, abortController);
+    scroller.addEventListener("scroll", onScroll, abortController);
     return () => abortController.abort();
   }, []);
 
