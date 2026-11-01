@@ -193,6 +193,8 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
           alt="GuhitKudlit"
           style=${{ height: "14vh" }}
           onClick=${() => setTlLogo(!tlLogo)}
+          onMouseEnter=${() => setTlLogo(true)}
+          onMouseLeave=${() => setTlLogo(false)}
         />
         <h2 class="introSubheading">
           Baybayin translator (transliterator)<br />& calligraphy maker
