@@ -139,7 +139,12 @@ const { AppMenuButton } = createAppMenuButton(
 when(
   () => baybayinUnits.get().length > 0,
   async () => {
-    const { installCalligraphy } = await import("./calligraphy/calligraphy.js");
+    const { installCalligraphy } = await import(
+      "./calligraphy/calligraphy.js"
+    ).catch((error) => {
+      alert("Error loading code. Reload the page and try again.");
+      throw error;
+    });
     const onProgress = (progress) => {
       if (progress === "start") {
         calligraphyComplete.set(false);
