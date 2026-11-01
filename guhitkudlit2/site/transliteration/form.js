@@ -36,7 +36,12 @@ export function createTransliterationForm(viramaStyle, separateRa) {
   reaction(
     () => [inputText.get(), separateRa.get(), precolonial.get()],
     async ([inputText, separateRa, precolonial]) => {
-      const { syllabicate } = await import("./syllabicate.js");
+      const { syllabicate } = await import("./syllabicate.js").catch(
+        (error) => {
+          alert("Error loading code. Reload the page and try again.");
+          throw error;
+        },
+      );
       let output;
       try {
         output = syllabicate(inputText, { separateRa, precolonial });
@@ -122,9 +127,14 @@ function lazyConvertToUnicode(baybayinUnits, viramaStyle) {
   if (baybayinUnits.length === 0) return "";
 
   if (!lazyConvertToUnicode[memo]) {
-    import("./unicode.mjs").then((imported) => {
-      lazyConvertToUnicode[memo] = imported.convertToUnicode;
-    });
+    import("./unicode.mjs")
+      .catch((error) => {
+        alert("Error loading code. Reload the page and try again.");
+        throw error;
+      })
+      .then((imported) => {
+        lazyConvertToUnicode[memo] = imported.convertToUnicode;
+      });
   }
 
   return lazyConvertToUnicode[memo]?.(baybayinUnits, viramaStyle) ?? "";

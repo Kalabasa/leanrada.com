@@ -56,7 +56,10 @@ export function createFileControls(
 
     isRenderingFull.set(true);
     try {
-      const { render } = await import("../canvas/render.js");
+      const { render } = await import("../canvas/render.js").catch((error) => {
+        alert("Error loading code. Reload the page and try again.");
+        throw error;
+      });
       await delay(25);
       await render({
         ...renderedInputs,
@@ -72,7 +75,10 @@ export function createFileControls(
   }
 
   async function drawExportCanvas() {
-    const { stampLogo } = await import("../canvas/render.js");
+    const { stampLogo } = await import("../canvas/render.js").catch((error) => {
+      alert("Error loading code. Reload the page and try again.");
+      throw error;
+    });
     const exportCanvas = drawColorStyledCanvas(
       canvasRef.current,
       colorStyle.get(),

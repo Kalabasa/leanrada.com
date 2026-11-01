@@ -13,13 +13,12 @@ const painterLoaders = {
   spray: async () => (await import("./painters/spray.js")).SprayPainter,
 };
 
-async function createPainter(random, painterName) {
-  if (painterName) {
-    const PainterClass = await painterLoaders[painterName]();
-    return new PainterClass(random);
-  }
-  const Brush = await painterLoaders.brush();
-  return new Brush(random);
+async function createPainter(random, painterName = "brush") {
+  const PainterClass = await painterLoaders[painterName]().catch((error) => {
+    alert("Error loading code. Reload the page and try again.");
+    throw error;
+  });
+  return new PainterClass(random);
 }
 
 export function installCalligraphy(
@@ -193,7 +192,10 @@ export async function layoutCalligraphy(
     import("./stroke.js"),
     import("./compose.js"),
     import("./path.js"),
-  ]);
+  ]).catch((error) => {
+    alert("Error loading code. Reload the page and try again.");
+    throw error;
+  });
 
   const lines = wrapLines(baybayinUnits, arrangement);
 
