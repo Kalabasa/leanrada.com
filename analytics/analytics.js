@@ -9,4 +9,22 @@
   script.async = true;
   script.setAttribute('src', '//gc.zgo.at/count.js');
   document.head.appendChild(script);
+
+  window.addEventListener('error', (event) => {
+    window.goatcounter?.count?.({
+      path: `error-${event.filename}:${event.lineno}-${event.message}`,
+      event: true,
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    if (!(event.reason instanceof Error)) return;
+    var match = event.reason.stack.match(/((?:blob:)?(?:https?|file):\/\/[^\s()]+):(\d+):\d+/);
+    var file = match?.[1] ?? "unknown";
+    var line = match?.[2] ?? 0;
+    window.goatcounter?.count?.({
+      path: `error-${file}:${line}-${event.reason.message}`,
+      event: true,
+    });
+  });
 })();
