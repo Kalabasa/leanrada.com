@@ -88,7 +88,15 @@ function generateCommands({
             )
             .startsWith("..")
       )
-      .map((project) => "/" + project.sitePathPrefix);
+      .map(
+        (otherProject) =>
+          "/" +
+          path.relative(
+            projectDeployDir,
+            path.resolve(deployDir, otherProject.sitePathPrefix)
+          ) +
+          "/"
+      );
 
     const gitExcludes = getGitExcludes(webFilesDir);
 
