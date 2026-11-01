@@ -90,7 +90,9 @@ export function createFileControls(
       const file = new File([blob], formatFileName(inputText.get()) + ".png", {
         type: "image/png",
       });
-      await navigator.share({ files: [file] });
+      try {
+        await navigator.share({ files: [file] });
+      } catch {}
     }, "image/png");
   }
 
