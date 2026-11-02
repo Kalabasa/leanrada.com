@@ -201,7 +201,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         </h2>
       </div>
       <div class="introStarter">
-        <p class="introText">Write a word</p>
+        <p class="introText">Write a Tagalog word</p>
         <form onSubmit=${onSubmitTextForm}>
           <${Input}
             autofocus
