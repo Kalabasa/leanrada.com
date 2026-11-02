@@ -125,7 +125,7 @@ export async function* drawCalligraphy(
     arrangement,
     density,
     speed,
-    seed = 0,
+    seed,
     maxComposeSteps,
     scale,
     painterName,
@@ -133,7 +133,11 @@ export async function* drawCalligraphy(
 ) {
   const painter = await createPainter(
     createRandom(
-      Number(new URLSearchParams(location.search).get("seed") ?? seed),
+      Number(
+        new URLSearchParams(location.search).get("seed") ??
+          seed ??
+          baybayinUnits.length,
+      ),
     ),
     painterName,
   );
