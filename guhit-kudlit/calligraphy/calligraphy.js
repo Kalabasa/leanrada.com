@@ -203,7 +203,7 @@ export async function layoutCalligraphy(
   let lineTopY = 0;
   for (const line of lines) {
     const glyphs = line.map((baybayinUnit) =>
-      getGlyph(baybayinUnit, viramaStyle),
+      getGlyph(baybayinUnit.split("]").at(-1), viramaStyle),
     );
 
     const lineLayout = layoutLine(glyphs, { kern: true, arrangement });
@@ -217,6 +217,13 @@ export async function layoutCalligraphy(
     }
     layout2D.push(...lineLayout);
     lineTopY += lineBounds.height;
+
+    for (let i = 0; i < line.length; i++) {
+      const unitParams = line[i].match(/^\[(.*)\]/)?.[1];
+      if (unitParams !== undefined) {
+        applyUnitParams(lineLayout[i], unitParams);
+      }
+    }
   }
 
   const glyphStrokesList = layout2D.map(traceStrokes);
@@ -242,6 +249,25 @@ export async function layoutCalligraphy(
   }));
 
   return { path, cellSize };
+}
+
+// "[y,x,scale]da"
+function applyUnitParams(glyph, unitParams) {
+  const [y = 0, x = 0, scale = 1] = unitParams.split(",").map(Number);
+  if (![y, x, scale].every(Number.isFinite) || scale === 0) return;
+  const vertices = glyph.map.flat().filter((vertex) => vertex);
+  let sumX = 0;
+  let sumY = 0;
+  for (const vertex of vertices) {
+    sumX += vertex.x;
+    sumY += vertex.y;
+  }
+  const centroidX = sumX / vertices.length;
+  const centroidY = sumY / vertices.length;
+  for (const vertex of vertices) {
+    vertex.x = centroidX + (vertex.x - centroidX) * scale + x;
+    vertex.y = centroidY + (vertex.y - centroidY) * scale + y;
+  }
 }
 
 function getBounds(vertices) {

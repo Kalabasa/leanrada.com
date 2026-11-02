@@ -29,7 +29,9 @@ export function syllabicate(phrase, how = {}) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/gu, " ")
-    .replace(/[^a-z\p{Letter}\/\s]|\p{Symbol}/gu, "-");
+    .replace(/\[[^\]]*\]|[^a-z\p{Letter}\/\s]|\p{Symbol}/gu, (match) =>
+      match.startsWith("[") ? match : "-",
+    );
 
   if (!phrase.match(/[a-z]/)) {
     return { baybayinUnits: [] };
@@ -59,9 +61,11 @@ export function syllabicate(phrase, how = {}) {
 
     const baybayinUnits = [];
     let currentUnit = "";
+    let unitParams = "";
+    let pendingUnitParams = "";
     let unitTransforms = [];
 
-    const letters = [...word];
+    const letters = word.match(/\[[^\]]*\]|./gu);
     for (let i = 0; i < letters.length; i++) {
       let letter = letters[i].toLowerCase();
       const lastLetter = currentUnit && currentUnit.slice(-1);
@@ -76,7 +80,7 @@ export function syllabicate(phrase, how = {}) {
           letter = "u";
         }
 
-        currentUnit += letter;
+        appendLetter(letter);
 
         if (how?.precolonial) {
           const collapsedUnit = collapseConsonant(
@@ -118,7 +122,7 @@ export function syllabicate(phrase, how = {}) {
           }
         }
 
-        currentUnit += letter;
+        appendLetter(letter);
       } else if (letter === "-") {
         if (how?.precolonial) {
           unitTransforms.push({ type: "drop", from: currentUnit });
@@ -126,6 +130,8 @@ export function syllabicate(phrase, how = {}) {
         } else {
           commitUnit(currentUnit);
         }
+      } else if (letter.startsWith("[")) {
+        pendingUnitParams = letter;
       } else {
         invalidChars.push(letter);
       }
@@ -155,14 +161,23 @@ export function syllabicate(phrase, how = {}) {
 
     return [...wordBoundary, ...baybayinUnits];
 
+    function appendLetter(letter) {
+      currentUnit += letter;
+      if (pendingUnitParams) {
+        unitParams = pendingUnitParams;
+        pendingUnitParams = "";
+      }
+    }
+
     function commitUnit(unit) {
       if (!how?.separateRa && unit.startsWith("r")) {
         unitTransforms.push({ type: "ra", from: unit });
         unit = "d" + unit.slice(1);
       }
       if (unit) {
-        baybayinUnits.push(unit);
+        baybayinUnits.push(unitParams + unit);
       }
+      unitParams = "";
       for (const unitTransform of unitTransforms) {
         transforms.push({ ...unitTransform, to: unit });
       }

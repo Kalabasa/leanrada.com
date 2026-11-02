@@ -68,7 +68,7 @@ export function createSpellingControls() {
             <//>
             <${OptionGroupOption} value="precolonial">
               <${ControlPreview}
-                baybayinUnits=${["ki", "du"]}
+                baybayinUnits=${["ku", "du"]}
                 viramaStyle="precolonial"
                 density=${-1.5}
               />
