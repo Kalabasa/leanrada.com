@@ -63,65 +63,38 @@ dapat(baybayin(&quot;durian&quot;)).ay([&quot;du&quot;, &quot;di&quot;, &quot;ya
 dapat(baybayin(&quot;ng&quot;)).ay([&quot;na&quot;, &quot;ng&quot;]);
 dapat(baybayin(&quot;mga&quot;)).ay([&quot;ma&quot;, &quot;nga&quot;]);
 // ...</code></pre></code-block>
-<p>(Yes, I wrote all the code for this project in Tagalog)</p>
 <p>The transliteration process is just one half of the program. It took me a a while to code it, but what I really wanted to make was the drawing algorithm. While transliteration is essential for a good user experience, the real show starts with the calligraphy algorithm.</p>
-<h2 id="calligraphy">Calligraphy</h2>
+
+<h2 id="calligraphy">Calligraphy algorithm</h2>
 <p>Once we have a sequence of baybayin glyphs, we can start drawing them on the canvas.</p>
-<p>The calligraphy algorithm goes like this (heavily simplified):</p>
-<ol start="0">
-<li>A brush head is simulated in 2D space. It has position, size, velocity, pressure, and other properties.</li>
-<li>The brush is continuously pulled along the canvas following the strokes of the current glyph. This simulation mimics natural movement and momentum.</li>
-<li>When the current glyph is finished, the brush head moves down the next available space to start drawing the next glyph, and so on.</li>
-</ol>
+
 <video autoplay="" muted="" loop="" playsinline="" aria-label="video of calligraphy algorithm in action" src="calligraphy.mp4" width="1136" height="746" style="--lqip:174819" preload="metadata"></video>
 
-<p>There are four preset calligraphy styles. These variations are created by changing the parameters of the brush simulation, like acceleration, pressure, etc.</p>
-<figure><img alt="screenshot of different calligraphy styles" src="styles.png" loading="lazy" width="1200" height="1000" style="--lqip:174819"></img><figcaption>Different styles starting from top-left, clockwise: Modern, Classic, Dry brush, Chisel tip</figcaption></figure>
+<p>The calligraphy algorithm goes like this (heavily simplified):</p>
+<ol start="0">
+<li>Layout: Glyphs are laid out in 2D space with kerning.</li>
+<li>Composition: Glyph are pulled into each other, while their edges and vertices repel. This is to create an organic composition of individual strokes.</li>
+<li>Drawing: A simulated brush is continuously pulled along the canvas following the strokes of the each glyph.</li>
+</ol>
 
-<p>To define the vertices or waypoints that the brush head would follow, I started by decomposing baybayin into individual strokes and identified the common structural elements.</p>
-<p>You know how Latin characters have something called “typography anatomy”? Things like ascenders, descenders, stems, bars, etc? These are elements common across Latin letters, like how the loop in ‘b’ is the same loop as in ‘p’, just with a different stem.</p>
-<img alt="Elements of Latin typography, partial anatomy" src="latin-parts.png" loading="lazy" width="800" height="400" style="--lqip:174819"></img>
+<p>The initial glyph shapes themselves were hardcoded Bezier curve paths authored by hand.</p>
 
-<p>Well, I tried to decompose baybayin in a similar way. A big inspiration came from others who have done the same before, like <a href="https://nordenx.blogspot.com/2014/04/saving-baybayin-through-technology.html" target="_blank">Nordenx</a>. However, for my specific purpose of constructing baybayin forms programmatically, my decomposition strategy is more about the reuse of common elements.</p>
-<img alt="Elements of Baybayin typography, partial anatomy" src="baybayin-parts.png" loading="lazy" width="800" height="400" style="--lqip:174819"></img>
+<p>The layout algorithm uses a grid system where each glyph is subdivded into N&times;5 cells (5 rows, variable columns). By stamping glyphs one by one and checking occupancy, like a jigsaw puzzle, a crude kerning solution is achieved.</p>
 
-<p>Here’s a partial list of the typographical building blocks that I ended up with:</p>
-<img alt="My version of elements of Baybayin typography" src="baybayin-elements.png" loading="lazy" width="800" height="300" style="--lqip:174819"></img>
+<img src="layout.png" loading="lazy" width="800" height="400" style="--lqip:524067">
 
-<p>The decomposition is more apparent in code:</p>
-<code-block language="js"><pre><code>const talaguhitan = {
-&quot;a&quot;: [
-  ...guhitYa,
-  [guhitTuwid, 0.0, 0.4, 0.2, 0.4, 0.05, -0.05, PUTOL],
-],
-&quot;i&quot;: [
-  [guhitAlon, 0.0, 0.2, 1.0, 0.2, 0.0, 0.1, PUTOL],
-  [guhitUlap, 0.0, 0.5, 1.0, 0.5, 0.0, 0.2, PUTOL],
-],
-&quot;u&quot;: [
-  [guhitIlog, 0.3, 0.0, 0.3, 1.0, 0.4, 0.0, PUTOL],
-],
-&quot;b&quot;: [
-  [guhitBundok, 0.0, 0.8, 0.5, 0.2, 1.0, 0.7, 0.1, 0.1],
-  [guhitUlap, DUGTONG, DUGTONG, 0.05, 0.7, 0.0, 0.3, PUTOL],
-],
-// ...</code></pre></code-block>
-<p>In the above code, baybayin glyphs (represented by Latin character keys) are defined by an array of elements. The numbers next to each element are parameters that vary the position &amp; form of the element.</p>
-<p>Looking at <em>‘b’</em> (ᜊ), we can see that it’s composed of a <code>guhitBundok</code> connected (<code>DUGTONG</code>) to a <code>guhitUlap</code> below it. (“guhit” means stroke in this case)</p>
-<code-block language="js"><pre><code>&quot;b&quot;: [
-  [guhitBundok, 0.0, 0.8, 0.5, 0.2, 1.0, 0.7, 0.1, 0.1],
-  [guhitUlap, DUGTONG, DUGTONG, 0.05, 0.7, 0.0, 0.3, PUTOL],
-],</code></pre></code-block>
-<p>Sometimes a character can even reuse another character, like <em>‘a’</em> (ᜀ) which is just <em>‘ya’</em> (ᜌ) with an extra <code>guhitTuwid</code> (straight stroke).</p>
-<code-block language="js"><pre><code>&quot;a&quot;: [
-  ...guhitYa,
-  [guhitTuwid, 0.0, 0.4, 0.2, 0.4, 0.05, -0.05, PUTOL],
-],</code></pre></code-block>
-<figure><img alt="Baybayin of the word ‘nagpaambon’" src="nagpaambon.png" loading="lazy" width="800" height="800" style="--lqip:174819"></img><figcaption>Decomposition of baybayin in the word ᜈᜄ᜕ᜉᜀᜋ᜕ᜊᜓᜈ᜕ (‘nagpaambon’, ‘made something be rained on’)</figcaption></figure>
+<p>The composition optimiser runs a kind of a particle simulation where vertices attract and repel each other according to dozens of rules. This was the hardest to get right as it was often unstable. It took a lot of number tweaking to get decent results.</p>
 
-<p>You probably have inferred that these vertices are hardcoded, so the resulting calligraphy is not as dynamic as you might expect. One quick fix I added was to slightly warp them in certain directions with a bit of randomness, but it’s not great. This is something I could improve upon in a future iteration&mdash;e.g., make the brush movement purposeful, or arrange vertices with respect to other vertices across the whole word.</p>
+<img src="compose.webp" loading="lazy" width="2000" height="1667" style="--lqip:174819">
+
+<p>There are three brush styles. Each brush's paint drawing algorithm has been individually designed and implemented.</p>
+
+<prose-bleed>
+  <figure><img alt="screenshot of different calligraphy styles" src="styles.png" loading="lazy" width="1200" height="1000" style="--lqip:174819"></img><figcaption>Different styles, left-to-right: Brush, Spray paint, Flat nib</figcaption></figure>
+</prose-bleed>
+
 <h2 id="end-note">End note</h2>
-<p>This was a project that was hastily launched as a proof-of-concept. It was fun, but the codebase got quite spaghetti. The concept seems mildly successful, since it is now getting regular visitors (though, I have no idea what they actually do with it, I haven’t seen an output of this in the wild). Anyway, since this webapp looks useful, I intend to rewrite it with a better and more dynamic calligraphy algorithm. Maybe.</p>
+<p>This was a project started as a proof-of-concept but is now getting regular visitors. Seeing an output of this in the wild gives me motivation to improve it further.</p>
 <figure><img alt="Generated baybayin calligraphy of the word ‘padayon’" src="padayon.png" loading="lazy" width="1080" height="1350" style="--lqip:174819"></img><figcaption>This post wouldn’t be complete without writing the now-clichéd word ‘padayon’ in baybayin.</figcaption></figure>
 </main>
 
