@@ -21,6 +21,7 @@ export function createFileControls(
     files: [new File([], "x.png", { type: "image/png" })],
   });
   const isRenderingFull = observable.box(false);
+  const downloadedText = observable.box(null);
   let cachedFullRender = null;
 
   function downloadCanvas(canvas) {
@@ -28,6 +29,7 @@ export function createFileControls(
     link.href = canvas.toDataURL("image/png");
     link.download = formatFileName(inputText.get()) + ".png";
     link.click();
+    downloadedText.set(inputText.get());
   }
 
   async function downloadFullCanvas() {
@@ -223,7 +225,7 @@ export function createFileControls(
       </div>
     `,
   );
-  return { FileControls, saveCanvas };
+  return { FileControls, saveCanvas, downloadedText };
 }
 
 function formatFileName(text) {

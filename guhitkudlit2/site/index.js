@@ -122,7 +122,7 @@ const calligraphyInputs = {
   density,
   painterName,
 };
-const { FileControls, saveCanvas } = createFileControls(
+const { FileControls, saveCanvas, downloadedText } = createFileControls(
   canvasRef,
   inputText,
   calligraphyInputs,
@@ -154,6 +154,13 @@ when(
     installCalligraphy(calligraphyInputs, canvasRef, onProgress);
   },
 );
+
+window.addEventListener("beforeunload", (event) => {
+  const text = inputText.get();
+  if (text.length > 0 && text !== downloadedText.get()) {
+    event.preventDefault();
+  }
+});
 
 const appLogoRef = { current: null };
 const Logo = observer(
