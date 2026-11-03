@@ -32,10 +32,26 @@ import { classes } from "./util/classes.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
 
+const unloadGuard = new AbortController();
+window.addEventListener(
+  "beforeunload",
+  (event) => {
+    const text = inputText.get();
+    if (text.length > 0 && text !== downloadedText.get()) {
+      event.preventDefault();
+    }
+  },
+  { signal: unloadGuard.signal },
+);
+function reloadApp() {
+  unloadGuard.abort();
+  location.reload();
+}
+
 const { AppPanelGroup, activatePanel } = createPanelGroup();
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
-  createTransliterationForm(viramaStyle, separateRa);
+  createTransliterationForm(viramaStyle, separateRa, unloadGuard);
 const { StyleControls, colorStyle, painterName } = createStyleControls();
 const { LayoutControls, arrangement, density } = createLayoutControls();
 const { PresetControls } = createPresetControls({
@@ -156,23 +172,6 @@ when(
     installCalligraphy(calligraphyInputs, canvasRef, onProgress);
   },
 );
-
-const unloadGuard = new AbortController();
-window.addEventListener(
-  "beforeunload",
-  (event) => {
-    const text = inputText.get();
-    if (text.length > 0 && text !== downloadedText.get()) {
-      event.preventDefault();
-    }
-  },
-  { signal: unloadGuard.signal },
-);
-
-function reloadApp() {
-  unloadGuard.abort();
-  location.reload();
-}
 
 const appLogoRef = { current: null };
 const Logo = observer(
