@@ -4,6 +4,7 @@ import { observer } from "../util/observer.js";
 import { observable } from "../lib/mobx.js";
 import { delay } from "../util/delay.js";
 import { drawColorStyledCanvas } from "../style/color-styles.js";
+import { CalligraphyStatus } from "../calligraphy/status.js";
 
 const instagramIconUrl = new URL("./instagram.svg#icon", import.meta.url).href;
 const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
@@ -15,7 +16,7 @@ export function createFileControls(
   inputText,
   calligraphyInputs,
   colorStyle,
-  calligraphyComplete,
+  calligraphyStatus,
 ) {
   const canShareFiles = navigator.canShare?.({
     files: [new File([], "x.png", { type: "image/png" })],
@@ -150,14 +151,15 @@ export function createFileControls(
             class="fileControlsButton"
             variant="primary"
             onClick=${saveCanvas}
-            disabled=${!calligraphyComplete.get()}
+            disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
           >
             Download
           <//>
           <${Button}
             class="fileControlsButton"
             onClick=${downloadFullCanvas}
-            disabled=${isRenderingFull.get() || !calligraphyComplete.get()}
+            disabled=${isRenderingFull.get() ||
+            !(calligraphyStatus.get() >= CalligraphyStatus.completed)}
           >
             ${isRenderingFull.get() ? "Rendering..." : "Download HD"}
           <//>
@@ -165,7 +167,7 @@ export function createFileControls(
           html`<${Button}
             class="fileControlsButton fileControlsShareButton"
             onClick=${shareCanvas}
-            disabled=${!calligraphyComplete.get()}
+            disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
           >
             Share
           <//>`}

@@ -1,5 +1,6 @@
 import { html } from "../components/html.js";
 import { observer } from "../util/observer.js";
+import { CalligraphyStatus } from "../calligraphy/status.js";
 
 const instagramIconUrl = new URL("../file/instagram.svg#icon", import.meta.url)
   .href;
@@ -8,7 +9,7 @@ const tipPageUrl = new URL("../tip/", import.meta.url).href;
 
 export function createAppMenuButton(
   inputText,
-  calligraphyComplete,
+  calligraphyStatus,
   openResetDialog,
   saveCanvas,
 ) {
@@ -120,7 +121,7 @@ export function createAppMenuButton(
           popovertarget="appMenuPopup"
           popovertargetaction="hide"
           onClick=${saveCanvas}
-          disabled=${!calligraphyComplete.get()}
+          disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
         >
           Download image
         </button>

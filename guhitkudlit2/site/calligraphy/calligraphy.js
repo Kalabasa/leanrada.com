@@ -5,6 +5,7 @@ import { hasVirama } from "../transliteration/syllabicate.js";
 import { debounce } from "../util/debounce.js";
 import { delay } from "../util/delay.js";
 import { createRandom } from "../util/random.js";
+import { CalligraphyStatus } from "./status.js";
 
 const painterLoaders = {
   basic: async () => (await import("./painter.js")).BasePainter,
@@ -46,16 +47,16 @@ export function installCalligraphy(
   let drawingAbortController;
   reaction(
     () => inputs.get(),
-    () => {
+    ({ baybayinUnits }) => {
       drawingAbortController?.abort();
-      onProgress("start");
+      onProgress(CalligraphyStatus.idle);
       if (!canvasRef.current) return;
       const context = canvasRef.current.getContext("2d");
       context.reset();
       context.fillStyle = "#fff";
       context.fillRect(0, 0, context.canvas.width, context.canvas.height);
     },
-    { equals: comparer.shallow },
+    { fireImmediately: true, equals: comparer.shallow },
   );
   reaction(
     () => inputs.get(),
@@ -67,10 +68,16 @@ export function installCalligraphy(
         density,
         painterName,
       }) => {
+        onProgress(
+          baybayinUnits.length === 0
+            ? CalligraphyStatus.idle
+            : CalligraphyStatus.started,
+        );
         if (baybayinUnits.length === 0) return;
         if (!canvasRef.current) return;
         const abortController = new AbortController();
         drawingAbortController = abortController;
+        let drawingStarted = false;
         await render({
           baybayinUnits,
           viramaStyle,
@@ -80,9 +87,16 @@ export function installCalligraphy(
           abortSignal: abortController.signal,
           speed: calculateSpeed(baybayinUnits),
           painterName: debugPainterName ?? painterName,
+          onProgress: (progress) => {
+            if (abortController.signal.aborted) return;
+            if (!drawingStarted && progress > 0) {
+              drawingStarted = true;
+              onProgress(CalligraphyStatus.drawing);
+            }
+          },
         });
         if (abortController.signal.aborted) return;
-        onProgress("complete");
+        onProgress(CalligraphyStatus.completed);
       },
       400,
     ),
