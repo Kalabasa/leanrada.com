@@ -30,6 +30,13 @@
     />
     <meta name="twitter:card" content="summary_large_image" />
 
+    <script defer>
+      if (!location.pathname.endsWith("/")) {
+        const url = new URL(location);
+        url.pathname += "/";
+        location.replace(url);
+      }
+    </script>
     <script async src="/analytics/analytics.js"></script>
 
     <link rel="stylesheet" href="../lib/reset.css" />
@@ -58,20 +65,6 @@
         padding: 0 var(--size-l);
         max-width: 800px;
         align-self: center;
-      }
-
-      footer {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: var(--size-m) var(--size-l);
-        margin: var(--size-l);
-
-        a {
-          display: inline-flex;
-          gap: var(--size-xs);
-          align-items: center;
-        }
       }
 
       a {
@@ -105,6 +98,13 @@
 
       strong {
         font-weight: bold;
+      }
+
+      .highlight {
+        color: var(--color-orange-darker);
+        background: color-mix(var(--color-orange), transparent 85%);
+        border-radius: var(--size-xs);
+        box-decoration-break: clone;
       }
 
       del {
@@ -169,7 +169,7 @@
         }
       }
 
-      #errorHelpContainer {
+      .errorHelpContainer {
         display: none;
         min-height: 60vh;
         place-items: center;
@@ -222,11 +222,11 @@
         }
       }
 
-      #cheatsheetCards {
+      .cheatsheetCards {
         width: 100%;
-        max-width: calc(3 * 600px + 2 * var(--size-l));
+        max-width: calc(2 * 600px + 2 * var(--size-l));
         align-self: center;
-        column-width: 480px;
+        column-width: 450px;
         column-gap: var(--size-l);
 
         section {
@@ -239,7 +239,7 @@
         }
       }
 
-      #unsupportedLetters {
+      .unsupportedLetters {
         margin-top: var(--size-s);
       }
 
@@ -256,7 +256,7 @@
         }
       }
 
-      #cheatExample {
+      .cheatExample {
         text-align: center;
         margin: var(--size-m) 0;
       }
@@ -268,7 +268,7 @@
         margin: var(--size-s) 0;
       }
 
-      #precolonialTables {
+      .precolonialTables {
         display: grid;
         overflow-x: auto;
         margin: 0 calc(var(--size-m) * -1);
@@ -312,20 +312,20 @@
         }
       }
 
-      .conversionRules li {
+      .bulletList li {
         margin-left: var(--size-m);
         list-style: disc;
 
         & + li {
           margin-top: var(--size-xs);
         }
+      }
 
-        q {
-          font-family: monospace;
-          background: var(--color-bg-secondary);
-          border-radius: 4px;
-          padding: 0 4px;
-        }
+      q {
+        font-family: monospace;
+        background: var(--color-bg-secondary);
+        border-radius: 4px;
+        padding: 0 4px;
       }
     </style>
     <script>
@@ -420,16 +420,16 @@
       </p>
     </header>
     <main>
-      <div id="errorHelpContainer">
+      <div class="errorHelpContainer">
         <div id="letterErrorHelp" class="errorHelp highlightFlash" hidden>
           <p>
             Baybayin doesn’t really have the letter
             <em id="letterErrorLetters"></em>.
           </p>
           <p>
-            There’s no direct equivalent for this letter. If you want to convert
-            a word or name with this letter, you’d need to respell it in Tagalog
-            for a more accurate Baybayin conversion.
+            <strong>There’s no direct equivalent for this letter.</strong> If
+            you want to convert a word or name with this letter, you’d need to
+            respell it in Tagalog for a more accurate Baybayin conversion.
           </p>
           <p>
             First, you can try substituting this letter with the equivalent
@@ -438,12 +438,14 @@
           <ul id="letterErrorExamples" class="examples"></ul>
           <p>
             GuhitKudlit will not guess to avoid mistakes. You know your word or
-            name better, so I highly recommend respelling it by yourself. Trust,
-            this part is best left to humans (thinking of a permanent tattoo?).
+            name better, so I highly recommend respelling it by yourself. Trust
+            me, this part is best left to humans (thinking of a permanent
+            tattoo?).
           </p>
           <p>
-            Read below for a quick guide! Baybayin is easy, you can learn it in
-            a few minutes!
+            Read below for a quick guide!
+            <strong>Baybayin is very easy</strong>, you can learn it in a few
+            minutes!
           </p>
         </div>
 
@@ -463,7 +465,25 @@
       </div>
 
       <h1>GuhitKudlit Guide</h1>
-      <div id="cheatsheetCards">
+
+      <div class="cheatsheetCards">
+        <section>
+          <h2>Common mistake #1</h2>
+          <p>
+            <strong class="highlight"
+              >Using English spelling is a common mistake.</strong
+            >
+            Baybayin is a <strong>sound-based writing system</strong>, and
+            English spelling does not directly map to Tagalog sounds.
+          </p>
+          <p>
+            For example, <q>my friend</q> should first be spelled as pronounced,
+            like <q>may prend</q>. Sound it out and write the sounded letters in
+            Tagalog. <strong>Kung ano ang bigkas, siya rin ang baybay.</strong>
+          </p>
+          <p>Check the following guides for more information.</p>
+        </section>
+
         <section>
           <h2>Foreign sounds</h2>
           <p>
@@ -473,9 +493,10 @@
               href="https://en.wikipedia.org/wiki/Abakada_alphabet"
               target="_blank"
               >abakada</a
-            >) instead. Kung ano ang bigkas, siya rin ang baybay.
+            >) instead.
+            <strong>Kung ano ang bigkas, siya rin ang baybay.</strong>
           </p>
-          <div id="unsupportedLetters">
+          <div class="unsupportedLetters">
             <div class="unsupportedLetter" data-letter="c">
               <h3>C</h3>
               <ul class="examples">
@@ -610,16 +631,16 @@
         <section>
           <h2>Baybayin cheatsheet</h2>
           <p>
-            Baybayin is generally one symbol per syllable. It’s an
+            Baybayin is generally one letter or symbol per syllable. It’s an
             <strong
               ><a
                 href="https://www.omniglot.com/writing/abugidas.htm"
                 target="_blank"
                 >abugida</a
               ></strong
-            >.
+            >, not an alphabet.
           </p>
-          <p id="cheatExample">
+          <p class="cheatExample">
             <ruby>ᜊᜓ<rt>bu</rt>ᜑ<rt>ha</rt>ᜌ᜕<rt>y</rt></ruby>
           </p>
           <p>Here are the vowel syllables</p>
@@ -715,7 +736,7 @@
             syllable were written and any final consonant was inferred from
             context.
           </p>
-          <div id="precolonialTables">
+          <div class="precolonialTables">
             <table class="precolonialExamples">
               <thead>
                 <tr>
@@ -834,30 +855,49 @@
 
         <section>
           <h2>Guhit Kudlit quirks</h2>
-          <ul class="conversionRules">
+          <ul class="bulletList">
             <li><q>ng</q> and <q>mga</q> are spelled as pronounced.</li>
           </ul>
         </section>
       </div>
     </main>
-    <footer>
-      <a href="../">GuhitKudlit</a>
-      <a href="../about/">About</a>
+    <footer id="footer">
+      <style>
+        footer {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: var(--size-m) var(--size-l);
+          margin: var(--size-l);
+
+          a {
+            display: inline-flex;
+            gap: var(--size-xs);
+            align-items: center;
+            text-decoration: underline;
+            color: var(--color-orange-darker);
+            text-underline-offset: 0.2em;
+          }
+        }
+      </style>
+      <a href="/guhit-kudlit/">GuhitKudlit</a>
+      <a href="/guhit-kudlit/help/">Help</a>
+      <a href="/guhit-kudlit/about/">About</a>
       <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
         <svg width="24" height="24" viewBox="0 0 24 24">
-          <use href="../file/instagram.svg#icon" />
+          <use href="/guhit-kudlit/file/instagram.svg#icon" />
         </svg>
         @guhitkudlit
       </a>
-      <a href="../tip/" target="_blank">
+      <a href="/guhit-kudlit/tip/" target="_blank">
         <svg width="24" height="24" viewBox="0 0 24 24">
-          <use href="../file/kofi.svg#icon" />
+          <use href="/guhit-kudlit/file/kofi.svg#icon" />
         </svg>
         Tip
       </a>
       <a href="mailto:guhitkudlit@leanrada.com" target="_blank">
         <svg width="24" height="24" viewBox="0 0 24 24">
-          <use href="../file/mail.svg#icon" />
+          <use href="/guhit-kudlit/file/mail.svg#icon" />
         </svg>
         guhitkudlit@leanrada.com
       </a>

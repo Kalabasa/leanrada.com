@@ -4,7 +4,7 @@
   /* https://huemint.com/website-3/#palette=ffffff-dcdfde-14130e-343bea-e56c7a-fcd115 */
   --color-orange: #fb7756;
   --color-orange-darker: #bd4223;
-  --color-danger: #ce2b03;
+  --color-danger: #fe5025;
   --color-green: #8ef915;
   --color-green-darker: #619c1e;
   --color-bg: #fffdfc;
@@ -59,4 +59,150 @@ img[src$="app/logo.svg"],
 img[src$="app/logo-tl.svg"] {
   display: inline-block;
   height: calc(1.6 * 3.82em / 2.6);
+}
+
+@layer base {
+  [data-appearance="button"] {
+    position: relative;
+    background: var(--color-fg);
+    color: var(--color-bg);
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: var(--font-size-s);
+    border-radius: var(--size-xs);
+    padding: var(--size-s);
+    box-shadow: var(--inset-shade);
+    overflow: hidden;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.1;
+    }
+    &:not(:disabled) {
+      cursor: pointer;
+      &:hover::after,
+      &:focus-visible::after {
+        background: var(--color-bg);
+      }
+      &:active::after {
+        background: var(--color-fg);
+      }
+    }
+    &:disabled {
+      opacity: var(--opacity-tertiary);
+      transition: opacity 0.4s;
+    }
+    &[data-button-variant="primary"] {
+      background: var(--color-orange-darker);
+    }
+    &[data-button-variant="danger"] {
+      background: var(--color-danger);
+    }
+  }
+
+  [data-appearance="signage-button"] {
+    cursor: pointer;
+    position: relative;
+    padding: 0 var(--size-xs);
+    font-family: "Cubao Narrow", sans-serif;
+    font-size: 30px;
+    letter-spacing: 0.02em;
+    line-height: 1.2em;
+    border-radius: var(--size-xs);
+    background: #f8f7f6;
+    color: #bd1003;
+    box-shadow: var(--shadow-l), var(--inset-shade);
+    z-index: 0;
+    transform-origin: bottom;
+    transition: none 0.04s ease-in;
+    transition-property: box-shadow, transform;
+    &::before {
+      content: "";
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      top: 10%;
+      bottom: 10%;
+      border-radius: 50%;
+      background: #f8ed8d;
+      z-index: -1;
+    }
+    &:focus-visible,
+    &:hover {
+      box-shadow: var(--shadow-xl), var(--inset-shade);
+      transform: scale(1.02);
+    }
+    &:active {
+      box-shadow: var(--shadow-m), var(--inset-shade);
+      transform: scale(1);
+    }
+  }
+
+  [data-appearance="option-group"] {
+    anchor-scope: --optionGroupOptionActive;
+    display: flex;
+    position: relative;
+    z-index: 0;
+    &::before {
+      content: "";
+      background: #f0f0f0;
+      position: absolute;
+      inset: 0;
+      border-radius: var(--size-xs);
+      z-index: -2;
+    }
+    &::after {
+      content: "";
+      background: #fff;
+      border-radius: var(--size-xs);
+      position: absolute;
+      inset: anchor(--optionGroupOptionActive top)
+        anchor(--optionGroupOptionActive right)
+        anchor(--optionGroupOptionActive bottom)
+        anchor(--optionGroupOptionActive left);
+      box-shadow: var(--inset-shade), inset 0 0 0 4px var(--color-orange);
+      position-visibility: anchors-valid;
+      transition: inset 0.15s;
+      z-index: -1;
+    }
+    &:not(:has(input:checked))::after {
+      display: none;
+    }
+    &:has(input:focus-visible) {
+      outline: solid 2px var(--color-green);
+      outline-offset: 2px;
+    }
+    > label {
+      flex: 1 1 1%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: var(--size-xs);
+      cursor: pointer;
+      font-size: var(--font-size-s);
+      font-weight: bold;
+      border-radius: var(--size-xs);
+      text-align: center;
+      &:has(input:checked) {
+        anchor-name: --optionGroupOptionActive;
+      }
+      &:not(:has(input:checked)) {
+        &:hover {
+          background: #0001;
+        }
+        &:active {
+          background: #0002;
+        }
+      }
+      input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+  }
 }

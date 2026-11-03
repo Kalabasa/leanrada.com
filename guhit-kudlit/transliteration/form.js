@@ -13,7 +13,11 @@ import { DEBUG, PARAMS } from "../app/flags.js";
 
 const memo = Symbol("memo");
 
-export function createTransliterationForm(viramaStyle, separateRa) {
+export function createTransliterationForm(
+  viramaStyle,
+  separateRa,
+  unloadGuard,
+) {
   const precolonial = computed(() => viramaStyle.get() === "precolonial");
   const initialText = PARAMS.get("word") ?? "";
   const inputText = observable.box(initialText);
@@ -73,6 +77,10 @@ export function createTransliterationForm(viramaStyle, separateRa) {
       });
     };
 
+    const onHelpLinkClick = () => {
+      unloadGuard.abort();
+    };
+
     const unicodeFilter = prettify.get()
       ? prettifyTempBaybayin
       : (value) => value;
@@ -92,6 +100,7 @@ export function createTransliterationForm(viramaStyle, separateRa) {
         error=${syllabicateError.get()}
         viramaStyle=${viramaStyle.get()}
         onInput=${onInput}
+        onHelpLinkClick=${onHelpLinkClick}
       />
     `;
   });
@@ -159,6 +168,7 @@ export function TransliterationForm({
   error,
   viramaStyle,
   onInput,
+  onHelpLinkClick,
 }) {
   const [hasFocused, setHasFocused] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -180,7 +190,10 @@ export function TransliterationForm({
         Baybayin.
       </p>
       <p>
-        <a class="transliterationTooltipLink" href=${helpLink}
+        <a
+          class="transliterationTooltipLink"
+          href=${helpLink}
+          onClick=${onHelpLinkClick}
           >Choose from the quick guide!</a
         >
       </p>`;
@@ -190,7 +203,10 @@ export function TransliterationForm({
         a vowel!
       </p>
       <p>
-        <a class="transliterationTooltipLink" href=${helpLink}
+        <a
+          class="transliterationTooltipLink"
+          href=${helpLink}
+          onClick=${onHelpLinkClick}
           >Check the quick guide!</a
         >
       </p>`;
@@ -406,7 +422,10 @@ export function TransliterationForm({
       )}
       ${hasPrecolonialTransform &&
       " Note: You are using the precolonial spelling mode. If this doesn’t sound right, you can rewrite your word or "}
-      <a class="transliterationTooltipLink" href=${helpLink}
+      <a
+        class="transliterationTooltipLink"
+        href=${helpLink}
+        onClick=${onHelpLinkClick}
         >Learn more in the quick guide!</a
       >
     <//>`}

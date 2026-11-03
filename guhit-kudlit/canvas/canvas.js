@@ -2,8 +2,14 @@ import { html } from "../components/html.js";
 import { observer } from "../util/observer.js";
 import { formatColorStyleFilter } from "../style/color-styles.js";
 import { IntroCanvas } from "./intro.js";
+import { CalligraphyStatus } from "../calligraphy/status.js";
 
-export function createCanvas(colorStyle, showPlaceholder, onConfig) {
+export function createCanvas(
+  colorStyle,
+  showPlaceholder,
+  calligraphyStatus,
+  onConfig,
+) {
   const aspectRatio = Math.min(
     1.5,
     2 * (window.innerWidth / window.innerHeight),
@@ -17,6 +23,7 @@ export function createCanvas(colorStyle, showPlaceholder, onConfig) {
         canvasRef=${canvasRef}
         colorStyle=${colorStyle.get()}
         showPlaceholder=${showPlaceholder.get()}
+        calligraphyStatus=${calligraphyStatus.get()}
         onConfig=${onConfig}
       />
     `;
@@ -29,6 +36,7 @@ export function Canvas({
   canvasRef,
   colorStyle,
   showPlaceholder,
+  calligraphyStatus,
   onConfig,
 }) {
   const canvasWidth =
@@ -56,9 +64,21 @@ export function Canvas({
         box-shadow: var(--shadow-m);
         view-transition-name: canvas;
       }
+      .canvasLoader {
+        grid-area: 1 / 1 / -1 / -1;
+        place-self: center;
+        font-family: "Cubao Narrow", sans-serif;
+        font-size: var(--font-size-l);
+        background: var(--color-bg-secondary);
+        color: var(--color-fg-secondary);
+        padding: var(--size-xs);
+        rotate: -4deg;
+        z-index: 1;
+      }
     </style>
     <div class="canvasContainer">
       <canvas
+        key="canvas"
         class="canvas"
         style=${{
           filter: formatColorStyleFilter(colorStyle),
@@ -67,6 +87,9 @@ export function Canvas({
         height=${canvasHeight}
         ref=${canvasRef}
       ></canvas>
+      ${calligraphyStatus >= CalligraphyStatus.started &&
+      calligraphyStatus < CalligraphyStatus.drawing &&
+      html`<span class="canvasLoader">LOADING</span>`}
       ${showPlaceholder &&
       html`
         <${IntroCanvas}

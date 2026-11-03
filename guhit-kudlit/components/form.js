@@ -67,62 +67,11 @@ export function Input({ class: className, tag = "input", ...props }) {
 
 export function Button({ class: className, tag = "button", ...props }) {
   return html`
-    <style id=${Button.name}>
-      @layer base {
-        .formButton {
-          position: relative;
-          background: var(--color-fg);
-          color: var(--color-bg);
-          text-transform: uppercase;
-          font-weight: bold;
-          font-size: var(--font-size-s);
-          border-radius: var(--size-xs);
-          padding: var(--size-s);
-          box-shadow: var(--inset-shade);
-          overflow: hidden;
-        }
-        .formButton::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          opacity: 0.1;
-        }
-        .formButton:not(:disabled) {
-          cursor: pointer;
-          &:hover::after,
-          &:focus-visible::after {
-            background: var(--color-bg);
-          }
-          &:active::after {
-            background: var(--color-fg);
-          }
-        }
-        .formButton:disabled {
-          opacity: var(--opacity-tertiary);
-          transition: opacity 0.4s;
-        }
-        .formButtonPrimaryVariant {
-          background: var(--color-orange-darker);
-        }
-        .formButtonDangerVariant {
-          background: var(--color-danger);
-        }
-      }
-    </style>
     <${tag}
-      class=${classes("formButton", getVariantClass(props.variant), className)}
+      data-appearance="button"
+      data-button-variant=${props.variant}
+      class=${className}
       ...${props}
     />
   `;
-}
-
-function getVariantClass(variant) {
-  switch (variant) {
-    case "primary":
-      return "formButtonPrimaryVariant";
-    case "danger":
-      return "formButtonDangerVariant";
-  }
-  return null;
 }

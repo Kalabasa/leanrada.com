@@ -4,6 +4,7 @@ import { observer } from "../util/observer.js";
 import { observable } from "../lib/mobx.js";
 import { delay } from "../util/delay.js";
 import { drawColorStyledCanvas } from "../style/color-styles.js";
+import { CalligraphyStatus } from "../calligraphy/status.js";
 
 const instagramIconUrl = new URL("./instagram.svg#icon", import.meta.url).href;
 const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
@@ -15,22 +16,28 @@ export function createFileControls(
   inputText,
   calligraphyInputs,
   colorStyle,
-  calligraphyComplete,
+  calligraphyStatus,
 ) {
   const canShareFiles = navigator.canShare?.({
     files: [new File([], "x.png", { type: "image/png" })],
   });
   const isRenderingFull = observable.box(false);
+  const downloadedText = observable.box(null);
   let cachedFullRender = null;
 
-  function downloadCanvas(canvas) {
+  const saveCanvas = async () => {
+    downloadCanvas(await drawExportCanvas());
+  };
+
+  const downloadCanvas = (canvas) => {
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
     link.download = formatFileName(inputText.get()) + ".png";
     link.click();
-  }
+    downloadedText.set(inputText.get());
+  };
 
-  async function downloadFullCanvas() {
+  const downloadFullCanvas = async () => {
     const fullCanvas = document.createElement("canvas");
     const ratio = canvasRef.current.width / canvasRef.current.height;
     fullCanvas.width = Math.max(canvasRef.current.width, 2000);
@@ -72,9 +79,20 @@ export function createFileControls(
     } finally {
       isRenderingFull.set(false);
     }
-  }
+  };
 
-  async function drawExportCanvas() {
+  const shareCanvas = async () => {
+    (await drawExportCanvas()).toBlob(async (blob) => {
+      const file = new File([blob], formatFileName(inputText.get()) + ".png", {
+        type: "image/png",
+      });
+      try {
+        await navigator.share({ files: [file] });
+      } catch {}
+    }, "image/png");
+  };
+
+  const drawExportCanvas = async () => {
     const { stampLogo } = await import("../canvas/render.js").catch((error) => {
       alert("Error loading code. Reload the page and try again.");
       throw error;
@@ -85,22 +103,7 @@ export function createFileControls(
     );
     await stampLogo(exportCanvas);
     return exportCanvas;
-  }
-
-  async function saveCanvas() {
-    downloadCanvas(await drawExportCanvas());
-  }
-
-  async function shareCanvas() {
-    (await drawExportCanvas()).toBlob(async (blob) => {
-      const file = new File([blob], formatFileName(inputText.get()) + ".png", {
-        type: "image/png",
-      });
-      try {
-        await navigator.share({ files: [file] });
-      } catch {}
-    }, "image/png");
-  }
+  };
 
   const FileControls = observer(
     () => html`
@@ -148,14 +151,15 @@ export function createFileControls(
             class="fileControlsButton"
             variant="primary"
             onClick=${saveCanvas}
-            disabled=${!calligraphyComplete.get()}
+            disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
           >
             Download
           <//>
           <${Button}
             class="fileControlsButton"
             onClick=${downloadFullCanvas}
-            disabled=${isRenderingFull.get() || !calligraphyComplete.get()}
+            disabled=${isRenderingFull.get() ||
+            !(calligraphyStatus.get() >= CalligraphyStatus.completed)}
           >
             ${isRenderingFull.get() ? "Rendering..." : "Download HD"}
           <//>
@@ -163,7 +167,7 @@ export function createFileControls(
           html`<${Button}
             class="fileControlsButton fileControlsShareButton"
             onClick=${shareCanvas}
-            disabled=${!calligraphyComplete.get()}
+            disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
           >
             Share
           <//>`}
@@ -223,7 +227,7 @@ export function createFileControls(
       </div>
     `,
   );
-  return { FileControls, saveCanvas };
+  return { FileControls, saveCanvas, downloadedText };
 }
 
 function formatFileName(text) {

@@ -17,11 +17,12 @@
 */
 import { createAppMenuButton } from "./app/menu-button.js";
 import { createPanelGroup } from "./app/panel-group.js";
+import { createResetDialog } from "./app/reset-dialog.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
 import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
-import { observable, runInAction, when } from "./lib/mobx.js";
+import { observable, reaction, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
 import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
@@ -30,11 +31,28 @@ import { flushObservers, observer } from "./util/observer.js";
 import { classes } from "./util/classes.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
+import { CalligraphyStatus } from "./calligraphy/status.js";
+
+const unloadGuard = new AbortController();
+window.addEventListener(
+  "beforeunload",
+  (event) => {
+    const text = inputText.get();
+    if (text.length > 0 && text !== downloadedText.get()) {
+      event.preventDefault();
+    }
+  },
+  { signal: unloadGuard.signal },
+);
+function reloadApp() {
+  unloadGuard.abort();
+  location.reload();
+}
 
 const { AppPanelGroup, activatePanel } = createPanelGroup();
 const { SpellingControls, viramaStyle, separateRa } = createSpellingControls();
 const { TransliterationForm, inputText, inputTextWrapperRef, baybayinUnits } =
-  createTransliterationForm(viramaStyle, separateRa);
+  createTransliterationForm(viramaStyle, separateRa, unloadGuard);
 const { StyleControls, colorStyle, painterName } = createStyleControls();
 const { LayoutControls, arrangement, density } = createLayoutControls();
 const { PresetControls } = createPresetControls({
@@ -45,60 +63,58 @@ const { PresetControls } = createPresetControls({
   density,
 });
 
-const calligraphyComplete = observable.box(false);
+const calligraphyStatus = observable.box(CalligraphyStatus.idle);
 const showPlaceholder = observable.box(inputText.get().length === 0);
-const { Canvas, canvasRef } = createCanvas(
-  colorStyle,
-  showPlaceholder,
-  async (config) => {
-    inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
 
-    await hidePlaceholder(() => {
-      for (const [key, input] of Object.entries({
-        painterName,
-        colorStyle,
-        viramaStyle,
-        separateRa,
-        arrangement,
-        density,
-      })) {
-        if (config[key] !== undefined) input.set(config[key]);
-      }
-      inputTextWrapperRef.current?.style.setProperty(
-        "view-transition-name",
-        config.sourceElement.style.viewTransitionName,
-      );
-      config.sourceElement.style.removeProperty("view-transition-name");
-      const destInput = inputTextWrapperRef.current?.querySelector("input");
-      if (destInput) destInput.value = config.text;
-    });
+const onConfig = async (config) => {
+  inputTextWrapperRef.current?.scrollIntoView({ behavior: "smooth" });
 
-    inputText.set(config.text);
-    setTimeout(() => {
-      if (!matchMedia("(pointer: fine)").matches) return;
-      inputTextWrapperRef.current?.querySelector("input").focus();
-    }, 125);
-
-    const interaction = new AbortController();
-    const lopts = {
-      once: true,
-      capture: true,
-      signal: interaction.signal,
-    };
-    window.addEventListener("pointerdown", () => interaction.abort(), lopts);
-    window.addEventListener("scroll", () => interaction.abort(), lopts);
-
-    when(
-      () => calligraphyComplete.get(),
-      () => {
-        if (interaction.signal.aborted) return;
-        interaction.abort();
-        activatePanel(/* File */ 5);
-      },
+  await hidePlaceholder(() => {
+    for (const [key, input] of Object.entries({
+      painterName,
+      colorStyle,
+      viramaStyle,
+      separateRa,
+      arrangement,
+      density,
+    })) {
+      if (config[key] !== undefined) input.set(config[key]);
+    }
+    inputTextWrapperRef.current?.style.setProperty(
+      "view-transition-name",
+      config.sourceElement.style.viewTransitionName,
     );
-  },
-);
-async function hidePlaceholder(updateDom) {
+    config.sourceElement.style.removeProperty("view-transition-name");
+    const destInput = inputTextWrapperRef.current?.querySelector("input");
+    if (destInput) destInput.value = config.text;
+  });
+
+  inputText.set(config.text);
+  setTimeout(() => {
+    if (!matchMedia("(pointer: fine)").matches) return;
+    inputTextWrapperRef.current?.querySelector("input").focus();
+  }, 125);
+
+  const interaction = new AbortController();
+  const lopts = {
+    once: true,
+    capture: true,
+    signal: interaction.signal,
+  };
+  window.addEventListener("pointerdown", () => interaction.abort(), lopts);
+  window.addEventListener("scroll", () => interaction.abort(), lopts);
+
+  when(
+    () => calligraphyStatus.get() >= CalligraphyStatus.completed,
+    () => {
+      if (interaction.signal.aborted) return;
+      interaction.abort();
+      activatePanel(/* File */ 5);
+    },
+  );
+};
+
+const hidePlaceholder = async (updateDom) => {
   const run = () => {
     showPlaceholder.set(false);
     updateDom();
@@ -113,7 +129,14 @@ async function hidePlaceholder(updateDom) {
   } else {
     run();
   }
-}
+};
+
+const { Canvas, canvasRef } = createCanvas(
+  colorStyle,
+  showPlaceholder,
+  calligraphyStatus,
+  onConfig,
+);
 
 const calligraphyInputs = {
   baybayinUnits,
@@ -122,17 +145,18 @@ const calligraphyInputs = {
   density,
   painterName,
 };
-const { FileControls, saveCanvas } = createFileControls(
+const { FileControls, saveCanvas, downloadedText } = createFileControls(
   canvasRef,
   inputText,
   calligraphyInputs,
   colorStyle,
-  calligraphyComplete,
+  calligraphyStatus,
 );
+const { ResetDialog, openResetDialog } = createResetDialog(reloadApp);
 const { AppMenuButton } = createAppMenuButton(
   inputText,
-  calligraphyComplete,
-  resetApp,
+  calligraphyStatus,
+  openResetDialog,
   saveCanvas,
 );
 
@@ -144,12 +168,9 @@ when(
         alert("Error loading code. Reload the page and try again.");
         throw error;
       });
-    const onProgress = (progress) => {
-      if (progress === "start") {
-        calligraphyComplete.set(false);
-      } else if (progress === "complete") {
-        calligraphyComplete.set(true);
-      }
+    const onProgress = (status) => {
+      console.log("onProgress", status);
+      calligraphyStatus.set(status);
     };
     installCalligraphy(calligraphyInputs, canvasRef, onProgress);
   },
@@ -169,14 +190,7 @@ const Logo = observer(
 
 function onLogoClick(event) {
   event.preventDefault();
-  resetApp();
-}
-
-function resetApp() {
-  runInAction(() => {
-    inputText.set("");
-    showPlaceholder.set(true);
-  });
+  openResetDialog();
 }
 
 const PanelGroupArea = observer(
@@ -199,7 +213,7 @@ export function Index() {
       .app {
         background: url("bgnoise.png"), var(--color-bg-darker);
         display: grid;
-        grid-template-rows: minmax(0, 1fr) min-content;
+        grid-template-rows: minmax(300px, 1fr) min-content;
         grid-template-columns: 1fr;
         grid-template-areas:
           "canvas"
@@ -207,7 +221,7 @@ export function Index() {
         grid-gap: var(--size-m);
         height: 100vh;
         height: 100svh;
-        overflow: hidden;
+        overflow: auto;
       }
       .appLogo {
         grid-area: canvas;
@@ -330,6 +344,7 @@ export function Index() {
         </div>
       <//>
       <${ColorStyleFilters} />
+      <${ResetDialog} />
     </div>
   `;
 }

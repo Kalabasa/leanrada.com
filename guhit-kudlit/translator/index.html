@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>
+      Baybayin Translator: Tagalog to Baybayin and back | GuhitKudlit
+    </title>
+    <meta
+      name="description"
+      content="Free Baybayin translator. Type Tagalog to convert it to Baybayin script, or paste Baybayin to read it in Tagalog. Then turn it into Baybayin calligraphy."
+    />
+    <link
+      rel="canonical"
+      href="https://leanrada.com/guhit-kudlit/translator/"
+    />
+
+    <link rel="icon" href="../favicon.png" />
+
+    <meta property="og:title" content="Baybayin Translator - GuhitKudlit" />
+    <meta
+      property="og:description"
+      content="Free Baybayin translator. Type Tagalog to convert it to Baybayin script, or paste Baybayin to read it in Tagalog."
+    />
+    <meta
+      property="og:url"
+      content="https://leanrada.com/guhit-kudlit/translator/"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GuhitKudlit" />
+    <meta
+      property="og:image"
+      content="https://leanrada.com/guhit-kudlit/preview/image.png"
+    />
+    <meta property="og:image:width" content="1260" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Screenshot of GuhitKudlit showing ‘sigabo’ in Baybayin calligraphy"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Baybayin Translator",
+        "url": "https://leanrada.com/guhit-kudlit/translator/",
+        "description": "Free Baybayin translator. Type Tagalog to convert it to Baybayin script, or paste Baybayin to read it in Tagalog.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": {
+          "@type": "Person",
+          "name": "Lean Rada",
+          "url": "https://leanrada.com/"
+        },
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "GuhitKudlit",
+          "url": "https://leanrada.com/guhit-kudlit/"
+        }
+      }
+    </script>
+
+    <script defer>
+      if (!location.pathname.endsWith("/")) {
+        const url = new URL(location);
+        url.pathname += "/";
+        location.replace(url);
+      }
+    </script>
+    <script async src="/analytics/analytics.js"></script>
+
+    <link rel="stylesheet" href="../lib/reset.css" />
+    <link rel="stylesheet" href="../global.css" />
+    <link rel="stylesheet" href="../font/font.css" />
+
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100svh;
+        background: url("../bgnoise.png"), var(--color-bg-darker);
+      }
+
+      .flipArea {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: var(--size-m);
+        padding: var(--size-m);
+        perspective: 1200px;
+      }
+
+      .flipForm {
+        display: contents;
+        text-align: center;
+        > h1 {
+          font-size: var(--font-size-l);
+          font-weight: bold;
+          /* text-transform: uppercase; */
+        }
+        > p {
+          max-width: 480px;
+          font-size: var(--font-size-l);
+          i {
+            font-style: italic;
+          }
+        }
+      }
+
+      .flipCard {
+        anchor-name: --flipCard;
+        display: grid;
+        width: min(480px, 100%);
+        aspect-ratio: 2 / 1;
+        transform-style: preserve-3d;
+        transition: transform 0.3s ease-in;
+        &.flipped {
+          transform: rotateY(180deg);
+        }
+      }
+
+      .flipCardFace {
+        grid-area: 1 / 1;
+        padding: var(--size-m);
+        text-align: center;
+        align-content: center;
+        background: var(--color-bg);
+        transition: background 0.3s ease-in;
+        border-radius: var(--size-s);
+        box-shadow: var(--shadow-l);
+        backface-visibility: hidden;
+        font-family: "Noto Sans Tagalog", "Karla", sans-serif;
+        font-size: 90px;
+        font-weight: bold;
+        .flipCard.flipped &:not(.flipCardBack) {
+          background: var(--color-bg-darker);
+        }
+      }
+
+      .flipCardBack {
+        transform: rotateY(180deg);
+        .flipCard:not(.flipped) & {
+          background: var(--color-bg-darker);
+        }
+      }
+
+      .flipActions {
+        min-height: 72px;
+        display: flex;
+        align-items: start;
+        gap: var(--size-s);
+        [data-appearance="button"] {
+          font-size: var(--font-size-m);
+        }
+      }
+
+      .flipButton[data-appearance="signage-button"] {
+        font-size: 60px;
+      }
+
+      .invalidLetterTooltip {
+        position: fixed;
+        position-anchor: --flipCard;
+        position-area: top;
+        max-width: 300px;
+        margin: var(--size-xs);
+        padding: var(--size-s);
+        border-radius: var(--size-xs);
+        background: #000;
+        color: var(--color-orange);
+        font-size: var(--font-size-m);
+        font-weight: bold;
+        box-shadow: var(--shadow-m);
+        animation: invalidLetterTooltipEnter 0.2s 0.1s both;
+        * + p {
+          margin-top: var(--size-xs);
+        }
+        a {
+          color: var(--color-green);
+          text-decoration: underline;
+        }
+      }
+
+      @keyframes invalidLetterTooltipEnter {
+        from {
+          opacity: 0;
+          translate: 0 20px;
+        }
+      }
+    </style>
+    <script type="module">
+      import { syllabicate } from "../transliteration/syllabicate.js";
+      import {
+        convertToUnicode,
+        convertFromUnicode,
+      } from "../transliteration/unicode.mjs";
+      import { InvalidLetterError } from "../transliteration/invalid-letter-error.js";
+
+      const form = document.querySelector(".flipForm");
+      const invalidLetterTooltip = document.querySelector(
+        ".invalidLetterTooltip",
+      );
+      const card = document.querySelector(".flipCard");
+      const [frontInput, backInput] =
+        document.querySelectorAll(".flipCardFace");
+      const appLink = document.querySelector(".appLink");
+      const flipButton = document.querySelector(".flipButton");
+      const cache = { tagalog: "", baybayin: "" };
+
+      for (const input of [frontInput, backInput]) {
+        input.addEventListener("keydown", (event) => {
+          if (
+            event.key === "Enter" &&
+            !event.shiftKey &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            !event.metaKey
+          ) {
+            event.preventDefault();
+            form.requestSubmit();
+          }
+        });
+        input.addEventListener("input", () => fitText(input));
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const [shownInput, hiddenInput] = card.classList.contains("flipped")
+          ? [backInput, frontInput]
+          : [frontInput, backInput];
+        try {
+          hiddenInput.value = transliterate(shownInput.value);
+        } catch (error) {
+          if (!(error instanceof InvalidLetterError)) throw error;
+          showInvalidLetterTooltip(error, shownInput.value);
+          return;
+        }
+        invalidLetterTooltip.hidePopover();
+        fitText(hiddenInput);
+        card.classList.toggle("flipped");
+        const baybayin = isBaybayin(shownInput.value)
+          ? shownInput.value
+          : hiddenInput.value;
+        appLink.href = "../?word=" + encodeURIComponent(toTagalog(baybayin));
+        appLink.hidden = false;
+        flipButton.dataset.appearance = "button";
+      });
+
+      function showInvalidLetterTooltip(error, word) {
+        invalidLetterTooltip.querySelector(".invalidLetters").textContent =
+          error.formatLetters();
+        invalidLetterTooltip.querySelector("a").href =
+          "../help/?word=" + encodeURIComponent(word) + "&viramaStyle=pamudpod";
+        invalidLetterTooltip.showPopover();
+      }
+
+      function fitText(input) {
+        input.style.fontSize = "";
+        input.style.overflow = "scroll";
+        if (!isTextFitting(input)) {
+          let overflowingFontSizePx = parseFloat(
+            getComputedStyle(input).fontSize,
+          );
+          let fittingFontSizePx = overflowingFontSizePx / 3;
+          for (let i = 0; i < 7; i++) {
+            const fontSizePx = (fittingFontSizePx + overflowingFontSizePx) / 2;
+            input.style.fontSize = fontSizePx + "px";
+            if (isTextFitting(input)) {
+              fittingFontSizePx = fontSizePx;
+            } else {
+              overflowingFontSizePx = fontSizePx;
+            }
+          }
+          input.style.fontSize = fittingFontSizePx + "px";
+        }
+        input.style.overflow = "";
+      }
+
+      function isTextFitting(input) {
+        return (
+          input.scrollHeight <= input.clientHeight &&
+          input.scrollWidth <= input.clientWidth
+        );
+      }
+
+      function transliterate(text) {
+        if (isBaybayin(text)) {
+          return toTagalog(text);
+        }
+        const baybayin = convertToUnicode(
+          syllabicate(text).baybayinUnits,
+          "pamudpod",
+        );
+        cache.tagalog = text;
+        cache.baybayin = baybayin;
+        return baybayin;
+      }
+
+      function toTagalog(baybayin) {
+        if (baybayin === cache.baybayin) {
+          return cache.tagalog;
+        }
+        return convertFromUnicode(baybayin);
+      }
+
+      function isBaybayin(text) {
+        return /[ᜀ-ᜟ]/.test(text);
+      }
+    </script>
+  </head>
+  <body>
+    <main class="flipArea">
+      <form class="flipForm">
+        <img src="../app/logo.svg" alt="GuhitKudlit" />
+        <h1>Baybayin translator</h1>
+        <p>
+          Enter Tagalog or Baybayin text, then press <i>Baybayín!</i> to
+          transliterate.
+        </p>
+        <div class="flipCard">
+          <textarea
+            class="flipCardFace"
+            aria-label="Text to transliterate"
+            required
+            autofocus
+          ></textarea>
+          <textarea
+            class="flipCardFace flipCardBack"
+            aria-label="Text to transliterate"
+          ></textarea>
+        </div>
+        <div class="flipActions">
+          <a
+            class="appLink"
+            data-appearance="button"
+            data-button-variant="primary"
+            hidden
+            >Gawing kaligrapiya</a
+          >
+          <button
+            class="flipButton"
+            data-appearance="signage-button"
+            type="submit"
+          >
+            ·Baybayin!·
+          </button>
+        </div>
+      </form>
+      <div class="invalidLetterTooltip" popover="manual">
+        <p>
+          For the letter <span class="invalidLetters"></span>, you have to
+          respell it for Baybayin.
+        </p>
+        <p><a>Choose from the quick guide!</a></p>
+      </div>
+    </main>
+    <footer id="footer">
+      <style>
+        footer {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: var(--size-m) var(--size-l);
+          margin: var(--size-l);
+
+          a {
+            display: inline-flex;
+            gap: var(--size-xs);
+            align-items: center;
+            text-decoration: underline;
+            color: var(--color-orange-darker);
+            text-underline-offset: 0.2em;
+          }
+        }
+      </style>
+      <a href="/guhit-kudlit/">GuhitKudlit</a>
+      <a href="/guhit-kudlit/help/">Help</a>
+      <a href="/guhit-kudlit/about/">About</a>
+      <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="/guhit-kudlit/file/instagram.svg#icon" />
+        </svg>
+        @guhitkudlit
+      </a>
+      <a href="/guhit-kudlit/tip/" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="/guhit-kudlit/file/kofi.svg#icon" />
+        </svg>
+        Tip
+      </a>
+      <a href="mailto:guhitkudlit@leanrada.com" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use href="/guhit-kudlit/file/mail.svg#icon" />
+        </svg>
+        guhitkudlit@leanrada.com
+      </a>
+      <span>
+        made with &lt;3 by
+        <a href="https://leanrada.com/" target="_blank">Lean</a>
+      </span>
+      <span>&copy;2023-2026 Lean Rada</span>
+    </footer>
+  </body>
+</html>
