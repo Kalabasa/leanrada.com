@@ -221,14 +221,15 @@ function calculateControlPoints(strokes) {
         const aControlY = a.position.y + a.control.y;
         const bControlX = b.position.x - b.control.x;
         const bControlY = b.position.y - b.control.y;
-        const offsetX = (bControlX - aControlX) * 0.1;
-        const offsetY = (bControlY - aControlY) * 0.1;
+        const offsetX = (bControlX - aControlX) * 0.25;
+        const offsetY = (bControlY - aControlY) * 0.25;
         offsets[i].x += offsetX;
         offsets[i].y += offsetY;
         offsets[i + 1].x += offsetX;
         offsets[i + 1].y += offsetY;
       }
       for (let i = 0; i < vertices.length; i++) {
+        if (i === 0 || i === vertices.length - 1) continue;
         const control = vertices[i].control;
         const newX = control.x + offsets[i].x;
         const newY = control.y + offsets[i].y;
@@ -261,7 +262,7 @@ function calculateMiddleControl(vertices, index) {
   const prevLen = Math.hypot(prevDX, prevDY);
   const nextLen = Math.hypot(nextDX, nextDY);
   const dot = (prevDX * nextDX + prevDY * nextDY) / (prevLen * nextLen);
-  const lenFactor = ((dot + 1) / 2) ** 0.25;
+  const lenFactor = ((dot + 1) / 2) ** 0.125;
   const controlLen = (Math.min(prevLen, nextLen) / 2) * lenFactor;
 
   const tangentX = next.position.x - prev.position.x;
