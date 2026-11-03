@@ -6,6 +6,7 @@
 
 import { DEBUG, PARAMS } from "../app/flags.js";
 import { delay } from "../util/delay.js";
+import { updateControlPoints } from "./stroke.js";
 const composeStepsOverride = Number.parseInt(PARAMS.get("composeSteps"));
 
 const pushStrength = 0.4;
@@ -58,18 +59,20 @@ export async function compose(glyphStrokesList, opts = {}) {
         edges.push({
           start,
           end,
-          origStartControl: { ...start.control },
-          origEndControl: { ...end.control },
           isKudlit: stroke.isKudlit,
         });
       }
     }
   }
 
+  const updateControls = () => {
+    for (const { strokes } of glyphStrokesList) {
+      updateControlPoints(strokes);
+    }
+  };
+
   /** @type {Map<StrokeVertex, Point>} */
   const vertexPushes = new Map();
-  /** @type {Map<StrokeVertex, Point>} */
-  const controlPushes = new Map();
 
   const pushVertex = (vertex, x, y) => {
     const offset = vertexPushes.get(getRootVertex(vertex));
@@ -77,22 +80,15 @@ export async function compose(glyphStrokesList, opts = {}) {
     offset.y += y;
   };
 
-  const pushControl = (vertex, x, y) => {
-    const offset = controlPushes.get(vertex);
-    offset.x += x;
-    offset.y += y;
-  };
-
   /**
    * @param {{ start: StrokeVertex, end: StrokeVertex, isKudlit: boolean | 'krus' }} curve
-   * @param {Point[]} points start, start control, end control, end
    * @param {{ isKudlit: boolean | 'krus' }} oCurve
    * @param {Point} oClosest
    */
-  const pushCurve = (curve, points, oCurve, oClosest) => {
-    const pushes = points.map((point) => {
-      const dx = point.x - oClosest.x;
-      const dy = point.y - oClosest.y;
+  const pushCurve = (curve, oCurve, oClosest) => {
+    const [startPush, endPush] = [curve.start, curve.end].map((vertex) => {
+      const dx = vertex.position.x - oClosest.x;
+      const dy = vertex.position.y - oClosest.y;
       const dist = Math.hypot(dx, dy);
       if (dist === 0) return { x: 0, y: 0 };
 
@@ -110,10 +106,8 @@ export async function compose(glyphStrokesList, opts = {}) {
       };
     });
 
-    pushVertex(curve.start, pushes[0].x, pushes[0].y);
-    pushControl(curve.start, pushes[1].x, pushes[1].y);
-    pushControl(curve.end, -pushes[2].x, -pushes[2].y);
-    pushVertex(curve.end, pushes[3].x, pushes[3].y);
+    pushVertex(curve.start, startPush.x, startPush.y);
+    pushVertex(curve.end, endPush.x, endPush.y);
   };
 
   const center = calculateCentroid(glyphs);
@@ -134,10 +128,6 @@ export async function compose(glyphStrokesList, opts = {}) {
       for (const vertex of glyph.vertices) {
         vertexPushes.set(vertex, { x: 0, y: 0 });
       }
-    }
-    for (const edge of edges) {
-      controlPushes.set(edge.start, { x: 0, y: 0 });
-      controlPushes.set(edge.end, { x: 0, y: 0 });
     }
 
     const springFactor =
@@ -190,31 +180,13 @@ export async function compose(glyphStrokesList, opts = {}) {
       }
     }
 
-    // pull controls back to original shape
-    for (const curve of edges) {
-      pushControl(
-        curve.start,
-        (curve.origStartControl.x - curve.start.control.x) * springFactor,
-        (curve.origStartControl.y - curve.start.control.y) * springFactor,
-      );
-      pushControl(
-        curve.end,
-        (curve.origEndControl.x - curve.end.control.x) * springFactor,
-        (curve.origEndControl.y - curve.end.control.y) * springFactor,
-      );
-    }
-
     // flush
     for (const [vertex, offset] of vertexPushes) {
       vertex.position.x += offset.x;
       vertex.position.y += offset.y;
       vertexPushes.set(vertex, { x: 0, y: 0 });
     }
-    for (const [vertex, offset] of controlPushes) {
-      vertex.control.x += offset.x;
-      vertex.control.y += offset.y;
-      controlPushes.set(vertex, { x: 0, y: 0 });
-    }
+    updateControls();
 
     // TODO cache centroids & extents
     // glyphs repel
@@ -281,8 +253,8 @@ export async function compose(glyphStrokesList, opts = {}) {
           }
         }
 
-        pushCurve(curve, points, oCurve, oClosest);
-        pushCurve(oCurve, oPoints, curve, closest);
+        pushCurve(curve, oCurve, oClosest);
+        pushCurve(oCurve, curve, closest);
       }
     }
 
@@ -338,10 +310,7 @@ export async function compose(glyphStrokesList, opts = {}) {
       vertex.position.x += offset.x;
       vertex.position.y += offset.y;
     }
-    for (const [vertex, offset] of controlPushes) {
-      vertex.control.x += offset.x;
-      vertex.control.y += offset.y;
-    }
+    updateControls();
   }
 }
 

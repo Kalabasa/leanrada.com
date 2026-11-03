@@ -40,7 +40,7 @@ export function traceStrokes(glyph) {
     isKudlit: chain[0].isKudlit ?? false,
   }));
 
-  calculateControlPoints(strokes);
+  updateControlPoints(strokes);
 
   return { strokes };
 }
@@ -157,7 +157,7 @@ function calculateOffsetPosition(start, end, progress, offset) {
 /**
  * @param {{ vertices: StrokeVertex[], isKudlit: boolean | 'krus' }[]} strokes
  */
-function calculateControlPoints(strokes) {
+export function updateControlPoints(strokes) {
   /** @type {Map<Point, StrokeVertex>} */
   const middleVertexAtPosition = new Map();
   for (const { vertices } of strokes) {
