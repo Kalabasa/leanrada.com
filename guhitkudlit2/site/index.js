@@ -213,7 +213,7 @@ export function Index() {
       .app {
         background: url("bgnoise.png"), var(--color-bg-darker);
         display: grid;
-        grid-template-rows: minmax(0, 1fr) min-content;
+        grid-template-rows: minmax(300px, 1fr) min-content;
         grid-template-columns: 1fr;
         grid-template-areas:
           "canvas"
@@ -221,7 +221,7 @@ export function Index() {
         grid-gap: var(--size-m);
         height: 100vh;
         height: 100svh;
-        overflow: hidden;
+        overflow: auto;
       }
       .appLogo {
         grid-area: canvas;

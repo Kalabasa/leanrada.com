@@ -110,7 +110,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
         justify-content: space-evenly;
         align-items: center;
         gap: var(--size-l);
-        overflow: hidden;
+        overflow: auto;
         contain: inline-size;
         view-transition-name: intro;
         @media (max-width: 750px) {
