@@ -17,50 +17,8 @@ export function createAppMenuButton(
     () => html`
       <style id=${AppMenuButton.name}>
         .appMenuButton {
-          border: none;
-          cursor: pointer;
-          position: relative;
-          padding: 0 var(--size-xs);
-          font-family: "Cubao Narrow", sans-serif;
-          font-weight: normal;
-          font-size: 30px;
-          letter-spacing: 0.02em;
-          border-radius: var(--size-xs);
-          background: #f8f7f6;
-          color: #bd1003;
-          box-shadow: var(--shadow-l), var(--inset-shade);
-          z-index: 0;
-          transform-origin: bottom;
-          transition: none 0.04s ease-in;
-          transition-property: box-shadow, transform;
-
           @media (max-width: 800px) {
             font-size: 24px;
-          }
-
-          > span {
-            display: block;
-            line-height: 1.2em;
-          }
-          &::before {
-            content: "";
-            position: absolute;
-            left: 5%;
-            right: 5%;
-            top: 10%;
-            bottom: 10%;
-            border-radius: 50%;
-            background: #f8ed8d;
-            z-index: -1;
-          }
-          &:focus-visible,
-          &:hover {
-            box-shadow: var(--shadow-xl), var(--inset-shade);
-            transform: scale(1.02);
-          }
-          &:active {
-            box-shadow: var(--shadow-m), var(--inset-shade);
-            transform: scale(1);
           }
         }
         .appMenuPopup {
@@ -100,11 +58,12 @@ export function createAppMenuButton(
       </style>
       <button
         class="appMenuButton"
+        data-appearance="signage-button"
         type="button"
         popovertarget="appMenuPopup"
         style=${{ anchorName: "--appMenuButton" }}
       >
-        <span>·menu·</span>
+        ·menu·
       </button>
       <div class="appMenuPopup" id="appMenuPopup" popover="auto">
         <button

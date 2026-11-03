@@ -63,6 +63,8 @@ const map = {
   yu: "ᜌᜓ",
   y: "ᜌ᜕",
   " ": " ",
+  ".": "᜶",
+  ",": "᜵",
 };
 
 /**
@@ -74,4 +76,31 @@ export function convertToUnicode(romanizedBaybayinUnits, viramaStyle) {
   if (viramaStyle === "krus") return unicode.replaceAll("᜕", "᜔");
   if (viramaStyle === "precolonial") return unicode.replaceAll("᜕", "");
   return unicode;
+}
+
+const unicodeToRomanized = new Map(
+  Object.entries(map).map(([romanized, unicode]) => [unicode, romanized]),
+);
+
+/** @param {string} unicode */
+export function convertFromUnicode(unicode) {
+  const normalizedUnicode = unicode
+    .replaceAll("᜔", "᜕")
+    .replaceAll("᜴", "᜕")
+    .replaceAll("ᜟ", "ᜍ")
+    .replace(/\s+(?=[᜵᜶])/g, "");
+  let romanized = "";
+  let i = 0;
+  while (i < normalizedUnicode.length) {
+    const pair = normalizedUnicode.slice(i, i + 2);
+    if (unicodeToRomanized.has(pair)) {
+      romanized += unicodeToRomanized.get(pair);
+      i += 2;
+    } else {
+      const char = normalizedUnicode[i];
+      romanized += unicodeToRomanized.get(char) ?? char;
+      i += 1;
+    }
+  }
+  return romanized.replace(/u(?=[bkdghlmnprstwy]*\b)/g, "o");
 }
