@@ -1,5 +1,4 @@
 import { html } from "../components/html.js";
-import { Button } from "../components/form.js";
 import { observer } from "../util/observer.js";
 
 const instagramIconUrl = new URL("../file/instagram.svg#icon", import.meta.url)
@@ -10,16 +9,9 @@ const tipPageUrl = new URL("../tip/", import.meta.url).href;
 export function createAppMenuButton(
   inputText,
   calligraphyComplete,
-  resetApp,
+  openResetDialog,
   saveCanvas,
 ) {
-  const resetDialogRef = { current: null };
-
-  function confirmReset() {
-    resetDialogRef.current.close();
-    resetApp();
-  }
-
   const AppMenuButton = observer(
     () => html`
       <style id=${AppMenuButton.name}>
@@ -104,24 +96,6 @@ export function createAppMenuButton(
           gap: var(--size-m);
           cursor: default;
         }
-        .appMenuResetDialog {
-          max-width: calc(100vw - 2 * var(--size-m));
-          padding: var(--size-m);
-          border: none;
-          border-radius: var(--size-xs);
-          background: var(--color-bg);
-          color: var(--color-fg);
-          box-shadow: var(--shadow-xl);
-          &::backdrop {
-            background: #0002;
-          }
-        }
-        .appMenuResetDialogActions {
-          display: flex;
-          justify-content: end;
-          gap: var(--size-s);
-          margin-top: var(--size-m);
-        }
       </style>
       <button
         class="appMenuButton"
@@ -136,7 +110,7 @@ export function createAppMenuButton(
           type="button"
           popovertarget="appMenuPopup"
           popovertargetaction="hide"
-          onClick=${() => resetDialogRef.current.showModal()}
+          onClick=${openResetDialog}
           disabled=${!inputText.get().length}
         >
           New canvas
@@ -177,20 +151,6 @@ export function createAppMenuButton(
           </a>
         </div>
       </div>
-      <dialog class="appMenuResetDialog" ref=${resetDialogRef}>
-        <p>Create a new canvas? Your current piece will be lost.</p>
-        <div class="appMenuResetDialogActions">
-          <${Button}
-            type="button"
-            onClick=${() => resetDialogRef.current.close()}
-          >
-            Cancel
-          <//>
-          <${Button} type="button" variant="danger" onClick=${confirmReset}>
-            New canvas
-          <//>
-        </div>
-      </dialog>
     `,
   );
   return { AppMenuButton };

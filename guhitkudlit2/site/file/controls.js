@@ -24,15 +24,19 @@ export function createFileControls(
   const downloadedText = observable.box(null);
   let cachedFullRender = null;
 
-  function downloadCanvas(canvas) {
+  const saveCanvas = async () => {
+    downloadCanvas(await drawExportCanvas());
+  };
+
+  const downloadCanvas = (canvas) => {
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
     link.download = formatFileName(inputText.get()) + ".png";
     link.click();
     downloadedText.set(inputText.get());
-  }
+  };
 
-  async function downloadFullCanvas() {
+  const downloadFullCanvas = async () => {
     const fullCanvas = document.createElement("canvas");
     const ratio = canvasRef.current.width / canvasRef.current.height;
     fullCanvas.width = Math.max(canvasRef.current.width, 2000);
@@ -74,9 +78,20 @@ export function createFileControls(
     } finally {
       isRenderingFull.set(false);
     }
-  }
+  };
 
-  async function drawExportCanvas() {
+  const shareCanvas = async () => {
+    (await drawExportCanvas()).toBlob(async (blob) => {
+      const file = new File([blob], formatFileName(inputText.get()) + ".png", {
+        type: "image/png",
+      });
+      try {
+        await navigator.share({ files: [file] });
+      } catch {}
+    }, "image/png");
+  };
+
+  const drawExportCanvas = async () => {
     const { stampLogo } = await import("../canvas/render.js").catch((error) => {
       alert("Error loading code. Reload the page and try again.");
       throw error;
@@ -87,22 +102,7 @@ export function createFileControls(
     );
     await stampLogo(exportCanvas);
     return exportCanvas;
-  }
-
-  async function saveCanvas() {
-    downloadCanvas(await drawExportCanvas());
-  }
-
-  async function shareCanvas() {
-    (await drawExportCanvas()).toBlob(async (blob) => {
-      const file = new File([blob], formatFileName(inputText.get()) + ".png", {
-        type: "image/png",
-      });
-      try {
-        await navigator.share({ files: [file] });
-      } catch {}
-    }, "image/png");
-  }
+  };
 
   const FileControls = observer(
     () => html`

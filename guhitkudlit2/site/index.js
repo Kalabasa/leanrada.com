@@ -17,11 +17,12 @@
 */
 import { createAppMenuButton } from "./app/menu-button.js";
 import { createPanelGroup } from "./app/panel-group.js";
+import { createResetDialog } from "./app/reset-dialog.js";
 import { createCanvas } from "./canvas/canvas.js";
 import { html } from "./components/html.js";
 import { render } from "./lib/htm-preact.js";
 import { createTransliterationForm } from "./transliteration/form.js";
-import { observable, runInAction, when } from "./lib/mobx.js";
+import { observable, when } from "./lib/mobx.js";
 import { createFileControls } from "./file/controls.js";
 import { createLayoutControls } from "./layout/controls.js";
 import { createSpellingControls } from "./spelling/controls.js";
@@ -129,10 +130,11 @@ const { FileControls, saveCanvas, downloadedText } = createFileControls(
   colorStyle,
   calligraphyComplete,
 );
+const { ResetDialog, openResetDialog } = createResetDialog(reloadApp);
 const { AppMenuButton } = createAppMenuButton(
   inputText,
   calligraphyComplete,
-  resetApp,
+  openResetDialog,
   saveCanvas,
 );
 
@@ -155,12 +157,22 @@ when(
   },
 );
 
-window.addEventListener("beforeunload", (event) => {
-  const text = inputText.get();
-  if (text.length > 0 && text !== downloadedText.get()) {
-    event.preventDefault();
-  }
-});
+const unloadGuard = new AbortController();
+window.addEventListener(
+  "beforeunload",
+  (event) => {
+    const text = inputText.get();
+    if (text.length > 0 && text !== downloadedText.get()) {
+      event.preventDefault();
+    }
+  },
+  { signal: unloadGuard.signal },
+);
+
+function reloadApp() {
+  unloadGuard.abort();
+  location.reload();
+}
 
 const appLogoRef = { current: null };
 const Logo = observer(
@@ -176,14 +188,7 @@ const Logo = observer(
 
 function onLogoClick(event) {
   event.preventDefault();
-  resetApp();
-}
-
-function resetApp() {
-  runInAction(() => {
-    inputText.set("");
-    showPlaceholder.set(true);
-  });
+  openResetDialog();
 }
 
 const PanelGroupArea = observer(
@@ -337,6 +342,7 @@ export function Index() {
         </div>
       <//>
       <${ColorStyleFilters} />
+      <${ResetDialog} />
     </div>
   `;
 }
