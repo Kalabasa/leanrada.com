@@ -84,23 +84,60 @@ const unicodeToRomanized = new Map(
 
 /** @param {string} unicode */
 export function convertFromUnicode(unicode) {
-  const normalizedUnicode = unicode
+  const normalized = unicode
     .replaceAll("᜔", "᜕")
     .replaceAll("᜴", "᜕")
     .replaceAll("ᜟ", "ᜍ")
     .replace(/\s+(?=[᜵᜶])/g, "");
+
   let romanized = "";
   let i = 0;
-  while (i < normalizedUnicode.length) {
-    const pair = normalizedUnicode.slice(i, i + 2);
+  while (i < normalized.length) {
+    const pair = normalized.slice(i, i + 2);
     if (unicodeToRomanized.has(pair)) {
       romanized += unicodeToRomanized.get(pair);
       i += 2;
     } else {
-      const char = normalizedUnicode[i];
+      const char = normalized[i];
       romanized += unicodeToRomanized.get(char) ?? char;
       i += 1;
     }
   }
-  return romanized.replace(/u(?=[bkdghlmnprstwy]*\b)/g, "o");
+
+  return resolveVowels(
+    normalized.includes("ᜍ") ? romanized : resolveDR(romanized),
+  );
+}
+
+function resolveVowels(romanized) {
+  return (
+    romanized
+      // o/u: final syllable usually U instead of O
+      .replace(/u(?=[bkdghlmnprstwy]*\b)/g, "o")
+      // i/e: final syllable often E instead of I when after A
+      .replace(/ai\b/g, "ae")
+  );
+}
+
+function resolveDR(romanized) {
+  return (
+    romanized
+      // daw/raw, dito/rito, etc
+      .replace(/(?<=[aeiouwyd] )d(?=(?:aw|in|uun|itu|iyan)\b)/g, "r")
+      // D between vowels becomes R
+      .replace(/(?<=[aeiou])d(?=[aeiou])/g, (match, offset, text) => {
+        const redupeFirst =
+          text[offset - 2] === "d" && text[offset - 1] === text[offset + 1];
+        const redupeSecond =
+          text[offset + 2] === "d" && text[offset + 3] === text[offset + 1];
+        const prefix =
+          ["ma", "ka", "pa"].includes(text.slice(offset - 2, offset)) &&
+          !/[a-z]/.test(text[offset - 3] ?? "");
+        // except reduplication (dadalo) or ma-/ka-/pa- (madali)
+        if (redupeFirst || redupeSecond || prefix) {
+          return match;
+        }
+        return "r";
+      })
+  );
 }
