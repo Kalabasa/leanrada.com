@@ -9,7 +9,7 @@
     </title>
     <meta
       name="description"
-      content="Free Baybayin translator. Type Tagalog to convert it to Baybayin script, or paste Baybayin to read it in Tagalog. Then turn it into Baybayin calligraphy."
+      content="Free Baybayin translator. Type Tagalog to convert it to Baybayin script, or paste Baybayin to read it in Tagalog."
     />
     <link
       rel="canonical"
@@ -77,6 +77,10 @@
     <link rel="stylesheet" href="../lib/reset.css" />
     <link rel="stylesheet" href="../global.css" />
     <link rel="stylesheet" href="../font/font.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&display=swap"
+    />
 
     <style>
       body {
@@ -86,7 +90,7 @@
         background: url("../bgnoise.png"), var(--color-bg-darker);
       }
 
-      .flipArea {
+      main {
         flex: 1;
         display: grid;
         place-items: center;
@@ -96,7 +100,7 @@
         perspective: 1200px;
       }
 
-      .flipForm {
+      form {
         display: contents;
         text-align: center;
         > h1 {
@@ -113,11 +117,10 @@
         }
       }
 
-      .flipCard {
-        anchor-name: --flipCard;
+      .card {
+        anchor-name: --card;
         display: grid;
-        width: min(480px, 100%);
-        aspect-ratio: 2 / 1;
+        width: min(100vw, 600px, 100%);
         transform-style: preserve-3d;
         transition: transform 0.3s ease-in;
         &.flipped {
@@ -125,9 +128,11 @@
         }
       }
 
-      .flipCardFace {
+      .textbox {
         grid-area: 1 / 1;
-        padding: var(--size-m);
+        width: 100%;
+        aspect-ratio: 5 / 2;
+        box-sizing: border-box;
         text-align: center;
         align-content: center;
         background: var(--color-bg);
@@ -136,21 +141,21 @@
         box-shadow: var(--shadow-l);
         backface-visibility: hidden;
         font-family: "Noto Sans Tagalog", "Karla", sans-serif;
-        font-size: 90px;
+        font-size: 80px;
         font-weight: bold;
-        .flipCard.flipped &:not(.flipCardBack) {
+        .card.flipped &:not(.textbox2) {
           background: var(--color-bg-darker);
         }
       }
 
-      .flipCardBack {
+      .textbox2 {
         transform: rotateY(180deg);
-        .flipCard:not(.flipped) & {
+        .card:not(.flipped) & {
           background: var(--color-bg-darker);
         }
       }
 
-      .flipActions {
+      .actions {
         min-height: 72px;
         display: flex;
         align-items: start;
@@ -158,15 +163,28 @@
         [data-appearance="button"] {
           font-size: var(--font-size-m);
         }
+        .kaligrapiYa {
+          height: 0.87em;
+          vertical-align: -0.085em;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 0.7;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
       }
 
-      .flipButton[data-appearance="signage-button"] {
-        font-size: 60px;
+      #convertButton[data-appearance="signage-button"] {
+        font-size: 45px;
+        span::before,
+        span::after {
+          content: "·";
+        }
       }
 
-      .invalidLetterTooltip {
+      #invalidLetterTooltip {
         position: fixed;
-        position-anchor: --flipCard;
+        position-anchor: --card;
         position-area: top;
         max-width: 300px;
         margin: var(--size-xs);
@@ -202,19 +220,19 @@
       } from "../transliteration/unicode.mjs";
       import { InvalidLetterError } from "../transliteration/invalid-letter-error.js";
 
-      const form = document.querySelector(".flipForm");
-      const invalidLetterTooltip = document.querySelector(
-        ".invalidLetterTooltip",
+      const form = document.querySelector("form");
+      const card = document.querySelector(".card");
+      const [textbox1, textbox2] = document.querySelectorAll(".textbox");
+      const convertButton = document.getElementById("convertButton");
+      const appLink = document.getElementById("appLink");
+      const invalidLetterTooltip = document.getElementById(
+        "invalidLetterTooltip",
       );
-      const card = document.querySelector(".flipCard");
-      const [frontInput, backInput] =
-        document.querySelectorAll(".flipCardFace");
-      const appLink = document.querySelector(".appLink");
-      const flipButton = document.querySelector(".flipButton");
+
       const cache = { tagalog: "", baybayin: "" };
 
-      for (const input of [frontInput, backInput]) {
-        input.addEventListener("keydown", (event) => {
+      for (const textbox of [textbox1, textbox2]) {
+        textbox.addEventListener("keydown", (event) => {
           if (
             event.key === "Enter" &&
             !event.shiftKey &&
@@ -226,30 +244,35 @@
             form.requestSubmit();
           }
         });
-        input.addEventListener("input", () => fitText(input));
+        textbox.addEventListener("input", () => fitText(textbox));
       }
 
       form.addEventListener("submit", (event) => {
         event.preventDefault();
-        const [shownInput, hiddenInput] = card.classList.contains("flipped")
-          ? [backInput, frontInput]
-          : [frontInput, backInput];
+
+        const [frontTextbox, backTextbox] = card.classList.contains("flipped")
+          ? [textbox2, textbox1]
+          : [textbox1, textbox2];
+
         try {
-          hiddenInput.value = transliterate(shownInput.value);
+          backTextbox.value = transliterate(frontTextbox.value);
+          fitText(backTextbox);
+
+          card.classList.toggle("flipped");
+          invalidLetterTooltip.hidePopover();
+
+          convertButton.dataset.appearance = "button";
+
+          const tagalog = isBaybayin(frontTextbox.value)
+            ? backTextbox.value
+            : frontTextbox.value;
+          appLink.href = "../?word=" + encodeURIComponent(tagalog);
+          appLink.hidden = false;
         } catch (error) {
           if (!(error instanceof InvalidLetterError)) throw error;
-          showInvalidLetterTooltip(error, shownInput.value);
-          return;
+          showInvalidLetterTooltip(error, frontTextbox.value);
+          selectInvalidLetter(frontTextbox, error.letters);
         }
-        invalidLetterTooltip.hidePopover();
-        fitText(hiddenInput);
-        card.classList.toggle("flipped");
-        const baybayin = isBaybayin(shownInput.value)
-          ? shownInput.value
-          : hiddenInput.value;
-        appLink.href = "../?word=" + encodeURIComponent(toTagalog(baybayin));
-        appLink.hidden = false;
-        flipButton.dataset.appearance = "button";
       });
 
       function showInvalidLetterTooltip(error, word) {
@@ -260,49 +283,68 @@
         invalidLetterTooltip.showPopover();
       }
 
+      function selectInvalidLetter(textbox, invalidLetters) {
+        let index = 0;
+        for (const char of textbox.value) {
+          const letter = char
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/\p{M}/gu, "");
+          if (invalidLetters.includes(letter)) {
+            textbox.focus();
+            textbox.setSelectionRange(index, index + char.length);
+            return;
+          }
+          index += char.length;
+        }
+      }
+
       function fitText(input) {
         input.style.fontSize = "";
         input.style.overflow = "scroll";
-        if (!isTextFitting(input)) {
-          let overflowingFontSizePx = parseFloat(
-            getComputedStyle(input).fontSize,
-          );
-          let fittingFontSizePx = overflowingFontSizePx / 3;
-          for (let i = 0; i < 7; i++) {
-            const fontSizePx = (fittingFontSizePx + overflowingFontSizePx) / 2;
-            input.style.fontSize = fontSizePx + "px";
-            if (isTextFitting(input)) {
-              fittingFontSizePx = fontSizePx;
-            } else {
-              overflowingFontSizePx = fontSizePx;
-            }
-          }
-          input.style.fontSize = fittingFontSizePx + "px";
-        }
-        input.style.overflow = "";
-      }
+        input.style.padding = "0 48px";
 
-      function isTextFitting(input) {
-        return (
+        const textFits = () =>
           input.scrollHeight <= input.clientHeight &&
-          input.scrollWidth <= input.clientWidth
-        );
+          input.scrollWidth <= input.clientWidth;
+
+        const baseFactor = 30 / (30 + input.value.length);
+        const baseFontSize = parseFloat(getComputedStyle(input).fontSize);
+        let high = baseFontSize * Math.max(0.7, baseFactor);
+        let low = (baseFontSize / 2) * baseFactor;
+
+        for (let i = 0; i < 7; i++) {
+          const mid = (low + high) / 2;
+          input.style.fontSize = mid + "px";
+          if (textFits()) {
+            low = mid;
+          } else {
+            high = mid;
+          }
+        }
+
+        input.style.fontSize = low + "px";
+
+        input.style.overflow = "";
+        input.style.padding = "";
       }
 
       function transliterate(text) {
         if (isBaybayin(text)) {
-          return toTagalog(text);
+          return convertToTagalog(text);
         }
+
         const baybayin = convertToUnicode(
           syllabicate(text).baybayinUnits,
           "pamudpod",
         );
+
         cache.tagalog = text;
         cache.baybayin = baybayin;
         return baybayin;
       }
 
-      function toTagalog(baybayin) {
+      function convertToTagalog(baybayin) {
         if (baybayin === cache.baybayin) {
           return cache.tagalog;
         }
@@ -315,96 +357,122 @@
     </script>
   </head>
   <body>
-    <main class="flipArea">
-      <form class="flipForm">
+    <main>
+      <form>
         <img src="../app/logo.svg" alt="GuhitKudlit" />
         <h1>Baybayin translator</h1>
         <p>
           Enter Tagalog or Baybayin text, then press <i>Baybayín!</i> to
           transliterate.
         </p>
-        <div class="flipCard">
+        <div lang="tl" class="card">
           <textarea
-            class="flipCardFace"
+            spellcheck="false"
+            class="textbox"
             aria-label="Text to transliterate"
             required
             autofocus
           ></textarea>
           <textarea
-            class="flipCardFace flipCardBack"
+            spellcheck="false"
+            class="textbox textbox2"
             aria-label="Text to transliterate"
           ></textarea>
         </div>
-        <div class="flipActions">
+        <div class="actions">
           <a
-            class="appLink"
+            id="appLink"
             data-appearance="button"
             data-button-variant="primary"
             hidden
-            >Gawing kaligrapiya</a
+            >Gawing
+            <span style="white-space: nowrap"
+              >kaligrapi<svg
+                class="kaligrapiYa"
+                role="img"
+                aria-label="ya"
+                viewBox="-0.4 -0.4 7 4.6"
+              >
+                <path
+                  d="M0 0.5 C0.8 0 1.9 0 1.9 1.2 L1.9 3 C1.9 4 3.2 4 3.9 2.6 L4.6 1.1 C5 0.3 6.2 0.1 6.2 0.9 C6.2 1.5 5.2 1.4 4.6 1.1"
+                /></svg
+              >!</span
+            ></a
           >
           <button
-            class="flipButton"
+            id="convertButton"
             data-appearance="signage-button"
             type="submit"
           >
-            ·Baybayin!·
+            <span>Baybayin!</span>
           </button>
         </div>
       </form>
-      <div class="invalidLetterTooltip" popover="manual">
+      <div id="invalidLetterTooltip" popover="manual">
         <p>
           For the letter <span class="invalidLetters"></span>, you have to
           respell it for Baybayin.
         </p>
-        <p><a>Choose from the quick guide!</a></p>
+        <p><a href="../help/">Choose from the quick guide!</a></p>
       </div>
     </main>
     <footer id="footer">
       <style>
         footer {
-          display: flex;
-          justify-content: center;
-          flex-wrap: wrap;
-          gap: var(--size-m) var(--size-l);
-          margin: var(--size-l);
-
-          a {
-            display: inline-flex;
-            gap: var(--size-xs);
-            align-items: center;
-            text-decoration: underline;
-            color: var(--color-orange-darker);
-            text-underline-offset: 0.2em;
+          padding: var(--size-l) 0 0;
+          width: 100%;
+          overflow: hidden;
+          > div {
+            width: 100vw;
+            width: 100lvw;
+            padding: 0 var(--size-l) var(--size-m);
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: var(--size-m) var(--size-l);
+            a {
+              display: inline-flex;
+              gap: var(--size-xs);
+              align-items: center;
+              text-decoration: underline;
+              color: var(--color-orange-darker);
+              text-underline-offset: 0.2em;
+            }
           }
         }
       </style>
-      <a href="/guhit-kudlit/">GuhitKudlit</a>
-      <a href="/guhit-kudlit/help/">Help</a>
-      <a href="/guhit-kudlit/about/">About</a>
-      <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
-        <svg width="24" height="24" viewBox="0 0 24 24">
-          <use href="/guhit-kudlit/file/instagram.svg#icon" />
-        </svg>
-        @guhitkudlit
-      </a>
-      <a href="/guhit-kudlit/tip/" target="_blank">
-        <svg width="24" height="24" viewBox="0 0 24 24">
-          <use href="/guhit-kudlit/file/kofi.svg#icon" />
-        </svg>
-        Tip
-      </a>
-      <a href="mailto:guhitkudlit@leanrada.com" target="_blank">
-        <svg width="24" height="24" viewBox="0 0 24 24">
-          <use href="/guhit-kudlit/file/mail.svg#icon" />
-        </svg>
-        guhitkudlit@leanrada.com
-      </a>
-      <span>
-        made with &lt;3 by
-        <a href="https://leanrada.com/" target="_blank">Lean</a>
-      </span>
-      <span>&copy;2023-2026 Lean Rada</span>
+      <div>
+        <a href="/guhit-kudlit/">Webapp</a>
+        <a href="/guhit-kudlit/help/">Help</a>
+        <a href="/guhit-kudlit/about/">About</a>
+        <a href="/guhit-kudlit/translator/">Transliterator</a>
+      </div>
+      <div>
+        <a href="https://www.instagram.com/guhitkudlit/" target="_blank">
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <use href="/guhit-kudlit/file/instagram.svg#icon" />
+          </svg>
+          @guhitkudlit
+        </a>
+        <a href="/guhit-kudlit/tip/" target="_blank">
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <use href="/guhit-kudlit/file/kofi.svg#icon" />
+          </svg>
+          Tip
+        </a>
+        <a href="mailto:guhitkudlit@leanrada.com" target="_blank">
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <use href="/guhit-kudlit/file/mail.svg#icon" />
+          </svg>
+          guhitkudlit@leanrada.com
+        </a>
+        <span>
+          made with &lt;3 by
+          <a href="https://leanrada.com/" target="_blank">Lean</a>
+        </span>
+        <span>&copy;2023-2026 Lean Rada</span>
+      </div>
     </footer>
   </body>
 </html>
