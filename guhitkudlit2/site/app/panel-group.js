@@ -40,6 +40,7 @@ function AppPanelGroup({ panels, activeIndex, onActivateIndex }) {
     const activeItem =
       groupRef.current.querySelectorAll(".appPanelGroupItem")[activeIndex];
     if (
+      activeItem &&
       groupRef.current.contains(document.activeElement) &&
       !activeItem.contains(document.activeElement)
     ) {
