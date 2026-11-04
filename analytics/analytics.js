@@ -13,6 +13,8 @@
   window.addEventListener('error', (event) => {
     window.goatcounter?.count?.({
       path: `error-${event.filename}:${event.lineno}-${event.message}`,
+      title: event.message,
+      referrer: location.href,
       event: true,
     });
   });
@@ -24,6 +26,8 @@
     var line = match?.[2] ?? 0;
     window.goatcounter?.count?.({
       path: `error-${file}:${line}-${event.reason.message}`,
+      title: event.reason.message,
+      referrer: location.href,
       event: true,
     });
   });
