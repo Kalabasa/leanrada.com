@@ -258,6 +258,7 @@
         } catch (error) {
           if (!(error instanceof InvalidLetterError)) throw error;
           showInvalidLetterTooltip(error, frontTextbox.value);
+          selectInvalidLetter(frontTextbox, error.letters);
         }
       });
 
@@ -267,6 +268,22 @@
         invalidLetterTooltip.querySelector("a").href =
           "../help/?word=" + encodeURIComponent(word) + "&viramaStyle=pamudpod";
         invalidLetterTooltip.showPopover();
+      }
+
+      function selectInvalidLetter(textbox, invalidLetters) {
+        let index = 0;
+        for (const char of textbox.value) {
+          const letter = char
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/\p{M}/gu, "");
+          if (invalidLetters.includes(letter)) {
+            textbox.focus();
+            textbox.setSelectionRange(index, index + char.length);
+            return;
+          }
+          index += char.length;
+        }
       }
 
       function fitText(input) {
