@@ -120,8 +120,7 @@
       .card {
         anchor-name: --card;
         display: grid;
-        width: min(480px, 100%);
-        aspect-ratio: 3 / 1;
+        width: min(100vw, 600px, 100%);
         transform-style: preserve-3d;
         transition: transform 0.3s ease-in;
         &.flipped {
@@ -132,7 +131,8 @@
       .textbox {
         grid-area: 1 / 1;
         width: 100%;
-        padding: var(--size-m);
+        aspect-ratio: 5 / 2;
+        box-sizing: border-box;
         text-align: center;
         align-content: center;
         background: var(--color-bg);
@@ -272,29 +272,31 @@
       function fitText(input) {
         input.style.fontSize = "";
         input.style.overflow = "scroll";
+        input.style.padding = "0 48px";
 
         const textFits = () =>
           input.scrollHeight <= input.clientHeight &&
           input.scrollWidth <= input.clientWidth;
 
-        if (!textFits()) {
-          let high = parseFloat(getComputedStyle(input).fontSize);
-          let low = high / 3;
+        const baseFactor = 30 / (30 + input.value.length);
+        const baseFontSize = parseFloat(getComputedStyle(input).fontSize);
+        let high = baseFontSize * Math.max(0.7, baseFactor);
+        let low = (baseFontSize / 2) * baseFactor;
 
-          for (let i = 0; i < 7; i++) {
-            const mid = (low + high) / 2;
-            input.style.fontSize = mid + "px";
-            if (textFits()) {
-              low = mid;
-            } else {
-              high = mid;
-            }
+        for (let i = 0; i < 7; i++) {
+          const mid = (low + high) / 2;
+          input.style.fontSize = mid + "px";
+          if (textFits()) {
+            low = mid;
+          } else {
+            high = mid;
           }
-
-          input.style.fontSize = low + "px";
         }
 
+        input.style.fontSize = low + "px";
+
         input.style.overflow = "";
+        input.style.padding = "";
       }
 
       function transliterate(text) {
@@ -333,14 +335,16 @@
           Enter Tagalog or Baybayin text, then press <i>Baybayín!</i> to
           transliterate.
         </p>
-        <div class="card">
+        <div lang="tl" class="card">
           <textarea
+            spellcheck="false"
             class="textbox"
             aria-label="Text to transliterate"
             required
             autofocus
           ></textarea>
           <textarea
+            spellcheck="false"
             class="textbox textbox2"
             aria-label="Text to transliterate"
           ></textarea>
