@@ -201,6 +201,7 @@ export const T = glyph(
 );
 T.map[2][1].x += 0.25;
 T.map[2][1].y += 0.15;
+T.map[3][0].y += 0.25;
 export const W = glyph(
   { xScale: 0.8 },
   `
