@@ -171,7 +171,6 @@ when(
         throw error;
       });
     const onProgress = (status) => {
-      console.log("onProgress", status);
       calligraphyStatus.set(status);
     };
     installCalligraphy(calligraphyInputs, canvasRef, onProgress);
