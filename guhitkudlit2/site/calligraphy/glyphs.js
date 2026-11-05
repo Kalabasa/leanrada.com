@@ -357,7 +357,7 @@ function addPamudpod(glyph) {
     adjacency: new Map(),
   };
   const pamudpodEnd = {
-    x: rightX * 0.1,
+    x: rightX * 0.3,
     y: 5,
     terminal: false,
     isKudlit: true,
