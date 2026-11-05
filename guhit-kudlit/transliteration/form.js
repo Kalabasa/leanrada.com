@@ -333,6 +333,7 @@ export function TransliterationForm({
             type="text"
             placeholder=${hasInteracted ? "kalabasa" : ""}
             maxlength="30"
+            spellcheck="false"
             value=${inputText}
             onInput=${onInput}
             onPointerDown=${() => setHasInteracted(true)}

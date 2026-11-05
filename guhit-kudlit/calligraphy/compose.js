@@ -14,10 +14,11 @@ const basePushDistScale = 3.1;
 const springStrength = 0.3;
 const squeezeStrengthX = 0.1;
 const squeezeStrengthY = 0.12;
-const kudlitGravityX = 0.07;
-const kudlitGravityY = 0.05;
-const kudlitDistFactor = 1.4;
+const kudlitGravityX = 0.005;
+const kudlitGravityY = 0.01;
+const kudlitDistFactor = 1.8;
 const krusSpringStrength = 0.08;
+const minStrokeLen = 0.01;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -169,14 +170,33 @@ export async function compose(glyphStrokesList, opts = {}) {
           vertices: glyph.vertices.filter((v) => !v.isKudlit),
         },
       ]);
-      const gravityFactor = ((steps - step) / steps) ** 2;
-      for (const vertex of glyph.vertices) {
-        if (!vertex.isKudlit) continue;
-        pushVertex(
-          vertex,
-          (baseCentroid.x - vertex.position.x) * kudlitGravityX * gravityFactor,
-          (baseCentroid.y - vertex.position.y) * kudlitGravityY * gravityFactor,
-        );
+      const kudlitVertices = glyph.vertices.filter((v) => v.isKudlit);
+      if (kudlitVertices.length) {
+        const kudlitCentroid = calculateCentroid([
+          {
+            vertices: kudlitVertices,
+          },
+        ]);
+        const gravityFactor = ((steps - step) / steps) ** 2;
+        for (const vertex of glyph.vertices) {
+          if (vertex.isKudlit) {
+            const dx =
+              (baseCentroid.x - vertex.position.x) *
+              kudlitGravityX *
+              gravityFactor;
+            const dy =
+              (baseCentroid.y - vertex.position.y) *
+              kudlitGravityY *
+              gravityFactor;
+            pushVertex(vertex, dx, dy);
+          } else {
+            const dy =
+              (baseCentroid.y - kudlitCentroid.y) *
+              kudlitGravityY *
+              gravityFactor;
+            pushVertex(vertex, 0, -dy);
+          }
+        }
       }
     }
 
@@ -312,6 +332,42 @@ export async function compose(glyphStrokesList, opts = {}) {
     }
     updateControls();
   }
+
+  for (const { strokes } of glyphStrokesList) {
+    for (const stroke of strokes) {
+      ensureMinStrokeLen(stroke);
+    }
+  }
+  updateControls();
+}
+
+/**
+ * @param {{ vertices: StrokeVertex[] }} stroke
+ */
+function ensureMinStrokeLen(stroke) {
+  const strokeLen = calculateStrokeLen(stroke);
+  if (strokeLen >= minStrokeLen) return;
+
+  const centroid = calculateCentroid([stroke]);
+  const start = stroke.vertices[0].position;
+  const end = stroke.vertices.at(-1).position;
+  const angle = Math.atan2(end.y - start.y, end.x - start.x);
+  const lastIndex = stroke.vertices.length - 1;
+  stroke.vertices.forEach(({ position }, i) => {
+    const offset = minStrokeLen * (i / lastIndex - 0.5);
+    position.x = centroid.x + Math.cos(angle) * offset;
+    position.y = centroid.y + Math.sin(angle) * offset;
+  });
+}
+function calculateStrokeLen({ vertices }) {
+  let strokeLen = 0;
+  for (let i = 1; i < vertices.length; i++) {
+    strokeLen += Math.hypot(
+      vertices[i].position.x - vertices[i - 1].position.x,
+      vertices[i].position.y - vertices[i - 1].position.y,
+    );
+  }
+  return strokeLen;
 }
 
 /**
