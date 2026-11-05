@@ -210,7 +210,7 @@ export function IntroCanvas({ canvasWidth, canvasHeight, onConfig }) {
             name="text"
             maxlength="30"
             autocomplete="off"
-            intro="kumusta"
+            spellcheck="false"
           />
         </form>
         <p class="introText">or start with an example</p>
