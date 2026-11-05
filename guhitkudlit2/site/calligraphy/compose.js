@@ -14,9 +14,9 @@ const basePushDistScale = 3.1;
 const springStrength = 0.3;
 const squeezeStrengthX = 0.1;
 const squeezeStrengthY = 0.12;
-const kudlitGravityX = 0.07;
-const kudlitGravityY = 0.05;
-const kudlitDistFactor = 1.4;
+const kudlitGravityX = 0.005;
+const kudlitGravityY = 0.01;
+const kudlitDistFactor = 1.8;
 const krusSpringStrength = 0.08;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
@@ -169,14 +169,33 @@ export async function compose(glyphStrokesList, opts = {}) {
           vertices: glyph.vertices.filter((v) => !v.isKudlit),
         },
       ]);
-      const gravityFactor = ((steps - step) / steps) ** 2;
-      for (const vertex of glyph.vertices) {
-        if (!vertex.isKudlit) continue;
-        pushVertex(
-          vertex,
-          (baseCentroid.x - vertex.position.x) * kudlitGravityX * gravityFactor,
-          (baseCentroid.y - vertex.position.y) * kudlitGravityY * gravityFactor,
-        );
+      const kudlitVertices = glyph.vertices.filter((v) => v.isKudlit);
+      if (kudlitVertices.length) {
+        const kudlitCentroid = calculateCentroid([
+          {
+            vertices: kudlitVertices,
+          },
+        ]);
+        const gravityFactor = ((steps - step) / steps) ** 2;
+        for (const vertex of glyph.vertices) {
+          if (vertex.isKudlit) {
+            const dx =
+              (baseCentroid.x - vertex.position.x) *
+              kudlitGravityX *
+              gravityFactor;
+            const dy =
+              (baseCentroid.y - vertex.position.y) *
+              kudlitGravityY *
+              gravityFactor;
+            pushVertex(vertex, dx, dy);
+          } else {
+            const dy =
+              (baseCentroid.y - kudlitCentroid.y) *
+              kudlitGravityY *
+              gravityFactor;
+            pushVertex(vertex, 0, -dy);
+          }
+        }
       }
     }
 

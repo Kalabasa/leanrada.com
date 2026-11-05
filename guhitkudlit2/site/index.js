@@ -32,11 +32,13 @@ import { classes } from "./util/classes.js";
 import { ColorStyleFilters } from "./style/color-styles.js";
 import { createPresetControls } from "./presets/controls.js";
 import { CalligraphyStatus } from "./calligraphy/status.js";
+import { DEBUG } from "./app/flags.js";
 
 const unloadGuard = new AbortController();
 window.addEventListener(
   "beforeunload",
   (event) => {
+    if (DEBUG) return;
     const text = inputText.get();
     if (text.length > 0 && text !== downloadedText.get()) {
       event.preventDefault();
