@@ -18,6 +18,7 @@ const kudlitGravityX = 0.005;
 const kudlitGravityY = 0.01;
 const kudlitDistFactor = 1.8;
 const krusSpringStrength = 0.08;
+const minStrokeLen = 0.01;
 const maxComposeSteps =
   DEBUG && Number.isInteger(composeStepsOverride) ? composeStepsOverride : 25;
 
@@ -331,6 +332,42 @@ export async function compose(glyphStrokesList, opts = {}) {
     }
     updateControls();
   }
+
+  for (const { strokes } of glyphStrokesList) {
+    for (const stroke of strokes) {
+      ensureMinStrokeLen(stroke);
+    }
+  }
+  updateControls();
+}
+
+/**
+ * @param {{ vertices: StrokeVertex[] }} stroke
+ */
+function ensureMinStrokeLen(stroke) {
+  const strokeLen = calculateStrokeLen(stroke);
+  if (strokeLen >= minStrokeLen) return;
+
+  const centroid = calculateCentroid([stroke]);
+  const start = stroke.vertices[0].position;
+  const end = stroke.vertices.at(-1).position;
+  const angle = Math.atan2(end.y - start.y, end.x - start.x);
+  const lastIndex = stroke.vertices.length - 1;
+  stroke.vertices.forEach(({ position }, i) => {
+    const offset = minStrokeLen * (i / lastIndex - 0.5);
+    position.x = centroid.x + Math.cos(angle) * offset;
+    position.y = centroid.y + Math.sin(angle) * offset;
+  });
+}
+function calculateStrokeLen({ vertices }) {
+  let strokeLen = 0;
+  for (let i = 1; i < vertices.length; i++) {
+    strokeLen += Math.hypot(
+      vertices[i].position.x - vertices[i - 1].position.x,
+      vertices[i].position.y - vertices[i - 1].position.y,
+    );
+  }
+  return strokeLen;
 }
 
 /**
