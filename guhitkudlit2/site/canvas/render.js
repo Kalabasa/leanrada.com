@@ -19,6 +19,7 @@ const logoUrl = new URL("../app/logo.svg", import.meta.url).href;
  * @param {string} [params.colorStyleName]
  * @param {boolean} [params.logo]
  * @param {(progress: number) => void} [params.onProgress]
+ * @param {(gifBytes: Uint8Array) => void} [params.onGif]
  */
 export async function render({
   baybayinUnits,
@@ -35,12 +36,33 @@ export async function render({
   colorStyleName,
   logo = false,
   onProgress = () => {},
+  onGif,
 }) {
-  const context = canvas.getContext("2d");
+  const context = canvas.getContext("2d", {
+    willReadFrequently: !!onGif,
+  });
+
+  let gifRecorder = null;
+  if (onGif) {
+    const { createGifRecorder } = await import("./gif.js").catch((error) => {
+      alert("Error loading code. Reload the page and try again.");
+      throw error;
+    });
+    let overlay;
+    if (logo) {
+      overlay = document.createElement("canvas");
+      overlay.width = canvas.width;
+      overlay.height = canvas.height;
+      await stampLogo(overlay, 0.8);
+    }
+    gifRecorder = createGifRecorder(context, colorStyleName, overlay);
+  }
+
   if (!transparent) {
     context.fillStyle = "#fff";
     context.fillRect(0, 0, canvas.width, canvas.height);
   }
+
   const progresses = drawCalligraphy(baybayinUnits, context, abortSignal, {
     viramaStyle,
     arrangement,
@@ -50,37 +72,33 @@ export async function render({
     scale,
     painterName,
   });
-  let latestProgress = 0;
-  let pendingFrameId = null;
+
   for await (const progress of progresses) {
-    latestProgress = progress;
-    if (pendingFrameId === null) {
-      pendingFrameId = requestAnimationFrame(() => {
-        pendingFrameId = null;
-        onProgress(latestProgress);
-      });
-    }
+    onProgress(progress);
+    gifRecorder?.recordProgress(progress);
   }
-  if (pendingFrameId !== null) {
-    cancelAnimationFrame(pendingFrameId);
-    onProgress(latestProgress);
-  }
+
   if (canvas.width >= 300 || canvas.height >= 300) {
     drawUrl(canvas);
   }
-  if (colorStyleName !== undefined) {
+
+  if (gifRecorder !== null) {
+    onGif(gifRecorder.finish());
+  }
+
+  if (colorStyleName) {
     applyColorStyle(context, colorStyleName);
   }
   if (logo) {
-    await stampLogo(canvas);
+    await stampLogo(canvas, 1);
   }
 }
 
-export async function stampLogo(canvas) {
+export async function stampLogo(canvas, scale = window.devicePixelRatio) {
   const logoImage = new Image();
   logoImage.src = logoUrl;
   await logoImage.decode();
-  const logoHeight = 30 * window.devicePixelRatio;
+  const logoHeight = 30 * scale;
   const logoWidth =
     (logoHeight * logoImage.naturalWidth) / logoImage.naturalHeight;
   canvas
