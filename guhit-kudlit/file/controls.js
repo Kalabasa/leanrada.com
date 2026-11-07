@@ -11,6 +11,8 @@ const mailIconUrl = new URL("./mail.svg#icon", import.meta.url).href;
 const kofiIconUrl = new URL("./kofi.svg#icon", import.meta.url).href;
 const tipPageUrl = new URL("../tip/", import.meta.url).href;
 
+const gifMaxSizePx = 400;
+
 export function createFileControls(
   canvasRef,
   inputText,
@@ -22,8 +24,10 @@ export function createFileControls(
     files: [new File([], "x.png", { type: "image/png" })],
   });
   const isRenderingFull = observable.box(false);
+  const isRenderingGif = observable.box(false);
   const downloadedText = observable.box(null);
   let cachedFullRender = null;
+  let cachedGifRender = null;
 
   const saveCanvas = async () => {
     downloadCanvas(await drawExportCanvas());
@@ -81,6 +85,66 @@ export function createFileControls(
     }
   };
 
+  const downloadGif = async () => {
+    const canvasWidth = canvasRef.current.width;
+    const canvasHeight = canvasRef.current.height;
+    const renderedInputs = {
+      baybayinUnits: calligraphyInputs.baybayinUnits.get(),
+      viramaStyle: calligraphyInputs.viramaStyle.get(),
+      arrangement: calligraphyInputs.arrangement.get(),
+      density: calligraphyInputs.density.get(),
+      painterName: calligraphyInputs.painterName.get(),
+      colorStyleName: colorStyle.get(),
+    };
+    const renderKey = JSON.stringify([
+      renderedInputs,
+      canvasWidth,
+      canvasHeight,
+    ]);
+    if (cachedGifRender !== null && cachedGifRender.renderKey === renderKey) {
+      downloadGifBytes(cachedGifRender.gifBytes);
+      return;
+    }
+
+    isRenderingGif.set(true);
+    try {
+      const { render } = await import("../canvas/render.js").catch((error) => {
+        alert("Error loading code. Reload the page and try again.");
+        throw error;
+      });
+      await delay(25);
+      const gifCanvas = document.createElement("canvas");
+      const gifScale = Math.min(
+        1,
+        gifMaxSizePx / Math.max(canvasWidth, canvasHeight),
+      );
+      gifCanvas.width = Math.round(canvasWidth * gifScale);
+      gifCanvas.height = Math.round(canvasHeight * gifScale);
+      await render({
+        ...renderedInputs,
+        canvas: gifCanvas,
+        speed: 0,
+        logo: true,
+        onGif: (gifBytes) => {
+          cachedGifRender = { renderKey, gifBytes };
+          downloadGifBytes(gifBytes);
+        },
+      });
+    } finally {
+      isRenderingGif.set(false);
+    }
+  };
+
+  const downloadGifBytes = (gifBytes) => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(
+      new Blob([gifBytes], { type: "image/gif" }),
+    );
+    link.download = formatFileName(inputText.get()) + ".gif";
+    link.click();
+    downloadedText.set(inputText.get());
+  };
+
   const shareCanvas = async () => {
     (await drawExportCanvas()).toBlob(async (blob) => {
       const file = new File([blob], formatFileName(inputText.get()) + ".png", {
@@ -125,7 +189,7 @@ export function createFileControls(
         .fileControlsButton {
           text-align: center;
         }
-        .fileControlsShareButton {
+        .fileControlsFullWidthButton {
           grid-column: 1 / -1;
         }
         .fileControlsSocial {
@@ -148,10 +212,12 @@ export function createFileControls(
       <div class="fileControls">
         <div class="fileControlsActions">
           <${Button}
-            class="fileControlsButton"
+            class="fileControlsButton fileControlsFullWidthButton"
             variant="primary"
             onClick=${saveCanvas}
-            disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
+            disabled=${!(
+              calligraphyStatus.get() >= CalligraphyStatus.completed
+            )}
           >
             Download
           <//>
@@ -163,11 +229,21 @@ export function createFileControls(
           >
             ${isRenderingFull.get() ? "Rendering..." : "Download HD"}
           <//>
+          <${Button}
+            class="fileControlsButton"
+            onClick=${downloadGif}
+            disabled=${isRenderingGif.get() ||
+            !(calligraphyStatus.get() >= CalligraphyStatus.completed)}
+          >
+            ${isRenderingGif.get() ? "Rendering..." : "Download GIF"}
+          <//>
           ${canShareFiles &&
           html`<${Button}
-            class="fileControlsButton fileControlsShareButton"
+            class="fileControlsButton fileControlsFullWidthButton"
             onClick=${shareCanvas}
-            disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
+            disabled=${!(
+              calligraphyStatus.get() >= CalligraphyStatus.completed
+            )}
           >
             Share
           <//>`}

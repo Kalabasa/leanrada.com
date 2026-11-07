@@ -56,10 +56,22 @@ export function drawColorStyledCanvas(sourceCanvas, colorStyleName) {
   return colorStyledCanvas;
 }
 
+export function createPalette(colorStyleName, count) {
+  const { fg, bg } = colorStyles.find((style) => style.name === colorStyleName);
+  const palette = [];
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    palette.push([
+      Math.round(fg[0] + (bg[0] - fg[0]) * t),
+      Math.round(fg[1] + (bg[1] - fg[1]) * t),
+      Math.round(fg[2] + (bg[2] - fg[2]) * t),
+    ]);
+  }
+  return palette;
+}
+
 export function applyColorStyle(context, colorStyleName) {
-  const colorStyle = colorStyles.find(
-    (style) => style.name === colorStyleName,
-  );
+  const colorStyle = colorStyles.find((style) => style.name === colorStyleName);
   const { width, height } = context.canvas;
   context.save();
   if (colorStyle.bg.every((value) => value === 255)) {
