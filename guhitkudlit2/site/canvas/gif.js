@@ -34,12 +34,14 @@ export function createGifRecorder(context, colorStyleName, overlay) {
   const writeFrame = (delayMs) => {
     const data = readData(context, overlayData);
     let frameData = data;
+    let framePalette = palette;
     if (prevData !== null) {
       clearUnchanged(prevData, data);
       frameData = prevData;
+      framePalette = null;
     }
     gifEncoder.writeFrame(frameData, canvas.width, canvas.height, {
-      palette,
+      palette: framePalette,
       colorDepth,
       transparent: true,
       transparentIndex,
@@ -56,7 +58,7 @@ export function createGifRecorder(context, colorStyleName, overlay) {
       if (frame <= prevFrame) {
         return;
       }
-      writeFrame(83.3333 * (frame - prevFrame));
+      writeFrame(80 * (frame - prevFrame));
       prevFrame = frame;
     },
     /** @returns {Uint8Array} GIF bytes */

@@ -142,6 +142,7 @@ export function createFileControls(
     );
     link.download = formatFileName(inputText.get()) + ".gif";
     link.click();
+    downloadedText.set(inputText.get());
   };
 
   const shareCanvas = async () => {

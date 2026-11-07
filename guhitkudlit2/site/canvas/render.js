@@ -90,7 +90,7 @@ export async function render({
     applyColorStyle(context, colorStyleName);
   }
   if (logo) {
-    await stampLogo(canvas, 1);
+    await stampLogo(canvas);
   }
 }
 
