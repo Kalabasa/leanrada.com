@@ -125,7 +125,7 @@ export function createFileControls(
         .fileControlsButton {
           text-align: center;
         }
-        .fileControlsShareButton {
+        .fileControlsFullWidthButton {
           grid-column: 1 / -1;
         }
         .fileControlsSocial {
@@ -148,7 +148,7 @@ export function createFileControls(
       <div class="fileControls">
         <div class="fileControlsActions">
           <${Button}
-            class="fileControlsButton"
+            class="fileControlsButton fileControlsFullWidthButton"
             variant="primary"
             onClick=${saveCanvas}
             disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
@@ -163,9 +163,10 @@ export function createFileControls(
           >
             ${isRenderingFull.get() ? "Rendering..." : "Download HD"}
           <//>
+          <${Button} class="fileControlsButton"> Download GIF <//>
           ${canShareFiles &&
           html`<${Button}
-            class="fileControlsButton fileControlsShareButton"
+            class="fileControlsButton fileControlsFullWidthButton"
             onClick=${shareCanvas}
             disabled=${!(calligraphyStatus.get() >= CalligraphyStatus.completed)}
           >
