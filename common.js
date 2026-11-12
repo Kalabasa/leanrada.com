@@ -121,7 +121,7 @@ customElements.define(
       window.addEventListener("touchmove", this.#onWindowTouchMove, passive);
       this.addEventListener("touchstart", this.#onTouchStart, passive);
 
-      if (this.hasAttribute("prehide")) {
+      if (window.self === window.top && this.hasAttribute("prehide")) {
         this.#currentY = this.#currentYTarget = -this.offsetHeight;
         this.#updateDOM();
       }
